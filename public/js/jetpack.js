@@ -205,6 +205,11 @@ export class JetpackDash {
     for (let i = 0; i < 28; i++) this.parts.push({ x: p.x, y: p.y, vx: rnd(-320, 320), vy: rnd(-320, 320), life: 0.7, max: 0.7, c: ['#b388ff', '#7c4dff', '#00e5ff', '#ffffff'][i % 4], s: rnd(2, 6) });
     this.onState('dying');
   }
+  endNow() { // "End run & save score" from the pause menu
+    if (this.state !== 'play' && this.state !== 'paused' && this.state !== 'dying') return;
+    if (this.state !== 'dying') { this.finalScore = this.score; this.finalMs = Math.round(performance.now() - this.startedAt); }
+    this._finish();
+  }
   _finish() {
     if (this.state === 'over') return;
     this.state = 'over'; this.sfx.play('sfx_lose');

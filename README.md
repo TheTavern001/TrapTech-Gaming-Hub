@@ -66,12 +66,51 @@ This works on Fly.io, Railway or any VPS. Always mount a volume at `/data`, or t
 
 ## Using it
 **Players:** open the site, then choose Get Started (sign up with a Potato username and password) or Continue as Guest.
-Signed-in players' runs are scored automatically when they die. Guests can play practice runs, but those scores aren't saved.
+Signed-in players' runs are scored automatically when the run ends (or from Pause > **End run & save score**). Guests can play
+practice runs, but those scores aren't saved.
 
-**Create a giveaway:** go to Admin, then Giveaways, then New Giveaway. Fill in the title, host, prize, image (pick one or paste a URL),
-start and end date/time (in your browser's time zone), entry method "Play Games", the linked game, the rules and the Active toggle, then click Save.
-Every signed-in player who **starts and finishes** a run of the linked game inside the window is an entrant.
-Higher scores rank higher. A run that starts before the start time or is submitted after the end time is saved to the global
+### Games (all 8 playable)
+Every game is an original HTML5 canvas game (touch + mouse + keyboard) built on `public/js/games/engine.js`, and every one uses the
+same signed run-token flow. Casino-style games use **free points only**: no real money, no purchases, no cash value.
+
+| Game | How it scores | Per-game cap (server) |
+|---|---|---|
+| Jetpack Dash | meters flown | 30 m/s + 25 |
+| Drift Rush | meters driven + banked drift points (drift x chain up to x4; lost if you go off-road or hit a cone). 45 s timer, +10 s per 1,000 m, nitro orbs | 240/s + 200 |
+| Plinko | 10 free chips; slot values 200/50/20/5/100/5/20/50/200; aim + 3 nudges per chip; golden pegs x2 then x4 | 700/s + 900, max 8,000 |
+| Spin to Win | 5 free spins (BONUS adds one, max 8); hold-to-charge power meter, same power = same landing; x2 doubles the next spin; BUST = 0 | 700/s + 2,000, max 16,000 |
+| Memory Match | 100 x combo (up to x5) per pair + 10 per second left on clear; levels grow 4x3 to 6x5; time runs out = end | 1,100/s + 500 |
+| High Score | reflex targets: (10 + up to 15 accuracy) x combo multiplier (up to x5), gold = x2, bombs/misses cost 1 of 3 lives | 900/s + 300 |
+| Blazed Roulette | 1,000 free chips, 8 spins, max 100 per spin (10 on 0); timed DROP lands within 2 pockets of the marker; score = chips left | 120/s + 1,000, max 3,800 |
+| Terp Tapper | 4-lane rhythm: perfect 100 / great 60 / good 30 x combo multiplier (up to x4); 5 lives; tempo rises 96 to 168 BPM | 3,000/s + 500 |
+
+Caps live in `src/config.js` (`GAMES[].ac`) and are checked against **server-measured** run time; `tiers` are the
+Bronze/Silver/Gold thresholds used by achievements.
+
+### Achievements & cosmetics (cosmetic only, no cash value)
+`src/achievements.js` defines **84 achievements** in 6 categories: game milestones (5 per game: bronze/silver/gold score, 10 runs,
+3-run streak), overall (runs, total points, days played, variety), giveaways (enter 1/5/25, podium, win 1/3), community (hype posts,
+equip cosmetics, collector), leaderboards (weekly top 10/3/1, monthly #1, global top 10, #1 in 3 games) and 9 hidden secrets.
+They are evaluated **on the server** after every accepted run, signup, equip, hype, admin draw and profile view, from data the server
+already validated; the client can't claim an unlock. Rarity = % of players who have it.
+Every unlock gives a badge plus a cosmetic from `src/cosmetics.js`: **39 profile banners, 19 avatar frames, 35 titles** (all original
+CSS/SVG, served as `/cosmetics.css`). Players equip a banner, frame, title and featured badge on their profile (Customize); these
+show on leaderboards, giveaway entrants, home and community posts.
+
+### Giveaway packages (/host)
+Basic / Premium / Elite tiers with "who it's for", feature lists, a 13-row comparison table and an FAQ. Names, prices
+(placeholders $49 / $149 / $399), notes, badges, features, the comparison table and the FAQ are all editable in
+**Admin > Settings > Hosting packages** (stored in the `settings` table; "Reset to defaults" restores `src/packages.js`).
+The booking form carries the chosen tier and the server stores a price snapshot (e.g. "Elite - $399 per 30-day campaign").
+
+**Create a giveaway:** fastest way: Admin > **Games** > **Create giveaway for this game** (prefilled title, art, game and a 7-day
+window). Or Admin > Giveaways > New Giveaway. Pick one or more games in the visual game picker, then title, host, prize, image,
+start/end (browser time zone), package tier, brand color + logo URL, Featured toggle (home slot; Elite + Featured = home hero takeover),
+minimum score, prize tiers (one per line) and rules, then Save.
+**One-click linking:** each game card in Admin > Games lists live/upcoming giveaways with an on/off toggle; flip it to make that game
+count (a giveaway always keeps at least one game).
+Every signed-in player who **starts and finishes** a run of any linked game inside the window (and meets the minimum score) is an
+entrant. With several games, the giveaway score is the sum of the player's best score in each linked game. Higher scores rank higher. A run that starts before the start time or is submitted after the end time is saved to the global
 boards but doesn't count for that giveaway.
 
 **Draw winners:** open Admin, go to Giveaways, and click Manage on the giveaway.
@@ -92,8 +131,8 @@ Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store C
 ## Anti-cheat (basic)
 - `POST /api/run/start` (signed-in only) returns an HMAC-signed, single-use run token tied to the player and game.
 - `POST /api/score` must include the token. Requests are rejected if the token belongs to another player, was already used,
-  has been tampered with, or has expired (2 hours). Scores above `30 m/s × server-measured elapsed time + 25 m` are rejected,
-  and so are implausible coin counts. The game's top speed is 24 m/s.
+  has been tampered with, or has expired (2 hours). Each game has its own caps (table above): scores above
+  `perSec x server-measured elapsed seconds + grace`, above the game's absolute `max`, or with implausible coin counts are rejected.
 - Rate limits: 20 run starts per minute per player (40 per IP) and 30 score submissions per minute per IP. Login, signup and booking
   are rate-limited per IP. IPs are stored only as salted hashes.
 - Limitation: it's a client-side game, so a skilled cheater can still script plausible scores. Use the admin tools (ban, top-N
@@ -103,7 +142,10 @@ Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store C
 `POST /api/auth/signup|signin|signout`, `GET /api/me`, `GET /api/games`,
 `GET /api/leaderboard?game=global|jetpack-dash&period=all|weekly|monthly&giveaway=ID`,
 `POST /api/run/start`, `POST /api/score`, `GET /api/giveaways?status=active|upcoming|past`, `GET /api/giveaways/:id`,
-`GET /api/profile/:username`, `GET /api/community`, `POST /api/bookings`, and `/api/admin/*` (cookie session after `POST /api/admin/login`).
+`GET /api/profile/:username`, `GET /api/community`, `POST /api/community/react {key}`, `GET /api/packages`, `POST /api/bookings {package,...}`,
+`GET /api/achievements[?user=]`, `GET /api/cosmetics`, `POST /api/me/cosmetics {banner,frame,title,badge}`, `GET /cosmetics.css`,
+and `/api/admin/*` (cookie session after `POST /api/admin/login`), incl. `GET /api/admin/games` (with linked giveaways),
+`POST /api/admin/giveaways/:id/games {game_id, linked}`, `GET|PUT /api/admin/packages`, `POST /api/admin/packages/reset`, `GET /api/admin/achievements`.
 
 ## File layout
 ```
@@ -111,14 +153,19 @@ src/server.js        Express app: auth, runs/anti-cheat, leaderboards, giveaways
 src/db.js            SQLite schema (better-sqlite3), database at $DATA_DIR/hub.db (default data/hub.db)
 src/config.js        env/.env loader, secrets, game catalog, anti-cheat constants
 src/demo.js          demo seed/wipe
-public/index.html    player SPA shell; public/js/app.js (router and all pages), public/js/jetpack.js (game)
+src/boards.js        leaderboards + giveaway entrants (multi-game, min score) + campaign stats
+src/achievements.js  84 achievements, server-side evaluation, rarity
+src/cosmetics.js     banners / frames / titles (original CSS) -> /cosmetics.css
+src/packages.js      default Basic/Premium/Elite package copy (admin-editable)
+public/index.html    player SPA shell; public/js/app.js (router and all pages), public/js/jetpack.js (Jetpack Dash)
+public/js/games/     engine.js (shared canvas game base + WebAudio synth) and the 7 other games
 public/admin.html    admin SPA; public/js/admin.js, public/css/admin.css
 public/css/app.css   theme (dark navy, neon purple-to-blue, glowing cards, bottom tab nav)
 public/assets/       brand/, cards/, giveaways/, badges/, packages/, avatars/ (from mockups), game/ + sfx/ (Kenney CC0)
 public/fonts/        Orbitron + Exo 2 (OFL)
 mockups/             the owner's original mockup PNGs (reference only, not served)
 tools/               extract_mockup_art.py, render-cover.js, e2e-api.js, e2e-browser.js, compare.py
-screenshots/         mobile-*.png, desktop-*.png, compare/ (generated by the tests, git-ignored)
+screenshots/         mobile-*.png, desktop-*.png, v2/ (mobile 390x844 shots of the v2 features), compare/ (generated by the tests, git-ignored)
 scripts/             start/stop/restart scripts
 .env                 local dev secrets (chmod 600, git-ignored); see .env.example
 render.yaml          Render Blueprint (web service + 1 GB disk at /data)
@@ -127,7 +174,7 @@ Dockerfile           container alternative (volume at /data)
 
 ## Tests
 ```bash
-node tools/e2e-api.js                      # 58 API checks (BASE=... to point elsewhere); cleans up after itself
-node tools/e2e-browser.js                  # 50 headless-Chrome checks + screenshots; cleans up after itself
+node tools/e2e-api.js                      # API checks incl. every game, linking, packages, achievements (BASE=... to point elsewhere)
+node tools/e2e-browser.js                  # headless-Chrome checks + screenshots (screenshots/, screenshots/v2/); both clean up after themselves
 python3 tools/compare.py                   # mockup vs built side-by-side images
 ```

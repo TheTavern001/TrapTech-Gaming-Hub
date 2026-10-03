@@ -102,6 +102,55 @@ CREATE TABLE IF NOT EXISTS activity (
   is_demo INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_activity_time ON activity(created_at);
+-- v2: a giveaway can count several games
+CREATE TABLE IF NOT EXISTS giveaway_games (
+  giveaway_id INTEGER NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
+  game_id TEXT NOT NULL,
+  PRIMARY KEY (giveaway_id, game_id)
+);
+CREATE INDEX IF NOT EXISTS idx_gg_game ON giveaway_games(game_id);
+-- v2: admin-editable settings (hosting packages, ...), JSON values
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+-- v2: achievements unlocked (evaluated server-side only)
+CREATE TABLE IF NOT EXISTS user_achievements (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  ach_id TEXT NOT NULL,
+  unlocked_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, ach_id)
+);
+CREATE INDEX IF NOT EXISTS idx_ua_ach ON user_achievements(ach_id);
+-- v2: community reactions ("hype")
+CREATE TABLE IF NOT EXISTS reactions (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  item_key TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, item_key)
+);
+CREATE INDEX IF NOT EXISTS idx_reactions_item ON reactions(item_key);
+CREATE INDEX IF NOT EXISTS idx_runs_user_game ON runs(user_id, game_id, created_at);
 `);
+
+// v2 column migrations (idempotent)
+function addCol(table, col, def) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name);
+  if (!cols.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+}
+addCol('giveaways', 'tier', "TEXT NOT NULL DEFAULT ''");
+addCol('giveaways', 'brand_color', "TEXT NOT NULL DEFAULT ''");
+addCol('giveaways', 'featured', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'min_score', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'prize_tiers', "TEXT NOT NULL DEFAULT ''");
+addCol('giveaways', 'brand_logo', "TEXT NOT NULL DEFAULT ''");
+addCol('users', 'eq_banner', "TEXT NOT NULL DEFAULT ''");
+addCol('users', 'eq_frame', "TEXT NOT NULL DEFAULT ''");
+addCol('users', 'eq_title', "TEXT NOT NULL DEFAULT ''");
+addCol('users', 'eq_badge', "TEXT NOT NULL DEFAULT ''");
+addCol('bookings', 'package_snapshot', "TEXT NOT NULL DEFAULT ''");
+// every pre-v2 giveaway keeps its single linked game
+db.exec('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) SELECT id, game_id FROM giveaways');
 
 module.exports = db;

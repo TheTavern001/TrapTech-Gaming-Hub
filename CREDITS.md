@@ -7,6 +7,15 @@ License texts are in `licenses/`.
 - **Jetpack Dash** (`public/js/jetpack.js`) - original code written for this project. No code was copied from
   other jetpack games. Not affiliated with, and uses no assets from, Jetpack Joyride / Halfbrick.
 - Zapper beams, rockets, the jetpack itself, the neon city/lab parallax and HUD are drawn procedurally on canvas (original).
+- **Drift Rush, Plinko, Spin to Win, Memory Match, High Score, Blazed Roulette, Terp Tapper** (`public/js/games/*.js`) and the shared
+  engine (`public/js/games/engine.js`) - original code written for this project. All in-game graphics (roads, cars, cones, pegs,
+  chips, wheels, card faces, targets, roulette wheel/table, rhythm lanes, particles, HUD) are drawn procedurally on canvas, and all
+  in-game sound effects and the Terp Tapper beat are synthesized live with the WebAudio API. No sprites, sounds or code from other
+  games, and no third-party trademarks or logos. Memory Match card faces are canvas-drawn neon glyphs (original).
+
+## Achievements & cosmetics
+Profile banners, avatar frames, titles and achievement badges (`src/cosmetics.js`, `src/achievements.js`, served as `/cosmetics.css`)
+are original CSS gradients / inline SVG patterns made for this project; badge glyphs are Lucide icons (ISC). Cosmetic only, no cash value.
 
 ## Game sprites & sounds - Kenney (CC0 1.0, public domain)
 | Pack | Source | Files used |
@@ -37,7 +46,7 @@ Giveaway hosts are shown as plain text in a colored block (`.brandblock`). If a 
 get their logo file and permission first.
 
 ## Icons
-- **Lucide** icons (ISC License) - https://lucide.dev - inlined into `public/js/icons.js` from `lucide-static`.
+- **Lucide** icons (ISC License) - https://lucide.dev - inlined into `public/js/icons.js` from `lucide-static` by `tools/build-icons.js`.
 
 ## Fonts (SIL Open Font License 1.1, self-hosted via @fontsource)
 - **Orbitron** - The Orbitron Project Authors (https://github.com/theleagueof/orbitron)

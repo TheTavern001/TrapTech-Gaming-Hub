@@ -86,28 +86,46 @@ async function dashboard() {
     </div>`);
 }
 
-// ---------- games ----------
+// ---------- games (one-click giveaway linking) ----------
 async function games() {
   const r = await api('/api/admin/games');
-  frame('games', 'Games', `<div class="card wrap-x"><table class="tbl"><thead><tr><th></th><th>Game</th><th>Category</th><th>Status</th><th class="num">Runs</th><th class="num">Players</th><th class="num">Best</th></tr></thead><tbody>
-    ${r.games.map(g => `<tr><td><img src="${g.art}" alt="" style="width:64px;height:40px;object-fit:cover;border-radius:8px"></td><td><b>${esc(g.title)}</b></td><td>${esc(g.category)}</td><td>${g.playable ? '<span class="pill green">LIVE</span>' : '<span class="pill gold">COMING SOON</span>'}</td><td class="num">${fmt(g.runs)}</td><td class="num">${fmt(g.players)}</td><td class="num">${fmt(g.best)}</td></tr>`).join('')}
-  </tbody></table></div><p class="small muted">Only Jetpack Dash is playable in this build; the others are placeholders shown as "Coming soon".</p>`);
+  const unit = (g) => g.unit === 'm' ? 'm' : ' ' + g.unit;
+  frame('games', 'Games', `<p class="muted small" style="margin-top:0">All ${r.games.length} games are live. Use <b>Create giveaway</b> for a prefilled giveaway on that game, or flip a toggle to make a live / upcoming giveaway count that game. A giveaway can count several games.</p>
+    <div class="ggrid">${r.games.map(g => `<div class="card agame" data-game="${g.id}">
+      <div class="agh"><img src="${g.art}" alt=""><div><b>${esc(g.title)}</b><div class="small muted">${esc(g.category)} • <span class="pill green">LIVE</span></div></div></div>
+      <div class="agstats"><div><b>${fmt(g.runs)}</b><span>runs</span></div><div><b>${fmt(g.players)}</b><span>players</span></div><div><b>${fmt(g.best)}${unit(g)}</b><span>best</span></div></div>
+      <div class="small muted agac">Anti-cheat: max ${fmt(g.ac.perSec)}${unit(g)}/s${g.ac.max < 1e7 ? `, cap ${fmt(g.ac.max)}` : ''}</div>
+      <a class="btn block sm" href="/admin/giveaways/new?game=${g.id}" data-create="${g.id}">${icon('plus')} Create giveaway for this game</a>
+      <div class="aglinks"><div class="small muted" style="margin:10px 0 4px">${icon('link')} Linked giveaways</div>
+        ${g.giveaways.length ? g.giveaways.map(x => `<label class="glink ${x.linked ? 'on' : ''}" data-gw="${x.id}"><span class="toggle"><input type="checkbox" data-link="${x.id}" data-game="${g.id}" ${x.linked ? 'checked' : ''}><span></span></span>
+          <span class="gl-t"><b>${esc(x.title)}</b>${demoTag(x.demo)}<span class="small muted">${statusPill(x.status)} ${x.games} game${x.games === 1 ? '' : 's'}${x.active ? '' : ' • hidden'}</span></span></label>`).join('')
+          : '<div class="small muted">No live or upcoming giveaways.</div>'}</div>
+    </div>`).join('')}</div>`, `<a class="btn sm" href="/admin/giveaways/new">${icon('plus')} New Giveaway</a>`);
+  root.querySelector('.ggrid').addEventListener('change', async (e) => {
+    const cb = e.target.closest('[data-link]'); if (!cb) return;
+    const x = await api(`/api/admin/giveaways/${cb.dataset.link}/games`, { method: 'POST', body: { game_id: cb.dataset.game, linked: cb.checked } });
+    if (!x.ok) { cb.checked = !cb.checked; return toast(x.error); }
+    toast(cb.checked ? 'Linked - runs of this game now count' : 'Unlinked'); games();
+  });
 }
 
 // ---------- giveaways ----------
 async function giveaways() {
   const r = await api('/api/admin/giveaways');
   frame('giveaways', 'Giveaways', `<div class="card wrap-x"><table class="tbl"><thead><tr><th>Title</th><th>Host</th><th>Status</th><th>Window</th><th class="num">Entrants</th><th>Winners</th><th>Visible</th><th></th></tr></thead><tbody>
-    ${r.giveaways.length ? r.giveaways.map(g => `<tr><td><b>${esc(g.title)}</b>${demoTag(g.demo)}<div class="small muted">${esc(g.game_title)}</div></td><td>${esc(g.host)}</td><td>${statusPill(g.status)}</td><td class="small">${dt(g.start_at)}<br>→ ${dt(g.end_at)}</td><td class="num">${fmt(g.entrants)}</td><td class="small">${g.winners.map(w => esc(w.username)).join(', ') || '-'}</td><td>${g.active ? '<span class="pill green">on</span>' : '<span class="pill red">off</span>'}</td>
+    ${r.giveaways.length ? r.giveaways.map(g => `<tr><td><b>${esc(g.title)}</b>${demoTag(g.demo)}${g.tier ? ` <span class="pill ${g.tier === 'elite' ? 'gold' : ''}">${esc(g.tier)}</span>` : ''}${g.featured ? ' <span class="pill green">featured</span>' : ''}<div class="small muted">${esc(g.game_title)}</div></td><td>${esc(g.host)}</td><td>${statusPill(g.status)}</td><td class="small">${dt(g.start_at)}<br>→ ${dt(g.end_at)}</td><td class="num">${fmt(g.entrants)}</td><td class="small">${g.winners.map(w => esc(w.username)).join(', ') || '-'}</td><td>${g.active ? '<span class="pill green">on</span>' : '<span class="pill red">off</span>'}</td>
       <td><a class="btn sm" href="/admin/giveaways/${g.id}">Manage</a></td></tr>`).join('') : '<tr><td colspan="8" class="empty">No giveaways yet.</td></tr>'}
   </tbody></table></div>`, `<a class="btn sm" href="/admin/giveaways/new">${icon('plus')} New Giveaway</a>`);
 }
 const IMAGES = ['/assets/giveaways/store-credit-art.webp', '/assets/giveaways/ps5-bundle-art.webp', '/assets/brand/hero-banner.webp', '/assets/cards/jetpack-dash.webp', '/assets/cards/drift-rush.webp', '/assets/cards/plinko.webp', '/assets/cards/spin-to-win.webp', '/assets/cards/memory-match.webp', '/assets/cards/blazed-roulette.webp', '/assets/cards/terp-tapper.webp'];
 async function manageGiveaway(id) {
   const isNew = id === 'new';
-  let g = { title: '', host: '', prize: '', image: IMAGES[0], start_at: nowS(), end_at: nowS() + 7 * 864e5, game_id: 'jetpack-dash', rules: 'Must be 18+ (21+ where required). No purchase necessary. One account per person. Winner will be contacted via their Potato username.', active: true };
-  let entrants = [];
-  if (!isNew) { const r = await api('/api/admin/giveaways/' + id); if (!r.ok) return frame('giveaways', 'Not found', `<div class="err">${esc(r.error)}</div>`); g = r.giveaway; entrants = r.entrants; }
+  const pre = new URLSearchParams(location.search).get('game'); const preG = GAMES.find(x => x.id === pre);
+  let g = { title: preG ? `${preG.title} Giveaway` : '', host: '', prize: '', image: preG ? preG.art : IMAGES[0], start_at: nowS(), end_at: nowS() + 7 * 864e5, game_ids: [preG ? preG.id : 'jetpack-dash'], rules: 'Must be 18+ (21+ where required). No purchase necessary. One account per person. Winner will be contacted via their Potato username.', active: true,
+    tier: 'basic', brand_color: '', brand_logo: '', featured: false, min_score: 0, prize_tiers_raw: '' };
+  let entrants = [], stats = null;
+  if (!isNew) { const r = await api('/api/admin/giveaways/' + id); if (!r.ok) return frame('giveaways', 'Not found', `<div class="err">${esc(r.error)}</div>`); g = r.giveaway; entrants = r.entrants; stats = r.stats; }
+  const sel = new Set(g.game_ids && g.game_ids.length ? g.game_ids : [g.game_id]);
   frame('giveaways', isNew ? 'New Giveaway' : 'Manage Giveaway', `
     <div class="cols" style="margin-top:0;grid-template-columns:1.1fr 1fr">
       <form class="card pad" id="gf">
@@ -121,16 +139,25 @@ async function manageGiveaway(id) {
           <div class="field"><label class="lbl">Prize</label><input class="input" id="prize" value="${esc(g.prize)}" placeholder="$250 store credit" maxlength="200"></div>
           <div class="field"><label class="lbl">Start Date & Time</label><input class="input" type="datetime-local" id="start" value="${toLocalInput(g.start_at)}"></div>
           <div class="field"><label class="lbl">End Date & Time</label><input class="input" type="datetime-local" id="end" value="${toLocalInput(g.end_at)}"></div>
-          <div class="field"><label class="lbl">Entry Method</label><select class="input" id="method"><option value="play">Play Games</option><option disabled>Earn Points (coming soon)</option></select></div>
-          <div class="field"><label class="lbl">Linked Game</label><select class="input" id="game">${GAMES.map(x => `<option value="${x.id}" ${x.id === g.game_id ? 'selected' : ''} ${x.playable ? '' : 'disabled'}>${esc(x.title)}${x.playable ? '' : ' (coming soon)'}</option>`).join('')}</select></div>
+          <div class="field full"><label class="lbl">Games that count <span class="muted small" id="gpn"></span></label><div class="gpicker" id="gpk">${GAMES.map(x => `<button type="button" class="gp ${sel.has(x.id) ? 'on' : ''}" data-g="${x.id}" aria-pressed="${sel.has(x.id)}"><span class="ck">${icon('check')}</span><img src="${x.art}" alt=""><b>${esc(x.title)}</b></button>`).join('')}</div>
+            <div class="hint" style="margin:6px 0 0">Tap to select one or more games. With several games, a player's giveaway score is the sum of their best score in each.</div></div>
+          <div class="field"><label class="lbl">Package tier</label><select class="input" id="tier">${[['', 'None'], ['basic', 'Basic'], ['premium', 'Premium'], ['elite', 'Elite']].map(([k, l]) => `<option value="${k}" ${g.tier === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+          <div class="field"><label class="lbl">Minimum score to qualify</label><input class="input" type="number" min="0" id="minscore" value="${g.min_score || 0}"></div>
+          <div class="field"><label class="lbl">Brand color</label><div style="display:flex;gap:8px"><input type="color" id="bcolor" value="${esc(g.brand_color || '#7c3aed')}" style="width:56px;height:48px;border:0;background:none"><label class="check" style="margin:0"><input type="checkbox" id="usecolor" ${g.brand_color ? 'checked' : ''}> Use brand color</label></div></div>
+          <div class="field"><label class="lbl">Brand logo URL</label><input class="input" id="blogo" value="${esc(g.brand_logo)}" placeholder="/assets/... or https://..." maxlength="300"></div>
+          <div class="field full"><label class="lbl">Prize tiers <span class="muted small">(one per line, e.g. "1st - PS5 bundle")</span></label><textarea class="input" id="ptiers" maxlength="1000" style="min-height:70px" placeholder="1st - ...&#10;2nd - ...&#10;3rd - ...&#10;Random draw - ...">${esc(g.prize_tiers_raw || '')}</textarea></div>
           <div class="field full"><label class="lbl">Rules</label><textarea class="input" id="rules" maxlength="4000">${esc(g.rules)}</textarea></div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;margin:4px 0 16px"><label class="toggle"><input type="checkbox" id="active" ${g.active ? 'checked' : ''}><span></span></label><b>Active</b><span class="small muted">(visible on the public site)</span></div>
+        <div style="display:flex;align-items:center;gap:12px;margin:4px 0 10px"><label class="toggle"><input type="checkbox" id="active" ${g.active ? 'checked' : ''}><span></span></label><b>Active</b><span class="small muted">(visible on the public site)</span></div>
+        <div style="display:flex;align-items:center;gap:12px;margin:0 0 16px"><label class="toggle"><input type="checkbox" id="featured" ${g.featured ? 'checked' : ''}><span></span></label><b>Featured</b><span class="small muted">(home page slot; Elite + featured = hero takeover)</span></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="submit" style="flex:1">${icon('check')} Save Changes</button>${isNew ? '' : `<button class="btn danger" type="button" id="del">${icon('trash-2')} Delete</button>`}</div>
         <p class="small muted">Times are in your browser's time zone (${Intl.DateTimeFormat().resolvedOptions().timeZone}). Runs started before the start time or submitted after the end time do not count.</p>
       </form>
-      ${isNew ? '<div class="card pad"><h2>Entrants & winners</h2><p class="muted">Save the giveaway first. Entrants are players who finish a run of the linked game during the window.</p></div>' : `
+      ${isNew ? '<div class="card pad"><h2>Entrants & winners</h2><p class="muted">Save the giveaway first. Entrants are players who finish a run of any linked game during the window.</p></div>' : `
       <div>
+        ${stats ? `<div class="card pad" style="margin-bottom:14px"><h2 style="margin-bottom:10px">${icon('chart-column')} Live campaign stats</h2>
+          <div class="agstats"><div><b>${fmt(stats.plays)}</b><span>plays</span></div><div><b>${fmt(stats.players)}</b><span>unique players</span></div><div><b>${fmt(g.entrants)}</b><span>entrants</span></div></div>
+          ${(stats.per_game || []).length ? `<table class="tbl" style="margin-top:8px"><tbody>${stats.per_game.map(p => `<tr><td>${esc(GAMES.find(x => x.id === p.game_id)?.title || p.game_id)}</td><td class="num">${fmt(p.plays)} plays</td><td class="num">${fmt(p.players)} players</td></tr>`).join('')}</tbody></table>` : ''}</div>` : ''}
         <div class="card pad" style="margin-bottom:14px">
           <div style="display:flex;align-items:center;justify-content:space-between"><h2>Winners</h2>${statusPill(g.status)}</div>
           <p class="small muted">${fmt(g.entrants)} entrant${g.entrants === 1 ? '' : 's'}. Random draw is uniform among entrants who haven't already won this giveaway.</p>
@@ -153,9 +180,13 @@ async function manageGiveaway(id) {
   $('#imgs').onclick = (e) => { const b = e.target.closest('[data-u]'); if (b) setImg(b.dataset.u); };
   $('#img').oninput = (e) => setImg(e.target.value.trim());
   $('#title').oninput = (e) => { $('#pvt').textContent = e.target.value || 'Giveaway title'; };
+  const paintGp = () => { document.querySelectorAll('#gpk .gp').forEach(b => { const on = sel.has(b.dataset.g); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); $('#gpn').textContent = `(${sel.size} selected)`; };
+  $('#gpk').onclick = (e) => { const b = e.target.closest('[data-g]'); if (!b) return; const k = b.dataset.g; if (sel.has(k)) { if (sel.size === 1) return toast('Pick at least one game'); sel.delete(k); } else sel.add(k); paintGp(); };
+  paintGp();
   $('#gf').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const body = { title: $('#title').value, host: $('#host').value, prize: $('#prize').value, image: $('#img').value.trim(), start_at: new Date($('#start').value).getTime(), end_at: new Date($('#end').value).getTime(), entry_method: 'play', game_id: $('#game').value, rules: $('#rules').value, active: $('#active').checked };
+    const body = { title: $('#title').value, host: $('#host').value, prize: $('#prize').value, image: $('#img').value.trim(), start_at: new Date($('#start').value).getTime(), end_at: new Date($('#end').value).getTime(), entry_method: 'play', game_ids: GAMES.map(x => x.id).filter(k => sel.has(k)), rules: $('#rules').value, active: $('#active').checked,
+      tier: $('#tier').value, min_score: +$('#minscore').value || 0, brand_color: $('#usecolor').checked ? $('#bcolor').value : '', brand_logo: $('#blogo').value.trim(), featured: $('#featured').checked, prize_tiers: $('#ptiers').value };
     const r = await api(isNew ? '/api/admin/giveaways' : '/api/admin/giveaways/' + id, { method: isNew ? 'POST' : 'PUT', body });
     if (!r.ok) { $('#gm').innerHTML = `<div class="err">${esc(r.error)}</div>`; window.scrollTo(0, 0); return; }
     toast('Saved'); if (isNew) nav('/admin/giveaways/' + r.id); else manageGiveaway(id);
@@ -178,7 +209,7 @@ async function manageGiveaway(id) {
 async function bookings() {
   const r = await api('/api/admin/bookings');
   frame('bookings', 'Bookings', `<div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th>Contact</th><th>Type / Package</th><th>Dates</th><th>Details</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>
-    ${r.bookings.length ? r.bookings.map(b => `<tr data-id="${b.id}"><td>${b.id}</td><td><b>${esc(b.brand)}</b>${demoTag(b.is_demo)}<div class="small muted">${ago(b.created_at)}${b.username ? ' • ' + esc(b.username) : ''}</div></td><td class="small">${esc(b.contact_name)}<br>${esc(b.contact)}</td><td class="small">${esc(b.event_type || '-')}<br><span class="pill">${esc(b.package)}</span></td><td class="small">${esc(b.start_date || '?')}<br>→ ${esc(b.end_date || '?')}</td><td class="small" style="max-width:260px;white-space:pre-wrap">${esc(b.details)}</td>
+    ${r.bookings.length ? r.bookings.map(b => `<tr data-id="${b.id}"><td>${b.id}</td><td><b>${esc(b.brand)}</b>${demoTag(b.is_demo)}<div class="small muted">${ago(b.created_at)}${b.username ? ' • ' + esc(b.username) : ''}</div></td><td class="small">${esc(b.contact_name)}<br>${esc(b.contact)}</td><td class="small">${esc(b.event_type || '-')}<br><span class="pill ${b.package === 'elite' ? 'gold' : ''}">${esc(b.package)}</span>${b.package_snapshot ? `<div class="small muted" data-snap>${esc(b.package_snapshot)}</div>` : ''}</td><td class="small">${esc(b.start_date || '?')}<br>→ ${esc(b.end_date || '?')}</td><td class="small" style="max-width:260px;white-space:pre-wrap">${esc(b.details)}</td>
       <td><select class="input" data-st style="height:36px;width:120px">${['pending', 'approved', 'declined', 'done'].map(s => `<option ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
       <td><input class="input" data-note value="${esc(b.admin_note)}" placeholder="Internal note" style="height:36px;min-width:140px"></td>
       <td style="white-space:nowrap"><button class="btn sm" data-save>Save</button> <button class="iconbtn" data-del aria-label="Delete">${icon('trash-2')}</button></td></tr>`).join('') : '<tr><td colspan="9" class="empty">No booking requests yet.</td></tr>'}
@@ -245,14 +276,36 @@ async function reports() {
 
 // ---------- settings ----------
 async function settings() {
-  const s = await api('/api/admin/stats');
-  frame('settings', 'Settings', `<div class="cols" style="margin-top:0">
+  const [s, pk, ac] = await Promise.all([api('/api/admin/stats'), api('/api/admin/packages'), api('/api/admin/achievements')]);
+  frame('settings', 'Settings', `
+    <div class="card pad" id="pkg-editor"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="flex:1">${icon('briefcase')} Hosting packages <span class="muted small">(shown on /host)</span></h2><a class="btn ghost sm" href="/host" target="_blank">${icon('external-link')} View page</a></div>
+      <p class="muted small">Edit prices, names and features for each tier. Prices are placeholders - set your real prices here. Changes are live as soon as you save.</p>
+      <div id="pkm"></div>
+      <div class="pk-ed">${pk.tiers.map((t, i) => `<div class="card pad pk-t" data-i="${i}"><h3 class="orb" style="margin:0 0 10px;text-transform:uppercase">${esc(t.id)}</h3>
+        <div class="form-grid"><div class="field"><label class="lbl">Name</label><input class="input" data-f="name" value="${esc(t.name)}"></div><div class="field"><label class="lbl">Price</label><input class="input" data-f="price" value="${esc(t.price)}" placeholder="$49"></div>
+        <div class="field"><label class="lbl">Price note</label><input class="input" data-f="price_note" value="${esc(t.price_note)}" placeholder="per giveaway"></div><div class="field"><label class="lbl">Badge</label><input class="input" data-f="badge" value="${esc(t.badge)}" placeholder="Most popular"></div>
+        <div class="field full"><label class="lbl">Tagline</label><input class="input" data-f="tagline" value="${esc(t.tagline)}"></div>
+        <div class="field full"><label class="lbl">Who it's for</label><input class="input" data-f="who" value="${esc(t.who)}"></div>
+        <div class="field full"><label class="lbl">Features (one per line)</label><textarea class="input" data-f="features" style="min-height:150px">${esc(t.features.join('\n'))}</textarea></div></div></div>`).join('')}</div>
+      <div class="field"><label class="lbl">Comparison table <span class="muted small">(one row per line: Label | Basic | Premium | Elite; use "yes" or "-" for check / cross)</span></label><textarea class="input" id="pk-cmp" style="min-height:220px;font-family:monospace;font-size:.8rem">${esc(pk.compare.map(r => r.join(' | ')).join('\n'))}</textarea></div>
+      <div class="field"><label class="lbl">FAQ <span class="muted small">(one per line: Question | Answer)</span></label><textarea class="input" id="pk-faq" style="min-height:180px;font-size:.8rem">${esc(pk.faq.map(r => r.join(' | ')).join('\n'))}</textarea></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="pk-save">${icon('check')} Save packages</button><button class="btn ghost" id="pk-reset">${icon('rotate-ccw')} Reset to defaults</button></div></div>
+    <div class="cols">
     <div class="card pad"><h2 style="margin-bottom:8px">Demo data</h2><p class="muted">Sample players, giveaways, bookings and announcements used for previews are tagged <span class="demo-tag">DEMO</span>. Currently: ${s.demo.players} demo players, ${s.demo.giveaways} demo giveaways.</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn danger" id="wipe">${icon('trash-2')} Wipe demo data</button><button class="btn ghost" id="seed">${icon('sparkles')} Load demo data</button></div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn danger" id="wipe">${icon('trash-2')} Wipe demo data</button><button class="btn ghost" id="seed">${icon('sparkles')} Load demo data</button></div>
+      <h2 style="margin:16px 0 8px">Achievements</h2><p class="muted small">${ac.achievements.length} achievements, ${fmt(ac.unlocks)} unlocks across ${fmt(ac.players)} players. Rewards are cosmetic only (no cash value) and are evaluated on the server.</p></div>
     <div class="card pad"><h2 style="margin-bottom:8px">Admin password</h2><p class="muted">The admin password lives in the server's <code>.env</code> file (<code>ADMIN_PASSWORD</code>). Edit it there and restart the server to change it.</p>
-    <h2 style="margin:16px 0 8px">Anti-cheat</h2><p class="muted small">Runs need a signed single-use token from /api/run/start. Scores faster than 30 m/s of server-measured time are rejected; starts and submissions are rate limited per player and per IP.</p></div></div>`);
+    <h2 style="margin:16px 0 8px">Anti-cheat</h2><p class="muted small">Runs need a signed single-use token from /api/run/start. Each game has its own plausibility caps against server-measured run time (see Games); starts and submissions are rate limited per player and per IP.</p></div></div>`);
   $('#wipe').onclick = async () => { if (!confirm('Delete all demo data? Real players and giveaways are not touched.')) return; const r = await api('/api/admin/demo/wipe', { method: 'POST' }); toast(`Removed ${r.players} demo players, ${r.giveaways} giveaways`); settings(); };
   $('#seed').onclick = async () => { const r = await api('/api/admin/demo/seed', { method: 'POST' }); toast(r.seeded ? 'Demo data loaded' : r.note); settings(); };
+  $('#pk-save').onclick = async () => {
+    const tiers = [...document.querySelectorAll('.pk-t')].map(el => { const o = {}; el.querySelectorAll('[data-f]').forEach(i => { o[i.dataset.f] = i.dataset.f === 'features' ? i.value.split('\n').map(x => x.trim()).filter(Boolean) : i.value; }); return o; });
+    const split = (v) => v.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.split('|').map(x => x.trim()));
+    const faq = $('#pk-faq').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf('|'); return i < 0 ? [l, ''] : [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
+    const r = await api('/api/admin/packages', { method: 'PUT', body: { tiers, compare: split($('#pk-cmp').value), faq } });
+    $('#pkm').innerHTML = r.ok ? '<div class="ok-msg">Packages saved - live on /host.</div>' : `<div class="err">${esc(r.error)}</div>`; if (r.ok) toast('Packages saved');
+  };
+  $('#pk-reset').onclick = async () => { if (!confirm('Reset all package names, prices, features, comparison and FAQ to the defaults?')) return; await api('/api/admin/packages/reset', { method: 'POST' }); toast('Packages reset'); settings(); };
 }
 
 render();
