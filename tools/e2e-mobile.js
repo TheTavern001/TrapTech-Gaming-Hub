@@ -93,7 +93,7 @@ setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: 
       if (pf.id === 'pixel7-chrome') await p.screenshot({ path: path.join(SHOTS, `m-play-${g}.png`) });
       await sleep(900);
       const st2 = await p.evaluate(() => window.__game.state);
-      if (st2 === 'play' || st2 === 'paused') { await p.tap('#pause'); await p.waitForSelector('#endrun'); await p.tap('#endrun'); }
+      if (st2 === 'play' || st2 === 'paused') { await p.tap('#pause').catch(() => {}); await p.waitForSelector('#endrun, #sv .ok-msg, #sv .err', { timeout: 15000 }); if (await p.isVisible('#endrun')) await p.tap('#endrun'); } // one-hit games (Sky Hopper) can end on their own while Pause is tapped
       await p.waitForSelector('#sv .ok-msg, #sv .err', { timeout: 20000 }).catch(() => {});
       const res = await p.evaluate(() => window.__lastResult);
       if (res && res.ok) saved.push(g); else console.log('   not saved', g, res && res.error);
