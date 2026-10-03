@@ -137,7 +137,7 @@ function client() {
 
   console.log('# profile, booking, community');
   r = await anon('/api/profile/' + ua); ok(r.body.ok && r.body.profile.games_played === 2 && r.body.profile.total_score === 80 && r.body.profile.giveaways_won >= 1, 'profile stats (2 runs, total 80, won>=1)', r.body.profile);
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand', contact: 'e2e@example.com', event_type: 'Giveaway', package: 'premium', start_date: '2026-11-01', end_date: '2026-11-14', details: 'test booking' } }); ok(r.body.ok, 'booking submitted'); const bid = r.body.id;
+  r = await anon('/api/bookings', { body: { brand: 'E2E Brand', email: 'e2e@example.com', business_type: 'Apparel / streetwear brand', event_type: 'Giveaway', package: 'premium', start_date: '2026-11-01', end_date: '2026-11-14', details: 'test booking' } }); ok(r.body.ok, 'booking submitted'); const bid = r.body.id;
   r = await anon('/api/bookings', { body: { brand: '', contact: '' } }); ok(r.status === 400, 'booking without brand rejected');
   r = await ADM('/api/admin/bookings'); ok(r.body.bookings.some(b => b.id === bid && b.brand === 'E2E Brand'), 'booking visible to admin');
   r = await ADM('/api/admin/bookings/' + bid, { method: 'PUT', body: { status: 'approved', admin_note: 'ok' } }); ok(r.body.ok, 'admin updates booking status');
@@ -196,13 +196,21 @@ function client() {
   r = await anon('/api/packages'); const PK = r.body;
   ok(PK.tiers.map(t => t.id).join() === 'basic,premium,elite' && PK.tiers.every(t => t.price && t.features.length >= 5 && t.who), 'packages: 3 tiers with price, who-for and features');
   ok(PK.compare.length >= 10 && PK.faq.length >= 5, `packages: comparison table (${PK.compare.length} rows) + FAQ (${PK.faq.length})`);
-  const adm0 = (await ADM('/api/admin/packages')).body; const orig = { tiers: adm0.tiers, compare: adm0.compare, faq: adm0.faq };
-  const wasDefault = JSON.stringify(orig) === JSON.stringify(adm0.defaults);
+  const adm0 = (await ADM('/api/admin/packages')).body; const { ok: _ok, defaults: _def, ...orig } = adm0;
+  const wasDefault = JSON.stringify(orig) === JSON.stringify(_def);
   const edited = JSON.parse(JSON.stringify(orig)); edited.tiers[1].price = '$175'; edited.tiers[1].features.push('E2E extra feature');
   r = await ADM('/api/admin/packages', { method: 'PUT', body: edited }); ok(r.body.ok, 'admin edits Premium price + features');
   r = await anon('/api/packages'); ok(r.body.tiers[1].price === '$175' && r.body.tiers[1].features.includes('E2E extra feature'), 'edited price/features are live on /api/packages');
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', contact: 'e2e@example.com', package: 'premium' } }); ok(r.body.ok && r.body.package === 'premium' && r.body.package_snapshot.includes('$175'), 'booking carries chosen tier + price snapshot', r.body); const bid2 = r.body.id;
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', contact: 'e2e@example.com', package: 'elite' } }); ok(r.body.package === 'elite' && /Elite/.test(r.body.package_snapshot), 'elite booking snapshot', r.body.package_snapshot); const bid3 = r.body.id;
+  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com', business_type: 'Gaming channel / esports', package: 'premium' } }); ok(r.body.ok && r.body.package === 'premium' && r.body.package_snapshot.includes('$175'), 'booking carries chosen tier + price snapshot', r.body); const bid2 = r.body.id;
+  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', potato: 'e2e_brand', business_type: 'Cannabis products seller (dispensary/brand/delivery)', licensed: true, package: 'elite', addons: ['push', 'bogus'] } }); ok(r.body.package === 'elite' && /Elite/.test(r.body.package_snapshot), 'elite booking snapshot', r.body.package_snapshot); const bid3 = r.body.id;
+  ok(r.body.licensed_confirmed === true && /Push notification blast/.test(r.body.package_snapshot) && !/bogus/.test(r.body.package_snapshot) && r.body.potato_handle === 'TrapTechSolutions', 'v5: cannabis seller booking with license + add-on + Potato handle in reply');
+  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com', business_type: 'Cannabis products seller (dispensary/brand/delivery)', package: 'basic' } }); ok(r.status === 400 && /licensed/.test(r.body.error), 'v5: cannabis seller without license confirmation rejected');
+  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', business_type: 'Artist / musician', package: 'basic' } }); ok(r.status === 400 && /Potato username/.test(r.body.error), 'v5: booking needs email or Potato username');
+  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com', package: 'basic' } }); ok(r.status === 400 && /business type/.test(r.body.error), 'v5: booking needs a business type');
+  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', potato: '@e2e_glass', business_type: 'Glass / smoke-gear shop', package: 'basic' } }); ok(r.body.ok && r.body.licensed_confirmed === false, 'v5: non-cannabis business books with no license question'); const bid4 = r.body.id;
+  { const P = (await anon('/api/packages')).body; ok(P.tiers.every(t => t.regular_price && t.dims && Object.keys(t.dims).length === 8) && P.addons.length >= 6 && P.multi_brand.length >= 3 && P.launch_label, 'v5: tiers have launch + regular price, 8 dimensions; add-ons + multi-brand sections');
+    const e2 = JSON.parse(JSON.stringify(orig)); e2.tiers[2].regular_price = '$649'; e2.potato_handle = '@E2E_Handle'; r = await ADM('/api/admin/packages', { method: 'PUT', body: e2 });
+    r = await anon('/api/packages'); ok(r.body.tiers[2].regular_price === '$649' && r.body.potato_handle === 'E2E_Handle', 'v5: admin edits regular price + Potato handle'); }
   r = await ADM('/api/admin/packages', { method: 'PUT', body: { tiers: [{ name: 'x' }] } }); ok(r.status === 400, 'packages need exactly 3 tiers');
   if (wasDefault) await ADM('/api/admin/packages/reset', { body: {} }); else await ADM('/api/admin/packages', { method: 'PUT', body: orig });
   r = await anon('/api/packages'); ok(r.body.tiers[1].price === orig.tiers[1].price, 'packages restored after test');
@@ -357,7 +365,7 @@ function client() {
     console.log('# cleanup');
     for (const id of [gid, gshort, gmulti, gmin, grand]) await ADM('/api/admin/giveaways/' + id, { method: 'DELETE' });
     for (const id of [tid, tbid]) await ADM('/api/admin/tournaments/' + id, { method: 'DELETE' });
-    for (const id of [bid, bid2, bid3]) await ADM('/api/admin/bookings/' + id, { method: 'DELETE' });
+    for (const id of [bid, bid2, bid3, bid4]) await ADM('/api/admin/bookings/' + id, { method: 'DELETE' });
     const pl = await ADM('/api/admin/players?q=e2e_'); for (const p of pl.body.players) await ADM('/api/admin/players/' + p.id, { method: 'DELETE' });
     console.log('  removed test giveaways, booking and', pl.body.players.length, 'test players');
   }

@@ -84,7 +84,7 @@ function topbar(path) {
   const act = navActive(path);
   return `<header class="topbar">
     <button class="iconbtn menu-btn" data-act="menu" aria-label="Open menu">${icon('menu')}</button>
-    <a href="/" aria-label="The Gaming Hub home"><img class="logo" src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub by Trap Tech Solutions" width="150" height="38"></a>
+    <a href="/" aria-label="The Gaming Hub home"><img class="logo" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub by Trap Tech Solutions" width="150" height="35"></a>
     <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/host" class="${path.startsWith('/host') || path.startsWith('/book') ? 'on' : ''}">${icon('briefcase')}Host</a></nav>
     <span class="spacer"></span>
     ${S.me && S.me.streak && S.me.streak.current ? `<a class="streak-chip" href="/quests" aria-label="${S.me.streak.current}-day streak - daily quests">${icon('flame')}<b>${S.me.streak.current}</b></a>` : ''}
@@ -98,7 +98,7 @@ const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/host', 'Host a giveaway'],
 function footer() {
   return `<footer class="site-foot" role="contentinfo">
     <div class="sf-in">
-      <a class="sf-brand" href="/about" aria-label="About Trap Tech Solutions"><img src="/assets/brand/traptech.webp" alt="Trap Tech Solutions" width="200" height="31"><span>Built by Trap Tech Solutions</span></a>
+      <a class="sf-brand" href="/about" aria-label="About Trap Tech Solutions"><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions" width="200" height="22"><span>Built by Trap Tech Solutions</span></a>
       <nav class="sf-links" aria-label="Footer">${FOOT_LINKS.map(([h, l]) => `<a href="${h}">${l}</a>`).join('')}</nav>
       <p class="sf-note">21+ only. No purchase necessary to enter or win. Points, XP and cosmetics have no cash value. © ${new Date().getFullYear()} Trap Tech Solutions. The Gaming Hub is powered by Trap Tech.</p>
     </div></footer>`;
@@ -107,7 +107,7 @@ function bottomnav(path) {
   const act = navActive(path);
   return `<nav class="bottomnav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}<span>${l}</span></a>`).join('')}</nav>`;
 }
-const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/host': 'Host a Giveaway',
+const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/host': 'Sponsor the Hub',
   '/book': 'Book a Branded Game', '/quests': 'Daily Quests', '/season': 'Season Pass', '/tournaments': 'Tournaments', '/notifications': 'Notifications', '/search': 'Search', '/invite': 'Invite Friends',
   '/about': 'About Trap Tech Solutions', '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/settings': 'Settings' };
 function setTitle(t) { document.title = t ? `${t} | The Gaming Hub by Trap Tech Solutions` : 'The Gaming Hub by Trap Tech Solutions'; }
@@ -137,7 +137,7 @@ function openMenu() {
   d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', 'Menu');
   const lv = S.me && S.me.level;
   d.innerHTML = `<div class="in">
-    <img src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub" style="width:180px;margin:0 0 12px">
+    <img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" style="width:180px;margin:0 0 12px">
     ${S.me ? `<a class="mini-row drawer-me" href="/u/${encodeURIComponent(S.me.username)}">${framed(S.me.username, false, S.me.cos)}<span style="flex:1;min-width:0">${pname(S.me.username, false, S.me.cos)}${lv ? `<span class="xpbar sm" aria-label="Level ${lv.level}"><i style="width:${Math.round(lv.into / lv.need * 100)}%"></i></span><span class="tiny muted">Level ${lv.level} • ${fmt(lv.into)}/${fmt(lv.need)} XP</span>` : ''}</span></a>` : ''}
     <div class="dr-sec">Play</div>
     ${NAV.map(([p, i, l]) => `<a href="${p}">${icon(i)}${l}</a>`).join('')}
@@ -154,7 +154,7 @@ function openMenu() {
     <a href="/about">${icon('building-2')}About Trap Tech</a>
     <a href="/admin">${icon('layout-dashboard')}Admin</a>
     <div class="dr-legal"><a href="/terms">Terms</a> • <a href="/privacy">Privacy</a> • <a href="/rules">Rules</a> • <a href="/responsible-play">Responsible play</a></div>
-    <a class="dr-tt" href="/about"><span>Built by</span><img src="/assets/brand/traptech.webp" alt="Trap Tech Solutions" width="150" height="23"></a>
+    <a class="dr-tt" href="/about"><span>Built by</span><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions" width="150" height="16"></a>
   </div><div style="flex:1" data-close></div>`;
   d.addEventListener('click', (e) => { if (e.target.closest('a, button') || e.target.hasAttribute('data-close')) setTimeout(() => d.remove(), 0); });
   d.addEventListener('keydown', (e) => { if (e.key === 'Escape') d.remove(); });
@@ -222,13 +222,13 @@ function ageGate() {
   setTitle('Age check');
   const blocked = ss.getItem('gh_age_block') === '1';
   $app.innerHTML = `<div class="gate" role="dialog" aria-labelledby="gate-h">
-    <img class="logo-stack" src="/assets/brand/logo-stacked.webp" alt="The Gaming Hub by Trap Tech Solutions" width="220" height="218">
+    <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub by Trap Tech Solutions" width="220" height="144">
     ${blocked ? `<div class="card pad gate-card"><h1 id="gate-h">Sorry</h1><p class="muted">The Gaming Hub features cannabis-brand sponsors and is only available to adults 21 and older.</p><p class="small"><a href="/responsible-play">Responsible play</a> • <a href="/about">About Trap Tech</a></p></div>`
     : `<form class="card pad gate-card" id="gate" novalidate><h1 id="gate-h">Welcome</h1><p class="muted">Please enter your date of birth to continue.</p>
       ${dobFields('gate')}<div class="hint" id="gate-hint">You must be 21 or older. We don't store this unless you create an account.</div><div id="gmsg"></div>
       <button class="btn block" type="submit">Enter</button>
       <p class="tiny muted" style="margin:12px 0 0">By entering you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>. Free to play. No purchase necessary.</p></form>`}
-    <a class="gate-tt" href="/about"><span>Built by</span><img src="/assets/brand/traptech.webp" alt="Trap Tech Solutions" width="170" height="26"></a>
+    <a class="gate-tt" href="/about"><span>Built by</span><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions" width="170" height="19"></a>
   </div>`;
   const f = $app.querySelector('#gate'); if (!f) return;
   $app.querySelector('#gate-m').focus();
@@ -248,7 +248,7 @@ route(/^\/welcome$/, () => splash());
 function splash() {
   $app.innerHTML = `<div class="splash">
     <div>
-      <img class="logo-stack" src="/assets/brand/logo-stacked.webp" alt="The Gaming Hub by Trap Tech Solutions" width="330" height="326">
+      <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub by Trap Tech Solutions" width="330" height="215">
       <div class="tagline">PLAY <b>•</b> COMPETE <b>•</b> WIN <b>•</b> CONNECT</div>
       <p class="splash-sub">Free arcade games, tournaments and brand giveaways.<br>No purchase necessary. 21+.</p>
     </div>
@@ -257,7 +257,7 @@ function splash() {
       <p class="small muted" style="margin:16px 0 4px">Already have an account?</p>
       <a href="/signin" class="orb" style="font-weight:700;font-size:.85rem;background:var(--grad-v);-webkit-background-clip:text;background-clip:text;color:transparent">SIGN IN</a>
       <p style="margin:10px 0 0"><a href="/" data-guest class="small muted">Just browsing? Continue as Guest</a></p>
-      <a class="tt-sig" href="/about"><span>Built by</span><img class="traptech" src="/assets/brand/traptech-stacked.webp" alt="Trap Tech Solutions" style="height:40px"></a>
+      <a class="tt-sig" href="/about"><span>Built by</span><img class="traptech" src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" style="height:40px"></a>
     </div></div>`;
   setTitle('Welcome');
   ls.setItem('gh_seen_splash', '1');
@@ -275,7 +275,7 @@ route(/^\/signin$/, (m, url) => {
   const remembered = ls.getItem('gh_username') || '';
   $app.innerHTML = `<div class="auth">
     <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button></div>
-    <img class="logo-h" src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub" width="220" height="56">
+    <img class="logo-h" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="220" height="52">
     <div class="card glow-purple" style="margin-top:14px">
       <h1>Welcome Back</h1><p class="sub">Sign in with your Potato username and password.</p>
       <form id="f" novalidate>
@@ -290,7 +290,7 @@ route(/^\/signin$/, (m, url) => {
       <div class="or">OR</div>
       <p class="center small muted" style="margin:0">Just here to browse? <a href="${esc(url.searchParams.get('next') || '/')}" id="guest">Continue as Guest</a></p>
     </div>
-    <a class="tt-sig" href="/about"><span>Powered by Trap Tech</span><img src="/assets/brand/traptech-stacked.webp" alt="Trap Tech Solutions" style="height:38px"></a>
+    <a class="tt-sig" href="/about"><span>Powered by Trap Tech</span><img src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" style="height:38px"></a>
   </div>`;
   setTitle('Sign in');
   wireEyes($app);
@@ -309,7 +309,7 @@ route(/^\/signup$/, (m, url) => {
   if (S.me) return go('/', true);
   $app.innerHTML = `<div class="auth">
     <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button></div>
-    <img class="logo-h" src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub" width="220" height="56">
+    <img class="logo-h" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="220" height="52">
     <div class="card glow-purple" style="margin-top:14px">
       <h1 style="text-align:left">Create Your Account</h1><p class="sub" style="text-align:left">Choose a unique Potato username and set your password.</p>
       <form id="f" novalidate>
@@ -328,7 +328,7 @@ route(/^\/signup$/, (m, url) => {
       </form>
       <p class="center small muted" style="margin:16px 0 0">Already have an account? <a href="/signin">Sign In</a></p>
     </div>
-    <a class="tt-sig" href="/about"><span>Powered by Trap Tech</span><img src="/assets/brand/traptech-stacked.webp" alt="Trap Tech Solutions" style="height:38px"></a>
+    <a class="tt-sig" href="/about"><span>Powered by Trap Tech</span><img src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" style="height:38px"></a>
   </div>`;
   setTitle('Create account');
   wireEyes($app);
@@ -400,7 +400,7 @@ route(/^\/(home)?$/, async () => {
     </div>
     <div class="section-h"><h2>Host a Game</h2><a href="/host">Learn more</a></div>
     <a class="banner" href="/host" style="display:block;color:var(--text)"><h2>Get Your Brand in the Game</h2><div class="small" style="color:#d9dcff">Trap Tech Solutions builds your branded giveaway or custom game - from a simple prize drop to a full 30-day takeover.</div></a>
-    <div class="footer-note"><img src="/assets/brand/traptech.webp" alt="Trap Tech Solutions">Powering the next generation of online gaming</div>`);
+    <div class="footer-note"><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions">Powering the next generation of online gaming</div>`);
   tickCountdowns(); wireDaily();
   if (S.me && q && q.ok && !q.streak.checked_today) doCheckin();
 });
@@ -756,7 +756,7 @@ route(/^\/giveaways\/(\d+)\/results$/, async (m) => {
     ${emptyState('hourglass', 'Results are not final yet', `Final standings for "${esc(g.title)}" lock automatically when it ends (${when(g.end_at)}).`, `<a class="btn sm" href="/giveaways/${id}/live">${icon('radio')} Live standings</a>`)}</div>`, { title: `Final results: ${g.title}` });
   shell('/giveaways', `<div class="narrow results-page" id="results-page">
     <div class="back-row no-print"><a class="iconbtn" href="/giveaways/${id}" aria-label="Back">${icon('chevron-left')}</a><h1>Final results</h1><span class="spacer"></span><button class="btn sm" id="print-btn">${icon('printer')} Print / save PDF</button></div>
-    <div class="card pad res-head"><img class="print-only" src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub" width="150" height="38">
+    <div class="card pad res-head"><img class="print-only" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="150" height="35">
       <h2>${esc(g.title)}${demoTag(g.demo)}</h2>
       <div class="res-meta"><div><small>Hosted by</small>${esc(g.host || 'The Gaming Hub')}</div><div><small>Prize</small>${esc(g.prize || g.title)}</div><div><small>Game</small>${esc(g.game_title)}</div>
         <div><small>Giveaway period</small>${when(g.start_at)} to ${when(g.end_at)}</div><div><small>Standings locked</small>${when(g.finalized_at)}</div><div><small>Eligible entrants</small>${fmt(r.total)}</div>
@@ -934,42 +934,48 @@ route(/^\/achievements$/, async (m, url) => {
 const PKG_IMG = { basic: '/assets/packages/basic.webp', premium: '/assets/packages/premium.webp', elite: '/assets/packages/elite.webp' };
 let PK = null;
 async function loadPackages() { if (!PK) { const r = await api('/api/packages'); if (r.ok) PK = r; } return PK; }
+const DIM_ROWS = [['exposure', 'monitor-smartphone', 'Where you are shown'], ['reach', 'users', 'How players find you'], ['duration', 'calendar-range', 'Duration'], ['branding', 'palette', 'Branding'], ['links', 'link', 'Links to your site / Potato channel'], ['winners', 'trophy', 'Winners'], ['analytics', 'chart-column', 'Analytics'], ['winner_contact', 'message-circle', 'Winner contact']];
+const priceBlock = (pk, t) => `<div class="pk-price">${t.regular_price && t.regular_price !== t.price ? `<span class="launch-pill">${icon('sparkles')} ${esc(pk.launch_label || 'Launch pricing')}</span>` : ''}<b>${esc(t.price)}</b>${t.regular_price && t.regular_price !== t.price ? `<s class="reg" aria-label="Regular price">${esc(t.regular_price)}</s>` : ''}<span>${esc(t.price_note)}</span></div>`;
 route(/^\/host$/, async (m, url) => {
-  let tab = url.searchParams.get('tab') === 'custom' ? 'custom' : 'packages';
   const pk = await loadPackages(); if (!pk) return shell('/host', `<div class="empty">Could not load packages.</div>`);
   const T = pk.tiers;
-  const draw = () => shell('/host', `<div class="narrow host">
-    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Host a Giveaway</h1></div>
-    <div class="banner"><h2>Get Your <span class="grad-text">Brand in the Game</span></h2><div style="color:#d9dcff">Put your prize in front of players who are already competing. Pick a package, send a free request, and we build and launch it with you.</div></div>
-    <div class="tabs" id="ht" style="margin-top:14px"><button data-k="packages" class="${tab === 'packages' ? 'on' : ''}">Giveaway Packages</button><button data-k="custom" class="${tab === 'custom' ? 'on' : ''}">Custom Event</button></div>
-    ${tab === 'packages' ? `
-      <div class="pk3">${T.map(t => `<div class="card pk ${t.id}" data-tier="${t.id}">
-        ${t.badge ? `<span class="pk-badge">${esc(t.badge)}</span>` : ''}
-        <div class="pk-h"><img src="${PKG_IMG[t.id] || PKG_IMG.basic}" alt=""><div><h3>${esc(t.name)}</h3><div class="pk-tag">${esc(t.tagline)}</div></div></div>
-        <div class="pk-price"><b>${esc(t.price)}</b><span>${esc(t.price_note)}</span></div>
-        <div class="pk-who"><span>${icon('users')} Who it's for</span>${esc(t.who)}</div>
-        <ul class="pk-f">${t.features.map(f => `<li>${icon(/^everything in/i.test(f) ? 'layers' : 'check')}<span>${esc(f)}</span></li>`).join('')}</ul>
-        <a class="btn block ${t.id === 'premium' ? '' : 'ghost'}" href="/book?package=${t.id}" data-pick="${t.id}">Choose ${esc(t.name)}</a>
-      </div>`).join('')}</div>
-      <p class="small dim center" style="margin:10px 0 0">Prices are starting prices; the final quote is confirmed with you before anything goes live. No payment is taken online.</p>
-      <div class="section-h"><h2>${icon('chart-column')} Compare packages</h2></div>
-      <div class="card cmp-wrap"><table class="cmp"><thead><tr><th></th>${T.map(t => `<th class="${t.id}">${esc(t.name)}<small>${esc(t.price)}</small></th>`).join('')}</tr></thead>
-        <tbody>${(pk.compare || []).map(row => `<tr><td>${esc(row[0])}</td>${[1, 2, 3].map(i => `<td>${cmpCell(row[i])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
-      : `<div class="card pad"><h2 style="margin-bottom:8px">Custom Event</h2><p class="muted">Tournaments, stream events, sponsored leaderboards, brand activations, or a brand-new custom game - tell us what you have in mind and we'll put together a plan and quote.</p><a class="btn block" href="/book?package=custom">Request a Custom Event</a></div>`}
+  shell('/host', `<div class="narrow host">
+    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Sponsor the Hub</h1></div>
+    <div class="banner"><h2>Launch your brand <span class="grad-text">in the game</span></h2><div style="color:#d9dcff">Built for upcoming and independent brands: put your prize in front of players who are already competing. Start small with Basic, grow into Premium or Elite. Booking is free - we confirm everything with you on Potato.</div></div>
+    <div class="who-chips" aria-label="Who sponsors">${['Licensed cannabis brands', 'Dispensaries & delivery', 'Streamers & creators', 'Gaming channels', 'Apparel & streetwear', 'Glass & smoke-gear shops', 'Artists & musicians', 'Shops & local business'].map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>
+    <div class="pk3" id="tiers">${T.map(t => `<div class="card pk ${t.id}" data-tier="${t.id}">
+      ${t.badge ? `<span class="pk-badge">${esc(t.badge)}</span>` : ''}
+      <div class="pk-h"><img src="${PKG_IMG[t.id] || PKG_IMG.basic}" alt="" width="48" height="48" loading="lazy"><div><h3>${esc(t.name)}</h3><div class="pk-tag">${esc(t.tagline)}</div></div></div>
+      ${priceBlock(pk, t)}
+      <div class="pk-who"><span>${icon('users')} Who it's for</span>${esc(t.who)}</div>
+      <dl class="pk-dims">${DIM_ROWS.map(([k, ic, l]) => t.dims && t.dims[k] ? `<div class="dim d-${k}"><dt>${icon(ic)} ${l}</dt><dd>${esc(t.dims[k])}</dd></div>` : '').join('')}</dl>
+      <details class="pk-more"><summary>Everything included ${icon('chevron-down')}</summary><ul class="pk-f">${t.features.map(f => `<li>${icon(/^everything in/i.test(f) ? 'layers' : 'check')}<span>${esc(f)}</span></li>`).join('')}</ul></details>
+      <a class="btn block ${t.id === 'premium' ? '' : 'ghost'}" href="/book?package=${t.id}" data-pick="${t.id}">Book ${esc(t.name)}</a>
+    </div>`).join('')}</div>
+    ${pk.launch_note ? `<p class="small dim center launch-note">${icon('sparkles')} ${esc(pk.launch_note)}</p>` : ''}
+    <div class="section-h"><h2>${icon('chart-column')} Compare side by side</h2></div>
+    <div class="card cmp-wrap"><table class="cmp"><thead><tr><th></th>${T.map(t => `<th class="${t.id}">${esc(t.name)}<small>${esc(t.price)}${t.regular_price && t.regular_price !== t.price ? ` <s>${esc(t.regular_price)}</s>` : ''}</small></th>`).join('')}</tr></thead>
+      <tbody>${(pk.compare || []).map(row => `<tr><td>${esc(row[0])}</td>${[1, 2, 3].map(i => `<td>${cmpCell(row[i])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    ${pk.why_links ? `<div class="card pad why-links"><h3>${icon('link')} Why links are a paid feature</h3><p class="muted">${esc(pk.why_links)}</p></div>` : ''}
+    <div class="section-h" id="addons"><h2>${icon('puzzle')} Custom &amp; add-ons</h2></div>
+    <div class="addons">${(pk.addons || []).map(a => `<div class="card addon" data-addon="${esc(a.id)}"><div><b>${esc(a.name)}</b><div class="small muted">${esc(a.desc)}</div></div><span class="ap">${esc(a.price)}</span></div>`).join('')}
+      <div class="card addon custom"><div><b>Fully custom</b><div class="small muted">Tournaments, stream events, sponsored leaderboards or a brand-new custom game. Tell us the idea; we quote it.</div></div><a class="btn sm" href="/book?package=custom">Request</a></div></div>
+    <div class="section-h" id="multi"><h2>${icon('layers')} Many brands at once - how it stays fair</h2></div>
+    <div class="howto">${(pk.multi_brand || []).map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${esc(t)}</b><div class="small muted">${esc(d)}</div></div></div>`).join('')}</div>
     <div class="card tt-build">
-      <div class="ttb-head"><img src="/assets/brand/traptech-stacked.webp" alt="Trap Tech Solutions" width="170" height="56"><span class="pill">${icon('code-xml')} Built in-house</span></div>
+      <div class="ttb-head"><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions" width="190" height="48"><span class="pill">${icon('code-xml')} Built in-house</span></div>
       <h2>Trap Tech Solutions builds your brand's game</h2>
-      <p class="muted">The Gaming Hub is designed, built and operated by Trap Tech Solutions. Every package is set up by our own team, with no third-party agency. That includes the giveaway card and brand theme, plus the custom game skins, prize tiers, leaderboards and the post-campaign report on Elite.</p>
-      <ul class="ttb-list"><li>${icon('gamepad-2')} Branded and custom HTML5 games that work on any phone</li><li>${icon('shield-check')} Server-side anti-cheat and fair winner draws</li><li>${icon('scale')} Official rules with "no purchase necessary", run by Trap Tech as operator</li><li>${icon('chart-column')} Live stats and reporting</li></ul>
+      <p class="muted">The Gaming Hub is designed, built and operated by Trap Tech Solutions. Every package is set up by our own team: giveaway card, channel page and brand theme, plus game skins, prize tiers and reports on Elite.</p>
+      <ul class="ttb-list"><li>${icon('gamepad-2')} Branded HTML5 games that work on any phone and inside Potato</li><li>${icon('shield-check')} Server-side anti-cheat and verifiable winner draws</li><li>${icon('scale')} Official rules with "no purchase necessary", run by Trap Tech as operator</li><li>${icon('message-circle')} Winners contacted on Potato by our team</li></ul>
       <a class="btn sm ghost" href="/about">${icon('building-2')} About Trap Tech</a>
     </div>
-    <div class="section-h"><h2>How it works</h2></div>
-    <div class="howto">${[['Pick a package', 'Choose Basic, Premium, Elite or a custom event.'], ['Send your request', 'Tell us your brand, prize, dates and goals. No payment needed now.'], ['We build & launch', 'We confirm the details and quote, set up your giveaway and games, and go live.'], ['Draw & deliver', 'Winners are drawn on the admin side; you get the entrant CSV (and the campaign report on Elite) and deliver the prize.']].map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${t}</b><div class="small muted">${d}</div></div></div>`).join('')}</div>
-    <div class="section-h" id="faq"><h2>${icon('circle-help')} Giveaway FAQ</h2></div>
+    <div class="section-h"><h2>How booking works</h2></div>
+    <div class="howto">${[['Pick a tier', 'Basic, Premium, Elite or custom, plus any add-ons.'], ['Send a free request', 'Your brand, prize, dates and an email and/or Potato username. No payment now.'], ['Confirm on Potato', `Message us on Potato at @${esc(pk.potato_handle || 'TrapTechSolutions')} - we confirm details and the quote.`], ['We build & launch', 'We set up your channel, giveaway and games, contact winners on Potato and send your stats.']].map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${t}</b><div class="small muted">${d}</div></div></div>`).join('')}</div>
+    <div class="section-h" id="faq"><h2>${icon('circle-help')} Sponsor FAQ</h2></div>
     <div class="faq">${(pk.faq || []).map(([q, a], i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary>${esc(q)}${icon('chevron-down')}</summary><p>${esc(a)}</p></details>`).join('')}</div>
+    <p class="small dim center">Sponsors must comply with all laws that apply to their business, products and advertising. See the <a href="/terms">Terms</a> and <a href="/rules">Official Rules</a>.</p>
   </div>`);
-  const draw2 = () => { draw(); document.getElementById('ht').onclick = (e) => { const b = e.target.closest('[data-k]'); if (!b) return; tab = b.dataset.k; draw2(); }; if (location.hash === '#faq') document.getElementById('faq')?.scrollIntoView(); };
-  draw2();
+  const h = location.hash.slice(1); if (h) document.getElementById(h)?.scrollIntoView();
 });
 function cmpCell(v) {
   const s = String(v || '').trim();
@@ -978,44 +984,63 @@ function cmpCell(v) {
   return esc(s);
 }
 route(/^\/book$/, async (m, url) => {
-  const pk = await loadPackages(); const T = pk ? pk.tiers : [];
-  const B = { step: 1, package: url.searchParams.get('package') || 'basic', brand: '', event_type: '', contact_name: S.me ? S.me.username : '', contact: '', start_date: '', end_date: '', details: '' };
+  const pk = await loadPackages(); const T = pk ? pk.tiers : []; const AD = (pk && pk.addons) || [];
+  const BT = await api('/api/business-types'); const TYPES = BT.types || []; const CANN = BT.cannabis;
+  const B = { step: 1, package: url.searchParams.get('package') || 'basic', business_type: '', brand: '', event_type: '', contact_name: '', email: '', potato: S.me ? S.me.username : '', licensed: false, addons: [], start_date: '', end_date: '', details: '' };
   if (B.package !== 'custom' && !T.some(t => t.id === B.package)) B.package = 'basic';
   const EV = ['Giveaway', 'Multi-game Giveaway', 'Brand Takeover', 'Tournament', 'Sponsored Leaderboard', 'Stream Event', 'Custom Game', 'Other'];
-  const save = () => document.querySelectorAll('[data-b]').forEach(i => { B[i.dataset.b] = i.value.trim(); });
+  const save = () => { document.querySelectorAll('[data-b]').forEach(i => { B[i.dataset.b] = i.value.trim(); }); const lc = document.getElementById('licensed'); if (lc) B.licensed = lc.checked; const ad = document.querySelectorAll('[data-ad]'); if (ad.length) B.addons = [...ad].filter(x => x.checked).map(x => x.dataset.ad); };
   const tierOf = () => T.find(t => t.id === B.package);
-  const summary = () => { const t = tierOf(); return t ? `<div class="pk-sel ${t.id}" id="pksel"><img src="${PKG_IMG[t.id]}" alt=""><div><small>SELECTED PACKAGE</small><b>${esc(t.name)}</b><span>${esc(t.tagline)}</span></div><div class="pr"><b>${esc(t.price)}</b><span>${esc(t.price_note)}</span></div></div>` : `<div class="pk-sel custom" id="pksel"><div><small>SELECTED</small><b>Custom Event</b><span>Quote on request</span></div></div>`; };
+  const summary = () => { const t = tierOf(); return t ? `<div class="pk-sel ${t.id}" id="pksel"><img src="${PKG_IMG[t.id]}" alt=""><div><small>SELECTED PACKAGE</small><b>${esc(t.name)}</b><span>${esc(t.tagline)}</span></div><div class="pr"><b>${esc(t.price)}</b><span>${t.regular_price && t.regular_price !== t.price ? `<s>${esc(t.regular_price)}</s> ` : ''}${esc(t.price_note)}</span></div></div>` : `<div class="pk-sel custom" id="pksel"><div><small>SELECTED</small><b>Custom</b><span>Quote on request</span></div></div>`; };
   function draw(err = '') {
     const st = (n, l) => `<div class="st ${B.step >= n ? 'on' : ''}"><i>${n}</i>${l}</div>`;
     let body = '';
     if (B.step === 1) body = `
       <div class="field"><label class="lbl">Package</label><div class="tierpick" id="tp">${[...T.map(t => [t.id, t.name, t.price]), ['custom', 'Custom', 'Quote']].map(([k, l, p]) => `<button type="button" data-t="${k}" class="${B.package === k ? 'on' : ''} ${k}"><b>${esc(l)}</b><span>${esc(p)}</span></button>`).join('')}</div></div>
+      <div class="field"><label class="lbl" for="bt">Business type</label><select class="input" id="bt" data-b="business_type"><option value="">Select your business type</option>${TYPES.map(e => `<option ${B.business_type === e ? 'selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
+      <div id="lic-wrap">${B.business_type === CANN ? `<label class="check lic"><input type="checkbox" id="licensed" ${B.licensed ? 'checked' : ''}> <span>I confirm my business is licensed and legally permitted to operate and advertise in my jurisdiction <b class="req">(required)</b></span></label>` : ''}</div>
       <div class="field"><label class="lbl">Channel / Brand Name</label><input class="input" data-b="brand" value="${esc(B.brand)}" placeholder="Your channel or brand name" maxlength="120"></div>
-      <div class="field"><label class="lbl">Event Type</label><select class="input" data-b="event_type"><option value="">Select an option</option>${EV.map(e => `<option ${B.event_type === e ? 'selected' : ''}>${e}</option>`).join('')}</select></div>
-      <div class="field"><label class="lbl">Your Name</label><input class="input" data-b="contact_name" value="${esc(B.contact_name)}" placeholder="Who should we talk to?" maxlength="120"></div>
-      <div class="field"><label class="lbl">Email or Discord</label><input class="input" data-b="contact" value="${esc(B.contact)}" placeholder="you@brand.com or discord handle" maxlength="160"></div>`;
+      <div class="field"><label class="lbl">Your Name <span class="muted small">(optional)</span></label><input class="input" data-b="contact_name" value="${esc(B.contact_name)}" placeholder="Who should we talk to?" maxlength="120"></div>
+      <div class="lbl" style="margin-top:4px">How can we reach you? <span class="muted small">(at least one)</span></div>
+      <div class="field ic">${icon('message-circle')}<input class="input" id="b-potato" data-b="potato" value="${esc(B.potato)}" placeholder="Potato username, e.g. @yourbrand" maxlength="40" autocapitalize="none"></div>
+      <div class="field ic">${icon('mail')}<input class="input" id="b-email" type="email" data-b="email" value="${esc(B.email)}" placeholder="Email (optional if Potato given)" maxlength="160" autocapitalize="none"></div>`;
     else if (B.step === 2) body = `
+      <div class="field"><label class="lbl">Event Type</label><select class="input" data-b="event_type"><option value="">Select an option</option>${EV.map(e => `<option ${B.event_type === e ? 'selected' : ''}>${e}</option>`).join('')}</select></div>
       <label class="lbl" style="font-weight:600;font-size:.85rem">Preferred Dates</label>
       <div class="grid2" style="margin-top:6px"><div class="field"><label class="lbl small">Start Date</label><input class="input" type="date" data-b="start_date" value="${esc(B.start_date)}"></div><div class="field"><label class="lbl small">End Date</label><input class="input" type="date" data-b="end_date" value="${esc(B.end_date)}"></div></div>
+      ${AD.length ? `<div class="lbl">Add-ons <span class="muted small">(optional)</span></div><div class="ad-pick">${AD.map(a => `<label class="check"><input type="checkbox" data-ad="${esc(a.id)}" ${B.addons.includes(a.id) ? 'checked' : ''}> <span><b>${esc(a.name)}</b> <span class="muted small">${esc(a.price)}</span></span></label>`).join('')}</div>` : ''}
       <div class="field"><label class="lbl">Prize, games &amp; details</label><textarea class="input" data-b="details" maxlength="4000" placeholder="Prize, which games you'd like, brand colors / logo link, rules (age, region) or any special requests...">${esc(B.details)}</textarea></div>`;
-    else { const t = tierOf(); body = `<div class="card pad" style="background:rgba(5,8,26,.7)">${[['Package', t ? `${t.name} - ${t.price} ${t.price_note}` : 'Custom event - quote on request'], ['Brand', B.brand], ['Event type', B.event_type || '-'], ['Contact', `${B.contact_name} (${B.contact})`], ['Dates', `${B.start_date || 'flexible'} → ${B.end_date || 'flexible'}`], ['Details', B.details || '-']].map(([k, v]) => `<div class="rv-row" data-rv="${k.toLowerCase()}"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</div>
-      <p class="small muted">No payment is taken. Our team reviews every request, confirms the quote and replies via your contact.</p>`; }
-    shell('/book', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Submit a Booking Request</h1></div>
+    else { const t = tierOf(); body = `<div class="card pad" style="background:rgba(5,8,26,.7)">${[['Package', t ? `${t.name} - ${t.price} ${t.price_note}` : 'Custom - quote on request'], ['Add-ons', B.addons.map(id => (AD.find(a => a.id === id) || {}).name).filter(Boolean).join(', ') || '-'], ['Business type', B.business_type], ...(B.business_type === CANN ? [['License', 'Confirmed licensed & legally permitted to advertise']] : []), ['Brand', B.brand], ['Event type', B.event_type || '-'], ['Contact', [B.contact_name, B.potato ? '@' + B.potato.replace(/^@/, '') + ' on Potato' : '', B.email].filter(Boolean).join(' • ')], ['Dates', `${B.start_date || 'flexible'} → ${B.end_date || 'flexible'}`], ['Details', B.details || '-']].map(([k, v]) => `<div class="rv-row" data-rv="${k.toLowerCase()}"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</div>
+      <p class="small muted">No payment is taken. After you send this, message us on Potato to confirm.</p>`; }
+    shell('/book', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Book a Sponsorship</h1></div>
       ${summary()}
-      <div class="steps">${st(1, 'Details')}<span class="bar"></span>${st(2, 'Dates')}<span class="bar"></span>${st(3, 'Review')}</div>
+      <div class="steps">${st(1, 'Details')}<span class="bar"></span>${st(2, 'Dates & add-ons')}<span class="bar"></span>${st(3, 'Review')}</div>
       <div class="card pad">${err ? `<div class="err">${esc(err)}</div>` : ''}${body}
       <div style="display:flex;gap:10px;margin-top:6px">${B.step > 1 ? `<button class="btn ghost" id="prev" style="flex:1">Back</button>` : ''}<button class="btn" id="next" style="flex:2">${B.step < 3 ? 'Next Step' : 'Submit Request'}</button></div></div>
-      <p class="small dim center"><a href="/host">Compare packages</a> • <a href="/host#faq">Giveaway FAQ</a></p></div>`);
+      <p class="small dim center"><a href="/host">Compare packages</a> • <a href="/host#faq">Sponsor FAQ</a></p></div>`);
     const tp = document.getElementById('tp'); if (tp) tp.onclick = (e) => { const b = e.target.closest('[data-t]'); if (!b) return; save(); B.package = b.dataset.t; draw(); };
+    const bt = document.getElementById('bt'); if (bt) bt.onchange = () => { save(); B.licensed = false; draw(); };
     document.getElementById('next').onclick = async () => {
-      save();
-      if (B.step === 1) { if (!B.brand) return draw('Channel / brand name is required.'); if (!B.contact) return draw('Add an email or Discord handle so we can reply.'); }
+      save(); B.potato = B.potato.replace(/^@/, '');
+      if (B.step === 1) {
+        if (!B.business_type) return draw('Please choose your business type.');
+        if (B.business_type === CANN && !B.licensed) return draw('Please confirm your business is licensed and legally permitted to operate and advertise in your jurisdiction.');
+        if (!B.brand) return draw('Channel / brand name is required.');
+        if (!B.email && !B.potato) return draw('Add a Potato username or an email (at least one) so we can reach you.');
+        if (B.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(B.email)) return draw('That email address does not look right.');
+      }
       if (B.step === 2 && B.start_date && B.end_date && B.end_date < B.start_date) return draw('End date must be after the start date.');
       if (B.step < 3) { B.step++; return draw(); }
       const btn = document.getElementById('next'); btn.disabled = true;
       const r = await api('/api/bookings', { method: 'POST', body: B });
       if (!r.ok) { btn.disabled = false; return draw(r.error); }
-      shell('/book', `<div class="narrow"><div class="card pad center glow-purple" style="margin-top:30px"><div style="font-size:3rem;color:var(--green)">${icon('calendar-check')}</div><h1>Request Sent!</h1><p class="muted">Booking reference <b>#${r.id}</b> for <b id="booked-pkg">${esc(r.package_snapshot)}</b>. The Trap Tech team will review it and reach out at <b>${esc(B.contact)}</b>.</p><a class="btn block" href="/">Back to Home</a><p class="tiny muted" style="margin:12px 0 0">Your branded game and giveaway will be built by Trap Tech Solutions.</p></div></div>`);
+      const hd = r.potato_handle || 'TrapTechSolutions';
+      shell('/book', `<div class="narrow"><div class="card pad center glow-purple book-done" style="margin-top:30px"><div style="font-size:3rem;color:var(--green)">${icon('calendar-check')}</div><h1>Request Sent!</h1>
+        <p class="muted">Booking reference <b>#${r.id}</b> for <b id="booked-pkg">${esc(r.package_snapshot)}</b>.</p>
+        <div class="potato-confirm" id="potato-confirm"><div class="pc-ic">${icon('message-circle')}</div><div><b>Message us on Potato at <span class="handle">@${esc(hd)}</span> to confirm your booking.</b><div class="small muted">Send your reference <b>#${r.id}</b>. We reply there with your quote and launch date${B.email ? ` (we may also email ${esc(B.email)})` : ''}.</div></div></div>
+        <div class="btn-row center-row"><button class="btn" id="copy-handle">${icon('copy')} Copy @${esc(hd)}</button><a class="btn ghost" href="https://potato.im/${encodeURIComponent(hd)}" rel="noopener">${icon('external-link')} Open in Potato</a></div>
+        <a class="btn block ghost" href="/" style="margin-top:10px">Back to Home</a><p class="tiny muted" style="margin:12px 0 0">Your branded game and giveaway will be built by Trap Tech Solutions.</p></div></div>`);
+      document.getElementById('copy-handle').onclick = async () => { if (await copyText('@' + hd, 'Copy our Potato username')) toast('Copied @' + hd); };
     };
     const prev = document.getElementById('prev'); if (prev) prev.onclick = () => { save(); B.step--; draw(); };
   }
@@ -1032,7 +1057,7 @@ route(/^\/community$/, async () => {
     if (!r.ok) { el.innerHTML = emptyState('users', 'Sign in to see this feed', r.error, '<a class="btn sm" href="/signin?next=/community">Sign in</a>'); return; }
     el.innerHTML = r.items.length ? r.items.map(it => {
       const u = it.user;
-      const head = it.kind === 'announcement' ? `<img src="/assets/brand/logo-mark.webp" alt="" style="width:38px;height:38px;object-fit:contain"><div><b>TrapTech Admin${demoTag(it.is_demo)}</b><span>${ago(it.created_at)}</span></div>`
+      const head = it.kind === 'announcement' ? `<img src="/assets/brand/hub-mark.svg" alt="" style="width:38px;height:38px;object-fit:contain"><div><b>TrapTech Admin${demoTag(it.is_demo)}</b><span>${ago(it.created_at)}</span></div>`
         : u ? `<a href="/u/${encodeURIComponent(u.username)}" class="ph-av">${framed(u.username, u.demo, u.cos)}</a><div>${pname(u.username, u.demo, u.cos)}<span>${it.kind === 'winner' ? 'Giveaway Winner' : ({ levelup: 'Level up', streak: 'Streak', tournament: 'Tournament', achievement: 'Achievement', highscore: 'High score' }[it.type] || 'Hub Activity')} • ${ago(it.created_at)}</span></div>`
         : `<span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">${icon('zap')}</span><div><b>Hub Activity${demoTag(it.is_demo)}</b><span>${ago(it.created_at)}</span></div>`;
       return `<div class="card post ${it.kind} ${u ? 'has-bn' : ''}">${u ? `<span class="post-bn bn-${esc(u.cos.banner)}"></span>` : ''}
@@ -1275,7 +1300,7 @@ route(/^\/s\/(\d+)$/, async (m) => {
   const x = r.run; const p = x.player;
   shell('/s', `<div class="narrow">
     <div class="share-card card bn-${esc(p.cos.banner)}">
-      <div class="shc-in"><img src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub" width="170" height="43">
+      <div class="shc-in"><img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="170" height="40">
         <div class="tiny orb" style="color:var(--cyan);margin-top:14px">${esc(x.game.toUpperCase())}</div>
         <div class="shc-score">${esc(x.score_text)}</div>
         <div class="shc-who">${framed(p.username, p.demo, p.cos)}${pname(p.username, p.demo, p.cos)}</div>
@@ -1301,7 +1326,7 @@ route(/^\/terms$/, () => legal('/terms', 'Terms of Service', 'October 3, 2026', 
   <h2>4. Giveaways & tournaments</h2><p>Giveaways are free to enter. <b>No purchase necessary.</b> Each giveaway is subject to the <a href="/rules">Official Rules</a> and any extra rules shown on its page. Tournament prizes are cosmetic unless a giveaway page says otherwise.</p>
   <h2>5. Fair play</h2><p>No cheating, bots, scripts, exploits, score tampering, multiple accounts or self-referrals. We use server-side checks and may remove scores, entries, rewards or accounts that break these rules.</p>
   <h2>6. Community</h2><p>Be respectful. We may remove content or suspend accounts that harass others, share illegal content or promote sales of regulated products.</p>
-  <h2>7. Sponsors</h2><p>Brands that host giveaways are responsible for their prizes as described on the giveaway page. Sponsor content is for adults 21+ in locations where such content is legal.</p>
+  <h2>7. Sponsors</h2><p>Sponsors can be any legitimate business or creator. Every sponsor must comply with all laws and regulations that apply to its business, products and advertising, and is responsible for its prizes as described on the giveaway page. Sponsors that sell cannabis products must be licensed and legally permitted to operate and advertise in their jurisdiction; Trap Tech does not accept unlicensed sellers. Sponsor content is for adults 21+ in locations where such content is legal.</p>
   <h2>8. Disclaimers & liability</h2><p>The Hub is provided "as is". To the extent allowed by law, ${OP} is not liable for indirect or consequential damages, lost data or service interruptions.</p>
   <h2>9. Changes</h2><p>We may update these Terms. We will post the new date above; continued use means you accept the update.</p>
   <h2>10. Contact</h2><p>Questions? Contact ${OP} via the <a href="/book">contact form</a>.</p>
@@ -1326,7 +1351,7 @@ function rulesHTML(g) {
   const method = !g ? '[top score ranking / verifiable random draw among eligible entrants], as announced on the giveaway page' : g.win_method === 'random' ? `a verifiable random draw of ${nW} winner${nW > 1 ? 's' : ''} among all eligible entrants (one entry each)` : `final score ranking: the top ${nW} eligible entrant${nW > 1 ? 's' : ''} by best qualifying score win${g.prize_tiers && g.prize_tiers.length ? ', following the prize tiers listed in Section 6' : ''}`;
   const tb = ((g && g.tiebreak_rules) || TB_RULES).map((x, i) => `<li><b>(${'abcd'[i]})</b> ${esc(x)}</li>`).join('');
   return `<p class="npn">NO PURCHASE NECESSARY TO ENTER OR WIN. A PURCHASE WILL NOT IMPROVE YOUR CHANCES OF WINNING. OPEN ONLY TO LEGAL RESIDENTS OF THE 50 UNITED STATES AND D.C. WHO ARE 21 YEARS OF AGE OR OLDER. VOID WHERE PROHIBITED.</p>
-  <h2>1. Giveaway, Sponsor and Operator</h2><p>The ${name} giveaway (the "Giveaway") is sponsored by <b>${sponsor}</b> ("Sponsor") and operated and administered by <b>${OP}</b> ("Operator") on The Gaming Hub.</p>
+  <h2>1. Giveaway, Sponsor and Operator</h2><p>The ${name} giveaway (the "Giveaway") is sponsored by <b>${sponsor}</b> ("Sponsor") and operated and administered by <b>${OP}</b> ("Operator") on The Gaming Hub. Sponsor must comply with all laws and regulations that apply to its business, products, advertising and this Giveaway; sponsors that sell cannabis products must be licensed and legally permitted to operate and advertise in their jurisdiction.</p>
   <h2>2. Eligibility</h2><p>Open to legal residents of the 50 United States and the District of Columbia who are <b>21 or older</b> at the time of entry and have a Gaming Hub account in good standing. Employees of Sponsor and Operator, and their immediate families and household members, are not eligible. Void where prohibited or restricted by law.</p>
   <h2>3. Giveaway Period</h2><p>${period} (the "Giveaway Period"). Operator's server clock is the official timekeeper.</p>
   <h2>4. How to Enter (free)</h2><p>Sign in to a free Gaming Hub account, then start and finish at least one scored run of ${games} during the Giveaway Period${g && g.min_score ? ` with a score of at least ${fmt(g.min_score)}` : ''}. Every game on the Hub is free; there is nothing to buy. Limit: one entry per person/account. Playing more runs can improve your score ranking, but does not create extra entries for random draws. Entries made with scripts, bots, multiple accounts or tampered scores are void.</p>
@@ -1357,7 +1382,7 @@ route(/^\/responsible-play$/, () => legal('/responsible-play', 'Responsible Play
 
 // ---------------- About Trap Tech Solutions ----------------
 route(/^\/about$/, () => shell('/about', `<div class="narrow">
-  <div class="about-hero card"><img src="/assets/brand/traptech-stacked.webp" alt="Trap Tech Solutions" width="260" height="85"><h1>We build the games your brand plays.</h1>
+  <div class="about-hero card"><img src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" width="260" height="78"><h1>We build the games your brand plays.</h1>
     <p class="muted">Trap Tech Solutions is the studio behind The Gaming Hub. We design, build and run every part of it: the games, leaderboards, tournaments, giveaways, achievements and the admin tools brands use.</p>
     <div class="btn-row center-row"><a class="btn" href="/host">${icon('briefcase')} Work with us</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
   <div class="about-grid">${[['gamepad-2', 'Original games', '8 original HTML5 games so far, made to play great on phones, with skill-based scoring and server-side anti-cheat.'], ['gift', 'Brand giveaways', 'Basic, Premium and Elite packages, from a simple prize drop to a full 30-day branded takeover.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Points only, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
@@ -1381,7 +1406,7 @@ route(/^\/settings$/, () => {
       ${!standalone ? '<p class="tiny muted" style="margin:0 0 8px">On iPhone: tap Share, then "Add to Home Screen".</p>' : ''}
       <div class="set-row"><div><b>${icon('accessibility')} Reduce motion</b><div class="small muted">Turns off decorative animations.</div></div><label class="toggle"><input type="checkbox" id="rm" ${rm ? 'checked' : ''}><span></span></label></div>
     </div>
-    <div class="card pad about-mini"><img src="/assets/brand/traptech-stacked.webp" alt="Trap Tech Solutions" width="170" height="56"><div><b>The Gaming Hub v3</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
+    <div class="card pad about-mini"><img src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" width="170" height="51"><div><b>The Gaming Hub v3</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
     <div class="card legal-links">${[['/terms', 'file-text', 'Terms of Service'], ['/privacy', 'shield', 'Privacy Policy'], ['/rules', 'scale', 'Official Giveaway Rules'], ['/responsible-play', 'heart-pulse', 'Responsible play']].map(([h, ic, l]) => `<a class="act-row" href="${h}">${icon(ic)}<span class="g">${l}</span>${icon('chevron-right')}</a>`).join('')}</div>
   </div>`);
   document.getElementById('rm').onchange = (e) => { ls.setItem('gh_reduce_motion', e.target.checked ? '1' : '0'); document.documentElement.classList.toggle('reduce-motion', e.target.checked); };

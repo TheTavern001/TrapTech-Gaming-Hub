@@ -862,3 +862,37 @@ a, button, .btn, .chip, .iconbtn, input, select, textarea, label { touch-action:
   .gcard:hover, a.card:hover, a.gcard:hover, a.t-card:hover { transform: none; box-shadow: none; }
   .btn:hover { filter: none; }
 }
+
+/* ---------- v5: sponsor tiers ---------- */
+.who-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+.who-chips .chip { font-size: .74rem; padding: 4px 10px; border-radius: 999px; background: rgba(139,92,246,.14); border: 1px solid rgba(139,92,246,.35); color: #ddd6fe; }
+.pk-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.launch-pill { flex-basis: 100%; display: inline-flex; align-items: center; gap: 5px; width: max-content; font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #052e16; background: linear-gradient(90deg,#4ade80,#22d3ee); padding: 3px 9px; border-radius: 999px; }
+.launch-pill svg { width: 12px; height: 12px; }
+.pk-price s.reg { color: var(--muted, #9aa0c8); font-weight: 700; font-size: 1rem; }
+.pk-dims { margin: 10px 0; display: grid; gap: 7px; }
+.pk-dims .dim { background: rgba(5,8,26,.55); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 7px 10px; }
+.pk-dims dt { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: #a5b4fc; display: flex; align-items: center; gap: 5px; font-weight: 700; }
+.pk-dims dt svg { width: 13px; height: 13px; }
+.pk-dims dd { margin: 2px 0 0; font-size: .86rem; line-height: 1.35; }
+.pk.elite .pk-dims .d-links, .pk.premium .pk-dims .d-links { border-color: rgba(74,222,128,.45); }
+.pk.basic .pk-dims .d-links dd { color: #fca5a5; }
+.pk-more summary { cursor: pointer; font-weight: 700; font-size: .85rem; display: flex; align-items: center; gap: 6px; margin: 4px 0 8px; list-style: none; }
+.pk-more summary::-webkit-details-marker { display: none; }
+.pk-more summary svg { width: 14px; height: 14px; }
+.launch-note { margin: 10px 0 0; }
+.why-links { margin-top: 14px; border-color: rgba(74,222,128,.35); }
+.why-links h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
+.addons { display: grid; gap: 8px; }
+@media (min-width: 760px) { .addons { grid-template-columns: 1fr 1fr; } }
+.addon { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 14px; }
+.addon .ap { font-weight: 800; color: #4ade80; white-space: nowrap; font-size: .9rem; }
+.addon.custom { border-color: rgba(139,92,246,.5); }
+.cmp th small s { opacity: .7; }
+.potato-confirm { display: flex; gap: 12px; align-items: flex-start; text-align: left; background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.4); border-radius: 14px; padding: 12px 14px; margin: 12px 0; }
+.potato-confirm .pc-ic { color: #22d3ee; font-size: 1.6rem; line-height: 1; }
+.potato-confirm .handle { color: #67e8f9; }
+.check.lic { background: rgba(250,204,21,.08); border: 1px solid rgba(250,204,21,.4); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+.check.lic .req { color: #fde047; font-weight: 700; }
+.ad-pick { display: grid; gap: 6px; margin: 6px 0 12px; }
+.ad-pick .check { margin: 0; }

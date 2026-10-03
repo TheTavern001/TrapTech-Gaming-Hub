@@ -21,6 +21,7 @@ function watch(page, tag) {
 async function shot(page, name, full = false, keepAch = false) { await sleep(350); await page.evaluate((k) => { document.querySelectorAll('.toast').forEach(t => t.remove()); if (!k) document.querySelectorAll('.ach-stack').forEach(t => t.remove()); }, keepAch); await page.screenshot({ path: path.join(SHOTS, name + '.png'), fullPage: full }); console.log('   shot', name); }
 const v2 = (page, name, full = false, keepAch = false) => shot(page, 'v2/' + name, full, keepAch);
 const v3 = (page, name, full = false, keepAch = false) => shot(page, 'v3/' + name, full, keepAch);
+const v5 = (page, name, full = false, keepAch = false) => shot(page, 'v5/' + name, full, keepAch);
 const passGate = (ctx) => ctx.addInitScript(() => { try { if (!localStorage.getItem('gh_age_ok')) localStorage.setItem('gh_age_ok', String(Date.now())); } catch {} });
 const noShare = (ctx) => ctx.addInitScript(() => { try { Object.defineProperty(Navigator.prototype, 'share', { value: undefined, configurable: true }); } catch {} });
 // logical game coords -> page coords (for clicking on canvas objects)
@@ -225,30 +226,42 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await m.goto(BASE + '/community'); await m.waitForSelector('.post');
   const hype = m.locator('.post .hype').first(); await hype.click(); await m.waitForFunction(() => document.querySelector('.post .hype').classList.contains('on')); ok(true, 'hype a community post');
 
-  console.log('# host packages / booking with tier');
+  console.log('# v5: sponsor tiers / booking with business type + Potato contact');
   await m.goto(BASE + '/host'); await m.waitForSelector('.pk');
   const prices = await m.locator('.pk .pk-price b').allTextContents();
-  ok(prices.join() === '$49,$149,$399', 'package prices shown (admin-editable)', prices);
-  ok((await m.locator('.pk.basic .pk-f li').count()) >= 5 && (await m.locator('.pk.elite .pk-f li').count()) >= 8 && (await m.locator('.pk-who').count()) === 3, 'each tier lists who-it-is-for + distinct features');
+  ok(prices.join() === '$49,$149,$399', 'launch prices shown (admin-editable)', prices);
+  const regs = await m.locator('.pk .pk-price s.reg').allTextContents();
+  ok(regs.join() === '$79,$229,$599' && (await m.locator('.pk .launch-pill').count()) === 3, 'regular prices struck through next to a "Launch pricing" label', regs);
+  ok((await m.locator('.pk.basic .pk-dims .dim').count()) === 8 && (await m.locator('.pk.elite .pk-dims .dim').count()) === 8, 'every tier spells out the same 8 dimensions in plain words');
+  const lk = await m.locator('.pk-dims .d-links dd').allTextContents();
+  ok(/No outbound link/.test(lk[0]) && /1 outbound link/.test(lk[1]) && /3 placements/.test(lk[2]), 'link promotion differs per tier (none / 1 / 3)', lk);
+  ok((await m.textContent('.host')).includes('upcoming and independent brands') && !/underground/i.test(await m.textContent('.host')), 'copy targets upcoming/independent brands (no "underground")');
+  ok((await m.locator('.addons .addon').count()) >= 6 && (await m.isVisible('.why-links')) && (await m.locator('#multi ~ .howto .card').first().isVisible()), 'add-ons, why-links-are-paid and many-brands sections');
   ok((await m.locator('.cmp tbody tr').count()) >= 10, 'comparison table rendered'); ok((await m.locator('.faq details').count()) >= 5, 'FAQ rendered');
-  await shot(m, 'mobile-13-host'); await v2(m, 'host-packages');
+  await v5(m, 'host-tiers'); await m.evaluate(() => document.querySelector('.pk.premium').scrollIntoView()); await v5(m, 'host-tier-premium');
+  await m.evaluate(() => document.querySelector('.pk.elite').scrollIntoView()); await v5(m, 'host-tier-elite');
+  await m.evaluate(() => document.querySelector('.cmp-wrap').scrollIntoView()); await v5(m, 'host-compare');
+  await m.evaluate(() => document.getElementById('addons').scrollIntoView()); await v5(m, 'host-addons');
+  await m.evaluate(() => document.getElementById('multi').scrollIntoView()); await v5(m, 'host-multi-brand');
   ok((await m.textContent('.tt-build')).includes("Trap Tech Solutions builds your brand's game"), 'host page: Trap Tech builds your branded game');
-  await v3(m, 'm17-host'); await m.evaluate(() => document.querySelector('.tt-build').scrollIntoView({ block: 'center' })); await v3(m, 'm17b-host-traptech');
-  await m.evaluate(() => document.querySelector('.pk.premium').scrollIntoView()); await v2(m, 'host-packages-premium');
-  await m.evaluate(() => document.querySelector('.pk.elite').scrollIntoView()); await v2(m, 'host-packages-elite');
-  await m.evaluate(() => document.querySelector('.cmp-wrap').scrollIntoView()); await v2(m, 'host-compare-table');
-  await m.evaluate(() => document.getElementById('faq').scrollIntoView()); await v2(m, 'host-faq');
-  await m.click('#ht >> text=Custom Event'); ok(await m.isVisible('text=Request a Custom Event'), 'custom event tab');
-  await m.click('#ht >> text=Giveaway Packages'); await m.click('.pk.elite [data-pick=elite]'); await m.waitForSelector('[data-b=brand]');
+  await m.click('.pk.elite [data-pick=elite]'); await m.waitForSelector('[data-b=brand]');
   ok((await m.textContent('#pksel')).includes('Elite') && (await m.textContent('#pksel')).includes('$399'), 'booking form carries the chosen tier (Elite $399)');
   await m.click('#tp [data-t=premium]'); ok((await m.textContent('#pksel')).includes('Premium'), 'tier can be switched in the form'); await m.click('#tp [data-t=elite]');
-  await m.click('#next'); ok(await m.isVisible('.err'), 'booking step 1 validates brand');
-  await m.fill('[data-b=brand]', brand); await m.selectOption('[data-b=event_type]', 'Giveaway'); await m.fill('[data-b=contact]', 'uitest@example.com');
-  await m.evaluate(() => { const e = document.querySelector('.err'); if (e) e.remove(); }); await shot(m, 'mobile-14-booking'); await v2(m, 'booking-with-tier');
-  await m.click('#next'); await m.fill('[data-b=start_date]', '2026-11-01'); await m.fill('[data-b=end_date]', '2026-11-15'); await m.fill('[data-b=details]', 'Headless browser test booking');
-  await m.click('#next'); ok((await m.textContent('main')).includes(brand) && (await m.textContent('[data-rv=package]')).includes('Elite - $399'), 'review step shows summary incl. package + price');
-  await v3(m, 'm18-booking-review');
-  await m.click('#next'); await m.waitForSelector('text=Request Sent!'); ok((await m.textContent('#booked-pkg')).includes('Elite'), 'booking submitted with Elite tier');
+  ok(!(await m.$('#licensed')), 'no license question before a business type is chosen');
+  await m.selectOption('#bt', 'Streamer / content creator'); await sleep(100); ok(!(await m.$('#licensed')), 'streamer: books with no license question');
+  await m.selectOption('#bt', 'Cannabis products seller (dispensary/brand/delivery)'); await m.waitForSelector('#licensed');
+  ok((await m.textContent('.check.lic')).includes('I confirm my business is licensed and legally permitted to operate and advertise in my jurisdiction'), 'cannabis seller: required licensed-business checkbox appears');
+  await m.fill('[data-b=brand]', brand); await m.fill('#b-email', ''); await m.fill('#b-potato', '');
+  await m.click('#next'); ok((await m.textContent('.err')).includes('licensed'), 'cannot continue without confirming the license');
+  await m.check('#licensed'); await m.click('#next'); ok((await m.textContent('.err')).includes('Potato username or an email'), 'needs an email or Potato username');
+  await m.fill('#b-potato', '@uitest_brand');
+  await m.evaluate(() => { const e = document.querySelector('.err'); if (e) e.remove(); }); await v5(m, 'booking-potato-contact');
+  await m.click('#next'); await m.selectOption('[data-b=event_type]', 'Giveaway'); await m.fill('[data-b=start_date]', '2026-11-01'); await m.fill('[data-b=end_date]', '2026-11-15');
+  await m.check('[data-ad=push]'); await m.fill('[data-b=details]', 'Headless browser test booking');
+  await m.click('#next'); ok((await m.textContent('main')).includes(brand) && (await m.textContent('[data-rv=package]')).includes('Elite - $399') && (await m.textContent('[data-rv=add-ons]')).includes('Push') && (await m.textContent('[data-rv=contact]')).includes('@uitest_brand'), 'review shows package, add-on and Potato contact');
+  await m.click('#next'); await m.waitForSelector('#potato-confirm');
+  ok((await m.textContent('#booked-pkg')).includes('Elite') && (await m.textContent('#potato-confirm')).includes('Message us on Potato at @TrapTechSolutions to confirm your booking'), 'confirmation: "Message us on Potato at @<admin handle> to confirm your booking"');
+  await v5(m, 'booking-confirmation');
 
   console.log('# community');
   await m.click('.bottomnav >> text=Community'); await m.waitForSelector('.post'); await shot(m, 'mobile-15-community'); await v3(m, 'm19-community');

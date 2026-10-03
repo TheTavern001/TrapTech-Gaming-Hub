@@ -1,73 +1,126 @@
 'use strict';
-// Hosting packages shown on /host. These are the DEFAULTS; the admin edits the live copy in
-// Admin > Settings > Hosting packages (stored as JSON in the settings table, key "packages").
-// Prices are placeholders - change them in the admin.
+// Sponsor packages shown on /host. These are the DEFAULTS; the admin edits the live copy in
+// Admin > Settings > Sponsor packages (stored as JSON in the settings table, key "packages").
+// v5: every tier differs on the same 8 dimensions (exposure, reach, duration, branding, links, winners, analytics,
+// winner handling); launch prices are shown with a "Launch pricing" label next to an admin-editable regular price.
 const db = require('./db');
+const VERSION = 5;
 
 const DEFAULT_PACKAGES = {
+  version: VERSION,
+  launch_label: 'Launch pricing',
+  launch_note: 'Launch prices are for the first sponsors on the hub and lock in for your first campaign. Regular prices apply after launch.',
+  potato_handle: 'TrapTechSolutions',
   tiers: [
-    { id: 'basic', name: 'Basic', tagline: 'Launch your first giveaway', price: '$49', price_note: 'per giveaway', badge: '',
-      who: 'Streamers, small shops and first-time hosts who want a simple, hands-off giveaway.',
-      features: ['1 giveaway on 1 existing game of your choice', 'Runs for up to 7 days', 'Standard listing on the Giveaways page',
-        'Your brand name + prize image on the giveaway card', 'Winner drawn at random from all entrants', 'Entrant CSV export when it ends'] },
-    { id: 'premium', name: 'Premium', tagline: 'Featured campaign with real numbers', price: '$149', price_note: 'per campaign', badge: 'Most popular',
-      who: 'Brands and growing channels that want home-page visibility, entry rules and live stats.',
-      features: ['Up to 3 giveaways, or 1 giveaway running up to 14 days', 'Choose any games - one giveaway can count several games',
-        'Your logo + brand colors themed into the giveaway card and game page', 'Featured slot on the home page', 'Pinned community announcement at launch',
-        'Entry rules: set a minimum score to qualify', 'Live campaign stats: plays, unique players, entrants', 'Winners by top-N score + random draws', 'Everything in Basic'] },
-    { id: 'elite', name: 'Elite', tagline: 'Full 30-day brand takeover', price: '$399', price_note: 'per 30-day campaign', badge: 'Maximum reach',
-      who: 'Brands running a major launch or a month-long community push that want maximum exposure.',
-      features: ['30-day campaign across any games', 'Custom branded game skin: your logo on obstacles and background, branded coins',
-        'Home page hero banner takeover', 'Multiple prize tiers: 1st / 2nd / 3rd + random winners', 'Custom achievement + badge for your brand',
-        'Recurring weekly leaderboards with weekly winners', 'Priority support from the Trap Tech team', 'Post-campaign report: plays, players, entrants, winners', 'Everything in Premium'] },
+    { id: 'basic', name: 'Basic', tagline: 'Starter: launch your brand with a first giveaway', price: '$49', regular_price: '$79', price_note: '7-day giveaway', duration: '7 days', badge: 'Starter friendly',
+      who: 'New and independent brands, streamers, shops and artists trying the hub for the first time. Lowest cost, zero setup work on your side.',
+      dims: {
+        exposure: 'Listed on the Giveaways page only',
+        reach: 'Players who open the Giveaways tab + one line in the activity feed at launch',
+        duration: '7 days',
+        branding: 'Your brand name + prize photo on the giveaway card',
+        links: 'No outbound link - brand name only (add a link for +$39)',
+        winners: '1 winner',
+        analytics: 'Entrant count + entrant CSV when it ends',
+        winner_contact: 'Trap Tech contacts the winner on Potato and confirms delivery with you',
+      },
+      features: ['1 giveaway on 1 game of your choice', 'Listed on the Giveaways page for 7 days', 'Brand name + prize photo on the card', 'Your own brand channel page (name only)', '1 winner, picked by the published rules', 'Winner contacted on Potato by Trap Tech', 'Entrant CSV when it ends'] },
+    { id: 'premium', name: 'Premium', tagline: 'Get featured: home page + your link', price: '$149', regular_price: '$229', price_note: '14-day campaign', duration: '14 days', badge: 'Most popular',
+      who: 'Growing brands and channels that want to be seen on the home page and send players to their own website or Potato channel.',
+      dims: {
+        exposure: 'Giveaways page + Featured row on the Home page',
+        reach: 'Every player who opens the hub sees the Featured row; your channel followers get an in-app alert at launch',
+        duration: '14 days',
+        branding: 'Logo + brand colors on the card, giveaway page and your channel page',
+        links: '1 outbound link (website or Potato channel) on the giveaway page',
+        winners: 'Up to 3 winners / prize tiers',
+        analytics: 'Live stats: plays, unique players, entrants, link clicks',
+        winner_contact: 'Trap Tech contacts and verifies winners on Potato',
+      },
+      features: ['Up to 3 giveaways inside 14 days, any games (multi-game OK)', 'Featured row on the Home page', '1 outbound link on the giveaway page (website or Potato channel)', 'Logo + brand colors on card, giveaway and channel page', 'In-app alert to your channel followers at launch', 'Entry rules: minimum score / activity', 'Up to 3 winners or prize tiers', 'Live stats incl. link clicks', 'Everything in Basic'] },
+    { id: 'elite', name: 'Elite', tagline: 'Brand takeover: hero banner, push alert, links everywhere', price: '$399', regular_price: '$599', price_note: '30-day takeover', duration: '30 days', badge: 'Maximum reach',
+      who: 'Brands with a launch, a new product line or a month-long push that want the top of the hub and the most clicks to their channel.',
+      dims: {
+        exposure: 'Hero takeover at the top of Home + Featured row + Giveaways page (only one Elite hero runs at a time)',
+        reach: 'Hero banner seen by every visitor, a push/in-app alert to all players who opted in at launch and a reminder in the final week',
+        duration: '30 days (or 14 days at $249 launch / $369 regular)',
+        branding: 'Branded game skin (logo on obstacles/background, branded coins) + channel page header',
+        links: 'Links on the giveaway page, the game page and the launch announcement (3 placements)',
+        winners: 'Up to 10 winners: 1st/2nd/3rd prize tiers + random draws + weekly leaderboard winners',
+        analytics: 'Live stats + post-campaign report (reach, plays, entrants, link clicks by placement)',
+        winner_contact: 'Trap Tech contacts, verifies and coordinates delivery for every winner on Potato',
+      },
+      features: ['30-day campaign across any games (14-day option available)', 'Hero banner takeover on Home (exclusive while it runs)', 'Push / in-app alert to all opted-in players at launch + final-week reminder', 'Links on giveaway page, game page and announcement', 'Branded game skin + custom brand badge', 'Up to 10 winners incl. prize tiers and weekly winners', 'Post-campaign report with link clicks by placement', 'Priority support from the Trap Tech team', 'Everything in Premium'] },
   ],
   compare: [
-    ['Giveaways included', '1', 'Up to 3', 'Up to 5'],
-    ['Campaign length', 'Up to 7 days', 'Up to 14 days', '30 days'],
-    ['Games', '1 existing game', 'Any games, multi-game', 'Any games + branded skin'],
-    ['Branding', 'Name + prize image', 'Logo + brand colors', 'Branded game skin + hero takeover'],
-    ['Home page placement', '-', 'Featured slot', 'Hero banner takeover'],
-    ['Community announcement', '-', 'Pinned at launch', 'Pinned + weekly updates'],
-    ['Entry rules', 'Play to enter', 'Minimum score', 'Minimum score'],
-    ['Live campaign stats', '-', 'yes', 'yes'],
-    ['Winner selection', 'Random draw', 'Top-N + random', 'Prize tiers 1st/2nd/3rd + random'],
-    ['Weekly leaderboards', '-', '-', 'yes'],
-    ['Custom achievement / badge', '-', '-', 'yes'],
-    ['Support', 'Standard', 'Standard', 'Priority'],
-    ['Reporting', 'Entrant CSV', 'CSV + live stats', 'Full post-campaign report'],
+    ['Where you are shown', 'Giveaways page', 'Giveaways + Home Featured row', 'Home hero takeover + Featured + Giveaways'],
+    ['How players find you', 'Giveaways tab + activity feed', '+ every Home visit, alert to your followers', '+ push/in-app alert to all opted-in players'],
+    ['Duration', '7 days', '14 days', '30 days (14-day option)'],
+    ['Branding', 'Name + prize photo', 'Logo + brand colors', 'Branded game skin + channel header'],
+    ['Outbound links (website / Potato channel)', '- (add-on)', '1 link: giveaway page', '3 links: giveaway + game page + announcement'],
+    ['Brand channel page', 'Name only', 'Logo, colors, link', 'Full header, pinned giveaway, links'],
+    ['Winners / prize tiers', '1', 'Up to 3', 'Up to 10 + weekly winners'],
+    ['Entry rules (anti-camping)', 'Default rules', 'Custom activity / min score', 'Custom + followers-only option'],
+    ['Analytics', 'Entrant CSV', 'Live stats + link clicks', 'Live stats + full report'],
+    ['Winner contact on Potato', 'yes', 'yes', 'yes + delivery coordination'],
+    ['Price per day (launch)', '$7', '$10.64', '$13.30'],
+  ],
+  addons: [
+    { id: 'extra-week', name: 'Extra week', price: '$25 / $59 / $99', desc: 'Add 7 days to any tier (Basic / Premium / Elite).' },
+    { id: 'extra-link', name: 'Extra outbound link', price: '$39', desc: 'Basic: unlock 1 link on your giveaway page. Premium: add a link on the game page.' },
+    { id: 'push', name: 'Push notification blast', price: '$79', desc: 'One push / in-app alert to every player who opted in. Max one blast per day across all brands.' },
+    { id: 'extra-winners', name: 'Extra winners', price: '$15 per winner', desc: 'More winners or prize tiers beyond your tier\'s limit.' },
+    { id: 'featured-week', name: 'Featured row week', price: '$49 / week', desc: 'Put a Basic giveaway in the Home Featured row.' },
+    { id: 'game-skin', name: 'Branded game skin', price: '$249', desc: 'Your logo and colors inside a game (included in Elite).' },
+  ],
+  why_links: 'Outbound links are a paid feature because they send players off the hub to your website or Potato channel - that click is the most valuable thing we sell. Basic stays cheap by showing your name only; Premium adds one link; Elite puts links in three places.',
+  multi_brand: [
+    ['Every brand gets its own channel', 'Each sponsor has a channel page with its giveaways. Players follow the channels they like and can filter to them.'],
+    ['Placements rotate fairly', 'Only one Elite hero takeover runs at a time (booked by date). Premium and Elite share the Home Featured row in rotation, so no brand buries another.'],
+    ['Players choose, not camp', 'Players can be entered in a limited number of giveaways at once and must pick which ones. Wins have cooldowns and a one-win-per-brand-per-month limit. Your entrants actually played and chose you.'],
+    ['Alerts are capped', 'At most one push blast per day across all brands, so your alert isn\'t lost in a flood.'],
   ],
   faq: [
-    ['How do players enter a giveaway?', 'Players sign in and finish a run of any game linked to the giveaway while it is open. Every finished run inside the window counts as an entry. No purchase is necessary and nothing can be bought in any game.'],
-    ['How are winners picked?', 'The admin draws winners on the giveaway\'s Manage page: a random draw (uniform among all entrants), the top N scores, or both for prize tiers. Winners appear on the giveaway page, in the Community feed and on their profile.'],
-    ['Can one giveaway count several games?', 'Yes, on Premium and Elite. A player\'s giveaway score is the sum of their best score in each linked game during the window, so playing more of the linked games helps.'],
-    ['How do you stop cheating?', 'Every scored run needs a signed, single-use run token from the server, scores are checked against per-game limits for the time actually played, and starts/submissions are rate-limited. Admins can review the top entrants, ban accounts and export every run before prizes go out.'],
-    ['Are the casino-style games gambling?', 'No. Plinko, Spin to Win and Blazed Roulette use free points only. There is no real money, no purchase and no cash value; your points just rank you on the leaderboard.'],
-    ['What do I need to provide?', 'The prize, your dates, the rules (age limits, regions) and your brand name and prize image. Premium and Elite also use your logo and brand colors. You are responsible for delivering the prize and following giveaway laws where you run it.'],
-    ['When do I pay?', 'Not now. Sending a booking request is free. The Trap Tech team reviews it, confirms details and sends a quote before anything goes live. Prices shown are starting prices and can change for custom needs.'],
+    ['Who can sponsor?', 'Any legitimate business or creator: streamers, gaming channels, apparel brands, glass and smoke-gear shops, artists, shops and licensed cannabis brands, dispensaries and delivery services. Cannabis product sellers confirm they are licensed and legally permitted to advertise in their jurisdiction. Every sponsor must follow the laws that apply to them.'],
+    ['How do players enter a giveaway?', 'Players sign in and finish a run of a linked game while the giveaway is open. No purchase is necessary and nothing can be bought in any game. Each giveaway shows its eligibility rules and each player\'s status.'],
+    ['How are winners picked and contacted?', 'By the published rules: best score with fixed tiebreakers, or a verifiable random draw. Results lock automatically at the end time. Trap Tech verifies winners and contacts them on Potato.'],
+    ['How do you stop giveaway camping and cheating?', 'Eligibility rules (recent activity, account age, max simultaneous entries, win cooldowns), seeded runs with server checks, and admin review of top entrants before any prize goes out.'],
+    ['Are the casino-style games gambling?', 'No. Plinko, Spin to Win and Blazed Roulette use free points only. No real money, no purchase, no cash value.'],
+    ['What do I need to provide?', 'The prize, your dates, rules (age, regions), your brand name and prize photo. Premium and Elite also use your logo, colors and link. You deliver the prize and follow giveaway and advertising laws where you run it.'],
+    ['When do I pay?', 'Not now. A booking request is free. We confirm details and a quote with you on Potato before anything goes live.'],
   ],
 };
 
 function getPackages() {
   const row = db.prepare("SELECT value FROM settings WHERE key='packages'").get();
   if (!row) return JSON.parse(JSON.stringify(DEFAULT_PACKAGES));
-  try { const v = JSON.parse(row.value); if (v && Array.isArray(v.tiers) && v.tiers.length) return v; } catch {}
-  return JSON.parse(JSON.stringify(DEFAULT_PACKAGES));
+  try { const v = JSON.parse(row.value); if (v && v.version === VERSION && Array.isArray(v.tiers) && v.tiers.length) return v; } catch {}
+  return JSON.parse(JSON.stringify(DEFAULT_PACKAGES)); // pre-v5 saved copies are ignored (different structure)
 }
 const s = (v, n) => String(v ?? '').trim().slice(0, n);
+const DIMS = ['exposure', 'reach', 'duration', 'branding', 'links', 'winners', 'analytics', 'winner_contact'];
 function sanitize(input) {
   const base = getPackages();
-  const tiers = (Array.isArray(input?.tiers) ? input.tiers : []).slice(0, 3).map((t, i) => ({
-    id: base.tiers[i]?.id || ['basic', 'premium', 'elite'][i],
-    name: s(t.name, 40) || base.tiers[i]?.name, tagline: s(t.tagline, 120), price: s(t.price, 30), price_note: s(t.price_note, 60), badge: s(t.badge, 30),
-    who: s(t.who, 300), features: (Array.isArray(t.features) ? t.features : String(t.features || '').split('\n')).map(f => s(f, 200)).filter(Boolean).slice(0, 20),
-  }));
+  const tiers = (Array.isArray(input?.tiers) ? input.tiers : []).slice(0, 3).map((t, i) => {
+    const b = base.tiers[i] || DEFAULT_PACKAGES.tiers[i];
+    const dims = {}; for (const k of DIMS) dims[k] = s(t.dims?.[k] ?? b.dims[k], 240);
+    return { id: b.id, name: s(t.name, 40) || b.name, tagline: s(t.tagline, 120), price: s(t.price, 30), regular_price: s(t.regular_price ?? b.regular_price, 30), price_note: s(t.price_note, 60),
+      duration: s(t.duration ?? b.duration, 40), badge: s(t.badge, 30), who: s(t.who, 300), dims,
+      features: (Array.isArray(t.features) ? t.features : String(t.features || '').split('\n')).map(f => s(f, 200)).filter(Boolean).slice(0, 20) };
+  });
   if (tiers.length !== 3) return [null, 'Exactly 3 tiers are required.'];
-  const compare = (Array.isArray(input.compare) ? input.compare : []).map(r => [0, 1, 2, 3].map(k => s(r[k], 120))).filter(r => r[0]).slice(0, 30);
-  const faq = (Array.isArray(input.faq) ? input.faq : []).map(r => [s(r[0], 200), s(r[1], 1200)]).filter(r => r[0] && r[1]).slice(0, 20);
-  return [{ tiers, compare, faq }, null];
+  const compare = (Array.isArray(input.compare) ? input.compare : base.compare).map(r => [0, 1, 2, 3].map(k => s(r[k], 120))).filter(r => r[0]).slice(0, 30);
+  const faq = (Array.isArray(input.faq) ? input.faq : base.faq).map(r => [s(r[0], 200), s(r[1], 1200)]).filter(r => r[0] && r[1]).slice(0, 20);
+  const addons = (Array.isArray(input.addons) ? input.addons : base.addons).map((a, i) => ({ id: s(a.id, 40) || 'addon-' + (i + 1), name: s(a.name, 60), price: s(a.price, 40), desc: s(a.desc, 240) })).filter(a => a.name).slice(0, 12);
+  const multi_brand = (Array.isArray(input.multi_brand) ? input.multi_brand : base.multi_brand).map(r => [s(r[0], 120), s(r[1], 600)]).filter(r => r[0] && r[1]).slice(0, 8);
+  const handle = s(input.potato_handle ?? base.potato_handle, 40).replace(/^@/, '').replace(/[^A-Za-z0-9_]/g, '');
+  return [{ version: VERSION, launch_label: s(input.launch_label ?? base.launch_label, 40), launch_note: s(input.launch_note ?? base.launch_note, 300), potato_handle: handle || DEFAULT_PACKAGES.potato_handle,
+    why_links: s(input.why_links ?? base.why_links, 600), tiers, compare, addons, multi_brand, faq }, null];
 }
 function savePackages(v) {
   db.prepare("INSERT INTO settings (key,value,updated_at) VALUES ('packages',?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at").run(JSON.stringify(v), Date.now());
 }
 function resetPackages() { db.prepare("DELETE FROM settings WHERE key='packages'").run(); }
-module.exports = { DEFAULT_PACKAGES, getPackages, sanitize, savePackages, resetPackages };
+const BUSINESS_TYPES = ['Cannabis products seller (dispensary/brand/delivery)', 'Streamer / content creator', 'Gaming channel / esports', 'Apparel / streetwear brand', 'Glass / smoke-gear shop', 'Artist / musician', 'Online shop / e-commerce', 'Local business', 'Other business'];
+const CANNABIS_TYPE = BUSINESS_TYPES[0];
+module.exports = { DEFAULT_PACKAGES, getPackages, sanitize, savePackages, resetPackages, DIMS, BUSINESS_TYPES, CANNABIS_TYPE };

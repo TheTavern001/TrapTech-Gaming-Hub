@@ -23,10 +23,10 @@ const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Game
 function frame(section, title, inner, actions = '') {
   document.title = `${title.replace(/<[^>]+>/g, '')} - Admin - The Gaming Hub by Trap Tech Solutions`;
   root.innerHTML = `<div class="adm">
-    <aside class="side" aria-label="Admin navigation"><div class="brand"><img src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub"><b>Admin Dashboard</b></div>
+    <aside class="side" aria-label="Admin navigation"><div class="brand"><img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub"><b>Admin Dashboard</b></div>
       ${NAV.map(([k, i, l]) => `<a href="/admin${k ? '/' + k : ''}" class="${section === k ? 'on' : ''}">${icon(i)}${l}</a>`).join('')}
       <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a>
-      <div class="side-tt"><span>Powered by</span><img src="/assets/brand/traptech.webp" alt="Trap Tech Solutions"></div></aside>
+      <div class="side-tt"><span>Powered by</span><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions"></div></aside>
     <main class="amain"><div class="tt-bar">${icon('zap')} Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v4</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
 }
 document.addEventListener('click', async (e) => {
@@ -38,7 +38,7 @@ window.addEventListener('popstate', render);
 const nav = (p) => { history.pushState({}, '', p); render(); };
 
 function loginView() {
-  root.innerHTML = `<div class="card login glow-purple"><img src="/assets/brand/logo-horizontal.webp" alt="" style="width:220px;margin:0 auto 10px"><h1 class="center">Admin Login</h1><p class="center small muted" style="margin:-4px 0 14px">Powered by Trap Tech Solutions</p>
+  root.innerHTML = `<div class="card login glow-purple"><img src="/assets/brand/hub-logo.svg" alt="" style="width:220px;margin:0 auto 10px"><h1 class="center">Admin Login</h1><p class="center small muted" style="margin:-4px 0 14px">Powered by Trap Tech Solutions</p>
     <form id="lf"><div id="m"></div><div class="field ic">${icon('lock')}<input class="input" type="password" id="pw" placeholder="Admin password" autocomplete="current-password" autofocus></div><button class="btn block">Log in</button></form></div>`;
   $('#lf').addEventListener('submit', async (e) => {
     e.preventDefault(); const r = await api('/api/admin/login', { method: 'POST', body: { password: $('#pw').value } });
@@ -366,15 +366,21 @@ async function reports() {
 async function settings() {
   const [s, pk, ac] = await Promise.all([api('/api/admin/stats'), api('/api/admin/packages'), api('/api/admin/achievements')]);
   frame('settings', 'Settings', `
-    <div class="card pad" id="pkg-editor"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="flex:1">${icon('briefcase')} Hosting packages <span class="muted small">(shown on /host)</span></h2><a class="btn ghost sm" href="/host" target="_blank">${icon('external-link')} View page</a></div>
+    <div class="card pad" id="pkg-editor"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="flex:1">${icon('briefcase')} Sponsor packages <span class="muted small">(shown on /host)</span></h2><a class="btn ghost sm" href="/host" target="_blank">${icon('external-link')} View page</a></div>
       <p class="muted small">Edit prices, names and features for each tier. Prices are placeholders - set your real prices here. Changes are live as soon as you save.</p>
       <div id="pkm"></div>
       <div class="pk-ed">${pk.tiers.map((t, i) => `<div class="card pad pk-t" data-i="${i}"><h3 class="orb" style="margin:0 0 10px;text-transform:uppercase">${esc(t.id)}</h3>
-        <div class="form-grid"><div class="field"><label class="lbl">Name</label><input class="input" data-f="name" value="${esc(t.name)}"></div><div class="field"><label class="lbl">Price</label><input class="input" data-f="price" value="${esc(t.price)}" placeholder="$49"></div>
+        <div class="form-grid"><div class="field"><label class="lbl">Name</label><input class="input" data-f="name" value="${esc(t.name)}"></div><div class="field"><label class="lbl">Launch price</label><input class="input" data-f="price" value="${esc(t.price)}" placeholder="$49"></div><div class="field"><label class="lbl">Regular price <span class="muted small">(shown struck through)</span></label><input class="input" data-f="regular_price" value="${esc(t.regular_price || '')}" placeholder="$79"></div><div class="field"><label class="lbl">Duration</label><input class="input" data-f="duration" value="${esc(t.duration || '')}" placeholder="7 days"></div>
         <div class="field"><label class="lbl">Price note</label><input class="input" data-f="price_note" value="${esc(t.price_note)}" placeholder="per giveaway"></div><div class="field"><label class="lbl">Badge</label><input class="input" data-f="badge" value="${esc(t.badge)}" placeholder="Most popular"></div>
         <div class="field full"><label class="lbl">Tagline</label><input class="input" data-f="tagline" value="${esc(t.tagline)}"></div>
         <div class="field full"><label class="lbl">Who it's for</label><input class="input" data-f="who" value="${esc(t.who)}"></div>
+        ${['exposure', 'reach', 'duration', 'branding', 'links', 'winners', 'analytics', 'winner_contact'].map(k => `<div class="field full"><label class="lbl">${k.replace('_', ' ')}</label><input class="input" data-dim="${k}" value="${esc((t.dims || {})[k] || '')}"></div>`).join('')}
         <div class="field full"><label class="lbl">Features (one per line)</label><textarea class="input" data-f="features" style="min-height:150px">${esc(t.features.join('\n'))}</textarea></div></div></div>`).join('')}</div>
+      <div class="form-grid"><div class="field"><label class="lbl">Launch label</label><input class="input" id="pk-ll" value="${esc(pk.launch_label || '')}" placeholder="Launch pricing"></div><div class="field"><label class="lbl">Admin Potato handle <span class="muted small">(booking confirmation: "Message us on Potato at @...")</span></label><input class="input" id="pk-ph" value="${esc(pk.potato_handle || '')}" placeholder="TrapTechSolutions"></div>
+        <div class="field full"><label class="lbl">Launch note</label><input class="input" id="pk-ln" value="${esc(pk.launch_note || '')}"></div>
+        <div class="field full"><label class="lbl">Why links are paid</label><textarea class="input" id="pk-wl">${esc(pk.why_links || '')}</textarea></div></div>
+      <div class="field"><label class="lbl">Add-ons <span class="muted small">(one per line: id | Name | Price | Description)</span></label><textarea class="input" id="pk-ad" style="min-height:140px;font-size:.8rem">${esc((pk.addons || []).map(a => [a.id, a.name, a.price, a.desc].join(' | ')).join('\n'))}</textarea></div>
+      <div class="field"><label class="lbl">Many brands at once <span class="muted small">(one per line: Title | Text)</span></label><textarea class="input" id="pk-mb" style="min-height:120px;font-size:.8rem">${esc((pk.multi_brand || []).map(r => r.join(' | ')).join('\n'))}</textarea></div>
       <div class="field"><label class="lbl">Comparison table <span class="muted small">(one row per line: Label | Basic | Premium | Elite; use "yes" or "-" for check / cross)</span></label><textarea class="input" id="pk-cmp" style="min-height:220px;font-family:monospace;font-size:.8rem">${esc(pk.compare.map(r => r.join(' | ')).join('\n'))}</textarea></div>
       <div class="field"><label class="lbl">FAQ <span class="muted small">(one per line: Question | Answer)</span></label><textarea class="input" id="pk-faq" style="min-height:180px;font-size:.8rem">${esc(pk.faq.map(r => r.join(' | ')).join('\n'))}</textarea></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="pk-save">${icon('check')} Save packages</button><button class="btn ghost" id="pk-reset">${icon('rotate-ccw')} Reset to defaults</button></div></div>
@@ -387,10 +393,12 @@ async function settings() {
   $('#wipe').onclick = async () => { if (!confirm('Delete all demo data? Real players and giveaways are not touched.')) return; const r = await api('/api/admin/demo/wipe', { method: 'POST' }); toast(`Removed ${r.players} demo players, ${r.giveaways} giveaways`); settings(); };
   $('#seed').onclick = async () => { const r = await api('/api/admin/demo/seed', { method: 'POST' }); toast(r.seeded ? 'Demo data loaded' : r.note); settings(); };
   $('#pk-save').onclick = async () => {
-    const tiers = [...document.querySelectorAll('.pk-t')].map(el => { const o = {}; el.querySelectorAll('[data-f]').forEach(i => { o[i.dataset.f] = i.dataset.f === 'features' ? i.value.split('\n').map(x => x.trim()).filter(Boolean) : i.value; }); return o; });
+    const tiers = [...document.querySelectorAll('.pk-t')].map(el => { const o = { dims: {} }; el.querySelectorAll('[data-f]').forEach(i => { o[i.dataset.f] = i.dataset.f === 'features' ? i.value.split('\n').map(x => x.trim()).filter(Boolean) : i.value; }); el.querySelectorAll('[data-dim]').forEach(i => { o.dims[i.dataset.dim] = i.value; }); return o; });
     const split = (v) => v.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.split('|').map(x => x.trim()));
     const faq = $('#pk-faq').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf('|'); return i < 0 ? [l, ''] : [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
-    const r = await api('/api/admin/packages', { method: 'PUT', body: { tiers, compare: split($('#pk-cmp').value), faq } });
+    const addons = split($('#pk-ad').value).map(([id, name, price, desc]) => ({ id, name, price, desc }));
+    const multi_brand = $('#pk-mb').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf('|'); return i < 0 ? [l, ''] : [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
+    const r = await api('/api/admin/packages', { method: 'PUT', body: { tiers, compare: split($('#pk-cmp').value), faq, addons, multi_brand, launch_label: $('#pk-ll').value, launch_note: $('#pk-ln').value, potato_handle: $('#pk-ph').value, why_links: $('#pk-wl').value } });
     $('#pkm').innerHTML = r.ok ? '<div class="ok-msg">Packages saved - live on /host.</div>' : `<div class="err">${esc(r.error)}</div>`; if (r.ok) toast('Packages saved');
   };
   $('#pk-reset').onclick = async () => { if (!confirm('Reset all package names, prices, features, comparison and FAQ to the defaults?')) return; await api('/api/admin/packages/reset', { method: 'POST' }); toast('Packages reset'); settings(); };

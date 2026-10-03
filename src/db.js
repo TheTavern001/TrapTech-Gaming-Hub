@@ -208,6 +208,12 @@ addCol('users', 'eq_frame', "TEXT NOT NULL DEFAULT ''");
 addCol('users', 'eq_title', "TEXT NOT NULL DEFAULT ''");
 addCol('users', 'eq_badge', "TEXT NOT NULL DEFAULT ''");
 addCol('bookings', 'package_snapshot', "TEXT NOT NULL DEFAULT ''");
+// v5 booking: business type, email and/or Potato username, licensed-business confirmation (cannabis sellers only), add-ons
+addCol('bookings', 'business_type', "TEXT NOT NULL DEFAULT ''");
+addCol('bookings', 'email', "TEXT NOT NULL DEFAULT ''");
+addCol('bookings', 'potato', "TEXT NOT NULL DEFAULT ''");
+addCol('bookings', 'licensed_confirmed', 'INTEGER NOT NULL DEFAULT 0');
+addCol('bookings', 'addons', "TEXT NOT NULL DEFAULT ''");
 // v3
 addCol('users', 'ref_code', "TEXT");
 addCol('users', 'referred_by', 'INTEGER');
@@ -270,6 +276,132 @@ CREATE TABLE IF NOT EXISTS giveaway_audit (
 );
 CREATE INDEX IF NOT EXISTS idx_gaudit ON giveaway_audit(giveaway_id, id);
 `);
+// ---------- v5 ----------
+db.exec(`
+CREATE TABLE IF NOT EXISTS channels (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  tagline TEXT NOT NULL DEFAULT '',
+  logo TEXT NOT NULL DEFAULT '',
+  color TEXT NOT NULL DEFAULT '',
+  link_url TEXT NOT NULL DEFAULT '',
+  link_label TEXT NOT NULL DEFAULT '',
+  tier TEXT NOT NULL DEFAULT 'basic',
+  business_type TEXT NOT NULL DEFAULT '',
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  is_demo INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS channel_follows (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  channel_id INTEGER NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, channel_id)
+);
+CREATE TABLE IF NOT EXISTS giveaway_entries (
+  giveaway_id INTEGER NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at INTEGER NOT NULL,
+  left_at INTEGER,
+  PRIMARY KEY (giveaway_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_gentries_user ON giveaway_entries(user_id, left_at);
+CREATE TABLE IF NOT EXISTS link_clicks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT NOT NULL,
+  ref_id INTEGER NOT NULL,
+  placement TEXT NOT NULL DEFAULT '',
+  user_id INTEGER,
+  ip_hash TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_clicks ON link_clicks(kind, ref_id);
+CREATE TABLE IF NOT EXISTS points_ledger (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount INTEGER NOT NULL,
+  reason TEXT NOT NULL,
+  ref TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  UNIQUE(user_id, reason, ref)
+);
+CREATE INDEX IF NOT EXISTS idx_points_user ON points_ledger(user_id);
+CREATE TABLE IF NOT EXISTS user_items (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  item_id TEXT NOT NULL,
+  price INTEGER NOT NULL DEFAULT 0,
+  acquired_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, item_id)
+);
+CREATE TABLE IF NOT EXISTS badge_grants (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  badge_id TEXT NOT NULL,
+  granted_by TEXT NOT NULL DEFAULT 'admin',
+  note TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, badge_id)
+);
+CREATE TABLE IF NOT EXISTS badge_audit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  username TEXT NOT NULL DEFAULT '',
+  badge_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  actor TEXT NOT NULL DEFAULT 'admin',
+  note TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS challenges (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_user INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  to_user INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  game_id TEXT NOT NULL,
+  target_score INTEGER NOT NULL,
+  from_run_id INTEGER,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at INTEGER NOT NULL,
+  responded_at INTEGER,
+  expires_at INTEGER NOT NULL,
+  result_run_id INTEGER,
+  result_score INTEGER,
+  winner_id INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_chal_to ON challenges(to_user, status);
+CREATE INDEX IF NOT EXISTS idx_chal_from ON challenges(from_user, status);
+CREATE TABLE IF NOT EXISTS run_flags (
+  run_id INTEGER PRIMARY KEY REFERENCES runs(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL,
+  game_id TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  reasons TEXT NOT NULL,
+  severity INTEGER NOT NULL DEFAULT 1,
+  status TEXT NOT NULL DEFAULT 'open',
+  created_at INTEGER NOT NULL,
+  reviewed_by TEXT,
+  reviewed_at INTEGER,
+  note TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_flags_status ON run_flags(status, created_at);
+`);
+addCol('giveaways', 'channel_id', 'INTEGER');
+addCol('giveaways', 'require_join', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'elig_min_runs7', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'elig_min_xp7', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'elig_account_age_days', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'elig_max_active', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'elig_win_cooldown_days', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'elig_brand_month', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'elig_followers_only', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'weight_mode', "TEXT NOT NULL DEFAULT ''");
+addCol('giveaways', 'link_url', "TEXT NOT NULL DEFAULT ''");
+addCol('giveaways', 'link_label', "TEXT NOT NULL DEFAULT ''");
+addCol('users', 'potato', "TEXT NOT NULL DEFAULT ''");
+addCol('users', 'eq_color', "TEXT NOT NULL DEFAULT ''");
+addCol('users', 'eq_effect', "TEXT NOT NULL DEFAULT ''");
+addCol('runs', 'seed', "TEXT NOT NULL DEFAULT ''");
+addCol('runs', 'verify', "TEXT NOT NULL DEFAULT ''");
+addCol('giveaway_results', 'weight', 'INTEGER');
 // every pre-v2 giveaway keeps its single linked game
 db.exec('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) SELECT id, game_id FROM giveaways');
 

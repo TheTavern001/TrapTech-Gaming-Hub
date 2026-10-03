@@ -32,7 +32,8 @@ function liveStandings(g) {
   const games = gamesOf(g.id); if (!games.length) return [];
   const sig = db.prepare(`SELECT MAX(id) AS m, COUNT(*) AS c FROM runs`).get();
   const dq = db.prepare('SELECT COUNT(*) AS c, MAX(created_at) AS m FROM giveaway_dq WHERE giveaway_id=?').get(g.id);
-  const key = `${g.id}:${g.updated_at}:${sig.m}:${sig.c}:${dq.c}:${dq.m}:${games.join()}`;
+  const en = db.prepare('SELECT COUNT(*) AS c, MAX(joined_at) AS j, MAX(left_at) AS l FROM giveaway_entries WHERE giveaway_id=?').get(g.id);
+  const key = `${g.id}:${g.updated_at}:${sig.m}:${sig.c}:${dq.c}:${dq.m}:${games.join()}:${en.c}:${en.j}:${en.l}`;
   const hit = cache.get(g.id); if (hit && hit.key === key && now() - hit.at < 5000) return hit.rows;
   const ph = games.map(() => '?').join(',');
   const rows = db.prepare(`
@@ -47,8 +48,9 @@ function liveStandings(g) {
     SELECT ${U}, bb.tot AS score, bb.created_at AS reached_at, bb.id AS best_run_id, att.attempts
     FROM bb JOIN att ON att.user_id = bb.user_id JOIN users u ON u.id = bb.user_id
     WHERE bb.rl = 1 AND u.banned = 0 AND NOT EXISTS (SELECT 1 FROM giveaway_dq d WHERE d.giveaway_id = @gid AND d.user_id = bb.user_id)
+    ${g.require_join ? 'AND EXISTS (SELECT 1 FROM giveaway_entries e WHERE e.giveaway_id = @gid AND e.user_id = bb.user_id AND e.left_at IS NULL)' : ''}
     ORDER BY score DESC, reached_at ASC, att.attempts ASC, best_run_id ASC`).all(...games, { s: g.start_at, e: g.end_at, min: g.min_score || 0, gid: g.id });
-  tag(rows);
+  tag(rows); rows.forEach(r => { r.weight = E().weightOf(g, r.attempts); });
   cache.set(g.id, { key, rows, at: now() });
   return rows;
 }
@@ -81,7 +83,11 @@ function ensureCommit(g) {
   audit(g.id, 'system', 'seed_committed', null, { draw_commit: out.draw_commit });
   return out;
 }
-const lineOf = (r) => `${r.rank}|${r.username}|${r.score}|${r.best_run_id}|${r.reached_at}|${r.attempts}`;
+// weighted (activity) draws append |w<entries> so the published entrant hash also commits to every draw weight
+const lineOf = (r) => `${r.rank}|${r.username}|${r.score}|${r.best_run_id}|${r.reached_at}|${r.attempts}${r.weight > 1 || r.weighted ? `|w${r.weight}` : ''}`;
+const E = () => require('./eligibility');
+// weighted draw key (Efraimidis-Spirakis): u = HMAC as a uniform number in (0,1); key = -ln(u) / weight; lowest keys win
+const wKey = (h, w) => -Math.log((parseInt(h.slice(0, 13), 16) + 1) / (2 ** 52 + 1)) / w;
 
 // Lock the final standings (idempotent). Late scores can never change the snapshot afterwards.
 function finalize(g, actor = 'system', opts = {}) {
@@ -90,22 +96,32 @@ function finalize(g, actor = 'system', opts = {}) {
   if (now() <= g.end_at && !opts.force) return g;
   g = ensureCommit(g);
   cache.delete(g.id);
-  const rows = liveStandings(g); const t = now();
+  const rows = liveStandings(g).map(r => ({ ...r })); const t = now();
+  const weighted = g.win_method === 'random' && g.weight_mode === 'activity';
+  rows.forEach(r => { r.weighted = weighted; if (!weighted) r.weight = 1; });
   const hash = sha256(rows.map(lineOf).join('\n'));
   if (g.win_method === 'random') {
     rows.forEach(r => { r.draw_key = hmac(g.draw_seed, `${hash}:${r.username}`); });
-    [...rows].sort((a, b) => a.draw_key < b.draw_key ? -1 : 1).forEach((r, i) => { r.draw_pos = i + 1; });
+    const k = (r) => weighted ? wKey(r.draw_key, r.weight) : 0;
+    [...rows].sort((a, b) => weighted ? (k(a) - k(b)) || (a.draw_key < b.draw_key ? -1 : 1) : a.draw_key < b.draw_key ? -1 : 1).forEach((r, i) => { r.draw_pos = i + 1; });
   }
-  const ins = db.prepare('INSERT INTO giveaway_results (giveaway_id, rank, user_id, username, score, best_run_id, reached_at, attempts, draw_key, draw_pos, locked_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
+  const ins = db.prepare('INSERT INTO giveaway_results (giveaway_id, rank, user_id, username, score, best_run_id, reached_at, attempts, draw_key, draw_pos, locked_at, weight) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
   const done = db.transaction(() => {
     const claim = db.prepare('UPDATE giveaways SET finalized_at=?, entrants_hash=? WHERE id=? AND finalized_at IS NULL').run(t, hash, g.id);
     if (claim.changes !== 1) return false;
-    for (const r of rows) ins.run(g.id, r.rank, r.user_id, r.username, r.score, r.best_run_id, r.reached_at, r.attempts, r.draw_key || null, r.draw_pos || null, t);
+    for (const r of rows) ins.run(g.id, r.rank, r.user_id, r.username, r.score, r.best_run_id, r.reached_at, r.attempts, r.draw_key || null, r.draw_pos || null, t, weighted ? r.weight : null);
     audit(g.id, actor, 'finalized', null, { entrants: rows.length, entrants_hash: hash, method: g.win_method, winners: winnerCount(g), ...(g.win_method === 'random' ? { seed_revealed: g.draw_seed, draw_commit: g.draw_commit } : {}) });
     return true;
   })();
   if (!done) return db.prepare('SELECT * FROM giveaways WHERE id=?').get(g.id);
   const fin = db.prepare('SELECT * FROM giveaways WHERE id=?').get(g.id);
+  // anti-camping: skip winners who won elsewhere meanwhile (cooldown / one win per brand per month); next place is promoted
+  for (let guard = 0; guard < 50; guard++) {
+    const bad = results(fin).winners.map(w => [w, w.user_id && E().lockViolation(fin, w.user_id, t)]).find(x => x[1]);
+    if (!bad) break;
+    db.prepare('INSERT OR IGNORE INTO giveaway_dq (giveaway_id, user_id, reason, created_at) VALUES (?,?,?,?)').run(fin.id, bad[0].user_id, bad[1], t);
+    audit(fin.id, 'system', 'ineligible_skipped', bad[0].username, { reason: bad[1] });
+  }
   for (const w of results(fin).winners) notifyProvisional(fin, w, opts.quiet);
   return fin;
 }
@@ -173,11 +189,12 @@ function verifyBundle(g) {
   const res = results(g);
   const out = { method: g.win_method, draw_commit: g.draw_commit || null, finalized: !!res, rules: { tiebreak: TIEBREAK_RULES, random: RANDOM_RULE } };
   if (!res) return out;
-  const lines = db.prepare('SELECT * FROM giveaway_results WHERE giveaway_id=? ORDER BY rank').all(g.id).map(lineOf);
+  const lines = db.prepare('SELECT * FROM giveaway_results WHERE giveaway_id=? ORDER BY rank').all(g.id).map(r => lineOf({ ...r, weighted: r.weight != null }));
   out.entrants_hash = g.entrants_hash; out.entrant_lines = lines; out.hash_ok = sha256(lines.join('\n')) === g.entrants_hash;
   if (g.win_method === 'random') {
     out.seed = g.draw_seed; out.seed_ok = sha256(g.draw_seed) === g.draw_commit;
-    out.draw_order = res.standings.map(r => ({ pos: r.draw_pos, username: r.username, key: r.draw_key, disqualified: r.disqualified }));
+    out.weighted = g.weight_mode === 'activity'; out.weight_rule = 'key = -ln((int(first 13 hex of HMAC, base 16) + 1) / (2^52 + 1)) / weight; lowest key wins';
+    out.draw_order = res.standings.map(r => ({ pos: r.draw_pos, username: r.username, key: r.draw_key, weight: r.weight || 1, disqualified: r.disqualified }));
   }
   return out;
 }

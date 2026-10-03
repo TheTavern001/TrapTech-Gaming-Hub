@@ -424,22 +424,34 @@ app.post('/api/community/react', requireUser, limiter('react', 60, 60e3), (req, 
 
 // ---------- hosting packages & bookings ----------
 app.get('/api/packages', (req, res) => res.json({ ok: true, ...PK.getPackages() }));
-app.post('/api/bookings', limiter('booking', 8, 3600e3), (req, res) => {
+app.post('/api/bookings', limiter('booking', 15, 3600e3), (req, res) => {
   const b = req.body || {};
-  const brand = str(b.brand, 120), contact = str(b.contact, 160);
+  const brand = str(b.brand, 120);
+  const email = str(b.email, 160).toLowerCase();
+  const potato = str(b.potato, 40).replace(/^@/, '');
   if (!brand) return bad(res, 400, 'Channel / brand name is required.');
-  if (!contact) return bad(res, 400, 'Please give an email or Discord handle so we can reply.');
+  if (!email && !potato) return bad(res, 400, 'Add an email or a Potato username (at least one) so we can reach you.');
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return bad(res, 400, 'That email address does not look right.');
+  if (potato && !/^[A-Za-z0-9_]{3,32}$/.test(potato)) return bad(res, 400, 'Potato usernames use letters, numbers and _ only.');
+  const businessType = PK.BUSINESS_TYPES.includes(b.business_type) ? b.business_type : '';
+  if (!businessType) return bad(res, 400, 'Please choose your business type.');
+  const isCannabis = businessType === PK.CANNABIS_TYPE;
+  if (isCannabis && b.licensed !== true) return bad(res, 400, 'Cannabis product sellers must confirm the business is licensed and legally permitted to operate and advertise in its jurisdiction.');
   const pk = PK.getPackages();
   const tier = pk.tiers.find(t => t.id === b.package);
   const pkg = tier ? tier.id : 'custom';
-  const snapshot = tier ? `${tier.name} - ${tier.price}${tier.price_note ? ' ' + tier.price_note : ''}` : 'Custom event - quote on request';
+  const addons = (Array.isArray(b.addons) ? b.addons : []).filter(id => (pk.addons || []).some(a => a.id === id));
+  const addonNames = addons.map(id => pk.addons.find(a => a.id === id).name);
+  const snapshot = (tier ? `${tier.name} - ${tier.price}${tier.regular_price && tier.regular_price !== tier.price ? ` (${pk.launch_label || 'launch'}; regular ${tier.regular_price})` : ''}${tier.price_note ? ' ' + tier.price_note : ''}` : 'Custom - quote on request') + (addonNames.length ? ' + ' + addonNames.join(', ') : '');
+  const contact = [email, potato ? '@' + potato + ' (Potato)' : ''].filter(Boolean).join(' / ');
   const me = currentUser(req);
-  const info = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,package_snapshot,start_date,end_date,details,user_id,created_at,ip_hash)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(brand, str(b.contact_name, 120), contact, str(b.event_type, 60), pkg, snapshot,
-    str(b.start_date, 20), str(b.end_date, 20), str(b.details, 4000), me ? me.id : null, now(), ipHash(req));
+  const info = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,package_snapshot,start_date,end_date,details,user_id,created_at,ip_hash,business_type,email,potato,licensed_confirmed,addons)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(brand, str(b.contact_name, 120), contact, str(b.event_type, 60), pkg, snapshot,
+    str(b.start_date, 20), str(b.end_date, 20), str(b.details, 4000), me ? me.id : null, now(), ipHash(req), businessType, email, potato, isCannabis ? 1 : 0, addons.join(','));
   logActivity('booking', `Booking request submitted: ${brand} (${tier ? tier.name : 'Custom'})`, me ? me.id : null, info.lastInsertRowid);
-  res.json({ ok: true, id: info.lastInsertRowid, package: pkg, package_snapshot: snapshot });
+  res.json({ ok: true, id: info.lastInsertRowid, package: pkg, package_snapshot: snapshot, potato_handle: pk.potato_handle, licensed_confirmed: isCannabis });
 });
+app.get('/api/business-types', (req, res) => res.json({ ok: true, types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE }));
 
 // ---------- admin ----------
 app.post('/api/admin/login', limiter('admin-login', 10, 15 * 60e3), (req, res) => {
@@ -666,7 +678,7 @@ A.get('/export/players.csv', (req, res) => {
 });
 A.get('/export/bookings.csv', (req, res) => {
   const rows = db.prepare('SELECT * FROM bookings ORDER BY created_at DESC').all().map(r => ({ ...r, created_at: iso(r.created_at) }));
-  sendCsv(res, 'bookings.csv', rows, ['id', 'brand', 'contact_name', 'contact', 'event_type', 'package', 'package_snapshot', 'start_date', 'end_date', 'details', 'status', 'admin_note', 'created_at', 'is_demo']);
+  sendCsv(res, 'bookings.csv', rows, ['id', 'brand', 'business_type', 'licensed_confirmed', 'contact_name', 'email', 'potato', 'contact', 'event_type', 'package', 'package_snapshot', 'addons', 'start_date', 'end_date', 'details', 'status', 'admin_note', 'created_at', 'is_demo']);
 });
 
 // hosting packages (prices/features shown on /host)

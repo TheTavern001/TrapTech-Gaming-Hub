@@ -19,7 +19,7 @@ const x = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const clip = (s, n) => { s = String(s ?? ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 
 function frame(inner, { art = null, accent = '#a855f7' } = {}) {
-  const logo = dataUri('/assets/brand/logo-horizontal.png'); const tt = dataUri('/assets/brand/traptech.png'); const a = dataUri(art);
+  const logo = dataUri('/assets/brand/hub-logo.png'); const tt = dataUri('/assets/brand/traptech-wordmark.png'); const a = dataUri(art);
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#140a3c"/><stop offset=".55" stop-color="#0a0f2e"/><stop offset="1" stop-color="#06203f"/></linearGradient>
@@ -58,7 +58,7 @@ const templates = {
     ${T(60, 280, 72, '#fff', clip(d.username, 16))}
     ${T(60, 335, 32, '#fde047', clip(d.title, 30), { font: 'Exo 2', weight: 800 })}
     ${T(60, 400, 30, '#e9e6ff', `Level ${d.level} • ${d.ach} achievements • ${d.games} games`, { font: 'Exo 2', weight: 700 })}
-    ${T(60, 445, 30, '#c7cdf5', `${d.points} total points`, { font: 'Exo 2', weight: 700 })}`, { art: '/assets/brand/logo-mark.png' }),
+    ${T(60, 445, 30, '#c7cdf5', `${d.points} total points`, { font: 'Exo 2', weight: 700 })}`, { art: '/assets/brand/hub-mark.png' }),
   tournament: (d) => frame(`${T(60, 180, 24, '#fde047', d.format === 'bracket' ? 'BRACKET TOURNAMENT' : 'TIMED TOURNAMENT', { weight: 700, ls: 3 })}
     ${T(60, 260, d.title.length > 18 ? 52 : 64, '#fff', clip(d.title, 26))}
     ${T(60, 320, 32, '#22d3ee', d.game, { font: 'Exo 2', weight: 800 })}
