@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v5: build store thumbnails for every game from REAL gameplay frames.
+"""v5/v6: build store thumbnails for every game from REAL gameplay frames.
 Input: /tmp/frames/<id>.png (raw canvas captured by tools/shoot-games.js)
 Output: public/assets/cards/v5/<id>.webp (800x450), <id>-tall.webp (600x620), <id>.png (1200x630 share/OG image)
 Title type: Orbitron (SIL OFL, bundled in /public/fonts). Trap Tech wordmark: our own logo."""
@@ -115,10 +115,30 @@ def scene(gid):
         paste_rot(im, art('coin-lg.webp'), 700, 260, 120)
         return im.convert('RGB')
     return None
-SCENES = {'drift-rush': (0.5, 0.5), 'high-score': (0.5, 0.5), 'terp-tapper': (0.5, 0.45), 'stack-2048': (0.5, 0.42), 'munchies-snake': (0.5, 0.45)}
+# v6: every card is cut from real v6 gameplay (wide cards from a 1280x720 capture in /tmp/frames-wide, tall cards from the phone capture)
+V6 = os.environ.get('V6') == '1'
+SCENES = {} if V6 else {'drift-rush': (0.5, 0.5), 'high-score': (0.5, 0.5), 'terp-tapper': (0.5, 0.45), 'stack-2048': (0.5, 0.42), 'munchies-snake': (0.5, 0.45)}
+V6F = {  # per card shape: (source capture, region of interest as fractions of the trimmed frame)
+  'jetpack-dash': {'w': ('wide', (0, 0, 1, 1)), 't': ('wide', (0.0, 0.0, 0.5, 1))},
+  'drift-rush': {'w': ('wide', (0.12, 0.1, 0.88, 1)), 't': ('tall', (0, 0.4, 1, 0.98))},
+  'plinko': {'w': ('wide', (0.3, 0.2, 0.7, 1)), 't': ('tall', (0, 0.28, 1, 0.98))},
+  'spin-to-win': {'w': ('wide', (0.25, 0.08, 0.75, 0.92)), 't': ('tall', (0, 0.1, 1, 0.62))},
+  'memory-match': {'w': ('wide', (0.22, 0.12, 0.78, 0.98)), 't': ('tall', (0, 0.08, 1, 0.8))},
+  'high-score': {'w': ('wide', (0, 0.05, 1, 1)), 't': ('tall', (0, 0.12, 1, 0.92))},
+  'blazed-roulette': {'w': ('wide', (0, 0.05, 1, 1)), 't': ('tall', (0, 0.06, 1, 0.5))},
+  'terp-tapper': {'w': ('wide', (0.1, 0, 0.9, 1)), 't': ('tall', (0, 0.05, 1, 1))},
+  'stack-2048': {'w': ('wide', (0.28, 0.18, 0.72, 0.92)), 't': ('tall', (0, 0.2, 1, 0.72))},
+  'munchies-snake': {'w': ('tall', (0, 0.4, 1, 0.74)), 't': ('tall', (0, 0.3, 1, 0.78))},
+  'brick-breaker': {'w': ('wide', (0.15, 0.05, 0.85, 0.95)), 't': ('tall', (0, 0.06, 1, 0.62))},
+  'sky-hopper': {'w': ('wide', (0, 0, 1, 1)), 't': ('tall', (0, 0.05, 1, 1))},
+}
 def card(gid, W, H):
     title, tag, acc, focus = GAMES[gid]
-    src = scene(gid) if gid in SCENES else trim_letterbox(Image.open(f'/tmp/frames/{gid}.png').convert('RGB'))
+    fp = f'/tmp/frames/{gid}.png'
+    if V6:
+        kind, roi = V6F[gid]['w' if W > H else 't']; fp = f'/tmp/frames-wide/{gid}.png' if kind == 'wide' else fp; focus = (0.5, 0.5)
+    src = scene(gid) if gid in SCENES else trim_letterbox(Image.open(fp).convert('RGB'))
+    if V6: src = src.crop((round(roi[0] * src.width), round(roi[1] * src.height), round(roi[2] * src.width), round(roi[3] * src.height)))
     if gid in SCENES: focus = SCENES[gid]
     base = crop(src, W, H, focus); base = ImageEnhance.Contrast(base).enhance(1.08); base = ImageEnhance.Color(base).enhance(1.1)
     im = base.convert('RGBA'); ov = Image.new('RGBA', (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(ov)

@@ -47,7 +47,7 @@ export class SkyHopper extends Game {
     ctx.save(); ctx.translate(this.hx, this.y); ctx.rotate(clamp(this.vy / 900, -0.5, 0.9));
     const AS = this.AS; const boost = this.vy < -100 && !this.dead;
     if (boost) drawFlame(ctx, -15, 14, 46, 16, 0.25, this.t);
-    if (AS) { const m = AS.meta; const dw = m.cell[0] * 0.42, dh = m.cell[1] * 0.42; const fn = this.dead ? 'hit_' + Math.min(5, Math.floor((0.9 - this.dead) * 8)) : 'fly_' + Math.floor(this.t * (boost ? 14 : 8)) % 6; spr(ctx, AS, fn, -m.anchor[0] * dw, -m.anchor[1] * dh, dw, dh); }
+    if (AS) { const m = AS.meta; const dw = m.cell[0] * 0.56, dh = m.cell[1] * 0.56; const fn = this.dead ? 'hit_' + Math.min(5, Math.floor((0.9 - this.dead) * 8)) : 'fly_' + Math.floor(this.t * (boost ? 14 : 8)) % 6; spr(ctx, AS, fn, -m.anchor[0] * dw, -m.anchor[1] * dh, dw, dh); }
     else { ctx.fillStyle = '#c4b5fd'; ctx.beginPath(); ctx.arc(0, 0, 18, 0, TAU); ctx.fill(); }
     ctx.restore();
     this.text(ctx, String(this.score), this.W / 2, 150, { size: 54, weight: 900, align: 'center', glow: '#7c4dff' });

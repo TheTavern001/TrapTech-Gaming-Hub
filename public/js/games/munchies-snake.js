@@ -1,5 +1,5 @@
 // Munchies Snake - classic grid snake (original code). v5 art: real citrus-slice + gold-coin photos (public domain), grass texture (Poly Haven CC0).
-import { Game, TAU, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, coinFrame, Ambient } from './engine.js';
+import { Game, TAU, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, coinFrame, Ambient, softShadow } from './engine.js';
 // v6: Blender-rendered scaled snake head/body (original), real citrus photo slices (StockSnap CC0), 3D gold coin spin frames, drifting smoke ambience.
 const FRUIT = ['/assets/v6/tt-lime.webp', '/assets/v6/tt-lemon.webp', '/assets/v6/tt-orange.webp', '/assets/v6/tt-grapefruit.webp'];
 const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
@@ -43,7 +43,7 @@ export class MunchiesSnake extends Game {
     if (this.food) { const [x, y] = this.px(this.food); const im = A['f' + this.food[2]]; const s = this.cell * (1.05 + Math.sin(this.t * 6) * 0.06); if (im) ctx.drawImage(im, x - s / 2, y - s / 2, s, s); else { ctx.fillStyle = '#a3e635'; ctx.beginPath(); ctx.arc(x, y, s / 2.4, 0, TAU); ctx.fill(); } }
     if (this.gold) { const [x, y] = this.px(this.gold); const s = this.cell * 1.1; ctx.save(); ctx.globalAlpha = this.gold[2] < 1.5 ? 0.5 + 0.5 * Math.sin(this.t * 20) : 1; ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 16; if (!sprC(ctx, this.P, coinFrame(this.t), x, y, s, s) && A.coin) ctx.drawImage(A.coin, x - s / 2, y - s / 2, s, s); ctx.restore(); }
     const n = this.body.length;
-    if (this.P && this.P.f.snake_body) { for (let i = n - 1; i >= 1; i--) { const [x, y] = this.px(this.body[i]); const k = i / Math.max(1, n - 1); const s = this.cell * (1.12 - k * 0.32); ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2; sprC(ctx, this.P, 'snake_body', x, y, s, s); ctx.restore(); }
+    if (this.P && this.P.f.snake_body) { for (let i = n - 1; i >= 1; i--) { const [x, y] = this.px(this.body[i]); const [px, py] = this.px(this.body[i - 1]); const k = i / Math.max(1, n - 1); const s = this.cell * (1.22 - k * 0.38); softShadow(ctx, x, y + 3, s * 0.6, s * 0.55, 0.45); sprC(ctx, this.P, 'snake_body', x, y, s, s); sprC(ctx, this.P, 'snake_body', (x + px) / 2, (y + py) / 2, s * 0.96, s * 0.96); }
       const [hx, hy] = this.px(this.body[0]); ctx.save(); ctx.translate(hx, hy); ctx.rotate(Math.atan2(DIRS[this.dir][1], DIRS[this.dir][0])); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8; sprC(ctx, this.P, 'snake_head', 0, 0, this.cell * 1.35); ctx.restore(); }
     else { for (let i = n - 1; i >= 0; i--) { const [x, y] = this.px(this.body[i]); const k = i / Math.max(1, n - 1); const r = this.cell * (i === 0 ? 0.5 : 0.44 - k * 0.1); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = `hsl(${280 - k * 140} 85% ${i === 0 ? 62 : 55}%)`; ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = i === 0 ? 14 : 6; ctx.fill(); }
     ctx.shadowBlur = 0; const [hx, hy] = this.px(this.body[0]); const [dx, dy] = DIRS[this.dir];

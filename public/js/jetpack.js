@@ -350,7 +350,7 @@ export class JetpackDash {
     else if (this.state === 'ready') fn = 'idle_' + Math.floor(this.t * 6) % 6;
     else if (p.onFloor) fn = 'run_' + Math.floor(p.anim * 2.6) % 8;
     else fn = 'fly_' + Math.floor(this.t * (thrust ? 14 : 7)) % 6;
-    if (A) { const m = A.meta; const dw = m.cell[0] * 0.46, dh = m.cell[1] * 0.46; spr(ctx, A, fn, -m.anchor[0] * dw, -m.anchor[1] * dh, dw, dh); }
+    if (A) { const m = A.meta; const dw = m.cell[0] * 0.5, dh = m.cell[1] * 0.5; spr(ctx, A, fn, -m.anchor[0] * dw, -m.anchor[1] * dh, dw, dh); }
     else { ctx.fillStyle = '#b388ff'; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, 7); ctx.fill(); }
     if (p.shield) {
       ctx.globalAlpha = 0.55 + Math.sin(this.t * 6) * 0.15; ctx.strokeStyle = '#4fc3ff'; ctx.lineWidth = 3; ctx.shadowColor = '#4fc3ff'; ctx.shadowBlur = 16;

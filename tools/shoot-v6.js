@@ -2,7 +2,7 @@
 // usage: [THROTTLE=4] [NOSHOT=1] node tools/shoot-v6.js [gameId ...]
 //   -> screenshots/v6/play-<id>.png, /tmp/frames/<id>.png (raw canvas for thumbnails), screenshots/v6/fps[-x4].json
 const { chromium } = require('playwright-core'); const fs = require('fs'); const path = require('path');
-const BASE = process.env.BASE || 'http://localhost:8787'; const SHOTS = path.join(__dirname, '..', 'screenshots', 'v6'); const FR = '/tmp/frames';
+const BASE = process.env.BASE || 'http://localhost:8787'; const SHOTS = path.join(__dirname, '..', 'screenshots', 'v6'); const VIEW = (process.env.VIEW || '390x844').split('x').map(Number); const FR = process.env.FRAMES || '/tmp/frames';
 const TH = +process.env.THROTTLE || 1; const NOSHOT = !!process.env.NOSHOT;
 fs.mkdirSync(SHOTS, { recursive: true }); fs.mkdirSync(FR, { recursive: true });
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -10,7 +10,7 @@ const ALL = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-matc
 (async () => {
   const games = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
   const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--autoplay-policy=no-user-gesture-required', '--enable-gpu-rasterization', '--ignore-gpu-blocklist'] });
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const ctx = await b.newContext({ viewport: { width: VIEW[0], height: VIEW[1] }, deviceScaleFactor: VIEW[0] > 700 ? 1.5 : 2, isMobile: true, hasTouch: true });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
   const cdp = await ctx.newCDPSession(p);
   await p.goto(BASE + '/', { waitUntil: 'networkidle' });
@@ -43,13 +43,13 @@ const ALL = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-matc
     if (TH > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     m.artKB = Math.round(bytes.n / 1024); out[g] = m;
     if (!NOSHOT) {
-      await p.screenshot({ path: path.join(SHOTS, `play-${g}.png`) });
+      if (!process.env.FRAMES) await p.screenshot({ path: path.join(SHOTS, `play-${g}.png`) });
       const data = await p.evaluate(() => document.querySelector('#game').toDataURL('image/png'));
       fs.writeFileSync(path.join(FR, g + '.png'), Buffer.from(data.split(',')[1], 'base64'));
     }
     console.log(g, JSON.stringify(m));
   }
-  fs.writeFileSync(path.join(SHOTS, (process.env.BASELINE ? 'baseline-' : '') + (TH > 1 ? `fps-x${TH}.json` : 'fps.json')), JSON.stringify(out, null, 1));
+  if (!process.env.FRAMES) fs.writeFileSync(path.join(SHOTS, (process.env.BASELINE ? 'baseline-' : '') + (TH > 1 ? `fps-x${TH}.json` : 'fps.json')), JSON.stringify(out, null, 1));
   console.log(errs.length ? 'PAGE ERRORS: ' + errs.join(' | ') : 'no page errors');
   await b.close();
 })().catch(e => { console.error(e); process.exit(1); });
