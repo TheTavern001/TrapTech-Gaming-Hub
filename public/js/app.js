@@ -544,6 +544,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
     token = null; window.__lastResult = r;
     if (!r.ok) { sv.innerHTML = `<div class="err" style="margin:0">Score not saved: ${esc(r.error)}</div>`; return; }
     const gw = (r.giveaways || []).map(x => `<div class="small" style="margin-top:4px">${icon('gift')} ${x.qualified ? `Counted for <b>${esc(x.title)}</b> - rank #${x.rank} of ${x.entrants}` : `<b>${esc(x.title)}</b> needs ${fmt(x.min_score)}+ to qualify`}</div>`).join('');
+    const jtc = (r.join_to_count || []).map(x => `<div class="small join-hint" style="margin-top:4px">${icon('ticket')} <a href="/giveaways/${x.id}">Enter <b>${esc(x.title)}</b></a> to have your runs count for it.</div>`).join('');
     const st = r.giveaway_status;
     const stMsg = st && st !== 'counted' ? `<div class="small" style="color:#fcd34d;margin-top:4px">${st === 'game_not_linked' ? 'This game is not part of that giveaway - run not counted for it.' : st === 'below_min_score' ? 'Below the minimum score for that giveaway - run not counted for it.' : `This giveaway is ${st.includes('ended') ? 'over' : 'not open'} - run not counted for it.`}</div>` : '';
     const pbHtml = r.personal_best ? `<div class="pb-banner" id="pb-banner">${icon('sparkles')} New personal best!</div>` : '';
@@ -551,7 +552,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
     const heldHtml = r.held ? `<div class="held-msg" id="held-msg">${icon('scan-eye')} ${esc(r.held_reason)}</div>` : '';
     const verHtml = r.verified ? `<div class="small" style="margin-top:4px;color:#86efac">${icon('badge-check')} Replay-verified by the server</div>` : '';
     const ptsHtml = r.points && r.points.gained > 0 ? `<div class="small" style="margin-top:4px">${icon('coins')} +${fmt(r.points.gained)} Hub Points <a href="/shop">(${fmt(r.points.balance)} - shop)</a></div>` : '';
-    sv.innerHTML = `${pbHtml}${heldHtml}<div class="ok-msg" style="margin:0">Saved. ${r.held ? 'Pending review.' : `You're <b>#${r.rank}</b> of ${r.players} on the ${esc(g.title)} board (best ${fmtScore(r.best, g.id)}).`}${chase}${verHtml}${ptsHtml}${gw}${stMsg}</div>
+    sv.innerHTML = `${pbHtml}${heldHtml}<div class="ok-msg" style="margin:0">Saved. ${r.held ? 'Pending review.' : `You're <b>#${r.rank}</b> of ${r.players} on the ${esc(g.title)} board (best ${fmtScore(r.best, g.id)}).`}${chase}${verHtml}${ptsHtml}${gw}${jtc}${stMsg}</div>
       ${r.level ? `<div class="xp-line">${icon('chevrons-up')} +${fmt(r.xp_gained)} XP • Level ${r.level.level}<span class="xpbar sm"><i style="width:${Math.round(r.level.into / r.level.need * 100)}%"></i></span></div>` : ''}
       <div class="share-row"><button class="btn sm ghost" id="share-run" data-run="${r.run_id}">${icon('share-2')} Share score</button><a class="btn sm ghost" href="/s/${r.run_id}">${icon('image')} Score card</a></div>
       ${r.unlocked && r.unlocked.length ? `<div class="unl-list">${r.unlocked.slice(0, 4).map(a => `<a href="/achievements" class="unl t-${a.tier}">${icon(a.icon)} ${esc(a.name)}</a>`).join('')}${r.unlocked.length > 4 ? `<span class="small muted">+${r.unlocked.length - 4} more</span>` : ''}</div>` : ''}`;

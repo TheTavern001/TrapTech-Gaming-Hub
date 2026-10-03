@@ -232,8 +232,11 @@ app.post('/api/score', requireUser, (req, res) => {
 
   const prevBest = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=?').get(req.user.id, row.game_id).b;
   const levelBefore = H.levelOf(req.user.id);
-  const gws = activeGiveawaysFor(row.game_id, t).filter(g => row.started_at >= g.start_at)
-    .filter(g => !g.require_join || db.prepare('SELECT 1 FROM giveaway_entries WHERE giveaway_id=? AND user_id=? AND left_at IS NULL').get(g.id, req.user.id));
+  const gwsAll = activeGiveawaysFor(row.game_id, t).filter(g => row.started_at >= g.start_at);
+  const joinedQ = db.prepare('SELECT 1 FROM giveaway_entries WHERE giveaway_id=? AND user_id=? AND left_at IS NULL');
+  const gws = gwsAll.filter(g => !g.require_join || joinedQ.get(g.id, req.user.id));
+  // v5 anti-camping: giveaways this game feeds that the player has not entered yet (runs only count after "Enter giveaway")
+  const joinToCount = gwsAll.filter(g => g.require_join && !gws.includes(g)).map(g => ({ id: g.id, title: g.title }));
   const newEntries = [];
   for (const g of gws) {
     if (score < (g.min_score || 0)) continue;
@@ -270,7 +273,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const first = board[0]; const toFirst = first && first.user_id !== req.user.id ? first.score - Math.max(score, prevBest || 0) + 1 : 0;
   let points = null; try { const before = require('./shop').balance(req.user.id); const after = require('./shop').sync(req.user.id); points = { balance: after, gained: after - before }; } catch (e) { console.error('points sync', e.message); }
   res.json({ ok: true, held: !!verdict.held, verified: verdict.verify === 'replay-ok', held_reason: verdict.held ? 'Huge score! It is in a quick fair-play review and will appear on the leaderboards and giveaways as soon as a Trap Tech admin verifies it. Your score is saved and nothing is deleted.' : null,
-    to_first: toFirst > 0 ? toFirst : 0, is_first: !!(first && first.user_id === req.user.id), points, run_id: info.lastInsertRowid, share_url: `/s/${info.lastInsertRowid}`, level: extra.level, level_up: extra.level_up || null, xp_gained: extra.level.xp - levelBefore.xp, game_id: row.game_id, score, coins, personal_best: isBest, best: Math.max(score, prevBest || 0), rank, players: board.length, giveaways: counted, giveaway_status: giveawayStatusOut, unlocked });
+    to_first: toFirst > 0 ? toFirst : 0, is_first: !!(first && first.user_id === req.user.id), points, run_id: info.lastInsertRowid, share_url: `/s/${info.lastInsertRowid}`, level: extra.level, level_up: extra.level_up || null, xp_gained: extra.level.xp - levelBefore.xp, game_id: row.game_id, score, coins, personal_best: isBest, best: Math.max(score, prevBest || 0), rank, players: board.length, giveaways: counted, join_to_count: joinToCount, giveaway_status: giveawayStatusOut, unlocked });
 });
 
 // ---------- giveaways ----------

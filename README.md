@@ -71,7 +71,7 @@ This works on Fly.io, Railway or any VPS. Always mount a volume at `/data`, or t
 Signed-in players' runs are scored automatically when the run ends (or from Pause > **End run & save score**). Guests can play
 practice runs, but those scores aren't saved.
 
-### Games (all 8 playable)
+### Games (all 12 playable)
 Every game is an original HTML5 canvas game (touch + mouse + keyboard) built on `public/js/games/engine.js`, and every one uses the
 same signed run-token flow. Casino-style games use **free points only**: no real money, no purchases, no cash value.
 
@@ -85,6 +85,10 @@ same signed run-token flow. Casino-style games use **free points only**: no real
 | High Score | reflex targets: (10 + up to 15 accuracy) x combo multiplier (up to x5), gold = x2, bombs/misses cost 1 of 3 lives | 900/s + 300 |
 | Blazed Roulette | 1,000 free chips, 8 spins, max 100 per spin (10 on 0); timed DROP lands within 2 pockets of the marker; score = chips left | 120/s + 1,000, max 3,800 |
 | Terp Tapper | 4-lane rhythm: perfect 100 / great 60 / good 30 x combo multiplier (up to x4); 5 lives; tempo rises 96 to 168 BPM | 3,000/s + 500 |
+| Stack 2048 (v5) | slide-and-merge chips; score = value of every merge; run ends when no move is possible | 150/s + 400 |
+| Munchies Snake (v5) | 10 per bite (+5 per 10 segments), gold coin +50; wall/tail = end | 60/s + 150 |
+| Brick Breaker (v5) | 10 per brick (gold 50) x level x chain (up to x4) + level-clear bonus; 3 balls | 600/s + 600 |
+| Sky Hopper (v5) | towers passed; one hit ends the run | 1.6/s + 5, max 100,000 |
 
 Caps live in `src/config.js` (`GAMES[].ac`) and are checked against **server-measured** run time; `tiers` are the
 Bronze/Silver/Gold thresholds used by achievements.
@@ -144,7 +148,7 @@ Community feed), Reports (CSV exports and rejected anti-cheat submissions), Sett
 - **Notifications center** (`/notifications`, bell badge): achievements, level-ups, follows, referrals, giveaway wins, plus
   broadcasts (new giveaways, tournaments, announcements).
 - **Invites/referrals**: every player gets a code (`/invite`, `/r/CODE`). A referral counts once the friend finishes a first scored
-  run, and unlocks Recruiter (1) and Ambassador (5) cosmetics. The friend also gets the "Newcomer" title.
+  run, and unlocks Crew Builder (1), Squad Goals (5) and Party Starter (15) cosmetics. The friend also gets the "Newcomer" title.
 - **Share cards**: each saved run has `/s/:id`, a score card page with its own OG/Twitter meta. OG images are rendered as PNGs on the server
   with resvg: `/og/default.png`, `/og/run/:id.png`, `/og/giveaway/:id.png`, `/og/u/:name.png`, `/og/tournament/:id.png` (1200×630,
   Trap Tech "Built by" footer). Giveaway, profile and tournament pages have share buttons. Sharing unlocks "Hype Sharer".

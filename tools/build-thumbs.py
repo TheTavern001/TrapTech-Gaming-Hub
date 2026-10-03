@@ -128,11 +128,11 @@ def card(gid, W, H):
     im = Image.alpha_composite(im, ov); d = ImageDraw.Draw(im)
     ts = int(min(W * 0.105, H * 0.15)); f = font('orbitron-latin-900-normal', ts)
     while d.textlength(title, font=f) > W * 0.88: ts -= 2; f = font('orbitron-latin-900-normal', ts)
-    x0, ty = int(W * 0.06), int(H - H * 0.1 - ts * 1.9)
+    x0, ty = int(W * 0.06), int(H - H * 0.09 - ts * 1.25)
     glow = Image.new('RGBA', (W, H), (0, 0, 0, 0)); ImageDraw.Draw(glow).text((x0, ty), title, font=f, fill=acc); glow = glow.filter(ImageFilter.GaussianBlur(ts * 0.18))
     im = Image.alpha_composite(im, glow); im = Image.alpha_composite(im, glow); d = ImageDraw.Draw(im)
     d.text((x0, ty), title, font=f, fill='white')
-    f2 = font('exo-2-latin-700-normal', int(ts * 0.42)); d.text((x0 + 2, ty + int(ts * 1.18)), tag.upper(), font=f2, fill=acc)
+    # v5 research: CrazyGames covers allow the title only and Poki tests found text-light tiles convert better, so no tagline/CTA text on the art
     # Trap Tech wordmark (top-left) + accent bar
     tw = int(W * 0.26); tt = TT.resize((tw, round(TT.height * tw / TT.width)), Image.LANCZOS); im.alpha_composite(tt, (int(W * 0.05), int(H * 0.06)))
     d.rectangle([x0, ty - int(ts * 0.35), x0 + int(W * 0.12), ty - int(ts * 0.35) + max(3, ts // 12)], fill=acc)

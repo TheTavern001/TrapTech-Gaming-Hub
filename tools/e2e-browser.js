@@ -121,7 +121,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   const saved = await m.textContent('#sv'); ok(saved.includes('Saved'), 'run over -> score auto-submitted and saved', saved);
   ok(await m.isVisible('.ach-toast'), 'achievement unlock toast shows after the run'); ok((await m.textContent('#sv')).includes('First Flight') || (await m.locator('#sv .unl').count()) >= 1, 'run result lists the unlocked achievements');
   await shot(m, 'mobile-08b-achievement-toast', false, true);
-  ok(/Counted for/.test(saved), 'run counted toward the active giveaway', saved);
+  ok(/Counted for/.test(saved) || /Enter .+ to have your runs count/.test(saved), 'run result: counted toward the active giveaway, or (v5) tells me to Enter the giveaway first', saved);
   const scoreTxt = await m.textContent('.over-card .big'); const myScore = parseInt(scoreTxt.replace(/\D/g, ''), 10);
   await shot(m, 'mobile-08-game-over');
   ok(await m.isVisible('.xp-line') && /XP/.test(await m.textContent('.xp-line')), 'result shows XP gained + level bar');
@@ -148,7 +148,12 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await m.click('#t >> text=Upcoming'); await sleep(600); ok((await m.textContent('#list')).includes('Starts in'), 'upcoming tab shows start countdown');
   await m.click('#t >> text=Past'); await sleep(600); ok((await m.textContent('#list')).match(/Ended|No past/), 'past tab works');
   await m.click('#t >> text=Active'); await sleep(600); await m.click('.gw .btn >> nth=0'); await m.waitForSelector('.lb, .empty');
-  ok((await m.textContent('main')).includes("You're entered"), 'giveaway detail shows I am entered');
+  // v5 anti-camping: entry is explicit (Enter button) and gated by the eligibility rules shown on the page
+  await m.waitForSelector('#elig-status', { timeout: 10000 }); await v5(m, 'giveaway-eligibility-card', true);
+  if (await m.$('#join-gw')) { await m.click('#join-gw'); await m.waitForSelector('#elig-status.joined', { timeout: 10000 }); }
+  const eligCls = await m.getAttribute('#elig-status', 'class'); const nChecks = await m.locator('.elig-checks li').count();
+  ok(nChecks >= 3 && (/joined/.test(eligCls) || ((await m.locator('.elig-checks li.no').count()) >= 1 && !(await m.$('#join-gw')))), `giveaway detail: eligibility checklist (${nChecks} rules) and explicit entry - ${/joined/.test(eligCls) ? 'entered' : 'not yet eligible, Enter hidden'}`);
+  ok((await m.textContent('main')).includes("You're entered") || /joined/.test(eligCls) || (await m.textContent('#elig-status')).length > 5, 'giveaway detail shows my entry status');
   await shot(m, 'mobile-11-giveaway-detail', true); await v3(m, 'm13-giveaway-detail', true);
   ok(await m.isVisible('#share-gw') && (await m.textContent('main')).includes('No purchase necessary'), 'giveaway detail: share link + no-purchase note');
   await m.click('.gw-actions a[href$="/rules"]'); await m.waitForSelector('.prose .npn');
@@ -164,7 +169,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await v3(m, 'm15-profile');
 
   console.log('# new games: play each briefly, end run & save');
-  const NEW = ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper'];
+  const NEW = ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
   const PLAY = {
     'drift-rush': async (p, box) => { for (let i = 0; i < 6; i++) { const left = i % 2 === 0; await p.mouse.move(box.x + box.width * (left ? 0.2 : 0.8), box.y + box.height * 0.7); await p.mouse.down(); await sleep(left ? 700 : 900); await p.mouse.up(); await sleep(200); } },
     plinko: async (p) => { for (let i = 0; i < 3; i++) { const g = await p.evaluate(() => ({ x: window.__game.g.bx + window.__game.g.bw * (0.15 + Math.random() * 0.7), y: window.__game.g.top + 20 })); await tapL(p, g.x, g.y, 120); await sleep(900); const c = await p.evaluate(() => window.__game.chip && { x: window.__game.chip.x, y: window.__game.chip.y }); if (c) await tapL(p, c.x + 40, c.y); await sleep(2600); } },
@@ -172,6 +177,10 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
     'memory-match': async (p) => { await sleep(1800); for (let n = 0; n < 4; n++) { const pair = await p.evaluate(() => { const g = window.__game; const left = g.cards.filter(c => !c.done && !c.open); const a = left[0]; const b = left.find(c => c !== a && c.g === a.g); const R = (c) => { const [x, y, w, h] = g.rect(c.k); return [x + w / 2, y + h / 2]; }; return a && b ? [R(a), R(b)] : null; }); if (!pair) break; await tapL(p, ...pair[0]); await sleep(150); await tapL(p, ...pair[1]); await sleep(450); } },
     'high-score': async (p) => { const until = Date.now() + 5000; while (Date.now() < until) { const t = await p.evaluate(() => (window.__game.targets || []).filter(t => t.type !== 'bomb').map(t => [t.x, t.y])[0]); if (t) await tapL(p, t[0], t[1], 30); await sleep(120); } },
     'blazed-roulette': async (p) => { for (let i = 0; i < 2; i++) { for (const id of ['red', 'd2']) { const b = await p.evaluate((id) => { const b = window.__game.btns.find(x => x.id === id); return [b.x + b.w / 2, b.y + b.h / 2]; }, id); await tapL(p, ...b); await sleep(150); } const d = await p.evaluate(() => { const b = window.__game.btns.find(x => x.id === 'drop'); return [b.x + b.w / 2, b.y + b.h / 2]; }); await tapL(p, ...d); await sleep(i === 0 ? 4300 : 1200); } },
+    'stack-2048': async (p) => { for (let i = 0; i < 24; i++) { await p.keyboard.press(['ArrowLeft', 'ArrowDown', 'ArrowRight', 'ArrowDown'][i % 4]); await sleep(110); } },
+    'munchies-snake': async (p) => { await p.evaluate(() => { const g = window.__game; const K = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp']; const loop = () => { if (g.state !== 'play') return; const [hx, hy] = g.body[0]; const [fx, fy] = g.food; const cur = g.q.length ? g.q[g.q.length - 1] : g.dir; let want = fx > hx ? 0 : fx < hx ? 2 : fy > hy ? 1 : 3; if ((want + 2) % 4 === cur) want = (want + 1) % 4; if (want !== cur && !g.q.length) window.dispatchEvent(new KeyboardEvent('keydown', { code: K[want] })); window.__sn = requestAnimationFrame(loop); }; loop(); }); await sleep(5000); await p.evaluate(() => cancelAnimationFrame(window.__sn)); },
+    'brick-breaker': async (p) => { await p.evaluate(() => { const g = window.__game; g.launch(); const loop = () => { if (g.state !== 'play') return; g.px = Math.max(g.pw / 2, Math.min(g.W - g.pw / 2, g.ball.x + 18)); if (g.ball.stuck) g.launch(); window.__bb = requestAnimationFrame(loop); }; loop(); }); await sleep(6000); await p.evaluate(() => cancelAnimationFrame(window.__bb)); },
+    'sky-hopper': async (p) => { await p.evaluate(() => { const g = window.__game; const loop = () => { if (g.state !== 'play') return; const nx = g.pipes.find(q => q.x - g.x + 74 > g.hx - 18); const target = nx ? nx.top + nx.g * 0.55 : g.H * 0.5; if (g.y > target && g.vy > -60) window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' })); window.__sh = requestAnimationFrame(loop); }; loop(); }); await sleep(7000); await p.evaluate(() => cancelAnimationFrame(window.__sh)); },
     'terp-tapper': async (p) => { await p.evaluate(() => { const K = ['KeyD', 'KeyF', 'KeyJ', 'KeyK']; const g = window.__game; const done = new Set(); const loop = () => { if (g.state !== 'play') return; for (const n of g.notes) if (!n.done && !done.has(n) && Math.abs(n.t - g.playT) < 0.03) { done.add(n); window.dispatchEvent(new KeyboardEvent('keydown', { code: K[n.lane] })); window.dispatchEvent(new KeyboardEvent('keyup', { code: K[n.lane] })); } window.__tt = requestAnimationFrame(loop); }; loop(); }); await sleep(6500); },
   };
   let lastUnlocked = [];
@@ -188,12 +197,12 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
     const res = await m.evaluate(() => window.__lastResult);
     ok(res && res.ok && res.game_id === id && (await m.textContent('#sv')).includes('Saved'), `${id}: run saved via run-token flow (score ${res && res.score})`, res && res.error);
     lastUnlocked = (res && res.unlocked) || [];
-    if (id === 'drift-rush' || id === 'blazed-roulette' || id === 'high-score') ok(res && res.score > 0, `${id}: real inputs produced a score > 0 (${res && res.score})`);
+    if (['drift-rush', 'blazed-roulette', 'high-score', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'].includes(id)) ok(res && res.score > 0, `${id}: real inputs produced a score > 0 (${res && res.score})`);
   }
-  ok(lastUnlocked.some(a => a.id === 'variety-all'), 'playing all 8 games unlocks "variety-all" (server-side)', lastUnlocked.map(a => a.id));
-  ok(await m.isVisible('.ach-toast'), 'unlock toast visible after the last run');
+  ok(lastUnlocked.some(a => a.id === 'variety-all'), 'playing all 12 games unlocks "variety-all" (server-side)', lastUnlocked.map(a => a.id));
+  ok((await m.isVisible('.ach-toast')) || (await m.locator('#sv .unl').count()) >= 1, 'unlock shown after the last run (toast, or listed in the run result if the toast already faded)');
   await shot(m, 'mobile-08c-unlock-toast', false, true);
-  const lbAll = await m.evaluate(async (u) => { const out = {}; for (const g of ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper']) { const r = await (await fetch('/api/leaderboard?game=' + g + '&limit=500')).json(); out[g] = r.rows.some(x => x.username === u); } return out; }, uname);
+  const lbAll = await m.evaluate(async (u) => { const out = {}; for (const g of ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper']) { const r = await (await fetch('/api/leaderboard?game=' + g + '&limit=500')).json(); out[g] = r.rows.some(x => x.username === u); } return out; }, uname);
   ok(Object.values(lbAll).every(Boolean), 'my scores are on every new game leaderboard', lbAll);
 
   console.log('# achievements page');
@@ -225,6 +234,25 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await myRow.locator('.bn-strip.bn-' + bId).count()) === 1 && (await myRow.textContent()).includes(tName), 'equipped banner + title show on the leaderboard');
   await m.goto(BASE + '/community'); await m.waitForSelector('.post');
   const hype = m.locator('.post .hype').first(); await hype.click(); await m.waitForFunction(() => document.querySelector('.post .hype').classList.contains('on')); ok(true, 'hype a community post');
+
+  console.log('# v5: brand channels, Hub Points shop, friends & challenges (no messaging), special badges');
+  await m.goto(BASE + '/games'); await m.waitForSelector('.gcard'); await v5(m, 'games-grid-new-thumbnails', true);
+  ok((await m.evaluate(() => [...document.querySelectorAll('main .gcard img, main .gcard [style*="background"]')].some(e => /cards\/v5\//.test(e.getAttribute('src') || e.getAttribute('style') || '')))), 'game cards use the new v5 thumbnails');
+  await m.goto(BASE + '/channels'); await m.waitForSelector('.ch-card'); ok((await m.locator('.ch-card').count()) >= 1, `brand channels list (${await m.locator('.ch-card').count()} channels)`); await v5(m, 'channels-list');
+  await m.click('.ch-card >> nth=0'); await m.waitForSelector('.ch-head');
+  { const fb = await m.$('#ch-follow'); if (fb) { const was = await fb.getAttribute('aria-pressed'); await fb.click(); await m.waitForFunction((w) => document.querySelector('#ch-follow').getAttribute('aria-pressed') !== w, was); ok(true, 'follow a brand channel from its page'); } }
+  await v5(m, 'channel-page', true);
+  await m.goto(BASE + '/shop'); await m.waitForSelector('.shop-item');
+  ok((await m.locator('#shop-daily .shop-item').count()) >= 4 && (await m.locator('#shop-weekly .shop-item').count()) >= 2 && (await m.textContent('main')).match(/cosmetic/i), 'Hub Points shop: daily + weekly rotation, cosmetic-only note');
+  ok(+(await m.textContent('#pts-bal')).replace(/\D/g, '') > 0, `points balance earned from play (${(await m.textContent('#pts-bal')).trim()})`);
+  ok(!/\b(dealer|plug|trap house|re-up|sell weed)\b/i.test(await m.textContent('main')), 'shop copy has no dealing-glorifying terms');
+  await v5(m, 'shop', true);
+  await m.goto(BASE + '/friends'); await m.waitForSelector('#ft'); ok((await m.textContent('main')).includes('There is no chat or messaging'), 'friends page: no chat/messaging, play-together only');
+  await v5(m, 'friends'); await m.click('#ft [data-k=challenges]'); await m.waitForSelector('#chf'); ok((await m.locator('#ch-game option').count()) === 12, 'challenge form lists all 12 games'); await v5(m, 'friend-challenges');
+  ok((await m.evaluate(async () => (await fetch('/api/messages')).status)) === 404 && (await m.locator('a[href*="messages"], a[href*="/dm"], textarea[placeholder*="essage"]').count()) === 0, 'no messaging endpoint or UI anywhere');
+  await m.goto(BASE + '/achievements'); await m.waitForSelector('.ach'); await m.waitForSelector('#special-section', { timeout: 8000 }).catch(() => {});
+  ok((await m.locator('#special-section .special-b').count()) >= 8, 'achievements page: special (admin-only) badges section'); await m.evaluate(() => document.getElementById('special-section')?.scrollIntoView()); await v5(m, 'achievements-special-badges');
+  ok((await m.textContent('main')).match(/Centurion|Iron Thumbs|One Percenter/), 'hard Legendary achievements listed');
 
   console.log('# v5: sponsor tiers / booking with business type + Potato contact');
   await m.goto(BASE + '/host'); await m.waitForSelector('.pk');
@@ -409,7 +437,14 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await a.fill('#pw', env.ADMIN_PASSWORD); await a.click('#lf button'); await a.waitForSelector('.stats');
   ok((await a.textContent('.amain')).includes('Total Players'), 'admin dashboard loads'); await shot(a, 'desktop-11-admin-dashboard', true);
   ok((await a.textContent('.tt-bar')).includes('Powered by Trap Tech Solutions') && await a.isVisible('.side-tt img'), 'admin header: Powered by Trap Tech Solutions'); await v3(a, 'd12-admin-dashboard');
-  ok((await a.textContent('.amain')).includes('8/8 games live'), 'dashboard: 8/8 games live');
+  ok((await a.textContent('.amain')).includes('12/12 games live'), 'dashboard: 12/12 games live');
+  console.log('# v5 admin: brand channels, grant badge, fair play');
+  await a.goto(BASE + '/admin/channels'); await a.waitForFunction(() => document.querySelector('.ahead h1')); await v5(a, 'admin-brand-channels');
+  await a.goto(BASE + '/admin/badges'); await a.waitForSelector('#bgf'); await a.fill('#bg-user', uname); await a.selectOption('#bg-badge', 'beta-tester'); await a.fill('#bg-note', 'UI test grant'); await a.click('#bg-grant'); await sleep(900);
+  ok((await a.textContent('.amain')).includes(uname), 'admin grants a special badge (shows in holders/audit)'); await v5(a, 'admin-grant-badge', true);
+  { const sb = await a.evaluate(async (u) => (await (await fetch('/api/users/' + u + '/special-badges')).json()).granted.map(b => b.id), uname); ok(sb.includes('beta-tester'), 'granted badge is visible on the public profile API', sb); }
+  await a.click('#bg-revoke'); await sleep(700);
+  await a.goto(BASE + '/admin/fairplay'); await a.waitForSelector('#fp-tabs'); ok((await a.textContent('.amain')).includes('Nobody is ever banned automatically'), 'admin Fair Play queue (soft flags, no auto-bans)'); await v5(a, 'admin-fair-play', true);
   console.log('# admin: one-click giveaway linking');
   await a.click('.side >> text=Games'); await a.waitForSelector('.agame');
   ok((await a.locator('.agame').count()) === 12, 'admin games page shows 12 game cards');
@@ -437,7 +472,11 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await a.fill('#title', 'UI Test Giveaway'); await a.fill('#host', 'Trap Tech Solutions'); await a.fill('#prize', 'Test prize');
   const toLocal = (ms) => { const x = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}T${p(x.getHours())}:${p(x.getMinutes())}`; };
   await a.fill('#start', toLocal(Date.now() - 30 * 864e5)); await a.fill('#end', toLocal(Date.now() + 2 * 864e5));
-  await a.click('#imgs button >> nth=1'); await a.click('#gf button[type=submit]');
+  await a.click('#imgs button >> nth=1');
+  ok(await a.isChecked('#e-join'), 'v5: new giveaways default to explicit entry + eligibility rules (anti-camping)');
+  // this UI-test giveaway runs in "open" mode (every run in the window counts) so the test player's earlier runs make them an entrant
+  await a.uncheck('#e-join'); for (const id of ['#e-age', '#e-runs']) if (await a.$(id)) await a.fill(id, '0');
+  await a.click('#gf button[type=submit]');
   await a.waitForSelector('#wcard'); ok(true, 'admin creates giveaway -> manage page');
   ok((await a.inputValue('#wmethod')) === 'score' && (await a.inputValue('#wcount')) === '0', 'winner selection defaults: top score, one winner per prize tier');
   // edit
@@ -457,6 +496,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   const firstName = await a.getAttribute('#rq .rq-item >> nth=0', 'data-name'); const secondName = await a.getAttribute('#rq .rq-item >> nth=1', 'data-name');
   await a.click('#rq .rq-item >> nth=0 >> [data-dq-open]'); await a.fill('#rq .rq-item >> nth=0 >> [data-reason]', 'UI test disqualification'); await a.click('#rq .rq-item >> nth=0 >> [data-dq-go]');
   await a.waitForSelector(`#rq .rq-item.is-dq[data-name="${firstName}"]`); ok((await a.getAttribute('#rq .rq-item >> nth=0', 'data-name')) === secondName, 'disqualify #1 (with reason) promotes #2 to the winning place');
+  await v5(a, 'admin-review-queue-potato-contact');
   await a.click('#rq .rq-item >> nth=0 >> [data-confirm]'); await a.waitForSelector('#rq .rq-item >> nth=0 >> .pill.green'); ok((await a.textContent('#wb')).includes('Confirmed'), 'confirm winner from the review queue');
   ok((await a.textContent('#audit')).includes('Disqualified') && (await a.textContent('#audit')).includes('Promoted to a winning place') && (await a.textContent('#audit')).includes('Winner confirmed'), 'audit log shows disqualify, promote, confirm');
   const fcsv = await a.evaluate(async (u) => (await fetch(u)).text(), (await a.getAttribute('#exp-final', 'href'))); ok(fcsv.startsWith('rank,place,username') && fcsv.includes('UI test disqualification'), 'final standings CSV export');
