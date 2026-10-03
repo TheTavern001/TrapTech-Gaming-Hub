@@ -1,3 +1,4 @@
+import { ls } from '../store.js';
 // Shared mini game engine for The Gaming Hub (original code).
 // Gives every game the same interface the play page expects:
 //   ready (Promise), start(), togglePause(), pause(bool), restart(), endNow(), destroy(), sfx.toggle()/muted
@@ -11,9 +12,10 @@ export function roundRect(ctx, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); c
 export const fmt = (n) => Math.floor(n).toLocaleString('en-US');
 
 export class Synth {
-  constructor() { this.muted = localStorage.getItem('jd_muted') === '1'; this.ac = null; }
+  constructor() { this.muted = ls.getItem('jd_muted') === '1'; this.ac = null; }
   _ctx() {
     if (this.muted) return null;
+    if (!this.ac && window.__ghAC && window.__ghAC.state !== 'closed') { this.ac = window.__ghAC; this.shared = true; this.master = this.ac.createGain(); this.master.gain.value = 0.35; this.master.connect(this.ac.destination); }
     if (!this.ac) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; try { this.ac = new AC(); this.master = this.ac.createGain(); this.master.gain.value = 0.35; this.master.connect(this.ac.destination); } catch { return null; } }
     if (this.ac.state === 'suspended') this.ac.resume().catch(() => {});
     return this.ac;
@@ -36,7 +38,7 @@ export class Synth {
   click() { this.tone(1800, 0.03, { type: 'square', vol: 0.15 }); }
   win() { this.chord([523, 659, 784, 1047], 0.35, { type: 'triangle', vol: 0.35 }); }
   lose() { this.tone(300, 0.4, { type: 'sawtooth', vol: 0.25, slide: 0.4 }); }
-  toggle() { this.muted = !this.muted; localStorage.setItem('jd_muted', this.muted ? '1' : '0'); return this.muted; }
+  toggle() { this.muted = !this.muted; ls.setItem('jd_muted', this.muted ? '1' : '0'); return this.muted; }
 }
 
 export class Game {
@@ -85,7 +87,7 @@ export class Game {
     window.removeEventListener('pointerup', this._h.pu); window.removeEventListener('pointercancel', this._h.pu);
     window.removeEventListener('keydown', this._h.kd); window.removeEventListener('keyup', this._h.ku);
     document.removeEventListener('visibilitychange', this._h.vis); window.removeEventListener('resize', this._h.rs);
-    try { this.sfx.ac && this.sfx.ac.close(); } catch {}
+    try { this.sfx.ac && !this.sfx.shared && this.sfx.ac.close(); } catch {}
   }
   resize() {
     const r = this.c.getBoundingClientRect(); const dpr = Math.min(window.devicePixelRatio || 1, 2);

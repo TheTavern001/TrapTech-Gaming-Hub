@@ -84,3 +84,26 @@ Who has it: CG = CrazyGames, Poki, itch = itch.io, Kong = Kongregate, Steam, Dis
   confirmations are stored separately, so the snapshot never changes and the audit trail shows every decision.
 
 > Not legal advice. The giveaway rules and age gate are templates and good-faith implementations. Have counsel review them for each state/brand before running real prizes.
+
+---
+
+# v5 research (Oct 2026)
+
+## 1. Potato in-app browser, phones and WebViews
+
+**Potato Chat platform**
+- Potato exposes a Telegram-style **Bot API** (HTTPS, `https://api.rct2008.com:8443/<token>/METHOD`, webhook or getUpdates) and an **authorized-login SDK**. Its interactive-web feature is the **game platform**: create a game with `/newgame`, send it with `sendGame`, answer the callback query with the game URL and *"the potato app will open our game in its built-in browser"*. No Telegram-style Mini-App/WebApp JS SDK (`window.Telegram.WebApp`-like) is documented, so the hub must work as a plain web page inside Potato's built-in browser. Sources: https://potato.im/api/bot , https://web.potato.im/bots , https://www.potato-chat.com.cn/en/api/
+- Links: bots/users are reachable by `potato.im/<username>` links (documented for bots); channel invites use `https://m.pt.im/joinchat/<code>` which hands off to the app scheme `pt://join?invite=<code>`. Usernames: a-z, 0-9, `_`, case-insensitive, min 5 chars. Sources: https://potato.im/bots , https://m.pt.im/joinchat/7Cn0-JaPruK6IK5oKDuBAQ (page source), https://www.potato.im/faq
+- Decision: winner/booking contact uses the handle (copy button) plus an `https://potato.im/<handle>` link; we do not depend on an undocumented `pt://user/...` scheme.
+
+**WebView behaviour that breaks typical sites**
+- Android WebView ships with `domStorageEnabled=false` by default, so `localStorage` can be missing/throw; cookies can be disabled by the host app (`CookieManager.setAcceptCookie`). Sources: https://developer.android.com/reference/android/webkit/WebSettings#setDomStorageEnabled(boolean) , https://developer.android.com/reference/android/webkit/CookieManager
+- `window.open` / `target=_blank` need `setSupportMultipleWindows` + `onCreateWindow` on Android and a `WKUIDelegate createWebViewWith` on iOS; many in-app browsers just ignore them. Sources: https://developer.android.com/reference/android/webkit/WebSettings#setSupportMultipleWindows(boolean) , https://developer.apple.com/documentation/webkit/wkuidelegate/1536907-webview
+- iOS/WKWebView only allows Web Audio after a user gesture; an `AudioContext` must be resumed inside a touch handler. Source: https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide , https://webkit.org/blog/6784/new-video-policies-for-ios/
+- Notch/home-indicator: `viewport-fit=cover` + `env(safe-area-inset-*)`. Dynamic toolbars: `100dvh` (fallback `100vh`). Sources: https://webkit.org/blog/7929/designing-websites-for-iphone-x/ , https://developer.mozilla.org/en-US/docs/Web/CSS/length#dynamic_viewport_units
+- No 300 ms delay / double-tap zoom: `touch-action: manipulation` with a `width=device-width` viewport (and don't disable pinch zoom - accessibility). Sources: https://developer.chrome.com/blog/300ms-tap-delay-gone-away , https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action
+- iOS zooms into inputs under 16px font. Source: https://webkit.org/blog/5610/more-responsive-tapping-on-ios/
+- `navigator.share` is available in Safari/Chrome Android but often missing in WebViews; `navigator.clipboard` needs a secure context and may be blocked - fallback to `execCommand('copy')`, then an on-page selectable field (never `prompt()`, which some WebViews suppress). Sources: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share , https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText
+- Budget: <2 MB initial on 4G; gzip text assets (express `compression`, MIT).
+
+**What we built**: `public/js/store.js` (storage wrapper with in-memory fallback + `copyText` with on-page sheet), session token returned at sign-in and sent as `X-Session` when the cookie didn't stick, global audio unlock on first tap shared with game synths, safe-area/dvh/touch-action CSS, no `target=_blank` in flows, gzip, portrait-first canvases with a 5-second non-blocking "rotate" tip for Jetpack Dash. Verified by `tools/e2e-mobile.js` (Pixel 7, iPhone 14, Android WebView UA, iOS Potato in-app UA, and a locked WebView with storage throwing and cookies stripped).

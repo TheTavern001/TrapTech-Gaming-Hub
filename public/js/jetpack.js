@@ -1,3 +1,4 @@
+import { ls } from './store.js';
 // Jetpack Dash - original HTML5 canvas side-scroller for The Gaming Hub.
 // Code: original. Sprites/sounds: Kenney (CC0) - see /CREDITS.md.
 const H = 540;              // logical world height
@@ -20,7 +21,7 @@ function loadAssets(base) {
 
 class Sfx {
   constructor(base) {
-    this.base = base; this.muted = localStorage.getItem('jd_muted') === '1'; this.pool = {};
+    this.base = base; this.muted = ls.getItem('jd_muted') === '1'; this.pool = {};
     for (const n of ['sfx_coin', 'sfx_hurt', 'sfx_shieldUp', 'sfx_zap', 'sfx_lose', 'sfx_gem']) {
       this.pool[n] = Array.from({ length: n === 'sfx_coin' ? 6 : 2 }, () => { const a = new Audio(`${base}/sfx/${n}.mp3`); a.preload = 'auto'; a.volume = n === 'sfx_coin' ? 0.35 : 0.6; return a; });
     }
@@ -31,7 +32,7 @@ class Sfx {
     const arr = this.pool[n]; const k = (this.i[n] = ((this.i[n] || 0) + 1) % arr.length);
     try { arr[k].currentTime = 0; const p = arr[k].play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ }
   }
-  toggle() { this.muted = !this.muted; localStorage.setItem('jd_muted', this.muted ? '1' : '0'); return this.muted; }
+  toggle() { this.muted = !this.muted; ls.setItem('jd_muted', this.muted ? '1' : '0'); return this.muted; }
 }
 
 const rnd = (a, b) => a + Math.random() * (b - a);

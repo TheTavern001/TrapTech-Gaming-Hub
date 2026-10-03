@@ -17,6 +17,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.10.0",
+    "compression": "^1.8.2",
     "express": "^4.22.3"
   },
   "private": true,

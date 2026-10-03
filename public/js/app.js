@@ -1,13 +1,18 @@
 import { icon } from './icons.js';
+import { ls, ss, copyText } from './store.js';
 
 // ---------------- core ----------------
 const $app = document.getElementById('app');
-const S = { me: null, games: [], serverOffset: 0, guest: localStorage.getItem('gh_guest') === '1', game: null };
+const S = { me: null, games: [], serverOffset: 0, guest: ls.getItem('gh_guest') === '1', game: null };
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (n) => Number(n || 0).toLocaleString('en-US');
 const nowS = () => Date.now() + S.serverOffset;
+// In-app browsers can block cookies. After sign-in we check whether the cookie stuck; if not, the session token
+// is kept in memory (and in storage when available) and sent as an X-Session header instead.
+let TOKEN = ls.getItem('gh_tok') || null;
 async function api(path, opts = {}) {
-  const res = await fetch(path, { credentials: 'same-origin', headers: opts.body ? { 'Content-Type': 'application/json' } : {}, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const headers = { ...(opts.body ? { 'Content-Type': 'application/json' } : {}), ...(TOKEN ? { 'X-Session': TOKEN } : {}) };
+  const res = await fetch(path, { credentials: 'same-origin', ...opts, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
   let data; try { data = await res.json(); } catch { data = { ok: false, error: `HTTP ${res.status}` }; }
   if (data && data.now) S.serverOffset = data.now - Date.now();
   data.status = res.status; return data;
@@ -155,12 +160,18 @@ function openMenu() {
   d.addEventListener('keydown', (e) => { if (e.key === 'Escape') d.remove(); });
   document.body.appendChild(d); const f = d.querySelector('a, button'); if (f) f.focus({ preventScroll: true });
 }
-async function signout() { await api('/api/auth/signout', { method: 'POST' }); S.me = null; toast('Signed out'); go('/signin'); }
+async function adoptSession(r) {
+  if (!r || !r.session) return;
+  const probe = await fetch('/api/me', { credentials: 'same-origin' }).then(x => x.json()).catch(() => ({}));
+  if (!(probe && probe.user)) { TOKEN = r.session; ls.setItem('gh_tok', r.session); } else if (TOKEN) { TOKEN = null; ls.removeItem('gh_tok'); }
+}
+async function signout() { await api('/api/auth/signout', { method: 'POST' }); TOKEN = null; ls.removeItem('gh_tok'); S.me = null; toast('Signed out'); go('/signin'); }
 
 // ---------------- router ----------------
 const routes = [];
 const route = (re, fn) => routes.push([re, fn]);
 function go(path, replace = false) { if (replace) history.replaceState({}, '', path); else history.pushState({}, '', path); render(); }
+window.__go = go; // used by the in-app browser test to navigate without a reload (fully locked webviews keep state only in memory)
 document.addEventListener('click', (e) => {
   const act = e.target.closest('[data-act]');
   if (act) { const a = act.dataset.act; if (a === 'menu') { e.preventDefault(); return openMenu(); } if (a === 'signout') { e.preventDefault(); return signout(); } if (a === 'back') { e.preventDefault(); return history.length > 1 ? history.back() : go('/'); } }
@@ -180,7 +191,7 @@ async function render() {
   document.body.style.overflow = '';
   document.querySelectorAll('.drawer, .sheet').forEach(x => x.remove());
   const url = new URL(location.href); const path = url.pathname.replace(/\/+$/, '') || '/';
-  if (url.searchParams.get('ref')) localStorage.setItem('gh_ref', url.searchParams.get('ref').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12));
+  if (url.searchParams.get('ref')) ls.setItem('gh_ref', url.searchParams.get('ref').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12));
   if (!ageOk() && !AGE_FREE.test(path)) return ageGate();
   const first = navCount++ === 0;
   for (const [re, fn] of routes) { const m = path.match(re); if (m) {
@@ -192,7 +203,7 @@ async function render() {
   shell(path, emptyState('circle-help', 'Page not found', "We couldn't find that page.", '<a class="btn sm" href="/">Go home</a>'), { title: 'Page not found' });
 }
 // ---------------- 21+ age gate (neutral date-of-birth screen; cannabis-brand content) ----------------
-function ageOk() { const v = +localStorage.getItem('gh_age_ok') || 0; return v && Date.now() - v < 30 * 864e5; }
+function ageOk() { const v = +ls.getItem('gh_age_ok') || 0; return v && Date.now() - v < 30 * 864e5; }
 function ageFrom(y, m, d) { const t = new Date(); return t.getFullYear() - y - ((t.getMonth() + 1 < m || (t.getMonth() + 1 === m && t.getDate() < d)) ? 1 : 0); }
 function dobFields(prefix, val = '') {
   const [y, m, d] = (val || '').split('-');
@@ -209,7 +220,7 @@ function readDob(root, prefix) {
 }
 function ageGate() {
   setTitle('Age check');
-  const blocked = sessionStorage.getItem('gh_age_block') === '1';
+  const blocked = ss.getItem('gh_age_block') === '1';
   $app.innerHTML = `<div class="gate" role="dialog" aria-labelledby="gate-h">
     <img class="logo-stack" src="/assets/brand/logo-stacked.webp" alt="The Gaming Hub by Trap Tech Solutions" width="220" height="218">
     ${blocked ? `<div class="card pad gate-card"><h1 id="gate-h">Sorry</h1><p class="muted">The Gaming Hub features cannabis-brand sponsors and is only available to adults 21 and older.</p><p class="small"><a href="/responsible-play">Responsible play</a> • <a href="/about">About Trap Tech</a></p></div>`
@@ -226,8 +237,8 @@ function ageGate() {
   f.addEventListener('submit', (e) => {
     e.preventDefault(); const r = readDob($app, 'gate');
     if (!r) { $app.querySelector('#gmsg').innerHTML = '<div class="err" role="alert">Please enter a valid date of birth.</div>'; return; }
-    if (r.age < 21) { sessionStorage.setItem('gh_age_block', '1'); return ageGate(); }
-    localStorage.setItem('gh_age_ok', String(Date.now())); sessionStorage.setItem('gh_dob', r.iso); render();
+    if (r.age < 21) { ss.setItem('gh_age_block', '1'); return ageGate(); }
+    ls.setItem('gh_age_ok', String(Date.now())); ss.setItem('gh_dob', r.iso); render();
   });
 }
 const gameById = (id) => S.games.find(g => g.id === id);
@@ -249,8 +260,8 @@ function splash() {
       <a class="tt-sig" href="/about"><span>Built by</span><img class="traptech" src="/assets/brand/traptech-stacked.webp" alt="Trap Tech Solutions" style="height:40px"></a>
     </div></div>`;
   setTitle('Welcome');
-  localStorage.setItem('gh_seen_splash', '1');
-  $app.querySelector('[data-guest]').addEventListener('click', () => { S.guest = true; localStorage.setItem('gh_guest', '1'); });
+  ls.setItem('gh_seen_splash', '1');
+  $app.querySelector('[data-guest]').addEventListener('click', () => { S.guest = true; ls.setItem('gh_guest', '1'); });
 }
 function pwField(id, ph, autocomplete) {
   return `<div class="field ic">${icon('lock')}<input class="input" id="${id}" type="password" placeholder="${ph}" autocomplete="${autocomplete}" required minlength="8">
@@ -261,7 +272,7 @@ function wireEyes(root) {
 }
 route(/^\/signin$/, (m, url) => {
   if (S.me) return go('/', true);
-  const remembered = localStorage.getItem('gh_username') || '';
+  const remembered = ls.getItem('gh_username') || '';
   $app.innerHTML = `<div class="auth">
     <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button></div>
     <img class="logo-h" src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub" width="220" height="56">
@@ -283,14 +294,14 @@ route(/^\/signin$/, (m, url) => {
   </div>`;
   setTitle('Sign in');
   wireEyes($app);
-  $app.querySelector('#guest').addEventListener('click', () => { S.guest = true; localStorage.setItem('gh_guest', '1'); });
+  $app.querySelector('#guest').addEventListener('click', () => { S.guest = true; ls.setItem('gh_guest', '1'); });
   $app.querySelector('#f').addEventListener('submit', async (e) => {
     e.preventDefault(); const u = $app.querySelector('#u').value.trim(), p = $app.querySelector('#p').value;
     const msg = $app.querySelector('#msg'); if (!u || !p) { msg.innerHTML = `<div class="err">Enter your username and password.</div>`; return; }
-    const r = await api('/api/auth/signin', { method: 'POST', body: { username: u, password: p } });
+    const r = await api('/api/auth/signin', { method: 'POST', body: { username: u, password: p } }); await adoptSession(r);
     if (!r.ok) { msg.innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
-    if ($app.querySelector('#rem').checked) localStorage.setItem('gh_username', r.user.username); else localStorage.removeItem('gh_username');
-    S.guest = false; localStorage.removeItem('gh_guest'); await refreshMe(); toast(`Welcome back, ${r.user.username}!`);
+    if ($app.querySelector('#rem').checked) ls.setItem('gh_username', r.user.username); else ls.removeItem('gh_username');
+    S.guest = false; ls.removeItem('gh_guest'); await refreshMe(); toast(`Welcome back, ${r.user.username}!`);
     go(url.searchParams.get('next') || '/', true);
   });
 });
@@ -309,10 +320,10 @@ route(/^\/signup$/, (m, url) => {
         <div class="hint">Minimum 8 characters</div>
         ${pwField('p2', 'Confirm Password', 'new-password')}
         <div class="lbl">Date of birth <span class="muted tiny">(21+ only)</span></div>
-        ${dobFields('dob', sessionStorage.getItem('gh_dob') || '')}
+        ${dobFields('dob', ss.getItem('gh_dob') || '')}
         <div class="hint" id="dob-hint">The Gaming Hub features cannabis-brand sponsors, so every player must be 21+. Prize winners are verified.</div>
-        <div class="field ic">${icon('gift')}<input class="input" id="ref" placeholder="Invite code (optional)" maxlength="12" autocapitalize="characters" value="${esc(url.searchParams.get('ref') || localStorage.getItem('gh_ref') || '')}"></div>
-        <label class="check"><input type="checkbox" id="agree"> <span>I'm 21+ and agree to the <a href="/terms" target="_blank">Terms of Service</a>, <a href="/privacy" target="_blank">Privacy Policy</a> &amp; <a href="/rules" target="_blank">Official Rules</a></span></label>
+        <div class="field ic">${icon('gift')}<input class="input" id="ref" placeholder="Invite code (optional)" maxlength="12" autocapitalize="characters" value="${esc(url.searchParams.get('ref') || ls.getItem('gh_ref') || '')}"></div>
+        <label class="check"><input type="checkbox" id="agree"> <span>I'm 21+ and agree to the <a href="/terms">Terms of Service</a>, <a href="/privacy">Privacy Policy</a> &amp; <a href="/rules">Official Rules</a></span></label>
         <button class="btn block" type="submit">Create Account</button>
       </form>
       <p class="center small muted" style="margin:16px 0 0">Already have an account? <a href="/signin">Sign In</a></p>
@@ -332,10 +343,10 @@ route(/^\/signup$/, (m, url) => {
     if (dob.age < 21) return fail('You must be 21 or older to join The Gaming Hub.');
     if (!agree) return fail('Please agree to the Terms of Service and Privacy Policy.');
     const ref = $app.querySelector('#ref').value.trim();
-    const r = await api('/api/auth/signup', { method: 'POST', body: { username: u, password: p, agree, dob: dob.iso, ref: ref || undefined } });
+    const r = await api('/api/auth/signup', { method: 'POST', body: { username: u, password: p, agree, dob: dob.iso, ref: ref || undefined } }); await adoptSession(r);
     if (!r.ok) return fail(r.error);
-    localStorage.removeItem('gh_ref');
-    S.guest = false; localStorage.removeItem('gh_guest'); localStorage.setItem('gh_username', r.user.username); await refreshMe();
+    ls.removeItem('gh_ref');
+    S.guest = false; ls.removeItem('gh_guest'); ls.setItem('gh_username', r.user.username); await refreshMe();
     toast(`Account created. Welcome, ${r.user.username}!`); achToast(r.unlocked); go(url.searchParams.get('next') || '/games/jetpack-dash', true);
   });
 });
@@ -347,7 +358,7 @@ route(/^\/forgot$/, () => shell('/forgot', `<div class="narrow"><div class="back
 
 // ---------------- home ----------------
 route(/^\/(home)?$/, async () => {
-  if (!S.me && !S.guest && !localStorage.getItem('gh_seen_splash')) return splash();
+  if (!S.me && !S.guest && !ls.getItem('gh_seen_splash')) return splash();
   const [gw, lb, tn, q] = await Promise.all([api('/api/giveaways?status=active'), api('/api/leaderboard?game=global&limit=5'), api('/api/tournaments'), S.me ? api('/api/quests') : Promise.resolve(null)]);
   const live = gw.ok ? gw.giveaways : [];
   const takeover = live.find(x => x.tier === 'elite' && x.featured);
@@ -438,7 +449,7 @@ route(/^\/games$/, (m, url) => {
 });
 route(/^\/games\/([\w-]+)$/, async (m) => {
   const g = gameById(m[1]); if (!g) return shell('/games', `<div class="empty">Game not found. <a href="/games">All games</a></div>`);
-  const fav = () => JSON.parse(localStorage.getItem('gh_favs') || '[]');
+  const fav = () => JSON.parse(ls.getItem('gh_favs') || '[]');
   const [lb, gw] = await Promise.all([api(`/api/leaderboard?game=${g.id}&limit=5`), api('/api/giveaways?status=active')]);
   const linked = (gw.giveaways || []).filter(x => (x.game_ids || []).includes(g.id));
   const sponsor = linked.find(x => (x.tier === 'premium' || x.tier === 'elite') && (x.brand_color || x.brand_logo));
@@ -466,7 +477,7 @@ route(/^\/games\/([\w-]+)$/, async (m) => {
     </div></div>`);
   const favBtn = document.getElementById('fav');
   const paint = () => { favBtn.style.color = fav().includes(g.id) ? '#f472b6' : ''; };
-  paint(); favBtn.addEventListener('click', () => { const f = fav(); const i = f.indexOf(g.id); i >= 0 ? f.splice(i, 1) : f.push(g.id); localStorage.setItem('gh_favs', JSON.stringify(f)); paint(); toast(i >= 0 ? 'Removed from favorites' : 'Added to favorites'); });
+  paint(); favBtn.addEventListener('click', () => { const f = fav(); const i = f.indexOf(g.id); i >= 0 ? f.splice(i, 1) : f.push(g.id); ls.setItem('gh_favs', JSON.stringify(f)); paint(); toast(i >= 0 ? 'Removed from favorites' : 'Added to favorites'); });
 });
 
 // ---------------- play ----------------
@@ -492,7 +503,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   const bootAt = Date.now();
   const mod = await import('./' + g.module); const Cls = mod[g.cls];
   const bestKey = g.id === 'jetpack-dash' ? 'jd_best' : 'gh_best_' + g.id;
-  let best = +localStorage.getItem(bestKey) || 0;
+  let best = +ls.getItem(bestKey) || 0;
   if (S.me) { const p = await api('/api/profile/' + encodeURIComponent(S.me.username)); const b = p.ok && p.profile.best_by_game.find(x => x.game_id === g.id); if (b) best = Math.max(best, b.best); }
   if (!document.getElementById('game')) return; // navigated away while loading
   let token = null; let tokenErr = null;
@@ -506,7 +517,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   document.getElementById('mute').onclick = () => { game.sfx.toggle(); setMute(); };
   document.getElementById('pause').onclick = () => game.togglePause();
   document.getElementById('exit').onclick = () => go('/games/' + g.id);
-  if (g.id === 'jetpack-dash') { const rot = document.getElementById('rot'); const checkRot = () => rot.classList.toggle('hidden', !(innerHeight > innerWidth && innerWidth < 700)); checkRot(); addEventListener('resize', checkRot); }
+  if (g.id === 'jetpack-dash') { const rot = document.getElementById('rot'); let shown = 0; const checkRot = () => { if (!document.body.contains(rot)) return removeEventListener('resize', checkRot); const p = innerHeight > innerWidth && innerWidth < 700 && shown < 1; rot.classList.toggle('hidden', !p); if (p) { shown++; setTimeout(() => rot.classList.add('hidden'), 5000); } }; checkRot(); addEventListener('resize', checkRot); }
   function showPause() {
     ov.innerHTML = `<div class="card over-card"><h2>Paused</h2><div class="btns"><button class="btn block" id="res">${icon('play')} Resume</button><button class="btn ghost block" id="endrun">${icon('flag')} End run &amp; save score</button><button class="btn ghost block" id="quit">Quit without saving</button></div></div>`;
     ov.classList.remove('hidden');
@@ -514,7 +525,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
     ov.querySelector('#endrun').onclick = () => game.endNow();
   }
   async function finish(res) {
-    if (res.score > (+localStorage.getItem(bestKey) || 0)) localStorage.setItem(bestKey, res.score);
+    if (res.score > (+ls.getItem(bestKey) || 0)) ls.setItem(bestKey, res.score);
     ov.innerHTML = `<div class="card over-card glow-purple"><div class="small muted orb">RUN OVER</div><div class="big">${fmtScore(res.score, g.id)}</div>${res.coins ? `<div class="muted">${icon('coins')} ${res.coins} ${g.id === 'jetpack-dash' ? 'coins' : 'bonus'}</div>` : ''}<div id="sv" style="margin-top:12px"><div class="small muted">Saving score...</div></div>
       <div class="btns"><button class="btn block" id="again">${icon('rotate-ccw')} Play Again</button><a class="btn ghost block" href="/leaderboard?game=${g.id}">${icon('trophy')} Leaderboard</a><a class="btn ghost block" href="/games/${g.id}">Back</a></div></div>`;
     ov.classList.remove('hidden');
@@ -1086,7 +1097,7 @@ async function shareLink({ kind, ref, url, title, text, withRef }) {
   let full = location.origin + url;
   if (S.me) { const r = await api('/api/share', { method: 'POST', body: { kind, ref } }); if (r.ok) { achToast(r.unlocked); if (withRef && r.ref_code) full += (full.includes('?') ? '&' : '?') + 'ref=' + r.ref_code; } }
   try { if (navigator.share) { await navigator.share({ title, text, url: full }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
-  try { await navigator.clipboard.writeText(full); toast('Link copied - share it anywhere!'); } catch { prompt('Copy this link:', full); }
+  if (await copyText(full)) toast('Link copied - share it anywhere!');
 }
 async function followSheet(username, type) {
   const r = await api(`/api/follows/${encodeURIComponent(username)}?type=${type}`);
@@ -1254,7 +1265,7 @@ route(/^\/invite$/, async () => {
       <p class="tiny muted" style="margin:10px 0 0">${icon('shield')} Cosmetic only, no cash value. Self-referrals, duplicate or fake accounts are removed.</p></div>
     ${r.friends.length ? `<div class="section-h"><h2>Your invites</h2></div><div class="card">${r.friends.map(f => `<div class="mini-row"><a href="/u/${encodeURIComponent(f.username)}"><b>${esc(f.username)}</b></a><span class="s small ${f.counted ? '' : 'muted'}">${f.counted ? icon('check') + ' Counted' : 'Waiting for first run'}</span></div>`).join('')}</div>` : ''}
   </div>`);
-  document.getElementById('copy').onclick = async () => { try { await navigator.clipboard.writeText(link); toast('Invite link copied'); } catch { document.getElementById('reflink').select(); } };
+  document.getElementById('copy').onclick = async () => { if (await copyText(link, 'Copy your invite link')) toast('Invite link copied'); };
   document.getElementById('share-inv').onclick = () => shareLink({ kind: 'invite', ref: r.code, url: r.link, title: 'Join me on The Gaming Hub', text: `Play free games and win brand giveaways with me. Use my code ${r.code}!` });
 });
 
@@ -1358,7 +1369,7 @@ let installEvt = null;
 addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; const b = document.getElementById('install'); if (b) b.disabled = false; });
 route(/^\/settings$/, () => {
   const standalone = matchMedia('(display-mode: standalone)').matches;
-  const rm = localStorage.getItem('gh_reduce_motion') === '1';
+  const rm = ls.getItem('gh_reduce_motion') === '1';
   shell('/settings', `<div class="narrow">${pageHead('Settings')}
     ${S.me ? `<div class="card pad"><h2 style="margin-bottom:10px">Account</h2><div class="mini-row" style="margin:0 0 10px">${framed(S.me.username, false, S.me.cos)}${pname(S.me.username, false, S.me.cos)}</div>
       <form id="pwf2"><div id="pwmsg2"></div><div class="field"><input class="input" type="password" id="cur2" placeholder="Current password" autocomplete="current-password" aria-label="Current password"></div>
@@ -1373,16 +1384,18 @@ route(/^\/settings$/, () => {
     <div class="card pad about-mini"><img src="/assets/brand/traptech-stacked.webp" alt="Trap Tech Solutions" width="170" height="56"><div><b>The Gaming Hub v3</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
     <div class="card legal-links">${[['/terms', 'file-text', 'Terms of Service'], ['/privacy', 'shield', 'Privacy Policy'], ['/rules', 'scale', 'Official Giveaway Rules'], ['/responsible-play', 'heart-pulse', 'Responsible play']].map(([h, ic, l]) => `<a class="act-row" href="${h}">${icon(ic)}<span class="g">${l}</span>${icon('chevron-right')}</a>`).join('')}</div>
   </div>`);
-  document.getElementById('rm').onchange = (e) => { localStorage.setItem('gh_reduce_motion', e.target.checked ? '1' : '0'); document.documentElement.classList.toggle('reduce-motion', e.target.checked); };
+  document.getElementById('rm').onchange = (e) => { ls.setItem('gh_reduce_motion', e.target.checked ? '1' : '0'); document.documentElement.classList.toggle('reduce-motion', e.target.checked); };
   const ib = document.getElementById('install'); ib.onclick = async () => { if (!installEvt) return toast('Use your browser menu: "Install app" / "Add to Home Screen"'); installEvt.prompt(); await installEvt.userChoice; installEvt = null; ib.disabled = true; };
   const pf = document.getElementById('pwf2');
   if (pf) pf.addEventListener('submit', async (e) => { e.preventDefault(); const out = document.getElementById('pwmsg2'); const r = await api('/api/auth/password', { method: 'POST', body: { current: document.getElementById('cur2').value, password: document.getElementById('np2').value } }); out.innerHTML = r.ok ? '<div class="ok-msg">Password changed.</div>' : `<div class="err">${esc(r.error)}</div>`; });
 });
-document.documentElement.classList.toggle('reduce-motion', localStorage.getItem('gh_reduce_motion') === '1');
+document.documentElement.classList.toggle('reduce-motion', ls.getItem('gh_reduce_motion') === '1');
 // offline banner + service worker (PWA)
 function netBanner() { let b = document.getElementById('offline'); if (navigator.onLine) { if (b) b.remove(); return; } if (!b) { b = document.createElement('div'); b.id = 'offline'; b.className = 'offline-bar'; b.setAttribute('role', 'status'); b.innerHTML = `${icon('wifi-off')} You're offline. Scores will save when you reconnect.`; document.body.appendChild(b); } }
 addEventListener('online', netBanner); addEventListener('offline', netBanner);
-if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+const unlockAudio = () => { try { const AC = window.AudioContext || window.webkitAudioContext; if (AC) { const ac = window.__ghAC || (window.__ghAC = new AC()); if (ac.state === 'suspended') ac.resume(); const b = ac.createBuffer(1, 1, 22050); const src = ac.createBufferSource(); src.buffer = b; src.connect(ac.destination); src.start(0); } } catch {} removeEventListener('pointerdown', unlockAudio, true); removeEventListener('touchend', unlockAudio, true); };
+addEventListener('pointerdown', unlockAudio, true); addEventListener('touchend', unlockAudio, true);
+if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigator.serviceWorker.register('/sw.js').catch(() => {}); } catch {} });
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
 // ---------------- boot ----------------

@@ -261,3 +261,12 @@ node tools/e2e-browser.js                  # headless-Chrome checks + screenshot
 node tools/e2e-scale.js                    # v4 scale test: 300 players / ~3.5k runs, ranking + tiebreaks, lock, DQ/promote, latency, screenshots/v4/
 python3 tools/compare.py                   # mockup vs built side-by-side images
 ```
+
+
+## How to open the hub in Potato
+
+1. **Share the link in any Potato chat/channel** (e.g. `https://<your-domain>/`). Tapping it opens the hub in Potato's built-in browser - no install needed. Everything works there: sign-up, every game, giveaways, sharing (copy sheet when the system share sheet isn't available).
+2. **Pin it in your channel**: post the link with a short line ("Play free, win prizes") and pin the message so members can reopen it any time.
+3. **As a bot game (optional)**: create a bot with Potato's bot creator, register a game with `/newgame`, send it with `sendGame` and answer the game callback with the hub URL (e.g. `https://<your-domain>/play/jetpack-dash`). Potato opens it in its built-in browser. (Potato has no Telegram-style mini-app SDK; the hub needs none.)
+4. If a phone's in-app browser blocks cookies/storage, the hub keeps you signed in for that visit via an in-memory session; open in Safari/Chrome (menu > "Open in browser") to stay signed in between visits.
+5. Test locally: `node tools/e2e-mobile.js` (Pixel 7, iPhone 14, Android WebView, iOS in-app, locked WebView).

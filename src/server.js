@@ -15,6 +15,8 @@ const { gameBoard, globalBoard, ranked, giveawayEntrants, giveawayStatus, active
 const app = express();
 app.set('trust proxy', true);
 app.disable('x-powered-by');
+// gzip/brotli-free compression for text assets + JSON (fast first load on 4G and in in-app browsers)
+app.use(require('compression')({ threshold: 1024 }));
 app.use(express.json({ limit: '32kb' }));
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
@@ -77,15 +79,18 @@ const H = {};
 
 // ---------- auth ----------
 function currentUser(req) {
-  const tok = verify(cfg.SESSION_SECRET, parseCookies(req).gh_sess);
+  // cookie first; X-Session header for in-app browsers (Potato / WebViews) that block cookies
+  const tok = verify(cfg.SESSION_SECRET, parseCookies(req).gh_sess || String(req.headers['x-session'] || ''));
   if (!tok || tok.e < now()) return null;
   const u = db.prepare('SELECT id, username, created_at, banned, is_demo, eq_banner, eq_frame, eq_title, eq_badge FROM users WHERE id=?').get(tok.u);
   if (!u || u.banned) return null;
   return u;
 }
 function startSession(req, res, user) {
-  setCookie(req, res, 'gh_sess', sign(cfg.SESSION_SECRET, { u: user.id, e: now() + cfg.SESSION_TTL_MS }), cfg.SESSION_TTL_MS);
+  const t = sign(cfg.SESSION_SECRET, { u: user.id, e: now() + cfg.SESSION_TTL_MS });
+  setCookie(req, res, 'gh_sess', t, cfg.SESSION_TTL_MS);
   db.prepare('UPDATE users SET last_seen=? WHERE id=?').run(now(), user.id);
+  return t;
 }
 const requireUser = (req, res, next) => { const u = currentUser(req); if (!u) return bad(res, 401, 'Please sign in first.'); req.user = u; next(); };
 function isAdmin(req) { const t = verify(cfg.SESSION_SECRET + ':admin', parseCookies(req).gh_admin); return !!(t && t.adm && t.e > now()); }
@@ -114,9 +119,9 @@ app.post('/api/auth/signup', limiter('signup', 10, 3600e3), (req, res) => {
   const user = { id: info.lastInsertRowid, username };
   if (referrer) require('./notify').notify(referrer.id, 'referral', `${username} signed up with your invite`, 'It counts as soon as they finish their first scored run.', '/u/' + encodeURIComponent(username), 'gift');
   logActivity('player', `New player registered: ${username}`, user.id);
-  startSession(req, res, user);
+  const session = startSession(req, res, user);
   const unlocked = ach.evaluate(user.id, { games: [] }).fresh;
-  res.json({ ok: true, user: { username, cos: ach.publicCos({}) }, unlocked, referred: !!referrer });
+  res.json({ ok: true, user: { username, cos: ach.publicCos({}) }, unlocked, referred: !!referrer, session });
 });
 
 app.post('/api/auth/signin', limiter('signin', 20, 15 * 60e3), (req, res) => {
@@ -124,8 +129,8 @@ app.post('/api/auth/signin', limiter('signin', 20, 15 * 60e3), (req, res) => {
   const u = db.prepare('SELECT * FROM users WHERE username=?').get(username);
   if (!u || !bcrypt.compareSync(password, u.pass_hash)) return bad(res, 401, 'Wrong username or password.');
   if (u.banned) return bad(res, 403, 'This account has been suspended.');
-  startSession(req, res, u);
-  res.json({ ok: true, user: { username: u.username, cos: ach.publicCos(u) } });
+  const session = startSession(req, res, u);
+  res.json({ ok: true, user: { username: u.username, cos: ach.publicCos(u) }, session });
 });
 
 app.post('/api/auth/signout', (req, res) => { setCookie(req, res, 'gh_sess', '', 0); res.json({ ok: true }); });

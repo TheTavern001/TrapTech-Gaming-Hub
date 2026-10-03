@@ -847,3 +847,18 @@ code.hash { font-size: .68rem; word-break: break-all; background: rgba(5,8,26,.7
   .pill { border-color: #999 !important; color: #000 !important; background: #fff !important; }
 }
 .lb tr.zone td.rk { color: var(--gold); text-shadow: 0 0 8px rgba(251,191,36,.5); }
+
+/* ---------- v5: phones + in-app browsers (Potato, Android WebView, iOS WKWebView) ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
+body, #app, .splash, .gate { min-height: 100vh; min-height: 100dvh; }
+a, button, .btn, .chip, .iconbtn, input, select, textarea, label { touch-action: manipulation; }
+.topbar { padding-top: max(env(safe-area-inset-top, 0px), 0px); padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
+.page { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.play-wrap { height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); overscroll-behavior: none; }
+#game { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.input, input, select, textarea { font-size: max(16px, 1em); } /* no iOS focus zoom */
+.copy-sheet .input { width: 100%; margin-bottom: 8px; }
+@media (hover: none) {
+  .gcard:hover, a.card:hover, a.gcard:hover, a.t-card:hover { transform: none; box-shadow: none; }
+  .btn:hover { filter: none; }
+}
