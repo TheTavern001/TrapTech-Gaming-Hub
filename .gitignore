@@ -26,3 +26,9 @@ screenshots/
 .DS_Store
 .vscode/
 .idea/
+
+# v5 raw asset downloads (sources + licenses recorded in CREDITS.md and assets-src/meta_*.json)
+assets-src/*.jpg
+assets-src/*.png
+assets-src/*.zip
+assets-src/kenney_racing/
