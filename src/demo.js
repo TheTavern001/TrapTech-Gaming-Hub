@@ -46,7 +46,7 @@ function seed() {
     });
     const insG = db.prepare(`INSERT INTO giveaways (title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,created_at,updated_at,is_demo)
       VALUES (?,?,?,?,?,?,'play','jetpack-dash',?,1,?,?,1)`);
-    const rules = 'Must be 18+ (21+ where required). No purchase necessary. One account per person. Winner will be drawn from players who play the linked game during the giveaway window and contacted via their Potato username.';
+    const rules = 'Must be 21+ and a legal US resident where not void. No purchase necessary. One account per person. Winner will be drawn from players who play the linked game during the giveaway window and contacted via their Potato username.';
     insG.run('$250 Store Credit', 'HighTimes', '$250 store credit', '/assets/giveaways/store-credit-art.webp', t - 3 * D, t + 2 * D + 14 * H + 32 * 60e3, rules, t, t);
     insG.run('PS5 + Games Bundle', 'Terp Tavern', 'PlayStation 5 console + 3 games', '/assets/giveaways/ps5-bundle-art.webp', t - 1 * D, t + 5 * D + 18 * H + 42 * 60e3, rules, t, t);
     insG.run('Neon Merch Drop', 'Trap Tech Solutions', 'Hoodie + hat + sticker pack', '/assets/brand/hero-banner.webp', t + 2 * D, t + 9 * D, rules, t, t);
@@ -70,13 +70,38 @@ function seed() {
     insA.run('entry', 'TerpQueen entered "$250 Store Credit"', null, t - 3 * 60e3);
     insA.run('booking', 'Booking request submitted: HighTimes (premium)', null, t - 12 * 60e3);
     insA.run('highscore', 'New high score (Jetpack Dash): BlazedKing - 4,120m', null, t - 15 * 60e3);
+
+    // ---------- v3 demo: tournaments, follows, check-in streaks, broadcast notifications ----------
+    const insT = db.prepare(`INSERT INTO tournaments (title, game_id, format, description, prize, start_at, qual_end_at, round_ms, end_at, active, created_at, is_demo) VALUES (?,?,?,?,?,?,?,?,?,1,?,1)`);
+    insT.run('Weekend Drift Cup', 'drift-rush', 'timed', 'Best single Drift Rush run between the start and the end wins. Play as many runs as you like - only your best counts.', 'Tournament Champ title + Tournament Gold frame (cosmetic)', t - 1 * D, null, null, t + 2 * D, t);
+    const bq = t - 18 * H, br = 12 * H;
+    insT.run('Plinko Bracket Battle', 'plinko', 'bracket', 'Qualify with your best Plinko run, then the top 8 go head-to-head in async knockout rounds. Higher best score in each round advances.', 'Finalist title + Bracket Lines banner (cosmetic)', t - 2 * D, bq, br, bq + 3 * br, t);
+    insT.run('Terp Tapper Rhythm Open', 'terp-tapper', 'timed', 'Two days of rhythm. Top score takes the crown.', 'Tournament Champ title (cosmetic)', t + 3 * D, null, null, t + 5 * D, t);
+    ids.forEach(([id], i) => {
+      // drift cup runs (inside the window)
+      if (i < 9) { const sc = Math.floor(9000 - i * 700 + rand() * 500); const at = t - (2 + i) * H; insR.run(id, 'drift-rush', sc, 0, 60e3, at - 60e3, at); }
+      // plinko qualifiers (top 8 seeded) + quarterfinal runs + some semifinal runs
+      if (i < 10) { const at = t - 30 * H - i * H; insR.run(id, 'plinko', 3200 - i * 180, 0, 50e3, at - 50e3, at); }
+      if (i < 8) { const at = t - 12 * H - i * 10 * 60e3; insR.run(id, 'plinko', Math.floor(1400 + rand() * 1500), 0, 50e3, at - 50e3, at); }
+      if (i < 8 && rand() < 0.6) { const at = t - 2 * H - i * 5 * 60e3; insR.run(id, 'plinko', Math.floor(1400 + rand() * 1600), 0, 50e3, at - 50e3, at); }
+      // follows + check-in streaks
+      for (let k = 1; k <= 3; k++) { const other = ids[(i + k * 2) % ids.length]; if (other[0] !== id) db.prepare('INSERT OR IGNORE INTO follows (follower_id, followee_id, created_at) VALUES (?,?,?)').run(id, other[0], t - k * D); }
+      const PR = require('./progress'); const today = PR.dayNum(t); const streak = Math.max(1, 12 - i);
+      for (let d = 0; d < streak; d++) db.prepare('INSERT OR IGNORE INTO checkins (user_id, day, xp, created_at) VALUES (?,?,?,?)').run(id, today - d, PR.checkinXp(streak - d), PR.dayStart(today - d) + 9 * H);
+    });
+    const N = require('./notify');
+    N.notify(null, 'season', 'Season 1: Neon Genesis is live', 'Earn XP from runs, quests and daily check-ins to unlock 20 free tiers of cosmetic rewards.', '/season', 'calendar-range', t - 5 * H, 1);
+    N.notify(null, 'tournament', 'New tournament: Weekend Drift Cup', 'Drift Rush • timed • free entry, cosmetic prizes', '/tournaments', 'swords', t - 1 * D, 1);
+    insA.run('tournament', 'New tournament: Weekend Drift Cup (Drift Rush)', null, t - 1 * D);
+    insA.run('levelup', 'TerpQueen reached level 10', ids[1] ? ids[1][0] : null, t - 40 * 60e3);
+    insA.run('streak', 'BlazedKing hit a 7-day streak', ids[0] ? ids[0][0] : null, t - 5 * H);
   })();
   // achievements for the demo players (server-side evaluation, same as for real players)
   try {
     const ach = require('./achievements'); const COS = require('./cosmetics');
     const upd = db.prepare('UPDATE users SET eq_banner=?, eq_frame=?, eq_title=?, eq_badge=? WHERE id=?');
     for (const [id] of ids) {
-      const ev = ach.evaluate(id); const own = ach.ownedFrom(ev.have);
+      const ev = ach.evaluate(id, { quiet: true }); const own = ach.ownedFrom(ev.have);
       // demo players show off what they earned (rarest-looking pick = last unlocked of each type)
       const pick = (type, def) => { const l = [...own[type]].filter(x => x !== def); return l.length ? l[(id * 7) % l.length] : def; };
       const badges = [...ev.have.keys()]; const badge = badges.length ? badges[(id * 3) % badges.length] : '';
@@ -95,6 +120,8 @@ function wipe() {
     r.announcements = db.prepare('DELETE FROM announcements WHERE is_demo=1').run().changes;
     r.activity = db.prepare('DELETE FROM activity WHERE is_demo=1').run().changes;
     db.prepare('DELETE FROM runs WHERE is_demo=1').run();
+    r.tournaments = db.prepare('DELETE FROM tournaments WHERE is_demo=1').run().changes;
+    db.prepare('DELETE FROM notifications WHERE is_demo=1').run();
   })();
   return r;
 }

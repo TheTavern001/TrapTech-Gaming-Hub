@@ -99,8 +99,35 @@ X('s-twins', 'silver', 'copy', 'Deja Vu', 'Score the exact same (non-zero) score
 X('s-og', 'gold', 'badge-check', 'OG', 'Be one of the first 100 players to join the hub', 1, s => s.og, [R('title', 'og-member')]);
 X('s-complete', 'legendary', 'star', 'Completionist', 'Unlock 50 achievements', 50, s => s.achCount, [R('banner', 'holo')]);
 
+// ---------- v3: streaks, quests, levels, seasons ----------
+const P = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat: 'progress', tier, icon, name, desc, target, value, rewards });
+P('streak-3', 'bronze', 'calendar-check', 'Early Bird', 'Check in 3 days in a row', 3, s => s.streakBest, [R('title', 'early-bird')]);
+P('streak-7', 'silver', 'sunrise', 'Habit Former', 'Check in 7 days in a row', 7, s => s.streakBest, [R('title', 'habit-former'), R('banner', 'sunrise')]);
+P('streak-30', 'epic', 'flame', 'Eternal Flame', 'Check in 30 days in a row', 30, s => s.streakBest, [R('frame', 'streak'), R('banner', 'streak-fire')]);
+P('quest-1', 'bronze', 'scroll-text', 'Questor', 'Claim your first daily quest', 1, s => s.questsDone, [R('title', 'questor')]);
+P('quest-25', 'gold', 'map', 'Quest Legend', 'Claim 25 daily quests', 25, s => s.questsDone, [R('title', 'quest-legend'), R('banner', 'quest-map')]);
+P('level-5', 'bronze', 'chevrons-up', 'Level 5', 'Reach player level 5', 5, s => s.level, [R('title', 'level-grinder')]);
+P('level-10', 'silver', 'chevrons-up', 'Level 10', 'Reach player level 10', 10, s => s.level, [R('frame', 'level')]);
+P('level-25', 'epic', 'shield-check', 'Veteran', 'Reach player level 25', 25, s => s.level, [R('title', 'veteran'), R('banner', 'level-up')]);
+P('season-3', 'bronze', 'calendar-range', 'Season Starter', 'Reach tier 3 of a season track', 3, s => s.seasonTier, [R('title', 'season-starter')]);
+P('season-5', 'silver', 'calendar-range', 'Season Pass', 'Reach tier 5 of a season track', 5, s => s.seasonTier, [R('banner', 'season-one')]);
+P('season-10', 'gold', 'calendar-range', 'Laurels', 'Reach tier 10 of a season track', 10, s => s.seasonTier, [R('frame', 'season')]);
+P('season-20', 'legendary', 'crown', 'Season Legend', 'Complete all 20 tiers of a season track', 20, s => s.seasonTier, [R('title', 'season-legend')]);
+// ---------- v3: tournaments ----------
+L('tourney-enter', 'bronze', 'swords', 'Competitor', 'Play a run in a tournament', 1, s => s.tourney.entered, [R('title', 'competitor')]);
+L('tourney-podium', 'gold', 'medal', 'Finalist', 'Finish top 3 in a timed tournament or reach a bracket final', 1, s => s.tourney.podium, [R('title', 'finalist'), R('banner', 'tourney-bracket')]);
+L('tourney-win', 'epic', 'trophy', 'Tournament Champ', 'Win a tournament', 1, s => s.tourney.wins, [R('title', 'tournament-champ'), R('frame', 'tourney')]);
+// ---------- v3: friends, referrals, sharing ----------
+const F = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat: 'social', tier, icon, name, desc, target, value, rewards });
+F('follow-1', 'bronze', 'user-plus', 'Social Butterfly', 'Follow another player', 1, s => s.following, [R('title', 'social-butterfly')]);
+F('followers-5', 'silver', 'users', 'Influencer', 'Get 5 followers', 5, s => s.followers, [R('title', 'influencer'), R('frame', 'friend')]);
+F('ref-1', 'silver', 'gift', 'Recruiter', 'Invite a friend who signs up with your code and finishes a run', 1, s => s.referrals, [R('title', 'recruiter'), R('banner', 'recruiter')]);
+F('ref-5', 'gold', 'megaphone', 'Ambassador', 'Invite 5 friends who sign up and finish a run', 5, s => s.referrals, [R('title', 'ambassador'), R('banner', 'crew')]);
+F('referred', 'bronze', 'handshake', 'Newcomer', "Join with a friend's invite code", 1, s => s.referred, [R('title', 'newcomer')]);
+F('share-1', 'bronze', 'share-2', 'Hype Sharer', 'Share a score card or giveaway link', 1, s => s.shares, [R('title', 'hype-sharer')]);
+
 const BY_ID = Object.fromEntries(A.map(a => [a.id, a]));
-const CATS = [['games', 'Game milestones'], ['overall', 'Overall'], ['giveaways', 'Giveaways'], ['community', 'Community'], ['leaderboards', 'Leaderboards'], ['secret', 'Secret']];
+const CATS = [['games', 'Game milestones'], ['overall', 'Overall'], ['progress', 'Streaks & seasons'], ['giveaways', 'Giveaways'], ['community', 'Community'], ['social', 'Friends & referrals'], ['leaderboards', 'Leaderboards & tournaments'], ['secret', 'Secret']];
 
 // sanity: every reward must exist
 for (const a of A) for (const r of a.rewards) if (!COS.BY[r.type][r.id]) throw new Error(`achievement ${a.id}: unknown ${r.type} ${r.id}`);
@@ -166,6 +193,16 @@ function computeStats(userId, opts = {}) {
   }
   for (const g of cfg.GAMES) { if (!st.game[g.id]) continue; const [ar, an] = rankIn(boards.gameBoard(g.id)); if (ar === 1 && an >= 3) st.lb.allTime1++; }
   const [gr, gn] = rankIn(boards.globalBoard(0)); if (gr && gr <= 10 && gn >= 11) st.lb.globalTop10 = 1;
+  // v3
+  const PR = require('./progress');
+  st.streakBest = PR.streakInfo(userId).best; st.questsDone = PR.questsDone(userId);
+  st.level = PR.levelFor(PR.xpFor(userId)).level; st.seasonTier = PR.bestSeasonTier(userId);
+  st.tourney = require('./tournaments').placements(userId);
+  st.following = db.prepare('SELECT COUNT(*) AS c FROM follows WHERE follower_id=?').get(userId).c;
+  st.followers = db.prepare('SELECT COUNT(*) AS c FROM follows WHERE followee_id=?').get(userId).c;
+  st.referrals = db.prepare('SELECT COUNT(*) AS c FROM users r WHERE r.referred_by=? AND r.banned=0 AND EXISTS (SELECT 1 FROM runs WHERE user_id=r.id)').get(userId).c;
+  st.referred = db.prepare('SELECT referred_by FROM users WHERE id=?').get(userId).referred_by ? 1 : 0;
+  st.shares = db.prepare('SELECT COUNT(*) AS c FROM shares WHERE user_id=?').get(userId).c;
   return st;
 }
 
@@ -180,7 +217,8 @@ function evaluate(userId, opts = {}) {
     let added = 0;
     for (const a of A) {
       if (have.has(a.id)) continue;
-      if (a.value(st) >= a.target) { ins.run(userId, a.id, t); have.set(a.id, t); fresh.push(a); added++; }
+      if (a.value(st) >= a.target) { ins.run(userId, a.id, t); have.set(a.id, t); fresh.push(a); added++;
+        if (!opts.quiet) require('./notify').notify(userId, 'achievement', `Achievement unlocked: ${a.name}`, a.desc, '/achievements', a.icon, t); }
     }
     if (!added) break;
   }

@@ -21,11 +21,11 @@ function client() {
   const A = client(), B = client(), ADM = client(), anon = client();
   const ua = 'e2e_' + Math.random().toString(36).slice(2, 8), ub = 'e2e_' + Math.random().toString(36).slice(2, 8);
   console.log('# accounts');
-  let r = await A('/api/auth/signup', { body: { username: 'bad name', password: 'x', agree: true } }); ok(r.status === 400, 'signup rejects invalid username');
-  r = await A('/api/auth/signup', { body: { username: ua, password: 'hunter2hunter2', agree: true } }); ok(r.body.ok, 'signup A ' + ua, r.body);
+  let r = await A('/api/auth/signup', { body: { username: 'bad name', password: 'x', agree: true, dob: '1990-05-05' } }); ok(r.status === 400, 'signup rejects invalid username');
+  r = await A('/api/auth/signup', { body: { username: ua, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.body.ok, 'signup A ' + ua, r.body);
   ok((r.body.unlocked || []).some(a => a.id === 'welcome'), 'signup unlocks the "welcome" achievement (server-side)', r.body.unlocked);
-  r = await A('/api/auth/signup', { body: { username: ua.toUpperCase(), password: 'hunter2hunter2', agree: true } }); ok(r.status === 409, 'duplicate username (case-insensitive) rejected');
-  r = await B('/api/auth/signup', { body: { username: ub, password: 'hunter2hunter2', agree: true } }); ok(r.body.ok, 'signup B ' + ub);
+  r = await A('/api/auth/signup', { body: { username: ua.toUpperCase(), password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.status === 409, 'duplicate username (case-insensitive) rejected');
+  r = await B('/api/auth/signup', { body: { username: ub, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.body.ok, 'signup B ' + ub);
   r = await anon('/api/auth/signin', { body: { username: ua, password: 'wrongpass' } }); ok(r.status === 401, 'signin wrong password rejected');
   const A2 = client(); r = await A2('/api/auth/signin', { body: { username: ua, password: 'hunter2hunter2' } }); ok(r.body.ok, 'signin A works');
   r = await A2('/api/me'); ok(r.body.user && r.body.user.username === ua, '/api/me returns signed-in user');
@@ -99,7 +99,7 @@ function client() {
 
   console.log('# v2: all games playable with per-game anti-cheat');
   const C = client(); const uc = 'e2e_' + Math.random().toString(36).slice(2, 8);
-  r = await C('/api/auth/signup', { body: { username: uc, password: 'hunter2hunter2', agree: true } }); ok(r.body.ok, 'signup C (game runner) ' + uc);
+  r = await C('/api/auth/signup', { body: { username: uc, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.body.ok, 'signup C (game runner) ' + uc);
   r = await anon('/api/games'); const GAMES = r.body.games;
   ok(GAMES.length === 8 && GAMES.every(g => g.playable && g.module && g.ac && g.tiers), 'all 8 games are playable with module + caps + tiers', GAMES.map(g => g.id));
   for (const g of GAMES) { const js = await anon('/js/' + g.module); ok(js.status === 200 && String(js.body).includes('class ' + g.cls), `game module served: ${g.module}`); }
@@ -162,7 +162,7 @@ function client() {
 
   console.log('# v2: achievements + cosmetics');
   r = await C('/api/achievements'); const AL = r.body.achievements;
-  ok(AL.length >= 60 && AL.length <= 100, `achievement catalog size ${AL.length}`);
+  ok(AL.length >= 100 && AL.length <= 140, `achievement catalog size ${AL.length}`);
   ok(AL.find(a => a.id === 'first-run').unlocked && AL.every(a => typeof a.rarity_pct === 'number' && a.rarity), 'achievements list has unlocked state + rarity');
   ok(AL.filter(a => a.hidden && !a.unlocked).every(a => a.name === 'Secret achievement'), 'secret achievements stay hidden until unlocked');
   const pg = AL.find(a => a.id === 'plinko-bronze'); ok(pg.progress === 600 && pg.target === 900, 'progress is reported (plinko 600/900)', pg);
@@ -182,6 +182,119 @@ function client() {
   ok((r.body.unlocked || []).some(a => a.id === 'react-1'), 'first hype unlocks react-1');
   r = await C('/api/community/react', { body: { key: post.key } }); ok(r.body.ok && !r.body.mine, 'un-hype toggles off');
 
+  console.log('# v3: 21+ date-of-birth check at signup');
+  const D = client(); const ud = 'e2e_' + Math.random().toString(36).slice(2, 8);
+  r = await D('/api/auth/signup', { body: { username: ud, password: 'hunter2hunter2', agree: true } }); ok(r.status === 400 && /date of birth/i.test(r.body.error), 'signup without a date of birth is rejected', r.body);
+  const yng = new Date(); yng.setFullYear(yng.getFullYear() - 20);
+  r = await D('/api/auth/signup', { body: { username: ud, password: 'hunter2hunter2', agree: true, dob: yng.toISOString().slice(0, 10) } }); ok(r.status === 403 && r.body.underage, 'under-21 signup rejected (403 underage)', r.body);
+
+  console.log('# v3: XP levels, check-in streaks, daily quests, season');
+  r = await C('/api/me'); const lv0 = r.body.user.level;
+  ok(lv0 && lv0.level >= 1 && lv0.xp > 0 && lv0.need > 0 && r.body.user.ref_code, '/api/me has level/xp + ref code', r.body.user.level);
+  r = await C('/api/checkin', { body: {} }); ok(r.body.ok && r.body.streak.fresh && r.body.streak.current === 1 && r.body.xp === 20, 'first daily check-in: 1-day streak, +20 XP', r.body.streak);
+  r = await C('/api/checkin', { body: {} }); ok(r.body.ok && !r.body.streak.fresh && r.body.xp === 0, 'second check-in on the same day gives no XP');
+  r = await C('/api/me'); ok(r.body.user.level.xp === lv0.xp + 20 && r.body.user.streak.checked_today, 'check-in XP counted toward level', [lv0.xp, r.body.user.level.xp]);
+  r = await anon('/api/checkin', { body: {} }); ok(r.status === 401, 'guests cannot check in');
+  r = await C('/api/quests'); const Q = r.body;
+  ok(Q.quests.length === 3 && Q.quests.every(q => q.text && q.xp > 0 && q.n > 0) && Q.bonus && Q.resets_at > Date.now(), '3 daily quests + all-clear bonus, with reset time', Q.quests && Q.quests.map(q => q.text));
+  r = await A('/api/quests'); ok(r.body.quests.map(q => q.text).join('|') === Q.quests.map(q => q.text).join('|'), 'everyone gets the same daily quests');
+  const qDone = Q.quests.find(q => q.done), qOpen = Q.quests.find(q => !q.done);
+  ok(!!qDone, 'C (8 runs today) has completed at least one quest', Q.quests.map(q => [q.text, q.value, q.n]));
+  if (qDone) {
+    r = await C(`/api/quests/${qDone.idx}/claim`, { body: {} }); ok(r.body.ok && r.body.xp === qDone.xp && r.body.quests[qDone.idx].claimed, `claim quest "${qDone.text}" (+${qDone.xp} XP)`, r.body);
+    ok((r.body.unlocked || []).some(a => a.id === 'quest-1'), 'first claimed quest unlocks quest-1', r.body.unlocked);
+    r = await C(`/api/quests/${qDone.idx}/claim`, { body: {} }); ok(r.status === 400, 'a quest cannot be claimed twice');
+  }
+  if (qOpen) { r = await C(`/api/quests/${qOpen.idx}/claim`, { body: {} }); ok(r.status === 400, 'an unfinished quest cannot be claimed'); }
+  r = await C('/api/quests/3/claim', { body: {} }); ok(r.status === 400 || (r.body.ok && Q.quests.every(q => q.done)), 'bonus needs all 3 quests claimed first');
+  r = await C('/api/season'); const SN = r.body.season;
+  ok(SN.number >= 1 && SN.name && SN.track.length === 20 && SN.track.some(t => t.reward) && SN.xp > 0 && SN.end_at > Date.now(), `season ${SN.number} "${SN.name}": 20-tier free track, C has ${SN.xp} season XP`);
+  ok(r.body.board.some(x => x.username === uc), 'C is on the season leaderboard');
+
+  console.log('# v3: follows, friends leaderboard, notifications');
+  r = await A('/api/follow/' + uc, { body: {} }); ok(r.body.ok && r.body.following && r.body.followers >= 1, 'A follows C');
+  ok((r.body.unlocked || []).some(a => a.id === 'follow-1'), 'first follow unlocks follow-1', r.body.unlocked);
+  r = await A('/api/follow/' + ua, { body: {} }); ok(r.status === 400, "can't follow yourself");
+  r = await anon('/api/follow/' + uc, { body: {} }); ok(r.status === 401, 'guests cannot follow');
+  r = await A('/api/follows/' + ua + '?type=following'); ok(r.body.users.some(u => u.username === uc), "A's following list has C");
+  r = await anon('/api/follows/' + uc + '?type=followers'); ok(r.body.users.some(u => u.username === ua), "C's followers list has A (public)");
+  r = await A('/api/profile/' + uc); ok(r.body.profile.i_follow === true && r.body.profile.followers >= 1 && r.body.profile.level && r.body.profile.level.level >= 1, 'profile shows follow state, follower count and level');
+  r = await A('/api/me'); ok(r.body.user.following >= 1, '/api/me has following count');
+  r = await A('/api/leaderboard?game=plinko&friends=1'); ok(r.body.rows.length >= 1 && r.body.rows.every(x => [ua, uc].includes(x.username)) && r.body.rows.some(x => x.username === uc), 'friends leaderboard = me + players I follow', r.body.rows && r.body.rows.map(x => x.username));
+  r = await anon('/api/leaderboard?game=plinko&friends=1'); ok(r.status === 401, 'friends leaderboard needs sign-in');
+  r = await A('/api/community?tab=following'); ok(r.body.ok && Array.isArray(r.body.items), 'community "following" tab works');
+  r = await C('/api/notifications'); const nf = r.body.items.find(n => n.type === 'follow' && n.title.includes(ua));
+  ok(nf && nf.unread && r.body.unread >= 1, 'C gets a "followed you" notification', r.body.items.slice(0, 3));
+  r = await C('/api/notifications/read', { body: { id: nf && nf.id } }); ok(r.body.ok, 'mark one notification read');
+  r = await C('/api/notifications'); ok(!r.body.items.find(n => n.id === (nf && nf.id)).unread, 'notification is now read');
+  r = await C('/api/notifications/read', { body: {} }); ok(r.body.ok && r.body.unread === 0, 'mark all read -> 0 unread');
+  r = await anon('/api/notifications'); ok(r.status === 401, 'notifications need sign-in');
+
+  console.log('# v3: referrals (invite codes award cosmetics)');
+  r = await C('/api/referral'); const code = r.body.code; ok(/^[A-Z0-9]{6}$/.test(code) && r.body.link === '/r/' + code && r.body.joined === 0, 'C has an invite code + link', r.body);
+  const rr = await fetch(BASE + '/r/' + code, { redirect: 'manual' }); ok(rr.status === 302 && (rr.headers.get('location') || '').includes('ref=' + code), '/r/CODE redirects to signup with the code');
+  r = await D('/api/auth/signup', { body: { username: ud, password: 'hunter2hunter2', agree: true, dob: '1990-05-05', ref: code.toLowerCase() } }); ok(r.body.ok && r.body.referred, 'D signs up with C\'s invite code', r.body);
+  ok((r.body.unlocked || []).some(a => a.id === 'referred'), 'D unlocks "Newcomer" (joined with an invite)', r.body.unlocked);
+  r = await C('/api/referral'); ok(r.body.joined === 1 && r.body.counted === 0 && r.body.friends[0].username === ud, 'C sees 1 invite joined, not counted until first run');
+  r = await D('/api/run/start', { body: { game_id: 'jetpack-dash' } }); const tokD = r.body.token; await sleep(2200);
+  r = await D('/api/score', { body: { token: tokD, score: 30, coins: 1, duration_ms: 2200 } });
+  ok(r.body.ok && r.body.share_url === '/s/' + r.body.run_id && r.body.level && r.body.xp_gained >= 10, 'score response has share_url, level and xp_gained', r.body); const runD = r.body.run_id;
+  r = await C('/api/referral'); ok(r.body.counted === 1, 'referral counts after the friend\'s first run');
+  r = await C('/api/achievements'); ok(r.body.achievements.find(a => a.id === 'ref-1').unlocked, 'C unlocks ref-1 (Recruiter cosmetics)');
+  r = await C('/api/notifications'); ok(r.body.items.some(n => n.type === 'referral' && n.title.includes(ud)), 'C notified that the referral counted');
+
+  console.log('# v3: share cards, OG images, page meta');
+  r = await anon('/api/runs/' + runD); ok(r.body.ok && r.body.run.player.username === ud && r.body.run.score === 30 && r.body.run.score_text, 'public run card data', r.body.run);
+  r = await D('/api/share', { body: { kind: 'run', ref: String(runD) } }); ok(r.body.ok && r.body.ref_code && (r.body.unlocked || []).some(a => a.id === 'share-1'), 'sharing a score card logs it + unlocks share-1', r.body);
+  r = await D('/api/share', { body: { kind: 'nope' } }); ok(r.status === 400, 'share rejects unknown kinds');
+  for (const p of ['/og/default.png', `/og/run/${runD}.png`, `/og/giveaway/${gmulti}.png`, `/og/u/${uc}.png`]) { const x = await fetch(BASE + p); const buf = Buffer.from(await x.arrayBuffer()); ok(x.status === 200 && x.headers.get('content-type') === 'image/png' && buf.slice(1, 4).toString() === 'PNG' && buf.length > 20000, `OG image ${p} (${Math.round(buf.length / 1024)} KB)`); }
+  { const x = await fetch(BASE + '/og/run/99999999.png'); ok(x.status === 200 && x.headers.get('content-type') === 'image/png', 'unknown run falls back to the default OG image'); }
+  r = await anon('/s/' + runD); ok(r.status === 200 && String(r.body).includes(`/og/run/${runD}.png`) && String(r.body).includes(ud) && /twitter:card" content="summary_large_image/.test(r.body), '/s/:id HTML has per-run OG + Twitter meta');
+  r = await anon('/giveaways/' + gmulti); ok(String(r.body).includes('E2E Multi Giveaway') && String(r.body).includes(`/og/giveaway/${gmulti}.png`), 'giveaway page HTML has per-giveaway OG meta');
+  r = await anon('/u/' + uc); ok(String(r.body).includes(`/og/u/${uc}.png`), 'profile page HTML has per-player OG image');
+  r = await anon('/'); ok(/<meta name="author" content="Trap Tech Solutions">/.test(r.body) && /og:image" content="https?:\/\/[^"]+\/og\/default\.png/.test(r.body) && /rel="manifest"/.test(r.body), 'home HTML: Trap Tech author meta, absolute OG image, manifest link');
+
+  console.log('# v3: search');
+  r = await anon('/api/search?q=plinko'); ok(r.body.games.some(g => g.id === 'plinko'), 'search finds games');
+  r = await anon('/api/search?q=' + uc); ok(r.body.players.some(u => u.username === uc), 'search finds players');
+  r = await anon('/api/search?q=' + encodeURIComponent('E2E Multi')); ok(r.body.giveaways.some(g => g.id === gmulti), 'search finds giveaways');
+  r = await anon('/api/search?q='); ok(r.body.ok && !r.body.games.length, 'empty search returns nothing');
+
+  console.log('# v3: tournaments (timed + bracket)');
+  const tStart = t1 - 60e3;
+  r = await ADM('/api/admin/tournaments', { body: { title: 'E2E Timed Cup', game_id: 'plinko', format: 'timed', start_at: tStart, end_at: Date.now() + 3600e3, prize: 'Finalist title', description: 'e2e' } });
+  ok(r.body.ok, 'admin creates a timed tournament'); const tid = r.body.id;
+  r = await anon('/api/tournaments/' + tid); let T = r.body.tournament;
+  ok(T.status === 'live' && T.format === 'timed' && T.board[0] && T.board[0].username === uc && T.board[0].score === 600, 'timed tournament is live; board ranks best score in the window', T.board && T.board.slice(0, 2));
+  r = await C('/api/tournaments/' + tid); ok(r.body.tournament.me && r.body.tournament.me.rank === 1, 'tournament shows my rank');
+  r = await A('/api/notifications'); ok(r.body.items.some(n => n.type === 'tournament' && n.link === '/tournaments/' + tid && n.broadcast), 'new tournament is broadcast to players');
+  r = await anon('/api/tournaments'); ok(r.body.tournaments.some(t => t.id === tid) && r.body.tournaments.some(t => t.format === 'bracket'), 'tournament list has timed + bracket events');
+  r = await ADM('/api/admin/tournaments', { body: { title: 'E2E Bracket', game_id: 'plinko', format: 'bracket', start_at: tStart, qual_end_at: Date.now() - 500, round_ms: 3600e3 } });
+  ok(r.body.ok, 'admin creates a bracket tournament (qualifying just ended)'); const tbid = r.body.id;
+  r = await anon('/api/tournaments/' + tbid); T = r.body.tournament;
+  ok(T.status === 'quarterfinals' && T.bracket.rounds.length === 3 && T.bracket.rounds[0].matches.length === 4 && T.bracket.rounds.map(x => x.name).join() === 'Quarterfinals,Semifinals,Final' && T.bracket.rounds[1].matches.length === 2 && T.bracket.rounds[2].matches[0].tbd && T.bracket.rounds[0].state === 'live', 'bracket: 3 rounds (later rounds TBD), 4 quarterfinal matches', T.bracket && T.bracket.rounds.map(x => x.name));
+  ok(T.bracket.seeds[0].username === uc && T.bracket.rounds[0].matches[0].a.username === uc && T.qualifying[0].username === uc, 'top qualifier is seed 1 in match 1');
+  ok(T.end_at === T.qual_end_at + 3 * 3600e3, 'bracket end = qualifying end + 3 rounds');
+  r = await ADM('/api/admin/tournaments', { body: { title: '', game_id: 'plinko', start_at: Date.now() } }); ok(r.status === 400, 'tournament needs a title');
+  r = await ADM('/api/admin/tournaments', { body: { title: 'x', game_id: 'nope', start_at: Date.now(), end_at: Date.now() + 1 } }); ok(r.status === 400, 'tournament needs a valid game');
+  r = await ADM('/api/admin/tournaments/' + tid, { method: 'PUT', body: { title: 'E2E Timed Cup Renamed', game_id: 'plinko', format: 'timed', start_at: tStart, end_at: Date.now() + 3600e3 } }); ok(r.body.ok, 'admin edits tournament');
+  r = await ADM('/api/admin/tournaments'); ok(r.body.tournaments.some(t => t.id === tid && t.title === 'E2E Timed Cup Renamed'), 'admin tournament list reflects edit');
+  r = await anon('/api/tournaments'); const demoBr = r.body.tournaments.find(t => t.demo && t.format === 'bracket');
+  if (demoBr) { r = await anon('/api/tournaments/' + demoBr.id); const b = r.body.tournament.bracket; ok(b.rounds[0].state === 'done' && b.rounds[0].matches.filter(m => m.a && m.b).every(m => m.winner === 'a' || m.winner === 'b'), 'demo bracket: finished quarterfinals have winners'); }
+  r = await C('/api/profile/' + uc); r = await C('/api/achievements'); ok(r.body.achievements.find(a => a.id === 'tourney-enter').unlocked, 'playing in a tournament window unlocks tourney-enter');
+  r = await anon('/api/tournaments/99999'); ok(r.status === 404, 'unknown tournament 404');
+
+  console.log('# v3: PWA + legal/about pages');
+  r = await anon('/manifest.webmanifest'); const MF = typeof r.body === 'string' ? JSON.parse(r.body) : r.body;
+  ok(/Trap Tech/.test(MF.name) && MF.display === 'standalone' && MF.start_url && MF.icons.some(i => i.sizes === '512x512') && MF.icons.some(i => (i.purpose || '').includes('maskable')), 'web app manifest: name, standalone, 192/512 + maskable icons');
+  for (const ic of MF.icons) { const x = await fetch(BASE + ic.src); ok(x.status === 200, 'manifest icon ' + ic.src); }
+  r = await anon('/sw.js'); ok(r.status === 200 && String(r.body).includes('gh-shell'), 'service worker served');
+  for (const [p, t] of [['/terms', 'Terms of Service'], ['/privacy', 'Privacy Policy'], ['/rules', 'Official Giveaway Rules'], ['/responsible-play', 'Responsible Play'], ['/about', 'About Trap Tech Solutions'], ['/settings', 'Settings'], ['/quests', 'Daily Quests'], ['/season', 'Season'], ['/tournaments', 'Tournaments'], ['/notifications', 'Notifications'], ['/search', 'Search'], ['/invite', 'Invite']]) {
+    r = await anon(p); ok(r.status === 200 && String(r.body).includes('<title>' + t) && String(r.body).includes('Trap Tech Solutions'), `GET ${p}: title "${t}" + Trap Tech meta`);
+  }
+  r = await anon(`/giveaways/${gmulti}/rules`); ok(r.status === 200 && /Official Rules/.test(r.body), 'per-giveaway official rules page');
+  r = await anon('/js/app.js'); ok(/NO PURCHASE NECESSARY/.test(r.body) && /Trap Tech Solutions/.test(r.body) && /A Trap Tech game/.test(r.body), 'app bundle has no-purchase rules, Trap Tech operator + "A Trap Tech game" loader');
+
   console.log('# rate limiting');
   let got429 = false; for (let i = 0; i < 22; i++) { r = await B('/api/run/start', { body: { game_id: 'jetpack-dash' } }); if (r.status === 429) { got429 = true; break; } }
   ok(got429, 'run/start rate limited (20/min per player)');
@@ -195,6 +308,7 @@ function client() {
   if (!process.env.KEEP) {
     console.log('# cleanup');
     for (const id of [gid, gshort, gmulti, gmin]) await ADM('/api/admin/giveaways/' + id, { method: 'DELETE' });
+    for (const id of [tid, tbid]) await ADM('/api/admin/tournaments/' + id, { method: 'DELETE' });
     for (const id of [bid, bid2, bid3]) await ADM('/api/admin/bookings/' + id, { method: 'DELETE' });
     const pl = await ADM('/api/admin/players?q=e2e_'); for (const p of pl.body.players) await ADM('/api/admin/players/' + p.id, { method: 'DELETE' });
     console.log('  removed test giveaways, booking and', pl.body.players.length, 'test players');

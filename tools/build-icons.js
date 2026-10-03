@@ -5,7 +5,11 @@ const OUT = path.join(__dirname, '..', 'public', 'js', 'icons.js');
 const DIR = path.join(__dirname, 'node_modules', 'lucide-static', 'icons');
 const old = fs.readFileSync(OUT, 'utf8').match(/export const ICONS=(\{.*\});/s);
 const prev = old ? JSON.parse(old[1]) : {};
-const EXTRA = ['target', 'disc-3', 'dices', 'palette', 'link', 'unlink', 'badge-check', 'circle-help', 'chart-column', 'shield', 'image', 'layers', 'lock-open', 'flag', 'car', 'brain', 'music', 'circle-dot', 'rocket', 'hand', 'gem', 'swords', 'calendar-days', 'hourglass', 'pin', 'mail', 'info', 'percent', 'square-check', 'chevron-down', 'circle-check', 'circle-x', 'party-popper', 'heart-handshake', 'flame-kindling', 'wand-sparkles', 'repeat', 'grid-3x3', 'mouse-pointer-click', 'arrow-down-to-line', 'trending-up'];
+const EXTRA = ['target', 'disc-3', 'dices', 'palette', 'link', 'unlink', 'badge-check', 'circle-help', 'chart-column', 'shield', 'image', 'layers', 'lock-open', 'flag', 'car', 'brain', 'music', 'circle-dot', 'rocket', 'hand', 'gem', 'swords', 'calendar-days', 'hourglass', 'pin', 'mail', 'info', 'percent', 'square-check', 'chevron-down', 'circle-check', 'circle-x', 'party-popper', 'heart-handshake', 'flame-kindling', 'wand-sparkles', 'repeat', 'grid-3x3', 'mouse-pointer-click', 'arrow-down-to-line', 'trending-up',
+  // v3
+  'calendar-check', 'sunrise', 'scroll-text', 'map', 'chevrons-up', 'shield-check', 'calendar-range', 'megaphone', 'handshake', 'share-2', 'share', 'search', 'bell-ring', 'user-check',
+  'user-minus', 'download', 'copy', 'settings', 'scale', 'triangle-alert', 'heart-pulse', 'smartphone', 'wifi-off', 'x', 'check', 'shuffle', 'play', 'zap', 'clock', 'external-link',
+  'building-2', 'code-xml', 'sparkle', 'eye', 'circle-alert', 'list-checks', 'network', 'bell-off', 'inbox', 'cake', 'ban', 'house', 'arrow-right', 'globe', 'cookie', 'accessibility', 'moon', 'activity'];
 const names = [...new Set([...Object.keys(prev), ...EXTRA])];
 const out = {};
 for (const n of names) {

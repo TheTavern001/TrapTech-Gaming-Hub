@@ -51,9 +51,15 @@ get their logo file and permission first.
 ## Fonts (SIL Open Font License 1.1, self-hosted via @fontsource)
 - **Orbitron** - The Orbitron Project Authors (https://github.com/theleagueof/orbitron)
 - **Exo 2** - The Exo 2 Project Authors (https://github.com/googlefonts/Exo-2.0)
+- `src/og-fonts/*.ttf` are the same Orbitron/Exo 2 files converted from WOFF2 to TTF (fontTools) so resvg can render OG images; still OFL-1.1.
+
+## PWA icons and OG images
+`public/assets/icons/*` (192/512/maskable/apple-touch) are generated from the Gaming Hub logo mark (owner's art). OG images are drawn
+at runtime from the owner's logos (Gaming Hub, Trap Tech Solutions) and game card art.
 
 ## Runtime dependencies (npm)
 - express (MIT), better-sqlite3 (MIT), bcryptjs (MIT)
+- @resvg/resvg-js (MPL-2.0) - renders the SVG share/OG images to PNG on the server (`src/og.js`); used unmodified as an npm dependency
 
 ## Dev/test tools (in `tools/`, not served)
 - playwright-core (Apache-2.0) driving the system Google Chrome for tests/screenshots

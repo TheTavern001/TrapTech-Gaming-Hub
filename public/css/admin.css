@@ -88,3 +88,9 @@
 @media (max-width: 1100px) { .pk-ed { grid-template-columns: 1fr; } }
 
 .agame { scroll-margin-top: 64px; }
+/* v3: Trap Tech branding + polish */
+.tt-bar { display: flex; align-items: center; gap: 6px; margin: -6px 0 12px; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); font-family: 'Orbitron', sans-serif; }
+.tt-bar .ico { width: 14px; height: 14px; } .tt-bar .muted { text-transform: none; letter-spacing: 0; font-family: 'Exo 2', sans-serif; }
+.side-tt { display: grid; gap: 6px; padding: 14px 12px 4px; margin-top: 8px; border-top: 1px solid rgba(99,102,241,.25); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.side-tt img { width: 150px; height: auto; opacity: .9; }
+.adm .card { animation: pageIn .25s ease both; }

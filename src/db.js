@@ -132,6 +132,64 @@ CREATE TABLE IF NOT EXISTS reactions (
 );
 CREATE INDEX IF NOT EXISTS idx_reactions_item ON reactions(item_key);
 CREATE INDEX IF NOT EXISTS idx_runs_user_game ON runs(user_id, game_id, created_at);
+-- v3: daily check-ins (login streak), daily quest claims, follows, notifications, tournaments, shares
+CREATE TABLE IF NOT EXISTS checkins (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  day INTEGER NOT NULL,
+  xp INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, day)
+);
+CREATE TABLE IF NOT EXISTS quest_claims (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  day INTEGER NOT NULL,
+  idx INTEGER NOT NULL,
+  xp INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, day, idx)
+);
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  followee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (follower_id, followee_id)
+);
+CREATE INDEX IF NOT EXISTS idx_follows_followee ON follows(followee_id);
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, -- NULL = broadcast to everyone
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL DEFAULT '',
+  link TEXT NOT NULL DEFAULT '',
+  icon TEXT NOT NULL DEFAULT 'bell',
+  created_at INTEGER NOT NULL,
+  read_at INTEGER,
+  is_demo INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id, created_at);
+CREATE TABLE IF NOT EXISTS tournaments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  game_id TEXT NOT NULL,
+  format TEXT NOT NULL DEFAULT 'timed',   -- timed | bracket
+  description TEXT NOT NULL DEFAULT '',
+  prize TEXT NOT NULL DEFAULT '',
+  start_at INTEGER NOT NULL,
+  qual_end_at INTEGER,                    -- bracket: end of the qualifying window
+  round_ms INTEGER,                       -- bracket: length of each knockout round
+  end_at INTEGER NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER NOT NULL,
+  is_demo INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS shares (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  ref TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (user_id, kind, ref)
+);
 `);
 
 // v2 column migrations (idempotent)
@@ -150,6 +208,12 @@ addCol('users', 'eq_frame', "TEXT NOT NULL DEFAULT ''");
 addCol('users', 'eq_title', "TEXT NOT NULL DEFAULT ''");
 addCol('users', 'eq_badge', "TEXT NOT NULL DEFAULT ''");
 addCol('bookings', 'package_snapshot', "TEXT NOT NULL DEFAULT ''");
+// v3
+addCol('users', 'ref_code', "TEXT");
+addCol('users', 'referred_by', 'INTEGER');
+addCol('users', 'birth_date', "TEXT NOT NULL DEFAULT ''");
+addCol('users', 'notif_seen_at', 'INTEGER NOT NULL DEFAULT 0');
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_ref ON users(ref_code)');
 // every pre-v2 giveaway keeps its single linked game
 db.exec('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) SELECT id, game_id FROM giveaways');
 

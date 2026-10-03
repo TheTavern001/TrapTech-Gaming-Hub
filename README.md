@@ -1,7 +1,9 @@
 # The Gaming Hub by Trap Tech Solutions
 
-Mobile-first game hub with accounts, leaderboards, giveaways, a booking request system and an admin dashboard.
-The first playable game is **Jetpack Dash**, an original HTML5 canvas side-scroller. Other games are "Coming soon" cards.
+Mobile-first game hub with accounts, leaderboards, giveaways, a booking request system and an admin dashboard, designed,
+built and operated by **Trap Tech Solutions**. 8 original HTML5 games, daily quests, login streaks, XP levels, a free season
+track, tournaments (timed and bracket), friends, notifications, share cards and invite codes. Everything is **points and
+cosmetics only, with no real money**. Adults only (21+). See `RESEARCH.md` for the v3 feature-gap research and sources.
 
 - Local URL: http://localhost:8787 (port is set by `PORT` in `.env` or the environment)
 - Public leaderboard: `/leaderboard` · Giveaways: `/giveaways` · Admin: `/admin` (password = `ADMIN_PASSWORD` env var / `.env`)
@@ -123,9 +125,46 @@ Winners show up on the public giveaway page, in the Community feed and in each w
 ban, reset password, delete), Leaderboards (global or per game, all time / 7 days / 30 days, export CSV), Announcements (post to the
 Community feed), Reports (CSV exports and rejected anti-cheat submissions), Settings (wipe or load demo data).
 
+### v3: engagement, social, PWA, legal (all points/cosmetic only)
+- **21+ age gate**: a neutral date-of-birth screen on first visit (not a yes/no button). It is remembered in localStorage for 30 days, and under-21 is blocked for the session.
+  Signup sends the DOB and the **server** rejects anyone under 21 (`403 underage`). `birth_date` is stored. Legal pages (/terms,
+  /privacy, /rules, /responsible-play, /about) stay readable without passing the gate. Limitation: the gate itself is client-side
+  (it's a content notice). The enforced check is at signup, and real prize winners should be verified with ID before fulfilment.
+- **XP and levels** (`src/progress.js`): each run gives 10 XP plus 10 per tier reached, achievements give 25-400, and quests and check-ins add more.
+  Level L needs 100·(L-1)·L/2 XP in total. Level-ups show a toast, post a notification and (every 5th level) appear in the community feed.
+- **Daily check-in streaks**: opening the home page checks you in (+20 XP, +5 per streak day up to +50). `/quests` shows the streak.
+- **Daily quests**: everyone gets the same 3 quests each day (midnight ET reset). They are claimed for XP, and an all-clear bonus adds +100 XP.
+- **Seasons**: calendar quarters. Season 1 "Neon Genesis" runs Oct 1 - Dec 31 2026, with 20 tiers × 300 season XP, a **free track only**
+  (no paid pass) and cosmetic rewards at tiers 3/5/10/20. There's also a season leaderboard.
+- **Tournaments** (`src/tournaments.js`, Admin > Tournaments): *timed* events rank the best single score in a window. *Brackets* run
+  a qualifying window, then the top 8 play 3 async knockout rounds (QF/SF/Final). In each round the higher best score inside the round
+  window advances, and ties go to the higher seed. Creating a tournament broadcasts a notification. Prizes are cosmetic unless you link a real giveaway.
+- **Friends**: follow/unfollow on profiles, follower/following sheets, a **Friends** toggle on leaderboards (you plus the players you follow),
+  and a Community "Following" tab.
+- **Notifications center** (`/notifications`, bell badge): achievements, level-ups, follows, referrals, giveaway wins, plus
+  broadcasts (new giveaways, tournaments, announcements).
+- **Invites/referrals**: every player gets a code (`/invite`, `/r/CODE`). A referral counts once the friend finishes a first scored
+  run, and unlocks Recruiter (1) and Ambassador (5) cosmetics. The friend also gets the "Newcomer" title.
+- **Share cards**: each saved run has `/s/:id`, a score card page with its own OG/Twitter meta. OG images are rendered as PNGs on the server
+  with resvg: `/og/default.png`, `/og/run/:id.png`, `/og/giveaway/:id.png`, `/og/u/:name.png`, `/og/tournament/:id.png` (1200×630,
+  Trap Tech "Built by" footer). Giveaway, profile and tournament pages have share buttons. Sharing unlocks "Hype Sharer".
+- **Search** (`/search`): games, players, giveaways and tournaments.
+- **PWA**: `manifest.webmanifest` ("The Gaming Hub by Trap Tech Solutions", 192/512/maskable icons, shortcuts) and `sw.js`, which uses
+  network-first and caches the app shell for offline. It never caches `/api`, `/og` or `/admin`. Settings has an Install button and a reduce-motion toggle.
+- **Legal templates**: `/terms`, `/privacy`, `/rules` (Official Giveaway Rules template) and `/giveaways/:id/rules` (filled-in rules
+  per giveaway: NO PURCHASE NECESSARY, 21+, US/DC, the host as Sponsor, **Trap Tech Solutions as operator/administrator**, dates, free
+  entry method, skill/random selection, odds, notification, winners list), plus `/responsible-play`. **These are templates. Have counsel
+  review them before running prize promotions.** The rules state that no cannabis/THC/nicotine/alcohol products are awarded as prizes.
+- **Trap Tech branding**: the age gate, splash ("Built by"), sign-in and sign-up ("Powered by Trap Tech"), the footer on every page (full on
+  desktop, compact on mobile) and the drawer, the game loading screen ("A Trap Tech game"), achievements ("Achievement system by
+  Trap Tech"), the host page ("Trap Tech Solutions builds your brand's game"), the booking confirmation, the admin header and login ("Powered by Trap Tech
+  Solutions"), giveaway rules (operator), `/about`, page titles and meta author, OG images and the PWA manifest.
+- **UX polish**: skip link, focus-visible rings, aria labels, live regions, reduced-motion support, skeleton loaders, empty states,
+  page-in animations, an offline banner, and wider desktop grids. There's also a "more" menu on desktop.
+
 ## Demo data
-Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store Credit", "PS5 + Games Bundle", ...), 2 bookings and
-1 announcement are tagged **DEMO** in the UI (`is_demo=1` in the database). Remove them with Admin > Settings > Wipe demo data, or
+Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store Credit", "PS5 + Games Bundle", ...), 2 bookings,
+1 announcement, 3 tournaments (live timed cup, bracket, upcoming), follows, streaks and broadcast notifications are tagged **DEMO** in the UI (`is_demo=1` in the database). Remove them with Admin > Settings > Wipe demo data, or
 `npm run demo:wipe`. Load them again with `npm run demo:seed`. Demo accounts have random passwords, so nobody can log into them.
 
 ## Anti-cheat (basic)
@@ -146,6 +185,11 @@ Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store C
 `GET /api/achievements[?user=]`, `GET /api/cosmetics`, `POST /api/me/cosmetics {banner,frame,title,badge}`, `GET /cosmetics.css`,
 and `/api/admin/*` (cookie session after `POST /api/admin/login`), incl. `GET /api/admin/games` (with linked giveaways),
 `POST /api/admin/giveaways/:id/games {game_id, linked}`, `GET|PUT /api/admin/packages`, `POST /api/admin/packages/reset`, `GET /api/admin/achievements`.
+v3: `POST /api/checkin`, `GET /api/quests`, `POST /api/quests/:idx/claim` (3 = bonus), `GET /api/season`, `GET /api/tournaments[/:id]`,
+`POST|DELETE /api/follow/:username`, `GET /api/follows/:username?type=followers|following`, `GET /api/leaderboard?...&friends=1`,
+`GET /api/notifications`, `POST /api/notifications/read {id?}`, `GET /api/referral`, `GET /r/:code`, `POST /api/share {kind,ref}`,
+`GET /api/runs/:id`, `GET /api/search?q=`, `GET /og/...png`, `GET|POST /api/admin/tournaments`, `PUT|DELETE /api/admin/tournaments/:id`.
+Signup now requires `dob: 'YYYY-MM-DD'` (21+) and accepts `ref`.
 
 ## File layout
 ```
@@ -154,10 +198,15 @@ src/db.js            SQLite schema (better-sqlite3), database at $DATA_DIR/hub.d
 src/config.js        env/.env loader, secrets, game catalog, anti-cheat constants
 src/demo.js          demo seed/wipe
 src/boards.js        leaderboards + giveaway entrants (multi-game, min score) + campaign stats
-src/achievements.js  84 achievements, server-side evaluation, rarity
+src/achievements.js  105 achievements (8 categories), server-side evaluation, rarity, unlock notifications
+src/progress.js      XP/levels, check-in streaks, daily quests, seasons
+src/tournaments.js   timed boards + async 8-seed brackets
+src/notify.js        notifications (per-user + broadcast)
+src/og.js            OG/share image renderer (resvg), fonts in src/og-fonts/
+src/v3.js            v3 routes (quests, season, tournaments, follows, notifications, referrals, share, search, OG, admin tournaments)
 src/cosmetics.js     banners / frames / titles (original CSS) -> /cosmetics.css
 src/packages.js      default Basic/Premium/Elite package copy (admin-editable)
-public/index.html    player SPA shell; public/js/app.js (router and all pages), public/js/jetpack.js (Jetpack Dash)
+public/index.html    player SPA shell (per-page meta injected server-side), manifest.webmanifest + sw.js (PWA); public/js/app.js (router and all pages), public/js/jetpack.js (Jetpack Dash)
 public/js/games/     engine.js (shared canvas game base + WebAudio synth) and the 7 other games
 public/admin.html    admin SPA; public/js/admin.js, public/css/admin.css
 public/css/app.css   theme (dark navy, neon purple-to-blue, glowing cards, bottom tab nav)
@@ -165,7 +214,7 @@ public/assets/       brand/, cards/, giveaways/, badges/, packages/, avatars/ (f
 public/fonts/        Orbitron + Exo 2 (OFL)
 mockups/             the owner's original mockup PNGs (reference only, not served)
 tools/               extract_mockup_art.py, render-cover.js, e2e-api.js, e2e-browser.js, compare.py
-screenshots/         mobile-*.png, desktop-*.png, v2/ (mobile 390x844 shots of the v2 features), compare/ (generated by the tests, git-ignored)
+screenshots/         mobile-*.png, desktop-*.png, v2/, v3/ (m*-*.png = mobile 390x844, d*-*.png = desktop 1440x900), compare/ (generated by the tests, git-ignored)
 scripts/             start/stop/restart scripts
 .env                 local dev secrets (chmod 600, git-ignored); see .env.example
 render.yaml          Render Blueprint (web service + 1 GB disk at /data)
@@ -175,6 +224,7 @@ Dockerfile           container alternative (volume at /data)
 ## Tests
 ```bash
 node tools/e2e-api.js                      # API checks incl. every game, linking, packages, achievements (BASE=... to point elsewhere)
-node tools/e2e-browser.js                  # headless-Chrome checks + screenshots (screenshots/, screenshots/v2/); both clean up after themselves
+node tools/e2e-browser.js                  # headless-Chrome checks + screenshots (screenshots/, v2/, v3/); both clean up after themselves
+# signup is limited to 10/hour per IP (in memory): run ./scripts/restart-server.sh before re-running the browser test
 python3 tools/compare.py                   # mockup vs built side-by-side images
 ```

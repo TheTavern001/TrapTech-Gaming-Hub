@@ -4,8 +4,8 @@ const { chromium } = require('playwright-core');
 const fs = require('fs'); const path = require('path');
 const BASE = process.env.BASE || 'http://localhost:8787';
 const SHOTS = path.join(__dirname, '..', 'screenshots');
-const V2 = path.join(SHOTS, 'v2');
-fs.mkdirSync(V2, { recursive: true });
+const V2 = path.join(SHOTS, 'v2'); const V3 = path.join(SHOTS, 'v3');
+fs.mkdirSync(V2, { recursive: true }); fs.mkdirSync(V3, { recursive: true });
 const ENV_FILE = path.join(__dirname, '..', '.env');
 const env = { ...(fs.existsSync(ENV_FILE) ? Object.fromEntries(fs.readFileSync(ENV_FILE, 'utf8').split('\n').filter(Boolean).map(l => l.split(/=(.*)/s).slice(0, 2))) : {}), ...(process.env.ADMIN_PASSWORD ? { ADMIN_PASSWORD: process.env.ADMIN_PASSWORD } : {}) };
 let pass = 0, fail = 0; const errors = [];
@@ -20,6 +20,9 @@ function watch(page, tag) {
 }
 async function shot(page, name, full = false, keepAch = false) { await sleep(350); await page.evaluate((k) => { document.querySelectorAll('.toast').forEach(t => t.remove()); if (!k) document.querySelectorAll('.ach-stack').forEach(t => t.remove()); }, keepAch); await page.screenshot({ path: path.join(SHOTS, name + '.png'), fullPage: full }); console.log('   shot', name); }
 const v2 = (page, name, full = false, keepAch = false) => shot(page, 'v2/' + name, full, keepAch);
+const v3 = (page, name, full = false, keepAch = false) => shot(page, 'v3/' + name, full, keepAch);
+const passGate = (ctx) => ctx.addInitScript(() => { try { if (!localStorage.getItem('gh_age_ok')) localStorage.setItem('gh_age_ok', String(Date.now())); } catch {} });
+const noShare = (ctx) => ctx.addInitScript(() => { try { Object.defineProperty(Navigator.prototype, 'share', { value: undefined, configurable: true }); } catch {} });
 // logical game coords -> page coords (for clicking on canvas objects)
 const L2S = (page, x, y) => page.evaluate(([x, y]) => { const g = window.__game; const r = g.c.getBoundingClientRect(); const d = g.c.width / r.width; return [r.left + (x * g.scale + g.ox) / d, r.top + (y * g.scale + g.oy) / d]; }, [x, y]);
 async function tapL(page, x, y, hold = 60) { const [px, py] = await L2S(page, x, y); await page.mouse.move(px, py); await page.mouse.down(); await sleep(hold); await page.mouse.up(); }
@@ -33,28 +36,53 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   console.log('BASE', BASE, 'user', uname);
 
   // ---------- mobile player flow ----------
-  const mctx = await browser.newContext(MOBILE); const m = await mctx.newPage(); watch(m, 'mobile');
+  console.log('# v3: 21+ age gate');
+  const uctx = await browser.newContext(MOBILE); const u = await uctx.newPage(); watch(u, 'underage');
+  await u.goto(BASE + '/'); await u.waitForSelector('#gate');
+  await u.fill('#gate-m', '06'); await u.fill('#gate-d', '15'); await u.fill('#gate-y', String(new Date().getFullYear() - 18)); await u.click('#gate button[type=submit]');
+  await u.waitForSelector('#gate-h'); ok((await u.textContent('#gate-h')) === 'Sorry' && (await u.textContent('.gate')).includes('21'), 'under-21 date of birth is blocked');
+  await v3(u, 'm01b-age-gate-blocked');
+  await u.goto(BASE + '/giveaways'); await u.waitForSelector('.gate'); ok((await u.textContent('#gate-h')) === 'Sorry', 'block persists for the session');
+  await u.goto(BASE + '/rules'); await u.waitForSelector('.prose'); ok((await u.textContent('.prose')).includes('NO PURCHASE NECESSARY'), 'legal pages stay readable without passing the gate');
+  await uctx.close();
+  const mctx = await browser.newContext(MOBILE); await noShare(mctx); await mctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
+  const m = await mctx.newPage(); watch(m, 'mobile');
+  await m.goto(BASE + '/'); await m.waitForSelector('#gate');
+  ok(await m.isVisible('#gate') && (await m.textContent('.gate')).includes('date of birth'), 'first visit shows the neutral 21+ date-of-birth gate');
+  ok((await m.textContent('.gate-tt')).includes('Built by'), 'age gate carries "Built by Trap Tech Solutions"');
+  await v3(m, 'm01-age-gate');
+  await m.click('#gate button[type=submit]'); await m.waitForSelector('#gmsg .err'); ok(true, 'age gate requires a valid date');
+  await m.fill('#gate-m', '05'); await m.fill('#gate-d', '05'); await m.fill('#gate-y', '1990'); await m.click('#gate button[type=submit]');
+  ok(!!(await m.$('link[rel=manifest]')) && (await m.title()).includes('Trap Tech'), 'manifest link + Trap Tech in page title');
   console.log('# splash / sign up');
-  await m.goto(BASE + '/'); await m.waitForSelector('.splash');
+  await m.waitForSelector('.splash');
   ok(await m.isVisible('.splash .logo-stack'), 'first visit shows splash'); await shot(m, 'mobile-01-splash');
+  ok((await m.textContent('.splash .tt-sig')).includes('Built by') && await m.isVisible('.splash .tt-sig img'), 'splash shows "Built by" + Trap Tech logo'); await v3(m, 'm02-splash');
   await m.click('text=Get Started'); await m.waitForSelector('#f');
   ok(m.url().endsWith('/signup'), 'Get Started -> sign up');
   await m.fill('#u', 'bad name'); await m.fill('#p', pw); await m.fill('#p2', pw); await m.check('#agree'); await m.click('button[type=submit]');
   ok(await m.isVisible('.err'), 'sign up validates username (no spaces)');
   await m.fill('#u', uname); await m.fill('#p2', 'mismatch1'); await m.click('button[type=submit]');
   ok((await m.textContent('.err')).includes('match'), 'sign up validates password confirmation');
-  await m.fill('#p2', pw); await m.evaluate(() => document.querySelector('#msg').innerHTML = ''); await shot(m, 'mobile-03-signup');
+  ok((await m.inputValue('#dob-y')) === '1990' && (await m.inputValue('#dob-m')) === '05', 'signup date of birth is prefilled from the age gate');
+  ok((await m.textContent('.tt-sig')).includes('Powered by Trap Tech'), 'auth screen shows "Powered by Trap Tech"');
+  await m.fill('#p2', pw); await m.fill('#dob-y', String(new Date().getFullYear() - 19)); await m.click('button[type=submit]'); await m.waitForSelector('.err');
+  ok(/21/.test(await m.textContent('.err')), 'signup rejects an under-21 date of birth', await m.textContent('.err'));
+  await m.fill('#dob-y', '1990'); await m.evaluate(() => document.querySelector('#msg').innerHTML = ''); await shot(m, 'mobile-03-signup'); await v3(m, 'm03-signup', true);
   await m.click('button[type=submit]'); await m.waitForURL(/\/games\/jetpack-dash/);
   ok(true, 'sign up succeeds and lands on Jetpack Dash');
   await m.waitForSelector('.gd-hero'); await shot(m, 'mobile-06-game-detail');
 
   console.log('# sign out / sign in');
-  await m.click('.topbar [data-act=menu] >> nth=-1'); await m.click('.drawer [data-act=signout]'); await m.waitForURL(/\/signin/);
+  await m.click('.topbar .menu-btn'); await m.waitForSelector('.drawer .dr-tt');
+  ok((await m.textContent('.drawer')).includes('Quests') && (await m.textContent('.drawer .dr-tt')).includes('Built by') && (await m.locator('.drawer .dr-legal a').count()) >= 3, 'drawer: progress links, legal links + Trap Tech credit');
+  await v3(m, 'm32-drawer');
+  await m.click('.drawer [data-act=signout]'); await m.waitForURL(/\/signin/);
   ok(true, 'sign out from menu');
   ok((await m.inputValue('#u')) === uname, 'username remembered on sign-in form (localStorage)');
   await m.fill('#p', 'wrongpass1'); await m.click('button[type=submit]'); await m.waitForSelector('.err');
   ok((await m.textContent('.err')).includes('Wrong'), 'wrong password shows error');
-  await m.fill('#p', ''); await m.evaluate(() => document.querySelector('#msg').innerHTML = ''); await shot(m, 'mobile-02-signin');
+  await m.fill('#p', ''); await m.evaluate(() => document.querySelector('#msg').innerHTML = ''); await shot(m, 'mobile-02-signin'); await v3(m, 'm04-signin');
   await m.fill('#p', pw); await m.click('button[type=submit]'); await m.waitForURL(u => new URL(u).pathname === '/');
   await m.waitForSelector('.hero, .hero-take'); ok(true, 'sign in -> home');
   ok(await m.isVisible('.hero-take'), 'Elite + featured giveaway takes over the home hero banner');
@@ -75,7 +103,11 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   const dtxt = await m.textContent('main'); ok(dtxt.includes('Play Now') && dtxt.includes('Scoring') && !dtxt.includes('COMING SOON'), 'Drift Rush detail page is playable with how-to + scoring');
 
   console.log('# play Jetpack Dash');
-  await m.goto(BASE + '/play/jetpack-dash'); await m.waitForSelector('#game'); await sleep(1200);
+  await m.goto(BASE + '/play/jetpack-dash'); await m.waitForSelector('#boot');
+  ok((await m.textContent('#boot')).includes('A Trap Tech game'), 'game loading screen says "A Trap Tech game"');
+  await m.screenshot({ path: path.join(V3, 'm09-game-boot.png') }); console.log('   shot v3/m09-game-boot');
+  await m.waitForSelector('#game'); await m.waitForSelector('#boot', { state: 'detached' }); await sleep(600);
+  ok((await m.title()).startsWith('Play Jetpack Dash'), 'game page title set');
   const box = await m.locator('#game').boundingBox();
   // fly a bit: press-hold pattern via touch-like pointer events
   await m.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -91,6 +123,13 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok(/Counted for/.test(saved), 'run counted toward the active giveaway', saved);
   const scoreTxt = await m.textContent('.over-card .big'); const myScore = parseInt(scoreTxt.replace(/\D/g, ''), 10);
   await shot(m, 'mobile-08-game-over');
+  ok(await m.isVisible('.xp-line') && /XP/.test(await m.textContent('.xp-line')), 'result shows XP gained + level bar');
+  ok(await m.isVisible('#share-run') && await m.isVisible('.share-row a[href^="/s/"]'), 'result offers Share score + Score card');
+  await v3(m, 'm10-game-over-share');
+  await m.click('#share-run'); await m.waitForFunction(() => [...document.querySelectorAll('.toast')].some(t => /copied/i.test(t.textContent)), null, { timeout: 5000 }).catch(() => {});
+  const sh1 = await m.evaluate(async () => (await (await fetch('/api/achievements')).json()).achievements.find(a => a.id === 'share-1').unlocked);
+  ok(sh1, 'sharing the score logs a share (unlocks Hype Sharer)');
+  const jetRun = await m.evaluate(() => window.__lastResult && window.__lastResult.run_id);
   await m.click('#again'); await sleep(800); ok(await m.isHidden('#ov'), 'Play Again restarts'); 
 
   console.log('# leaderboard');
@@ -109,13 +148,19 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await m.click('#t >> text=Past'); await sleep(600); ok((await m.textContent('#list')).match(/Ended|No past/), 'past tab works');
   await m.click('#t >> text=Active'); await sleep(600); await m.click('.gw .btn >> nth=0'); await m.waitForSelector('.lb, .empty');
   ok((await m.textContent('main')).includes("You're entered"), 'giveaway detail shows I am entered');
-  await shot(m, 'mobile-11-giveaway-detail', true);
+  await shot(m, 'mobile-11-giveaway-detail', true); await v3(m, 'm13-giveaway-detail', true);
+  ok(await m.isVisible('#share-gw') && (await m.textContent('main')).includes('No purchase necessary'), 'giveaway detail: share link + no-purchase note');
+  await m.click('.gw-actions a[href$="/rules"]'); await m.waitForSelector('.prose .npn');
+  const rulesTxt = await m.textContent('.prose'); ok(rulesTxt.includes('NO PURCHASE NECESSARY') && rulesTxt.includes('Trap Tech Solutions') && /21 or older/.test(rulesTxt) && /Sponsor/.test(rulesTxt), 'per-giveaway official rules: NPN, 21+, sponsor + Trap Tech as operator');
+  await v3(m, 'm14-giveaway-rules');
 
   console.log('# profile');
   await m.goto(BASE + '/profile'); await m.waitForSelector('.prof-head');
   const st = await m.locator('.stat3 b').allTextContents(); ok(st[1] === '1' && +st[0].replace(/\D/g, '') === myScore, 'profile shows total score = my run and games played = 1', st);
   ok((await m.textContent('.card .act-row')).includes('Jetpack Dash'), 'profile recent activity shows the run');
   await shot(m, 'mobile-12-profile');
+  ok(await m.isVisible('.prof-actions .fcount') && await m.isVisible('.pchips') && await m.isVisible('.prof-head .xpbar'), 'profile: level bar, rank/streak chips, follower counts');
+  await v3(m, 'm15-profile');
 
   console.log('# new games: play each briefly, end run & save');
   const NEW = ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper'];
@@ -153,7 +198,9 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   console.log('# achievements page');
   await m.goto(BASE + '/achievements'); await m.waitForSelector('.ach');
   const nAch = await m.locator('.ach').count(); const nOn = await m.locator('.ach.on').count();
-  ok(nAch >= 60 && nAch <= 100 && nOn >= 4, `achievements page: ${nAch} achievements, ${nOn} unlocked`);
+  ok(nAch >= 100 && nAch <= 140 && nOn >= 4, `achievements page: ${nAch} achievements, ${nOn} unlocked`);
+  ok((await m.textContent('main')).includes('Achievement system by Trap Tech') && (await m.locator('.ach-links a[href="/season"]').count()) === 1, 'achievements page: Trap Tech credit + season/quests links');
+  ok((await m.locator('#cats button, #cats .chip').allTextContents()).join('|').includes('Streaks'), 'new achievement categories (streaks & seasons, friends & referrals)');
   ok((await m.textContent('main')).includes('Cosmetic only, no cash value'), 'achievements page states "Cosmetic only, no cash value"');
   ok((await m.locator('.ach .bar i').count()) >= 10 && (await m.locator('.ach .rar').count()) === nAch, 'progress bars + rarity % shown');
   await v2(m, 'achievements');
@@ -185,6 +232,8 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await m.locator('.pk.basic .pk-f li').count()) >= 5 && (await m.locator('.pk.elite .pk-f li').count()) >= 8 && (await m.locator('.pk-who').count()) === 3, 'each tier lists who-it-is-for + distinct features');
   ok((await m.locator('.cmp tbody tr').count()) >= 10, 'comparison table rendered'); ok((await m.locator('.faq details').count()) >= 5, 'FAQ rendered');
   await shot(m, 'mobile-13-host'); await v2(m, 'host-packages');
+  ok((await m.textContent('.tt-build')).includes("Trap Tech Solutions builds your brand's game"), 'host page: Trap Tech builds your branded game');
+  await v3(m, 'm17-host'); await m.evaluate(() => document.querySelector('.tt-build').scrollIntoView({ block: 'center' })); await v3(m, 'm17b-host-traptech');
   await m.evaluate(() => document.querySelector('.pk.premium').scrollIntoView()); await v2(m, 'host-packages-premium');
   await m.evaluate(() => document.querySelector('.pk.elite').scrollIntoView()); await v2(m, 'host-packages-elite');
   await m.evaluate(() => document.querySelector('.cmp-wrap').scrollIntoView()); await v2(m, 'host-compare-table');
@@ -198,26 +247,124 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await m.evaluate(() => { const e = document.querySelector('.err'); if (e) e.remove(); }); await shot(m, 'mobile-14-booking'); await v2(m, 'booking-with-tier');
   await m.click('#next'); await m.fill('[data-b=start_date]', '2026-11-01'); await m.fill('[data-b=end_date]', '2026-11-15'); await m.fill('[data-b=details]', 'Headless browser test booking');
   await m.click('#next'); ok((await m.textContent('main')).includes(brand) && (await m.textContent('[data-rv=package]')).includes('Elite - $399'), 'review step shows summary incl. package + price');
+  await v3(m, 'm18-booking-review');
   await m.click('#next'); await m.waitForSelector('text=Request Sent!'); ok((await m.textContent('#booked-pkg')).includes('Elite'), 'booking submitted with Elite tier');
 
   console.log('# community');
-  await m.click('.bottomnav >> text=Community'); await m.waitForSelector('.post'); await shot(m, 'mobile-15-community');
+  await m.click('.bottomnav >> text=Community'); await m.waitForSelector('.post'); await shot(m, 'mobile-15-community'); await v3(m, 'm19-community');
+  ok((await m.locator('.tabs [role=tab]').allTextContents()).join('|').includes('Following'), 'community has a Following tab');
+
+  console.log('# v3: home daily panel, streak, quests');
+  await m.goto(BASE + '/'); await m.waitForSelector('#daily .quest');
+  ok((await m.locator('#daily .quest').count()) === 3, 'home shows 3 daily quests');
+  const stk = await m.evaluate(async () => (await (await fetch('/api/me')).json()).user.streak);
+  ok(stk.current >= 1 && stk.checked_today, 'opening home checks in automatically (streak >= 1)', stk);
+  await m.reload(); await m.waitForSelector('#daily'); ok(await m.isVisible('.streak-chip'), 'streak chip in the top bar');
+  ok((await m.locator('.t-strip .t-card').count()) >= 1 && (await m.locator('.promo-grid .ach-promo').count()) === 3, 'home: tournaments strip + season/achievements/invite promos');
+  ok((await m.textContent('.site-foot')).includes('Built by Trap Tech Solutions'), 'footer: Built by Trap Tech Solutions');
+  await v3(m, 'm05-home'); await v3(m, 'm06-home-full', true);
+  await m.goto(BASE + '/quests'); await m.waitForSelector('.streak-card');
+  ok((await m.locator('.quests .quest').count()) === 4, 'quests page: 3 quests + bonus');
+  const claimBtn = m.locator('[data-claim]').first();
+  if (await claimBtn.count()) { await claimBtn.click(); await m.waitForSelector('.quest.claimed'); ok(true, 'claim a completed quest (+XP)'); } else ok(false, 'expected a claimable quest after 8 runs');
+  await v3(m, 'm20-quests', true);
+
+  console.log('# v3: season');
+  await m.goto(BASE + '/season'); await m.waitForSelector('.track .tier');
+  ok((await m.locator('.track .tier').count()) === 20 && (await m.locator('.track .tier.rw').count()) >= 4, 'season track: 20 tiers with cosmetic rewards');
+  ok((await m.textContent('main')).includes('Free track only') && await m.isVisible('.sh-tier'), 'season: free track only + my tier');
+  await v3(m, 'm21-season'); await v3(m, 'm21b-season-full', true);
+
+  console.log('# v3: tournaments');
+  const TL = await m.evaluate(async () => (await (await fetch('/api/tournaments')).json()).tournaments);
+  const tBr = TL.find(t => t.format === 'bracket' && t.status !== 'upcoming'); const tTm = TL.find(t => t.format === 'timed' && t.status === 'live');
+  await m.goto(BASE + '/tournaments'); await m.waitForSelector('.t-card');
+  ok((await m.locator('.t-card').count()) >= 3 && (await m.textContent('main')).includes('Live now'), 'tournaments page lists live + upcoming events');
+  await v3(m, 'm22-tournaments', true);
+  if (tBr) {
+    await m.goto(BASE + '/tournaments/' + tBr.id); await m.waitForSelector('.bracket .bk-m');
+    ok((await m.locator('.bk-round').count()) >= 3 && (await m.textContent('.bracket')).includes('Quarterfinals'), 'bracket view renders all rounds');
+    ok((await m.locator('.bk-p.win').count()) >= 3, 'bracket highlights quarterfinal winners');
+    await v3(m, 'm23-tournament-bracket'); await v3(m, 'm23b-tournament-bracket-full', true);
+  } else ok(false, 'demo bracket tournament exists');
+  if (tTm) {
+    await m.goto(BASE + '/tournaments/' + tTm.id); await m.waitForSelector('.t-hero .cd');
+    ok(await m.isVisible('.t-hero a.btn[href^="/play/"]') && await m.isVisible('#share-t'), 'live timed tournament: countdown, Play + Share');
+    await v3(m, 'm24-tournament-timed');
+  }
+
+  console.log('# v3: follow + friends leaderboard');
+  await m.goto(BASE + '/u/TerpQueen'); await m.waitForSelector('#follow');
+  const f0 = +(await m.textContent('#nfollowers')).replace(/\D/g, '');
+  await m.click('#follow'); await m.waitForFunction(() => document.querySelector('#follow').getAttribute('aria-pressed') === 'true');
+  ok(+(await m.textContent('#nfollowers')).replace(/\D/g, '') === f0 + 1 && (await m.textContent('#follow')).includes('Following'), 'follow button toggles + updates follower count');
+  await m.click('.fcount[data-fl=followers]'); await m.waitForSelector('.sheet .mini-row');
+  ok((await m.textContent('.sheet')).includes(uname), 'followers sheet lists me'); await v3(m, 'm15b-followers-sheet');
+  await m.keyboard.press('Escape'); await m.waitForSelector('.sheet', { state: 'detached' });
+  await m.goto(BASE + '/leaderboard?game=plinko'); await m.waitForSelector('.lb'); await m.check('#friends'); await sleep(900);
+  const fnames = await m.locator('.lb .nm').allTextContents();
+  ok(fnames.length >= 2 && fnames.every(n => n.includes(uname) || n.includes('TerpQueen')), 'friends leaderboard = me + players I follow', fnames);
+  await v3(m, 'm11-leaderboard-friends'); await m.uncheck('#friends'); await sleep(500); await v3(m, 'm11b-leaderboard');
+
+  console.log('# v3: notifications');
+  const un = await m.evaluate(async () => (await (await fetch('/api/me')).json()).user.unread);
+  ok(un >= 1, `unread notifications counted (${un})`);
+  await m.goto(BASE + '/'); await m.waitForSelector('#daily'); await m.waitForFunction(() => !document.getElementById('bell-n').classList.contains('hidden'));
+  ok(true, 'bell shows the unread badge');
+  await m.click('.topbar a[href="/notifications"]'); await m.waitForSelector('.notif');
+  ok((await m.locator('.notif.unread').count()) >= 1 && (await m.textContent('#nl')).includes('Achievement unlocked'), 'notifications center lists unread achievement notices');
+  await v3(m, 'm25-notifications');
+  await m.click('#readall'); await m.waitForFunction(() => !document.querySelector('.notif.unread'));
+  ok(await m.isHidden('#bell-n'), 'mark all read clears the bell badge');
+
+  console.log('# v3: search');
+  await m.click('.topbar a[href="/search"]'); await m.waitForSelector('#sq'); await m.fill('#sq', 'plinko'); await m.waitForSelector('#sr .sr-row');
+  const srt = await m.textContent('#sr'); ok(srt.includes('Plinko') && srt.includes('Tournaments'), 'search finds games + tournaments');
+  await v3(m, 'm26-search');
+  await m.fill('#sq', 'zzqqxx'); await m.waitForSelector('#sr .empty-state'); ok(true, 'search empty state');
+
+  console.log('# v3: invite + share card');
+  await m.goto(BASE + '/invite'); await m.waitForSelector('#refcode');
+  const rcode = (await m.textContent('#refcode')).trim();
+  ok(/^[A-Z0-9]{6}$/.test(rcode) && (await m.inputValue('#reflink')).endsWith('/r/' + rcode), 'invite page shows my code + link', rcode);
+  await v3(m, 'm27-invite', true);
+  await m.goto(BASE + '/s/' + jetRun); await m.waitForSelector('.share-card');
+  ok((await m.textContent('.share-card')).includes(uname) && (await m.getAttribute('meta[property="og:image"]', 'content')).includes('/og/run/' + jetRun), 'score card page + per-run og:image');
+  await v3(m, 'm28-share-card');
+
+  console.log('# v3: legal, about, settings');
+  for (const [pth, sel, txt] of [['/terms', '.prose', '21 years old'], ['/privacy', '.prose', 'date of birth'], ['/rules', '.prose', 'Trap Tech Solutions'], ['/responsible-play', '.prose', 'No real money'], ['/about', '.about-hero', 'Trap Tech Solutions'], ['/settings', '.about-mini', 'Built by Trap Tech Solutions']]) {
+    await m.goto(BASE + pth); await m.waitForSelector(sel); ok((await m.textContent('main')).includes(txt), `${pth} renders ("${txt}")`);
+  }
+  await m.goto(BASE + '/about'); await m.waitForSelector('.about-hero'); await v3(m, 'm29-about', true);
+  await m.goto(BASE + '/settings'); await m.waitForSelector('.set-row'); ok(await m.isVisible('#install') && await m.isVisible('#rm'), 'settings: install app + reduce motion'); await v3(m, 'm30-settings', true);
+  await m.goto(BASE + '/terms'); await m.waitForSelector('.prose'); await v3(m, 'm31-terms');
+  await m.goto(BASE + '/rules'); await m.waitForSelector('.prose'); await v3(m, 'm31b-rules-template');
+  await m.goto(BASE + '/nope-404'); await m.waitForSelector('.empty-state'); ok((await m.textContent('main')).includes('Page not found'), '404 empty state');
+  await m.goto(BASE + '/games'); await m.waitForSelector('.gcard'); await v3(m, 'm07-games');
+  await m.goto(BASE + '/games/drift-rush'); await m.waitForSelector('.gd-hero'); await v3(m, 'm08-game-detail');
+  await m.goto(BASE + '/giveaways'); await m.waitForSelector('.gw'); await v3(m, 'm12-giveaways');
+  await m.goto(BASE + '/achievements'); await m.waitForSelector('.ach'); await v3(m, 'm16-achievements');
 
   // ---------- guest flow ----------
   console.log('# guest');
-  const gctx = await browser.newContext(MOBILE); const g = await gctx.newPage(); watch(g, 'guest');
+  const gctx = await browser.newContext(MOBILE); await passGate(gctx); const g = await gctx.newPage(); watch(g, 'guest');
   await g.goto(BASE + '/signin'); await g.click('#guest'); await g.waitForSelector('.hero, .hero-take'); ok(true, 'Continue as Guest -> home');
   await g.goto(BASE + '/games/jetpack-dash'); ok((await g.textContent('main')).includes('Playing as guest'), 'guest sees practice-mode note');
   await g.goto(BASE + '/play/jetpack-dash'); await g.waitForSelector('#game'); ok((await g.textContent('.who-chip')).includes('Guest'), 'guest can play practice run');
   await g.goto(BASE + '/giveaways'); await g.waitForSelector('.gw'); await g.click('.gw .btn >> nth=0'); await g.waitForURL(/giveaways\/\d+/); await g.waitForSelector('.back-row');
   ok(await g.isVisible('text=Sign in to enter') && (await g.locator('.gpicks a[href^="/signin"]').count()) >= 1, 'guest is asked to sign in to enter giveaway');
+  await g.goto(BASE + '/'); await g.waitForSelector('.cta-card'); ok((await g.textContent('.cta-card')).includes('Sign up'), 'guest home shows a sign-up card instead of quests');
+  await g.goto(BASE + '/quests'); await g.waitForSelector('.empty-state'); ok((await g.textContent('main')).includes('Sign in'), 'guest quests page asks to sign in');
   await gctx.close();
 
   // ---------- desktop pages ----------
   console.log('# desktop pages');
-  const dctx = await browser.newContext(DESKTOP); const d = await dctx.newPage(); watch(d, 'desktop');
+  const dctx = await browser.newContext(DESKTOP); await passGate(dctx); const d = await dctx.newPage(); watch(d, 'desktop');
   await d.goto(BASE + '/signin'); await d.fill('#u', uname); await d.fill('#p', pw); await d.click('button[type=submit]'); await d.waitForSelector('.hero, .hero-take');
-  await shot(d, 'desktop-01-home', true);
+  await shot(d, 'desktop-01-home', true); await v3(d, 'd01-home'); await v3(d, 'd01b-home-full', true);
+  ok(await d.isVisible('.site-foot .sf-brand img') && (await d.locator('.site-foot .sf-links a').count()) >= 6 && await d.isVisible('.desk-nav a[href="/tournaments"]'), 'desktop: Trap Tech footer with links + Tournaments in nav');
+  await d.click('.topbar .more-btn'); await d.waitForSelector('.drawer .dr-tt'); ok(true, 'desktop "more" menu opens the drawer'); await d.keyboard.press('Escape');
   await d.goto(BASE + '/games'); await d.waitForSelector('.gcard'); await shot(d, 'desktop-02-games', true);
   await d.goto(BASE + '/games/jetpack-dash'); await d.waitForSelector('.gd-hero'); await shot(d, 'desktop-03-game-detail');
   await d.goto(BASE + '/leaderboard'); await d.waitForSelector('.lb'); await shot(d, 'desktop-04-leaderboard');
@@ -226,6 +373,17 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await d.goto(BASE + '/host'); await d.waitForSelector('.pk'); await shot(d, 'desktop-07-host', true);
   await d.goto(BASE + '/achievements'); await d.waitForSelector('.ach'); await shot(d, 'desktop-07b-achievements');
   await d.goto(BASE + '/book?package=elite'); await d.waitForSelector('[data-b=brand]'); await shot(d, 'desktop-08-booking');
+  await d.goto(BASE + '/games'); await d.waitForSelector('.gcard'); await v3(d, 'd02-games');
+  if (tBr) { await d.goto(BASE + '/tournaments/' + tBr.id); await d.waitForSelector('.bracket .bk-m'); await v3(d, 'd03-tournament-bracket', true); }
+  await d.goto(BASE + '/tournaments'); await d.waitForSelector('.t-card'); await v3(d, 'd03b-tournaments', true);
+  await d.goto(BASE + '/season'); await d.waitForSelector('.track .tier'); await v3(d, 'd04-season', true);
+  await d.goto(BASE + '/u/' + uname); await d.waitForSelector('.prof-head'); await v3(d, 'd05-profile');
+  await d.goto(BASE + '/achievements'); await d.waitForSelector('.ach'); await v3(d, 'd06-achievements');
+  await d.goto(BASE + '/host'); await d.waitForSelector('.tt-build'); await v3(d, 'd07-host', true);
+  await d.goto(BASE + '/about'); await d.waitForSelector('.about-hero'); await v3(d, 'd08-about', true);
+  await d.goto(BASE + '/leaderboard'); await d.waitForSelector('.lb'); await v3(d, 'd09-leaderboard');
+  await d.goto(BASE + '/giveaways'); await d.waitForSelector('.gw'); await v3(d, 'd10-giveaways');
+  await d.goto(BASE + '/rules'); await d.waitForSelector('.prose'); await v3(d, 'd11-rules');
   await d.goto(BASE + '/play/jetpack-dash'); await d.waitForSelector('#game'); await sleep(900);
   await d.keyboard.down('Space'); await sleep(700); await d.keyboard.up('Space'); await sleep(500); await d.keyboard.down('Space'); await sleep(300); await shot(d, 'desktop-09-gameplay'); await d.keyboard.up('Space');
 
@@ -234,9 +392,10 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   const a = await dctx.newPage(); watch(a, 'admin');
   await a.goto(BASE + '/admin'); await a.waitForSelector('#pw');
   await a.fill('#pw', 'wrong'); await a.click('#lf button'); await a.waitForSelector('.err'); ok(true, 'admin wrong password rejected');
-  await shot(a, 'desktop-10-admin-login');
+  await shot(a, 'desktop-10-admin-login'); ok((await a.textContent('.login')).includes('Powered by Trap Tech Solutions'), 'admin login: Powered by Trap Tech Solutions');
   await a.fill('#pw', env.ADMIN_PASSWORD); await a.click('#lf button'); await a.waitForSelector('.stats');
   ok((await a.textContent('.amain')).includes('Total Players'), 'admin dashboard loads'); await shot(a, 'desktop-11-admin-dashboard', true);
+  ok((await a.textContent('.tt-bar')).includes('Powered by Trap Tech Solutions') && await a.isVisible('.side-tt img'), 'admin header: Powered by Trap Tech Solutions'); await v3(a, 'd12-admin-dashboard');
   ok((await a.textContent('.amain')).includes('8/8 games live'), 'dashboard: 8/8 games live');
   console.log('# admin: one-click giveaway linking');
   await a.click('.side >> text=Games'); await a.waitForSelector('.agame');
@@ -293,6 +452,15 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   const runsCsv = await a.evaluate(async () => (await fetch('/api/admin/export/runs.csv')).text()); ok(runsCsv.includes(uname), 'runs CSV export');
   await a.click('.side >> text=Announcements'); await a.fill('#at', 'UI test announcement'); await a.fill('#ab', 'hello'); await a.click('#af button'); await sleep(700);
   ok((await a.textContent('.amain')).includes('UI test announcement'), 'admin posts announcement');
+  console.log('# v3: admin tournaments');
+  await a.click('.side >> text=Tournaments'); await a.waitForSelector('#tf');
+  await a.fill('#tt', 'UI Test Cup'); await a.selectOption('#tg', 'drift-rush'); await a.selectOption('#tfm', 'bracket');
+  ok(await a.isVisible('#tq') && await a.isHidden('#te'), 'bracket format shows qualifying + round fields');
+  await a.selectOption('#tfm', 'timed'); await a.fill('#ts', toLocal(Date.now() - 3600e3)); await a.fill('#te', toLocal(Date.now() + 864e5));
+  await v3(a, 'd13-admin-tournament-form');
+  await a.click('#tf button[type=submit]'); await a.waitForFunction(() => document.querySelector('.tbl') && document.querySelector('.tbl').textContent.includes('UI Test Cup'));
+  ok((await a.locator('tr', { hasText: 'UI Test Cup' }).textContent()).includes('live'), 'admin creates a live timed tournament');
+  await v3(a, 'd14-admin-tournaments');
   // admin mobile layout
   const am = await mctx.newPage(); watch(am, 'admin-mobile'); await am.goto(BASE + '/admin'); await am.fill('#pw', env.ADMIN_PASSWORD); await am.click('#lf button'); await am.waitForSelector('.stats'); await shot(am, 'mobile-16-admin-dashboard');
   await am.goto(gidUrl); await am.waitForSelector('#gf'); await shot(am, 'mobile-17-admin-manage-giveaway');
@@ -300,6 +468,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await am.evaluate(() => document.querySelector('.agame[data-game=plinko]').scrollIntoView()); await v2(am, 'admin-game-giveaway-linking-2');
   await am.goto(BASE + '/admin/giveaways/new?game=terp-tapper'); await am.waitForSelector('#gpk'); await am.click('#gpk .gp[data-g=spin-to-win]'); await am.evaluate(() => document.getElementById('gpk').scrollIntoView({ block: 'center' })); await v2(am, 'admin-giveaway-game-picker');
   await am.goto(BASE + '/admin/settings'); await am.waitForSelector('#pkg-editor'); await v2(am, 'admin-package-editor');
+  await am.goto(BASE + '/admin/tournaments'); await am.waitForSelector('#tf'); await v3(am, 'm33-admin-tournaments');
 
   // ---------- cleanup of UI test data (keeps demo data) ----------
   if (!process.env.KEEP) {
@@ -309,6 +478,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
       const out = [];
       const gs = await j('/api/admin/giveaways'); for (const g of gs.giveaways.filter(g => g.title.startsWith('UI Test'))) { await fetch('/api/admin/giveaways/' + g.id, { method: 'DELETE' }); out.push('giveaway ' + g.id); }
       const bs = await j('/api/admin/bookings'); for (const b of bs.bookings.filter(b => b.brand.startsWith('UI Test Brand'))) { await fetch('/api/admin/bookings/' + b.id, { method: 'DELETE' }); out.push('booking ' + b.id); }
+      const ts = await j('/api/admin/tournaments'); for (const t of ts.tournaments.filter(t => t.title.startsWith('UI Test'))) { await fetch('/api/admin/tournaments/' + t.id, { method: 'DELETE' }); out.push('tournament ' + t.id); }
       const an = await j('/api/admin/announcements'); for (const x of an.announcements.filter(x => x.title === 'UI test announcement')) { await fetch('/api/admin/announcements/' + x.id, { method: 'DELETE' }); out.push('announcement'); }
       const ps = await j('/api/admin/players?q=ui_'); for (const p of ps.players.filter(p => p.username.startsWith('ui_'))) { await fetch('/api/admin/players/' + p.id, { method: 'DELETE' }); out.push('player ' + p.username); }
       return out;

@@ -19,13 +19,15 @@ const demoTag = (d) => d ? '<span class="demo-tag">DEMO</span>' : '';
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 let GAMES = [];
 
-const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['bookings', 'calendar-check', 'Bookings'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['announcements', 'megaphone', 'Announcements'], ['reports', 'file-text', 'Reports'], ['settings', 'settings', 'Settings']];
+const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['bookings', 'calendar-check', 'Bookings'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['tournaments', 'swords', 'Tournaments'], ['announcements', 'megaphone', 'Announcements'], ['reports', 'file-text', 'Reports'], ['settings', 'settings', 'Settings']];
 function frame(section, title, inner, actions = '') {
+  document.title = `${title.replace(/<[^>]+>/g, '')} - Admin - The Gaming Hub by Trap Tech Solutions`;
   root.innerHTML = `<div class="adm">
-    <aside class="side"><div class="brand"><img src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub"><b>Admin Dashboard</b></div>
+    <aside class="side" aria-label="Admin navigation"><div class="brand"><img src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub"><b>Admin Dashboard</b></div>
       ${NAV.map(([k, i, l]) => `<a href="/admin${k ? '/' + k : ''}" class="${section === k ? 'on' : ''}">${icon(i)}${l}</a>`).join('')}
-      <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a></aside>
-    <main class="amain"><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
+      <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a>
+      <div class="side-tt"><span>Powered by</span><img src="/assets/brand/traptech.webp" alt="Trap Tech Solutions"></div></aside>
+    <main class="amain"><div class="tt-bar">${icon('zap')} Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v3</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
 }
 document.addEventListener('click', async (e) => {
   if (e.target.closest('[data-logout]')) { e.preventDefault(); await fetch('/api/admin/logout', { method: 'POST' }); return loginView(); }
@@ -36,7 +38,7 @@ window.addEventListener('popstate', render);
 const nav = (p) => { history.pushState({}, '', p); render(); };
 
 function loginView() {
-  root.innerHTML = `<div class="card login glow-purple"><img src="/assets/brand/logo-horizontal.webp" alt="" style="width:220px;margin:0 auto 10px"><h1 class="center">Admin Login</h1>
+  root.innerHTML = `<div class="card login glow-purple"><img src="/assets/brand/logo-horizontal.webp" alt="" style="width:220px;margin:0 auto 10px"><h1 class="center">Admin Login</h1><p class="center small muted" style="margin:-4px 0 14px">Powered by Trap Tech Solutions</p>
     <form id="lf"><div id="m"></div><div class="field ic">${icon('lock')}<input class="input" type="password" id="pw" placeholder="Admin password" autocomplete="current-password" autofocus></div><button class="btn block">Log in</button></form></div>`;
   $('#lf').addEventListener('submit', async (e) => {
     e.preventDefault(); const r = await api('/api/admin/login', { method: 'POST', body: { password: $('#pw').value } });
@@ -58,6 +60,7 @@ async function render() {
     if (s === 'players') return players();
     if (s === 'leaderboards') return leaderboards();
     if (s === 'announcements') return announcements();
+    if (s === 'tournaments') return tournaments(id);
     if (s === 'reports') return reports();
     if (s === 'settings') return settings();
     frame('', 'Not found', '<div class="empty">Unknown admin page.</div>');
@@ -261,6 +264,48 @@ async function announcements() {
     <form class="card pad" id="af"><h2 style="margin-bottom:10px">Post to Community</h2><div class="field"><input class="input" id="at" placeholder="Title" maxlength="140"></div><div class="field"><textarea class="input" id="ab" placeholder="Message"></textarea></div><button class="btn block">${icon('megaphone')} Post</button></form></div>`);
   $('#af').addEventListener('submit', async (e) => { e.preventDefault(); const x = await api('/api/admin/announcements', { method: 'POST', body: { title: $('#at').value, body: $('#ab').value } }); if (!x.ok) return toast(x.error); toast('Posted'); announcements(); });
   root.addEventListener('click', async function h(e) { const b = e.target.closest('[data-del]'); if (!b || !location.pathname.endsWith('announcements')) return; if (!confirm('Delete announcement?')) return; await api('/api/admin/announcements/' + b.dataset.del, { method: 'DELETE' }); root.removeEventListener('click', h); announcements(); });
+}
+
+
+// ---------- tournaments (v3) ----------
+const T_ST = { upcoming: '', live: 'green', qualifying: 'green', quarterfinals: 'green', semifinals: 'green', final: 'green', ended: 'red' };
+async function tournaments(editId) {
+  const r = await api('/api/admin/tournaments'); const list = r.tournaments;
+  const t = editId && editId !== 'new' ? list.find(x => String(x.id) === String(editId)) : null;
+  const H = 3600e3; const n = nowS();
+  const v = t || { title: '', game_id: GAMES[0]?.id, format: 'timed', description: '', prize: 'Cosmetic title + bragging rights', start_at: n + H, end_at: n + 72 * H, qual_end_at: n + 48 * H, round_ms: 24 * H, active: true };
+  frame('tournaments', 'Tournaments', `<div class="cols" style="margin-top:0">
+    <div class="card wrap-x"><table class="tbl"><thead><tr><th>Tournament</th><th>Format</th><th>Status</th><th>Window</th><th class="num">Players</th><th></th></tr></thead><tbody>
+      ${list.map(x => `<tr><td><b>${esc(x.title)}</b>${demoTag(x.demo)}<div class="small muted">${esc(x.game)}${x.active ? '' : ' • hidden'}</div></td><td>${x.format}</td><td><span class="pill ${T_ST[x.status] || ''}">${x.status}</span></td>
+        <td class="small">${dt(x.start_at)}<br>→ ${dt(x.end_at)}</td><td class="num">${fmt(x.players)}</td>
+        <td style="white-space:nowrap"><a class="btn sm ghost" href="/admin/tournaments/${x.id}">Edit</a> <a class="btn sm ghost" href="/tournaments/${x.id}" target="_blank">View</a> <button class="iconbtn" data-tdel="${x.id}" aria-label="Delete ${esc(x.title)}">${icon('trash-2')}</button></td></tr>`).join('')
+        || '<tr><td colspan="6"><div class="empty">No tournaments yet. Create one to drive engagement around a game.</div></td></tr>'}
+    </tbody></table></div>
+    <form class="card pad" id="tf"><h2 style="margin-bottom:10px">${t ? 'Edit tournament' : 'New tournament'}</h2><div id="tm"></div>
+      <div class="field"><label class="lbl" for="tt">Title</label><input class="input" id="tt" maxlength="100" value="${esc(v.title)}" required></div>
+      <div class="field"><label class="lbl" for="tg">Game</label><select class="input" id="tg">${GAMES.filter(g => g.playable).map(g => `<option value="${g.id}" ${g.id === v.game_id ? 'selected' : ''}>${esc(g.title)}</option>`).join('')}</select></div>
+      <div class="field"><label class="lbl" for="tfm">Format</label><select class="input" id="tfm"><option value="timed" ${v.format === 'timed' ? 'selected' : ''}>Timed event (best score in window)</option><option value="bracket" ${v.format === 'bracket' ? 'selected' : ''}>Bracket (qualify, then top 8 knockout)</option></select></div>
+      <div class="field"><label class="lbl" for="ts">Start</label><input class="input" type="datetime-local" id="ts" value="${toLocalInput(v.start_at)}"></div>
+      <div class="field f-timed"><label class="lbl" for="te">End</label><input class="input" type="datetime-local" id="te" value="${toLocalInput(v.end_at)}"></div>
+      <div class="field f-br"><label class="lbl" for="tq">Qualifying ends</label><input class="input" type="datetime-local" id="tq" value="${toLocalInput(v.qual_end_at || v.start_at + 48 * H)}"></div>
+      <div class="field f-br"><label class="lbl" for="tr">Hours per knockout round (3 rounds)</label><input class="input" type="number" id="tr" min="1" max="168" value="${Math.round((v.round_ms || 24 * H) / H)}"></div>
+      <div class="field"><label class="lbl" for="tp">Prize (cosmetic / bragging rights)</label><input class="input" id="tp" maxlength="200" value="${esc(v.prize || '')}"></div>
+      <div class="field"><label class="lbl" for="td">Description</label><textarea class="input" id="td" maxlength="2000">${esc(v.description || '')}</textarea></div>
+      <label class="check"><input type="checkbox" id="ta" ${v.active ? 'checked' : ''}> Visible to players</label>
+      <p class="small muted">Free entry, no purchase necessary. Keep prizes cosmetic, or link a giveaway with official rules for real prizes.</p>
+      <button class="btn block" type="submit">${icon('check')} ${t ? 'Save changes' : 'Create & notify players'}</button>
+      ${t ? '<a class="btn ghost block" style="margin-top:8px" href="/admin/tournaments/new">New tournament</a>' : ''}
+    </form></div>`, '<a class="btn sm" href="/admin/tournaments/new">' + icon('plus') + ' New</a>');
+  const sync = () => { const br = $('#tfm').value === 'bracket'; root.querySelectorAll('.f-br').forEach(e => e.classList.toggle('hidden', !br)); root.querySelectorAll('.f-timed').forEach(e => e.classList.toggle('hidden', br)); };
+  $('#tfm').onchange = sync; sync();
+  $('#tf').addEventListener('submit', async (e) => {
+    e.preventDefault(); const ms = (id) => new Date($(id).value).getTime();
+    const body = { title: $('#tt').value, game_id: $('#tg').value, format: $('#tfm').value, start_at: ms('#ts'), end_at: ms('#te'), qual_end_at: ms('#tq'), round_ms: (+$('#tr').value || 24) * H, prize: $('#tp').value, description: $('#td').value, active: $('#ta').checked };
+    const x = await api(t ? '/api/admin/tournaments/' + t.id : '/api/admin/tournaments', { method: t ? 'PUT' : 'POST', body });
+    if (!x.ok) { $('#tm').innerHTML = `<div class="err">${esc(x.error)}</div>`; return; }
+    toast(t ? 'Saved' : 'Tournament created - players notified'); nav('/admin/tournaments');
+  });
+  root.querySelectorAll('[data-tdel]').forEach(b => b.onclick = async () => { if (!confirm('Delete this tournament?')) return; await api('/api/admin/tournaments/' + b.dataset.tdel, { method: 'DELETE' }); toast('Deleted'); nav('/admin/tournaments'); });
 }
 
 // ---------- reports ----------

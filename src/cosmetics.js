@@ -45,6 +45,15 @@ const BANNERS = [
   ['felt', 'Felt Table', 'radial-gradient(circle at 50% 50%,#16a34a,#052e16 85%),repeating-linear-gradient(45deg,rgba(0,0,0,.08) 0 2px,transparent 2px 4px)'],
   ['rhythm-bars', 'Rhythm Bars', 'linear-gradient(0deg,#22d3ee 0 30%,transparent 30%) 0 100%/12% 100% no-repeat,linear-gradient(0deg,#a855f7 0 70%,transparent 70%) 14% 100%/12% 100% no-repeat,linear-gradient(0deg,#ec4899 0 45%,transparent 45%) 28% 100%/12% 100% no-repeat,linear-gradient(0deg,#22d3ee 0 85%,transparent 85%) 42% 100%/12% 100% no-repeat,linear-gradient(0deg,#a855f7 0 55%,transparent 55%) 56% 100%/12% 100% no-repeat,linear-gradient(0deg,#ec4899 0 35%,transparent 35%) 70% 100%/12% 100% no-repeat,linear-gradient(0deg,#22d3ee 0 65%,transparent 65%) 84% 100%/12% 100% no-repeat,#0b0a26'],
   ['bass-drop', 'Bass Drop', `${svg("<svg xmlns='http://www.w3.org/2000/svg' width='120' height='40'><path d='M0 20 Q15 0 30 20 T60 20 T90 20 T120 20' fill='none' stroke='#22d3ee' stroke-width='2'/><path d='M0 28 Q15 8 30 28 T60 28 T90 28 T120 28' fill='none' stroke='#e879f9' stroke-width='2' opacity='.7'/></svg>")},linear-gradient(180deg,#0f0726,#2e1065)`],
+  // v3: streaks, quests, levels, seasons, tournaments, friends, referrals
+  ['streak-fire', 'Streak Fire', 'radial-gradient(30% 80% at 15% 110%,#fde047,transparent 70%),radial-gradient(30% 90% at 45% 115%,#f97316,transparent 70%),radial-gradient(30% 80% at 80% 110%,#ef4444,transparent 70%),linear-gradient(180deg,#1c0a00,#3b0a0a)'],
+  ['sunrise', 'Daily Sunrise', 'radial-gradient(circle at 50% 120%,#fde68a 0 20%,#fb923c 21% 34%,transparent 35%),linear-gradient(180deg,#1e1b4b,#7c3aed 70%,#f472b6)'],
+  ['quest-map', 'Quest Map', `${svg("<svg xmlns='http://www.w3.org/2000/svg' width='60' height='40'><path d='M2 30 C15 5 30 35 45 12 S58 20 58 20' fill='none' stroke='#fde047' stroke-width='2' stroke-dasharray='4 4' opacity='.8'/><circle cx='58' cy='20' r='3' fill='#f43f5e'/></svg>")},linear-gradient(135deg,#1f2937,#0f172a)`],
+  ['level-up', 'Level Up', 'repeating-linear-gradient(90deg,rgba(34,211,238,.55) 0 8%,transparent 8% 10%),linear-gradient(0deg,#0b1030 0 30%,transparent 30%),linear-gradient(90deg,#7c3aed,#22d3ee)'],
+  ['season-one', 'Season One: Neon Genesis', 'radial-gradient(circle at 80% 50%,rgba(250,204,21,.6),transparent 30%),repeating-linear-gradient(135deg,rgba(168,85,247,.5) 0 10px,rgba(59,130,246,.45) 10px 20px),#0b1030'],
+  ['tourney-bracket', 'Bracket Lines', `${svg("<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40'><path d='M0 6h16v12h16M0 30h16V18M32 18h16v-8h16M48 18v12h16' fill='none' stroke='#22d3ee' stroke-width='2' opacity='.7'/></svg>")},linear-gradient(90deg,#0a0f2e,#312e81)`],
+  ['crew', 'Crew Colors', 'linear-gradient(90deg,#f472b6 0 20%,#a855f7 20% 40%,#6366f1 40% 60%,#22d3ee 60% 80%,#34d399 80%)'],
+  ['recruiter', 'Recruiter Beacon', 'repeating-radial-gradient(circle at 20% 50%,rgba(52,211,153,.6) 0 2px,transparent 2px 16px),linear-gradient(90deg,#022c22,#0f172a)'],
 ].map(([id, name, css]) => ({ id, name, css }));
 
 // Avatar frames: ring background (+ optional animation class defined in app.css)
@@ -69,12 +78,20 @@ const FRAMES = [
   ['crosshair', 'Crosshair', 'repeating-conic-gradient(#ef4444 0 6deg,transparent 6deg 84deg,#ef4444 84deg 90deg),linear-gradient(#22d3ee,#22d3ee)', 'pulse'],
   ['croupier', 'Croupier', 'repeating-conic-gradient(#b91c1c 0 12deg,#0f172a 12deg 24deg,#15803d 24deg 26deg)', 'spin'],
   ['equalizer', 'Equalizer', 'conic-gradient(#a3e635,#22d3ee,#a855f7,#a3e635)', 'pulse'],
+  // v3
+  ['streak', 'Eternal Flame', 'conic-gradient(#fde047,#f97316,#ef4444,#f97316,#fde047)', 'spin'],
+  ['level', 'XP Ring', 'conic-gradient(#22d3ee 0 75%,#1e293b 0)', 'glow'],
+  ['season', 'Season Laurel', 'repeating-conic-gradient(#facc15 0 10deg,#7c3aed 10deg 20deg)', 'spin'],
+  ['tourney', 'Tournament Gold', 'conic-gradient(#fff7d6,#fbbf24,#b45309,#fbbf24,#fff7d6)', 'pulse'],
+  ['friend', 'Friendship', 'conic-gradient(#f472b6,#a855f7,#22d3ee,#f472b6)', 'glow'],
 ].map(([id, name, bg, anim]) => ({ id, name, bg, anim }));
 
 const TITLES = ['Rookie', 'Hub Regular', 'Hub Legend', 'Explorer', 'Daily Driver', 'Unstoppable', 'Contender', 'Giveaway Hunter', 'Lucky Charm',
   'Hype Machine', 'Trendsetter', 'Weekly Warrior', 'Champion', 'Triple Crown', 'Blaze Legend', 'Zero Hero', 'Record Breaker', 'Marathoner', 'OG Member',
   'Sky Ace', 'Afterburner', 'Drift King', 'Slide Master', 'Plinko Pro', 'Peg Whisperer', 'Wheel Wizard', 'Spin Doctor', 'Memory Master', 'Total Recall',
-  'Reflex Legend', 'Sharpshooter', 'High Roller', 'Hot Table', 'Rhythm Royalty', 'Encore']
+  'Reflex Legend', 'Sharpshooter', 'High Roller', 'Hot Table', 'Rhythm Royalty', 'Encore',
+  'Early Bird', 'Habit Former', 'Questor', 'Quest Legend', 'Level Grinder', 'Veteran', 'Season Starter', 'Season Legend', 'Competitor', 'Finalist', 'Tournament Champ',
+  'Social Butterfly', 'Influencer', 'Recruiter', 'Ambassador', 'Newcomer', 'Hype Sharer']
   .map(name => ({ id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name }));
 
 const DEFAULTS = { banner: 'midnight', frame: 'none', title: 'rookie' };
