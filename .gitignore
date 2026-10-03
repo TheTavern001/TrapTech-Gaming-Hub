@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# secrets - never commit
+.env
+.env.*
+!.env.example
+
+# runtime data (SQLite lives on the host's persistent disk in production)
+data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# logs / pids
+logs/
+*.log
+*.pid
+
+# large generated files (test screenshots, mockup-vs-built comparisons)
+screenshots/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face { font-family: Orb; font-weight: 900; src: url(../public/fonts/orbitron-latin-900-normal.woff2); }
+html,body{margin:0;background:#000}
+.c{position:relative;width:var(--w);height:var(--h);overflow:hidden;
+ background:radial-gradient(60% 50% at 70% 30%,rgba(168,85,247,.55),transparent 70%),radial-gradient(50% 40% at 15% 80%,rgba(34,211,238,.35),transparent 70%),linear-gradient(180deg,#0a0730,#170b45 55%,#07051c)}
+.sky{position:absolute;left:0;right:0;bottom:16%;height:46%;display:flex;align-items:flex-end;gap:6px;opacity:.9}
+.sky i{display:block;background:linear-gradient(180deg,#1b1460,#0d0a33);flex:1;box-shadow:inset 0 0 0 1px rgba(124,77,255,.25);
+ background-image:radial-gradient(circle,#00d2ff 1.2px,transparent 1.6px);background-size:12px 16px;background-color:#120f3d}
+.floor{position:absolute;left:0;right:0;bottom:0;height:16%;background:linear-gradient(180deg,#1f1a55,#06051a);border-top:4px solid #8b5cf6;box-shadow:0 -6px 24px #8b5cf6}
+.zap{position:absolute;height:14px;border-radius:7px;background:#fff6c2;box-shadow:0 0 18px 8px rgba(255,214,63,.75),0 0 50px 20px rgba(255,170,0,.35);transform-origin:left center}
+.node{position:absolute;width:38px;height:38px;border-radius:50%;background:#2b2f4a;border:5px solid #ffd23f;box-shadow:0 0 18px #ffb000;transform:translate(-50%,-50%)}
+.coin{position:absolute;width:44px;height:48px;background:url(../public/assets/game/coin.png) center/contain no-repeat;filter:drop-shadow(0 0 8px rgba(255,214,63,.8))}
+.hero{position:absolute;filter:drop-shadow(0 0 24px rgba(168,85,247,.9))}
+.hero img.body{position:relative;width:100%;z-index:2}
+.pack{position:absolute;left:-22%;top:28%;width:32%;height:46%;border-radius:14px;background:linear-gradient(180deg,#39407a,#22274f);border:4px solid #22d3ee;z-index:1}
+.pack::before{content:'';position:absolute;left:18%;top:12%;width:64%;height:20%;border-radius:6px;background:#8b5cf6}
+.flame{position:absolute;left:-17%;top:70%;width:20%;height:34%;background:url(../public/assets/game/flame_a.png) center top/100% 100% no-repeat;filter:drop-shadow(0 0 14px #ff8a00) saturate(1.4);z-index:0}
+.title{position:absolute;left:0;right:0;text-align:center;font-family:Orb;font-weight:900;line-height:.92;letter-spacing:.02em;
+ color:#fff;filter:drop-shadow(0 5px 0 #24104f) drop-shadow(0 0 16px rgba(168,85,247,.95))}
+.title span{display:block;color:#f5f3ff;-webkit-text-stroke:2px #3b1d8f}
+.title span.b{color:#fbbf24;-webkit-text-stroke:2px #7c2d12}
+</style></head><body>
+<div class="c" id="c"></div>
+<script>
+const q=new URLSearchParams(location.search);const W=+q.get('w')||800,Hh=+q.get('h')||800;const c=document.getElementById('c');
+c.style.setProperty('--w',W+'px');c.style.setProperty('--h',Hh+'px');
+const tall=Hh>=W*0.9;
+let sky='<div class="sky">';for(let i=0;i<14;i++)sky+=`<i style="height:${30+((i*37)%70)}%"></i>`;sky+='</div>';
+const hx=tall?W*0.42:W*0.16, hy=tall?Hh*0.18:Hh*0.16, hw=tall?W*0.36:W*0.21;
+const zx=tall?W*0.06:W*0.48, zy=tall?Hh*0.62:Hh*0.24, zl=tall?W*0.42:W*0.32, za=tall?-24:28;
+const coins=(tall?[[.12,.2],[.2,.15],[.28,.12],[.82,.38],[.88,.46],[.76,.48],[.6,.55]]:[[.42,.14],[.5,.1],[.58,.08],[.86,.16],[.92,.24],[.9,.6],[.8,.66]]).map(([x,y])=>`<div class="coin" style="left:${x*W}px;top:${y*Hh}px"></div>`).join('');
+const rad=za*Math.PI/180;
+c.innerHTML=sky+'<div class="floor"></div>'+
+ `<div class="zap" style="left:${zx}px;top:${zy-7}px;width:${zl}px;transform:rotate(${za}deg)"></div><div class="node" style="left:${zx}px;top:${zy}px"></div><div class="node" style="left:${zx+Math.cos(rad)*zl}px;top:${zy+Math.sin(rad)*zl}px"></div>`+
+ coins+
+ `<div class="hero" style="left:${hx}px;top:${hy}px;width:${hw}px;transform:rotate(-8deg)"><div class="flame"></div><div class="pack"></div><img class="body" src="../public/assets/game/hero_fly.png"></div>`+
+ `<div class="title" style="${tall?`bottom:${Hh*0.2}px;font-size:${W*0.15}px`:`bottom:${Hh*0.2}px;font-size:${W*0.105}px`}"><span>JETPACK</span><span class="b">DASH</span></div>`;
+</script></body></html>
