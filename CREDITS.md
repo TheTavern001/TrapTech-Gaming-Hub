@@ -99,6 +99,30 @@ Notes: Poly Haven HDRIs are used as tonemapped, blurred panoramas (no HDR lighti
 index; every file was taken from the original provider (Wikimedia Commons, rawpixel, StockSnap, Flickr) and is marked CC0 1.0 there.
 Card titles use Orbitron / Exo 2 (SIL OFL 1.1, already bundled). Trap Tech / Gaming Hub logos are the owner's marks.
 
+## v6 art round: sprites, moving backgrounds, ambient effects (all reuse-OK; commercial OK)
+Every v6 game object is either **original art made for the hub** (modelled in Blender 4.2 or generated in code) or a
+**CC0** model/photo, rendered with one shared neon-night lighting rig (warm key, magenta + cyan rim lights, Poly Haven CC0
+HDRI reflections, Cycles + OIDN). Sources/scripts: `tools/v6/` (Blender scripts run headless:
+`blender -b --python tools/v6/r_astro.py`, `r_props.py`, `r_cars.py`; then `tools/v6/build-sprites.py` and
+`tools/v6/build-layers.py` write `public/assets/v6/`). Raw downloads stay in `assets-src/v6/` (not committed).
+
+| Asset | Author | License | Source | Used for |
+|---|---|---|---|---|
+| Astronaut (procedural model, rig-less pose animation: run 8 / fly 6 / hit 6 / idle 6 frames) | The Gaming Hub (original) | Original, owned by the hub | `tools/v6/r_astro.py` | Jetpack Dash + Sky Hopper player (`astro.webp/json`) |
+| Props: 3D gold star coin (8 spin frames), saw blade, zapper emitter, rocket, shield orb, chrome / ivory / gold balls, clay casino chips (13 colours), acrylic + steel + gold bricks, chrome paddle, bomb, gold pointer, wheel hub, target board, snake head/body | The Gaming Hub (original) | Original, owned by the hub | `tools/v6/r_props.py` | All games (`props.webp/json`) |
+| Car Kit 3.1 (sedan-sports, cone, debris-tire models) | Kenney | CC0 1.0 (`licenses/KENNEY-CAR-KIT-License.txt`) | https://kenney.nl/assets/car-kit | Drift Rush car, cones, tyre stacks (re-lit glossy top-down renders, `drift.webp/json`) |
+| Nitro canister, street lamp | The Gaming Hub (original) | Original | `tools/v6/r_cars.py` | Drift Rush pickups + roadside lamps |
+| Studio Small 09 HDRI | Sergej Majboroda | CC0 1.0 | https://polyhaven.com/a/studio_small_09 | Reflections in the renders |
+| Shanghai Bund HDRI | Greg Zaal | CC0 1.0 | https://polyhaven.com/a/shanghai_bund | City reflections in chrome/gold renders |
+| "Sliced Citrus" photo (lime, lemon, orange, pink grapefruit slices) | StockSnap.io contributor | CC0 1.0 (StockSnap license) | https://stocksnap.io/photo/P9M6WLW6QF | Terp Tapper notes + Munchies Snake food (`tt-*.webp`, real fruit, no recolours) |
+| Parallax layers: night sky + clouds, far skyline, mid towers with neon signs, lab glass-wall columns, near rooftops, glass tower facade | The Gaming Hub (original, procedural PIL/numpy) | Original | `tools/v6/build-layers.py` | Jetpack Dash + Sky Hopper (`px-*.webp`, `sh-tower.webp`), all horizontally seamless |
+| Fog sheet, top-down cloud shadows | The Gaming Hub (original, periodic FFT noise) | Original | `tools/v6/build-layers.py` | Ambient backgrounds (`fx-fog.webp`), Drift Rush (`dr-clouds.webp`) |
+| Memory Match card back (velvet, gold foil, TT medallion) | The Gaming Hub (original) | Original | `tools/v6/build-sprites.py` | Memory Match (`mm-back.webp`) |
+
+Not used (checked and rejected): the Quaternius Ultimate Space Kit "Astronaut" models (CC0) turned out to be animal
+characters in suits (flamingo/frog/bee), not a realistic astronaut; rawpixel "lemon slice png" stickers were flat
+illustrations with a baked-in checkerboard. Kenney 2D hero/saw/flame sprites are no longer loaded by Jetpack Dash.
+
 ## Runtime dependencies (npm)
 - express (MIT), better-sqlite3 (MIT), bcryptjs (MIT)
 - @resvg/resvg-js (MPL-2.0) - renders the SVG share/OG images to PNG on the server (`src/og.js`); used unmodified as an npm dependency

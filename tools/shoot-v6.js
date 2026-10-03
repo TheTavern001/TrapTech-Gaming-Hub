@@ -39,7 +39,7 @@ const ALL = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-matc
       else if (plan === 'flip') { await sleep(200); }
       else { await p.touchscreen.tap(box.x + box.width * (0.15 + Math.random() * 0.7), box.y + box.height * (0.55 + Math.random() * 0.3)); await sleep(300); }
     }
-    const m = await p.evaluate(() => { const st = window.__fps; st.stop = true; const el = (performance.now() - st.t0) / 1000; const d = st.d.slice().sort((a, b) => a - b); const q = (k) => d.length ? d[Math.min(d.length - 1, Math.floor(d.length * k))] : 0; return { fps: +(st.n / el).toFixed(1), drawMs: +(d.reduce((a, b) => a + b, 0) / Math.max(1, d.length)).toFixed(2), p95: +q(0.95).toFixed(2), frames: d.length, state: window.__game.state }; });
+    const m = await p.evaluate(() => { const st = window.__fps; st.stop = true; const el = (performance.now() - st.t0) / 1000; const d = st.d.slice().sort((a, b) => a - b); const q = (k) => d.length ? d[Math.min(d.length - 1, Math.floor(d.length * k))] : 0; return { fps: +(st.n / el).toFixed(1), drawMs: +(d.reduce((a, b) => a + b, 0) / Math.max(1, d.length)).toFixed(2), p95: +q(0.95).toFixed(2), frames: d.length, state: window.__game.state, ambLite: !!(window.__game.amb && window.__game.amb.lite) }; });
     if (TH > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     m.artKB = Math.round(bytes.n / 1024); out[g] = m;
     if (!NOSHOT) {

@@ -107,24 +107,41 @@ export class Ambient {
     const q = 0.25, bw = Math.ceil(W * q), bh = Math.ceil(H * q);
     if (!this.buf) { this.buf = document.createElement('canvas'); this.bctx = this.buf.getContext('2d'); }
     const sizeChanged = this.buf.width !== bw || this.buf.height !== bh;
-    if (sizeChanged) { this.buf.width = bw; this.buf.height = bh; this._pat = null; }
+    if (sizeChanged) { this.buf.width = bw; this.buf.height = bh; }
     if (sizeChanged || this._drawnT === undefined || this.t - this._drawnT >= 1 / 30 || this.t < this._drawnT || this._fogOk !== !!this.fog) {
       const b = this.bctx; b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(0, 0, bw, bh); b.setTransform(q, 0, 0, q, 0, 0); this._paint(b, W, H); this._drawnT = this.t; this._fogOk = !!this.fog;
     }
-    ctx.drawImage(this.buf, 0, 0, W, H);
+    // auto-lite: the full-screen upscale is ~free on a GPU canvas but costs real CPU on software-rendered / very slow
+    // devices. If this layer alone averages > 3 ms over 40 frames, keep only the top/bottom neon bands (sticky).
+    if (this.lite) { const sh = Math.ceil(bh * 0.22); ctx.drawImage(this.buf, 0, 0, bw, sh, 0, 0, W, sh / q); ctx.drawImage(this.buf, 0, bh - sh, bw, sh, 0, H - sh / q, W, sh / q); return; }
+    const t0 = performance.now(); ctx.drawImage(this.buf, 0, 0, W, H); const dt = performance.now() - t0;
+    this._n = (this._n || 0) + 1; if (this._n > 20) { this._acc = (this._acc || 0) + dt; if (this._n % 40 === 0) { if (this._acc / 40 > 3) this.lite = true; this._acc = 0; } }
   }
   _paint(ctx, W, H) {
-    const t = this.t, p = this.p; ctx.save();
-    if (this.fog) { // two fog sheets drifting in different directions at different scales
-      if (!this._pat) this._pat = ctx.createPattern(this.fog, 'repeat');
-      for (const [sc, vx, vy, a] of [[1.6, 9, 2, p.fogA], [2.3, -6, -1.5, p.fogA * 0.8]]) {
-        ctx.save(); ctx.globalAlpha = a; ctx.scale(sc, sc); const ox = ((t * vx) % 512 + 512) % 512, oy = ((t * vy) % 512 + 512) % 512; ctx.translate(ox - 512, oy - 512); ctx.fillStyle = this._pat; ctx.fillRect(0, 0, W / sc + 1024, H / sc + 1024); ctx.restore();
+    const t = this.t, p = this.p, q = 0.25; ctx.save();
+    if (this.fog) { // two fog sheets drifting in different directions at different scales. Each sheet is pre-scaled once to
+      // buffer resolution and tiled with plain 1:1 blits (a scaled pattern fill is slow on software-rendered canvases)
+      if (!this._fogT) this._fogT = [[1.6, 9, 2, p.fogA], [2.3, -6, -1.5, p.fogA * 0.8]].map(([sc, vx, vy, a]) => { const n = Math.round(512 * sc * q), c = document.createElement('canvas'); c.width = c.height = n; c.getContext('2d').drawImage(this.fog, 0, 0, n, n); return { c, n, sc, vx, vy, a }; });
+      ctx.setTransform(1, 0, 0, 1, 0, 0); const bw = W * q, bh = H * q;
+      for (const f of this._fogT) {
+        ctx.globalAlpha = f.a; const ox = Math.round((((t * f.vx * f.sc * q) % f.n) + f.n) % f.n) - f.n, oy = Math.round((((t * f.vy * f.sc * q) % f.n) + f.n) % f.n) - f.n;
+        for (let y = oy; y < bh; y += f.n) for (let x = ox; x < bw; x += f.n) ctx.drawImage(f.c, x, y);
       }
+      ctx.setTransform(q, 0, 0, q, 0, 0);
     }
     ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 3; i++) { // slow light rays from the top
-      const a = Math.sin(t * 0.15 + i * 2.1) * 0.12 + (i - 1) * 0.35; ctx.save(); ctx.globalAlpha = p.raysA * (0.7 + 0.3 * Math.sin(t * 0.4 + i)); ctx.translate(W * (0.2 + i * 0.3), -20); ctx.rotate(a); ctx.drawImage(this.ray, -W * 0.18, 0, W * 0.36, H * 1.1); ctx.restore();
+    // slow light rays from the top: rotated blits are the costly part, so they live in their own buffer refreshed at ~10 Hz
+    if (!this._ray) { this._ray = document.createElement('canvas'); this._rctx = this._ray.getContext('2d'); }
+    const rw = Math.ceil(W * q), rh = Math.ceil(H * q);
+    if (this._ray.width !== rw || this._ray.height !== rh || this._rayT === undefined || Math.abs(t - this._rayT) >= 0.1) {
+      if (this._ray.width !== rw || this._ray.height !== rh) { this._ray.width = rw; this._ray.height = rh; }
+      const r = this._rctx; r.setTransform(1, 0, 0, 1, 0, 0); r.clearRect(0, 0, rw, rh); r.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 3; i++) {
+        const a = Math.sin(t * 0.15 + i * 2.1) * 0.12 + (i - 1) * 0.35; r.setTransform(q, 0, 0, q, 0, 0); r.globalAlpha = p.raysA * (0.7 + 0.3 * Math.sin(t * 0.4 + i)); r.translate(W * (0.2 + i * 0.3), -20); r.rotate(a); r.drawImage(this.ray, -W * 0.18, 0, W * 0.36, H * 1.1);
+      }
+      this._rayT = t;
     }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.drawImage(this._ray, 0, 0); ctx.setTransform(q, 0, 0, q, 0, 0);
     for (const b of this.bok) {
       const y = ((b.y * (H + 200) - t * b.sp) % (H + 200) + H + 200) % (H + 200) - 100; const x = b.x * W + Math.sin(t * 0.3 + b.ph) * 24;
       ctx.globalAlpha = 0.35 + 0.25 * Math.sin(t * 0.7 + b.ph); ctx.drawImage(this.spr[b.c], x - b.s / 2, y - b.s / 2, b.s, b.s);
