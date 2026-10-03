@@ -1,6 +1,6 @@
 // Blazed Roulette - points-only European roulette with a timed drop. No real money, no purchases.
-// Original procedural code/art.
-import { Game, TAU, rnd, clamp, roundRect, fmt } from './engine.js';
+// v5 art: casino-lounge photo backdrop (Poly Haven CC0 HDRI), green velour felt + cherry-wood wheel rim (Poly Haven CC0). See /CREDITS.md
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
 const ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
 const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 const STEP = TAU / 37; const MARK = -Math.PI / 2; const WHEEL_SPEED = 0.6;
@@ -64,10 +64,12 @@ export class BlazedRoulette extends Game {
     if (this.ball && !this.ball.done) { this.ball.t += dt; if (Math.random() < dt * 8 && this.ball.t < this.ball.dur * 0.9) this.sfx.tone(rnd(1800, 2600), 0.015, { type: 'square', vol: 0.04 }); if (this.ball.t >= this.ball.dur) { this.ball.done = true; this.hold = 1.3; this.resolve(this.ball.idx); } }
     else if (this.ball && this.ball.done) { this.hold -= dt; if (this.hold <= 0) { this.ball = null; if (this.over) { this.finish(); } } }
   }
+  async load() { this.art = await loadArt({ bg: 'rl-bg.webp', felt: 'rl-felt.webp', wood: 'wood-cherry.webp' }); }
   render(ctx) {
-    this.bg(ctx, '#160a2e', '#05040f'); const { x: cx, y: cy, R } = this.wc;
+    const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(8,6,14,0.45)'); const { x: cx, y: cy, R } = this.wc;
+    if (A.felt && this.btns && this.btns.length) { const top = Math.min(...this.btns.map(b => b.y)) - 12; ctx.save(); ctx.fillStyle = pattern(ctx, A.felt); roundRect(ctx, 6, top, this.W - 12, this.H - top - 6, 18); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#d4a373'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore(); }
     // wheel
-    ctx.save(); ctx.translate(cx, cy); ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 30; ctx.beginPath(); ctx.arc(0, 0, R + 10, 0, TAU); ctx.fillStyle = '#2a1650'; ctx.fill(); ctx.shadowBlur = 0;
+    ctx.save(); ctx.translate(cx, cy); ctx.shadowColor = 'rgba(0,0,0,0.75)'; ctx.shadowBlur = 30; ctx.beginPath(); ctx.arc(0, 0, R + 16, 0, TAU); ctx.fillStyle = pattern(ctx, A.wood) || '#2a1650'; ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, R + 3, 0, TAU); ctx.stroke();
     const under = this.underMarker();
     for (let i = 0; i < 37; i++) {
       const n = ORDER[i]; const a0 = this.ang + i * STEP - STEP / 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, a0, a0 + STEP); ctx.closePath();
@@ -75,8 +77,8 @@ export class BlazedRoulette extends Game {
       const d = Math.min(Math.abs(i - under), 37 - Math.abs(i - under)); if (d <= 2 && !this.ball) { ctx.fillStyle = 'rgba(34,211,238,0.16)'; ctx.fill(); }
       ctx.save(); ctx.rotate(this.ang + i * STEP); ctx.translate(R * 0.86, 0); ctx.rotate(Math.PI / 2); ctx.fillStyle = '#fff'; ctx.font = `700 ${Math.max(9, R * 0.085)}px Orbitron, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(n), 0, 0); ctx.restore();
     }
-    ctx.beginPath(); ctx.arc(0, 0, R * 0.7, 0, TAU); ctx.fillStyle = '#1a0f3a'; ctx.fill(); ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 3; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, R * 0.62, 0, TAU); const g = ctx.createRadialGradient(0, 0, 4, 0, 0, R * 0.62); g.addColorStop(0, '#3b0764'); g.addColorStop(1, '#120a2a'); ctx.fillStyle = g; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, R * 0.7, 0, TAU); ctx.fillStyle = pattern(ctx, A.wood) || '#1a0f3a'; ctx.fill(); ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, R * 0.62, 0, TAU); const g = ctx.createRadialGradient(-R * 0.15, -R * 0.15, 4, 0, 0, R * 0.62); g.addColorStop(0, '#e5e7eb'); g.addColorStop(0.5, '#9ca3af'); g.addColorStop(1, '#374151'); ctx.fillStyle = g; ctx.fill();
     for (let k = 0; k < 7; k++) { ctx.save(); ctx.rotate(this.ang * 1 + k * TAU / 7); ctx.fillStyle = k % 2 ? '#84cc16' : '#a3e635'; ctx.beginPath(); ctx.ellipse(0, -R * 0.3, R * 0.07, R * 0.26, 0, 0, TAU); ctx.globalAlpha = 0.8; ctx.fill(); ctx.restore(); }
     ctx.beginPath(); ctx.arc(0, 0, R * 0.1, 0, TAU); ctx.fillStyle = '#fde047'; ctx.fill();
     ctx.restore();
@@ -88,7 +90,7 @@ export class BlazedRoulette extends Game {
     for (const b of this.btns) {
       const bet = BETS[b.id]; const sel = (b.kind === 'chip' && +b.label === this.chip); const stake = bet ? this.bets[b.id] || 0 : 0;
       roundRect(ctx, b.x, b.y, b.w, b.h, 10);
-      ctx.fillStyle = b.kind === 'drop' ? (this.ball ? '#334155' : '#7c3aed') : bet && bet.col ? bet.col : sel ? '#0e7490' : 'rgba(30,27,75,0.85)'; ctx.fill();
+      ctx.fillStyle = b.kind === 'drop' ? (this.ball ? '#334155' : '#7c3aed') : bet && bet.col ? bet.col : sel ? '#0e7490' : 'rgba(6,30,18,0.72)'; ctx.fill();
       ctx.strokeStyle = stake ? '#fde047' : sel ? '#22d3ee' : 'rgba(129,140,248,0.45)'; ctx.lineWidth = stake || sel ? 3 : 1.5; ctx.stroke();
       const lbl = bet ? bet.label : b.label; const fs = Math.min(18, b.h * 0.36);
       this.text(ctx, lbl, b.x + b.w / 2, b.y + b.h / 2 + (bet ? -2 : fs * 0.35), { size: fs, weight: 800, align: 'center', glow: b.kind === 'drop' ? '#a855f7' : null });

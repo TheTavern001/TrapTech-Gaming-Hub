@@ -1,6 +1,7 @@
 // Spin to Win - timing wheel. Original code/art. Points only: no money, nothing to buy.
 // The wheel always travels the same distance for the same power, so skill (timing the release) decides the segment.
-import { Game, TAU, rnd, clamp, roundRect, fmt } from './engine.js';
+// v5 art: blurred lounge photo backdrop (Poly Haven CC0 HDRI 'warm_restaurant_night') + lacquered cherry-wood rim (Poly Haven CC0). See /CREDITS.md
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
 const SEG = [100, 20, 250, 10, 'x2', 50, 500, 20, 'BUST', 100, 50, 1000, 10, 'BONUS', 25, 200];
 const COLORS = ['#7c3aed', '#2563eb', '#db2777', '#0891b2'];
 const BASE_SPINS = 5, MAX_SPINS = 8, PERIOD = 1.4;
@@ -45,12 +46,13 @@ export class SpinToWin extends Game {
     this.lastRes = { msg, col }; this.resultT = 1.1; this.history.push(v);
     this.pop(this.cx, this.cy - 10, msg, col, 32);
   }
+  async load() { this.art = await loadArt({ bg: 'lounge-blur.webp', wood: 'wood-cherry.webp' }); }
   render(ctx) {
-    this.bg(ctx, '#160a3a', '#05060f'); const { cx, cy, R } = this; const n = SEG.length; const seg = TAU / n;
+    const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(10,6,22,0.5)'); const { cx, cy, R } = this; const n = SEG.length; const seg = TAU / n;
     // rim lights
-    for (let i = 0; i < 24; i++) { const a = i / 24 * TAU + this.t * 0.4; const on = (Math.floor(this.t * 6) + i) % 2 === 0; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * (R + 18), cy + Math.sin(a) * (R + 18), 5, 0, TAU); ctx.fillStyle = on ? '#fde047' : '#7c3aed'; ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = on ? 12 : 4; ctx.fill(); }
-    ctx.shadowBlur = 0;
-    ctx.beginPath(); ctx.arc(cx, cy, R + 10, 0, TAU); ctx.fillStyle = '#1e1b4b'; ctx.fill(); ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R + 30, 0, TAU); ctx.arc(cx, cy, R + 8, 0, TAU, true); ctx.fillStyle = pattern(ctx, A.wood) || '#3f1d0b'; ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 24; ctx.fill('evenodd'); ctx.restore();
+    for (let i = 0; i < 24; i++) { const a = i / 24 * TAU + this.t * 0.4; const on = (Math.floor(this.t * 6) + i) % 2 === 0; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * (R + 19), cy + Math.sin(a) * (R + 19), 4.5, 0, TAU); ctx.fillStyle = on ? '#fef3c7' : '#92400e'; ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = on ? 14 : 0; ctx.fill(); } ctx.shadowBlur = 0;
+    ctx.beginPath(); ctx.arc(cx, cy, R + 8, 0, TAU); ctx.fillStyle = '#1c1917'; ctx.fill(); ctx.strokeStyle = '#d4a373'; ctx.lineWidth = 3; ctx.stroke();
     for (let i = 0; i < n; i++) {
       const a0 = this.ang + i * seg, a1 = a0 + seg; const v = SEG[i];
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, a0, a1); ctx.closePath();

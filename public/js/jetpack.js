@@ -11,12 +11,15 @@ const START_MPS = 11, MAX_MPS = 24, ACCEL_MPS = 0.12;
 
 const IMG = {};
 const IMG_LIST = ['hero_fly', 'hero_run_a', 'hero_run_b', 'hero_hit', 'coin', 'saw_a', 'saw_b', 'flame_a', 'flame_b', 'flame_c', 'shield_pickup', 'shield_bubble', 'bg_space', 'star'];
+// v5 realistic art: night-city panorama cut from a Poly Haven CC0 HDRI (Shanghai Bund), photo gold coin (Wikimedia, public domain),
+// brushed-metal floor (Poly Haven CC0 metal_plate). Hero/saws/flames stay Kenney CC0. See /CREDITS.md
+const V5_IMG = { city: 'jp-city.webp', coin_v5: 'coin.webp', metal: 'metal-plate.webp' };
 let assetsPromise = null;
 function loadAssets(base) {
   if (assetsPromise) return assetsPromise;
   assetsPromise = Promise.all(IMG_LIST.map(n => new Promise(res => {
     const im = new Image(); im.onload = () => { IMG[n] = im; res(); }; im.onerror = () => res(); im.src = `${base}/game/${n}.png`;
-  })));
+  })).concat(Object.entries(V5_IMG).map(([k, f]) => new Promise(res => { const im = new Image(); im.onload = () => { IMG[k] = im; res(); }; im.onerror = () => res(); im.src = `/assets/v5/${f}`; }))));
   return assetsPromise;
 }
 
@@ -305,9 +308,10 @@ export class JetpackDash {
   _drawBg(ctx) {
     const W = this.W;
     // space backdrop (Kenney CC0 tile) tinted dark
-    const bg = IMG.bg_space;
-    if (bg) { const tw = 256; const off = -(this.bgX * 0.05) % tw; for (let x = off - tw; x < W + tw; x += tw) for (let y = 0; y < H; y += tw) ctx.drawImage(bg, x, y, tw, tw); }
-    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(8,6,30,0.55)'); g.addColorStop(0.6, 'rgba(30,10,70,0.35)'); g.addColorStop(1, 'rgba(5,10,40,0.85)');
+    const bg = IMG.bg_space; const city = IMG.city;
+    if (city) { const ih = H - FLOOR - CEIL + 40, iw = city.width * (ih / city.height); let off = -((this.bgX * 0.08) % iw); for (let x = off; x < W; x += iw) ctx.drawImage(city, x, CEIL - 20, iw, ih); }
+    else if (bg) { const tw = 256; const off = -(this.bgX * 0.05) % tw; for (let x = off - tw; x < W + tw; x += tw) for (let y = 0; y < H; y += tw) ctx.drawImage(bg, x, y, tw, tw); }
+    const g = ctx.createLinearGradient(0, 0, 0, H); if (city) { g.addColorStop(0, 'rgba(8,6,30,0.55)'); g.addColorStop(0.6, 'rgba(24,8,60,0.32)'); g.addColorStop(1, 'rgba(5,6,24,0.75)'); } else { g.addColorStop(0, 'rgba(8,6,30,0.55)'); g.addColorStop(0.6, 'rgba(30,10,70,0.35)'); g.addColorStop(1, 'rgba(5,10,40,0.85)'); }
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     // far skyline
     const drawCity = (arr, speed, base, col, winCol, winA) => {
@@ -320,8 +324,7 @@ export class JetpackDash {
         ctx.globalAlpha = 1;
       }
     };
-    drawCity(this.cityFar || [], 0.12, H - FLOOR, '#0d0b2a', '#7c4dff', 0.5);
-    drawCity(this.cityNear || [], 0.25, H - FLOOR, '#120f38', '#00d2ff', 0.55);
+    if (!city) { drawCity(this.cityFar || [], 0.12, H - FLOOR, '#0d0b2a', '#7c4dff', 0.5); drawCity(this.cityNear || [], 0.25, H - FLOOR, '#120f38', '#00d2ff', 0.55); }
     // lab wall pillars with neon strips
     const pw = 340; const off = -((this.bgX * 0.6) % pw);
     for (let x = off - pw; x < W + pw; x += pw) {
@@ -338,6 +341,7 @@ export class JetpackDash {
     const fy = H - FLOOR;
     const fg = ctx.createLinearGradient(0, fy, 0, H); fg.addColorStop(0, '#1b1748'); fg.addColorStop(1, '#07061a');
     ctx.fillStyle = fg; ctx.fillRect(0, fy, W, FLOOR);
+    if (IMG.metal) { ctx.save(); ctx.globalAlpha = 0.55; ctx.translate(-(this.bgX % 256), fy); ctx.fillStyle = ctx.createPattern(IMG.metal, 'repeat'); ctx.fillRect(0, 0, W + 256, FLOOR); ctx.restore(); ctx.fillStyle = 'rgba(7,6,26,0.45)'; ctx.fillRect(0, fy, W, FLOOR); }
     ctx.fillStyle = '#7c4dff'; ctx.shadowColor = '#9f6bff'; ctx.shadowBlur = 14; ctx.fillRect(0, fy, W, 3); ctx.shadowBlur = 0;
     ctx.strokeStyle = 'rgba(124,77,255,0.25)'; ctx.lineWidth = 2;
     const to = -((this.bgX) % 80);
@@ -421,7 +425,7 @@ export class JetpackDash {
   _drawCoin(ctx, c) {
     const sx = Math.abs(Math.cos(this.t * 4 + c.ph)) * 0.8 + 0.2;
     ctx.save(); ctx.translate(c.x, c.y); ctx.scale(sx, 1);
-    if (IMG.coin) ctx.drawImage(IMG.coin, -13, -14, 26, 28); else { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.fill(); }
+    if (IMG.coin_v5) ctx.drawImage(IMG.coin_v5, -14, -14, 28, 28); else if (IMG.coin) ctx.drawImage(IMG.coin, -13, -14, 26, 28); else { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.fill(); }
     ctx.restore();
   }
   _drawPickup(ctx, k) {
@@ -439,7 +443,7 @@ export class JetpackDash {
     ctx.fillText(`${sc.toLocaleString('en-US')}m`, 18, CEIL + 42);
     ctx.shadowBlur = 0; ctx.font = '600 15px "Exo 2", sans-serif'; ctx.fillStyle = '#b9b3ff';
     ctx.fillText(`BEST ${Math.max(this.best, sc).toLocaleString('en-US')}m`, 20, CEIL + 64);
-    if (IMG.coin) ctx.drawImage(IMG.coin, 18, CEIL + 74, 18, 20);
+    if (IMG.coin_v5) ctx.drawImage(IMG.coin_v5, 17, CEIL + 74, 20, 20); else if (IMG.coin) ctx.drawImage(IMG.coin, 18, CEIL + 74, 18, 20);
     ctx.fillStyle = '#ffe066'; ctx.font = '700 17px Orbitron, sans-serif'; ctx.fillText(String(this.coins), 42, CEIL + 91);
     if (this.p.shield) { ctx.fillStyle = '#4fc3ff'; ctx.font = '700 13px Orbitron, sans-serif'; ctx.fillText('SHIELD', 20, CEIL + 114); }
     ctx.restore();

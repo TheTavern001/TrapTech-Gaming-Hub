@@ -1,5 +1,6 @@
 // High Score - neon reflex target game. Original code/art.
-import { Game, TAU, rnd, clamp, fmt } from './engine.js';
+// v5 art: brick wall (Poly Haven CC0 brick_wall_02), real archery-target photo (rawpixel, public domain), gold-coin bonus targets (Wikimedia, public domain). See /CREDITS.md
+import { Game, TAU, rnd, clamp, fmt, loadArt } from './engine.js';
 export class HighScore extends Game {
   get title() { return 'HIGH SCORE'; }
   get hint() { return 'Tap targets before they vanish. Dead-center hits score more, gold = x2, never tap red bombs. 3 lives.'; }
@@ -38,8 +39,10 @@ export class HighScore extends Game {
     for (const t of this.targets.filter(t => t.age >= t.life)) { if (t.type !== 'bomb') this.loseLife(t.x, t.y, 'MISS'); }
     this.targets = this.targets.filter(t => t.age < t.life);
   }
+  async load() { this.art = await loadArt({ wall: 'hs-wall.webp', target: 'hs-target.webp', coin: 'coin-lg.webp' }); }
   render(ctx) {
-    this.bg(ctx, '#0b0a2e', '#05060f');
+    const A = this.art || {}; this.photoBg(ctx, A.wall, 'rgba(8,6,16,0.55)');
+    if (A.wall) { const v = ctx.createRadialGradient(this.W / 2, this.H / 2, this.H * 0.2, this.W / 2, this.H / 2, this.H * 0.75); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.55)'); ctx.fillStyle = v; ctx.fillRect(0, 0, this.W, this.H); }
     if (this.hurt > 0) { ctx.fillStyle = `rgba(239,68,68,${this.hurt * 0.5})`; ctx.fillRect(0, 0, this.W, this.H); }
     for (const r of this.rings) { ctx.globalAlpha = Math.max(0, r.life / 0.35); ctx.strokeStyle = r.c; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, TAU); ctx.stroke(); } ctx.globalAlpha = 1;
     for (const t of this.targets) {
@@ -48,6 +51,10 @@ export class HighScore extends Game {
       if (t.type === 'bomb') {
         ctx.beginPath(); ctx.arc(0, 0, r * pulse, 0, TAU); ctx.fillStyle = '#7f1d1d'; ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0;
         ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-r * 0.4, -r * 0.4); ctx.lineTo(r * 0.4, r * 0.4); ctx.moveTo(r * 0.4, -r * 0.4); ctx.lineTo(-r * 0.4, r * 0.4); ctx.stroke();
+      } else if ((t.type === 'gold' ? A.coin : A.target)) {
+        const im = t.type === 'gold' ? A.coin : A.target; ctx.shadowColor = t.type === 'gold' ? '#fbbf24' : 'rgba(0,0,0,0.7)'; ctx.shadowBlur = t.type === 'gold' ? 22 : 12; ctx.drawImage(im, -r * pulse, -r * pulse, r * 2 * pulse, r * 2 * pulse); ctx.shadowBlur = 0;
+        if (t.type === 'gold') this.text(ctx, 'x2', 0, r * 0.25, { size: Math.max(10, r * 0.6), weight: 900, align: 'center', color: '#fff', glow: '#b45309' });
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, t.R + 6, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - k)); ctx.stroke();
       } else {
         const c1 = t.type === 'gold' ? '#fde047' : t.hue < 0.5 ? '#22d3ee' : '#c084fc'; const c2 = t.type === 'gold' ? '#b45309' : '#4c1d95';
         ctx.shadowColor = c1; ctx.shadowBlur = 22;

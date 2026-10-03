@@ -42,7 +42,7 @@ const T = (x0, y, size, fill, text, { font = 'Orbitron', weight = 900, anchor = 
 
 const templates = {
   default: () => frame(`${T(60, 240, 64, '#fff', 'PLAY • COMPETE')}${T(60, 320, 64, 'url(#nv)', 'WIN • CONNECT')}
-    ${T(60, 390, 28, '#c7cdf5', 'Free arcade games, leaderboards, tournaments and', { font: 'Exo 2', weight: 600 })}${T(60, 430, 28, '#c7cdf5', 'brand giveaways. No purchase necessary.', { font: 'Exo 2', weight: 600 })}`, { art: '/assets/cards/jetpack-dash.png' }),
+    ${T(60, 390, 28, '#c7cdf5', 'Free arcade games, leaderboards, tournaments and', { font: 'Exo 2', weight: 600 })}${T(60, 430, 28, '#c7cdf5', 'brand giveaways. No purchase necessary.', { font: 'Exo 2', weight: 600 })}`, { art: '/assets/cards/v5/jetpack-dash.png' }),
   run: (d) => frame(`${T(60, 190, 26, '#22d3ee', clip(d.game, 28).toUpperCase(), { weight: 700, ls: 3 })}
     ${T(60, 320, d.scoreText.length > 9 ? 92 : 120, '#fff', d.scoreText)}
     ${T(60, 380, 34, '#e9e6ff', `${clip(d.username, 20)}${d.title ? ' • ' + clip(d.title, 22) : ''}`, { font: 'Exo 2', weight: 800 })}

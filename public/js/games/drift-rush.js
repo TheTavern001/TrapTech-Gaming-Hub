@@ -1,9 +1,10 @@
-// Drift Rush - top-down neon drift racer. Original procedural code/art.
-import { Game, TAU, rnd, clamp, roundRect, fmt } from './engine.js';
+// Drift Rush - top-down drift racer. v5 art: Poly Haven CC0 asphalt/grass photo textures + Kenney Racing Pack (CC0) cars/props. See /CREDITS.md
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
 const PX = 10; // px per meter
 export class DriftRush extends Game {
   get title() { return 'DRIFT RUSH'; }
   get hint() { return 'Hold left/right side (or arrows / A-D) to steer. Slide through curves to build drift points, straighten out to bank them. Stay on the road!'; }
+  async load() { this.art = await loadArt({ road: 'dr-asphalt.webp', grass: 'dr-grass.webp', car: 'dr-car_red_1.webp', cone: 'dr-cone_straight.webp', barrel: 'dr-barrel_red.webp', tires: 'dr-tires_white.webp', oil: 'dr-oil.webp' }); }
   layout() { this.carY = this.H * 0.74; }
   reset() {
     this.score = 0; this.coins = 0; this.dist = 0; this.meters = 0; this.x = this.W / 2; this.th = 0; this.ph = 0; this.v = 20;
@@ -60,31 +61,40 @@ export class DriftRush extends Game {
     this.score = Math.floor(this.meters + this.banked);
   }
   render(ctx) {
-    ctx.fillStyle = '#070516'; ctx.fillRect(0, 0, this.W, this.H);
-    const off = this.dist % 40; ctx.strokeStyle = 'rgba(99,102,241,0.09)'; ctx.lineWidth = 1; ctx.beginPath();
-    for (let x = 0; x < this.W; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, this.H); } for (let y = off - 40; y < this.H; y += 40) { ctx.moveTo(0, y); ctx.lineTo(this.W, y); } ctx.stroke();
+    const A = this.art || {}; const gp = pattern(ctx, A.grass), rp = pattern(ctx, A.road);
+    if (gp) { ctx.save(); ctx.translate(0, this.dist % 512); ctx.fillStyle = gp; ctx.fillRect(0, -512, this.W, this.H + 1024); ctx.restore(); ctx.fillStyle = 'rgba(4,10,6,0.12)'; ctx.fillRect(0, 0, this.W, this.H); }
+    else { ctx.fillStyle = '#070516'; ctx.fillRect(0, 0, this.W, this.H); }
     const step = 10; const L = [], R = [], C = [];
     for (let y = -step; y <= this.H + step; y += step) { const d = this.dist + (this.carY - y); const c = this.cx(d), h = this.hw(d); L.push([c - h, y]); R.push([c + h, y]); C.push([c, y, d]); }
     ctx.beginPath(); L.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); for (let i = R.length - 1; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]); ctx.closePath();
-    const g = ctx.createLinearGradient(0, 0, 0, this.H); g.addColorStop(0, '#120c33'); g.addColorStop(1, '#1b1446'); ctx.fillStyle = g; ctx.fill();
-    for (const [pts, col] of [[L, '#22d3ee'], [R, '#f472b6']]) { ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.shadowColor = col; ctx.shadowBlur = 14; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); ctx.restore(); }
-    ctx.strokeStyle = 'rgba(253,224,71,0.45)'; ctx.lineWidth = 3; ctx.beginPath();
+    if (rp) { ctx.save(); ctx.clip(); ctx.translate(0, this.dist % 512); ctx.fillStyle = rp; ctx.fillRect(0, -512, this.W, this.H + 1024); ctx.restore(); }
+    else { const g = ctx.createLinearGradient(0, 0, 0, this.H); g.addColorStop(0, '#120c33'); g.addColorStop(1, '#1b1446'); ctx.fillStyle = g; ctx.fill(); }
+    // red/white rumble-strip curbs with a faint neon edge glow
+    for (const [pts, col] of [[L, '#22d3ee'], [R, '#f472b6']]) {
+      ctx.save(); ctx.lineCap = 'butt'; ctx.lineWidth = 9; for (let i = 1; i < pts.length; i++) { ctx.strokeStyle = Math.floor(C[i][2] / 40) % 2 ? '#f4f4f5' : '#dc2626'; ctx.beginPath(); ctx.moveTo(pts[i - 1][0], pts[i - 1][1]); ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke(); }
+      ctx.strokeStyle = col; ctx.globalAlpha = 0.55; ctx.lineWidth = 2; ctx.shadowColor = col; ctx.shadowBlur = 10; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); ctx.restore();
+    }
+    // roadside tyre stacks (decor, deterministic by distance)
+    if (A.tires) for (let k = Math.floor((this.dist - 200) / 520); k * 520 < this.dist + this.H + 200; k++) { const d = k * 520 + 260; const y = this.carY - (d - this.dist); const side = (k & 1) ? 1 : -1; const x = this.cx(d) + side * (this.hw(d) + 30); if (x > -30 && x < this.W + 30) ctx.drawImage(A.tires, x - 18, y - 18, 36, 36); }
+    ctx.strokeStyle = 'rgba(250,250,250,0.7)'; ctx.lineWidth = 3; ctx.beginPath();
     for (let i = 1; i < C.length; i++) { if (Math.floor(C[i][2] / 60) % 2) continue; ctx.moveTo(C[i - 1][0], C[i - 1][1]); ctx.lineTo(C[i][0], C[i][1]); } ctx.stroke();
     // checkpoint line
     const cpD = this.nextCp * PX; const cpY = this.carY - (cpD - this.dist); if (cpY > -10 && cpY < this.H) { const c = this.cx(cpD), h = this.hw(cpD); for (let i = 0; i < 12; i++) { ctx.fillStyle = i % 2 ? '#fff' : '#111'; ctx.fillRect(c - h + (2 * h / 12) * i, cpY - 6, 2 * h / 12, 12); } }
     // skids
-    ctx.fillStyle = 'rgba(15,10,30,0.7)'; for (const s of this.skids) { const y = this.carY - (s.d - this.dist); if (y > this.H) continue; ctx.fillRect(s.x - 2, y, 4, 4); }
+    ctx.fillStyle = 'rgba(8,8,10,0.55)'; for (const s of this.skids) { const y = this.carY - (s.d - this.dist); if (y > this.H) continue; ctx.fillRect(s.x - 2, y, 4, 4); }
     for (const it of this.items) {
       const y = this.carY - (it.d - this.dist); if (y < -30 || y > this.H + 30) continue;
-      if (it.t === 'cone') { ctx.save(); ctx.translate(it.x, y); ctx.fillStyle = '#fb923c'; ctx.shadowColor = '#fb923c'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(11, 11); ctx.lineTo(-11, 11); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.fillRect(-6, 0, 12, 3); ctx.restore(); }
+      if (it.t === 'cone' && A.cone) { const im = (Math.floor(it.d) % 3 === 0 && A.barrel) ? A.barrel : A.cone; ctx.drawImage(im, it.x - 15, y - 15, 30, 30); }
+      else if (it.t === 'cone') { ctx.save(); ctx.translate(it.x, y); ctx.fillStyle = '#fb923c'; ctx.shadowColor = '#fb923c'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(11, 11); ctx.lineTo(-11, 11); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.fillRect(-6, 0, 12, 3); ctx.restore(); }
       else { const p = 1 + Math.sin(this.t * 8) * 0.12; ctx.save(); ctx.translate(it.x, y); ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 20; ctx.fillStyle = '#22d3ee'; ctx.beginPath(); ctx.arc(0, 0, 11 * p, 0, TAU); ctx.fill(); ctx.fillStyle = '#0b1030'; ctx.font = '900 12px Orbitron, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('N', 0, 1); ctx.restore(); }
     }
     // car
     ctx.save(); ctx.translate(this.x, this.carY); ctx.rotate(this.th); if (this.hit > 0 && Math.floor(this.t * 20) % 2) ctx.globalAlpha = 0.5;
     if (this.boost > 0) { ctx.fillStyle = '#22d3ee'; ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 20; ctx.beginPath(); ctx.moveTo(-7, 22); ctx.lineTo(0, 22 + rnd(18, 34)); ctx.lineTo(7, 22); ctx.fill(); }
-    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 18; ctx.fillStyle = '#7c3aed'; roundRect(ctx, -13, -24, 26, 48, 7); ctx.fill(); ctx.shadowBlur = 0;
+    if (A.car) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4; ctx.rotate(Math.PI); ctx.drawImage(A.car, -17, -31, 34, 62); ctx.shadowColor = 'transparent'; }
+    else { ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 18; ctx.fillStyle = '#7c3aed'; roundRect(ctx, -13, -24, 26, 48, 7); ctx.fill(); ctx.shadowBlur = 0;
     ctx.fillStyle = '#c4b5fd'; roundRect(ctx, -10, -12, 20, 14, 4); ctx.fill(); ctx.fillStyle = '#22d3ee'; ctx.fillRect(-11, -24, 6, 3); ctx.fillRect(5, -24, 6, 3);
-    ctx.fillStyle = '#f472b6'; ctx.fillRect(-11, 21, 6, 3); ctx.fillRect(5, 21, 6, 3); ctx.fillStyle = '#0b0820'; for (const [wx, wy] of [[-15, -15], [11, -15], [-15, 8], [11, 8]]) ctx.fillRect(wx, wy, 4, 10);
+    ctx.fillStyle = '#f472b6'; ctx.fillRect(-11, 21, 6, 3); ctx.fillRect(5, 21, 6, 3); ctx.fillStyle = '#0b0820'; for (const [wx, wy] of [[-15, -15], [11, -15], [-15, 8], [11, 8]]) ctx.fillRect(wx, wy, 4, 10); }
     ctx.restore();
     if (this.flash > 0) { ctx.fillStyle = `rgba(239,68,68,${this.flash})`; ctx.fillRect(0, 0, this.W, this.H); }
     // HUD

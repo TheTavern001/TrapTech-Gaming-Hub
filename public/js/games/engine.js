@@ -16,6 +16,19 @@ export function shuffle(arr, r = Math.random) { for (let i = arr.length - 1; i >
 export class Telemetry { constructor() { this.reset(); } reset() { this.n = 0; this.last = 0; this.sum = 0; this.sq = 0; this.min = 0; this.k = 0; }
   hit() { const t = performance.now(); if (this.last) { const d = t - this.last; this.sum += d; this.sq += d * d; this.k++; this.min = this.min ? Math.min(this.min, d) : d; } this.last = t; this.n++; }
   out() { const m = this.k ? this.sum / this.k : 0; return { n: this.n, mean: Math.round(m), sd: Math.round(Math.sqrt(Math.max(0, this.k ? this.sq / this.k - m * m : 0))), min: Math.round(this.min) }; } }
+// v5: realistic art helpers (photos/textures from CC0 + public-domain sources, see /CREDITS.md)
+export const ART = '/assets/v5/';
+const _imgCache = {};
+export function loadImg(name) { if (_imgCache[name]) return _imgCache[name]; return (_imgCache[name] = new Promise((res) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = () => res(null); i.src = ART + name; })); }
+export async function loadArt(map) { const out = {}; await Promise.all(Object.entries(map).map(async ([k, n]) => { out[k] = await loadImg(n); })); return out; }
+// draw an image to cover a rect (object-fit: cover), optional horizontal scroll offset for parallax panoramas
+export function cover(ctx, img, x, y, w, h, scroll = 0) {
+  if (!img) return false; const s = Math.max(w / img.width, h / img.height); const iw = img.width * s, ih = img.height * s;
+  if (scroll) { let ox = -((scroll % iw) + iw) % iw; for (; ox < w; ox += iw) ctx.drawImage(img, x + ox, y + (h - ih) / 2, iw, ih); return true; }
+  ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih); return true;
+}
+const _pat = new WeakMap();
+export function pattern(ctx, img) { if (!img) return null; let p = _pat.get(img); if (!p) { p = ctx.createPattern(img, 'repeat'); _pat.set(img, p); } return p; }
 export const fmt = (n) => Math.floor(n).toLocaleString('en-US');
 
 export class Synth {
@@ -143,6 +156,11 @@ export class Game {
   text(ctx, s, x, y, { size = 20, weight = 800, color = '#fff', align = 'left', glow = null, font = 'Orbitron', base = 'alphabetic' } = {}) {
     ctx.save(); ctx.font = `${weight} ${size}px ${font === 'Exo' ? '"Exo 2"' : 'Orbitron'}, sans-serif`; ctx.textAlign = align; ctx.textBaseline = base; ctx.fillStyle = color;
     if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 14; } ctx.fillText(s, x, y); ctx.restore();
+  }
+  // photo backdrop: cover-fit image + a dark tint so neon HUD stays readable; falls back to gradient bg
+  photoBg(ctx, img, tint = 'rgba(6,6,18,0.45)', scroll = 0) {
+    if (!cover(ctx, img, 0, 0, this.W, this.H, scroll)) return this.bg(ctx);
+    if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, this.W, this.H); }
   }
   bg(ctx, c1 = '#0a0628', c2 = '#050714') {
     const g = ctx.createLinearGradient(0, 0, 0, this.H); g.addColorStop(0, c1); g.addColorStop(1, c2); ctx.fillStyle = g; ctx.fillRect(0, 0, this.W, this.H);

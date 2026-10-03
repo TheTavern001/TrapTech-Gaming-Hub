@@ -1,9 +1,13 @@
-// Memory Match - original code/art (canvas-drawn neon glyphs).
-import { Game, TAU, rnd, clamp, roundRect, fmt, shuffle } from './engine.js';
+// Memory Match - v5 art: real photo card faces (rawpixel / Wikimedia public-domain + CC0 photos), velvet card backs + walnut table (Poly Haven CC0).
+// Card identities are still glyph indexes (the server replays the deal from the seed), only the artwork changed. See /CREDITS.md
+import { Game, TAU, rnd, clamp, roundRect, fmt, shuffle, loadArt, cover } from './engine.js';
 const LEVELS = [[4, 3], [4, 4], [5, 4], [6, 4], [6, 5]];
 const GLYPHS = ['star', 'heart', 'diamond', 'bolt', 'moon', 'crown', 'hex', 'ring', 'tri', 'plus', 'drop', 'note', 'flame', 'square', 'spark'];
 const GCOL = ['#fde047', '#f472b6', '#22d3ee', '#facc15', '#c4b5fd', '#fbbf24', '#34d399', '#60a5fa', '#fb7185', '#a3e635', '#38bdf8', '#e879f9', '#fb923c', '#5eead4', '#f0abfc'];
+// photo face per glyph index (index order must not change: it is part of the replay-verified deal)
+const PHOTOS = ['lime', 'orange', 'lemon', 'grapefruit', 'coin', 'leaf', 'target', 'darts', 'roulette', 'chips', 'boombox', 'controller', 'dice', 'headphones', 'vinyl'];
 export class MemoryMatch extends Game {
+  async load() { const m = { table: 'mm-table.webp', back: 'mm-back.webp' }; PHOTOS.forEach((n, i) => { m['f' + i] = `mm-${n}.webp`; }); this.art = await loadArt(m); }
   get title() { return 'MEMORY MATCH'; }
   get hint() { return 'Memorize the cards, then tap two at a time to find pairs. Chain matches for up to x5 combo. Clear boards for extra time.'; }
   get startOnTapOnly() { return true; }
@@ -62,14 +66,17 @@ export class MemoryMatch extends Game {
     if (this.time <= 0) { this.time = 0; this.sfx.lose(); this.finish(); }
   }
   render(ctx) {
-    this.bg(ctx, '#0f0a30', '#05060f');
+    const A = this.art || {}; this.photoBg(ctx, A.table, 'rgba(8,5,4,0.35)');
     for (const c of this.cards) {
       let [x, y, w, h] = this.rect(c.k); const f = this.peek > 0 ? 1 : c.flip;
       const face = f > 0.5; const s = Math.max(0.04, Math.abs(Math.cos(f * Math.PI)));
       if (c.shake > 0) x += Math.sin(c.shake * 60) * 4;
       ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.scale(s, 1);
       roundRect(ctx, -w / 2, -h / 2, w, h, 12);
-      if (face) { ctx.fillStyle = c.done ? 'rgba(52,211,153,0.16)' : '#111a46'; ctx.fill(); ctx.strokeStyle = c.done ? '#34d399' : GCOL[c.g]; ctx.lineWidth = 2.5; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = c.done ? 16 : 8; ctx.stroke(); ctx.shadowBlur = 0; this.glyph(ctx, c.g, Math.min(w, h) * 0.3); }
+      const ph = A['f' + c.g];
+      if (face && ph) { ctx.save(); ctx.clip(); cover(ctx, ph, -w / 2, -h / 2, w, h); if (c.done) { ctx.fillStyle = 'rgba(16,185,129,0.22)'; ctx.fillRect(-w / 2, -h / 2, w, h); } ctx.restore(); roundRect(ctx, -w / 2, -h / 2, w, h, 12); ctx.strokeStyle = c.done ? '#34d399' : '#f5f5f4'; ctx.lineWidth = c.done ? 4 : 3; ctx.shadowColor = c.done ? '#34d399' : 'rgba(0,0,0,0.6)'; ctx.shadowBlur = c.done ? 16 : 8; ctx.stroke(); ctx.shadowBlur = 0; }
+      else if (!face && A.back) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3; ctx.fillStyle = '#3b0d4d'; ctx.fill(); ctx.restore(); ctx.save(); roundRect(ctx, -w / 2, -h / 2, w, h, 12); ctx.clip(); cover(ctx, A.back, -w / 2, -h / 2, w, h); ctx.restore(); roundRect(ctx, -w / 2, -h / 2, w, h, 12); ctx.strokeStyle = 'rgba(234,179,8,0.85)'; ctx.lineWidth = 2; ctx.stroke(); roundRect(ctx, -w / 2 + 6, -h / 2 + 6, w - 12, h - 12, 8); ctx.strokeStyle = 'rgba(234,179,8,0.35)'; ctx.lineWidth = 1; ctx.stroke(); this.text(ctx, 'TT', 0, Math.min(w, h) * 0.1, { size: Math.min(w, h) * 0.26, weight: 900, align: 'center', color: 'rgba(250,204,21,0.85)' }); }
+      else if (face) { ctx.fillStyle = c.done ? 'rgba(52,211,153,0.16)' : '#111a46'; ctx.fill(); ctx.strokeStyle = c.done ? '#34d399' : GCOL[c.g]; ctx.lineWidth = 2.5; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = c.done ? 16 : 8; ctx.stroke(); ctx.shadowBlur = 0; this.glyph(ctx, c.g, Math.min(w, h) * 0.3); }
       else { const g = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2); g.addColorStop(0, '#6d28d9'); g.addColorStop(1, '#1d4ed8'); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = 'rgba(196,181,253,0.7)'; ctx.lineWidth = 2; ctx.stroke();
         ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1; for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(-w / 2, i * h / 6); ctx.lineTo(w / 2, i * h / 6 + h / 3); ctx.stroke(); }
         this.text(ctx, '?', 0, 9, { size: Math.min(w, h) * 0.32, weight: 900, align: 'center', color: 'rgba(255,255,255,0.8)' }); }

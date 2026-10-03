@@ -1,6 +1,7 @@
 // Plinko - skill drop. Original code/art. 10 free chips per run, aim + nudge, golden multiplier pegs.
 // Points only: no money, nothing to buy.
-import { Game, TAU, rnd, clamp, roundRect, fmt } from './engine.js';
+// v5 art: blurred bar photo backdrop (Poly Haven CC0 HDRI 'warm_bar'), black-walnut board + brushed-metal slots (Poly Haven CC0), chrome pegs. See /CREDITS.md
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
 const VALUES = [200, 50, 20, 5, 100, 5, 20, 50, 200];
 const CHIPS = 10, NUDGES = 3, ROWS = 10;
 export class Plinko extends Game {
@@ -93,21 +94,22 @@ export class Plinko extends Game {
     this.burst(g.bx + g.dx * (i + 0.5), g.bot - 20, pts >= 100 ? ['#fde047', '#f472b6', '#22d3ee'] : '#22d3ee', pts >= 100 ? 26 : 10, 280, 0.7, 4);
     if (pts >= 100) this.sfx.win(); else this.sfx.tone(440, 0.15, { type: 'triangle', vol: 0.3 });
   }
+  async load() { this.art = await loadArt({ bg: 'bar-blur.webp', wood: 'wood-dark.webp', metal: 'metal-plate.webp' }); }
   render(ctx) {
-    this.bg(ctx, '#140a35', '#05060f'); const g = this.g;
+    const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(10,6,20,0.5)'); const g = this.g;
     // board
-    ctx.save(); roundRect(ctx, g.bx - 10, g.top - 4, g.bw + 20, g.bot - g.top + 12, 18); ctx.fillStyle = 'rgba(20,14,60,0.75)'; ctx.fill();
-    ctx.strokeStyle = 'rgba(168,85,247,0.6)'; ctx.lineWidth = 2; ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 16; ctx.stroke(); ctx.restore();
+    ctx.save(); roundRect(ctx, g.bx - 10, g.top - 4, g.bw + 20, g.bot - g.top + 12, 18); ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 24; ctx.fillStyle = pattern(ctx, A.wood) || 'rgba(20,14,60,0.75)'; ctx.fill(); ctx.shadowBlur = 0; if (A.wood) { ctx.fillStyle = 'rgba(12,6,4,0.35)'; ctx.fill(); }
+    ctx.strokeStyle = A.wood ? '#d4a373' : 'rgba(168,85,247,0.6)'; ctx.lineWidth = A.wood ? 5 : 2; ctx.shadowColor = A.wood ? 'rgba(251,191,36,0.5)' : '#a855f7'; ctx.shadowBlur = 10; ctx.stroke(); ctx.restore();
     // slots
     for (let i = 0; i < 9; i++) {
       const x = g.bx + g.dx * i; const v = VALUES[i]; const hot = this.flashSlot === i && this.flashT > 0;
       const col = v >= 200 ? '#fde047' : v >= 100 ? '#f472b6' : v >= 50 ? '#a855f7' : v >= 20 ? '#3b82f6' : '#334155';
       ctx.save(); ctx.globalAlpha = hot ? 0.95 : 0.55; ctx.fillStyle = col; roundRect(ctx, x + 3, g.slotTop + 8, g.dx - 6, g.slotH - 12, 8); ctx.fill(); ctx.restore();
       this.text(ctx, String(v), x + g.dx / 2, g.slotTop + g.slotH / 2 + 10, { size: Math.min(18, g.dx * 0.32), weight: 900, align: 'center', color: v >= 100 ? '#1a0b2e' : '#fff' });
-      if (i) { ctx.fillStyle = '#c4b5fd'; ctx.fillRect(x - 1.5, g.slotTop - 6, 3, g.slotH + 2); }
+      if (i) { const mg = ctx.createLinearGradient(x - 2, 0, x + 2, 0); mg.addColorStop(0, '#6b7280'); mg.addColorStop(0.5, '#f8fafc'); mg.addColorStop(1, '#6b7280'); ctx.fillStyle = mg; ctx.fillRect(x - 2, g.slotTop - 6, 4, g.slotH + 2); }
     }
     // pegs
-    for (const p of this.pegs) { ctx.beginPath(); ctx.arc(p.x, p.y, g.pr * (p.flash > 0 ? 1.4 : 1), 0, TAU); ctx.fillStyle = p.flash > 0 ? '#22d3ee' : '#e0e7ff'; ctx.shadowColor = '#818cf8'; ctx.shadowBlur = p.flash > 0 ? 14 : 6; ctx.fill(); }
+    for (const p of this.pegs) { const pr = g.pr * (p.flash > 0 ? 1.4 : 1); const cg = ctx.createRadialGradient(p.x - pr * 0.35, p.y - pr * 0.35, pr * 0.1, p.x, p.y, pr); cg.addColorStop(0, '#ffffff'); cg.addColorStop(0.45, p.flash > 0 ? '#67e8f9' : '#cbd5e1'); cg.addColorStop(1, p.flash > 0 ? '#0891b2' : '#475569'); ctx.beginPath(); ctx.arc(p.x, p.y, pr, 0, TAU); ctx.fillStyle = cg; ctx.shadowColor = p.flash > 0 ? '#22d3ee' : 'rgba(0,0,0,0.6)'; ctx.shadowBlur = p.flash > 0 ? 14 : 4; ctx.shadowOffsetY = p.flash > 0 ? 0 : 2; ctx.fill(); } ctx.shadowOffsetY = 0;
     ctx.shadowBlur = 0;
     for (const gp of this.golden) { const [x, y] = this.goldenPos(gp); ctx.save(); ctx.beginPath(); ctx.arc(x, y, g.pr * 1.8, 0, TAU); ctx.fillStyle = '#fde047'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 18; ctx.fill(); ctx.restore(); this.text(ctx, 'x2', x, y + 4, { size: 10, weight: 900, align: 'center', color: '#78350f' }); }
     // aim guide

@@ -123,7 +123,7 @@ async function giveaways() {
       <td><a class="btn sm" href="/admin/giveaways/${g.id}">Manage</a></td></tr>`).join('') : '<tr><td colspan="8" class="empty">No giveaways yet.</td></tr>'}
   </tbody></table></div>`, `<a class="btn sm" href="/admin/giveaways/new">${icon('plus')} New Giveaway</a>`);
 }
-const IMAGES = ['/assets/giveaways/store-credit-art.webp', '/assets/giveaways/ps5-bundle-art.webp', '/assets/brand/hero-banner.webp', '/assets/cards/jetpack-dash.webp', '/assets/cards/drift-rush.webp', '/assets/cards/plinko.webp', '/assets/cards/spin-to-win.webp', '/assets/cards/memory-match.webp', '/assets/cards/blazed-roulette.webp', '/assets/cards/terp-tapper.webp'];
+const IMAGES = ['/assets/giveaways/store-credit-art.webp', '/assets/giveaways/ps5-bundle-art.webp', '/assets/brand/hero-banner.webp', '/assets/cards/v5/jetpack-dash.webp', '/assets/cards/v5/drift-rush.webp', '/assets/cards/v5/plinko.webp', '/assets/cards/v5/spin-to-win.webp', '/assets/cards/v5/memory-match.webp', '/assets/cards/v5/blazed-roulette.webp', '/assets/cards/v5/terp-tapper.webp'];
 async function manageGiveaway(id) {
   const isNew = id === 'new';
   const pre = new URLSearchParams(location.search).get('game'); const preG = GAMES.find(x => x.id === pre);

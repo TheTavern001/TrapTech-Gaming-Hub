@@ -1,6 +1,8 @@
-// Terp Tapper - four-lane neon rhythm tapper. Original code/art; music is synthesized live (WebAudio).
-import { Game, TAU, rnd, clamp, roundRect, fmt } from './engine.js';
-const LANE_COL = ['#a3e635', '#22d3ee', '#c084fc', '#f472b6'];
+// Terp Tapper - four-lane rhythm tapper; music is synthesized live (WebAudio).
+// v5 art: real citrus-slice notes (lime/lemon/orange/grapefruit - rawpixel public-domain photos), lounge photo backdrop (Poly Haven CC0). See /CREDITS.md
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt } from './engine.js';
+const LANE_COL = ['#a3e635', '#fde047', '#fb923c', '#f472b6']; // lime, lemon, orange, grapefruit (terpene citrus notes)
+const LANE_ART = ['tt-lime.webp', 'tt-lemon.webp', 'tt-orange.webp', 'tt-grapefruit.webp'];
 const KEYS = { KeyD: 0, KeyF: 1, KeyJ: 2, KeyK: 3, ArrowLeft: 0, ArrowDown: 1, ArrowUp: 2, ArrowRight: 3 };
 const SCALE = [261.6, 311.1, 349.2, 392.0, 466.2, 523.3, 622.3, 698.5];
 const WIN = { perfect: 0.06, great: 0.12, good: 0.18 };
@@ -45,13 +47,14 @@ export class TerpTapper extends Game {
     for (const n of this.notes) if (!n.done && this.playT - n.t > WIN.good) { n.done = true; n.miss = true; this.lives--; this.combo = 0; this.pop(this.lx + this.laneW * (n.lane + 0.5), this.hitY - 30, 'MISS', '#f87171', 20); this.sfx.tone(200, 0.12, { type: 'sawtooth', vol: 0.12, slide: 0.6 }); if (this.lives <= 0) { this.lives = 0; this.dead = true; break; } }
     this.notes = this.notes.filter(n => !n.done || this.playT - n.t < 0.4);
   }
+  async load() { const m = { bg: 'tt-bg.webp' }; LANE_ART.forEach((f, i) => { m['n' + i] = f; }); this.art = await loadArt(m); }
   render(ctx) {
-    this.bg(ctx, '#0d0626', '#04030c');
+    const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(6,4,14,0.5)');
     const beatPh = ((this.playT || 0) * this.bpm() / 60) % 1; const pulse = this.state === 'play' ? Math.pow(1 - beatPh, 3) : 0;
     // lanes
     for (let l = 0; l < 4; l++) {
       const x = this.lx + l * this.laneW; const g = ctx.createLinearGradient(0, 0, 0, this.H);
-      g.addColorStop(0, 'rgba(15,10,40,0.2)'); g.addColorStop(1, `rgba(${l % 2 ? '59,130,246' : '168,85,247'},${0.14 + pulse * 0.08 + (this.press[l] > 0 ? 0.25 : 0)})`);
+      const lc = ['163,230,53', '253,224,71', '251,146,60', '244,114,182'][l]; g.addColorStop(0, 'rgba(10,8,20,0.35)'); g.addColorStop(1, `rgba(${lc},${0.12 + pulse * 0.08 + (this.press[l] > 0 ? 0.25 : 0)})`);
       ctx.fillStyle = g; ctx.fillRect(x + 3, 96, this.laneW - 6, this.H - 96);
       ctx.strokeStyle = 'rgba(99,102,241,0.35)'; ctx.lineWidth = 1; ctx.strokeRect(x + 3, 96, this.laneW - 6, this.H - 96);
     }
@@ -68,6 +71,7 @@ export class TerpTapper extends Game {
     for (const n of this.notes) {
       if (n.done && !n.miss) continue; const y = this.hitY - (n.t - (this.playT || 0)) * v; if (y < 70 || y > this.H + 30) continue;
       const x = this.lx + this.laneW * (n.lane + 0.5); const r = this.laneW * 0.26;
+      const im = A['n' + n.lane]; if (im) { ctx.save(); ctx.globalAlpha = n.miss ? 0.3 : 1; ctx.shadowColor = LANE_COL[n.lane]; ctx.shadowBlur = 14; ctx.translate(x, y); ctx.rotate((n.t * 1.7) % TAU); ctx.drawImage(im, -r * 1.1, -r * 1.1, r * 2.2, r * 2.2); ctx.restore(); continue; }
       ctx.save(); ctx.globalAlpha = n.miss ? 0.3 : 1; const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 2, x, y, r); g.addColorStop(0, '#fff'); g.addColorStop(0.35, LANE_COL[n.lane]); g.addColorStop(1, 'rgba(0,0,0,0.2)');
       ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = g; ctx.shadowColor = LANE_COL[n.lane]; ctx.shadowBlur = 18; ctx.fill(); ctx.restore();
     }
