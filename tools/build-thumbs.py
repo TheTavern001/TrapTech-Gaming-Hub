@@ -22,6 +22,10 @@ GAMES = {
   'high-score': ('HIGH SCORE', 'Fast hands win', '#ef4444', (0.5, 0.45)),
   'blazed-roulette': ('BLAZED ROULETTE', 'Points-only table, 8 spins', '#34d399', (0.5, 0.3)),
   'terp-tapper': ('TERP TAPPER', 'Tap the citrus to the beat', '#fde047', (0.5, 0.62)),
+  'stack-2048': ('STACK 2048', 'Slide, merge, double up', '#facc15', (0.5, 0.5)),
+  'munchies-snake': ('MUNCHIES SNAKE', 'Eat, grow, do not bite yourself', '#a3e635', (0.5, 0.5)),
+  'brick-breaker': ('BRICK BREAKER', 'Aim the bounce, clear the wall', '#f97316', (0.5, 0.2)),
+  'sky-hopper': ('SKY HOPPER', 'One tap over the night city', '#22d3ee', (0.5, 0.5)),
 }
 TT = Image.open(os.path.join(ROOT, 'public/assets/brand/traptech-wordmark.png')).convert('RGBA')
 def crop(im, W, H, focus):
@@ -80,8 +84,38 @@ def scene(gid):
         for l, c in enumerate(cols): d.ellipse([l * lw + lw / 2 - 110, hy - 110, l * lw + lw / 2 + 110, hy + 110], outline=c + (255,), width=12)
         for (l, y, sz) in ((0, 300, 230), (1, 560, 230), (2, 180, 230), (3, 640, 230), (2, 900 , 200), (0, 1020, 200)): paste_rot(bg, art(notes[l]), l * lw + lw / 2, y, sz, (y * 7) % 360)
         return bg.convert('RGB')
+    if gid == 'stack-2048':
+        import math
+        im = tile(art('wood-dark.webp'), S, S); felt = tile(art('rl-felt.webp'), 1100, 1100); m = Image.new('L', (1100, 1100), 0); ImageDraw.Draw(m).rounded_rectangle([0, 0, 1099, 1099], 60, fill=255)
+        im.paste(felt, (150, 150), m); d = ImageDraw.Draw(im); d.rounded_rectangle([150, 150, 1250, 1250], 60, outline='#d4a373', width=14)
+        COL = {2: '#e2e8f0', 4: '#a3e635', 8: '#22d3ee', 16: '#60a5fa', 32: '#a78bfa', 64: '#f472b6', 128: '#fb923c', 256: '#facc15', 512: '#f59e0b', 1024: '#ef4444', 2048: '#fde047'}
+        vals = [2048, 1024, 512, 256, 4, 128, 64, 32, 2, 8, 16, 4, 0, 2, 8, 2]; cs = 1100 / 4; f = font('orbitron-latin-900-normal', 80)
+        for i, v in enumerate(vals):
+            if not v: continue
+            cx = 150 + (i % 4 + 0.5) * cs; cy = 150 + (i // 4 + 0.5) * cs; r = cs * 0.42; col = COL[v]
+            sh = Image.new('RGBA', (S, S), (0, 0, 0, 0)); ImageDraw.Draw(sh).ellipse([cx - r + 8, cy - r + 14, cx + r + 8, cy + r + 14], fill=(0, 0, 0, 150)); im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(10)))
+            d = ImageDraw.Draw(im); d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col)
+            for k in range(8):
+                a = k / 8 * 2 * math.pi; d.arc([cx - r * 0.9, cy - r * 0.9, cx + r * 0.9, cy + r * 0.9], math.degrees(a) - 8, math.degrees(a) + 8, fill='white', width=int(r * 0.16))
+            d.ellipse([cx - r * 0.68, cy - r * 0.68, cx + r * 0.68, cy + r * 0.68], fill=col, outline=(0, 0, 0, 70), width=4)
+            t = str(v); fs = font('orbitron-latin-900-normal', int(r * (0.42 if len(t) > 3 else 0.55 if len(t) > 2 else 0.68)))
+            d.text((cx, cy), t, font=fs, fill='#1e293b' if v <= 4 else 'white', anchor='mm')
+        return im.convert('RGB')
+    if gid == 'munchies-snake':
+        import math
+        im = tile(art('dr-grass.webp'), S, S); d = ImageDraw.Draw(im)
+        pts = [(260 + i * 28, 520 + 240 * math.sin(i / 7)) for i in range(32)]
+        for i in range(len(pts) - 1, -1, -1):
+            k = i / (len(pts) - 1); x, y = pts[len(pts) - 1 - i]; r = 46 if i == 0 else 40 - k * 12
+            import colorsys; rr, gg, bb = colorsys.hls_to_rgb(((280 - k * 140) % 360) / 360, 0.55, 0.85)
+            d.ellipse([x - r, y - r, x + r, y + r], fill=(int(rr * 255), int(gg * 255), int(bb * 255)))
+        hx, hy = pts[-1]
+        for s_ in (-1, 1): d.ellipse([hx + 10 - 11, hy + s_ * 18 - 11, hx + 10 + 11, hy + s_ * 18 + 11], fill='white'); d.ellipse([hx + 14 - 5, hy + s_ * 18 - 5, hx + 14 + 5, hy + s_ * 18 + 5], fill='black')
+        for (n, cx, cy) in (('tt-orange.webp', 1240, 500), ('tt-lime.webp', 420, 900), ('tt-lemon.webp', 900, 1050), ('tt-grapefruit.webp', 1180, 260)): paste_rot(im, art(n), cx, cy, 130, 20)
+        paste_rot(im, art('coin-lg.webp'), 700, 260, 120)
+        return im.convert('RGB')
     return None
-SCENES = {'drift-rush': (0.5, 0.5), 'high-score': (0.5, 0.5), 'terp-tapper': (0.5, 0.45)}
+SCENES = {'drift-rush': (0.5, 0.5), 'high-score': (0.5, 0.5), 'terp-tapper': (0.5, 0.45), 'stack-2048': (0.5, 0.42), 'munchies-snake': (0.5, 0.45)}
 def card(gid, W, H):
     title, tag, acc, focus = GAMES[gid]
     src = scene(gid) if gid in SCENES else trim_letterbox(Image.open(f'/tmp/frames/{gid}.png').convert('RGB'))

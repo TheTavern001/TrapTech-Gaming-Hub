@@ -149,7 +149,7 @@ function client() {
   const C = client(); const uc = 'e2e_' + Math.random().toString(36).slice(2, 8);
   r = await C('/api/auth/signup', { body: { username: uc, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.body.ok, 'signup C (game runner) ' + uc);
   r = await anon('/api/games'); const GAMES = r.body.games;
-  ok(GAMES.length === 8 && GAMES.every(g => g.playable && g.module && g.ac && g.tiers), 'all 8 games are playable with module + caps + tiers', GAMES.map(g => g.id));
+  ok(GAMES.length === 12 && GAMES.every(g => g.playable && g.module && g.ac && g.tiers), 'all 12 games are playable with module + caps + tiers', GAMES.map(g => g.id));
   for (const g of GAMES) { const js = await anon('/js/' + g.module); ok(js.status === 200 && String(js.body).includes('class ' + g.cls), `game module served: ${g.module}`); }
   // multi-game + min-score giveaways created BEFORE C plays
   const t1 = Date.now();

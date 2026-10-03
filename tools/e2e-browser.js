@@ -98,7 +98,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok(nAll >= 5 && nQ === 1, `games search filters (${nAll} -> ${nQ})`); await m.fill('#q', '');
   await m.click('#chips >> text=Racing'); ok((await m.locator('#grid .gcard').count()) === 1, 'category chip filters');
   await m.click('#chips >> text=All'); await shot(m, 'mobile-05-games'); await v2(m, 'games-library');
-  ok((await m.locator('main .gcard').count()) === 8 && (await m.locator('main .gcard .soon').count()) === 0, 'all 8 games listed, none "coming soon"');
+  ok((await m.locator('main .gcard').count()) === 12 && (await m.locator('main .gcard .soon').count()) === 0, 'all 12 games listed, none "coming soon"');
   await v2(m, 'games-library-full', true);
   await m.click('#grid .gcard[data-game=drift-rush]'); await m.waitForSelector('.gd-hero');
   const dtxt = await m.textContent('main'); ok(dtxt.includes('Play Now') && dtxt.includes('Scoring') && !dtxt.includes('COMING SOON'), 'Drift Rush detail page is playable with how-to + scoring');
@@ -412,7 +412,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await a.textContent('.amain')).includes('8/8 games live'), 'dashboard: 8/8 games live');
   console.log('# admin: one-click giveaway linking');
   await a.click('.side >> text=Games'); await a.waitForSelector('.agame');
-  ok((await a.locator('.agame').count()) === 8, 'admin games page shows 8 game cards');
+  ok((await a.locator('.agame').count()) === 12, 'admin games page shows 12 game cards');
   await a.click('[data-create=plinko]'); await a.waitForSelector('#gpk');
   ok((await a.inputValue('#title')) === 'Plinko Giveaway' && (await a.locator('#gpk .gp.on').count()) === 1 && (await a.getAttribute('#gpk .gp.on', 'data-g')) === 'plinko', 'Create-giveaway-for-game prefills title + game');
   await a.click('#gpk .gp[data-g=memory-match]'); await a.click('#gpk .gp[data-g=high-score]');

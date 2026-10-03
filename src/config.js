@@ -80,6 +80,27 @@ const GAMES = [
     howto: 'Orbs fall down four lanes. Tap the lane (or press D F J K / arrow keys) as each orb crosses the line. Perfect timing scores the most, and every 10-hit combo raises your multiplier (up to x4). Missing an orb costs one of your 5 lives, and the tempo keeps rising.',
     scoring: 'Score = 100 perfect / 60 great / 30 good x combo multiplier per orb.',
     ac: { perSec: 3000, grace: 500, max: 10_000_000, coinsPerSec: 2 }, tiers: [3000, 9000, 20000] },
+  // v5 additions
+  { id: 'stack-2048', title: 'Stack 2048', category: 'Puzzle', tags: ['Puzzle', 'Strategy', 'New'], playable: true, unit: 'pts', module: 'games/stack-2048.js', cls: 'Stack2048',
+    art: '/assets/cards/v5/stack-2048.webp', artTall: '/assets/cards/v5/stack-2048-tall.webp', desc: 'Slide and merge chips on the felt. Double up all the way to 2048 and beyond.',
+    howto: 'Swipe (or use the arrow keys) to slide every chip on the board. Two chips with the same value merge into one worth double, and a new 2 or 4 appears after every move. The run ends when no move is possible.',
+    scoring: 'Score = the value of every merge you make (merging two 64s = +128). Points only.',
+    ac: { perSec: 150, grace: 400, max: 10_000_000, coinsPerSec: 1 }, tiers: [2500, 8000, 20000] },
+  { id: 'munchies-snake', title: 'Munchies Snake', category: 'Arcade', tags: ['Arcade', 'Classic', 'New'], playable: true, unit: 'pts', module: 'games/munchies-snake.js', cls: 'MunchiesSnake',
+    art: '/assets/cards/v5/munchies-snake.webp', artTall: '/assets/cards/v5/munchies-snake-tall.webp', desc: 'The classic snake with a citrus twist. Eat, grow, speed up, do not bite yourself.',
+    howto: 'Swipe, use the arrow keys, or tap beside the snake\'s head to turn. Eat citrus to grow; the snake speeds up as it gets longer. Gold coins appear every 5 bites and vanish after 5 seconds. Hitting a wall or your own tail ends the run.',
+    scoring: 'Score = 10 per bite (+5 for every 10 segments of length) + 50 per gold coin.',
+    ac: { perSec: 60, grace: 150, max: 10_000_000, coinsPerSec: 1 }, tiers: [200, 600, 1400] },
+  { id: 'brick-breaker', title: 'Brick Breaker', category: 'Arcade', tags: ['Arcade', 'Classic', 'New'], playable: true, unit: 'pts', module: 'games/brick-breaker.js', cls: 'BrickBreaker',
+    art: '/assets/cards/v5/brick-breaker.webp', artTall: '/assets/cards/v5/brick-breaker-tall.webp', desc: 'Paddle, ball, wall of bricks. Aim your bounces, chain hits and clear level after level.',
+    howto: 'Drag (or use the arrow keys) to move the paddle and tap to launch. Where the ball hits the paddle sets its angle. Clear every brick to reach the next, faster level. Gold bricks are worth 5x. You have 3 balls.',
+    scoring: 'Score = 10 per brick (50 for gold) x level x chain bonus (up to x4), plus a level-clear bonus.',
+    ac: { perSec: 600, grace: 600, max: 10_000_000, coinsPerSec: 2 }, tiers: [1500, 5000, 12000] },
+  { id: 'sky-hopper', title: 'Sky Hopper', category: 'Arcade', tags: ['Arcade', 'One-Tap', 'New'], playable: true, unit: 'pts', module: 'games/sky-hopper.js', cls: 'SkyHopper',
+    art: '/assets/cards/v5/sky-hopper.webp', artTall: '/assets/cards/v5/sky-hopper-tall.webp', desc: 'One-tap flyer over the night city. Thread the gaps between the towers.',
+    howto: 'Tap (or press Space) to boost up; stop tapping to fall. Fly through the gaps between the towers. The gaps get tighter and the speed rises as you go. One hit ends the run.',
+    scoring: 'Score = towers passed. Coins in the gaps count toward your coin total.',
+    ac: { perSec: 1.6, grace: 5, max: 100_000, coinsPerSec: 1.5 }, tiers: [10, 30, 60] },
 ];
 
 module.exports = {

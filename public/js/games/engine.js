@@ -19,7 +19,7 @@ export class Telemetry { constructor() { this.reset(); } reset() { this.n = 0; t
 // v5: realistic art helpers (photos/textures from CC0 + public-domain sources, see /CREDITS.md)
 export const ART = '/assets/v5/';
 const _imgCache = {};
-export function loadImg(name) { if (_imgCache[name]) return _imgCache[name]; return (_imgCache[name] = new Promise((res) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = () => res(null); i.src = ART + name; })); }
+export function loadImg(name) { if (_imgCache[name]) return _imgCache[name]; return (_imgCache[name] = new Promise((res) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = () => res(null); i.src = name.startsWith('/') ? name : ART + name; })); }
 export async function loadArt(map) { const out = {}; await Promise.all(Object.entries(map).map(async ([k, n]) => { out[k] = await loadImg(n); })); return out; }
 // draw an image to cover a rect (object-fit: cover), optional horizontal scroll offset for parallax panoramas
 export function cover(ctx, img, x, y, w, h, scroll = 0) {
