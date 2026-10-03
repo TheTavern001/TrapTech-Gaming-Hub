@@ -52,6 +52,7 @@ function liveStandings(g) {
     ORDER BY score DESC, reached_at ASC, att.attempts ASC, best_run_id ASC`).all(...games, { s: g.start_at, e: g.end_at, min: g.min_score || 0, gid: g.id });
   tag(rows); rows.forEach(r => { r.weight = E().weightOf(g, r.attempts); });
   cache.set(g.id, { key, rows, at: now() });
+  if (cache.size > 20) for (const [id, c] of cache) if (now() - c.at > 5000) cache.delete(id); // only a 5 s cache: keep it small
   return rows;
 }
 // rank + which tiebreak separated a row from the one above it (for display)

@@ -218,12 +218,14 @@ function computeStats(userId, opts = {}) {
   const games = opts.games || cfg.GAMES.map(g => g.id);
   st.lb = { weeklyTop10: 0, weeklyTop3: 0, weekly1: 0, monthly1: 0, globalTop10: 0, allTime1: 0 };
   const rankIn = (rows) => { const i = rows.findIndex(r => r.user_id === userId); return [i + 1, rows.length]; };
+  // the same boards are needed several times below (same t => same rows): query each one once per evaluation
+  const memo = new Map(); const gb = (gid, since = 0) => { const k = gid + ':' + since; let r = memo.get(k); if (!r) memo.set(k, r = boards.gameBoard(gid, since)); return r; };
   for (const gid of games) {
-    const [wr, wn] = rankIn(boards.gameBoard(gid, t - 7 * 864e5));
+    const [wr, wn] = rankIn(gb(gid, t - 7 * 864e5));
     if (wr) { if (wn >= 11 && wr <= 10) st.lb.weeklyTop10 = 1; if (wn >= 5 && wr <= 3) st.lb.weeklyTop3 = 1; if (wn >= 5 && wr === 1) st.lb.weekly1 = 1; }
-    const [mr, mn] = rankIn(boards.gameBoard(gid, t - 30 * 864e5)); if (mr === 1 && mn >= 5) st.lb.monthly1 = 1;
+    const [mr, mn] = rankIn(gb(gid, t - 30 * 864e5)); if (mr === 1 && mn >= 5) st.lb.monthly1 = 1;
   }
-  for (const g of cfg.GAMES) { if (!st.game[g.id]) continue; const [ar, an] = rankIn(boards.gameBoard(g.id)); if (ar === 1 && an >= 3) st.lb.allTime1++; }
+  for (const g of cfg.GAMES) { if (!st.game[g.id]) continue; const [ar, an] = rankIn(gb(g.id)); if (ar === 1 && an >= 3) st.lb.allTime1++; }
   const [gr, gn] = rankIn(boards.globalBoard(0)); if (gr && gr <= 10 && gn >= 11) st.lb.globalTop10 = 1;
   // v3
   const PR = require('./progress');
@@ -239,9 +241,10 @@ function computeStats(userId, opts = {}) {
   st.chalWins = db.prepare("SELECT COUNT(*) AS c FROM challenges WHERE winner_id=? AND status='completed'").get(userId).c;
   st.goldGames = cfg.GAMES.filter(g => (st.game[g.id]?.best || 0) >= g.tiers[2]).length;
   st.top1pct = 0;
-  for (const g of cfg.GAMES) { if (!st.game[g.id]) continue; const rows = boards.gameBoard(g.id); if (rows.length < 100) continue; const i = rows.findIndex(r => r.user_id === userId); if (i >= 0 && i + 1 <= Math.ceil(rows.length * 0.01)) { st.top1pct = 1; break; } }
+  for (const g of cfg.GAMES) { if (!st.game[g.id]) continue; const rows = gb(g.id); if (rows.length < 100) continue; const i = rows.findIndex(r => r.user_id === userId); if (i >= 0 && i + 1 <= Math.ceil(rows.length * 0.01)) { st.top1pct = 1; break; } }
   st.lb.weekly1Count = 0;
-  for (const g of cfg.GAMES) { const rows = boards.gameBoard(g.id, t - 7 * 864e5); if (rows.length >= 5 && rows[0].user_id === userId) st.lb.weekly1Count++; }
+  for (const g of cfg.GAMES) { const rows = gb(g.id, t - 7 * 864e5); if (rows.length >= 5 && rows[0].user_id === userId) st.lb.weekly1Count++; }
+  memo.clear();
   return st;
 }
 

@@ -1,13 +1,31 @@
 'use strict';
-const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
 const { DB_PATH } = require('./config');
 
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+try { fs.mkdirSync(path.dirname(DB_PATH), { recursive: true }); fs.accessSync(path.dirname(DB_PATH), fs.constants.W_OK); } catch (e) {
+  console.error(`FATAL: database directory ${path.dirname(DB_PATH)} is not writable by uid ${process.getuid && process.getuid()} (${e.code || e.message}). ` +
+    'Mount the persistent volume there (Deplexo: /data) and set DATA_DIR to it; the container root filesystem is read-only.');
+  process.exit(1);
+}
+// SQLite spill/temp files go next to the database (the persistent volume), not to RAM or a small tmpfs.
+// Must be set before SQLite initialises, i.e. before better-sqlite3 is loaded.
+if (!process.env.SQLITE_TMPDIR) {
+  const t = path.join(path.dirname(DB_PATH), 'tmp');
+  try { fs.mkdirSync(t, { recursive: true }); fs.accessSync(t, fs.constants.W_OK); process.env.SQLITE_TMPDIR = t; } catch { /* falls back to TMPDIR / /tmp */ }
+}
+const Database = require('better-sqlite3');
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+// Low-memory tuning (Deplexo free plan: 128 MB RAM). Page cache is bounded, no mmap of the DB file, temp b-trees
+// (big ORDER BY / GROUP BY sorts) spill to files instead of RAM, and the WAL is checkpointed + truncated regularly.
+db.pragma(`cache_size = -${Math.max(256, Number(process.env.SQLITE_CACHE_KB || 2048))}`); // KiB
+db.pragma('mmap_size = 0');
+db.pragma('temp_store = FILE');
+db.pragma('wal_autocheckpoint = 500');          // pages (~2 MB)
+db.pragma('journal_size_limit = 4194304');      // truncate the WAL back to <= 4 MB after checkpoints
+db.pragma(`soft_heap_limit = ${16 * 1048576}`); // SQLite releases cache memory when it goes above 16 MB
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
@@ -409,5 +427,20 @@ addCol('giveaway_results', 'weight', 'INTEGER');
 db.prepare("UPDATE users SET potato=username WHERE potato='' AND username NOT GLOB '*[^A-Za-z0-9_]*' AND length(username) >= 3").run();
 // every pre-v2 giveaway keeps its single linked game
 db.exec('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) SELECT id, game_id FROM giveaways');
+
+// periodic maintenance: checkpoint + truncate the WAL, refresh planner stats
+const maint = setInterval(() => { try { db.pragma('wal_checkpoint(TRUNCATE)'); } catch (e) { console.error('[db] checkpoint', e.message); } }, 10 * 60e3); maint.unref();
+// Disk budget: run tokens only matter until they are submitted or expire (RUN_TOKEN_TTL_MS = 2 h). Accepted and never-used
+// tokens older than RUN_TOKEN_KEEP_DAYS (default 3; 0 = keep forever) are deleted; rejected ones are kept for the admin
+// anti-cheat review. Replaying such an old token now gets "Unknown run." instead of "already submitted"/"expired".
+const TOKEN_KEEP_MS = Math.max(0, Number(process.env.RUN_TOKEN_KEEP_DAYS ?? 3)) * 864e5;
+function pruneTokens() {
+  if (!TOKEN_KEEP_MS) return 0;
+  try { return db.prepare("DELETE FROM run_tokens WHERE started_at < ? AND (status IS NULL OR status = 'accepted')").run(Date.now() - TOKEN_KEEP_MS).changes; }
+  catch (e) { console.error('[db] prune run_tokens', e.message); return 0; }
+}
+const opt = setInterval(() => { pruneTokens(); try { db.pragma('optimize'); } catch {} }, 6 * 3600e3); opt.unref();
+setTimeout(pruneTokens, 60e3).unref();
+db.pruneTokens = pruneTokens;
 
 module.exports = db;

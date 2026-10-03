@@ -16,8 +16,10 @@ const { gameBoard, globalBoard, ranked, giveawayEntrants, giveawayStatus, active
 const app = express();
 app.set('trust proxy', true);
 app.disable('x-powered-by');
-// gzip/brotli-free compression for text assets + JSON (fast first load on 4G and in in-app browsers)
-app.use(require('compression')({ threshold: 1024 }));
+// Static text assets are gzipped at build time (scripts/deplexo-prebuild.js -> $BUILD_DIR/gz) and served as-is;
+// on-the-fly gzip is only used for dynamic responses (JSON, HTML). Smaller zlib windows keep per-response memory low.
+app.use(require('./static-gz')(path.join(cfg.ROOT, 'public')));
+app.use(require('compression')({ threshold: 1024, memLevel: 7, windowBits: 14 }));
 app.use(express.json({ limit: '32kb' }));
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
@@ -64,12 +66,16 @@ function logActivity(type, message, user_id = null, ref_id = null, is_demo = 0, 
 }
 const str = (v, max) => String(v ?? '').trim().slice(0, max);
 
-// Simple in-memory sliding-window rate limiter
-const buckets = new Map();
+// Simple in-memory sliding-window rate limiter. Bounded: least-recently-used keys are evicted past RATE_LIMIT_MAX_KEYS
+// (Map keeps insertion order, so delete + set moves a key to the end).
+const buckets = new Map(); const MAX_BUCKETS = Math.max(1000, parseInt(process.env.RATE_LIMIT_MAX_KEYS || '20000', 10) || 20000);
 function rateLimit(key, limit, windowMs) {
   const t = now(); const arr = (buckets.get(key) || []).filter(x => t - x < windowMs);
+  buckets.delete(key);
   if (arr.length >= limit) { buckets.set(key, arr); return false; }
-  arr.push(t); buckets.set(key, arr); return true;
+  arr.push(t); buckets.set(key, arr);
+  if (buckets.size > MAX_BUCKETS) buckets.delete(buckets.keys().next().value);
+  return true;
 }
 setInterval(() => { const t = now(); for (const [k, v] of buckets) if (!v.length || t - v[v.length - 1] > 3600e3) buckets.delete(k); }, 600e3).unref();
 const limiter = (name, limit, windowMs) => (req, res, next) =>
@@ -672,16 +678,40 @@ A.get('/runs', (req, res) => {
   res.json({ ok: true, rejected: db.prepare("SELECT t.rid, u.username, t.game_id, t.started_at, t.used_at, t.reason FROM run_tokens t JOIN users u ON u.id=t.user_id WHERE t.status='rejected' ORDER BY t.used_at DESC LIMIT 50").all() });
 });
 
-// CSV exports
-function csv(rows, cols) {
-  const esc = (v) => { let s = v === null || v === undefined ? '' : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-  return [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\r\n') + '\r\n';
-}
+// CSV exports (streamed: rows are written in ~64 KB chunks with backpressure, never joined into one big string)
+const csvEsc = (v) => { let s = v === null || v === undefined ? '' : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+const csvLine = (r, cols) => cols.map(c => csvEsc(r[c])).join(',') + '\r\n';
+function csv(rows, cols) { return cols.join(',') + '\r\n' + rows.map(r => csvLine(r, cols)).join(''); }
 const iso = (ms) => ms ? new Date(ms).toISOString() : '';
-function sendCsv(res, name, rows, cols) {
+function csvStart(res, name) {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
-  res.send(csv(rows, cols));
+  let buf = ''; let closed = false; res.on('close', () => { closed = true; });
+  const flush = () => new Promise(r => {
+    if (closed || res.write(buf)) { buf = ''; return r(); }
+    buf = ''; const done = () => { res.off('drain', done); res.off('close', done); r(); }; res.on('drain', done); res.on('close', done);
+  });
+  return { async add(line) { buf += line; if (buf.length >= 65536) await flush(); }, async end() { if (buf) res.write(buf); res.end(); }, get closed() { return closed; } };
+}
+// rows: an array (already computed in memory)
+function sendCsv(res, name, rows, cols) {
+  return (async () => {
+    const w = csvStart(res, name); await w.add(cols.join(',') + '\r\n');
+    for (let i = 0; i < rows.length && !w.closed; i++) await w.add(csvLine(rows[i], cols));
+    await w.end();
+  })().catch(e => { console.error('csv export', e); res.destroy(); });
+}
+// page(after) -> up to N rows ordered by the paging key; key(row) gives the cursor for the next page.
+// Each page is a short synchronous query, so the SQLite connection is never held across an await.
+async function sendCsvPaged(res, name, cols, page, map) {
+  const w = csvStart(res, name); await w.add(cols.join(',') + '\r\n');
+  let after = null;
+  for (;;) {
+    const rows = page(after); if (!rows.length || w.closed) break;
+    for (const r of rows) await w.add(csvLine(map ? map(r) : r, cols));
+    after = rows[rows.length - 1];
+  }
+  await w.end();
 }
 A.get('/export/leaderboard.csv', (req, res) => {
   let rows; let name;
@@ -695,15 +725,17 @@ A.get('/export/leaderboard.csv', (req, res) => {
   }
   sendCsv(res, name, rows.map(r => ({ ...r, last_at: iso(r.last_at), first_at: iso(r.first_at), demo: r.is_demo ? 'yes' : '' })), ['rank', 'username', 'score', 'runs', 'first_at', 'last_at', 'demo', ...(req.query.giveaway ? ['winner'] : [])]);
 });
-A.get('/export/runs.csv', (req, res) => {
-  const rows = db.prepare('SELECT r.id, u.username, r.game_id, r.score, r.coins, r.duration_ms, r.started_at, r.created_at, r.ip_hash, r.is_demo FROM runs r JOIN users u ON u.id=r.user_id ORDER BY r.created_at DESC').all()
-    .map(r => ({ ...r, started_at: iso(r.started_at), created_at: iso(r.created_at) }));
-  sendCsv(res, 'runs.csv', rows, ['id', 'username', 'game_id', 'score', 'coins', 'duration_ms', 'started_at', 'created_at', 'ip_hash', 'is_demo']);
+const RUNS_PAGE = 'SELECT r.id, u.username, r.game_id, r.score, r.coins, r.duration_ms, r.started_at, r.created_at, r.ip_hash, r.is_demo FROM runs r JOIN users u ON u.id=r.user_id';
+const runsFirst = db.prepare(`${RUNS_PAGE} ORDER BY r.created_at DESC, r.id DESC LIMIT 1000`);
+const runsNext = db.prepare(`${RUNS_PAGE} WHERE (r.created_at < @c OR (r.created_at = @c AND r.id < @i)) ORDER BY r.created_at DESC, r.id DESC LIMIT 1000`);
+A.get('/export/runs.csv', (req, res, next) => {
+  sendCsvPaged(res, 'runs.csv', ['id', 'username', 'game_id', 'score', 'coins', 'duration_ms', 'started_at', 'created_at', 'ip_hash', 'is_demo'],
+    (a) => a ? runsNext.all({ c: a.created_at, i: a.id }) : runsFirst.all(), (r) => ({ ...r, started_at: iso(r.started_at), created_at: iso(r.created_at) })).catch(next);
 });
-A.get('/export/players.csv', (req, res) => {
-  const rows = db.prepare('SELECT u.id, u.username, u.created_at, u.last_seen, u.banned, u.is_demo, (SELECT COUNT(*) FROM runs r WHERE r.user_id=u.id) AS runs, (SELECT MAX(score) FROM runs r WHERE r.user_id=u.id) AS best FROM users u ORDER BY u.id').all()
-    .map(r => ({ ...r, created_at: iso(r.created_at), last_seen: iso(r.last_seen) }));
-  sendCsv(res, 'players.csv', rows, ['id', 'username', 'created_at', 'last_seen', 'runs', 'best', 'banned', 'is_demo']);
+const playersPage = db.prepare('SELECT u.id, u.username, u.created_at, u.last_seen, u.banned, u.is_demo, (SELECT COUNT(*) FROM runs r WHERE r.user_id=u.id) AS runs, (SELECT MAX(score) FROM runs r WHERE r.user_id=u.id) AS best FROM users u WHERE u.id > ? ORDER BY u.id LIMIT 1000');
+A.get('/export/players.csv', (req, res, next) => {
+  sendCsvPaged(res, 'players.csv', ['id', 'username', 'created_at', 'last_seen', 'runs', 'best', 'banned', 'is_demo'],
+    (a) => playersPage.all(a ? a.id : -1), (r) => ({ ...r, created_at: iso(r.created_at), last_seen: iso(r.last_seen) })).catch(next);
 });
 A.get('/export/bookings.csv', (req, res) => {
   const rows = db.prepare('SELECT * FROM bookings ORDER BY created_at DESC').all().map(r => ({ ...r, created_at: iso(r.created_at) }));
@@ -723,10 +755,24 @@ A.get('/achievements', (req, res) => {
     achievements: ach.ACHIEVEMENTS.map(a => ({ id: a.id, name: a.name, cat: a.cat, tier: a.tier, hidden: a.hidden, pct: rr.pct(a.id) })) });
 });
 
+// ---------- backups (SQLite online backup -> gzip -> $DATA_DIR/backups, optional push to a private GitHub branch) ----------
+const BK = require('./backup');
+A.get('/backups', (req, res) => res.json({ ok: true, ...BK.info(), og_cache: require('./og').stats() }));
+A.post('/backups', async (req, res, next) => { try { const r = await BK.run('manual'); const { github: push, ...rest } = r; res.status(r.ok ? 200 : 500).json({ ...BK.info(), ...rest, ok: r.ok, push: push || null }); } catch (e) { next(e); } });
+// "Download backup": makes a fresh snapshot (also kept in the local rotation) and streams the .db.gz
+A.get('/backups/download', async (req, res, next) => {
+  try {
+    let name = req.query.name ? String(req.query.name) : null;
+    if (!name) { const r = await BK.run('download', { push: false }); if (!r.ok) return bad(res, 500, r.error || 'Backup failed'); name = r.name; }
+    const f = BK.fileOf(name); if (!f || !fs.existsSync(f)) return bad(res, 404, 'Backup not found');
+    res.setHeader('Cache-Control', 'no-store'); res.download(f, name);
+  } catch (e) { next(e); }
+});
+
 // ---------- v3 routes (streaks, quests, seasons, tournaments, follows, notifications, referrals, sharing, search) ----------
 Object.assign(H, { requireUser, currentUser, publicRow });
 require('./v3')(app, A, H);
-Object.assign(H, { csv, sendCsv, iso, giveawayPublic, ipHash });
+Object.assign(H, { csv, sendCsv, sendCsvPaged, iso, giveawayPublic, ipHash });
 require('./v4')(app, A, H);
 require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
@@ -781,7 +827,14 @@ app.use((err, req, res, next) => { console.error(err); bad(res, err.status || 50
 
 // lock final standings automatically at each giveaway's end time
 setInterval(() => R.sweep(), 15e3).unref(); setTimeout(() => R.sweep(), 1500).unref();
-const server = app.listen(cfg.PORT, '0.0.0.0', () => console.log(`[${new Date().toISOString()}] Gaming Hub listening on port ${cfg.PORT} (db: ${cfg.DB_PATH})`));
+BK.schedule();
+const server = app.listen(cfg.PORT, '0.0.0.0', () => {
+  const heap = Math.round(require('v8').getHeapStatistics().heap_size_limit / 1048576);
+  console.log(`[${new Date().toISOString()}] Gaming Hub listening on port ${cfg.PORT} (db: ${cfg.DB_PATH}, node ${process.version} ${process.platform}/${process.arch}, heap limit ${heap} MB, uid ${process.getuid ? process.getuid() : '?'})`);
+});
+// Keep idle keep-alive sockets open longer than a typical reverse-proxy idle timeout, so the proxy never reuses a
+// socket the app has just closed (that race shows up as sporadic ECONNRESET / 502 on slow, CPU-capped hosts).
+server.keepAliveTimeout = 65e3; server.headersTimeout = 66e3;
 // Graceful shutdown (Render/Docker send SIGTERM on deploys): stop accepting requests, then close SQLite cleanly.
 for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => {
   console.log(`[${new Date().toISOString()}] ${sig} received, shutting down`);

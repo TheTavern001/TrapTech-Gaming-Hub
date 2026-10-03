@@ -167,7 +167,6 @@ module.exports = function v3(app, A, h) {
   h.runCard = runCard;
   app.get('/api/runs/:id', (req, res) => { const c = runCard(parseInt(req.params.id, 10)); if (!c) return bad(res, 404, 'Run not found'); res.json({ ok: true, run: c }); });
 
-  const png = (res, buf) => { res.setHeader('Content-Type', 'image/png'); res.setHeader('Cache-Control', 'public, max-age=600'); res.end(buf); };
   const whenText = (a, b) => { const d = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: cfg.TZ }); const t = now(); return t < a ? `Starts ${d(a)}` : t > b ? `Ended ${d(b)}` : `Live now • ends ${d(b)}`; };
   h.og = {
     run(id) { const c = runCard(id); if (!c) return null; return { kind: 'run', key: `${id}:${c.rank}:${c.players}`, data: { game: c.game, scoreText: c.score_text, username: c.player.username, title: c.player.cos.title, rank: c.rank, players: c.players, best: c.personal_best, art: c.art }, title: `${c.player.username} scored ${c.score_text} in ${c.game}`, desc: `#${c.rank} of ${c.players} players on The Gaming Hub. Can you beat it? Free to play.` }; },
@@ -177,12 +176,13 @@ module.exports = function v3(app, A, h) {
     tournament(id) { const t = db.prepare('SELECT * FROM tournaments WHERE id=? AND active=1').get(id); if (!t) return null; const g = cfg.GAME_MAP[t.game_id] || {}; return { kind: 'tournament', key: `${id}:${Math.floor(now() / 36e5)}`, data: { title: t.title, game: g.title, format: t.format, when: whenText(t.start_at, t.end_at), prize: t.prize, art: g.art }, title: `${t.title} - ${g.title} tournament`, desc: `Free ${t.format === 'bracket' ? 'bracket' : 'timed'} tournament on The Gaming Hub. Cosmetic prizes only.` }; },
     game(id) { const g = cfg.GAME_MAP[id]; if (!g) return null; return { kind: 'default', key: null, img: g.art ? g.art.replace(/\.webp$/, '.png') : null, title: `${g.title} - play free on The Gaming Hub`, desc: (g.desc || 'A Trap Tech game.') + ' Free to play, A Trap Tech game.' }; },
   };
-  app.get('/og/default.png', (req, res) => png(res, og.render('default', {}, 'default')));
+  // PNGs are rendered once, cached on disk ($DATA_DIR/og-cache, size-capped LRU) and streamed (see src/og.js)
+  app.get('/og/default.png', (req, res) => og.send(res, 'default', {}, 'default'));
   app.get('/og/:kind/:id.png', (req, res) => {
     const f = { run: 'run', giveaway: 'giveaway', u: 'profile', tournament: 'tournament' }[req.params.kind];
     const m = f && h.og[f](f === 'profile' ? req.params.id : parseInt(req.params.id, 10));
-    if (!m) return png(res, og.render('default', {}, 'default'));
-    png(res, og.render(m.kind, m.data, m.key));
+    if (!m) return og.send(res, 'default', {}, 'default');
+    og.send(res, m.kind, m.data, m.key);
   });
 
   // ---------- search ----------

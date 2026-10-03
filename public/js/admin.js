@@ -389,7 +389,9 @@ async function reports() {
 
 // ---------- settings ----------
 async function settings() {
-  const [s, pk, ac] = await Promise.all([api('/api/admin/stats'), api('/api/admin/packages'), api('/api/admin/achievements')]);
+  const [s, pk, ac, bk] = await Promise.all([api('/api/admin/stats'), api('/api/admin/packages'), api('/api/admin/achievements'), api('/api/admin/backups')]);
+  const kb = (n) => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+  const bst = bk.status || {}; const gh = bst.last_github;
   frame('settings', 'Settings', `
     <div class="card pad" id="pkg-editor"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="flex:1">${icon('briefcase')} Sponsor packages <span class="muted small">(shown on /host)</span></h2><a class="btn ghost sm" href="/host" target="_blank">${icon('external-link')} View page</a></div>
       <p class="muted small">Edit prices, names and features for each tier. Prices are placeholders - set your real prices here. Changes are live as soon as you save.</p>
@@ -414,7 +416,14 @@ async function settings() {
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn danger" id="wipe">${icon('trash-2')} Wipe demo data</button><button class="btn ghost" id="seed">${icon('sparkles')} Load demo data</button></div>
       <h2 style="margin:16px 0 8px">Achievements</h2><p class="muted small">${ac.achievements.length} achievements, ${fmt(ac.unlocks)} unlocks across ${fmt(ac.players)} players. Rewards are cosmetic only (no cash value) and are evaluated on the server.</p></div>
     <div class="card pad"><h2 style="margin-bottom:8px">Admin password</h2><p class="muted">The admin password lives in the server's <code>.env</code> file (<code>ADMIN_PASSWORD</code>). Edit it there and restart the server to change it.</p>
-    <h2 style="margin:16px 0 8px">Anti-cheat</h2><p class="muted small">Runs need a signed single-use token from /api/run/start. Each game has its own plausibility caps against server-measured run time (see Games); starts and submissions are rate limited per player and per IP.</p></div></div>`);
+    <h2 style="margin:16px 0 8px">Anti-cheat</h2><p class="muted small">Runs need a signed single-use token from /api/run/start. Each game has its own plausibility caps against server-measured run time (see Games); starts and submissions are rate limited per player and per IP.</p></div></div>
+    <div class="card pad" id="backups" style="margin-top:16px"><h2 style="margin-bottom:8px">${icon('download')} Database backups</h2>
+      <p class="muted small">A consistent snapshot of the SQLite database (gzip) is made automatically every ${bk.interval_hours} h and whenever you press the button. Up to the newest ${bk.keep} (max ${bk.max_mb} MB in total) stay on the server's data disk.
+        Off-site copy: ${bk.github.enabled ? `pushed to the private GitHub repo <b>${esc(bk.github.repo)}</b>, branch <b>${esc(bk.github.branch)}</b> (newest ${bk.github.keep} kept)` : 'not configured - set <code>BACKUP_GITHUB_TOKEN</code> (see DEPLOY-DEPLEXO.md), or download a copy regularly'}.</p>
+      <p class="small">Last backup: ${bst.last_local ? `${dt(bst.last_local.at)} (${kb(bst.last_local.size)})` : 'none yet'}${gh ? ` • Last GitHub push: ${gh.ok ? `<span class="pill green">ok</span> ${dt(gh.at)}` : `<span class="pill red">failed</span> ${esc(gh.error)}`}` : ''}${bst.last_error ? ` • <span class="pill red">last error</span> ${esc(bst.last_error.error)}` : ''}</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px"><button class="btn" id="bk-now">${icon('refresh-cw')} Back up now</button><a class="btn ghost" id="bk-dl" href="/api/admin/backups/download">${icon('download')} Download backup</a></div>
+      <div class="wrap-x"><table class="tbl"><thead><tr><th>Backup file</th><th>Created</th><th>Size</th><th></th></tr></thead><tbody>${(bk.backups || []).map(b => `<tr><td class="small">${esc(b.name)}</td><td class="small">${dt(b.created_at)}</td><td class="small">${kb(b.size)}</td><td><a class="btn ghost sm" href="/api/admin/backups/download?name=${encodeURIComponent(b.name)}">${icon('download')} Download</a></td></tr>`).join('') || '<tr><td colspan="4" class="empty">No backups yet.</td></tr>'}</tbody></table></div></div>`);
+  $('#bk-now').onclick = async (e) => { e.target.disabled = true; const r = await api('/api/admin/backups', { method: 'POST' }); toast(r.ok ? `Backup saved${r.push ? (r.push.ok ? ' and pushed to GitHub' : ' (GitHub push failed: ' + r.push.error + ')') : ''}` : 'Backup failed: ' + r.error); settings(); };
   $('#wipe').onclick = async () => { if (!confirm('Delete all demo data? Real players and giveaways are not touched.')) return; const r = await api('/api/admin/demo/wipe', { method: 'POST' }); toast(`Removed ${r.players} demo players, ${r.giveaways} giveaways`); settings(); };
   $('#seed').onclick = async () => { const r = await api('/api/admin/demo/seed', { method: 'POST' }); toast(r.seeded ? 'Demo data loaded' : r.note); settings(); };
   $('#pk-save').onclick = async () => {
