@@ -57,6 +57,9 @@ get their logo file and permission first.
 `public/assets/icons/*` (192/512/maskable/apple-touch) are generated from the Gaming Hub logo mark (owner's art). OG images are drawn
 at runtime from the owner's logos (Gaming Hub, Trap Tech Solutions) and game card art.
 
+## v4 (giveaway results)
+- No new third-party assets or packages. The commit-reveal draw uses Node's built-in `crypto` (SHA-256 / HMAC-SHA256) on the server and the browser's built-in WebCrypto for in-page verification. New icons (printer, shield-alert, fingerprint, radio, user-x, hash, gavel, lock, list-ordered, scroll) are Lucide (ISC), same as above.
+
 ## Runtime dependencies (npm)
 - express (MIT), better-sqlite3 (MIT), bcryptjs (MIT)
 - @resvg/resvg-js (MPL-2.0) - renders the SVG share/OG images to PNG on the server (`src/og.js`); used unmodified as an npm dependency

@@ -9,7 +9,9 @@ const EXTRA = ['target', 'disc-3', 'dices', 'palette', 'link', 'unlink', 'badge-
   // v3
   'calendar-check', 'sunrise', 'scroll-text', 'map', 'chevrons-up', 'shield-check', 'calendar-range', 'megaphone', 'handshake', 'share-2', 'share', 'search', 'bell-ring', 'user-check',
   'user-minus', 'download', 'copy', 'settings', 'scale', 'triangle-alert', 'heart-pulse', 'smartphone', 'wifi-off', 'x', 'check', 'shuffle', 'play', 'zap', 'clock', 'external-link',
-  'building-2', 'code-xml', 'sparkle', 'eye', 'circle-alert', 'list-checks', 'network', 'bell-off', 'inbox', 'cake', 'ban', 'house', 'arrow-right', 'globe', 'cookie', 'accessibility', 'moon', 'activity'];
+  'building-2', 'code-xml', 'sparkle', 'eye', 'circle-alert', 'list-checks', 'network', 'bell-off', 'inbox', 'cake', 'ban', 'house', 'arrow-right', 'globe', 'cookie', 'accessibility', 'moon', 'activity',
+  // v4
+  'shield-alert', 'printer', 'fingerprint', 'radio', 'user-x', 'hash', 'gavel', 'lock', 'list-ordered', 'scroll'];
 const names = [...new Set([...Object.keys(prev), ...EXTRA])];
 const out = {};
 for (const n of names) {

@@ -406,7 +406,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await a.locator('#gpk .gp.on').count()) === 3, 'visual game picker multi-select (3 games)');
   await a.fill('#title', 'UI Test Plinko Giveaway'); await a.fill('#host', 'UI Brand'); await a.selectOption('#tier', 'premium'); await a.check('#usecolor'); await a.fill('#minscore', '0');
   await shot(a, 'desktop-11b-admin-giveaway-picker');
-  await a.click('#gf button[type=submit]'); await a.waitForSelector('#draw'); const linkGid = a.url().split('/').pop();
+  await a.click('#gf button[type=submit]'); await a.waitForSelector('#wcard'); const linkGid = a.url().split('/').pop();
   ok((await a.textContent('.amain')).includes('Live campaign stats'), 'manage page shows live campaign stats');
   const linkedNow = await a.evaluate(async (id) => (await (await fetch('/api/admin/giveaways/' + id)).json()).giveaway.game_ids, linkGid);
   ok(linkedNow.join() === 'plinko,memory-match,high-score', 'saved giveaway counts the 3 picked games', linkedNow);
@@ -425,15 +425,38 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   const toLocal = (ms) => { const x = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}T${p(x.getHours())}:${p(x.getMinutes())}`; };
   await a.fill('#start', toLocal(Date.now() - 30 * 864e5)); await a.fill('#end', toLocal(Date.now() + 2 * 864e5));
   await a.click('#imgs button >> nth=1'); await a.click('#gf button[type=submit]');
-  await a.waitForSelector('#draw'); ok(true, 'admin creates giveaway -> manage page');
+  await a.waitForSelector('#wcard'); ok(true, 'admin creates giveaway -> manage page');
+  ok((await a.inputValue('#wmethod')) === 'score' && (await a.inputValue('#wcount')) === '0', 'winner selection defaults: top score, one winner per prize tier');
   // edit
   await a.fill('#title', 'UI Test Giveaway (edited)'); await a.click('#gf button[type=submit]'); await sleep(900);
   ok((await a.inputValue('#title')).includes('edited'), 'admin edits giveaway');
   // player ran before this giveaway started? our run started ~minutes ago and window started 1h ago -> entrant
   await a.fill('#viewn', '200'); await sleep(200); ok((await a.textContent('#ent')).includes(uname), 'test player is an entrant (played during window)'); await a.fill('#viewn', '10');
-  await a.click('#draw'); await a.waitForSelector('.winner-box .nm'); ok(true, 'draw random winner shows a winner');
+  console.log('# v4: review queue, end now + lock, confirm, disqualify');
+  await a.waitForSelector('#rq .rq-item'); ok((await a.textContent('#rq')).includes('Live preview') && (await a.locator('#rq [data-confirm]').count()) === 0, 'review queue is a live preview before the end (no confirm buttons)');
+  ok((await a.locator('#rq .rq-item').count()) === Math.min(10, +(await a.textContent('.agstats div:nth-child(3) b')).replace(/,/g, '')) && (await a.locator('#rq .rq-runs').count()) >= 1, 'review queue lists the top 10 entrants with their runs');
+  await a.fill('#rqn', '100'); await a.dispatchEvent('#rqn', 'change'); await a.waitForFunction((u) => document.querySelector(`#rq .rq-item[data-name="${u}"]`), uname, { timeout: 8000 }).catch(() => {});
+  ok(!!(await a.$(`#rq .rq-item[data-name="${uname}"]`)), 'top-N input widens the queue (test player found in the top 100)');
+  await a.fill('#rqn', '10'); await a.dispatchEvent('#rqn', 'change'); await a.waitForFunction(() => document.querySelectorAll('#rq .rq-item').length <= 10);
+  await a.click('#endnow'); await a.waitForSelector('.lockbox'); ok((await a.textContent('#wcard')).includes('Final standings locked'), '"End now & lock results" locks the final standings');
+  ok(await a.isDisabled('#end') && await a.isDisabled('#wmethod'), 'locked giveaway: dates + winner rules disabled in the form');
+  await a.waitForSelector('#rq [data-confirm]');
+  const firstName = await a.getAttribute('#rq .rq-item >> nth=0', 'data-name'); const secondName = await a.getAttribute('#rq .rq-item >> nth=1', 'data-name');
+  await a.click('#rq .rq-item >> nth=0 >> [data-dq-open]'); await a.fill('#rq .rq-item >> nth=0 >> [data-reason]', 'UI test disqualification'); await a.click('#rq .rq-item >> nth=0 >> [data-dq-go]');
+  await a.waitForSelector(`#rq .rq-item.is-dq[data-name="${firstName}"]`); ok((await a.getAttribute('#rq .rq-item >> nth=0', 'data-name')) === secondName, 'disqualify #1 (with reason) promotes #2 to the winning place');
+  await a.click('#rq .rq-item >> nth=0 >> [data-confirm]'); await a.waitForSelector('#rq .rq-item >> nth=0 >> .pill.green'); ok((await a.textContent('#wb')).includes('Confirmed'), 'confirm winner from the review queue');
+  ok((await a.textContent('#audit')).includes('Disqualified') && (await a.textContent('#audit')).includes('Promoted to a winning place') && (await a.textContent('#audit')).includes('Winner confirmed'), 'audit log shows disqualify, promote, confirm');
+  const fcsv = await a.evaluate(async (u) => (await fetch(u)).text(), (await a.getAttribute('#exp-final', 'href'))); ok(fcsv.startsWith('rank,place,username') && fcsv.includes('UI test disqualification'), 'final standings CSV export');
+  const rcsv = await a.evaluate(async (u) => (await fetch(u)).text(), (await a.getAttribute('#exp-runs', 'href'))); ok(rcsv.startsWith('giveaway_id,username') && rcsv.includes(uname), 'all entrants + runs CSV export');
   await shot(a, 'desktop-12-admin-manage-giveaway', true);
-  await a.fill('#topn', '2'); await a.click('#top'); await a.waitForFunction(() => document.querySelectorAll('.winner-box').length >= 3, null, { timeout: 8000 }).catch(() => {}); ok((await a.locator('.winner-box').count()) >= 3, 'pick top N (2) adds winners');
+  const v4gid = a.url().split('/').pop();
+  { const pc = await browser.newContext(MOBILE); await passGate(pc); const p = await pc.newPage(); watch(p, 'v4-public');
+    await p.goto(`${BASE}/giveaways/${v4gid}`); await p.waitForSelector('#final-results');
+    ok((await p.textContent('#final-results')).includes(secondName) && (await p.textContent('#final-results')).includes('Confirmed winner') && (await p.textContent('#gw-how')).includes('fewer attempts'), 'public page: Final results with the confirmed winner + tiebreak rules');
+    await p.click('#live-link'); await p.waitForSelector('.res-table'); ok((await p.textContent('.res-table')).includes(secondName) && (await p.locator('.res-table tr.win').count()) >= 1, 'printable results page highlights the winner');
+    await p.goto(`${BASE}/giveaways/${v4gid}/live`); await p.waitForSelector('#lv-table table'); ok((await p.textContent('.final-banner')).includes('Final results locked'), 'live page switches to final results after the lock');
+    await p.goto(`${BASE}/giveaways/${v4gid}/rules`); await p.waitForSelector('#rules-tiebreak'); ok((await p.textContent('.prose')).includes('(b) If scores are tied, whoever reached that score first wins'), 'Official Rules list the tiebreak order');
+    await pc.close(); }
   const csv = await a.evaluate(async (u) => (await fetch(u)).text(), (await a.getAttribute('a[href*="export/leaderboard.csv?giveaway"]', 'href')));
   ok(csv.startsWith('rank,username,score') && csv.includes(uname), 'giveaway CSV export downloads with entrants');
   const gidUrl = a.url();

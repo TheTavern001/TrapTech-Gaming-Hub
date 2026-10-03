@@ -27,7 +27,7 @@ function frame(section, title, inner, actions = '') {
       ${NAV.map(([k, i, l]) => `<a href="/admin${k ? '/' + k : ''}" class="${section === k ? 'on' : ''}">${icon(i)}${l}</a>`).join('')}
       <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a>
       <div class="side-tt"><span>Powered by</span><img src="/assets/brand/traptech.webp" alt="Trap Tech Solutions"></div></aside>
-    <main class="amain"><div class="tt-bar">${icon('zap')} Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v3</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
+    <main class="amain"><div class="tt-bar">${icon('zap')} Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v4</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
 }
 document.addEventListener('click', async (e) => {
   if (e.target.closest('[data-logout]')) { e.preventDefault(); await fetch('/api/admin/logout', { method: 'POST' }); return loginView(); }
@@ -129,6 +129,7 @@ async function manageGiveaway(id) {
   let entrants = [], stats = null;
   if (!isNew) { const r = await api('/api/admin/giveaways/' + id); if (!r.ok) return frame('giveaways', 'Not found', `<div class="err">${esc(r.error)}</div>`); g = r.giveaway; entrants = r.entrants; stats = r.stats; }
   const sel = new Set(g.game_ids && g.game_ids.length ? g.game_ids : [g.game_id]);
+  const lockA = g.finalized_at ? 'disabled' : '';
   frame('giveaways', isNew ? 'New Giveaway' : 'Manage Giveaway', `
     <div class="cols" style="margin-top:0;grid-template-columns:1.1fr 1fr">
       <form class="card pad" id="gf">
@@ -140,12 +141,15 @@ async function manageGiveaway(id) {
           <div class="field full"><label class="lbl">Title</label><input class="input" id="title" value="${esc(g.title)}" maxlength="120" required></div>
           <div class="field"><label class="lbl">Host</label><input class="input" id="host" value="${esc(g.host)}" placeholder="e.g. HighTimes" maxlength="80"></div>
           <div class="field"><label class="lbl">Prize</label><input class="input" id="prize" value="${esc(g.prize)}" placeholder="$250 store credit" maxlength="200"></div>
-          <div class="field"><label class="lbl">Start Date & Time</label><input class="input" type="datetime-local" id="start" value="${toLocalInput(g.start_at)}"></div>
-          <div class="field"><label class="lbl">End Date & Time</label><input class="input" type="datetime-local" id="end" value="${toLocalInput(g.end_at)}"></div>
+          <div class="field"><label class="lbl">Start Date & Time</label><input class="input" type="datetime-local" id="start" value="${toLocalInput(g.start_at)}" ${lockA}></div>
+          <div class="field"><label class="lbl">End Date & Time</label><input class="input" type="datetime-local" id="end" value="${toLocalInput(g.end_at)}" ${lockA}></div>
+          ${g.finalized_at ? `<div class="field full"><div class="hint lockhint">${icon('lock')} Final standings were locked ${dt(g.finalized_at)}. Dates, games, minimum score and winner rules can no longer change.</div></div>` : ''}
           <div class="field full"><label class="lbl">Games that count <span class="muted small" id="gpn"></span></label><div class="gpicker" id="gpk">${GAMES.map(x => `<button type="button" class="gp ${sel.has(x.id) ? 'on' : ''}" data-g="${x.id}" aria-pressed="${sel.has(x.id)}"><span class="ck">${icon('check')}</span><img src="${x.art}" alt=""><b>${esc(x.title)}</b></button>`).join('')}</div>
             <div class="hint" style="margin:6px 0 0">Tap to select one or more games. With several games, a player's giveaway score is the sum of their best score in each.</div></div>
           <div class="field"><label class="lbl">Package tier</label><select class="input" id="tier">${[['', 'None'], ['basic', 'Basic'], ['premium', 'Premium'], ['elite', 'Elite']].map(([k, l]) => `<option value="${k}" ${g.tier === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
-          <div class="field"><label class="lbl">Minimum score to qualify</label><input class="input" type="number" min="0" id="minscore" value="${g.min_score || 0}"></div>
+          <div class="field"><label class="lbl">Minimum score to qualify</label><input class="input" type="number" min="0" id="minscore" value="${g.min_score || 0}" ${lockA}></div>
+          <div class="field"><label class="lbl">Winner selection</label><select class="input" id="wmethod" ${lockA}><option value="score" ${g.win_method !== 'random' ? 'selected' : ''}>Top score (skill)</option><option value="random" ${g.win_method === 'random' ? 'selected' : ''}>Verifiable random draw</option></select></div>
+          <div class="field"><label class="lbl">Number of winners <span class="muted small">(0 = one per prize tier)</span></label><input class="input" type="number" min="0" max="100" id="wcount" value="${g.winner_count_raw ?? 0}" ${lockA}></div>
           <div class="field"><label class="lbl">Brand color</label><div style="display:flex;gap:8px"><input type="color" id="bcolor" value="${esc(g.brand_color || '#7c3aed')}" style="width:56px;height:48px;border:0;background:none"><label class="check" style="margin:0"><input type="checkbox" id="usecolor" ${g.brand_color ? 'checked' : ''}> Use brand color</label></div></div>
           <div class="field"><label class="lbl">Brand logo URL</label><input class="input" id="blogo" value="${esc(g.brand_logo)}" placeholder="/assets/... or https://..." maxlength="300"></div>
           <div class="field full"><label class="lbl">Prize tiers <span class="muted small">(one per line, e.g. "1st - PS5 bundle")</span></label><textarea class="input" id="ptiers" maxlength="1000" style="min-height:70px" placeholder="1st - ...&#10;2nd - ...&#10;3rd - ...&#10;Random draw - ...">${esc(g.prize_tiers_raw || '')}</textarea></div>
@@ -161,51 +165,90 @@ async function manageGiveaway(id) {
         ${stats ? `<div class="card pad" style="margin-bottom:14px"><h2 style="margin-bottom:10px">${icon('chart-column')} Live campaign stats</h2>
           <div class="agstats"><div><b>${fmt(stats.plays)}</b><span>plays</span></div><div><b>${fmt(stats.players)}</b><span>unique players</span></div><div><b>${fmt(g.entrants)}</b><span>entrants</span></div></div>
           ${(stats.per_game || []).length ? `<table class="tbl" style="margin-top:8px"><tbody>${stats.per_game.map(p => `<tr><td>${esc(GAMES.find(x => x.id === p.game_id)?.title || p.game_id)}</td><td class="num">${fmt(p.plays)} plays</td><td class="num">${fmt(p.players)} players</td></tr>`).join('')}</tbody></table>` : ''}</div>` : ''}
-        <div class="card pad" style="margin-bottom:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between"><h2>Winners</h2>${statusPill(g.status)}</div>
-          <p class="small muted">${fmt(g.entrants)} entrant${g.entrants === 1 ? '' : 's'}. Random draw is uniform among entrants who haven't already won this giveaway.</p>
-          <div id="wb">${g.winners.length ? g.winners.map(w => `<div class="winner-box"><div class="small muted">${w.method === 'top' ? 'Top score' : 'Random draw'} • ${dt(w.drawn_at)}</div><div class="nm">${esc(w.username)}</div></div>`).join('') : '<div class="empty" style="padding:10px">No winners drawn yet.</div>'}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn" id="draw">${icon('shuffle')} Draw Random Winner</button>
-            <input class="input" id="topn" type="number" min="1" max="100" value="3" style="width:80px;height:46px">
-            <button class="btn ghost" id="top">${icon('list-ordered')} Pick Top N</button>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-            <a class="btn ghost sm" href="/api/admin/export/leaderboard.csv?giveaway=${g.id}" target="_blank">${icon('download')} Export CSV</a>
-            ${g.winners.length ? `<button class="btn ghost sm" id="clearw">${icon('rotate-ccw')} Clear winners</button>` : ''}
+        <div class="card pad" style="margin-bottom:14px" id="wcard">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2>${icon('trophy')} Winners</h2>${statusPill(g.status)}</div>
+          <p class="small muted" style="margin:6px 0">${g.win_method === 'random' ? `Verifiable random draw • ${g.winner_count} winner${g.winner_count > 1 ? 's' : ''}` : `Top ${g.winner_count} by best qualifying score`}. Ties: higher score, then reached first, then fewer attempts.</p>
+          ${g.finalized_at ? `<div class="lockbox">${icon('lock')} Final standings locked ${dt(g.finalized_at)} • ${fmt(g.entrants)} entrants<div class="tiny muted">Entrant list SHA-256 <code>${esc((g.entrants_hash || '').slice(0, 24))}...</code></div></div>
+              <div id="wb">${g.winners.length ? g.winners.map(w => `<div class="wrow ${w.state}"><b>#${w.place}</b> ${esc(w.username)} <span class="muted small">${fmt(w.score)}</span> ${w.state === 'confirmed' ? `<span class="pill green">${icon('badge-check')} Confirmed</span>` : `<span class="pill amber">${icon('hourglass')} Pending verification</span>`}</div>`).join('') : '<div class="empty" style="padding:10px">No eligible entrants.</div>'}</div>`
+            : `<p class="small">Final standings lock automatically at the end time (${dt(g.end_at)}). Late scores never change them.</p>
+              ${g.win_method === 'random' ? `<div class="tiny muted">Published draw commitment: <code>${esc((g.draw_commit || '').slice(0, 32))}...</code></div>` : ''}
+              ${g.status === 'active' ? `<button class="btn danger sm" id="endnow" style="margin-top:8px">${icon('lock')} End now & lock results</button>` : ''}`}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+            <a class="btn ghost sm" id="exp-runs" href="/api/admin/export/giveaway/${g.id}/runs.csv" target="_blank">${icon('download')} All entrants + runs CSV</a>
+            ${g.finalized_at ? `<a class="btn ghost sm" id="exp-final" href="/api/admin/export/giveaway/${g.id}/final.csv" target="_blank">${icon('download')} Final standings CSV</a>` : ''}
+            <a class="btn ghost sm" href="/api/admin/export/leaderboard.csv?giveaway=${g.id}" target="_blank">${icon('download')} Entrants CSV</a>
+            <a class="btn ghost sm" href="/giveaways/${g.id}/${g.finalized_at ? 'results' : 'live'}" target="_blank">${icon('printer')} ${g.finalized_at ? 'Printable results' : 'Live standings'}</a>
             <a class="btn ghost sm" href="/giveaways/${g.id}" target="_blank">${icon('external-link')} Public page</a>
           </div>
         </div>
         <div class="card"><div class="panel-h"><h2>Entrants - Top N view</h2><input class="input" id="viewn" type="number" min="1" value="${Math.min(10, Math.max(entrants.length, 1))}" style="width:80px;height:36px"></div><div id="ent"></div></div>
       </div>`}
-    </div>`, `<a class="btn ghost sm" href="/admin/giveaways">${icon('chevron-left')} All giveaways</a>`);
+    </div>
+    ${isNew ? '' : `<div class="card rq-card" id="rq-card" style="margin-top:16px"><div class="panel-h"><h2>${icon('shield-check')} Winner review queue</h2><label class="small muted">Top <input class="input" id="rqn" type="number" min="1" max="100" value="10" style="width:70px;height:34px;display:inline-block"></label></div><div id="rq"><div class="empty">Loading review queue...</div></div></div>
+    <div class="card" id="audit-card" style="margin-top:16px"><div class="panel-h"><h2>${icon('scroll-text')} Audit log</h2></div><div id="audit"></div></div>`}`, `<a class="btn ghost sm" href="/admin/giveaways">${icon('chevron-left')} All giveaways</a>`);
   const setImg = (u) => { $('#img').value = u; $('#pv').style.backgroundImage = `url('${u}')`; document.querySelectorAll('#imgs button').forEach(b => b.classList.toggle('on', b.dataset.u === u)); };
   $('#imgs').onclick = (e) => { const b = e.target.closest('[data-u]'); if (b) setImg(b.dataset.u); };
   $('#img').oninput = (e) => setImg(e.target.value.trim());
   $('#title').oninput = (e) => { $('#pvt').textContent = e.target.value || 'Giveaway title'; };
   const paintGp = () => { document.querySelectorAll('#gpk .gp').forEach(b => { const on = sel.has(b.dataset.g); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); $('#gpn').textContent = `(${sel.size} selected)`; };
-  $('#gpk').onclick = (e) => { const b = e.target.closest('[data-g]'); if (!b) return; const k = b.dataset.g; if (sel.has(k)) { if (sel.size === 1) return toast('Pick at least one game'); sel.delete(k); } else sel.add(k); paintGp(); };
+  $('#gpk').onclick = (e) => { const b = e.target.closest('[data-g]'); if (!b) return; if (g.finalized_at) return toast('Results are locked: linked games cannot change.'); const k = b.dataset.g; if (sel.has(k)) { if (sel.size === 1) return toast('Pick at least one game'); sel.delete(k); } else sel.add(k); paintGp(); };
   paintGp();
   $('#gf').addEventListener('submit', async (e) => {
     e.preventDefault();
     const body = { title: $('#title').value, host: $('#host').value, prize: $('#prize').value, image: $('#img').value.trim(), start_at: new Date($('#start').value).getTime(), end_at: new Date($('#end').value).getTime(), entry_method: 'play', game_ids: GAMES.map(x => x.id).filter(k => sel.has(k)), rules: $('#rules').value, active: $('#active').checked,
-      tier: $('#tier').value, min_score: +$('#minscore').value || 0, brand_color: $('#usecolor').checked ? $('#bcolor').value : '', brand_logo: $('#blogo').value.trim(), featured: $('#featured').checked, prize_tiers: $('#ptiers').value };
+      tier: $('#tier').value, min_score: +$('#minscore').value || 0, brand_color: $('#usecolor').checked ? $('#bcolor').value : '', brand_logo: $('#blogo').value.trim(), featured: $('#featured').checked, prize_tiers: $('#ptiers').value, win_method: $('#wmethod').value, winner_count: +$('#wcount').value || 0 };
+    if (g.finalized_at) Object.assign(body, { start_at: g.start_at, end_at: g.end_at });
     const r = await api(isNew ? '/api/admin/giveaways' : '/api/admin/giveaways/' + id, { method: isNew ? 'POST' : 'PUT', body });
     if (!r.ok) { $('#gm').innerHTML = `<div class="err">${esc(r.error)}</div>`; window.scrollTo(0, 0); return; }
     toast('Saved'); if (isNew) nav('/admin/giveaways/' + r.id); else manageGiveaway(id);
   });
   if (isNew) return;
   $('#del').onclick = async () => { if (!confirm('Delete this giveaway and its winners? This cannot be undone.')) return; await api('/api/admin/giveaways/' + id, { method: 'DELETE' }); toast('Deleted'); nav('/admin/giveaways'); };
-  const draw = async (method) => {
-    const r = await api(`/api/admin/giveaways/${id}/draw`, { method: 'POST', body: { method, count: method === 'top' ? +$('#topn').value : 1 } });
-    if (!r.ok) return toast(r.error);
-    toast(`${r.winners.map(w => w.username).join(', ')} ${r.winners.length > 1 ? 'are' : 'is'} the winner${r.winners.length > 1 ? 's' : ''}!`); manageGiveaway(id);
+  const en = $('#endnow'); if (en) en.onclick = async () => {
+    if (!confirm('End this giveaway now and lock the final standings? Scores after this moment will not count. This cannot be undone.')) return;
+    const r = await api(`/api/admin/giveaways/${id}/finalize`, { method: 'POST' }); if (!r.ok) return toast(r.error);
+    toast('Final standings locked'); manageGiveaway(id);
   };
-  $('#draw').onclick = () => draw('random'); $('#top').onclick = () => draw('top');
-  const cw = $('#clearw'); if (cw) cw.onclick = async () => { if (!confirm('Clear all drawn winners for this giveaway?')) return; await api(`/api/admin/giveaways/${id}/winners`, { method: 'DELETE' }); manageGiveaway(id); };
-  const winners = new Set(g.winners.map(w => w.username));
-  const drawEnt = () => { const n = Math.max(1, +$('#viewn').value || 10); $('#ent').innerHTML = entrants.length ? `<table class="tbl"><thead><tr><th>#</th><th>Player</th><th class="num">Best</th><th class="num">Runs</th></tr></thead><tbody>${entrants.slice(0, n).map(x => `<tr><td>${x.rank}</td><td>${esc(x.username)}${demoTag(x.demo)} ${winners.has(x.username) ? `<span class="pill gold">${icon('crown')} winner</span>` : ''}</td><td class="num">${fmt(x.score)}</td><td class="num">${x.runs}</td></tr>`).join('')}</tbody></table><div class="small muted" style="padding:10px">Showing top ${Math.min(n, entrants.length)} of ${entrants.length}</div>` : '<div class="empty">No entrants yet.</div>'; };
+  const drawEnt = () => { const n = Math.max(1, +$('#viewn').value || 10); $('#ent').innerHTML = entrants.length ? `<table class="tbl"><thead><tr><th>#</th><th>Player</th><th class="num">Best</th><th class="num">Runs</th></tr></thead><tbody>${entrants.slice(0, n).map(x => `<tr><td>${x.rank}</td><td>${esc(x.username)}${demoTag(x.demo)}${g.finalized_at && g.winners.some(w => w.username === x.username) ? ` <span class="pill gold">${icon('crown')} winner</span>` : ''}</td><td class="num">${fmt(x.score)}</td><td class="num">${fmt(x.runs)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No entrants yet.</div>'; };
   $('#viewn').oninput = drawEnt; drawEnt();
+  loadReview(id, g);
+}
+const AUDIT_L = { created: 'Giveaway created', seed_committed: 'Draw seed committed', finalized: 'Final standings locked', ended_early: 'Ended early by admin', provisional_winner: 'Provisional winner', confirmed: 'Winner confirmed', disqualified: 'Disqualified', promoted: 'Promoted to a winning place', reinstated: 'Reinstated' };
+const flagChip = (f) => `<span class="flag f-${f.level}" title="${esc(f.text)}">${icon(f.level === 'high' ? 'shield-alert' : f.level === 'med' ? 'triangle-alert' : 'info')}${esc(f.text)}</span>`;
+const secs = (ms) => ms == null ? '' : `${(ms / 1000).toFixed(1)}s`;
+async function loadReview(id, g) {
+  const n = Math.max(1, +($('#rqn') || {}).value || 10);
+  const r = await api(`/api/admin/giveaways/${id}/review?n=${n}`); const box = $('#rq'); if (!box) return;
+  if (!r.ok) { box.innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  const runsTbl = (e) => `<details class="rq-runs"><summary>${fmt(e.runs.length)} run${e.runs.length === 1 ? '' : 's'} in the window • IPs ${esc(e.ip_hashes.join(', ') || '-')}</summary><div class="wrap-x"><table class="tbl sm"><thead><tr><th>Run</th><th>Game</th><th class="num">Score</th><th class="num">Client time</th><th class="num">Server time</th><th class="num">Rate / s</th><th class="num">Cap / s</th><th class="num">% of cap</th><th>IP</th><th>Device</th><th>When</th></tr></thead><tbody>
+    ${e.runs.map(x => `<tr class="${x.over_cap ? 'bad' : x.best ? 'best' : ''}"><td>#${x.id}${x.best ? ' <span class="pill green">counted</span>' : ''}${x.over_cap ? ' <span class="pill red">over cap</span>' : ''}</td><td>${esc(GAMES.find(y => y.id === x.game_id)?.title || x.game_id)}</td><td class="num">${fmt(x.score)}</td><td class="num">${secs(x.duration_ms)}</td><td class="num">${secs(x.elapsed_ms)}</td><td class="num">${x.rate ?? ''}</td><td class="num">${x.per_sec_cap}</td><td class="num ${x.pct_cap >= 90 ? 'warn' : ''}">${x.pct_cap ?? ''}%</td><td><code>${esc(x.ip)}</code></td><td><code>${esc(x.device)}</code></td><td class="small">${dt(x.created_at)}</td></tr>`).join('')}</tbody></table></div></details>`;
+  const item = (e, dq) => `<div class="rq-item ${e.winner ? 'is-win' : ''} ${dq ? 'is-dq' : ''}" data-u="${e.user_id}" data-name="${esc(e.username)}">
+    <div class="rq-top"><span class="rq-pos">${dq ? 'DQ' : `#${e.place ?? e.rank}`}</span><div class="rq-who"><b>${esc(e.username)}</b>${e.banned ? ' <span class="pill red">banned</span>' : ''}<div class="tiny muted">Joined ${e.joined_at ? dt(e.joined_at) : '?'} • rank #${e.final_rank ?? e.rank}${e.draw_pos ? ` • draw #${e.draw_pos}` : ''}${e.tiebreak ? ` • tiebreak: ${esc({ time: 'reached first', attempts: 'fewer attempts', run: 'earlier run' }[e.tiebreak])}` : ''}</div></div>
+      <div class="rq-nums"><div><b>${fmt(e.score)}</b><span>best</span></div><div><b>${fmt(e.attempts)}</b><span>attempts</span></div><div><b>${e.reached_at ? new Date(e.reached_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) : '-'}</b><span>reached</span></div></div>
+      <div class="rq-state">${dq ? `<span class="pill red">${icon('user-x')} Disqualified</span><div class="tiny muted">${esc(e.dq_reason || '')}</div>` : e.state === 'confirmed' ? `<span class="pill green">${icon('badge-check')} Confirmed winner</span>` : e.state === 'pending' ? `<span class="pill amber">${icon('hourglass')} Pending verification</span>` : e.winner ? '<span class="pill">Winning place (live)</span>' : ''}</div></div>
+    <div class="rq-flags">${e.flags.length ? e.flags.map(flagChip).join('') : `<span class="flag f-ok">${icon('circle-check')}No flags</span>`}</div>
+    ${runsTbl(e)}
+    <div class="rq-act">${dq ? `<button class="btn ghost sm" data-reinstate>${icon('rotate-ccw')} Reinstate</button>`
+      : `${r.finalized && e.state === 'pending' ? `<button class="btn sm" data-confirm>${icon('badge-check')} Confirm winner</button>` : ''}<button class="btn danger sm" data-dq-open>${icon('user-x')} Disqualify</button>
+         <div class="dq-form hidden"><input class="input" data-reason maxlength="300" placeholder="Reason (shown to the player and logged)"><button class="btn danger sm" data-dq-go>Confirm disqualification</button></div>`}</div>
+  </div>`;
+  box.innerHTML = `<div class="rq-head small muted">${r.finalized ? `Final standings locked ${dt(r.giveaway.finalized_at)}. Confirm each winner after checking their runs. Disqualifying a winner promotes the next place automatically.` : 'Live preview: the giveaway has not ended yet. Confirmation opens once the final standings are locked.'} ${fmt(r.total)} ranked • ${r.ms}ms</div>
+    ${r.queue.length ? r.queue.map(e => item(e, false)).join('') : '<div class="empty">No entrants yet.</div>'}
+    ${r.disqualified.length ? `<h3 class="rq-sub">Disqualified (${r.disqualified.length})</h3>${r.disqualified.map(e => item(e, true)).join('')}` : ''}
+    ${r.excluded_runs.length ? `<h3 class="rq-sub">${icon('shield-alert')} Runs excluded for breaking the score cap (${r.excluded_runs.length})</h3><div class="wrap-x"><table class="tbl sm"><thead><tr><th>Run</th><th>Player</th><th class="num">Score</th><th class="num">Cap</th><th class="num">Server time</th><th class="num">% of cap</th><th>IP</th><th>When</th></tr></thead><tbody>${r.excluded_runs.map(x => `<tr class="bad"><td>#${x.id}</td><td>${esc(x.username)}</td><td class="num">${fmt(x.score)}</td><td class="num">${fmt(x.cap)}</td><td class="num">${secs(x.elapsed_ms)}</td><td class="num warn">${x.pct_cap}%</td><td><code>${esc(x.ip)}</code></td><td class="small">${dt(x.created_at)}</td></tr>`).join('')}</tbody></table></div>` : ''}`;
+  $('#audit').innerHTML = r.audit.length ? `<div class="wrap-x"><table class="tbl sm"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Player</th><th>Detail</th></tr></thead><tbody>${r.audit.map(a => { let d = a.detail; try { const o = JSON.parse(d); d = Object.entries(o).map(([k, v]) => `${k}: ${typeof v === 'string' && v.length > 24 ? v.slice(0, 24) + '...' : v}`).join(' • '); } catch {} return `<tr data-action="${esc(a.action)}"><td class="small">${dt(a.created_at)}</td><td>${esc(a.actor)}</td><td><b>${esc(AUDIT_L[a.action] || a.action)}</b></td><td>${esc(a.username || '')}</td><td class="small muted">${esc(d)}</td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">No events yet.</div>';
+  $('#rqn').onchange = () => loadReview(id, g);
+  box.onclick = async (e) => {
+    const it = e.target.closest('.rq-item'); if (!it) return; const uid = +it.dataset.u; const name = it.dataset.name;
+    if (e.target.closest('[data-dq-open]')) { $('.dq-form', it).classList.toggle('hidden'); const inp = $('[data-reason]', it); if (inp) inp.focus(); return; }
+    if (e.target.closest('[data-confirm]')) { const x = await api(`/api/admin/giveaways/${id}/confirm`, { method: 'POST', body: { user_id: uid } }); if (!x.ok) return toast(x.error); toast(`${name} confirmed as winner #${x.winner.place}. They've been notified.`); return manageGiveaway(id); }
+    if (e.target.closest('[data-dq-go]')) {
+      const reason = $('[data-reason]', it).value.trim(); if (!reason) { toast('Enter a reason first'); $('[data-reason]', it).focus(); return; }
+      const x = await api(`/api/admin/giveaways/${id}/disqualify`, { method: 'POST', body: { user_id: uid, reason } }); if (!x.ok) return toast(x.error);
+      toast(`${name} disqualified.${x.promoted && x.promoted.length ? ` ${x.promoted.map(p => `${p.username} promoted to #${p.place}`).join(', ')}.` : ''}`); return manageGiveaway(id);
+    }
+    if (e.target.closest('[data-reinstate]')) { const x = await api(`/api/admin/giveaways/${id}/reinstate`, { method: 'POST', body: { user_id: uid } }); if (!x.ok) return toast(x.error); toast(`${name} reinstated`); return manageGiveaway(id); }
+  };
 }
 
 // ---------- bookings ----------

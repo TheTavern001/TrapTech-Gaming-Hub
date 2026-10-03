@@ -39,6 +39,7 @@ function verify(secret, token) {
 }
 function clientIp(req) { return String(req.headers['cf-connecting-ip'] || req.ip || '').trim(); }
 function ipHash(req) { return crypto.createHash('sha256').update(cfg.IP_SALT + clientIp(req)).digest('hex').slice(0, 16); }
+function uaHash(req) { return crypto.createHash('sha256').update(cfg.IP_SALT + ':ua:' + String(req.headers['user-agent'] || '')).digest('hex').slice(0, 12); }
 function parseCookies(req) {
   const out = {};
   for (const part of String(req.headers.cookie || '').split(';')) {
@@ -159,7 +160,7 @@ app.get('/api/leaderboard', (req, res) => {
   if (req.query.giveaway || req.query.contest) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.query.giveaway || req.query.contest);
     if (!g) return bad(res, 404, 'Giveaway not found');
-    rows = giveawayEntrants(g);
+    rows = giveawayEntrants(R.ready(g));
   } else if (game === 'global') rows = ranked(globalBoard(periodStart(period)));
   else if (cfg.GAME_MAP[game]) rows = ranked(gameBoard(game, periodStart(period)));
   else return bad(res, 404, 'Unknown game');
@@ -226,8 +227,8 @@ app.post('/api/score', requireUser, (req, res) => {
     const had = db.prepare(`SELECT 1 FROM runs WHERE user_id=? AND game_id IN (${ph}) AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
     if (!had) newEntries.push(g);
   }
-  const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash) VALUES (?,?,?,?,?,?,?,?)')
-    .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req));
+  const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash) VALUES (?,?,?,?,?,?,?,?,?)')
+    .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req));
   for (const g of newEntries) logActivity('entry', `${req.user.username} entered "${g.title}"`, req.user.id, g.id);
   const isBest = prevBest === null || prevBest === undefined || score > prevBest;
   if (isBest && score >= (game.tiers ? game.tiers[0] : 100)) logActivity('highscore', `New high score (${game.title}): ${req.user.username} - ${score.toLocaleString('en-US')}${unit}`, req.user.id, info.lastInsertRowid);
@@ -254,6 +255,9 @@ app.post('/api/score', requireUser, (req, res) => {
 });
 
 // ---------- giveaways ----------
+const R = require('./results');
+// lazily lock results the moment anyone looks at an ended giveaway (the 15s sweep below covers the rest)
+R.ready = (g) => { if (g && !g.finalized_at && !g.draw_commit) g = R.ensureCommit(g); return (g && !g.finalized_at && g.end_at < now()) ? R.finalize(g) : g; };
 const winnersOf = (gid) => db.prepare('SELECT u.username, w.method, w.score, w.drawn_at FROM winners w JOIN users u ON u.id=w.user_id WHERE w.giveaway_id=? ORDER BY w.drawn_at').all(gid);
 function giveawayPublic(g, withWinners = true) {
   const entrants = giveawayEntrants(g);
@@ -263,20 +267,27 @@ function giveawayPublic(g, withWinners = true) {
     game_title: gameIds.map(id => cfg.GAME_MAP[id]?.title || id).join(' + '), rules: g.rules,
     tier: g.tier || '', brand_color: g.brand_color || '', brand_logo: g.brand_logo || '', featured: !!g.featured, min_score: g.min_score || 0,
     prize_tiers: String(g.prize_tiers || '').split('\n').map(x => x.trim()).filter(Boolean),
-    status: giveawayStatus(g), entrants: entrants.length, demo: !!g.is_demo, top: entrants.slice(0, 3).map(publicRow) };
-  if (withWinners) out.winners = winnersOf(g.id);
+    status: giveawayStatus(g), entrants: entrants.length, demo: !!g.is_demo, top: entrants.slice(0, 3).map(publicRow),
+    win_method: g.win_method || 'score', winner_count: R.winnerCount(g), finalized_at: g.finalized_at || null, draw_commit: g.draw_commit || null,
+    entrants_hash: g.entrants_hash || null, tiebreak_rules: R.TIEBREAK_RULES };
+  if (withWinners) {
+    const res = g.finalized_at ? R.results(g) : null;
+    // after the lock, winners come from the immutable final standings (pending until an admin confirms)
+    out.winners = res ? res.winners.map(w => ({ username: w.username, place: w.place, score: w.score, state: w.state, method: g.win_method === 'random' ? 'random' : 'top' })) : winnersOf(g.id);
+    out.winners_state = res ? (res.winners.length && res.winners.every(w => w.state === 'confirmed') ? 'confirmed' : res.winners.length ? 'pending' : 'none') : null;
+  }
   return out;
 }
 app.get('/api/giveaways', (req, res) => {
   const status = req.query.status;
   const all = db.prepare('SELECT * FROM giveaways WHERE active=1 ORDER BY start_at DESC').all();
-  let list = all.map(g => giveawayPublic(g));
+  let list = all.map(g => giveawayPublic(R.ready(g)));
   if (['active', 'upcoming', 'past'].includes(status)) list = list.filter(g => g.status === status);
   list.sort((a, b) => a.status === 'past' ? b.end_at - a.end_at : (b.featured - a.featured) || (a.end_at - b.end_at));
   res.json({ ok: true, giveaways: list, now: now() });
 });
 app.get('/api/giveaways/:id', (req, res) => {
-  const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(req.params.id);
+  const g = R.ready(db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(req.params.id));
   if (!g) return bad(res, 404, 'Giveaway not found');
   const entrants = giveawayEntrants(g); const me = currentUser(req);
   const mine = me ? entrants.find(e => e.user_id === me.id) : null;
@@ -479,6 +490,7 @@ function readGiveaway(b) {
     tier: ['basic', 'premium', 'elite'].includes(b.tier) ? b.tier : '', brand_color: HEX.test(String(b.brand_color || '')) ? b.brand_color : '',
     brand_logo: str(b.brand_logo, 300), featured: b.featured ? 1 : 0, min_score: Math.max(0, Math.min(10_000_000, parseInt(b.min_score || '0', 10) || 0)),
     prize_tiers: str(b.prize_tiers, 1000),
+    win_method: b.win_method === 'random' ? 'random' : 'score', winner_count: Math.max(0, Math.min(100, parseInt(b.winner_count || '0', 10) || 0)),
   };
   if (!g.title) return [null, 'Title is required.'];
   if (!Number.isFinite(g.start_at) || !Number.isFinite(g.end_at)) return [null, 'Start and end date/time are required.'];
@@ -501,24 +513,31 @@ A.get('/giveaways', (req, res) => {
   const list = db.prepare('SELECT * FROM giveaways ORDER BY start_at DESC').all().map(g => ({ ...giveawayPublic(g), active: !!g.active }));
   res.json({ ok: true, giveaways: list, now: now() });
 });
-const GW_COLS = 'title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,tier,brand_color,brand_logo,featured,min_score,prize_tiers';
+const GW_COLS = 'title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,tier,brand_color,brand_logo,featured,min_score,prize_tiers,win_method,winner_count';
 A.post('/giveaways', (req, res) => {
   const [g, err, gameIds] = readGiveaway(req.body || {}); if (err) return bad(res, 400, err);
   const t = now();
   const info = db.prepare(`INSERT INTO giveaways (${GW_COLS},created_at,updated_at) VALUES (${GW_COLS.split(',').map(c => '@' + c).join(',')},${t},${t})`).run(g);
   setGames(info.lastInsertRowid, gameIds);
+  R.ensureCommit({ id: info.lastInsertRowid }); R.audit(info.lastInsertRowid, 'admin', 'created', null, { method: g.win_method, winners: g.winner_count || 'auto' });
   logActivity('giveaway', `Giveaway created: ${g.title}`, null, info.lastInsertRowid);
   if (g.active) require('./notify').notify(null, 'giveaway', `New giveaway: ${g.title}`, `Hosted by ${g.host}. Play free to enter - no purchase necessary.`, `/giveaways/${info.lastInsertRowid}`, 'gift');
   res.json({ ok: true, id: info.lastInsertRowid });
 });
 A.get('/giveaways/:id', (req, res) => {
-  const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
+  const g = R.ready(db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id)); if (!g) return bad(res, 404, 'Not found');
   const entrants = giveawayEntrants(g);
-  res.json({ ok: true, giveaway: { ...giveawayPublic(g), active: !!g.active, prize_tiers_raw: g.prize_tiers || '' }, entrants: entrants.map(publicRow), stats: boards.giveawayStats(g), now: now() });
+  res.json({ ok: true, giveaway: { ...giveawayPublic(g), active: !!g.active, prize_tiers_raw: g.prize_tiers || '', winner_count_raw: g.winner_count || 0 }, entrants: entrants.map(publicRow), stats: boards.giveawayStats(g), now: now() });
 });
 A.put('/giveaways/:id', (req, res) => {
   const ex = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!ex) return bad(res, 404, 'Not found');
   const [g, err, gameIds] = readGiveaway(req.body || {}); if (err) return bad(res, 400, err);
+  if (ex.finalized_at) {
+    const cur = giveawayGameIds(ex.id);
+    const changed = ['start_at', 'end_at', 'min_score', 'win_method', 'winner_count'].filter(k => Number.isFinite(ex[k]) ? Number(ex[k]) !== Number(g[k]) : String(ex[k]) !== String(g[k]));
+    if (cur.join() !== gameIds.join()) changed.push('games');
+    if (changed.length) return bad(res, 409, `Final results are locked, so these can't change: ${changed.join(', ')}. You can still edit the title, prize, artwork and rules text.`);
+  }
   db.prepare(`UPDATE giveaways SET ${GW_COLS.split(',').map(c => `${c}=@${c}`).join(',')},updated_at=${now()} WHERE id=${ex.id}`).run(g);
   setGames(ex.id, gameIds);
   res.json({ ok: true });
@@ -527,6 +546,7 @@ A.put('/giveaways/:id', (req, res) => {
 A.post('/giveaways/:id/games', (req, res) => {
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
   const gameId = String(req.body.game_id || ''); if (!cfg.GAME_MAP[gameId]) return bad(res, 400, 'Unknown game.');
+  if (g.finalized_at) return bad(res, 409, 'Final results are locked, so linked games can\'t change.');
   const cur = giveawayGameIds(g.id);
   let next = req.body.linked ? [...new Set([...cur, gameId])] : cur.filter(x => x !== gameId);
   if (!next.length) return bad(res, 400, 'A giveaway needs at least one game. Link another game first, or delete the giveaway.');
@@ -535,11 +555,14 @@ A.post('/giveaways/:id/games', (req, res) => {
 });
 A.delete('/giveaways/:id', (req, res) => {
   db.prepare("DELETE FROM activity WHERE type IN ('giveaway','entry','winner') AND ref_id=?").run(req.params.id);
+  // notifications that point at the deleted giveaway (new-giveaway broadcast, winner / disqualification notices)
+  db.prepare("DELETE FROM notifications WHERE link = ? OR link LIKE ?").run(`/giveaways/${Number(req.params.id)}`, `/giveaways/${Number(req.params.id)}/%`);
   const r = db.prepare('DELETE FROM giveaways WHERE id=?').run(req.params.id);
   res.json({ ok: r.changes === 1 });
 });
 A.post('/giveaways/:id/draw', (req, res) => {
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
+  if (R.ready(g).finalized_at) return bad(res, 409, 'This giveaway has ended and its final standings are locked. Use the review queue to confirm or disqualify winners.');
   const method = req.body.method === 'top' ? 'top' : 'random';
   const entrants = giveawayEntrants(g);
   const already = new Set(db.prepare('SELECT user_id FROM winners WHERE giveaway_id=?').all(g.id).map(r => r.user_id));
@@ -559,6 +582,8 @@ A.post('/giveaways/:id/draw', (req, res) => {
   res.json({ ok: true, method, pool_size: pool.length, winners: picks.map(publicRow) });
 });
 A.delete('/giveaways/:id/winners', (req, res) => {
+  const g = db.prepare('SELECT finalized_at FROM giveaways WHERE id=?').get(req.params.id);
+  if (g && g.finalized_at) return bad(res, 409, 'Final results are locked. Disqualify a winner instead (the next place is promoted automatically).');
   const r = db.prepare('DELETE FROM winners WHERE giveaway_id=?').run(req.params.id); res.json({ ok: true, removed: r.changes });
 });
 
@@ -655,6 +680,8 @@ A.get('/achievements', (req, res) => {
 // ---------- v3 routes (streaks, quests, seasons, tournaments, follows, notifications, referrals, sharing, search) ----------
 Object.assign(H, { requireUser, currentUser, publicRow });
 require('./v3')(app, A, H);
+Object.assign(H, { csv, sendCsv, iso, giveawayPublic, ipHash });
+require('./v4')(app, A, H);
 
 const demo = require('./demo');
 A.post('/demo/seed', (req, res) => res.json({ ok: true, ...demo.seed() }));
@@ -676,7 +703,7 @@ const PAGE_TITLES = { '/games': 'Games', '/leaderboard': 'Leaderboards', '/givea
 function pageMeta(p, origin) {
   let m = null, mm;
   if ((mm = p.match(/^\/s\/(\d+)$/))) { const o = H.og.run(+mm[1]); if (o) m = { ...o, img: `/og/run/${mm[1]}.png` }; }
-  else if ((mm = p.match(/^\/giveaways\/(\d+)(\/rules)?$/))) { const o = H.og.giveaway(+mm[1]); if (o) m = { ...o, img: `/og/giveaway/${mm[1]}.png`, title: mm[2] ? `Official Rules: ${o.title}` : o.title }; }
+  else if ((mm = p.match(/^\/giveaways\/(\d+)(\/rules|\/live|\/results)?$/))) { const o = H.og.giveaway(+mm[1]); if (o) m = { ...o, img: `/og/giveaway/${mm[1]}.png`, title: ({ '/rules': 'Official Rules: ', '/live': 'Live standings: ', '/results': 'Final results: ' }[mm[2]] || '') + o.title }; }
   else if ((mm = p.match(/^\/u\/([^/]+)$/))) { const o = H.og.profile(decodeURIComponent(mm[1])); if (o) m = { ...o, img: `/og/u/${encodeURIComponent(decodeURIComponent(mm[1]))}.png` }; }
   else if ((mm = p.match(/^\/tournaments\/(\d+)$/))) { const o = H.og.tournament(+mm[1]); if (o) m = { ...o, img: `/og/tournament/${mm[1]}.png` }; }
   else if ((mm = p.match(/^\/(?:games|play)\/([\w-]+)$/))) { const o = H.og.game(mm[1]); if (o) m = o; }
@@ -703,6 +730,8 @@ app.get('*', (req, res) => {
 });
 app.use((err, req, res, next) => { console.error(err); bad(res, err.status || 500, err.type === 'entity.parse.failed' ? 'Bad JSON' : 'Server error'); });
 
+// lock final standings automatically at each giveaway's end time
+setInterval(() => R.sweep(), 15e3).unref(); setTimeout(() => R.sweep(), 1500).unref();
 const server = app.listen(cfg.PORT, '0.0.0.0', () => console.log(`[${new Date().toISOString()}] Gaming Hub listening on port ${cfg.PORT} (db: ${cfg.DB_PATH})`));
 // Graceful shutdown (Render/Docker send SIGTERM on deploys): stop accepting requests, then close SQLite cleanly.
 for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => {

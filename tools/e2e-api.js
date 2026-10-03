@@ -87,6 +87,54 @@ function client() {
   r = await ADM('/api/admin/export/leaderboard.csv?game=jetpack-dash&period=weekly'); ok(r.body.includes(ua), 'leaderboard CSV export');
   r = await anon('/api/admin/export/runs.csv'); ok(r.status === 401, 'CSV export requires admin');
 
+  console.log('# v4: final standings lock + winner workflow');
+  const crypto = require('crypto'); const sha = (x) => crypto.createHash('sha256').update(x).digest('hex');
+  r = await anon(`/api/giveaways/${gshort}`); let gs = r.body.giveaway;
+  ok(gs.finalized_at && gs.finalized_at >= gs.end_at && gs.winners.length === 1 && gs.winners[0].username === ua && gs.winners[0].state === 'pending' && gs.winners_state === 'pending', 'ended giveaway: standings locked, #1 shown as "pending verification"', gs.winners);
+  ok(gs.tiebreak_rules.length === 4 && gs.tiebreak_rules[1].includes('reached that score first') && gs.tiebreak_rules[2].includes('fewer attempts'), 'giveaway API publishes the tiebreak rules');
+  r = await A(`/api/giveaways/${gshort}/standings`); ok(r.body.finalized && r.body.total === 2 && r.body.me.rank === 1 && r.body.me.of === 2 && r.body.me.gap_to_next === null, 'standings: A is #1 of 2 (final)', r.body.me);
+  r = await B(`/api/giveaways/${gshort}/standings`); ok(r.body.me.rank === 2 && r.body.me.gap_to_next === 40 && r.body.me.next_username === ua, 'standings: B is #2, 40 behind A', r.body.me);
+  r = await anon(`/api/giveaways/${gshort}/standings?q=${ub}`); ok(r.body.matched === 1 && r.body.rows[0].username === ub && r.body.rows[0].rank === 2, 'standings search by username');
+  r = await anon(`/api/giveaways/${gshort}/verify`); ok(r.body.hash_ok && r.body.entrant_lines.length === 2 && sha(r.body.entrant_lines.join('\n')) === r.body.entrants_hash && !r.body.seed, 'verify: entrant-list hash recomputes (score giveaway: no seed revealed)');
+  r = await anon(`/api/giveaways/${gid}/verify`); ok(!r.body.finalized && !r.body.seed && /^[0-9a-f]{64}$/.test(r.body.draw_commit), 'active giveaway: commitment published, nothing else');
+  r = await ADM(`/api/admin/giveaways/${gshort}/review`); const q0 = r.body.queue[0];
+  ok(r.body.finalized && q0.username === ua && q0.state === 'pending' && q0.runs.length >= 1 && q0.runs[0].cap > 0 && 'pct_cap' in q0.runs[0] && 'elapsed_ms' in q0.runs[0], 'review queue: per-run duration, cap and % of cap', q0);
+  ok(q0.flags.some(f => f.code === 'shared_device' || f.code === 'shared_ip') && q0.shared_ip_accounts.includes(ub), 'review queue flags accounts sharing an IP hash (A and B play from the same IP)', q0.flags);
+  r = await ADM(`/api/admin/giveaways/${gshort}/confirm`, { body: { username: ub } }); ok(r.status === 400, 'cannot confirm a non-winning place');
+  r = await ADM(`/api/admin/giveaways/${gshort}/disqualify`, { body: { username: ua, reason: '' } }); ok(r.status === 400, 'disqualify requires a reason');
+  r = await ADM(`/api/admin/giveaways/${gshort}/disqualify`, { body: { username: ua, reason: 'E2E test disqualification' } });
+  ok(r.body.ok && r.body.promoted.length === 1 && r.body.promoted[0].username === ub && r.body.results[0].username === ub, 'disqualify #1 auto-promotes #2', r.body);
+  r = await B('/api/notifications'); ok((r.body.items || r.body.notifications || []).some(n => n.title.includes('placed #1')), 'promoted player notified in-app');
+  r = await A('/api/notifications'); ok((r.body.items || r.body.notifications || []).some(n => n.title.includes('disqualified')), 'disqualified player notified in-app');
+  r = await A(`/api/giveaways/${gshort}/standings`); ok(r.body.me.rank === null && r.body.me.disqualified && r.body.total === 1, 'disqualified player sees they are out of the standings');
+  r = await ADM(`/api/admin/giveaways/${gshort}/reinstate`, { body: { username: ua } }); ok(r.body.ok && r.body.results[0].username === ua, 'reinstate restores the original place');
+  r = await ADM(`/api/admin/giveaways/${gshort}/confirm`, { body: { username: ua } }); ok(r.body.ok && r.body.winner.place === 1, 'admin confirms winner');
+  r = await anon(`/api/giveaways/${gshort}`); ok(r.body.giveaway.winners[0].state === 'confirmed' && r.body.giveaway.winners_state === 'confirmed', 'public page: winner confirmed');
+  r = await A('/api/notifications'); ok((r.body.items || r.body.notifications || []).some(n => n.title.startsWith('Confirmed: you won')), 'confirmed winner notified in-app');
+  r = await ADM(`/api/admin/giveaways/${gshort}/audit`); const acts = r.body.audit.map(a => a.action);
+  ok(['finalized', 'provisional_winner', 'disqualified', 'promoted', 'reinstated', 'confirmed'].every(a => acts.includes(a)), 'audit log records every step', acts);
+  r = await ADM(`/api/admin/export/giveaway/${gshort}/final.csv`); ok(r.ct.includes('text/csv') && r.body.split('\r\n')[0].startsWith('rank,place,username,score,best_run_id,reached_at,attempts') && r.body.includes(',confirmed,'), 'final standings CSV');
+  r = await ADM(`/api/admin/export/giveaway/${gshort}/runs.csv`); ok(r.body.split('\r\n')[0].startsWith('giveaway_id,username') && r.body.includes(ua) && r.body.includes(ub), 'all entrants + runs CSV');
+  r = await ADM(`/api/admin/export/giveaway/${gid}/final.csv`); ok(r.status === 409, 'final CSV only after the lock');
+  r = await anon(`/api/admin/export/giveaway/${gshort}/final.csv`); ok(r.status === 401, 'exports require admin');
+  r = await ADM(`/api/admin/giveaways/${gshort}`); const gsa = r.body.giveaway;
+  const putBody = (x) => ({ title: gsa.title, host: gsa.host, prize: gsa.prize, image: gsa.image, start_at: gsa.start_at, end_at: gsa.end_at, game_ids: gsa.game_ids, rules: gsa.rules, active: true, ...x });
+  r = await ADM(`/api/admin/giveaways/${gshort}`, { method: 'PUT', body: putBody({ end_at: gsa.end_at + 3600e3 }) }); ok(r.status === 409, 'locked giveaway: end time cannot change');
+  r = await ADM(`/api/admin/giveaways/${gshort}`, { method: 'PUT', body: putBody({ title: 'E2E Short Giveaway (renamed)' }) }); ok(r.body.ok, 'locked giveaway: title can still change');
+  r = await ADM(`/api/admin/giveaways/${gshort}/draw`, { body: { method: 'random' } }); ok(r.status === 409, 'legacy draw refused after the lock');
+  r = await ADM(`/api/admin/giveaways/${gshort}/winners`, { method: 'DELETE' }); ok(r.status === 409, 'clearing winners refused after the lock');
+  r = await ADM(`/api/admin/giveaways/${gshort}/finalize`, { method: 'POST' }); ok(r.status === 409, 'cannot lock twice');
+  // verifiable random draw, ended early by the admin
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Random Giveaway', host: 'Test', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true, win_method: 'random', winner_count: 2 } });
+  const grand = r.body.id; r = await anon(`/api/giveaways/${grand}`); const commit = r.body.giveaway.draw_commit;
+  ok(r.body.giveaway.win_method === 'random' && r.body.giveaway.winner_count === 2 && /^[0-9a-f]{64}$/.test(commit), 'random giveaway publishes its draw commitment up front');
+  r = await ADM(`/api/admin/giveaways/${grand}/finalize`, { method: 'POST' }); ok(r.body.ok && r.body.results.length === 2, 'admin "End now & lock results"');
+  r = await anon(`/api/giveaways/${grand}/verify`); const vv = r.body;
+  const ord = vv.entrant_lines.map(l => l.split('|')[1]).map(u => [crypto.createHmac('sha256', vv.seed).update(`${vv.entrants_hash}:${u}`).digest('hex'), u]).sort((a, b) => a[0] < b[0] ? -1 : 1).map(x => x[1]);
+  ok(vv.draw_commit === commit && sha(vv.seed) === commit && vv.seed_ok && vv.hash_ok && ord.join() === vv.draw_order.map(x => x.username).join(), 'seed reveal matches commitment and the draw order recomputes');
+  r = await anon(`/api/giveaways/${grand}`); ok(r.body.giveaway.winners.map(w => w.username).join() === ord.slice(0, 2).join() && new Set(r.body.giveaway.winners.map(w => w.username)).size === 2, 'random winners = first 2 in draw order, no duplicates');
+  r = await anon('/api/giveaways/999999/standings'); ok(r.status === 404, 'standings 404 for unknown giveaway');
+
   console.log('# profile, booking, community');
   r = await anon('/api/profile/' + ua); ok(r.body.ok && r.body.profile.games_played === 2 && r.body.profile.total_score === 80 && r.body.profile.giveaways_won >= 1, 'profile stats (2 runs, total 80, won>=1)', r.body.profile);
   r = await anon('/api/bookings', { body: { brand: 'E2E Brand', contact: 'e2e@example.com', event_type: 'Giveaway', package: 'premium', start_date: '2026-11-01', end_date: '2026-11-14', details: 'test booking' } }); ok(r.body.ok, 'booking submitted'); const bid = r.body.id;
@@ -307,7 +355,7 @@ function client() {
 
   if (!process.env.KEEP) {
     console.log('# cleanup');
-    for (const id of [gid, gshort, gmulti, gmin]) await ADM('/api/admin/giveaways/' + id, { method: 'DELETE' });
+    for (const id of [gid, gshort, gmulti, gmin, grand]) await ADM('/api/admin/giveaways/' + id, { method: 'DELETE' });
     for (const id of [tid, tbid]) await ADM('/api/admin/tournaments/' + id, { method: 'DELETE' });
     for (const id of [bid, bid2, bid3]) await ADM('/api/admin/bookings/' + id, { method: 'DELETE' });
     const pl = await ADM('/api/admin/players?q=e2e_'); for (const p of pl.body.players) await ADM('/api/admin/players/' + p.id, { method: 'DELETE' });

@@ -162,6 +162,32 @@ Community feed), Reports (CSV exports and rejected anti-cheat submissions), Sett
 - **UX polish**: skip link, focus-visible rings, aria labels, live regions, reduced-motion support, skeleton loaders, empty states,
   page-in animations, an offline banner, and wider desktop grids. There's also a "more" menu on desktop.
 
+### v4: giveaways with 100+ players: clear winners, locked results, live tracking
+- **Deterministic winner rules.** Score giveaways rank each entrant by their best qualifying score. A qualifying run starts and finishes inside the window,
+  meets the minimum score and is within the game's plausibility cap for its server-measured duration; with several linked games it is the sum of the best per game.
+  Tiebreakers, shown on the giveaway page, the live board and in Official Rules section 5:
+  (a) higher score wins; (b) if tied, whoever reached that score first (server timestamp of the run that set it); (c) then fewer attempts (runs in the window);
+  (d) then the earlier-submitted run (lower run ID). Every place is unique.
+- **Verifiable random draws** (`win_method=random`) use commit-reveal. When the giveaway is created, the server picks a secret seed and publishes
+  `draw_commit = SHA-256(seed)`. At the end it locks the entrant list, publishes `entrants_hash = SHA-256(lines "rank|username|score|run_id|reached_at|attempts")`
+  and reveals the seed. Draw keys are `HMAC-SHA256(seed, entrants_hash + ":" + username)`, sorted ascending. One entry per player, so nobody can be drawn twice.
+  `/giveaways/:id/results` re-checks the hash, the commitment and the draw order in the browser (WebCrypto).
+- **Final standings lock.** A 15 s sweep (and any read of an ended giveaway) snapshots the standings into `giveaway_results`
+  (rank, username, best score, run id, reached-at, attempts, draw key/position). SQLite triggers block UPDATE/DELETE on it, so late or back-dated scores can't change it.
+  After the lock, dates, games, minimum score and winner rules are read-only (409). Winners show as **"Winner pending verification"** until an admin confirms.
+- **Admin winner workflow** (Admin > Giveaways > manage). The review queue shows the top N (default 10) with every run: client vs server duration, score rate vs the
+  game's per-second cap, % of cap, IP/device hashes and flags (same IP + device as another account, shared IP hash, over-cap runs, near-cap, duration mismatch,
+  new account). It also lists runs excluded for breaking the cap. Actions: **Confirm winner**, **Disqualify** (reason required; the next place is promoted
+  automatically and notified), Reinstate, and **End now & lock results**. Everything is written to an audit log shown on the page. Winners get in-app
+  notifications for provisional, promoted, confirmed and disqualified.
+- **Live score tracking.** `/giveaways/:id/live` shows "You are #X of N", best score, attempts, gap to the next place and to a winning place, with 10 s polling,
+  25 per page, username search and "jump to me". `/giveaways/:id/results` is a printable / save-as-PDF results page.
+- **Exports**: `GET /api/admin/export/giveaway/:id/runs.csv` (every entrant with every run in the window, cap/over-cap/counted columns) and
+  `.../final.csv` (locked standings with place, DQ reason and winner state).
+- **Scale test**: `node tools/e2e-scale.js` seeds 300 players and ~3,500 runs (designed ties, an over-cap cheat run, and an alt account on a shared IP + device).
+  It checks every rank against an independent recomputation, API latency, the automatic lock, late-score immutability, disqualify/promote/confirm, CSVs and the
+  random draw. It saves screenshots to `screenshots/v4/` and removes everything afterwards.
+
 ## Demo data
 Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store Credit", "PS5 + Games Bundle", ...), 2 bookings,
 1 announcement, 3 tournaments (live timed cup, bracket, upcoming), follows, streaks and broadcast notifications are tagged **DEMO** in the UI (`is_demo=1` in the database). Remove them with Admin > Settings > Wipe demo data, or
@@ -174,8 +200,9 @@ Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store C
   `perSec x server-measured elapsed seconds + grace`, above the game's absolute `max`, or with implausible coin counts are rejected.
 - Rate limits: 20 run starts per minute per player (40 per IP) and 30 score submissions per minute per IP. Login, signup and booking
   are rate-limited per IP. IPs are stored only as salted hashes.
-- Limitation: it's a client-side game, so a skilled cheater can still script plausible scores. Use the admin tools (ban, top-N
-  review, runs CSV) before paying out prizes.
+- Limitation: it's a client-side game, so a skilled cheater can still script plausible scores. Use the admin tools before paying out prizes:
+  the winner review queue (flags, per-run rate vs cap, shared IP/device), ban, and the runs CSV. Giveaway standings also re-check every run against the caps,
+  so a run inserted past the API is excluded and flagged.
 
 ## API (summary)
 `POST /api/auth/signup|signin|signout`, `GET /api/me`, `GET /api/games`,
@@ -190,6 +217,9 @@ v3: `POST /api/checkin`, `GET /api/quests`, `POST /api/quests/:idx/claim` (3 = b
 `GET /api/notifications`, `POST /api/notifications/read {id?}`, `GET /api/referral`, `GET /r/:code`, `POST /api/share {kind,ref}`,
 `GET /api/runs/:id`, `GET /api/search?q=`, `GET /og/...png`, `GET|POST /api/admin/tournaments`, `PUT|DELETE /api/admin/tournaments/:id`.
 Signup now requires `dob: 'YYYY-MM-DD'` (21+) and accepts `ref`.
+v4: `GET /api/giveaways/:id/standings?page=&per=&q=&around=me` (rows, total, me {rank, of, score, attempts, gap_to_next, gap_to_win}, winners + states, tiebreak rules),
+`GET /api/giveaways/:id/verify`, admin `GET /api/admin/giveaways/:id/review?n=10`, `GET .../audit`, `POST .../finalize|confirm|disqualify|reinstate {user_id|username, reason}`,
+`GET /api/admin/export/giveaway/:id/runs.csv|final.csv`. Giveaway create/update accepts `win_method` (score|random) and `winner_count` (0 = one per prize tier).
 
 ## File layout
 ```
@@ -203,6 +233,8 @@ src/progress.js      XP/levels, check-in streaks, daily quests, seasons
 src/tournaments.js   timed boards + async 8-seed brackets
 src/notify.js        notifications (per-user + broadcast)
 src/og.js            OG/share image renderer (resvg), fonts in src/og-fonts/
+src/results.js       v4 standings (tiebreaks, cap re-check), final-standings lock, commit-reveal draws, confirm/disqualify/promote, audit
+src/v4.js            v4 routes (live standings, verify, admin review queue, finalize, exports)
 src/v3.js            v3 routes (quests, season, tournaments, follows, notifications, referrals, share, search, OG, admin tournaments)
 src/cosmetics.js     banners / frames / titles (original CSS) -> /cosmetics.css
 src/packages.js      default Basic/Premium/Elite package copy (admin-editable)
@@ -213,8 +245,8 @@ public/css/app.css   theme (dark navy, neon purple-to-blue, glowing cards, botto
 public/assets/       brand/, cards/, giveaways/, badges/, packages/, avatars/ (from mockups), game/ + sfx/ (Kenney CC0)
 public/fonts/        Orbitron + Exo 2 (OFL)
 mockups/             the owner's original mockup PNGs (reference only, not served)
-tools/               extract_mockup_art.py, render-cover.js, e2e-api.js, e2e-browser.js, compare.py
-screenshots/         mobile-*.png, desktop-*.png, v2/, v3/ (m*-*.png = mobile 390x844, d*-*.png = desktop 1440x900), compare/ (generated by the tests, git-ignored)
+tools/               extract_mockup_art.py, render-cover.js, e2e-api.js, e2e-browser.js, e2e-scale.js, compare.py
+screenshots/         mobile-*.png, desktop-*.png, v2/, v3/, v4/ (m*-*.png = mobile 390x844, d*-*.png = desktop 1440x900), compare/ (generated by the tests, git-ignored)
 scripts/             start/stop/restart scripts
 .env                 local dev secrets (chmod 600, git-ignored); see .env.example
 render.yaml          Render Blueprint (web service + 1 GB disk at /data)
@@ -226,5 +258,6 @@ Dockerfile           container alternative (volume at /data)
 node tools/e2e-api.js                      # API checks incl. every game, linking, packages, achievements (BASE=... to point elsewhere)
 node tools/e2e-browser.js                  # headless-Chrome checks + screenshots (screenshots/, v2/, v3/); both clean up after themselves
 # signup is limited to 10/hour per IP (in memory): run ./scripts/restart-server.sh before re-running the browser test
+node tools/e2e-scale.js                    # v4 scale test: 300 players / ~3.5k runs, ranking + tiebreaks, lock, DQ/promote, latency, screenshots/v4/
 python3 tools/compare.py                   # mockup vs built side-by-side images
 ```

@@ -176,6 +176,7 @@ const AGE_FREE = /^\/(terms|privacy|rules|responsible-play|about)$/;
 let navCount = 0;
 async function render() {
   if (S.game) { S.game.destroy(); S.game = null; }
+  if (S.poll) { clearInterval(S.poll); S.poll = null; }
   document.body.style.overflow = '';
   document.querySelectorAll('.drawer, .sheet').forEach(x => x.remove());
   const url = new URL(location.href); const path = url.pathname.replace(/\/+$/, '') || '/';
@@ -599,7 +600,7 @@ function giveawayCard(g) {
     </div>${g.image ? `<div class="art" style="background-image:url('${esc(g.image)}')"></div>` : '<div></div>'}</div>
     <div class="gw-games">${(g.game_ids || []).map(id => { const x = gameById(id); return x ? `<span class="gchip"><img src="${x.art}" alt="">${esc(x.title)}</span>` : ''; }).join('')}${g.min_score ? `<span class="gchip rule">${icon('target')} Min ${fmt(g.min_score)}</span>` : ''}${g.prize_tiers && g.prize_tiers.length ? `<span class="gchip rule">${icon('trophy')} ${g.prize_tiers.length} prize tiers</span>` : ''}</div>
     ${g.status === 'past' ? `<div class="small muted" style="margin:10px 0">Ended ${new Date(g.end_at).toLocaleDateString()} • ${fmt(g.entrants)} entrants</div>
-        ${g.winners.length ? `<div style="margin-bottom:10px">${g.winners.map(w => `<span class="pill gold" style="margin:0 6px 6px 0">${icon('crown')} ${esc(w.username)}</span>`).join('')}</div>` : '<div class="small muted" style="margin-bottom:10px">Winner to be announced</div>'}`
+        ${g.winners.length ? `<div style="margin-bottom:10px">${g.winners.map(w => `<span class="pill gold" style="margin:0 6px 6px 0">${icon('crown')} ${w.place ? `#${w.place} ` : ''}${esc(w.username)}</span>`).join('')}${g.winners_state === 'pending' ? `<span class="pill wpend">${icon('hourglass')} Winner pending verification</span>` : ''}</div>` : '<div class="small muted" style="margin-bottom:10px">Winner to be announced</div>'}`
       : cdHTML(target, g.status === 'upcoming' ? 'Starts in' : `${fmt(g.entrants)} entrant${g.entrants === 1 ? '' : 's'} • Play ${esc(g.game_title)}`)}
     <a class="btn block ${g.status !== 'active' ? 'ghost' : ''}" href="/giveaways/${g.id}">${g.status === 'active' ? 'Enter Now' : g.status === 'upcoming' ? 'View Details' : 'View Results'}</a>
   </div>`;
@@ -633,17 +634,155 @@ route(/^\/giveaways\/(\d+)$/, async (m) => {
       <p class="small muted" style="margin:6px 0 6px">Entry: play ${multi ? `any of <b>${esc(g.game_title)}</b>` : `<b>${esc(g.game_title)}</b>`} between ${new Date(g.start_at).toLocaleString()} and ${new Date(g.end_at).toLocaleString()}.${g.min_score ? ` Runs need at least <b>${fmt(g.min_score)}</b> points to qualify.` : ''} ${multi ? 'Your giveaway score is the sum of your best score in each linked game.' : 'Higher scores rank higher.'} No purchase necessary.</p>
       ${g.status === 'past' ? '' : cdHTML(g.status === 'upcoming' ? g.start_at : g.end_at, g.status === 'upcoming' ? 'Starts in' : 'Ends in')}
       ${g.status === 'active' ? `<div class="small muted" style="margin:0 0 6px">${S.me ? (r.me ? 'Play again to improve:' : 'Enter now - pick a game:') : 'Sign in to enter - pick a game:'}</div><div class="gpicks">${playBtns}</div>${!S.me ? `<p class="small muted center">Guests can browse but only signed-in players are entered.</p>` : ''}` : ''}
-      ${r.me ? `<div class="ok-msg" style="margin:12px 0 0">You're entered! Current rank #${r.me.rank} with ${sc(r.me.score)}.</div>` : ''}
+      ${r.me ? `<div class="ok-msg" style="margin:12px 0 0">${g.finalized_at ? 'Final result:' : "You're entered!"} You are <b>#${r.me.rank} of ${fmt(g.entrants)}</b> with ${sc(r.me.score)}. <a href="/giveaways/${g.id}/live">${g.finalized_at ? 'See final standings' : 'Track live'}</a></div>` : ''}
     </div>
-    ${g.winners.length ? `<div class="card pad" style="margin-bottom:14px"><h2 style="margin-bottom:8px"><span class="crown">${icon('crown')}</span> Winners</h2>${g.winners.map(w => `<div class="mini-row" style="margin:6px 0">${avatar(w.username)}<b>${esc(w.username)}</b><span class="s small" style="color:var(--gold)">${w.method === 'top' ? 'Top score' : 'Random draw'}</span></div>`).join('')}</div>` : ''}
-    <div class="card"><div class="panel-h"><h2>Entrants (${fmt(g.entrants)})</h2></div>
-      ${r.leaderboard.length ? `<table class="lb"><tbody>${r.leaderboard.map(x => `<tr><td class="rk">${x.rank}</td><td>${whoHTML(x)}</td><td class="sc">${sc(x.score)}</td></tr>`).join('')}</tbody></table>` : `<div class="empty">No entrants yet.</div>`}</div>
-    <div class="gw-actions"><button class="btn ghost" id="share-gw">${icon('share-2')} Share giveaway</button><a class="btn ghost" href="/giveaways/${g.id}/rules">${icon('scale')} Official rules</a></div>
+    ${g.finalized_at ? finalResultsCard(g, sc) : ''}
+    ${winRulesCard(g)}
+    ${!g.finalized_at && g.winners.length ? `<div class="card pad" style="margin-bottom:14px"><h2 style="margin-bottom:8px"><span class="crown">${icon('crown')}</span> Winners</h2>${g.winners.map(w => `<div class="mini-row" style="margin:6px 0">${avatar(w.username)}<b>${esc(w.username)}</b><span class="s small" style="color:var(--gold)">${w.method === 'top' ? 'Top score' : 'Random draw'}</span></div>`).join('')}</div>` : ''}
+    <div class="card"><div class="panel-h"><h2>${g.finalized_at ? 'Final standings' : 'Entrants'} (${fmt(g.entrants)})</h2><a class="btn sm ghost" id="live-link" href="/giveaways/${g.id}/${g.finalized_at ? 'results' : 'live'}">${icon(g.finalized_at ? 'list-ordered' : 'radio')} ${g.finalized_at ? 'All results' : 'Live standings'}</a></div>
+      ${r.leaderboard.length ? `<table class="lb"><tbody>${r.leaderboard.map(x => { const w = (g.finalized_at ? g.winners : []).find(y => y.username === x.username); return `<tr class="${w ? 'win' : ''} ${r.me && r.me.username === x.username ? 'me' : ''}"><td class="rk">${x.rank}</td><td>${whoHTML(x, { extra: w ? ` <span class="crown">${icon('crown')}</span>` : '' })}</td><td class="sc">${sc(x.score)}</td></tr>`; }).join('')}</tbody></table>${g.entrants > r.leaderboard.length ? `<div class="center" style="padding:10px"><a class="btn sm ghost" href="/giveaways/${g.id}/live">See all ${fmt(g.entrants)} entrants</a></div>` : ''}` : `<div class="empty">No entrants yet.</div>`}</div>
+    <div class="gw-actions"><button class="btn ghost" id="share-gw">${icon('share-2')} Share giveaway</button><a class="btn ghost" href="/giveaways/${g.id}/rules">${icon('scale')} Official rules</a>${g.finalized_at ? `<a class="btn ghost" href="/giveaways/${g.id}/results">${icon('printer')} Printable results</a>` : ''}</div>
     ${g.rules ? `<div class="card pad" style="margin-top:14px"><h2 style="margin-bottom:6px">Host rules</h2><p class="small muted" style="white-space:pre-wrap;margin:0">${esc(g.rules)}</p></div>` : ''}
     <p class="tiny muted center" style="margin-top:12px">NO PURCHASE NECESSARY. 21+. Void where prohibited. Operated by Trap Tech Solutions. See <a href="/giveaways/${g.id}/rules">Official Rules</a>.</p>
   </div>`, { title: g.title });
   document.getElementById('share-gw').onclick = () => shareLink({ kind: 'giveaway', ref: String(g.id), url: `/giveaways/${g.id}`, title: g.title, text: `Play free to win: ${g.prize || g.title} (hosted by ${g.host})`, withRef: true });
   tickCountdowns();
+});
+
+// ---------------- v4: winner rules, live standings, final results ----------------
+// Same text as src/results.js TIEBREAK_RULES (the API also sends it as tiebreak_rules).
+const TB_RULES = ['Higher score wins.', 'If scores are tied, whoever reached that score first wins (server timestamp of the run that set it).', 'If still tied, the player with fewer attempts (runs in the giveaway window) wins.', 'If still tied, the earlier-submitted run (lower run ID) wins.'];
+const TB_TAG = { time: 'Tie: reached first', attempts: 'Tie: fewer attempts', run: 'Tie: earlier run' };
+const tbList = (g) => `<ol class="tb-rules">${((g && g.tiebreak_rules) || TB_RULES).map(x => `<li>${esc(x)}</li>`).join('')}</ol>`;
+const stamp = (ms) => ms ? new Date(ms).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' }) : '';
+const placeIc = (p) => p === 1 ? 'crown' : p <= 3 ? 'medal' : 'trophy';
+const stateBadge = (st) => st === 'confirmed' ? `<span class="pill green wstate">${icon('badge-check')} Confirmed winner</span>` : st === 'pending' ? `<span class="pill wpend wstate">${icon('hourglass')} Winner pending verification</span>` : '';
+function winRulesCard(g) {
+  const n = g.winner_count || 1; const rnd = g.win_method === 'random';
+  return `<div class="card pad gw-how" id="gw-how"><h2 style="margin-bottom:6px">${icon('scale')} How the winner is decided</h2>
+    <p class="small" style="margin:0 0 8px">${rnd ? `<b>Verifiable random draw:</b> ${n} winner${n > 1 ? 's' : ''} drawn from all eligible entrants (one entry each, nobody can be picked twice).` : `<b>Top ${n} by best qualifying score win.</b> Your best valid run counts${g.game_ids && g.game_ids.length > 1 ? ' (sum of your best in each linked game)' : ''}, not your total plays.`}</p>
+    <div class="small"><b>${rnd ? 'Leaderboard tiebreakers' : 'Tiebreakers, in order'}:</b></div>${tbList(g)}
+    ${rnd ? `<p class="tiny muted" style="margin:6px 0 0">Draw commitment (SHA-256 of the secret seed, published before the end): <code class="hash">${esc(g.draw_commit || 'pending')}</code>. The seed is revealed with the results so anyone can check the draw.</p>` : ''}
+    <p class="tiny muted" style="margin:6px 0 0">${icon('lock')} Final standings lock automatically at the end time. Scores submitted after that never change them. Runs that are impossible for their server-measured length are excluded.</p></div>`;
+}
+function finalResultsCard(g, sc) {
+  const ws = g.winners || [];
+  return `<div class="card pad final-res" id="final-results"><h2 style="margin-bottom:4px"><span class="crown">${icon('trophy')}</span> Final results</h2>
+    <div class="tiny muted" style="margin-bottom:8px">${icon('lock')} Locked ${stamp(g.finalized_at)} • ${fmt(g.entrants)} entrants</div>
+    ${ws.length ? ws.map(w => `<div class="win-row ${w.state}"><span class="wp">${icon(placeIc(w.place))}#${w.place}</span>${avatar(w.username)}<b class="wn">${esc(w.username)}</b><span class="ws">${sc(w.score)}</span>${stateBadge(w.state)}</div>`).join('')
+      : '<div class="small muted">No eligible entrants.</div>'}
+    ${g.winners_state === 'pending' ? `<p class="tiny muted" style="margin:8px 0 0">Winner pending verification: an admin is reviewing the top runs for fair play and eligibility (21+). If a winner is disqualified, the next place moves up.</p>` : ''}
+    <div class="row-btns"><a class="btn sm" href="/giveaways/${g.id}/results">${icon('list-ordered')} Full final standings</a>${g.win_method === 'random' ? `<a class="btn sm ghost" href="/giveaways/${g.id}/results#verify">${icon('shield-check')} Verify the draw</a>` : ''}</div></div>`;
+}
+route(/^\/giveaways\/(\d+)\/live$/, async (m, url) => {
+  const id = m[1]; let page = 1, q = url.searchParams.get('q') || '', first = true, busy = false, follow = true; // follow = keep my row in view until the player pages/searches
+  const r0 = await api(`/api/giveaways/${id}/standings?per=25&around=me`);
+  if (!r0.ok) return shell('/giveaways', emptyState('gift', 'Giveaway not found', '', '<a class="btn sm" href="/giveaways">All giveaways</a>'));
+  const g = r0.giveaway; const multi = g.game_ids.length > 1;
+  const sc = (n) => multi ? `${fmt(n)} pts` : fmtScore(n, g.game_ids[0]);
+  shell('/giveaways', `<div class="narrow live-lb">
+    <div class="back-row"><a class="iconbtn" href="/giveaways/${id}" aria-label="Back to giveaway">${icon('chevron-left')}</a><h1>${r0.finalized ? 'Final standings' : 'Live standings'}</h1></div>
+    <div class="small muted" style="margin:-6px 0 10px"><a href="/giveaways/${id}">${esc(g.title)}</a>${demoTag(g.demo)} • ${esc(g.game_title)}</div>
+    <div id="lv-status"></div>
+    <div id="lv-me"></div>
+    <div class="card"><div class="panel-h lv-tools"><h2 id="lv-count">Entrants</h2>
+      <input class="input" id="lv-q" type="search" placeholder="Search username" aria-label="Search by username" value="${esc(q)}" autocomplete="off"></div>
+      <div id="lv-table"><div class="skeleton"></div></div>
+      <div class="lv-pager" id="lv-pager"></div></div>
+    <div class="card pad" style="margin-top:14px"><h2 style="margin-bottom:6px">Tiebreakers, in order</h2>${tbList(r0)}<p class="tiny muted" id="lv-upd" style="margin:6px 0 0"></p></div>
+  </div>`, { title: `Live standings: ${g.title}` });
+  function draw(r) {
+    const g = r.giveaway;
+    document.getElementById('lv-status').innerHTML = r.finalized
+      ? `<div class="final-banner ${r.winners_state}">${icon('lock')} <b>Final results locked</b> ${stamp(g.finalized_at)}${r.winners.length ? ` • Winner${r.winners.length > 1 ? 's' : ''}: ${r.winners.map(w => `<b>#${w.place} ${esc(w.username)}</b>`).join(', ')}` : ''} ${stateBadge(r.winners_state === 'confirmed' ? 'confirmed' : r.winners_state === 'pending' ? 'pending' : '')} <a href="/giveaways/${g.id}/results">Results page</a></div>`
+      : g.status === 'upcoming' ? `<div class="final-banner">Starts ${stamp(g.start_at)}</div>`
+      : `<div class="live-pill"><span class="dot"></span>LIVE • updates every 10s • ends ${stamp(g.end_at)}</div>${cdHTML(g.end_at, '')}`;
+    const me = r.me; const el = document.getElementById('lv-me');
+    if (!S.me) el.innerHTML = `<div class="card pad lv-mecard guest"><b>Sign in to see your rank.</b> <a class="btn sm" href="/signin?next=${encodeURIComponent(location.pathname)}">Sign in</a></div>`;
+    else if (!me || !me.rank) el.innerHTML = `<div class="card pad lv-mecard"><b>${me && me.disqualified ? 'Your entry was disqualified from this giveaway.' : r.finalized ? "You didn't enter this giveaway." : "You're not on the board yet."}</b> ${!r.finalized && !(me && me.disqualified) && g.status === 'active' ? `<a class="btn sm" href="/giveaways/${g.id}">${icon('play')} Play to enter</a>` : ''}<div class="tiny muted">${fmt(r.total)} players ranked</div></div>`;
+    else el.innerHTML = `<div class="card pad lv-mecard ${me.winner ? 'is-win' : ''}" id="lv-mecard">
+      <div class="lv-rank"><span>You are</span><b id="lv-rank">#${me.rank}</b><span>of ${fmt(me.of)}</span></div>
+      <div class="lv-stats"><div><small>Best score</small><b>${sc(me.score)}</b></div><div><small>Attempts</small><b>${fmt(me.attempts)}</b></div>
+        <div><small>Gap to next place</small><b>${me.rank === 1 ? 'You lead!' : me.gap_to_next === 0 ? 'Tied' : '+' + (multi ? fmt(me.gap_to_next) : fmtScore(me.gap_to_next, g.game_ids[0]))}</b>${me.next_username ? `<em>to pass ${esc(me.next_username)}${me.gap_to_next === 0 ? ' (tiebreak: they got there first)' : ''}</em>` : ''}</div>
+        ${me.gap_to_win ? `<div><small>To reach a winning place</small><b>+${multi ? fmt(me.gap_to_win) : fmtScore(me.gap_to_win, g.game_ids[0])}</b></div>` : ''}</div>
+      ${me.state ? stateBadge(me.state) : me.winner ? '' : ''}${!r.finalized && g.status === 'active' ? `<a class="btn sm" style="margin-top:8px" href="/giveaways/${g.id}">${icon('play')} Play again to improve</a>` : ''}</div>`;
+    document.getElementById('lv-count').textContent = r.q ? `${fmt(r.matched)} of ${fmt(r.total)} entrants match` : `${fmt(r.total)} entrants`;
+    const myName = S.me && S.me.username;
+    document.getElementById('lv-table').innerHTML = r.rows.length ? `<table class="lb lv"><thead><tr><th>#</th><th>Player</th><th class="hide-sm">Reached</th><th class="hide-sm">Tries</th><th>Best</th></tr></thead><tbody>${r.rows.map(x => `<tr class="${x.username === myName ? 'me' : ''} ${x.winner ? 'win' : ''} ${!r.finalized && g.win_method !== 'random' && x.rank <= g.winner_count ? 'zone' : ''}" data-rank="${x.rank}"><td class="rk">${x.rank}</td><td>${whoHTML(x, { extra: x.winner ? ` <span class="crown">${icon('crown')}</span>` : '' })}${x.tiebreak ? `<span class="tb-tag">${TB_TAG[x.tiebreak]}</span>` : ''}</td><td class="hide-sm tiny muted">${stamp(x.reached_at)}</td><td class="hide-sm">${fmt(x.attempts)}</td><td class="sc">${sc(x.score)}</td></tr>`).join('')}</tbody></table>`
+      : `<div class="empty">${r.q ? 'No players match that search.' : 'No entrants yet. Be the first!'}</div>`;
+    document.getElementById('lv-pager').innerHTML = r.pages > 1 ? `<button class="btn sm ghost" data-pg="${r.page - 1}" ${r.page <= 1 ? 'disabled' : ''} aria-label="Previous page">${icon('chevron-left')}</button><span class="small">Page ${r.page} of ${r.pages}</span><button class="btn sm ghost" data-pg="${r.page + 1}" ${r.page >= r.pages ? 'disabled' : ''} aria-label="Next page">${icon('chevron-right')}</button>${me && me.rank && !r.q ? `<button class="btn sm ghost" data-pg="me" id="lv-jump">Jump to me</button>` : ''}` : '';
+    document.getElementById('lv-upd').textContent = `Updated ${new Date().toLocaleTimeString()}${r.finalized ? ' • final' : ' • refreshes every 10 seconds'}`;
+    tickCountdowns();
+  }
+  async function load(opts = {}) {
+    if (busy) return; busy = true;
+    try {
+      const qs = new URLSearchParams({ per: '25', page: String(page) }); if (q) qs.set('q', q); if (opts.me || (follow && !q)) qs.set('around', 'me');
+      const r = first ? r0 : await api(`/api/giveaways/${id}/standings?${qs}`); first = false;
+      if (!r.ok || !document.getElementById('lv-table')) return;
+      page = r.page; draw(r);
+      if (r.finalized && S.poll) { clearInterval(S.poll); S.poll = null; }
+    } finally { busy = false; }
+  }
+  let t = null;
+  document.getElementById('lv-q').addEventListener('input', (e) => { clearTimeout(t); t = setTimeout(() => { q = e.target.value.trim(); page = 1; follow = !q; history.replaceState({}, '', `/giveaways/${id}/live${q ? '?q=' + encodeURIComponent(q) : ''}`); load(); }, 250); });
+  document.getElementById('lv-pager').addEventListener('click', (e) => { const b = e.target.closest('[data-pg]'); if (!b || b.disabled) return; if (b.dataset.pg === 'me') { follow = true; load({ me: true }); } else { follow = false; page = +b.dataset.pg; load(); } });
+  if (q) { first = false; await load(); } else await load();
+  if (!r0.finalized) S.poll = setInterval(() => { if (document.visibilityState === 'visible') load(); }, r0.refresh_ms || 10000);
+});
+async function sha256hex(str) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+async function hmachex(key, msg) { const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']); const b = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+route(/^\/giveaways\/(\d+)\/results$/, async (m) => {
+  const id = m[1];
+  const r = await api(`/api/giveaways/${id}/standings?per=1000`);
+  if (!r.ok) return shell('/giveaways', emptyState('gift', 'Giveaway not found', '', '<a class="btn sm" href="/giveaways">All giveaways</a>'));
+  const g = r.giveaway; let rows = r.rows;
+  for (let p = 2; p <= r.pages; p++) { const x = await api(`/api/giveaways/${id}/standings?per=1000&page=${p}`); if (x.ok) rows = rows.concat(x.rows); }
+  const multi = g.game_ids.length > 1; const gid = g.game_ids[0];
+  const sc = (n) => multi ? `${fmt(n)} pts` : fmtScore(n, gid);
+  const when = (ms) => new Date(ms).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'medium' }) + ' ET';
+  if (!r.finalized) return shell('/giveaways', `<div class="narrow"><div class="back-row"><a class="iconbtn" href="/giveaways/${id}" aria-label="Back">${icon('chevron-left')}</a><h1>Final results</h1></div>
+    ${emptyState('hourglass', 'Results are not final yet', `Final standings for "${esc(g.title)}" lock automatically when it ends (${when(g.end_at)}).`, `<a class="btn sm" href="/giveaways/${id}/live">${icon('radio')} Live standings</a>`)}</div>`, { title: `Final results: ${g.title}` });
+  shell('/giveaways', `<div class="narrow results-page" id="results-page">
+    <div class="back-row no-print"><a class="iconbtn" href="/giveaways/${id}" aria-label="Back">${icon('chevron-left')}</a><h1>Final results</h1><span class="spacer"></span><button class="btn sm" id="print-btn">${icon('printer')} Print / save PDF</button></div>
+    <div class="card pad res-head"><img class="print-only" src="/assets/brand/logo-horizontal.webp" alt="The Gaming Hub" width="150" height="38">
+      <h2>${esc(g.title)}${demoTag(g.demo)}</h2>
+      <div class="res-meta"><div><small>Hosted by</small>${esc(g.host || 'The Gaming Hub')}</div><div><small>Prize</small>${esc(g.prize || g.title)}</div><div><small>Game</small>${esc(g.game_title)}</div>
+        <div><small>Giveaway period</small>${when(g.start_at)} to ${when(g.end_at)}</div><div><small>Standings locked</small>${when(g.finalized_at)}</div><div><small>Eligible entrants</small>${fmt(r.total)}</div>
+        <div><small>Winner selection</small>${g.win_method === 'random' ? `Verifiable random draw, ${g.winner_count} winner${g.winner_count > 1 ? 's' : ''}` : `Top ${g.winner_count} by best qualifying score`}</div></div>
+      ${g.prize_tiers.length ? `<div class="ptiers">${g.prize_tiers.map((p, i) => `<div><span>${icon(/random/i.test(p) ? 'shuffle' : i === 0 ? 'crown' : 'trophy')}</span>${esc(p)}</div>`).join('')}</div>` : ''}
+    </div>
+    <div class="card pad final-res" id="final-results"><h2 style="margin-bottom:8px"><span class="crown">${icon('trophy')}</span> Winner${r.winners.length === 1 ? '' : 's'}</h2>
+      ${r.winners.length ? r.winners.map(w => `<div class="win-row ${w.state}"><span class="wp">${icon(placeIc(w.place))}#${w.place}</span>${avatar(w.username)}<b class="wn">${esc(w.username)}</b><span class="ws">${sc(w.score)}</span>${stateBadge(w.state)}</div>`).join('') : '<div class="small muted">No eligible entrants.</div>'}
+      ${r.winners_state === 'pending' ? '<p class="tiny muted" style="margin:8px 0 0">Winner pending verification. Results become official once an admin confirms them. If a winner is disqualified, the next place moves up.</p>' : ''}</div>
+    <div class="card"><div class="panel-h"><h2>Final standings (${fmt(rows.length)})</h2></div>
+      <table class="lb res-table"><thead><tr><th>Place</th><th>Player</th><th>Best score</th><th>Reached at</th><th>Attempts</th><th>Tiebreak</th></tr></thead><tbody>
+      ${rows.map(x => `<tr class="${x.winner ? 'win' : ''}"><td class="rk">${x.rank}</td><td><b>${esc(x.username)}</b>${x.winner ? ` <span class="crown">${icon('crown')}</span>` : ''}${x.draw_pos ? `<span class="tiny muted"> draw #${x.draw_pos}</span>` : ''}</td><td class="sc">${sc(x.score)}</td><td class="tiny">${stamp(x.reached_at)}</td><td>${fmt(x.attempts)}</td><td class="tiny muted">${x.tiebreak ? TB_TAG[x.tiebreak] : ''}</td></tr>`).join('')}
+      </tbody></table></div>
+    <div class="card pad"><h2 style="margin-bottom:6px">Tiebreakers, in order</h2>${tbList(r)}<p class="tiny muted" style="margin:6px 0 0">${esc(r.score_rule)}</p></div>
+    <div class="card pad" id="verify"><h2 style="margin-bottom:6px">${icon('shield-check')} Verification</h2><div id="vf-body" class="small muted">Checking...</div></div>
+    <p class="tiny muted center">NO PURCHASE NECESSARY. 21+. Operated by Trap Tech Solutions. <a href="/giveaways/${id}/rules">Official Rules</a> • Printed ${when(Date.now())}</p>
+  </div>`, { title: `Final results: ${g.title}` });
+  document.getElementById('print-btn').onclick = () => window.print();
+  // independent, in-browser check of the published hashes and (for random draws) the draw order
+  const v = await api(`/api/giveaways/${id}/verify`); const vb = document.getElementById('vf-body'); if (!vb) return;
+  if (!v.ok || !v.finalized) { vb.textContent = 'Not available.'; return; }
+  let html = `<div>Entrant list SHA-256: <code class="hash">${esc(v.entrants_hash)}</code></div>`;
+  try {
+    const h = await sha256hex(v.entrant_lines.join('\n')); const okH = h === v.entrants_hash;
+    html += `<div class="${okH ? 'vf-ok' : 'vf-bad'}">${icon(okH ? 'circle-check' : 'circle-x')} Recomputed in your browser from ${fmt(v.entrant_lines.length)} locked entries: ${okH ? 'match' : 'MISMATCH'}</div>`;
+    if (v.method === 'random') {
+      const okS = (await sha256hex(v.seed)) === v.draw_commit;
+      const keys = await Promise.all(v.entrant_lines.map(l => hmachex(v.seed, `${v.entrants_hash}:${l.split('|')[1]}`)));
+      const order = v.entrant_lines.map((l, i) => [keys[i], l.split('|')[1]]).sort((a, b) => a[0] < b[0] ? -1 : 1).map(x => x[1]);
+      const okD = order.join() === v.draw_order.map(x => x.username).join();
+      html += `<div>Commitment (published before the end): <code class="hash">${esc(v.draw_commit)}</code></div><div>Revealed seed: <code class="hash">${esc(v.seed)}</code></div>
+        <div class="${okS ? 'vf-ok' : 'vf-bad'}">${icon(okS ? 'circle-check' : 'circle-x')} SHA-256(seed) equals the commitment: ${okS ? 'yes' : 'NO'}</div>
+        <div class="${okD ? 'vf-ok' : 'vf-bad'}">${icon(okD ? 'circle-check' : 'circle-x')} Draw order recomputed with HMAC-SHA256(seed, entrants_hash + ":" + username): ${okD ? 'match' : 'MISMATCH'}</div>
+        <p class="tiny">${esc(r.random_rule)}</p>`;
+    }
+  } catch (e) { html += '<div>Your browser cannot run the check here (needs HTTPS). The hashes above can be checked with any SHA-256 tool.</div>'; }
+  vb.innerHTML = html;
 });
 
 // ---------------- profile ----------------
@@ -1172,19 +1311,24 @@ function rulesHTML(g) {
   const when = (ms) => new Date(ms).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'long', timeStyle: 'short' }) + ' ET';
   const period = g ? `${when(g.start_at)} through ${when(g.end_at)}` : '[START DATE/TIME ET] through [END DATE/TIME ET]';
   const games = g ? esc(g.game_title) : '[LINKED GAME(S)]';
-  const method = !g ? '[random draw among eligible entrants / top score ranking / prize tiers]' : g.prize_tiers && g.prize_tiers.length ? 'final score ranking, following the prize tiers listed in Section 6' : 'the highest valid score (skill-based) or a random draw among eligible entrants, as announced on the giveaway page';
+  const nW = g ? (g.winner_count || 1) : 0;
+  const method = !g ? '[top score ranking / verifiable random draw among eligible entrants], as announced on the giveaway page' : g.win_method === 'random' ? `a verifiable random draw of ${nW} winner${nW > 1 ? 's' : ''} among all eligible entrants (one entry each)` : `final score ranking: the top ${nW} eligible entrant${nW > 1 ? 's' : ''} by best qualifying score win${g.prize_tiers && g.prize_tiers.length ? ', following the prize tiers listed in Section 6' : ''}`;
+  const tb = ((g && g.tiebreak_rules) || TB_RULES).map((x, i) => `<li><b>(${'abcd'[i]})</b> ${esc(x)}</li>`).join('');
   return `<p class="npn">NO PURCHASE NECESSARY TO ENTER OR WIN. A PURCHASE WILL NOT IMPROVE YOUR CHANCES OF WINNING. OPEN ONLY TO LEGAL RESIDENTS OF THE 50 UNITED STATES AND D.C. WHO ARE 21 YEARS OF AGE OR OLDER. VOID WHERE PROHIBITED.</p>
   <h2>1. Giveaway, Sponsor and Operator</h2><p>The ${name} giveaway (the "Giveaway") is sponsored by <b>${sponsor}</b> ("Sponsor") and operated and administered by <b>${OP}</b> ("Operator") on The Gaming Hub.</p>
   <h2>2. Eligibility</h2><p>Open to legal residents of the 50 United States and the District of Columbia who are <b>21 or older</b> at the time of entry and have a Gaming Hub account in good standing. Employees of Sponsor and Operator, and their immediate families and household members, are not eligible. Void where prohibited or restricted by law.</p>
   <h2>3. Giveaway Period</h2><p>${period} (the "Giveaway Period"). Operator's server clock is the official timekeeper.</p>
   <h2>4. How to Enter (free)</h2><p>Sign in to a free Gaming Hub account, then start and finish at least one scored run of ${games} during the Giveaway Period${g && g.min_score ? ` with a score of at least ${fmt(g.min_score)}` : ''}. Every game on the Hub is free; there is nothing to buy. Limit: one entry per person/account. Playing more runs can improve your score ranking, but does not create extra entries for random draws. Entries made with scripts, bots, multiple accounts or tampered scores are void.</p>
-  <h2>5. Winner Selection</h2><p>Winners are determined by ${method}. Score-based placements depend on the skill shown in valid runs. Ties go to the earlier score. Random draws use a cryptographically secure random number generator among all eligible entrants. Odds of winning a random draw depend on the number of eligible entrants.</p>
+  <h2>5. Winner Selection and Tiebreakers</h2><p>Winners are determined by ${method}. Each entrant's ranking score is their best qualifying score: runs must start and finish inside the Giveaway Period and meet any minimum score. When several games are linked, it is the sum of the best score in each game. Runs whose score is impossible for their server-measured duration are excluded. Score-based placements depend on the skill shown in valid runs.</p>
+  <p id="rules-tiebreak"><b>Tiebreakers, applied in this order:</b></p><ol class="tb-rules plain">${tb}</ol>
+  <p><b>Final standings lock:</b> at the end of the Giveaway Period the server automatically saves the final standings (rank, username, best score, run ID, the time that score was reached, and attempts) to a locked record. Scores submitted after the end never change it.</p>
+  <p id="rules-random"><b>Random draws:</b> they use a verifiable commit-reveal method. Before the Giveaway Period ends, Operator publishes on the giveaway page the SHA-256 hash ("commitment") of a secret random seed. At the end, the locked entrant list is hashed with SHA-256 and the seed is revealed. Each entrant's draw key is HMAC-SHA256(seed, entrant-list hash + ":" + username), and entrants are drawn in ascending key order. Each eligible entrant appears exactly once, so nobody can be drawn twice. Anyone can recompute the result on the giveaway's results page. Odds of winning a random draw depend on the number of eligible entrants.</p>
   <h2>6. Prizes</h2><p>${g ? `<b>${esc(g.prize || g.title)}</b>${g.prize_tiers && g.prize_tiers.length ? '<br>' + g.prize_tiers.map(esc).join('<br>') : ''}` : '[PRIZE DESCRIPTION]'}. Approximate retail value: [ARV - provided by Sponsor]. No cash alternative or substitution except by Sponsor, which may substitute a prize of equal or greater value. <b>No cannabis, THC, nicotine or alcohol products are awarded as prizes.</b> Winners are responsible for any taxes.</p>
-  <h2>7. Winner Notification & Verification</h2><p>Potential winners are notified through their Gaming Hub notifications and must respond within 7 days. They may be required to verify age (21+), identity and eligibility, and to sign an affidavit of eligibility and release where permitted by law. If a winner can't be reached, doesn't respond, or is ineligible, an alternate winner may be selected.</p>
+  <h2>7. Winner Notification & Verification</h2><p>Potential winners are notified through their Gaming Hub notifications and must respond within 7 days. They may be required to verify age (21+), identity and eligibility, and to sign an affidavit of eligibility and release where permitted by law. Results show as "Winner pending verification" until Operator confirms them. If a winner can't be reached, doesn't respond, is ineligible, or is disqualified (for example for cheating, multiple accounts or tampered scores), the next eligible entrant in the locked final standings (or the next position in the draw order) moves up. Every confirmation and disqualification is recorded in an audit log.</p>
   <h2>8. General Conditions</h2><p>Operator may disqualify anyone who tampers with the Giveaway or breaks these rules or the <a href="/terms">Terms of Service</a>. If the Giveaway can't run as planned because of fraud, technical failures or other causes beyond Operator's control, Operator may modify, suspend or cancel it and select winners from valid entries received before that point.</p>
   <h2>9. Publicity & Privacy</h2><p>Except where prohibited, winners agree that their username may be shown as a winner on the Hub. Personal data is handled under the <a href="/privacy">Privacy Policy</a> and shared with Sponsor only as needed to deliver prizes.</p>
   <h2>10. Limitation of Liability</h2><p>Sponsor and Operator are not responsible for lost, late or incomplete entries, technical malfunctions, or any injury or damage arising from participation or from accepting or using a prize.</p>
-  <h2>11. Winners List</h2><p>Winners are shown on the giveaway page after the draw. For a written winners list, contact ${OP} within 60 days after the Giveaway Period ends.</p>
+  <h2>11. Winners List</h2><p>Winners and the full final standings are shown on the giveaway's results page after the Giveaway Period ends. For a written winners list, contact ${OP} within 60 days after the Giveaway Period ends.</p>
   <p class="tiny muted">${g ? '' : 'This is the standard template. Each giveaway page links to a version filled in with its sponsor, dates, games and prizes. '}Template provided by ${OP}. Not legal advice. Have counsel review it for each promotion.</p>`;
 }
 route(/^\/rules$/, () => legal('/rules', 'Official Giveaway Rules', 'October 3, 2026', rulesHTML(null)));

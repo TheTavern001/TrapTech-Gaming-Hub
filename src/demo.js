@@ -51,7 +51,7 @@ function seed() {
     insG.run('PS5 + Games Bundle', 'Terp Tavern', 'PlayStation 5 console + 3 games', '/assets/giveaways/ps5-bundle-art.webp', t - 1 * D, t + 5 * D + 18 * H + 42 * 60e3, rules, t, t);
     insG.run('Neon Merch Drop', 'Trap Tech Solutions', 'Hoodie + hat + sticker pack', '/assets/brand/hero-banner.webp', t + 2 * D, t + 9 * D, rules, t, t);
     const past = insG.run('Launch Week Cash Prize', 'The Gaming Hub', '$100 cash', '/assets/giveaways/store-credit-art.webp', t - 20 * D, t - 13 * D, rules, t, t).lastInsertRowid;
-    if (ids.length) db.prepare("INSERT INTO winners (giveaway_id,user_id,method,score,drawn_at) VALUES (?,?,'random',NULL,?)").run(past, ids[2][0], t - 12 * D);
+    db.prepare("UPDATE giveaways SET win_method='random' WHERE id=?").run(past); // v4: verifiable random draw (finalized + confirmed below)
     // v2 fields: tiers, brand colors, multi-game links
     const demoG = db.prepare('SELECT id, title FROM giveaways WHERE is_demo=1').all();
     const setG = (title, games, extra) => { const g = demoG.find(x => x.title === title); if (!g) return;
@@ -96,6 +96,18 @@ function seed() {
     insA.run('levelup', 'TerpQueen reached level 10', ids[1] ? ids[1][0] : null, t - 40 * 60e3);
     insA.run('streak', 'BlazedKing hit a 7-day streak', ids[0] ? ids[0][0] : null, t - 5 * H);
   })();
+  // v4: lock the ended demo giveaway's final standings (verifiable draw) and confirm its winner, like an admin would
+  try {
+    const R = require('./results');
+    for (const g of db.prepare('SELECT * FROM giveaways WHERE is_demo=1 AND end_at < ? AND finalized_at IS NULL').all(t)) {
+      const fin = R.finalize(g, 'system', { quiet: true }); const res = R.results(fin);
+      for (const w of res.winners) {
+        db.prepare('INSERT OR IGNORE INTO giveaway_confirm (giveaway_id, user_id, place, note, created_at) VALUES (?,?,?,?,?)').run(g.id, w.user_id, w.place, 'demo', fin.end_at + D);
+        db.prepare("INSERT OR IGNORE INTO winners (giveaway_id,user_id,method,score,drawn_at) VALUES (?,?,?,?,?)").run(g.id, w.user_id, g.win_method === 'random' ? 'random' : 'top', w.score, fin.end_at + D);
+        R.audit(g.id, 'admin', 'confirmed', w.username, { place: w.place, note: 'demo data' });
+      }
+    }
+  } catch (e) { console.error('demo finalize failed', e); }
   // achievements for the demo players (server-side evaluation, same as for real players)
   try {
     const ach = require('./achievements'); const COS = require('./cosmetics');

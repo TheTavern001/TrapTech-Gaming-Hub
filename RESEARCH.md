@@ -74,4 +74,13 @@ Who has it: CG = CrazyGames, Poki, itch = itch.io, Kong = Kongregate, Steam, Dis
 25. W3C WCAG 2.2 - https://www.w3.org/TR/WCAG22/
 26. Discord Activities - https://discord.com/blog/server-activities-games-voice-watch-together
 
+## v4 design notes: giveaways with 100+ entrants
+- **Why "reached first" is the main tiebreaker:** it rewards whoever set the score earliest and can't be gamed by playing again later. The server
+  timestamp of the run is the official clock (Official Rules section 3). Fewer attempts comes next, then the earlier run ID, so every place is unique and
+  rankings always reproduce.
+- **Why commit-reveal for random draws:** publishing SHA-256(seed) before the end and the entrant-list hash at the end means the operator can't pick the seed
+  after seeing the entrants. Anyone can recompute the order with standard SHA-256/HMAC tools (or the results page).
+- **Why a locked snapshot plus DB triggers:** results for paid-out prizes must not shift if a late, replayed or back-dated score lands. Disqualifications and
+  confirmations are stored separately, so the snapshot never changes and the audit trail shows every decision.
+
 > Not legal advice. The giveaway rules and age gate are templates and good-faith implementations. Have counsel review them for each state/brand before running real prizes.

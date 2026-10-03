@@ -27,15 +27,15 @@ function giveawayGameIds(gid) {
 }
 // Entrants = signed-in players who STARTED and FINISHED a run of any linked game inside the window
 // (and scored at least the giveaway's min_score). Giveaway score = sum of each player's best per linked game.
+// v4: standings live in results.js (deterministic tiebreaks, over-cap runs excluded, locked snapshot after the end).
 function giveawayEntrants(g) {
-  const games = giveawayGameIds(g.id); if (!games.length) return [];
-  const ph = games.map(() => '?').join(',');
-  return ranked(db.prepare(`
-    SELECT ${U}, SUM(b.best) AS score, SUM(b.n) AS runs, MAX(b.last_at) AS last_at, MIN(b.first_at) AS first_at
-    FROM (SELECT user_id, game_id, MAX(score) AS best, COUNT(*) AS n, MAX(created_at) AS last_at, MIN(created_at) AS first_at FROM runs
-          WHERE game_id IN (${ph}) AND started_at >= ? AND created_at >= ? AND created_at <= ? AND score >= ? GROUP BY user_id, game_id) b
-    JOIN users u ON u.id = b.user_id WHERE u.banned = 0
-    GROUP BY u.id ORDER BY score DESC, last_at ASC`).all(...games, g.start_at, g.start_at, g.end_at, g.min_score || 0));
+  const R = require('./results');
+  if (g.finalized_at) {
+    const res = R.results(g);
+    return res.standings.filter(r => !r.disqualified && r.user_id != null).sort((a, b) => a.rank - b.rank)
+      .map((r, i) => ({ ...r, rank: i + 1, final_rank: r.rank, runs: r.attempts, last_at: r.reached_at, first_at: r.reached_at }));
+  }
+  return R.liveStandings(g);
 }
 function giveawayStats(g) {
   const games = giveawayGameIds(g.id); if (!games.length) return { plays: 0, players: 0, qualifying_runs: 0 };

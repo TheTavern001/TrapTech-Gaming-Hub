@@ -214,6 +214,62 @@ addCol('users', 'referred_by', 'INTEGER');
 addCol('users', 'birth_date', "TEXT NOT NULL DEFAULT ''");
 addCol('users', 'notif_seen_at', 'INTEGER NOT NULL DEFAULT 0');
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_ref ON users(ref_code)');
+// v4: deterministic winners, locked final standings, verifiable draws, winner review + audit
+addCol('giveaways', 'win_method', "TEXT NOT NULL DEFAULT 'score'"); // score | random
+addCol('giveaways', 'winner_count', 'INTEGER NOT NULL DEFAULT 0'); // 0 = auto (number of prize tiers, min 1)
+addCol('giveaways', 'finalized_at', 'INTEGER');
+addCol('giveaways', 'draw_seed', 'TEXT');      // secret until finalization (revealed afterwards)
+addCol('giveaways', 'draw_commit', 'TEXT');    // sha256(draw_seed), published from creation
+addCol('giveaways', 'entrants_hash', 'TEXT');  // sha256 of the canonical final entrant list
+addCol('runs', 'ua_hash', 'TEXT');
+db.exec(`
+CREATE INDEX IF NOT EXISTS idx_runs_ip ON runs(ip_hash);
+CREATE TABLE IF NOT EXISTS giveaway_results (
+  giveaway_id INTEGER NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
+  rank INTEGER NOT NULL,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  username TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  best_run_id INTEGER,
+  reached_at INTEGER NOT NULL,
+  attempts INTEGER NOT NULL,
+  draw_key TEXT,               -- random giveaways: HMAC-SHA256(seed, entrants_hash:username), sorted ascending = draw order
+  draw_pos INTEGER,
+  locked_at INTEGER NOT NULL,
+  PRIMARY KEY (giveaway_id, rank)
+);
+CREATE INDEX IF NOT EXISTS idx_gres_user ON giveaway_results(giveaway_id, user_id);
+-- the snapshot is immutable: no edits of the locked fields, no deletes while the giveaway exists
+CREATE TRIGGER IF NOT EXISTS gres_no_update BEFORE UPDATE OF giveaway_id, rank, username, score, best_run_id, reached_at, attempts, draw_key, draw_pos, locked_at ON giveaway_results
+BEGIN SELECT RAISE(ABORT, 'final standings are locked'); END;
+CREATE TRIGGER IF NOT EXISTS gres_no_delete BEFORE DELETE ON giveaway_results WHEN EXISTS (SELECT 1 FROM giveaways WHERE id = OLD.giveaway_id)
+BEGIN SELECT RAISE(ABORT, 'final standings are locked'); END;
+CREATE TABLE IF NOT EXISTS giveaway_dq (
+  giveaway_id INTEGER NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (giveaway_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS giveaway_confirm (
+  giveaway_id INTEGER NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  place INTEGER NOT NULL,
+  note TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (giveaway_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS giveaway_audit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  giveaway_id INTEGER NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  actor TEXT NOT NULL,
+  action TEXT NOT NULL,
+  username TEXT,
+  detail TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_gaudit ON giveaway_audit(giveaway_id, id);
+`);
 // every pre-v2 giveaway keeps its single linked game
 db.exec('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) SELECT id, game_id FROM giveaways');
 
