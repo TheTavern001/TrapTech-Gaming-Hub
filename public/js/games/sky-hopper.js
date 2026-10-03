@@ -1,9 +1,10 @@
-// Sky Hopper - tap-to-fly gap runner (original code). v5 art: night-city panorama (Poly Haven CC0 HDRI), brushed-metal towers (Poly Haven CC0), Kenney CC0 astronaut + gold-coin photo (public domain).
-import { Game, TAU, clamp, roundRect, fmt, loadArt, pattern, cover } from './engine.js';
+// Sky Hopper - tap-to-fly gap runner (original code).
+import { Game, TAU, clamp, roundRect, fmt, loadArt, pattern, cover, loadAtlas, loadLayers, spr, sprC, coinFrame, drawFlame, reducedMotion } from './engine.js';
+// v6: 4-layer seamless parallax night city (original procedural art), glass curtain-wall towers, original Blender-rendered astronaut (fly/hit frames), 3D gold coin spin frames.
 export class SkyHopper extends Game {
   get title() { return 'SKY HOPPER'; }
   get hint() { return 'Tap (or press Space) to boost up, let go to fall. Fly through the gaps between the towers. Every tower passed is +1, coins in the gaps are a bonus. One hit ends the run.'; }
-  async load() { this.art = await loadArt({ city: 'jp-city.webp', metal: 'metal-plate.webp', hero: '/assets/game/hero_fly.png', coin: 'coin.webp' }); }
+  async load() { const [a, L, astro, P] = await Promise.all([loadArt({ metal: 'metal-plate.webp', tower: '/assets/v6/sh-tower.webp' }), loadLayers({ sky: 'px-sky.webp', far: 'px-far.webp', mid: 'px-mid.webp', near: 'px-near-roofs.webp' }), loadAtlas('astro'), loadAtlas('props')]); this.art = a; this.L = L; this.AS = astro; this.P = P; }
   layout() { this.hx = Math.min(this.W * 0.3, 160); this.ground = this.H - 40; }
   reset() { this.score = 0; this.coins = 0; this.y = this.H * 0.45; this.vy = 0; this.x = 0; this.pipes = []; this.next = 420; this.dead = 0; this.layout(); }
   gap() { return Math.max(150, 215 - this.score * 2.2); }
@@ -29,17 +30,25 @@ export class SkyHopper extends Game {
   crash() { this.dead = 0.9; this.vy = -200; this.sfx.lose(); this.burst(this.hx, this.y, ['#f472b6', '#fde047', '#fff'], 22, 260, 0.6, 5); }
   render(ctx) {
     const A = this.art || {};
-    if (A.city) { const ih = this.H, iw = A.city.width * ih / A.city.height; for (let x = -((this.x * 0.15) % iw); x < this.W; x += iw) ctx.drawImage(A.city, x, 0, iw, ih); ctx.fillStyle = 'rgba(8,6,30,0.45)'; ctx.fillRect(0, 0, this.W, this.H); } else this.bg(ctx);
-    const mp = pattern(ctx, A.metal);
+    const L = this.L || {}; const rm = reducedMotion(); const X = rm ? 0 : this.x; const W = this.W, G = this.ground; const k = Math.max(1, this.H / 800);
+    if (L.sky) L.sky.draw(ctx, X * 0.03, 0, 0, W, this.H); else this.bg(ctx);
+    if (L.far) L.far.draw(ctx, X * 0.1, 0, G - 360 * k, W, 360 * k);
+    if (L.mid) L.mid.draw(ctx, X * 0.25, 0, G - 460 * k, W, 460 * k);
+    if (L.near) L.near.draw(ctx, X * 0.55, 0, G - 220 * k, W, 260 * k);
+    ctx.fillStyle = 'rgba(8,6,30,0.22)'; ctx.fillRect(0, 0, W, this.H);
+    const mp = pattern(ctx, A.metal); const tp = pattern(ctx, A.tower);
     for (const p of this.pipes) {
       const sx = p.x - this.x, w = 74; if (sx > this.W || sx + w < 0) continue;
-      for (const [y0, y1] of [[0, p.top], [p.top + p.g, this.ground]]) { ctx.save(); ctx.fillStyle = mp || '#475569'; ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 12; ctx.fillRect(sx, y0, w, y1 - y0); ctx.restore(); const g = ctx.createLinearGradient(sx, 0, sx + w, 0); g.addColorStop(0, 'rgba(0,0,0,0.45)'); g.addColorStop(0.4, 'rgba(255,255,255,0.12)'); g.addColorStop(1, 'rgba(0,0,0,0.55)'); ctx.fillStyle = g; ctx.fillRect(sx, y0, w, y1 - y0); }
+      for (const [y0, y1] of [[0, p.top], [p.top + p.g, this.ground]]) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 12; if (tp) { ctx.translate(sx, 0); ctx.scale(0.5, 0.5); ctx.fillStyle = tp; ctx.fillRect(0, y0 * 2, w * 2, (y1 - y0) * 2); } else { ctx.fillStyle = mp || '#475569'; ctx.fillRect(sx, y0, w, y1 - y0); } ctx.restore(); const g = ctx.createLinearGradient(sx, 0, sx + w, 0); g.addColorStop(0, 'rgba(0,0,0,0.45)'); g.addColorStop(0.4, 'rgba(255,255,255,0.12)'); g.addColorStop(1, 'rgba(0,0,0,0.55)'); ctx.fillStyle = g; ctx.fillRect(sx, y0, w, y1 - y0); }
       ctx.fillStyle = '#f472b6'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 12; ctx.fillRect(sx - 4, p.top - 10, w + 8, 10); ctx.fillStyle = '#22d3ee'; ctx.shadowColor = '#22d3ee'; ctx.fillRect(sx - 4, p.top + p.g, w + 8, 10); ctx.shadowBlur = 0;
-      if (p.coin && !p.got && A.coin) { const s = 30 * (0.8 + 0.2 * Math.abs(Math.sin(this.t * 4))); ctx.drawImage(A.coin, sx + w / 2 - s / 2, p.top + p.g / 2 - 15, s, 30); }
+      if (p.coin && !p.got) { ctx.save(); ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 14; sprC(ctx, this.P, coinFrame(this.t, p.x * 0.001), sx + w / 2, p.top + p.g / 2, 32, 32); ctx.restore(); }
     }
     ctx.fillStyle = 'rgba(5,6,20,0.9)'; ctx.fillRect(0, this.ground, this.W, this.H - this.ground); ctx.fillStyle = '#7c4dff'; ctx.fillRect(0, this.ground, this.W, 3);
-    ctx.save(); ctx.translate(this.hx, this.y); ctx.rotate(clamp(this.vy / 900, -0.5, 0.9)); if (A.hero) ctx.drawImage(A.hero, -26, -26, 52, 52); else { ctx.fillStyle = '#c4b5fd'; ctx.beginPath(); ctx.arc(0, 0, 18, 0, TAU); ctx.fill(); }
-    if (this.vy < -100 && !this.dead) { ctx.fillStyle = '#fbbf24'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 14; ctx.beginPath(); ctx.moveTo(-20, 8); ctx.lineTo(-34 - Math.random() * 10, 16); ctx.lineTo(-20, 22); ctx.fill(); }
+    ctx.save(); ctx.translate(this.hx, this.y); ctx.rotate(clamp(this.vy / 900, -0.5, 0.9));
+    const AS = this.AS; const boost = this.vy < -100 && !this.dead;
+    if (boost) drawFlame(ctx, -15, 14, 46, 16, 0.25, this.t);
+    if (AS) { const m = AS.meta; const dw = m.cell[0] * 0.42, dh = m.cell[1] * 0.42; const fn = this.dead ? 'hit_' + Math.min(5, Math.floor((0.9 - this.dead) * 8)) : 'fly_' + Math.floor(this.t * (boost ? 14 : 8)) % 6; spr(ctx, AS, fn, -m.anchor[0] * dw, -m.anchor[1] * dh, dw, dh); }
+    else { ctx.fillStyle = '#c4b5fd'; ctx.beginPath(); ctx.arc(0, 0, 18, 0, TAU); ctx.fill(); }
     ctx.restore();
     this.text(ctx, String(this.score), this.W / 2, 150, { size: 54, weight: 900, align: 'center', glow: '#7c4dff' });
     this.text(ctx, `BEST ${fmt(Math.max(this.best, this.score))}`, 18, 30, { size: 12, weight: 700, color: '#b9b3ff', font: 'Exo' });

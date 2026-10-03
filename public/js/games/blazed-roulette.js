@@ -1,6 +1,8 @@
 // Blazed Roulette - points-only European roulette with a timed drop. No real money, no purchases.
 // v5 art: casino-lounge photo backdrop (Poly Haven CC0 HDRI), green velour felt + cherry-wood wheel rim (Poly Haven CC0). See /CREDITS.md
-import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, Ambient, softShadow } from './engine.js';
+// v6: ivory roulette ball + clay casino chips on the chip selectors + stake markers (original Blender renders), animated casino ambience.
+const CHIPART = { 10: 'chip_blue', 25: 'chip_green', 50: 'chip_red', 100: 'chip_black' };
 const ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
 const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 const STEP = TAU / 37; const MARK = -Math.PI / 2; const WHEEL_SPEED = 0.6;
@@ -64,7 +66,7 @@ export class BlazedRoulette extends Game {
     if (this.ball && !this.ball.done) { this.ball.t += dt; if (Math.random() < dt * 8 && this.ball.t < this.ball.dur * 0.9) this.sfx.tone(rnd(1800, 2600), 0.015, { type: 'square', vol: 0.04 }); if (this.ball.t >= this.ball.dur) { this.ball.done = true; this.hold = 1.3; this.resolve(this.ball.idx); } }
     else if (this.ball && this.ball.done) { this.hold -= dt; if (this.hold <= 0) { this.ball = null; if (this.over) { this.finish(); } } }
   }
-  async load() { this.art = await loadArt({ bg: 'rl-bg.webp', felt: 'rl-felt.webp', wood: 'wood-cherry.webp' }); }
+  async load() { this.amb = new Ambient('casino', 13); const [a, p] = await Promise.all([loadArt({ bg: 'rl-bg.webp', felt: 'rl-felt.webp', wood: 'wood-cherry.webp' }), loadAtlas('props')]); this.art = a; this.P = p; }
   render(ctx) {
     const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(8,6,14,0.45)'); const { x: cx, y: cy, R } = this.wc;
     if (A.felt && this.btns && this.btns.length) { const top = Math.min(...this.btns.map(b => b.y)) - 12; ctx.save(); ctx.fillStyle = pattern(ctx, A.felt); roundRect(ctx, 6, top, this.W - 12, this.H - top - 6, 18); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#d4a373'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore(); }
@@ -85,13 +87,15 @@ export class BlazedRoulette extends Game {
     // marker
     ctx.save(); ctx.translate(cx, cy - R - 12); ctx.fillStyle = '#22d3ee'; ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 14; ctx.beginPath(); ctx.moveTo(-11, -14); ctx.lineTo(11, -14); ctx.lineTo(0, 6); ctx.closePath(); ctx.fill(); ctx.restore();
     // ball
-    const bp = this.ballPos(); ctx.save(); ctx.beginPath(); ctx.arc(bp.x, bp.y, Math.max(6, R * 0.05), 0, TAU); ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 12; ctx.fill(); ctx.restore();
+    const bp = this.ballPos(); const br = Math.max(6, R * 0.05); ctx.save(); if (!sprC(ctx, this.P, 'ball_ivory', bp.x, bp.y, br * 2.2, br * 2.2)) { ctx.beginPath(); ctx.arc(bp.x, bp.y, br, 0, TAU); ctx.fillStyle = '#fff'; ctx.fill(); } ctx.restore();
     // board
     for (const b of this.btns) {
       const bet = BETS[b.id]; const sel = (b.kind === 'chip' && +b.label === this.chip); const stake = bet ? this.bets[b.id] || 0 : 0;
       roundRect(ctx, b.x, b.y, b.w, b.h, 10);
       ctx.fillStyle = b.kind === 'drop' ? (this.ball ? '#334155' : '#7c3aed') : bet && bet.col ? bet.col : sel ? '#0e7490' : 'rgba(6,30,18,0.72)'; ctx.fill();
       ctx.strokeStyle = stake ? '#fde047' : sel ? '#22d3ee' : 'rgba(129,140,248,0.45)'; ctx.lineWidth = stake || sel ? 3 : 1.5; ctx.stroke();
+      if (b.kind === 'chip' && this.P && CHIPART[+b.label]) { const s = Math.min(b.h * 0.86, b.w * 0.9); softShadow(ctx, b.x + b.w / 2, b.y + b.h / 2 + 3, s * 0.6, s * 0.55, 0.5); sprC(ctx, this.P, CHIPART[+b.label], b.x + b.w / 2, b.y + b.h / 2, s, s); this.text(ctx, b.label, b.x + b.w / 2, b.y + b.h / 2 + 5, { size: Math.min(15, s * 0.3), weight: 900, align: 'center', glow: 'rgba(0,0,0,0.9)' }); continue; }
+      if (stake && this.P) sprC(ctx, this.P, 'chip_gold', b.x + b.w - 14, b.y + 14, 20, 20);
       const lbl = bet ? bet.label : b.label; const fs = Math.min(18, b.h * 0.36);
       this.text(ctx, lbl, b.x + b.w / 2, b.y + b.h / 2 + (bet ? -2 : fs * 0.35), { size: fs, weight: 800, align: 'center', glow: b.kind === 'drop' ? '#a855f7' : null });
       if (bet) this.text(ctx, stake ? `${stake} on  -  pays ${bet.pay}:1` : `pays ${bet.pay}:1${b.id === 'zero' ? ' (max 10)' : ''}`, b.x + b.w / 2, b.y + b.h / 2 + fs * 0.85, { size: Math.max(10, fs * 0.6), weight: 600, align: 'center', color: stake ? '#fde047' : '#c4b5fd', font: 'Exo' });

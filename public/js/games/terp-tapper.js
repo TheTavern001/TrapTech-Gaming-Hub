@@ -1,8 +1,9 @@
 // Terp Tapper - four-lane rhythm tapper; music is synthesized live (WebAudio).
 // v5 art: real citrus-slice notes (lime/lemon/orange/grapefruit - rawpixel public-domain photos), lounge photo backdrop (Poly Haven CC0). See /CREDITS.md
-import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt } from './engine.js';
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, Ambient } from './engine.js';
+// v6: real citrus slices cut from one CC0 StockSnap photo (lime, lemon, orange, pink grapefruit - no recolours), club light ambience.
 const LANE_COL = ['#a3e635', '#fde047', '#fb923c', '#f472b6']; // lime, lemon, orange, grapefruit (terpene citrus notes)
-const LANE_ART = ['tt-lime.webp', 'tt-lemon.webp', 'tt-orange.webp', 'tt-grapefruit.webp'];
+const LANE_ART = ['/assets/v6/tt-lime.webp', '/assets/v6/tt-lemon.webp', '/assets/v6/tt-orange.webp', '/assets/v6/tt-grapefruit.webp'];
 const KEYS = { KeyD: 0, KeyF: 1, KeyJ: 2, KeyK: 3, ArrowLeft: 0, ArrowDown: 1, ArrowUp: 2, ArrowRight: 3 };
 const SCALE = [261.6, 311.1, 349.2, 392.0, 466.2, 523.3, 622.3, 698.5];
 const WIN = { perfect: 0.06, great: 0.12, good: 0.18 };
@@ -47,7 +48,7 @@ export class TerpTapper extends Game {
     for (const n of this.notes) if (!n.done && this.playT - n.t > WIN.good) { n.done = true; n.miss = true; this.lives--; this.combo = 0; this.pop(this.lx + this.laneW * (n.lane + 0.5), this.hitY - 30, 'MISS', '#f87171', 20); this.sfx.tone(200, 0.12, { type: 'sawtooth', vol: 0.12, slide: 0.6 }); if (this.lives <= 0) { this.lives = 0; this.dead = true; break; } }
     this.notes = this.notes.filter(n => !n.done || this.playT - n.t < 0.4);
   }
-  async load() { const m = { bg: 'tt-bg.webp' }; LANE_ART.forEach((f, i) => { m['n' + i] = f; }); this.art = await loadArt(m); }
+  async load() { this.amb = new Ambient('club', 19); const m = { bg: 'tt-bg.webp' }; LANE_ART.forEach((f, i) => { m['n' + i] = f; }); this.art = await loadArt(m); }
   render(ctx) {
     const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(6,4,14,0.5)');
     const beatPh = ((this.playT || 0) * this.bpm() / 60) % 1; const pulse = this.state === 'play' ? Math.pow(1 - beatPh, 3) : 0;

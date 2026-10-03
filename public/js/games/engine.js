@@ -30,6 +30,114 @@ export function cover(ctx, img, x, y, w, h, scroll = 0) {
 const _pat = new WeakMap();
 export function pattern(ctx, img) { if (!img) return null; let p = _pat.get(img); if (!p) { p = ctx.createPattern(img, 'repeat'); _pat.set(img, p); } return p; }
 export const fmt = (n) => Math.floor(n).toLocaleString('en-US');
+// ---------- v6 art: WebP sprite atlases (Blender renders, see /CREDITS.md), parallax layers, animated ambience ----------
+export const ART6 = '/assets/v6/';
+const _atlas = {};
+// loads /assets/v6/<name>.webp + <name>.json once per page (lazy: only the games that need an atlas ask for it)
+export function loadAtlas(name) {
+  if (_atlas[name]) return _atlas[name];
+  return (_atlas[name] = Promise.all([loadImg(ART6 + name + '.webp'), fetch(ART6 + name + '.json').then(r => (r.ok ? r.json() : null)).catch(() => null)])
+    .then(([img, j]) => (img && j ? { img, f: j.frames, meta: j } : null)));
+}
+// draw atlas frame into a box; returns false when the art is missing so callers can fall back to vector drawing
+export function spr(ctx, A, name, x, y, w, h) { const f = A && A.f[name]; if (!f) return false; ctx.drawImage(A.img, f[0], f[1], f[2], f[3], x, y, w, h); return true; }
+// centred, width given, height from the frame aspect (h optional)
+export function sprC(ctx, A, name, cx, cy, w, h) { const f = A && A.f[name]; if (!f) return false; const hh = h || w * f[3] / f[2]; ctx.drawImage(A.img, f[0], f[1], f[2], f[3], cx - w / 2, cy - hh / 2, w, hh); return true; }
+// realistic thruster flame (pre-rendered once, additive): white-hot core, yellow/orange body, blue base
+let _flame = null;
+export function flameSprite() {
+  if (_flame) return _flame; const c = document.createElement('canvas'); c.width = 64; c.height = 192; const g = c.getContext('2d'); g.globalCompositeOperation = 'lighter';
+  const blob = (cy, ry, rx, stops) => { g.save(); g.translate(32, cy); g.scale(rx / ry, 1); const gr = g.createRadialGradient(0, 0, 0, 0, 0, ry); stops.forEach(([o, col]) => gr.addColorStop(o, col)); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, ry, 0, TAU); g.fill(); g.restore(); };
+  blob(96, 92, 30, [[0, 'rgba(255,120,30,0.55)'], [0.5, 'rgba(255,60,20,0.22)'], [1, 'rgba(255,40,0,0)']]);
+  blob(70, 64, 16, [[0, 'rgba(255,230,140,0.95)'], [0.45, 'rgba(255,170,60,0.6)'], [1, 'rgba(255,90,20,0)']]);
+  blob(38, 30, 9, [[0, 'rgba(255,255,255,1)'], [0.5, 'rgba(255,250,220,0.8)'], [1, 'rgba(255,220,150,0)']]);
+  blob(10, 12, 12, [[0, 'rgba(140,200,255,0.9)'], [1, 'rgba(80,120,255,0)']]);
+  return (_flame = c);
+}
+// draw a flame whose nozzle is at (x, y) pointing along angle a (0 = down)
+export function drawFlame(ctx, x, y, len, w, a = 0, t = 0) {
+  const f = flameSprite(); const fl = 0.85 + 0.15 * Math.sin(t * 61) * Math.sin(t * 23); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, y); ctx.rotate(a); ctx.drawImage(f, -w / 2, -len * 0.05, w, len * fl); ctx.restore();
+}
+// cheap pre-baked contact shadow (software-rendered canvases pay a lot for shadowBlur on big sprites)
+let _shadow = null;
+export function softShadow(ctx, cx, cy, rx, ry, a = 0.5) { if (!_shadow) { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.55, 'rgba(0,0,0,0.6)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); _shadow = c; } const o = ctx.globalAlpha; ctx.globalAlpha = o * a; ctx.drawImage(_shadow, cx - rx, cy - ry, rx * 2, ry * 2); ctx.globalAlpha = o; }
+export const coinFrame = (t, ph = 0) => 'coin_' + (Math.floor(t * 12 + ph * 8) % 8 + 8) % 8;
+export function reducedMotion() { try { return document.documentElement.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } }
+// Seamless horizontal parallax layer. The tile is pre-doubled into one offscreen canvas so each frame is a single
+// drawImage from a sliding window: no tile edge is ever drawn, so there is no seam even at fractional scales.
+export class Layer {
+  constructor(img) { this.img = img; if (!img) return; const c = document.createElement('canvas'); c.width = img.width * 2; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0); g.drawImage(img, img.width, 0); this.c = c; }
+  draw(ctx, off, x, y, w, h) {
+    const im = this.img; if (!im) return; const s = h / im.height; const sw = w / s;
+    let sx = ((off / s) % im.width + im.width) % im.width;
+    if (sw <= im.width) { ctx.drawImage(this.c, sx, 0, sw, im.height, x, y, w, h); return; }
+    for (let px = -sx * s; px < w; px += im.width * s) ctx.drawImage(im, x + px, y, im.width * s + 0.6, h);
+  }
+}
+export async function loadLayers(map) { const out = {}; await Promise.all(Object.entries(map).map(async ([k, n]) => { const im = await loadImg(n.startsWith('/') ? n : ART6 + n); out[k] = im ? new Layer(im) : null; })); return out; }
+// Subtle animated ambience for the board games: drifting fog, slow light rays, bokeh, dust motes and a neon flicker value.
+// Cheap: 2 pattern fills + ~20 small sprite draws per frame. Frozen while paused, static under reduced motion.
+const _sprite = (col, size, kind) => { const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d'); const r = size / 2;
+  const gr = g.createRadialGradient(r, r, 0, r, r, r); if (kind === 'bokeh') { gr.addColorStop(0, col + '00'); gr.addColorStop(0.55, col + '30'); gr.addColorStop(0.8, col + '66'); gr.addColorStop(0.9, col + '40'); gr.addColorStop(1, col + '00'); } else { gr.addColorStop(0, '#ffffffff'); gr.addColorStop(0.3, col + 'aa'); gr.addColorStop(1, col + '00'); }
+  g.fillStyle = gr; g.fillRect(0, 0, size, size); return c; };
+export const AMBIENT = {
+  lounge: { fog: '#b07cff', fogA: 0.10, cols: ['#ff4fd8', '#7c4dff', '#ffd27a'], rays: '#ffcf8a', raysA: 0.07, bokeh: 12, dust: 18 },
+  casino: { fog: '#ff9a4d', fogA: 0.08, cols: ['#ffd27a', '#ff4f6d', '#ffffff'], rays: '#ffd9a0', raysA: 0.08, bokeh: 12, dust: 16 },
+  club: { fog: '#38e8ff', fogA: 0.10, cols: ['#38e8ff', '#ff4fd8', '#a3e635'], rays: '#9ff3ff', raysA: 0.07, bokeh: 10, dust: 18 },
+  smoke: { fog: '#d9d4ff', fogA: 0.12, cols: ['#a3e635', '#ffd27a', '#38e8ff'], rays: '#e9e4ff', raysA: 0.05, bokeh: 9, dust: 22 },
+  arcade: { fog: '#6b7cff', fogA: 0.08, cols: ['#38e8ff', '#ff4fd8', '#ffd23f'], rays: '#b6c2ff', raysA: 0.05, bokeh: 10, dust: 14 },
+};
+export class Ambient {
+  constructor(preset = 'lounge', seed = 7) { this.p = typeof preset === 'string' ? AMBIENT[preset] : preset; this.t = 0; this.flick = 1; this._fl = 0; let a = seed; const r = () => { a = (a * 16807) % 2147483647; return a / 2147483647; };
+    this.bok = Array.from({ length: this.p.bokeh }, (_, i) => ({ x: r(), y: r(), s: 40 + r() * 90, sp: 4 + r() * 10, ph: r() * 6.28, c: i % this.p.cols.length }));
+    this.dust = Array.from({ length: this.p.dust }, () => ({ x: r(), y: r(), s: 1 + r() * 2.2, sp: 6 + r() * 16, ph: r() * 6.28 }));
+    this.spr = this.p.cols.map(c => _sprite(c, 128, 'bokeh')); this.dot = _sprite('#ffffff', 16, 'dot');
+    const rc = document.createElement('canvas'); rc.width = 64; rc.height = 512; const g = rc.getContext('2d'); const lg = g.createLinearGradient(0, 0, 0, 512); lg.addColorStop(0, this.p.rays + 'ff'); lg.addColorStop(1, this.p.rays + '00'); g.fillStyle = lg;
+    g.beginPath(); g.moveTo(26, 0); g.lineTo(38, 0); g.lineTo(64, 512); g.lineTo(0, 512); g.closePath(); g.filter = 'blur(6px)'; g.fill(); this.ray = rc;
+    this.ready = loadImg(ART6 + 'fx-fog.webp').then(im => { if (!im) return; const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const g2 = c.getContext('2d'); g2.drawImage(im, 0, 0); g2.globalCompositeOperation = 'source-in'; g2.fillStyle = this.p.fog; g2.fillRect(0, 0, c.width, c.height); this.fog = c; });
+  }
+  update(dt) {
+    if (reducedMotion()) { this.flick = 1; return; }
+    this.t += dt; this._fl -= dt;
+    if (this._fl <= 0) { this._fl = 0.04 + Math.random() * (Math.random() < 0.08 ? 0.06 : 2.5); this.flick = Math.random() < 0.3 ? 0.55 + Math.random() * 0.3 : 1; }
+  }
+  // call right after drawing the game's backdrop. Everything here is soft, so it is rendered into a quarter-resolution
+  // buffer (re-rendered at most ~30x/s, never while frozen) and upscaled with one drawImage: mobile-friendly fill rate.
+  draw(ctx, W, H) {
+    const q = 0.25, bw = Math.ceil(W * q), bh = Math.ceil(H * q);
+    if (!this.buf) { this.buf = document.createElement('canvas'); this.bctx = this.buf.getContext('2d'); }
+    const sizeChanged = this.buf.width !== bw || this.buf.height !== bh;
+    if (sizeChanged) { this.buf.width = bw; this.buf.height = bh; this._pat = null; }
+    if (sizeChanged || this._drawnT === undefined || this.t - this._drawnT >= 1 / 30 || this.t < this._drawnT || this._fogOk !== !!this.fog) {
+      const b = this.bctx; b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(0, 0, bw, bh); b.setTransform(q, 0, 0, q, 0, 0); this._paint(b, W, H); this._drawnT = this.t; this._fogOk = !!this.fog;
+    }
+    ctx.drawImage(this.buf, 0, 0, W, H);
+  }
+  _paint(ctx, W, H) {
+    const t = this.t, p = this.p; ctx.save();
+    if (this.fog) { // two fog sheets drifting in different directions at different scales
+      if (!this._pat) this._pat = ctx.createPattern(this.fog, 'repeat');
+      for (const [sc, vx, vy, a] of [[1.6, 9, 2, p.fogA], [2.3, -6, -1.5, p.fogA * 0.8]]) {
+        ctx.save(); ctx.globalAlpha = a; ctx.scale(sc, sc); const ox = ((t * vx) % 512 + 512) % 512, oy = ((t * vy) % 512 + 512) % 512; ctx.translate(ox - 512, oy - 512); ctx.fillStyle = this._pat; ctx.fillRect(0, 0, W / sc + 1024, H / sc + 1024); ctx.restore();
+      }
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 3; i++) { // slow light rays from the top
+      const a = Math.sin(t * 0.15 + i * 2.1) * 0.12 + (i - 1) * 0.35; ctx.save(); ctx.globalAlpha = p.raysA * (0.7 + 0.3 * Math.sin(t * 0.4 + i)); ctx.translate(W * (0.2 + i * 0.3), -20); ctx.rotate(a); ctx.drawImage(this.ray, -W * 0.18, 0, W * 0.36, H * 1.1); ctx.restore();
+    }
+    for (const b of this.bok) {
+      const y = ((b.y * (H + 200) - t * b.sp) % (H + 200) + H + 200) % (H + 200) - 100; const x = b.x * W + Math.sin(t * 0.3 + b.ph) * 24;
+      ctx.globalAlpha = 0.35 + 0.25 * Math.sin(t * 0.7 + b.ph); ctx.drawImage(this.spr[b.c], x - b.s / 2, y - b.s / 2, b.s, b.s);
+    }
+    for (const d of this.dust) {
+      const y = ((d.y * H - t * d.sp) % H + H) % H; const x = d.x * W + Math.sin(t * 0.8 + d.ph) * 10; ctx.globalAlpha = 0.35 + 0.35 * Math.sin(t * 2 + d.ph); ctx.drawImage(this.dot, x - d.s * 2, y - d.s * 2, d.s * 4, d.s * 4);
+    }
+    // neon edge glow (flickers like a real tube)
+    ctx.globalAlpha = 0.16 * this.flick; let g = ctx.createLinearGradient(0, 0, 0, 90); g.addColorStop(0, p.cols[0]); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 90);
+    g = ctx.createLinearGradient(0, H, 0, H - 90); g.addColorStop(0, p.cols[1]); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, H - 90, W, 90);
+    ctx.restore();
+  }
+}
 
 export class Synth {
   constructor() { this.muted = ls.getItem('jd_muted') === '1'; this.ac = null; }
@@ -68,7 +176,7 @@ export class Game {
     this.best = opts.best || 0; this.sfx = new Synth(); this.tel = new Telemetry(); this.seed = opts.seed || ''; this.r = seeded(this.seed); this.log = [];
     this.state = 'ready'; this.t = 0; this.parts = []; this.pops = []; this.running = false;
     this._bind(); this.resize(); this.reset(); this.layout(); this._inited = true;
-    this.ready = Promise.resolve(this.load ? this.load() : null).then(() => this.draw());
+    this.ready = Promise.resolve(this.load ? this.load() : null).then(() => (this.amb && this.amb.ready)).then(() => this.draw());
   }
   // ----- to override -----
   get title() { return 'GAME'; }
@@ -127,7 +235,7 @@ export class Game {
   frame(dt) {
     this.t += dt;
     if (this.state === 'play') { this.playT += dt; this.update(dt); }
-    if (this.state !== 'paused') { this._parts(dt); }
+    if (this.state !== 'paused') { this._parts(dt); if (this.amb) this.amb.update(dt); }
     this.draw();
   }
   begin() { if (this.state !== 'ready') return; this.state = 'play'; this.startedAt = performance.now(); this.playT = 0; this.onState('play'); }
@@ -159,8 +267,9 @@ export class Game {
   }
   // photo backdrop: cover-fit image + a dark tint so neon HUD stays readable; falls back to gradient bg
   photoBg(ctx, img, tint = 'rgba(6,6,18,0.45)', scroll = 0) {
-    if (!cover(ctx, img, 0, 0, this.W, this.H, scroll)) return this.bg(ctx);
-    if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, this.W, this.H); }
+    if (!cover(ctx, img, 0, 0, this.W, this.H, scroll)) this.bg(ctx);
+    else if (tint) { ctx.fillStyle = tint; ctx.fillRect(0, 0, this.W, this.H); }
+    if (this.amb) this.amb.draw(ctx, this.W, this.H); // v6 animated ambience over the backdrop
   }
   bg(ctx, c1 = '#0a0628', c2 = '#050714') {
     const g = ctx.createLinearGradient(0, 0, 0, this.H); g.addColorStop(0, c1); g.addColorStop(1, c2); ctx.fillStyle = g; ctx.fillRect(0, 0, this.W, this.H);

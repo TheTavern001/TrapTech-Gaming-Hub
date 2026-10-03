@@ -1,13 +1,14 @@
 // Memory Match - v5 art: real photo card faces (rawpixel / Wikimedia public-domain + CC0 photos), velvet card backs + walnut table (Poly Haven CC0).
 // Card identities are still glyph indexes (the server replays the deal from the seed), only the artwork changed. See /CREDITS.md
-import { Game, TAU, rnd, clamp, roundRect, fmt, shuffle, loadArt, cover } from './engine.js';
+import { Game, TAU, rnd, clamp, roundRect, fmt, shuffle, loadArt, cover, Ambient } from './engine.js';
+// v6: new velvet + gold-foil card back with embossed medallion (original), animated lounge ambience.
 const LEVELS = [[4, 3], [4, 4], [5, 4], [6, 4], [6, 5]];
 const GLYPHS = ['star', 'heart', 'diamond', 'bolt', 'moon', 'crown', 'hex', 'ring', 'tri', 'plus', 'drop', 'note', 'flame', 'square', 'spark'];
 const GCOL = ['#fde047', '#f472b6', '#22d3ee', '#facc15', '#c4b5fd', '#fbbf24', '#34d399', '#60a5fa', '#fb7185', '#a3e635', '#38bdf8', '#e879f9', '#fb923c', '#5eead4', '#f0abfc'];
 // photo face per glyph index (index order must not change: it is part of the replay-verified deal)
 const PHOTOS = ['lime', 'orange', 'lemon', 'grapefruit', 'coin', 'leaf', 'target', 'darts', 'roulette', 'chips', 'boombox', 'controller', 'dice', 'headphones', 'vinyl'];
 export class MemoryMatch extends Game {
-  async load() { const m = { table: 'mm-table.webp', back: 'mm-back.webp' }; PHOTOS.forEach((n, i) => { m['f' + i] = `mm-${n}.webp`; }); this.art = await loadArt(m); }
+  async load() { this.amb = new Ambient('lounge', 17); const m = { table: 'mm-table.webp', back: '/assets/v6/mm-back.webp' }; PHOTOS.forEach((n, i) => { m['f' + i] = `mm-${n}.webp`; }); this.art = await loadArt(m); }
   get title() { return 'MEMORY MATCH'; }
   get hint() { return 'Memorize the cards, then tap two at a time to find pairs. Chain matches for up to x5 combo. Clear boards for extra time.'; }
   get startOnTapOnly() { return true; }

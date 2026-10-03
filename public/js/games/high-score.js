@@ -1,6 +1,7 @@
 // High Score - neon reflex target game. Original code/art.
 // v5 art: brick wall (Poly Haven CC0 brick_wall_02), real archery-target photo (rawpixel, public domain), gold-coin bonus targets (Wikimedia, public domain). See /CREDITS.md
-import { Game, TAU, rnd, clamp, fmt, loadArt } from './engine.js';
+import { Game, TAU, rnd, clamp, fmt, loadArt, loadAtlas, sprC, coinFrame, Ambient } from './engine.js';
+// v6: lacquered 3D target boards, black bomb with lit fuse, spinning gold coin x2 targets (original Blender renders), smoky arcade ambience.
 export class HighScore extends Game {
   get title() { return 'HIGH SCORE'; }
   get hint() { return 'Tap targets before they vanish. Dead-center hits score more, gold = x2, never tap red bombs. 3 lives.'; }
@@ -39,7 +40,7 @@ export class HighScore extends Game {
     for (const t of this.targets.filter(t => t.age >= t.life)) { if (t.type !== 'bomb') this.loseLife(t.x, t.y, 'MISS'); }
     this.targets = this.targets.filter(t => t.age < t.life);
   }
-  async load() { this.art = await loadArt({ wall: 'hs-wall.webp', target: 'hs-target.webp', coin: 'coin-lg.webp' }); }
+  async load() { this.amb = new Ambient('arcade', 23); const [a, p] = await Promise.all([loadArt({ wall: 'hs-wall.webp', target: 'hs-target.webp', coin: 'coin-lg.webp' }), loadAtlas('props')]); this.art = a; this.P = p; }
   render(ctx) {
     const A = this.art || {}; this.photoBg(ctx, A.wall, 'rgba(8,6,16,0.55)');
     if (A.wall) { const v = ctx.createRadialGradient(this.W / 2, this.H / 2, this.H * 0.2, this.W / 2, this.H / 2, this.H * 0.75); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.55)'); ctx.fillStyle = v; ctx.fillRect(0, 0, this.W, this.H); }
@@ -48,7 +49,12 @@ export class HighScore extends Game {
     for (const t of this.targets) {
       const k = t.age / t.life; const r = t.R * (1 - k * 0.75); const pulse = 1 + Math.sin(this.t * 10) * 0.04;
       ctx.save(); ctx.translate(t.x, t.y);
-      if (t.type === 'bomb') {
+      if (this.P && this.P.f.bomb) {
+        const s = r * 2 * pulse; const nm = t.type === 'bomb' ? 'bomb' : t.type === 'gold' ? coinFrame(this.t, t.x * 0.01) : 'target';
+        ctx.shadowColor = t.type === 'bomb' ? '#ef4444' : t.type === 'gold' ? '#fbbf24' : 'rgba(0,0,0,0.7)'; ctx.shadowBlur = t.type === 'target' ? 12 : 20; sprC(ctx, this.P, nm, 0, t.type === 'bomb' ? -s * 0.08 : 0, t.type === 'bomb' ? s * 1.15 : s, t.type === 'bomb' ? s * 1.15 : s); ctx.shadowBlur = 0;
+        if (t.type === 'gold') this.text(ctx, 'x2', 0, r * 0.25, { size: Math.max(10, r * 0.6), weight: 900, align: 'center', color: '#fff', glow: '#b45309' });
+        if (t.type !== 'bomb') { ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, t.R + 6, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - k)); ctx.stroke(); }
+      } else if (t.type === 'bomb') {
         ctx.beginPath(); ctx.arc(0, 0, r * pulse, 0, TAU); ctx.fillStyle = '#7f1d1d'; ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0;
         ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-r * 0.4, -r * 0.4); ctx.lineTo(r * 0.4, r * 0.4); ctx.moveTo(r * 0.4, -r * 0.4); ctx.lineTo(-r * 0.4, r * 0.4); ctx.stroke();
       } else if ((t.type === 'gold' ? A.coin : A.target)) {

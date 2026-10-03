@@ -1,11 +1,12 @@
 // Munchies Snake - classic grid snake (original code). v5 art: real citrus-slice + gold-coin photos (public domain), grass texture (Poly Haven CC0).
-import { Game, TAU, roundRect, fmt, loadArt, pattern } from './engine.js';
-const FRUIT = ['tt-lime.webp', 'tt-lemon.webp', 'tt-orange.webp', 'tt-grapefruit.webp'];
+import { Game, TAU, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, coinFrame, Ambient } from './engine.js';
+// v6: Blender-rendered scaled snake head/body (original), real citrus photo slices (StockSnap CC0), 3D gold coin spin frames, drifting smoke ambience.
+const FRUIT = ['/assets/v6/tt-lime.webp', '/assets/v6/tt-lemon.webp', '/assets/v6/tt-orange.webp', '/assets/v6/tt-grapefruit.webp'];
 const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 export class MunchiesSnake extends Game {
   get title() { return 'MUNCHIES SNAKE'; }
   get hint() { return 'Swipe, use the arrow keys, or tap beside the head to turn. Eat citrus to grow (+10, more as you get longer). Gold coins are +50 but vanish fast. Hit a wall or yourself and the run ends.'; }
-  async load() { const m = { grass: 'dr-grass.webp', coin: 'coin.webp' }; FRUIT.forEach((f, i) => { m['f' + i] = f; }); this.art = await loadArt(m); }
+  async load() { this.amb = new Ambient('smoke', 11); const m = { grass: 'dr-grass.webp', coin: 'coin.webp' }; FRUIT.forEach((f, i) => { m['f' + i] = f; }); const [a, p] = await Promise.all([loadArt(m), loadAtlas('props')]); this.art = a; this.P = p; }
   layout() { this.cols = 15; this.cell = Math.floor((this.W - 24) / this.cols); this.rows = (this.state === 'play' && this.rows) ? this.rows : Math.max(12, Math.floor((this.H - 150) / this.cell)); this.gx = Math.floor((this.W - this.cols * this.cell) / 2); this.gy = Math.max(110, Math.floor((this.H - this.rows * this.cell) / 2) + 20); }
   reset() { this.layout(); const cx = Math.floor(this.cols / 2), cy = Math.floor(this.rows / 2); this.body = [[cx, cy], [cx - 1, cy], [cx - 2, cy]]; this.dir = 0; this.q = []; this.acc = 0; this.score = 0; this.coins = 0; this.eaten = 0; this.food = null; this.gold = null; this.dead = 0; this.sw = null; this.place(); }
   step() { return Math.max(0.065, 0.15 - this.eaten * 0.003); }
@@ -35,16 +36,19 @@ export class MunchiesSnake extends Game {
   }
   px(p) { return [this.gx + (p[0] + 0.5) * this.cell, this.gy + (p[1] + 0.5) * this.cell]; }
   render(ctx) {
-    const A = this.art || {}; ctx.fillStyle = '#05070a'; ctx.fillRect(0, 0, this.W, this.H);
+    const A = this.art || {}; ctx.fillStyle = '#05070a'; ctx.fillRect(0, 0, this.W, this.H); if (this.amb) this.amb.draw(ctx, this.W, this.H);
     const W = this.cols * this.cell, H = this.rows * this.cell;
     ctx.save(); roundRect(ctx, this.gx - 6, this.gy - 6, W + 12, H + 12, 14); ctx.fillStyle = pattern(ctx, A.grass) || '#14301c'; ctx.fill(); ctx.fillStyle = 'rgba(30,60,20,0.08)'; ctx.fill(); ctx.strokeStyle = '#a3e635'; ctx.globalAlpha = 0.6; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
     ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1; ctx.beginPath(); for (let i = 1; i < this.cols; i++) { ctx.moveTo(this.gx + i * this.cell, this.gy); ctx.lineTo(this.gx + i * this.cell, this.gy + H); } for (let j = 1; j < this.rows; j++) { ctx.moveTo(this.gx, this.gy + j * this.cell); ctx.lineTo(this.gx + W, this.gy + j * this.cell); } ctx.stroke();
     if (this.food) { const [x, y] = this.px(this.food); const im = A['f' + this.food[2]]; const s = this.cell * (1.05 + Math.sin(this.t * 6) * 0.06); if (im) ctx.drawImage(im, x - s / 2, y - s / 2, s, s); else { ctx.fillStyle = '#a3e635'; ctx.beginPath(); ctx.arc(x, y, s / 2.4, 0, TAU); ctx.fill(); } }
-    if (this.gold) { const [x, y] = this.px(this.gold); const s = this.cell * 1.1; ctx.save(); ctx.globalAlpha = this.gold[2] < 1.5 ? 0.5 + 0.5 * Math.sin(this.t * 20) : 1; ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 16; if (A.coin) ctx.drawImage(A.coin, x - s / 2, y - s / 2, s, s); ctx.restore(); }
+    if (this.gold) { const [x, y] = this.px(this.gold); const s = this.cell * 1.1; ctx.save(); ctx.globalAlpha = this.gold[2] < 1.5 ? 0.5 + 0.5 * Math.sin(this.t * 20) : 1; ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 16; if (!sprC(ctx, this.P, coinFrame(this.t), x, y, s, s) && A.coin) ctx.drawImage(A.coin, x - s / 2, y - s / 2, s, s); ctx.restore(); }
     const n = this.body.length;
-    for (let i = n - 1; i >= 0; i--) { const [x, y] = this.px(this.body[i]); const k = i / Math.max(1, n - 1); const r = this.cell * (i === 0 ? 0.5 : 0.44 - k * 0.1); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = `hsl(${280 - k * 140} 85% ${i === 0 ? 62 : 55}%)`; ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = i === 0 ? 14 : 6; ctx.fill(); }
+    if (this.P && this.P.f.snake_body) { for (let i = n - 1; i >= 1; i--) { const [x, y] = this.px(this.body[i]); const k = i / Math.max(1, n - 1); const s = this.cell * (1.12 - k * 0.32); ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2; sprC(ctx, this.P, 'snake_body', x, y, s, s); ctx.restore(); }
+      const [hx, hy] = this.px(this.body[0]); ctx.save(); ctx.translate(hx, hy); ctx.rotate(Math.atan2(DIRS[this.dir][1], DIRS[this.dir][0])); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8; sprC(ctx, this.P, 'snake_head', 0, 0, this.cell * 1.35); ctx.restore(); }
+    else { for (let i = n - 1; i >= 0; i--) { const [x, y] = this.px(this.body[i]); const k = i / Math.max(1, n - 1); const r = this.cell * (i === 0 ? 0.5 : 0.44 - k * 0.1); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = `hsl(${280 - k * 140} 85% ${i === 0 ? 62 : 55}%)`; ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = i === 0 ? 14 : 6; ctx.fill(); }
     ctx.shadowBlur = 0; const [hx, hy] = this.px(this.body[0]); const [dx, dy] = DIRS[this.dir];
     for (const s of [-1, 1]) { const ex = hx + dx * this.cell * 0.18 + -dy * s * this.cell * 0.2, ey = hy + dy * this.cell * 0.18 + dx * s * this.cell * 0.2; ctx.beginPath(); ctx.arc(ex, ey, this.cell * 0.11, 0, TAU); ctx.fillStyle = '#fff'; ctx.fill(); ctx.beginPath(); ctx.arc(ex + dx * 2, ey + dy * 2, this.cell * 0.05, 0, TAU); ctx.fillStyle = '#111'; ctx.fill(); }
+    }
     this.hudScore(ctx);
     this.text(ctx, 'LENGTH', this.W - 18, 30, { size: 12, weight: 700, color: '#9aa3d0', align: 'right' });
     this.text(ctx, String(n), this.W - 18, 62, { size: 28, weight: 900, align: 'right', glow: '#a3e635' });

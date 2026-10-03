@@ -1,11 +1,14 @@
 // Drift Rush - top-down drift racer. v5 art: Poly Haven CC0 asphalt/grass photo textures + Kenney Racing Pack (CC0) cars/props. See /CREDITS.md
-import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, drawFlame, reducedMotion } from './engine.js';
+// v6: Kenney Car Kit (CC0) 3D sports car + cones + tyres re-lit and rendered top-down in Blender, original nitro canister + street lamps,
+// top-down parallax: ground (1.0) -> street-lamp light pools (1.0) -> lamp heads (1.12, closer to the camera) -> drifting cloud shadows (0.55).
 const PX = 10; // px per meter
 export class DriftRush extends Game {
   get title() { return 'DRIFT RUSH'; }
   get hint() { return 'Hold left/right side (or arrows / A-D) to steer. Slide through curves to build drift points, straighten out to bank them. Stay on the road!'; }
-  async load() { this.art = await loadArt({ road: 'dr-asphalt.webp', grass: 'dr-grass.webp', car: 'dr-car_red_1.webp', cone: 'dr-cone_straight.webp', barrel: 'dr-barrel_red.webp', tires: 'dr-tires_white.webp', oil: 'dr-oil.webp' }); }
+  async load() { this.D = null; loadAtlas('drift').then(d => { this.D = d; }); const D = loadAtlas('drift'); this.art = await loadArt({ clouds: '/assets/v6/dr-clouds.webp', road: 'dr-asphalt.webp', grass: 'dr-grass.webp', car: 'dr-car_red_1.webp', cone: 'dr-cone_straight.webp', barrel: 'dr-barrel_red.webp', tires: 'dr-tires_white.webp', oil: 'dr-oil.webp' }); this.D = await D; }
   layout() { this.carY = this.H * 0.74; }
+  pool() { if (this._pool) return this._pool; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const lg = g.createRadialGradient(32, 32, 1, 32, 32, 32); lg.addColorStop(0, 'rgba(255,190,120,0.22)'); lg.addColorStop(1, 'rgba(255,150,80,0)'); g.fillStyle = lg; g.fillRect(0, 0, 64, 64); return (this._pool = c); }
   reset() {
     this.score = 0; this.coins = 0; this.dist = 0; this.meters = 0; this.x = this.W / 2; this.th = 0; this.ph = 0; this.v = 20;
     this.timeLeft = 45; this.nextCp = 1000; this.banked = 0; this.pending = 0; this.chain = 0; this.calm = 0; this.boost = 0; this.hit = 0;
@@ -75,7 +78,12 @@ export class DriftRush extends Game {
       ctx.strokeStyle = col; ctx.globalAlpha = 0.55; ctx.lineWidth = 2; ctx.shadowColor = col; ctx.shadowBlur = 10; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); ctx.restore();
     }
     // roadside tyre stacks (decor, deterministic by distance)
-    if (A.tires) for (let k = Math.floor((this.dist - 200) / 520); k * 520 < this.dist + this.H + 200; k++) { const d = k * 520 + 260; const y = this.carY - (d - this.dist); const side = (k & 1) ? 1 : -1; const x = this.cx(d) + side * (this.hw(d) + 30); if (x > -30 && x < this.W + 30) ctx.drawImage(A.tires, x - 18, y - 18, 36, 36); }
+    const D = this.D;
+    for (let k = Math.floor((this.dist - 200) / 520); k * 520 < this.dist + this.H + 200; k++) { const d = k * 520 + 260; const y = this.carY - (d - this.dist); const side = (k & 1) ? 1 : -1; const x = this.cx(d) + side * (this.hw(d) + 30); if (x > -30 && x < this.W + 30) { if (!(D && sprC(ctx, D, 'tires', x, y, 40, 40)) && A.tires) ctx.drawImage(A.tires, x - 18, y - 18, 36, 36); } }
+    // street lamps: warm light pools on the asphalt (additive)
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let k = Math.floor((this.dist - 300) / 340); k * 340 < this.dist + this.H + 300; k++) { const d = k * 340 + 100; const y = this.carY - (d - this.dist); const side = (k & 1) ? 1 : -1; const x = this.cx(d) + side * (this.hw(d) * 0.55); const r = 120; ctx.drawImage(this.pool(), x - r, y - r, r * 2, r * 2); }
+    ctx.restore();
     ctx.strokeStyle = 'rgba(250,250,250,0.7)'; ctx.lineWidth = 3; ctx.beginPath();
     for (let i = 1; i < C.length; i++) { if (Math.floor(C[i][2] / 60) % 2) continue; ctx.moveTo(C[i - 1][0], C[i - 1][1]); ctx.lineTo(C[i][0], C[i][1]); } ctx.stroke();
     // checkpoint line
@@ -84,18 +92,30 @@ export class DriftRush extends Game {
     ctx.fillStyle = 'rgba(8,8,10,0.55)'; for (const s of this.skids) { const y = this.carY - (s.d - this.dist); if (y > this.H) continue; ctx.fillRect(s.x - 2, y, 4, 4); }
     for (const it of this.items) {
       const y = this.carY - (it.d - this.dist); if (y < -30 || y > this.H + 30) continue;
-      if (it.t === 'cone' && A.cone) { const im = (Math.floor(it.d) % 3 === 0 && A.barrel) ? A.barrel : A.cone; ctx.drawImage(im, it.x - 15, y - 15, 30, 30); }
+      if (it.t === 'cone' && D) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3; if (Math.floor(it.d) % 3 === 0) sprC(ctx, D, 'tires', it.x, y, 34, 34); else sprC(ctx, D, 'cone', it.x, y, 28, 28); ctx.restore(); }
+      else if (it.t === 'cone' && A.cone) { const im = (Math.floor(it.d) % 3 === 0 && A.barrel) ? A.barrel : A.cone; ctx.drawImage(im, it.x - 15, y - 15, 30, 30); }
       else if (it.t === 'cone') { ctx.save(); ctx.translate(it.x, y); ctx.fillStyle = '#fb923c'; ctx.shadowColor = '#fb923c'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(11, 11); ctx.lineTo(-11, 11); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.fillRect(-6, 0, 12, 3); ctx.restore(); }
+      else if (D && D.f.nitro) { const p = 1 + Math.sin(this.t * 8) * 0.08; ctx.save(); ctx.translate(it.x, y); ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 22; ctx.rotate(Math.sin(this.t * 2) * 0.3); sprC(ctx, D, 'nitro', 0, 0, 30 * p, 30 * p); ctx.restore(); }
       else { const p = 1 + Math.sin(this.t * 8) * 0.12; ctx.save(); ctx.translate(it.x, y); ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 20; ctx.fillStyle = '#22d3ee'; ctx.beginPath(); ctx.arc(0, 0, 11 * p, 0, TAU); ctx.fill(); ctx.fillStyle = '#0b1030'; ctx.font = '900 12px Orbitron, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('N', 0, 1); ctx.restore(); }
     }
     // car
     ctx.save(); ctx.translate(this.x, this.carY); ctx.rotate(this.th); if (this.hit > 0 && Math.floor(this.t * 20) % 2) ctx.globalAlpha = 0.5;
-    if (this.boost > 0) { ctx.fillStyle = '#22d3ee'; ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 20; ctx.beginPath(); ctx.moveTo(-7, 22); ctx.lineTo(0, 22 + rnd(18, 34)); ctx.lineTo(7, 22); ctx.fill(); }
-    if (A.car) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4; ctx.rotate(Math.PI); ctx.drawImage(A.car, -17, -31, 34, 62); ctx.shadowColor = 'transparent'; }
+    if (this.boost > 0) { drawFlame(ctx, -7, 28, 34, 12, 0, this.t); drawFlame(ctx, 7, 28, 34, 12, 0, this.t + 2); }
+    if (D && D.f.car_sedan) { ctx.fillStyle = 'rgba(0,0,0,0.45)'; roundRect(ctx, -16, -28, 34, 62, 10); ctx.fill(); sprC(ctx, D, 'car_sedan', 0, 0, 34, 64);
+      // headlight beams
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; const hb = ctx.createLinearGradient(0, -30, 0, -120); hb.addColorStop(0, 'rgba(255,240,200,0.35)'); hb.addColorStop(1, 'rgba(255,240,200,0)'); ctx.fillStyle = hb; ctx.beginPath(); ctx.moveTo(-12, -30); ctx.lineTo(-34, -120); ctx.lineTo(34, -120); ctx.lineTo(12, -30); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    else if (A.car) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4; ctx.rotate(Math.PI); ctx.drawImage(A.car, -17, -31, 34, 62); ctx.shadowColor = 'transparent'; }
     else { ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 18; ctx.fillStyle = '#7c3aed'; roundRect(ctx, -13, -24, 26, 48, 7); ctx.fill(); ctx.shadowBlur = 0;
     ctx.fillStyle = '#c4b5fd'; roundRect(ctx, -10, -12, 20, 14, 4); ctx.fill(); ctx.fillStyle = '#22d3ee'; ctx.fillRect(-11, -24, 6, 3); ctx.fillRect(5, -24, 6, 3);
     ctx.fillStyle = '#f472b6'; ctx.fillRect(-11, 21, 6, 3); ctx.fillRect(5, 21, 6, 3); ctx.fillStyle = '#0b0820'; for (const [wx, wy] of [[-15, -15], [11, -15], [-15, 8], [11, 8]]) ctx.fillRect(wx, wy, 4, 10); }
     ctx.restore();
+    if (D && D.f.lamp) for (let k = Math.floor((this.dist * 1.12 - 300) / 340); k * 340 < this.dist * 1.12 + this.H + 300; k++) { const d = k * 340 + 100; const y = this.carY - (d - this.dist * 1.12); const side = (k & 1) ? 1 : -1; const dd = this.dist + (this.carY - y); const ex = this.cx(dd) + side * (this.hw(dd) + 40); ctx.save(); ctx.translate(ex, y); if (side > 0) ctx.scale(-1, 1); sprC(ctx, D, 'lamp', 34, 0, 88, 22); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(this.pool(), 54, -14, 28, 28); ctx.drawImage(this.pool(), 60, -8, 16, 16); ctx.restore(); }
+    if (A.clouds) { // cloud shadows drift at 0.55x the road speed; drawn into a quarter-res buffer (they are blurry anyway) and upscaled once
+      const q = 0.25, bw = Math.ceil(this.W * q), bh = Math.ceil(this.H * q); if (!this._cb) { this._cb = document.createElement('canvas'); this._cbx = this._cb.getContext('2d'); }
+      if (this._cb.width !== bw || this._cb.height !== bh) { this._cb.width = bw; this._cb.height = bh; this._cp = null; }
+      const b = this._cbx; if (!this._cp) this._cp = b.createPattern(A.clouds, 'repeat'); const rm = reducedMotion();
+      b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(0, 0, bw, bh); b.setTransform(q * 2, 0, 0, q * 2, 0, 0); b.translate(rm ? 0 : (((this.playT || 0) * 3) % 512), rm ? 0 : ((this.dist * 0.275) % 512)); b.fillStyle = this._cp; b.fillRect(-512, -512, bw / (q * 2) + 1024, bh / (q * 2) + 1024);
+      ctx.drawImage(this._cb, 0, 0, this.W, this.H); }
     if (this.flash > 0) { ctx.fillStyle = `rgba(239,68,68,${this.flash})`; ctx.fillRect(0, 0, this.W, this.H); }
     // HUD
     this.hudScore(ctx);

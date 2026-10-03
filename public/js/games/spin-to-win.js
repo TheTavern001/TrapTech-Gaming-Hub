@@ -1,7 +1,8 @@
 // Spin to Win - timing wheel. Original code/art. Points only: no money, nothing to buy.
 // The wheel always travels the same distance for the same power, so skill (timing the release) decides the segment.
 // v5 art: blurred lounge photo backdrop (Poly Haven CC0 HDRI 'warm_restaurant_night') + lacquered cherry-wood rim (Poly Haven CC0). See /CREDITS.md
-import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, Ambient, softShadow } from './engine.js';
+// v6: gold pointer with ruby + chrome/gold hub cap (original Blender renders), animated lounge ambience.
 const SEG = [100, 20, 250, 10, 'x2', 50, 500, 20, 'BUST', 100, 50, 1000, 10, 'BONUS', 25, 200];
 const COLORS = ['#7c3aed', '#2563eb', '#db2777', '#0891b2'];
 const BASE_SPINS = 5, MAX_SPINS = 8, PERIOD = 1.4;
@@ -46,7 +47,7 @@ export class SpinToWin extends Game {
     this.lastRes = { msg, col }; this.resultT = 1.1; this.history.push(v);
     this.pop(this.cx, this.cy - 10, msg, col, 32);
   }
-  async load() { this.art = await loadArt({ bg: 'lounge-blur.webp', wood: 'wood-cherry.webp' }); }
+  async load() { this.amb = new Ambient('lounge', 9); const [a, p] = await Promise.all([loadArt({ bg: 'lounge-blur.webp', wood: 'wood-cherry.webp' }), loadAtlas('props')]); this.art = a; this.P = p; }
   render(ctx) {
     const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(10,6,22,0.5)'); const { cx, cy, R } = this; const n = SEG.length; const seg = TAU / n;
     // rim lights
@@ -62,10 +63,10 @@ export class SpinToWin extends Game {
       this.text(ctx, label, R * 0.92, 6, { size: label.length > 3 ? Math.min(15, R * 0.075) : Math.min(20, R * 0.1), weight: 900, align: 'right', color: v === 'BUST' ? '#f87171' : '#fff' }); ctx.restore();
     }
     const hub = ctx.createRadialGradient(cx, cy, 4, cx, cy, R * 0.2); hub.addColorStop(0, '#f0abfc'); hub.addColorStop(1, '#4c1d95');
-    ctx.beginPath(); ctx.arc(cx, cy, R * 0.18, 0, TAU); ctx.fillStyle = hub; ctx.fill(); ctx.strokeStyle = '#fde047'; ctx.lineWidth = 3; ctx.stroke();
+    if (this.P && this.P.f.hub) { softShadow(ctx, cx, cy + R * 0.03, R * 0.26, R * 0.26, 0.6); sprC(ctx, this.P, 'hub', cx, cy, R * 0.42, R * 0.42); } else { ctx.beginPath(); ctx.arc(cx, cy, R * 0.18, 0, TAU); ctx.fillStyle = hub; ctx.fill(); ctx.strokeStyle = '#fde047'; ctx.lineWidth = 3; ctx.stroke(); }
     this.text(ctx, 'SPIN', cx, cy + 6, { size: Math.max(12, R * 0.07), weight: 900, align: 'center' });
     // pointer
-    ctx.save(); ctx.translate(cx, cy - R - 6); ctx.beginPath(); ctx.moveTo(-16, -22); ctx.lineTo(16, -22); ctx.lineTo(0, 12); ctx.closePath(); ctx.fillStyle = '#fde047'; ctx.shadowColor = '#fde047'; ctx.shadowBlur = 16; ctx.fill(); ctx.restore();
+    if (this.P && this.P.f.pointer) { softShadow(ctx, cx, cy - R - 6, 22, 26, 0.5); sprC(ctx, this.P, 'pointer', cx, cy - R - 12, 34); } else { ctx.save(); ctx.translate(cx, cy - R - 6); ctx.beginPath(); ctx.moveTo(-16, -22); ctx.lineTo(16, -22); ctx.lineTo(0, 12); ctx.closePath(); ctx.fillStyle = '#fde047'; ctx.shadowColor = '#fde047'; ctx.shadowBlur = 16; ctx.fill(); ctx.restore(); }
     // power meter
     const mw = Math.min(this.W - 60, 420), mx = (this.W - mw) / 2, my = this.meterY;
     roundRect(ctx, mx, my, mw, 22, 11); ctx.fillStyle = 'rgba(15,23,42,0.9)'; ctx.fill(); ctx.strokeStyle = 'rgba(99,102,241,0.6)'; ctx.lineWidth = 2; ctx.stroke();

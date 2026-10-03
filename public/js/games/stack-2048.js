@@ -1,11 +1,13 @@
 // Stack 2048 - slide-and-merge chip puzzle (original code). v5 art: walnut table + velour felt (Poly Haven CC0). Points only.
-import { Game, TAU, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
+import { Game, TAU, clamp, roundRect, fmt, loadArt, pattern, loadAtlas, spr, Ambient, softShadow } from './engine.js';
+// v6: Blender-rendered clay casino chips (original renders) per value, animated casino ambience.
 const N = 4;
+const CHIPN = { 2: 'white', 4: 'lime', 8: 'cyan', 16: 'blue', 32: 'purple', 64: 'pink', 128: 'orange', 256: 'yellow', 512: 'amber', 1024: 'red', 2048: 'gold' };
 const COL = { 2: '#e2e8f0', 4: '#a3e635', 8: '#22d3ee', 16: '#60a5fa', 32: '#a78bfa', 64: '#f472b6', 128: '#fb923c', 256: '#facc15', 512: '#f59e0b', 1024: '#ef4444', 2048: '#fde047' };
 export class Stack2048 extends Game {
   get title() { return 'STACK 2048'; }
   get hint() { return 'Swipe (or use the arrow keys) to slide every chip. Two chips with the same value merge into one worth double. Reach 2048, then keep stacking. No moves left ends the run.'; }
-  async load() { this.art = await loadArt({ bg: 'wood-dark.webp', felt: 'rl-felt.webp' }); }
+  async load() { this.amb = new Ambient('casino', 3); const [a, p] = await Promise.all([loadArt({ bg: 'wood-dark.webp', felt: 'rl-felt.webp' }), loadAtlas('props')]); this.art = a; this.P = p; }
   reset() { this.score = 0; this.coins = 0; this.g = Array(N * N).fill(0); this.fx = {}; this.top = 0; this.overT = 0; this.sw = null; this.add(); this.add(); }
   layout() { const s = Math.min(this.W - 36, this.H - 230, 620); this.bs = s; this.bx = (this.W - s) / 2; this.by = Math.max(120, (this.H - s) / 2 + 20); this.cs = s / N; }
   add() { const e = []; this.g.forEach((v, i) => { if (!v) e.push(i); }); if (!e.length) return; const i = e[Math.floor(this.r() * e.length)]; this.g[i] = this.r() < 0.9 ? 2 : 4; this.fx[i] = { t: 0, k: 'new' }; }
@@ -31,6 +33,8 @@ export class Stack2048 extends Game {
   update(dt) { for (const k in this.fx) this.fx[k].t += dt; if (this.overT) { this.overT -= dt; if (this.overT <= 0) { this.sfx.lose(); this.finish(); } } }
   chip(ctx, x, y, s, v, sc) {
     const cx = x + s / 2, cy = y + s / 2, r = s * 0.42 * sc; const col = COL[Math.min(2048, v)] || '#fde047';
+    const cn = 'chip_' + (CHIPN[Math.min(2048, v)] || 'black');
+    if (this.P && this.P.f[cn]) { softShadow(ctx, cx, cy + r * 0.18, r * 1.2, r * 1.1, 0.6); spr(ctx, this.P, cn, cx - r * 1.04, cy - r * 1.06, r * 2.08, r * 2.12); const t = String(v); this.text(ctx, t, cx, cy + r * 0.12, { size: r * (t.length > 3 ? 0.4 : t.length > 2 ? 0.5 : 0.6), weight: 900, align: 'center', color: v === 2 ? '#1e293b' : '#fff', glow: v >= 128 ? col : 'rgba(0,0,0,0.6)' }); return; }
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4; ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fillStyle = col; ctx.fill(); ctx.restore();
     ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = r * 0.16; for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; ctx.beginPath(); ctx.arc(cx, cy, r * 0.9, a - 0.13, a + 0.13); ctx.stroke(); } ctx.restore();
     const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, 1, cx, cy, r * 0.7); g.addColorStop(0, 'rgba(255,255,255,0.55)'); g.addColorStop(1, 'rgba(0,0,0,0.25)');

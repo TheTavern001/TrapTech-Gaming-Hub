@@ -1,7 +1,8 @@
 // Plinko - skill drop. Original code/art. 10 free chips per run, aim + nudge, golden multiplier pegs.
 // Points only: no money, nothing to buy.
 // v5 art: blurred bar photo backdrop (Poly Haven CC0 HDRI 'warm_bar'), black-walnut board + brushed-metal slots (Poly Haven CC0), chrome pegs. See /CREDITS.md
-import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern } from './engine.js';
+import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, coinFrame, Ambient, softShadow } from './engine.js';
+// v6: chrome ball-bearing pegs, gold coin x2 pegs, clay casino chip (original Blender renders), animated lounge ambience.
 const VALUES = [200, 50, 20, 5, 100, 5, 20, 50, 200];
 const CHIPS = 10, NUDGES = 3, ROWS = 10;
 export class Plinko extends Game {
@@ -94,7 +95,7 @@ export class Plinko extends Game {
     this.burst(g.bx + g.dx * (i + 0.5), g.bot - 20, pts >= 100 ? ['#fde047', '#f472b6', '#22d3ee'] : '#22d3ee', pts >= 100 ? 26 : 10, 280, 0.7, 4);
     if (pts >= 100) this.sfx.win(); else this.sfx.tone(440, 0.15, { type: 'triangle', vol: 0.3 });
   }
-  async load() { this.art = await loadArt({ bg: 'bar-blur.webp', wood: 'wood-dark.webp', metal: 'metal-plate.webp' }); }
+  async load() { this.amb = new Ambient('lounge', 2); const [a, p] = await Promise.all([loadArt({ bg: 'bar-blur.webp', wood: 'wood-dark.webp', metal: 'metal-plate.webp' }), loadAtlas('props')]); this.art = a; this.P = p; }
   render(ctx) {
     const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(10,6,20,0.5)'); const g = this.g;
     // board
@@ -109,16 +110,17 @@ export class Plinko extends Game {
       if (i) { const mg = ctx.createLinearGradient(x - 2, 0, x + 2, 0); mg.addColorStop(0, '#6b7280'); mg.addColorStop(0.5, '#f8fafc'); mg.addColorStop(1, '#6b7280'); ctx.fillStyle = mg; ctx.fillRect(x - 2, g.slotTop - 6, 4, g.slotH + 2); }
     }
     // pegs
+    if (this.P) { for (const p of this.pegs) { const pr = g.pr * (p.flash > 0 ? 1.35 : 1); if (p.flash > 0) { ctx.save(); ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 14; } sprC(ctx, this.P, 'ball_chrome', p.x, p.y, pr * 2.2, pr * 2.2); if (p.flash > 0) ctx.restore(); } } else
     for (const p of this.pegs) { const pr = g.pr * (p.flash > 0 ? 1.4 : 1); const cg = ctx.createRadialGradient(p.x - pr * 0.35, p.y - pr * 0.35, pr * 0.1, p.x, p.y, pr); cg.addColorStop(0, '#ffffff'); cg.addColorStop(0.45, p.flash > 0 ? '#67e8f9' : '#cbd5e1'); cg.addColorStop(1, p.flash > 0 ? '#0891b2' : '#475569'); ctx.beginPath(); ctx.arc(p.x, p.y, pr, 0, TAU); ctx.fillStyle = cg; ctx.shadowColor = p.flash > 0 ? '#22d3ee' : 'rgba(0,0,0,0.6)'; ctx.shadowBlur = p.flash > 0 ? 14 : 4; ctx.shadowOffsetY = p.flash > 0 ? 0 : 2; ctx.fill(); } ctx.shadowOffsetY = 0;
     ctx.shadowBlur = 0;
-    for (const gp of this.golden) { const [x, y] = this.goldenPos(gp); ctx.save(); ctx.beginPath(); ctx.arc(x, y, g.pr * 1.8, 0, TAU); ctx.fillStyle = '#fde047'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 18; ctx.fill(); ctx.restore(); this.text(ctx, 'x2', x, y + 4, { size: 10, weight: 900, align: 'center', color: '#78350f' }); }
+    for (const gp of this.golden) { const [x, y] = this.goldenPos(gp); if (this.P) { sprC(ctx, this.P, coinFrame(this.t, x * 0.01), x, y, g.pr * 4, g.pr * 4); this.text(ctx, 'x2', x, y + 4, { size: 10, weight: 900, align: 'center', color: '#fff', glow: '#78350f' }); continue; } ctx.save(); ctx.beginPath(); ctx.arc(x, y, g.pr * 1.8, 0, TAU); ctx.fillStyle = '#fde047'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 18; ctx.fill(); ctx.restore(); this.text(ctx, 'x2', x, y + 4, { size: 10, weight: 900, align: 'center', color: '#78350f' }); }
     // aim guide
     if (!this.chip && this.left > 0 && this.state !== 'over') {
       ctx.save(); ctx.setLineDash([6, 8]); ctx.strokeStyle = 'rgba(34,211,238,0.45)'; ctx.beginPath(); ctx.moveTo(this.aimX, g.top + 20); ctx.lineTo(this.aimX, g.pegTop - 10); ctx.stroke(); ctx.restore();
       this.drawChip(ctx, this.aimX, g.top + 20, 1, 0.9);
     }
     if (this.chip) {
-      const c = this.chip; c.trail.forEach(([x, y], i) => { ctx.globalAlpha = i / c.trail.length * 0.4; ctx.beginPath(); ctx.arc(x, y, g.r * 0.8, 0, TAU); ctx.fillStyle = '#a855f7'; ctx.fill(); }); ctx.globalAlpha = 1;
+      const c = this.chip; c.trail.forEach(([x, y], i) => { ctx.globalAlpha = i / c.trail.length * 0.25; ctx.beginPath(); ctx.arc(x, y, g.r * 0.8, 0, TAU); ctx.fillStyle = '#a855f7'; ctx.fill(); }); ctx.globalAlpha = 1;
       this.drawChip(ctx, c.x, c.y, c.mult, 1);
       for (let i = 0; i < c.nudges; i++) { ctx.beginPath(); ctx.arc(c.x - 10 + i * 10, c.y - g.r - 10, 3, 0, TAU); ctx.fillStyle = '#22d3ee'; ctx.fill(); }
     }
@@ -130,6 +132,7 @@ export class Plinko extends Game {
   }
   drawChip(ctx, x, y, mult, a) {
     const r = this.g.r; ctx.save(); ctx.globalAlpha = a;
+    if (this.P && this.P.f.chip_purple) { softShadow(ctx, x, y + r * 0.2, r * 1.3, r * 1.2, 0.55); sprC(ctx, this.P, mult > 1 ? 'chip_gold' : 'chip_purple', x, y, r * 2.15, r * 2.2); if (mult > 1) this.text(ctx, `x${mult}`, x, y + 4, { size: 11, weight: 900, align: 'center', color: '#fff', glow: '#422006' }); ctx.restore(); return; }
     const gr = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 2, x, y, r); gr.addColorStop(0, mult > 1 ? '#fef08a' : '#f0abfc'); gr.addColorStop(1, mult > 1 ? '#d97706' : '#7c3aed');
     ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = gr; ctx.shadowColor = mult > 1 ? '#fde047' : '#a855f7'; ctx.shadowBlur = 16; ctx.fill();
     ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r * 0.62, 0, TAU); ctx.stroke();

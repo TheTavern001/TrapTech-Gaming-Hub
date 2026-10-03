@@ -1,7 +1,8 @@
 import { ls } from './store.js';
-import { Telemetry } from './games/engine.js';
+import { Telemetry, loadAtlas, loadLayers, spr, sprC, coinFrame, drawFlame, reducedMotion } from './games/engine.js';
 // Jetpack Dash - original HTML5 canvas side-scroller for The Gaming Hub.
-// Code: original. Sprites/sounds: Kenney (CC0) - see /CREDITS.md.
+// Code: original. Sounds: Kenney (CC0). v6 art: original Blender-rendered astronaut (run/fly/hit/idle frames), saw blades, zapper
+// emitters, rocket, shield orb and 3D gold coins; 4-layer seamless parallax night city (original procedural). See /CREDITS.md.
 const H = 540;              // logical world height
 const FLOOR = 70;           // floor thickness
 const CEIL = 34;            // ceiling thickness
@@ -10,16 +11,19 @@ const GRAVITY = 2300, THRUST = 3900, MAX_UP = -620, MAX_DOWN = 900;
 const START_MPS = 11, MAX_MPS = 24, ACCEL_MPS = 0.12;
 
 const IMG = {};
-const IMG_LIST = ['hero_fly', 'hero_run_a', 'hero_run_b', 'hero_hit', 'coin', 'saw_a', 'saw_b', 'flame_a', 'flame_b', 'flame_c', 'shield_pickup', 'shield_bubble', 'bg_space', 'star'];
+const IMG_LIST = []; // v6: the Kenney sprites were replaced by the v6 atlases below
 // v5 realistic art: night-city panorama cut from a Poly Haven CC0 HDRI (Shanghai Bund), photo gold coin (Wikimedia, public domain),
 // brushed-metal floor (Poly Haven CC0 metal_plate). Hero/saws/flames stay Kenney CC0. See /CREDITS.md
-const V5_IMG = { city: 'jp-city.webp', coin_v5: 'coin.webp', metal: 'metal-plate.webp' };
+const V5_IMG = { metal: 'metal-plate.webp' };
+const V6 = {};
 let assetsPromise = null;
 function loadAssets(base) {
   if (assetsPromise) return assetsPromise;
   assetsPromise = Promise.all(IMG_LIST.map(n => new Promise(res => {
     const im = new Image(); im.onload = () => { IMG[n] = im; res(); }; im.onerror = () => res(); im.src = `${base}/game/${n}.png`;
-  })).concat(Object.entries(V5_IMG).map(([k, f]) => new Promise(res => { const im = new Image(); im.onload = () => { IMG[k] = im; res(); }; im.onerror = () => res(); im.src = `/assets/v5/${f}`; }))));
+  })).concat(Object.entries(V5_IMG).map(([k, f]) => new Promise(res => { const im = new Image(); im.onload = () => { IMG[k] = im; res(); }; im.onerror = () => res(); im.src = `/assets/v5/${f}`; })))
+    .concat([loadAtlas('astro').then(a => { V6.astro = a; }), loadAtlas('props').then(a => { V6.props = a; }),
+      loadLayers({ sky: 'px-sky.webp', far: 'px-far.webp', mid: 'px-mid.webp', near: 'px-near-lab.webp' }).then(l => { V6.L = l; })]));
   return assetsPromise;
 }
 
@@ -306,32 +310,13 @@ export class JetpackDash {
     ctx.restore();
   }
   _drawBg(ctx) {
-    const W = this.W;
-    // space backdrop (Kenney CC0 tile) tinted dark
-    const bg = IMG.bg_space; const city = IMG.city;
-    if (city) { const ih = H - FLOOR - CEIL + 40, iw = city.width * (ih / city.height); let off = -((this.bgX * 0.08) % iw); for (let x = off; x < W; x += iw) ctx.drawImage(city, x, CEIL - 20, iw, ih); }
-    else if (bg) { const tw = 256; const off = -(this.bgX * 0.05) % tw; for (let x = off - tw; x < W + tw; x += tw) for (let y = 0; y < H; y += tw) ctx.drawImage(bg, x, y, tw, tw); }
-    const g = ctx.createLinearGradient(0, 0, 0, H); if (city) { g.addColorStop(0, 'rgba(8,6,30,0.55)'); g.addColorStop(0.6, 'rgba(24,8,60,0.32)'); g.addColorStop(1, 'rgba(5,6,24,0.75)'); } else { g.addColorStop(0, 'rgba(8,6,30,0.55)'); g.addColorStop(0.6, 'rgba(30,10,70,0.35)'); g.addColorStop(1, 'rgba(5,10,40,0.85)'); }
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    // far skyline
-    const drawCity = (arr, speed, base, col, winCol, winA) => {
-      const span = 1600; const off = -((this.bgX * speed) % span);
-      for (const rep of [0, span]) for (const b of arr) {
-        const x = b.x + off + rep; if (x > W || x + b.w < 0) continue;
-        ctx.fillStyle = col; ctx.fillRect(x, base - b.h, b.w, b.h);
-        ctx.fillStyle = winCol; ctx.globalAlpha = winA;
-        for (let wy = base - b.h + 10; wy < base - 10; wy += 16) for (let wx = x + 6; wx < x + b.w - 8; wx += 12) if (((wx * 7 + wy * 13 + b.lit * 100) | 0) % 5 === 0) ctx.fillRect(wx, wy, 5, 7);
-        ctx.globalAlpha = 1;
-      }
-    };
-    if (!city) { drawCity(this.cityFar || [], 0.12, H - FLOOR, '#0d0b2a', '#7c4dff', 0.5); drawCity(this.cityNear || [], 0.25, H - FLOOR, '#120f38', '#00d2ff', 0.55); }
-    // lab wall pillars with neon strips
-    const pw = 340; const off = -((this.bgX * 0.6) % pw);
-    for (let x = off - pw; x < W + pw; x += pw) {
-      const lg = ctx.createLinearGradient(x, 0, x + 26, 0); lg.addColorStop(0, '#1a1650'); lg.addColorStop(1, '#0b0a26');
-      ctx.fillStyle = lg; ctx.fillRect(x, CEIL, 26, H - FLOOR - CEIL);
-      ctx.fillStyle = '#b14dff'; ctx.shadowColor = '#b14dff'; ctx.shadowBlur = 12; ctx.fillRect(x + 11, CEIL + 20, 4, H - FLOOR - CEIL - 40); ctx.shadowBlur = 0;
-    }
+    const W = this.W; const L = V6.L || {}; const X = reducedMotion() ? 0 : this.bgX; const top = CEIL, bot = H - FLOOR, span = bot - top;
+    // v6 seamless parallax: sky (0.02) -> far skyline (0.06) -> mid towers with neon signs (0.16) -> lab glass-wall columns (0.55) -> floor (1.0)
+    if (L.sky) L.sky.draw(ctx, X * 0.02, 0, 0, W, H); else { ctx.fillStyle = '#0a0628'; ctx.fillRect(0, 0, W, H); }
+    if (L.far) L.far.draw(ctx, X * 0.06, 0, bot - span * 0.72, W, span * 0.72);
+    if (L.mid) L.mid.draw(ctx, X * 0.16, 0, bot - span * 0.9, W, span * 0.9);
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(8,6,30,0.35)'); g.addColorStop(0.6, 'rgba(24,8,60,0.12)'); g.addColorStop(1, 'rgba(5,6,24,0.5)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (L.near) L.near.draw(ctx, X * 0.55, 0, 0, W, H);
     // ceiling
     ctx.fillStyle = '#0a0a22'; ctx.fillRect(0, 0, W, CEIL);
     ctx.fillStyle = '#3b2bd9'; ctx.fillRect(0, CEIL - 3, W, 3);
@@ -354,27 +339,23 @@ export class JetpackDash {
     }
   }
   _drawPlayer(ctx) {
-    const p = this.p; const dying = this.state === 'dying' || this.state === 'over';
-    let img = IMG.hero_fly;
-    if (dying) img = IMG.hero_hit; else if (p.onFloor) img = (Math.floor(p.anim * 2) % 2) ? IMG.hero_run_a : IMG.hero_run_b;
-    const w = 56, h = 66;
+    const p = this.p; const dying = this.state === 'dying' || this.state === 'over'; const A = V6.astro;
     ctx.save(); ctx.translate(p.x, p.y);
-    if (dying) ctx.rotate(Math.min(1.4, this.deathT * 3));
-    else ctx.rotate(clamp(p.vy / 2600, -0.18, 0.22));
+    if (dying) ctx.rotate(Math.min(1.1, this.deathT * 2.2)); else ctx.rotate(clamp(p.vy / 2600, -0.18, 0.22));
     if (p.inv > 0 && Math.floor(p.inv * 20) % 2) ctx.globalAlpha = 0.4;
-    // jetpack (canvas-drawn, original)
-    ctx.fillStyle = '#2a2f55'; ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2;
-    roundRect(ctx, -36, -14, 18, 34, 6); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#7c4dff'; roundRect(ctx, -33, -10, 12, 8, 3); ctx.fill();
-    ctx.fillStyle = '#9aa3c7'; ctx.fillRect(-34, 20, 14, 5);
-    if (!dying && this.state === 'play' && this.input) {
-      const f = [IMG.flame_a, IMG.flame_b, IMG.flame_c][Math.floor(this.t * 20) % 3];
-      if (f) ctx.drawImage(f, -36, 24, 16, 34 + Math.random() * 8);
-    }
-    if (img) ctx.drawImage(img, -w / 2, -h / 2, w, h); else { ctx.fillStyle = '#b388ff'; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, 7); ctx.fill(); }
+    const thrust = !dying && this.state === 'play' && this.input;
+    if (thrust) { drawFlame(ctx, -22, 6, 54 + Math.random() * 10, 18, 0.12, this.t); drawFlame(ctx, -14, 6, 44 + Math.random() * 8, 14, 0.12, this.t + 1); }
+    let fn;
+    if (dying) fn = 'hit_' + Math.min(5, Math.floor(this.deathT * 9));
+    else if (this.state === 'ready') fn = 'idle_' + Math.floor(this.t * 6) % 6;
+    else if (p.onFloor) fn = 'run_' + Math.floor(p.anim * 2.6) % 8;
+    else fn = 'fly_' + Math.floor(this.t * (thrust ? 14 : 7)) % 6;
+    if (A) { const m = A.meta; const dw = m.cell[0] * 0.46, dh = m.cell[1] * 0.46; spr(ctx, A, fn, -m.anchor[0] * dw, -m.anchor[1] * dh, dw, dh); }
+    else { ctx.fillStyle = '#b388ff'; ctx.beginPath(); ctx.arc(0, 0, p.r, 0, 7); ctx.fill(); }
     if (p.shield) {
       ctx.globalAlpha = 0.55 + Math.sin(this.t * 6) * 0.15; ctx.strokeStyle = '#4fc3ff'; ctx.lineWidth = 3; ctx.shadowColor = '#4fc3ff'; ctx.shadowBlur = 16;
-      ctx.beginPath(); ctx.arc(0, 0, 44, 0, Math.PI * 2); ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.arc(0, 0, 46, 0, Math.PI * 2); ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.globalAlpha = 0.12; ctx.fillStyle = '#4fc3ff'; ctx.fill();
     }
     ctx.restore(); ctx.globalAlpha = 1;
   }
@@ -391,6 +372,7 @@ export class JetpackDash {
     ctx.lineTo(b[0], b[1]); ctx.stroke();
     // nodes
     for (const e of [a, b]) {
+      if (V6.props && sprC(ctx, V6.props, 'zapnode', e[0], e[1], 34, 34)) continue;
       ctx.fillStyle = '#2b2f4a'; ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(e[0], e[1], 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#ff9f1c'; ctx.beginPath(); ctx.arc(e[0], e[1], 5, 0, Math.PI * 2); ctx.fill();
@@ -398,10 +380,9 @@ export class JetpackDash {
     ctx.restore();
   }
   _drawSaw(ctx, o) {
-    const img = (Math.floor(o.t * 12) % 2) ? IMG.saw_a : IMG.saw_b;
     ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot);
-    ctx.shadowColor = '#ff3d71'; ctx.shadowBlur = 18;
-    if (img) ctx.drawImage(img, -o.r, -o.r, o.r * 2, o.r * 2); else { ctx.fillStyle = '#aaa'; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); }
+    ctx.shadowColor = 'rgba(255,61,113,0.75)'; ctx.shadowBlur = 16;
+    if (V6.props && V6.props.f.saw) sprC(ctx, V6.props, 'saw', 0, 0, o.r * 2.05, o.r * 2.05); else { ctx.fillStyle = '#aaa'; ctx.beginPath(); ctx.arc(0, 0, o.r, 0, 7); ctx.fill(); }
     ctx.restore();
     if (o.bob) { ctx.strokeStyle = 'rgba(255,61,113,0.25)'; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(o.x, o.y0 - o.bob); ctx.lineTo(o.x, o.y0 + o.bob); ctx.stroke(); ctx.setLineDash([]); }
   }
@@ -416,6 +397,7 @@ export class JetpackDash {
       ctx.restore(); return;
     }
     ctx.save(); ctx.translate(m.x, m.y);
+    if (V6.props && V6.props.f.rocket) { drawFlame(ctx, 30, 0, 40 + Math.random() * 10, 14, -Math.PI / 2, this.t); sprC(ctx, V6.props, 'rocket', 0, 0, 84); ctx.restore(); return; }
     ctx.fillStyle = '#dfe6ff'; roundRect(ctx, -26, -8, 46, 16, 8); ctx.fill();
     ctx.fillStyle = '#ff3d71'; ctx.beginPath(); ctx.moveTo(-26, -8); ctx.lineTo(-38, 0); ctx.lineTo(-26, 8); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#7c4dff'; ctx.beginPath(); ctx.moveTo(14, -8); ctx.lineTo(26, -16); ctx.lineTo(22, -6); ctx.closePath(); ctx.fill();
@@ -423,6 +405,7 @@ export class JetpackDash {
     ctx.restore();
   }
   _drawCoin(ctx, c) {
+    if (V6.props && sprC(ctx, V6.props, coinFrame(this.t, c.ph), c.x, c.y, 30, 30)) return;
     const sx = Math.abs(Math.cos(this.t * 4 + c.ph)) * 0.8 + 0.2;
     ctx.save(); ctx.translate(c.x, c.y); ctx.scale(sx, 1);
     if (IMG.coin_v5) ctx.drawImage(IMG.coin_v5, -14, -14, 28, 28); else if (IMG.coin) ctx.drawImage(IMG.coin, -13, -14, 26, 28); else { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.fill(); }
@@ -432,7 +415,7 @@ export class JetpackDash {
     const y = k.y + Math.sin(k.t * 3) * 10;
     ctx.save(); ctx.translate(k.x, y); ctx.shadowColor = '#4fc3ff'; ctx.shadowBlur = 20;
     ctx.strokeStyle = '#4fc3ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.stroke();
-    if (IMG.shield_pickup) ctx.drawImage(IMG.shield_pickup, -15, -15, 30, 30);
+    if (V6.props) sprC(ctx, V6.props, 'shield', 0, 0, 40, 40);
     ctx.restore();
   }
   _drawHud(ctx) {
@@ -443,7 +426,7 @@ export class JetpackDash {
     ctx.fillText(`${sc.toLocaleString('en-US')}m`, 18, CEIL + 42);
     ctx.shadowBlur = 0; ctx.font = '600 15px "Exo 2", sans-serif'; ctx.fillStyle = '#b9b3ff';
     ctx.fillText(`BEST ${Math.max(this.best, sc).toLocaleString('en-US')}m`, 20, CEIL + 64);
-    if (IMG.coin_v5) ctx.drawImage(IMG.coin_v5, 17, CEIL + 74, 20, 20); else if (IMG.coin) ctx.drawImage(IMG.coin, 18, CEIL + 74, 18, 20);
+    if (V6.props && V6.props.f.coin_0) spr(ctx, V6.props, 'coin_0', 16, CEIL + 73, 22, 22); else if (IMG.coin) ctx.drawImage(IMG.coin, 18, CEIL + 74, 18, 20);
     ctx.fillStyle = '#ffe066'; ctx.font = '700 17px Orbitron, sans-serif'; ctx.fillText(String(this.coins), 42, CEIL + 91);
     if (this.p.shield) { ctx.fillStyle = '#4fc3ff'; ctx.font = '700 13px Orbitron, sans-serif'; ctx.fillText('SHIELD', 20, CEIL + 114); }
     ctx.restore();
