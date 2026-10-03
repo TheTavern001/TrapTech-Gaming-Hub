@@ -134,3 +134,11 @@
   .rq-state { grid-column: 1 / -1; text-align: left; }
   .rq-item { margin: 0 8px 10px; padding: 10px; }
 }
+/* v5 */
+.elig-fs { border: 1px solid rgba(124,77,255,.35); border-radius: 12px; padding: 10px 12px; }
+.elig-fs legend { padding: 0 6px; }
+.potato-contact { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.potato-contact code { font-size: .8rem; }
+.badge-defs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.bdef { display: flex; gap: 10px; align-items: center; padding: 10px; }
+.fp-item { margin-top: 10px; }

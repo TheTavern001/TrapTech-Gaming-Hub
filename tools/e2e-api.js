@@ -296,7 +296,7 @@ function client() {
   r = await D('/api/score', { body: { token: tokD, score: 30, coins: 1, duration_ms: 2200 } });
   ok(r.body.ok && r.body.share_url === '/s/' + r.body.run_id && r.body.level && r.body.xp_gained >= 10, 'score response has share_url, level and xp_gained', r.body); const runD = r.body.run_id;
   r = await C('/api/referral'); ok(r.body.counted === 1, 'referral counts after the friend\'s first run');
-  r = await C('/api/achievements'); ok(r.body.achievements.find(a => a.id === 'ref-1').unlocked, 'C unlocks ref-1 (Recruiter cosmetics)');
+  r = await C('/api/achievements'); ok(r.body.achievements.find(a => a.id === 'ref-1').unlocked, 'C unlocks ref-1 (Crew Builder cosmetics)');
   r = await C('/api/notifications'); ok(r.body.items.some(n => n.type === 'referral' && n.title.includes(ud)), 'C notified that the referral counted');
 
   console.log('# v3: share cards, OG images, page meta');
@@ -350,6 +350,142 @@ function client() {
   }
   r = await anon(`/giveaways/${gmulti}/rules`); ok(r.status === 200 && /Official Rules/.test(r.body), 'per-giveaway official rules page');
   r = await anon('/js/app.js'); ok(/NO PURCHASE NECESSARY/.test(r.body) && /Trap Tech Solutions/.test(r.body) && /A Trap Tech game/.test(r.body), 'app bundle has no-purchase rules, Trap Tech operator + "A Trap Tech game" loader');
+
+  // ======================= v5 =======================
+  const DBP = require(path.join(__dirname, '..', 'src', 'config.js')).DB_PATH; const sdb = new (require('better-sqlite3'))(DBP);
+  const play = async (cl, game, score, wait = 1200, extra = {}) => { let x; for (let k = 0; k < 6; k++) { x = await cl('/api/run/start', { body: { game_id: game } }); if (x.status !== 429) break; await sleep(12000); } if (!x.body.ok) return x; const tk = x.body.token; const seed = x.body.seed; if (wait) await sleep(wait); const body = { token: tk, score, coins: 0, duration_ms: wait, tel: { n: 12, mean: 310, sd: 95, min: 120 }, ...extra }; for (let k = 0; k < 6; k++) { x = await cl('/api/score', { body }); if (x.status !== 429 || x.body.rejected) break; await sleep(12000); } x.seed = seed; return x; };
+  console.log('# v5: brand channels + paid links');
+  r = await anon('/api/channels'); ok(r.body.ok && r.body.channels.length >= 4 && r.body.channels.some(c => c.slug === 'terp-tavern' && c.tier === 'elite'), 'public brand channel list (demo channels)');
+  r = await anon('/api/channels/terp-tavern'); ok(r.body.channel && Array.isArray(r.body.giveaways) && r.body.giveaways.every(g => g.channel && g.channel.slug === 'terp-tavern'), 'channel page lists only that brand\'s giveaways');
+  r = await ADM('/api/admin/channels', { body: { name: 'E2E Brand', slug: 'e2e-brand', tier: 'elite', link_url: 'https://example.com/brand', link_label: 'Shop' } }); ok(r.body.ok, 'admin creates an Elite brand channel'); const chE = r.body.id;
+  r = await ADM('/api/admin/channels', { body: { name: 'E2E Basic', slug: 'e2e-basic', tier: 'basic', link_url: 'https://example.com/basic' } }); const chB = r.body.id;
+  r = await ADM('/api/admin/channels', { body: { name: 'Bad', link_url: 'http://insecure.example' } }); ok(r.status === 400, 'channel link must be https');
+  r = await anon('/api/channels/e2e-brand'); ok(r.body.channel.link && r.body.channel.link.url === `/go/c/${chE}?p=channel`, 'Elite channel shows a tracked link');
+  r = await anon('/api/channels/e2e-basic'); ok(r.body.channel.link === null, 'Basic channel: no outbound link (links are a paid placement)');
+  let rr2 = await fetch(BASE + `/go/c/${chE}?p=channel`, { redirect: 'manual' }); ok(rr2.status === 302 && rr2.headers.get('location') === 'https://example.com/brand', '/go redirect sends to the sponsor URL');
+  rr2 = await fetch(BASE + `/go/c/${chB}?p=channel`, { redirect: 'manual' }); ok(rr2.status === 302 && rr2.headers.get('location') === '/', '/go refuses placements the tier did not pay for');
+  r = await ADM('/api/admin/channels'); ok(r.body.channels.find(c => c.id === chE).clicks === 1 && r.body.channels.find(c => c.id === chB).clicks === 0, 'click analytics count only valid clicks');
+  r = await C('/api/channels/e2e-brand/follow', { body: { on: true } }); ok(r.body.following && r.body.followers === 1, 'player follows a brand channel');
+  r = await C('/api/me/channels'); ok(r.body.slugs.includes('e2e-brand'), '/api/me/channels lists followed channels');
+
+  console.log('# v5: eligibility + explicit entries (anti-camping)');
+  const t5 = Date.now();
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Brand Giveaway', host: 'E2E Brand', start_at: t5 - 60e3, end_at: t5 + 3600e3, game_id: 'high-score', active: true, tier: 'elite', channel_id: chE, link_url: 'https://example.com/gw', link_label: 'Visit E2E',
+    require_join: true, elig_min_runs7: 3, elig_account_age_days: 0, elig_max_active: 3, elig_win_cooldown_days: 30, elig_brand_month: true, elig_followers_only: true } });
+  ok(r.body.ok, 'admin creates a channel giveaway with eligibility rules'); const gE = r.body.id;
+  r = await anon(`/api/giveaways/${gE}/eligibility`); ok(r.body.require_join && r.body.rules.some(x => x.includes('Followers only')) && r.body.rules.some(x => x.includes('Win cooldown')) && r.body.rules.some(x => x.includes('Potato')), 'public eligibility rules in plain language');
+  r = await D(`/api/giveaways/${gE}/eligibility`); const dAct = r.body.checks.find(c => c.id === 'activity');
+  ok(!r.body.eligible && dAct && !dAct.ok && /Play \d more runs? to qualify/.test(dAct.hint) && r.body.checks.find(c => c.id === 'follow').ok === false, 'ineligible player sees exactly what to do ("Play N more runs")', r.body.checks);
+  r = await D(`/api/giveaways/${gE}/join`, { body: {} }); ok(r.status === 400 && r.body.status && !r.body.status.eligible, 'ineligible player cannot join');
+  r = await A(`/api/giveaways/${gE}/eligibility`); ok(r.body.checks.some(c => c.id === 'cooldown' && !c.ok && /won recently/.test(c.hint)), 'recent winner is on win cooldown');
+  for (let i = 0; i < 3; i++) await play(C, 'high-score', 5, 300);
+  r = await C(`/api/giveaways/${gE}/eligibility`); ok(r.body.eligible && r.body.can_join && r.body.message.includes('Enter giveaway'), 'eligible player: "You\'re eligible - tap Enter giveaway"', r.body);
+  r = await play(C, 'high-score', 20, 300); ok(r.body.ok && !(r.body.giveaways || []).some(g => g.id === gE), 'runs before joining do not count for a join-required giveaway');
+  r = await C(`/api/giveaways/${gE}/join`, { body: {} }); ok(r.body.ok && r.body.status.joined, 'eligible player joins');
+  r = await anon(`/api/giveaways/${gE}`); ok(r.body.giveaway.joined_count === 1 && r.body.giveaway.link && r.body.giveaway.link.url === `/go/g/${gE}?p=giveaway` && r.body.giveaway.channel.slug === 'e2e-brand', 'giveaway shows entrants, channel and the paid sponsor link');
+  r = await play(C, 'high-score', 25, 300); ok((r.body.giveaways || []).some(g => g.id === gE && g.rank === 1), 'after joining, runs count');
+  const gMs = []; for (let i = 0; i < 3; i++) { r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Slot ' + i, host: 'T', start_at: t5 - 60e3, end_at: t5 + 3600e3, game_id: 'plinko', active: true, require_join: true, elig_max_active: 3 } }); gMs.push(r.body.id); }
+  r = await C(`/api/giveaways/${gMs[0]}/join`, { body: {} }); ok(r.body.ok, 'join 2nd live giveaway');
+  r = await C(`/api/giveaways/${gMs[1]}/join`, { body: {} }); ok(r.body.ok, 'join 3rd live giveaway');
+  r = await C(`/api/giveaways/${gMs[2]}/join`, { body: {} }); ok(r.status === 400 && /Leave one/.test(r.body.error), 'max 3 live entries: 4th join refused with a clear hint', r.body);
+  r = await C('/api/me/entries'); ok(r.body.entries.length === 3 && r.body.max === 3, '/api/me/entries shows the 3 entries');
+  r = await C(`/api/giveaways/${gMs[1]}/leave`, { body: {} }); ok(r.body.ok, 'leaving frees a slot');
+  r = await C(`/api/giveaways/${gMs[2]}/join`, { body: {} }); ok(r.body.ok, 'now the other giveaway can be joined');
+
+  console.log('# v5: Potato username (winner contact)');
+  r = await D('/api/me/potato', { method: 'PUT', body: { potato: 'bad name!' } }); ok(r.status === 400, 'invalid Potato username rejected');
+  r = await D('/api/me/potato', { method: 'PUT', body: { potato: '@e2e_potato_d' } }); ok(r.body.ok && r.body.potato === 'e2e_potato_d', 'Potato username saved (leading @ stripped)');
+  r = await D('/api/me'); ok(r.body.user.potato === 'e2e_potato_d', '/api/me returns the Potato username');
+
+  console.log('# v5: cooldown skip at lock + activity-weighted verifiable draw');
+  const t6 = Date.now();
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Cooldown', host: 'T', start_at: t6 - 1000, end_at: t6 + 3600e3, game_id: 'spin-to-win', active: true, winner_count: 1, elig_win_cooldown_days: 30 } }); const gCD = r.body.id;
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Weighted', host: 'T', start_at: t6 - 1000, end_at: t6 + 3600e3, game_id: 'plinko', active: true, win_method: 'random', winner_count: 1, weight_mode: 'activity' } }); const gW = r.body.id;
+  await play(A, 'spin-to-win', 900, 1500); await play(D, 'spin-to-win', 100, 1500);
+  for (let i = 0; i < 5; i++) await play(D, 'plinko', 10 + i, 300); await play(C, 'plinko', 50, 300);
+  r = await ADM(`/api/admin/giveaways/${gCD}/finalize`, { method: 'POST' }); r = await ADM(`/api/admin/giveaways/${gW}/finalize`, { method: 'POST' }); ok(r.body.ok, 'admin ends both test giveaways and locks results');
+  r = await anon(`/api/giveaways/${gCD}`); ok(r.body.giveaway.winners.length === 1 && r.body.giveaway.winners[0].username === ud, 'recent winner auto-skipped at lock; next place promoted', r.body.giveaway.winners);
+  r = await ADM(`/api/admin/giveaways/${gCD}/audit`); ok(r.body.audit.some(a => a.action === 'ineligible_skipped' && a.username === ua), 'audit logs "ineligible_skipped" with the reason');
+  r = await anon(`/api/giveaways/${gW}/verify`); const vw = r.body;
+  const wOf = (l) => { const m = l.match(/\|w(\d+)$/); return m ? +m[1] : 1; };
+  const word = vw.entrant_lines.map(l => [-Math.log((parseInt(crypto.createHmac('sha256', vw.seed).update(`${vw.entrants_hash}:${l.split('|')[1]}`).digest('hex').slice(0, 13), 16) + 1) / (2 ** 52 + 1)) / wOf(l), l.split('|')[1]]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  ok(vw.weighted && vw.weight_rule && vw.draw_order.find(x => x.username === ud).weight === 2 && vw.draw_order.find(x => x.username === uc).weight === 1, 'weights: D (5 runs) has 2 entries, C (1 run) has 1', vw.draw_order);
+  ok(vw.hash_ok && vw.seed_ok && word.join() === vw.draw_order.map(x => x.username).join(), 'weighted draw order recomputes independently from the revealed seed');
+
+  console.log('# v5: friend challenges (play together, no messaging)');
+  r = await C('/api/challenges', { body: { to: ud, game_id: 'high-score' } }); ok(r.status === 403, 'challenges need mutual follows (friends)');
+  await C('/api/follow/' + ud, { body: {} }); await D('/api/follow/' + uc, { body: {} });
+  r = await D('/api/challenges', { body: { to: uc, game_id: 'drift-rush' } }); ok(r.status === 400 && /Finish a run/.test(r.body.error), 'challenger needs a run in that game (their best is the target)');
+  r = await C('/api/challenges', { body: { to: ud, game_id: 'high-score' } }); const chT = r.body.target_score; ok(r.body.ok && chT >= 25, 'friend challenge created with C\'s best as target', r.body); const chId = r.body.id;
+  r = await C('/api/challenges', { body: { to: ud, game_id: 'high-score' } }); ok(r.status === 409, 'one open challenge per friend per game');
+  r = await D('/api/challenges'); ok(r.body.incoming.some(c => c.id === chId && c.target_score === chT) && r.body.friends.includes(uc), 'D sees the incoming challenge');
+  r = await D('/api/notifications'); ok(r.body.items.some(n => n.type === 'challenge'), 'D notified of the challenge');
+  r = await D(`/api/challenges/${chId}/accept`, { body: {} }); ok(r.body.ok && r.body.status === 'accepted', 'D accepts');
+  r = await play(D, 'high-score', chT + 10, 1500);
+  r = await D('/api/challenges'); const done = r.body.history.find(c => c.id === chId); ok(done && done.status === 'completed' && done.won === true && done.result_score === chT + 10, 'beating the target completes the challenge (D wins)', r.body);
+  r = await anon('/api/messages'); ok(r.status === 404, 'no user-to-user messaging endpoint exists');
+  r = await anon('/api/dm'); ok(r.status === 404, 'no DM endpoint exists');
+
+  console.log('# v5: profanity + staff-name filter at signup');
+  r = await anon('/api/auth/signup', { body: { username: 'TrapTech_Official', password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.status === 400, 'staff-like username refused');
+
+  console.log('# v5: Hub Points + cosmetics shop');
+  r = await D('/api/shop'); ok(r.body.ok && r.body.balance > 0 && r.body.daily.length === 6 && r.body.weekly.length === 4 && /no cash value/.test(r.body.disclaimer), 'shop: balance from play, 6 daily + 4 weekly items, cosmetic-only disclaimer', { bal: r.body.balance });
+  const shop = r.body; const pricey = shop.weekly.find(i => i.price > shop.balance);
+  if (pricey) { r = await D('/api/shop/buy', { body: { item: pricey.id } }); ok(r.status === 400 && /more Hub Points/.test(r.body.error), 'cannot buy without enough points'); }
+  const notIn = require(path.join(__dirname, '..', 'src', 'shop.js')).ITEMS.find(i => ![...shop.daily, ...shop.weekly].some(x => x.id === i.id));
+  r = await D('/api/shop/buy', { body: { item: notIn.id } }); ok(r.status === 400 && /not in the shop/.test(r.body.error), 'only rotating items can be bought');
+  const dId = sdb.prepare('SELECT id FROM users WHERE username=?').get(ud).id; sdb.prepare("INSERT INTO points_ledger (user_id, amount, reason, ref, created_at) VALUES (?, 5000, 'e2e', 'grant', ?)").run(dId, Date.now());
+  const color = [...shop.daily, ...shop.weekly].find(i => i.type !== 'badge') || shop.daily[0];
+  r = await D('/api/shop/buy', { body: { item: color.id } }); ok(r.body.ok && r.body.item.owned && r.body.balance === shop.balance + 5000 - color.price, 'buying deducts exactly the price', r.body);
+  r = await D('/api/shop/buy', { body: { item: color.id } }); ok(r.status === 400 && /already own/.test(r.body.error), 'cannot buy twice');
+  r = await D('/api/cosmetics'); const t2 = { banner: 'banners', frame: 'frames', title: 'titles', color: 'colors', effect: 'effects', badge: 'badges' }[color.type];
+  ok((r.body[t2] || []).some(x => (x.id === color.id || x.id === 'shop:' + color.id) && x.owned), 'purchased item shows as owned in cosmetics');
+  r = await D('/api/me/cosmetics', { body: { [color.type]: color.type === 'badge' ? 'shop:' + color.id : color.id } }); ok(r.body.ok, 'purchased item can be equipped');
+  const unownedColor = require(path.join(__dirname, '..', 'src', 'shop.js')).ITEMS.find(i => i.type === 'color' && i.id !== color.id);
+  r = await D('/api/me/cosmetics', { body: { color: unownedColor.id } }); ok(r.status === 403, 'unowned shop items cannot be equipped');
+  r = await D('/api/me/points'); ok(r.body.history.some(h => h.reason === 'purchase') && r.body.history.some(h => h.reason === 'run'), 'points history shows earn + spend');
+
+  console.log('# v5: achievements overhaul + admin-only badges');
+  r = await anon('/api/achievements?user=' + ud); const achs = r.body.achievements || [];
+  ok(achs.filter(a => a.tier === 'legendary').length >= 5 && achs.some(a => a.id === 'leg-top1') && achs.some(a => a.id === 'leg-streak-100'), 'legendary (very hard) achievements exist');
+  { const vis = achs.filter(a => a.name !== 'Secret achievement'); ok(new Set(vis.map(a => a.name)).size === vis.length && !achs.some(a => /^Level \d+$/.test(a.name)), 'achievement names are unique (no generic "Level 5")'); }
+  ok(achs.find(a => a.id === 'ref-1').name === 'Crew Builder' && achs.find(a => a.id === 'ref-5').name === 'Squad Goals', 'referral badges renamed (Crew Builder, Squad Goals)');
+  r = await anon('/badges/leg-top1.svg'); ok(r.status === 200 && r.ct.includes('svg') && String(r.body).includes('<path'), 'unique badge art served as SVG');
+  const a1 = (await anon('/badges/runs-10.svg')).body, a2 = (await anon('/badges/runs-50.svg')).body; ok(a1 !== a2, 'each badge has different art');
+  r = await anon('/api/admin/badges'); ok(r.status === 401, 'badge admin needs admin login');
+  r = await D('/api/me/cosmetics', { body: { badge: 'adm:staff' } }); ok(r.status === 403, 'players cannot equip admin badges they were not granted');
+  r = await ADM('/api/admin/badges/grant', { body: { username: ud, badge: 'verified-host', note: 'E2E grant' } }); ok(r.body.ok, 'admin grants "Verified Host"');
+  r = await ADM('/api/admin/badges/grant', { body: { username: ud, badge: 'verified-host' } }); ok(r.status === 409, 'double grant refused');
+  r = await ADM('/api/admin/badges/grant', { body: { username: ud, badge: 'not-a-badge' } }); ok(r.status === 400, 'unknown badge refused');
+  r = await anon(`/api/users/${ud}/special-badges`); ok(r.body.granted.some(b => b.id === 'verified-host') && r.body.all.length >= 8, 'special badges listed on the profile');
+  r = await D('/api/me/cosmetics', { body: { badge: 'adm:verified-host' } }); ok(r.body.ok && r.body.cos.badge && r.body.cos.badge.tier === 'admin', 'granted badge can be equipped (admin tier styling)');
+  r = await anon(`/api/giveaways/${gshort}`);
+  r = await ADM('/api/admin/badges'); ok(r.body.audit.some(a => a.username === ud && a.action === 'grant') && r.body.grants.some(g => g.username === ua && g.badge_id === 'giveaway-winner'), 'audit log + confirmed winner auto-received "Giveaway Winner"');
+  r = await ADM('/api/admin/badges/revoke', { body: { username: ud, badge: 'verified-host', note: 'E2E revoke' } }); ok(r.body.ok, 'admin revokes');
+  r = await D('/api/me'); ok(!r.body.user.cos.badge, 'revoked badge is unequipped');
+
+  console.log('# v5: anti-cheat (keep great legit scores, catch cheaters)');
+  r = await D('/api/run/start', { body: { game_id: 'memory-match' } }); const mmTok = r.body.token, mmSeed = r.body.seed; ok(/^[0-9a-f]{16}$/.test(mmSeed), 'run/start issues a server seed');
+  const AC = require(path.join(__dirname, '..', 'src', 'anticheat.js')); const deal = AC.mmLevel(0, AC.rng(mmSeed)); const pos = {}; deal.forEach((g, i) => (pos[g] = pos[g] || []).push(i));
+  const log = []; let tt = 600; for (const g in pos) { log.push([tt, pos[g][0]]); tt += 350; log.push([tt, pos[g][1]]); tt += 350; }
+  const legit = AC.replayMemory(mmSeed, log).score; await sleep(5000);
+  r = await D('/api/score', { body: { token: mmTok, score: legit, coins: 1, duration_ms: 5000, log, tel: { n: 12, mean: 350, sd: 60, min: 200 } } });
+  ok(r.body.ok && r.body.verified && !r.body.held, 'perfect Memory Match run is replay-verified and counts', r.body);
+  r = await D('/api/run/start', { body: { game_id: 'memory-match' } }); const mmTok2 = r.body.token; await sleep(5000);
+  r = await D('/api/score', { body: { token: mmTok2, score: legit + 2000, coins: 1, duration_ms: 5000, log, tel: { n: 12, mean: 350, sd: 60, min: 200 } } });
+  ok(r.body.ok && r.body.held && !r.body.verified && /fair-play review/.test(r.body.held_reason), 'tampered Memory Match score (log replays differently) is kept but held', r.body); const heldRun = r.body.run_id;
+  r = await play(C, 'terp-tapper', 30, 1500, { tel: { n: 60, mean: 100, sd: 1, min: 99 } }); ok(r.body.ok && r.body.held, 'robotic input rhythm (bot) is held for review');
+  r = await play(D, 'terp-tapper', 30, 1500); ok(r.body.ok && !r.body.held, 'human-like input rhythm counts normally');
+  r = await anon('/api/leaderboard?game=memory-match&period=all&limit=500'); const lbRows = r.body.rows || r.body.leaderboard || r.body.entries || [];
+  ok(lbRows.length > 0 && lbRows.some(x => x.username === ud && x.score === legit) && !lbRows.some(x => x.username === ud && x.score === legit + 2000), 'held runs are hidden from leaderboards (verified run shows)', lbRows.filter(x => x.username === ud));
+  r = await ADM('/api/admin/flags?status=open'); ok(r.body.flags.some(f => f.run_id === heldRun && f.reasons.some(x => x.code === 'replay_mismatch')), 'admin fair-play queue lists the held run with reasons');
+  r = await ADM(`/api/admin/flags/${heldRun}/clear`, { body: { note: 'E2E clear' } }); ok(r.body.ok, 'admin clears a held run');
+  r = await D('/api/notifications'); ok(r.body.items.some(n => n.title === 'Your score was verified'), 'player notified when cleared');
+  r = await ADM('/api/admin/flags?status=cleared'); ok(r.body.flags.some(f => f.run_id === heldRun), 'cleared run moves to the cleared list');
+  r = await ADM('/api/admin/players?q=' + uc); ok(!r.body.players[0].banned, 'anti-cheat never auto-bans');
+  for (const id of [gE, gCD, gW, ...gMs]) await ADM('/api/admin/giveaways/' + id, { method: 'DELETE' });
+  for (const id of [chE, chB]) await ADM('/api/admin/channels/' + id, { method: 'DELETE' });
 
   console.log('# rate limiting');
   let got429 = false; for (let i = 0; i < 22; i++) { r = await B('/api/run/start', { body: { game_id: 'jetpack-dash' } }); if (r.status === 429) { got429 = true; break; } }

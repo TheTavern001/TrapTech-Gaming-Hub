@@ -2,7 +2,7 @@
 // Leaderboard + giveaway-entrant queries shared by the API and the achievement engine.
 const db = require('./db');
 const now = () => Date.now();
-const U = 'u.id AS user_id, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge';
+const U = 'u.id AS user_id, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect';
 
 function gameBoard(gameId, since = 0, until = Infinity, opts = {}) {
   const until2 = Number.isFinite(until) ? until : 8.64e15;
@@ -10,13 +10,13 @@ function gameBoard(gameId, since = 0, until = Infinity, opts = {}) {
   return db.prepare(`
     SELECT ${U}, MAX(r.score) AS score, COUNT(*) AS runs, MAX(r.created_at) AS last_at, MIN(r.created_at) AS first_at
     FROM runs r JOIN users u ON u.id = r.user_id
-    WHERE r.game_id = ? AND ${startCol} >= ? AND r.created_at >= ? AND r.created_at <= ? AND u.banned = 0
+    WHERE r.game_id = ? AND ${startCol} >= ? AND r.created_at >= ? AND r.created_at <= ? AND u.banned = 0 AND r.held = 0
     GROUP BY u.id ORDER BY score DESC, last_at ASC`).all(gameId, since, since, until2);
 }
 function globalBoard(since = 0) {
   return db.prepare(`
     SELECT ${U}, SUM(b.best) AS score, SUM(b.n) AS runs, MAX(b.last_at) AS last_at
-    FROM (SELECT user_id, game_id, MAX(score) AS best, COUNT(*) AS n, MAX(created_at) AS last_at FROM runs WHERE created_at >= ? GROUP BY user_id, game_id) b
+    FROM (SELECT user_id, game_id, MAX(score) AS best, COUNT(*) AS n, MAX(created_at) AS last_at FROM runs WHERE created_at >= ? AND held = 0 GROUP BY user_id, game_id) b
     JOIN users u ON u.id = b.user_id WHERE u.banned = 0
     GROUP BY u.id ORDER BY score DESC, last_at ASC`).all(since);
 }

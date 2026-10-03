@@ -43,28 +43,28 @@ for (const g of cfg.GAMES) {
 // ---------- overall ----------
 const O = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat: 'overall', tier, icon, name, desc, target, value, rewards });
 O('first-run', 'bronze', 'play', 'First Steps', 'Finish your first scored run', 1, s => s.runs, [R('banner', 'neon-grid')]);
-O('runs-10', 'bronze', 'gamepad-2', 'Getting Warm', 'Finish 10 runs (any games)', 10, s => s.runs, [R('frame', 'violet')]);
-O('runs-50', 'silver', 'gamepad-2', 'Hub Regular', 'Finish 50 runs', 50, s => s.runs, [R('title', 'hub-regular')]);
-O('runs-100', 'silver', 'gamepad-2', 'Grinder', 'Finish 100 runs', 100, s => s.runs, [R('banner', 'carbon')]);
-O('runs-250', 'gold', 'gamepad-2', 'Dedicated', 'Finish 250 runs', 250, s => s.runs, [R('frame', 'plasma'), R('banner', 'plasma')]);
+O('runs-10', 'bronze', 'thermometer', 'Getting Warm', 'Finish 10 runs (any games)', 10, s => s.runs, [R('frame', 'violet')]);
+O('runs-50', 'silver', 'armchair', 'Hub Regular', 'Your 50th finished run - you basically live here now', 50, s => s.runs, [R('title', 'hub-regular')]);
+O('runs-100', 'silver', 'cog', 'Grinder', 'Finish 100 runs - the grind is real', 100, s => s.runs, [R('banner', 'carbon')]);
+O('runs-250', 'gold', 'anchor', 'Dedicated', 'Finish 250 runs without giving up', 250, s => s.runs, [R('frame', 'plasma'), R('banner', 'plasma')]);
 O('runs-500', 'epic', 'crown', 'Legend of the Hub', 'Finish 500 runs', 500, s => s.runs, [R('title', 'hub-legend')]);
 O('points-10k', 'bronze', 'coins', 'Point Collector', 'Earn 10,000 lifetime points (all runs, all games)', 10000, s => s.points, [R('banner', 'laser')]);
-O('points-100k', 'silver', 'coins', 'Point Hoarder', 'Earn 100,000 lifetime points', 100000, s => s.points, [R('frame', 'gold')]);
+O('points-100k', 'silver', 'piggy-bank', 'Point Hoarder', 'Earn 100,000 lifetime points', 100000, s => s.points, [R('frame', 'gold')]);
 O('points-1m', 'epic', 'gem', 'Points Millionaire', 'Earn 1,000,000 lifetime points (no cash value!)', 1000000, s => s.points, [R('banner', 'gold-rush')]);
 O('variety-3', 'bronze', 'layers', 'Explorer', 'Play 3 different games', 3, s => s.games, [R('title', 'explorer')]);
 O('variety-all', 'gold', 'grid-3x3', 'Polymath', `Play every game in the hub (${cfg.GAMES.length})`, cfg.GAMES.length, s => s.games, [R('banner', 'prism')]);
-O('days-2', 'bronze', 'calendar-days', 'Back Again', 'Play on 2 days in a row', 2, s => s.dayStreak, [R('frame', 'cyan-pulse')]);
-O('days-3', 'silver', 'calendar-days', 'Daily Driver', 'Play on 3 days in a row', 3, s => s.dayStreak, [R('title', 'daily-driver')]);
+O('days-2', 'bronze', 'rotate-ccw', 'Back Again', 'Play on 2 days in a row', 2, s => s.dayStreak, [R('frame', 'cyan-pulse')]);
+O('days-3', 'silver', 'car-front', 'Daily Driver', 'Play on 3 days in a row', 3, s => s.dayStreak, [R('title', 'daily-driver')]);
 O('days-7', 'gold', 'flame', 'On Fire', 'Play 7 days in a row', 7, s => s.dayStreak, [R('frame', 'fire'), R('banner', 'ember')]);
-O('days-14', 'epic', 'flame', 'Unstoppable', 'Play 14 days in a row', 14, s => s.dayStreak, [R('title', 'unstoppable'), R('banner', 'synthwave')]);
-O('days-10', 'silver', 'calendar', 'Ten Days', 'Play on 10 different days', 10, s => s.days, [R('banner', 'deep-ocean')]);
-O('days-30', 'gold', 'calendar', 'Monthly Regular', 'Play on 30 different days', 30, s => s.days, [R('banner', 'aurora')]);
+O('days-14', 'epic', 'zap', 'Unstoppable', 'Play 14 days in a row', 14, s => s.dayStreak, [R('title', 'unstoppable'), R('banner', 'synthwave')]);
+O('days-10', 'silver', 'calendar', 'Ten-Day Tour', 'Show up on 10 different days', 10, s => s.days, [R('banner', 'deep-ocean')]);
+O('days-30', 'gold', 'calendar-heart', 'Monthly Regular', 'Show up on 30 different days', 30, s => s.days, [R('banner', 'aurora')]);
 
 // ---------- giveaways ----------
 const G = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat: 'giveaways', tier, icon, name, desc, target, value, rewards });
 G('gw-enter-1', 'bronze', 'ticket', 'In the Draw', 'Enter a giveaway (finish a run of a linked game while it is open)', 1, s => s.gwEntered, [R('title', 'contender')]);
-G('gw-enter-5', 'silver', 'ticket', 'Regular Entrant', 'Enter 5 different giveaways', 5, s => s.gwEntered, [R('banner', 'confetti')]);
-G('gw-enter-25', 'gold', 'gift', 'Giveaway Hunter', 'Enter 25 different giveaways', 25, s => s.gwEntered, [R('title', 'giveaway-hunter')]);
+G('gw-enter-5', 'silver', 'tickets', 'Regular Entrant', 'Enter 5 different giveaways', 5, s => s.gwEntered, [R('banner', 'confetti')]);
+G('gw-enter-25', 'gold', 'gift', 'Prize Pursuer', 'Enter 25 different giveaways', 25, s => s.gwEntered, [R('title', 'giveaway-hunter')]);
 G('gw-podium', 'silver', 'medal', 'Podium Finish', 'Finish top 3 on the entrant board of a giveaway that has ended', 1, s => s.gwPodium, [R('banner', 'victory')]);
 G('gw-win-1', 'gold', 'crown', 'Winner Winner', 'Win a giveaway', 1, s => s.gwWon, [R('frame', 'champion')]);
 G('gw-win-3', 'epic', 'party-popper', 'Lucky Charm', 'Win 3 giveaways', 3, s => s.gwWon, [R('title', 'lucky-charm')]);
@@ -72,8 +72,8 @@ G('gw-win-3', 'epic', 'party-popper', 'Lucky Charm', 'Win 3 giveaways', 3, s => 
 // ---------- community ----------
 const C = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat: 'community', tier, icon, name, desc, target, value, rewards });
 C('welcome', 'bronze', 'user-plus', 'Welcome Aboard', 'Create your Gaming Hub account', 1, () => 1, [R('banner', 'ultraviolet')]);
-C('react-1', 'bronze', 'flame', 'First Hype', 'Hype a post in the Community feed', 1, s => s.reactions, [R('frame', 'holo')]);
-C('react-25', 'silver', 'heart-handshake', 'Hype Machine', 'Hype 25 Community posts', 25, s => s.reactions, [R('title', 'hype-machine'), R('banner', 'toxic')]);
+C('react-1', 'bronze', 'thumbs-up', 'First Hype', 'Hype an announcement or highlight in the Community feed', 1, s => s.reactions, [R('frame', 'holo')]);
+C('react-25', 'silver', 'heart-handshake', 'Hype Machine', 'Hype 25 Community highlights', 25, s => s.reactions, [R('title', 'hype-machine'), R('banner', 'toxic')]);
 C('equip-banner', 'bronze', 'palette', 'Fresh Look', 'Equip a profile banner', 1, s => s.eqBanner, [R('banner', 'vaporwave')]);
 C('full-fit', 'silver', 'wand-sparkles', 'Drip Check', 'Equip a banner, a frame and a title at the same time', 1, s => s.fullFit, [R('title', 'trendsetter')]);
 C('collector-25', 'gold', 'sparkles', 'Collector', 'Own 25 cosmetics (banners, frames and titles)', 25, s => s.owned, [R('frame', 'rainbow')]);
@@ -83,9 +83,9 @@ const L = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat:
 L('lb-weekly-top10', 'silver', 'trending-up', 'Weekly Contender', 'Reach the top 10 of a weekly game board (11+ players)', 1, s => s.lb.weeklyTop10, [R('banner', 'champion')]);
 L('lb-weekly-top3', 'gold', 'medal', 'Weekly Podium', 'Reach the top 3 of a weekly game board (5+ players)', 1, s => s.lb.weeklyTop3, [R('title', 'weekly-warrior')]);
 L('lb-weekly-1', 'epic', 'trophy', 'Weekly Champion', 'Take #1 on a weekly game board (5+ players)', 1, s => s.lb.weekly1, [R('frame', 'royal')]);
-L('lb-monthly-1', 'epic', 'trophy', 'Monthly Champion', 'Take #1 on a monthly (30-day) game board (5+ players)', 1, s => s.lb.monthly1, [R('title', 'champion')]);
+L('lb-monthly-1', 'epic', 'calendar-check-2', 'Monthly Champion', 'Take #1 on a monthly (30-day) game board (5+ players)', 1, s => s.lb.monthly1, [R('title', 'champion')]);
 L('lb-global-top10', 'gold', 'crown', 'Global Elite', 'Reach the all-time global top 10 (11+ players)', 1, s => s.lb.globalTop10, [R('banner', 'hyperspace')]);
-L('lb-triple', 'legendary', 'swords', 'Triple Crown', 'Hold #1 on 3 different all-time game boards at once (3+ players each)', 3, s => s.lb.allTime1, [R('title', 'triple-crown')]);
+L('lb-triple', 'legendary', 'crown', 'Triple Crown', 'Hold #1 on 3 different all-time game boards at once (3+ players each)', 3, s => s.lb.allTime1, [R('title', 'triple-crown')]);
 
 // ---------- secret ----------
 const X = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat: 'secret', hidden: true, tier, icon, name, desc, target, value, rewards });
@@ -103,31 +103,55 @@ X('s-complete', 'legendary', 'star', 'Completionist', 'Unlock 50 achievements', 
 const P = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat: 'progress', tier, icon, name, desc, target, value, rewards });
 P('streak-3', 'bronze', 'calendar-check', 'Early Bird', 'Check in 3 days in a row', 3, s => s.streakBest, [R('title', 'early-bird')]);
 P('streak-7', 'silver', 'sunrise', 'Habit Former', 'Check in 7 days in a row', 7, s => s.streakBest, [R('title', 'habit-former'), R('banner', 'sunrise')]);
-P('streak-30', 'epic', 'flame', 'Eternal Flame', 'Check in 30 days in a row', 30, s => s.streakBest, [R('frame', 'streak'), R('banner', 'streak-fire')]);
+P('streak-30', 'epic', 'flame-kindling', 'Eternal Flame', 'Check in 30 days in a row', 30, s => s.streakBest, [R('frame', 'streak'), R('banner', 'streak-fire')]);
 P('quest-1', 'bronze', 'scroll-text', 'Questor', 'Claim your first daily quest', 1, s => s.questsDone, [R('title', 'questor')]);
 P('quest-25', 'gold', 'map', 'Quest Legend', 'Claim 25 daily quests', 25, s => s.questsDone, [R('title', 'quest-legend'), R('banner', 'quest-map')]);
-P('level-5', 'bronze', 'chevrons-up', 'Level 5', 'Reach player level 5', 5, s => s.level, [R('title', 'level-grinder')]);
-P('level-10', 'silver', 'chevrons-up', 'Level 10', 'Reach player level 10', 10, s => s.level, [R('frame', 'level')]);
+P('level-5', 'bronze', 'chevrons-up', 'Leveled Up', 'Reach player level 5', 5, s => s.level, [R('title', 'level-grinder')]);
+P('level-10', 'silver', 'signal', 'Double Digits', 'Reach player level 10', 10, s => s.level, [R('frame', 'level')]);
 P('level-25', 'epic', 'shield-check', 'Veteran', 'Reach player level 25', 25, s => s.level, [R('title', 'veteran'), R('banner', 'level-up')]);
 P('season-3', 'bronze', 'calendar-range', 'Season Starter', 'Reach tier 3 of a season track', 3, s => s.seasonTier, [R('title', 'season-starter')]);
-P('season-5', 'silver', 'calendar-range', 'Season Pass', 'Reach tier 5 of a season track', 5, s => s.seasonTier, [R('banner', 'season-one')]);
-P('season-10', 'gold', 'calendar-range', 'Laurels', 'Reach tier 10 of a season track', 10, s => s.seasonTier, [R('frame', 'season')]);
+P('season-5', 'silver', 'ticket-check', 'Pass Holder', 'Reach tier 5 of a season track', 5, s => s.seasonTier, [R('banner', 'season-one')]);
+P('season-10', 'gold', 'award', 'Laurels', 'Reach tier 10 of a season track', 10, s => s.seasonTier, [R('frame', 'season')]);
 P('season-20', 'legendary', 'crown', 'Season Legend', 'Complete all 20 tiers of a season track', 20, s => s.seasonTier, [R('title', 'season-legend')]);
 // ---------- v3: tournaments ----------
 L('tourney-enter', 'bronze', 'swords', 'Competitor', 'Play a run in a tournament', 1, s => s.tourney.entered, [R('title', 'competitor')]);
 L('tourney-podium', 'gold', 'medal', 'Finalist', 'Finish top 3 in a timed tournament or reach a bracket final', 1, s => s.tourney.podium, [R('title', 'finalist'), R('banner', 'tourney-bracket')]);
-L('tourney-win', 'epic', 'trophy', 'Tournament Champ', 'Win a tournament', 1, s => s.tourney.wins, [R('title', 'tournament-champ'), R('frame', 'tourney')]);
+L('tourney-win', 'epic', 'swords', 'Tournament Champ', 'Win a tournament', 1, s => s.tourney.wins, [R('title', 'tournament-champ'), R('frame', 'tourney')]);
 // ---------- v3: friends, referrals, sharing ----------
 const F = (id, tier, icon, name, desc, target, value, rewards) => add({ id, cat: 'social', tier, icon, name, desc, target, value, rewards });
 F('follow-1', 'bronze', 'user-plus', 'Social Butterfly', 'Follow another player', 1, s => s.following, [R('title', 'social-butterfly')]);
 F('followers-5', 'silver', 'users', 'Influencer', 'Get 5 followers', 5, s => s.followers, [R('title', 'influencer'), R('frame', 'friend')]);
-F('ref-1', 'silver', 'gift', 'Recruiter', 'Invite a friend who signs up with your code and finishes a run', 1, s => s.referrals, [R('title', 'recruiter'), R('banner', 'recruiter')]);
-F('ref-5', 'gold', 'megaphone', 'Ambassador', 'Invite 5 friends who sign up and finish a run', 5, s => s.referrals, [R('title', 'ambassador'), R('banner', 'crew')]);
+F('ref-1', 'silver', 'gift', 'Crew Builder', 'Invite a friend who signs up with your code and finishes a run', 1, s => s.referrals, [R('title', 'crew-builder'), R('banner', 'crew-beacon')]);
+F('ref-5', 'gold', 'users-round', 'Squad Goals', 'Invite 5 friends who sign up and finish a run', 5, s => s.referrals, [R('title', 'squad-goals'), R('banner', 'crew')]);
+F('ref-15', 'epic', 'party-popper', 'Party Starter', 'Invite 15 friends who sign up and finish a run', 15, s => s.referrals, [R('title', 'party-starter')]);
 F('referred', 'bronze', 'handshake', 'Newcomer', "Join with a friend's invite code", 1, s => s.referred, [R('title', 'newcomer')]);
 F('share-1', 'bronze', 'share-2', 'Hype Sharer', 'Share a score card or giveaway link', 1, s => s.shares, [R('title', 'hype-sharer')]);
+F('chal-win-1', 'silver', 'swords', 'Called It', 'Win a friend challenge', 1, s => s.chalWins, [R('frame', 'friend')]);
+F('chal-win-10', 'gold', 'shield-half', 'Rivalry Royalty', 'Win 10 friend challenges', 10, s => s.chalWins, [R('banner', 'tourney-bracket')]);
+
+// ---------- v5: Legendary tier (very hard; rarity shown on every badge) ----------
+const LG = (id, icon, name, desc, target, value, rewards) => add({ id, cat: 'legendary', tier: 'legendary', icon, name, desc, target, value, rewards });
+LG('leg-top1', 'gem', 'One Percenter', 'Hold a best score in the top 1% of an all-time game board (board must have 100+ players)', 1, s => s.top1pct, [R('title', 'one-percenter'), R('frame', 'legend-crest')]);
+LG('leg-streak-100', 'flame', 'Centurion', 'Check in 100 days in a row', 100, s => s.streakBest, [R('title', 'centurion'), R('banner', 'centurion-flame')]);
+LG('leg-mastery', 'graduation-cap', 'Grandmaster', 'Reach the Gold score tier in every game on the hub', cfg.GAMES.length, s => s.goldGames, [R('title', 'grandmaster'), R('banner', 'legend-aurora')]);
+LG('leg-runs-2000', 'hand-metal', 'Iron Thumbs', 'Finish 2,000 runs', 2000, s => s.runs, [R('title', 'iron-thumbs')]);
+LG('leg-weekly-hold', 'castle', 'Dynasty', 'Be #1 on the weekly board of 4 different games at the same time (5+ players each)', 4, s => s.lb.weekly1Count, [R('title', 'dynasty')]);
 
 const BY_ID = Object.fromEntries(A.map(a => [a.id, a]));
-const CATS = [['games', 'Game milestones'], ['overall', 'Overall'], ['progress', 'Streaks & seasons'], ['giveaways', 'Giveaways'], ['community', 'Community'], ['social', 'Friends & referrals'], ['leaderboards', 'Leaderboards & tournaments'], ['secret', 'Secret']];
+// ---------- v5: admin-granted badges (can never be unlocked by playing) ----------
+const ADMIN_BADGES = [
+  { id: 'staff', name: 'Staff', icon: 'shield-check', desc: 'Hub staff member', color: '#a78bfa' },
+  { id: 'traptech-team', name: 'Trap Tech Team', icon: 'code-xml', desc: 'Part of the Trap Tech Solutions team that builds the hub', color: '#22d3ee' },
+  { id: 'verified-host', name: 'Verified Host', icon: 'badge-check', desc: 'Verified giveaway host', color: '#4ade80' },
+  { id: 'verified-sponsor', name: 'Verified Sponsor', icon: 'store', desc: 'Verified sponsor brand or creator', color: '#34d399' },
+  { id: 'giveaway-winner', name: 'Giveaway Winner', icon: 'trophy', desc: 'Confirmed winner of a hub giveaway (granted automatically on confirmation)', color: '#fbbf24' },
+  { id: 'beta-tester', name: 'Beta Tester', icon: 'flask-conical', desc: 'Helped test the hub before launch', color: '#f472b6' },
+  { id: 'founder', name: 'Founder', icon: 'gem', desc: 'Founding member of The Gaming Hub', color: '#fde047' },
+  { id: 'community-mvp', name: 'Community MVP', icon: 'star', desc: 'Recognised by the team for making the community better', color: '#fb923c' },
+];
+const ADMIN_BY = Object.fromEntries(ADMIN_BADGES.map(b => [b.id, b]));
+const grantsOf = (userId) => db.prepare('SELECT badge_id, created_at, note FROM badge_grants WHERE user_id=? ORDER BY created_at').all(userId).filter(g => ADMIN_BY[g.badge_id]);
+const CATS = [['legendary', 'Legendary'], ['games', 'Game milestones'], ['overall', 'Overall'], ['progress', 'Streaks & seasons'], ['giveaways', 'Giveaways'], ['community', 'Community'], ['social', 'Friends & referrals'], ['leaderboards', 'Leaderboards & tournaments'], ['secret', 'Secret']];
 
 // sanity: every reward must exist
 for (const a of A) for (const r of a.rewards) if (!COS.BY[r.type][r.id]) throw new Error(`achievement ${a.id}: unknown ${r.type} ${r.id}`);
@@ -142,6 +166,14 @@ function unlockedMap(userId) {
 function ownedFrom(unlocked) {
   const own = { banner: new Set([COS.DEFAULTS.banner]), frame: new Set([COS.DEFAULTS.frame]), title: new Set([COS.DEFAULTS.title]), badge: new Set() };
   for (const id of unlocked.keys()) { const a = BY_ID[id]; if (!a) continue; own.badge.add(id); for (const r of a.rewards) own[r.type].add(r.id); }
+  return own;
+}
+// v5: everything a user owns = achievement rewards + Points Shop purchases + admin-granted badges
+function ownedAll(userId, unl) {
+  const own = ownedFrom(unl || unlockedMap(userId)); own.color = new Set(); own.effect = new Set();
+  const SH = require('./shop');
+  for (const r of db.prepare('SELECT item_id FROM user_items WHERE user_id=?').all(userId)) { const it = SH.BY_ID[r.item_id]; if (!it) continue; if (it.type === 'badge') own.badge.add('shop:' + it.id); else own[it.type].add(it.id); }
+  for (const g of grantsOf(userId)) { own.badge.add('adm:' + g.badge_id); if (g.badge_id === 'staff' || g.badge_id === 'traptech-team') own.frame.add('staff-glow'); }
   return own;
 }
 const ownedCount = (own) => own.banner.size + own.frame.size + own.title.size - 3; // excluding the 3 defaults
@@ -203,6 +235,13 @@ function computeStats(userId, opts = {}) {
   st.referrals = db.prepare('SELECT COUNT(*) AS c FROM users r WHERE r.referred_by=? AND r.banned=0 AND EXISTS (SELECT 1 FROM runs WHERE user_id=r.id)').get(userId).c;
   st.referred = db.prepare('SELECT referred_by FROM users WHERE id=?').get(userId).referred_by ? 1 : 0;
   st.shares = db.prepare('SELECT COUNT(*) AS c FROM shares WHERE user_id=?').get(userId).c;
+  // v5
+  st.chalWins = db.prepare("SELECT COUNT(*) AS c FROM challenges WHERE winner_id=? AND status='completed'").get(userId).c;
+  st.goldGames = cfg.GAMES.filter(g => (st.game[g.id]?.best || 0) >= g.tiers[2]).length;
+  st.top1pct = 0;
+  for (const g of cfg.GAMES) { if (!st.game[g.id]) continue; const rows = boards.gameBoard(g.id); if (rows.length < 100) continue; const i = rows.findIndex(r => r.user_id === userId); if (i >= 0 && i + 1 <= Math.ceil(rows.length * 0.01)) { st.top1pct = 1; break; } }
+  st.lb.weekly1Count = 0;
+  for (const g of cfg.GAMES) { const rows = boards.gameBoard(g.id, t - 7 * 864e5); if (rows.length >= 5 && rows[0].user_id === userId) st.lb.weekly1Count++; }
   return st;
 }
 
@@ -244,7 +283,30 @@ function publicCos(u) {
   const banner = COS.BY.banner[u.eq_banner] ? u.eq_banner : COS.DEFAULTS.banner;
   const frame = COS.BY.frame[u.eq_frame] ? u.eq_frame : COS.DEFAULTS.frame;
   const title = (COS.BY.title[u.eq_title] || COS.BY.title[COS.DEFAULTS.title]).name;
-  const b = BY_ID[u.eq_badge];
-  return { banner, frame, title, badge: b ? { id: b.id, name: b.name, icon: b.icon, tier: b.tier } : null };
+  const eb = String(u.eq_badge || ''); let badge = null;
+  if (eb.startsWith('adm:') && ADMIN_BY[eb.slice(4)]) { const x = ADMIN_BY[eb.slice(4)]; badge = { id: eb, name: x.name, icon: x.icon, tier: 'admin' }; }
+  else if (eb.startsWith('shop:')) { const x = require('./shop').BY_ID[eb.slice(5)]; if (x && x.type === 'badge') badge = { id: eb, name: x.name, icon: x.extra, tier: x.rarity }; }
+  else if (BY_ID[eb]) { const b = BY_ID[eb]; badge = { id: b.id, name: b.name, icon: b.icon, tier: b.tier }; }
+  const color = COS.BY.color[u.eq_color] ? u.eq_color : ''; const effect = COS.BY.effect[u.eq_effect] ? u.eq_effect : '';
+  return { banner, frame, title, badge, ...(color ? { color } : {}), ...(effect ? { effect } : {}) };
 }
-module.exports = { ACHIEVEMENTS: A, BY_ID, CATS, evaluate, computeStats, unlockedMap, ownedFrom, ownedCount, publicAch, rarity, rarityLabel, publicCos };
+// ---------- v5: unique badge art (procedural SVG medallion per achievement: tier shape + id-derived hue/pattern + glyph) ----------
+const SHAPES = {
+  bronze: 'M50 6 A44 44 0 1 1 49.9 6 Z', silver: 'M50 4 L90 27 L90 73 L50 96 L10 73 L10 27 Z', gold: 'M50 4 L90 16 L86 60 Q80 84 50 96 Q20 84 14 60 L10 16 Z',
+  epic: 'M50 3 L61 34 L95 36 L68 56 L78 90 L50 70 L22 90 L32 56 L5 36 L39 34 Z', legendary: 'M50 2 L64 14 L84 10 L86 30 L98 44 L88 60 L92 80 L72 84 L60 98 L50 88 L40 98 L28 84 L8 80 L12 60 L2 44 L14 30 L16 10 L36 14 Z',
+  admin: 'M50 4 L94 26 L94 74 L50 96 L6 74 L6 26 Z',
+};
+const TIER_RIM = { bronze: ['#f5c79b', '#9a5b2b'], silver: ['#f1f5f9', '#64748b'], gold: ['#fef08a', '#b45309'], epic: ['#f0abfc', '#7e22ce'], legendary: ['#fde047', '#db2777'], admin: ['#ffffff', '#22d3ee'] };
+function hashStr(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function badgeSvg(id, iconPaths) {
+  const a = BY_ID[id]; const adm = id.startsWith('adm:') ? ADMIN_BY[id.slice(4)] : null; if (!a && !adm) return null;
+  const tier = adm ? 'admin' : a.tier; const h = hashStr(id); const hue = adm ? null : h % 360; const pat = (h >> 9) % 4;
+  const c1 = adm ? adm.color : `hsl(${hue},80%,58%)`; const c2 = adm ? '#0b1030' : `hsl(${(hue + 40) % 360},70%,22%)`;
+  const [r1, r2] = TIER_RIM[tier];
+  const patterns = [`<circle cx="50" cy="50" r="30" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="6"/>`, `<path d="M0 30 L100 70 M0 50 L100 90 M0 10 L100 50" stroke="#fff" stroke-opacity=".1" stroke-width="5"/>`,
+    `<g fill="#fff" fill-opacity=".12"><circle cx="28" cy="30" r="5"/><circle cx="72" cy="34" r="4"/><circle cx="64" cy="72" r="6"/><circle cx="32" cy="70" r="3"/></g>`, `<path d="M50 10 L50 90 M10 50 L90 50" stroke="#fff" stroke-opacity=".1" stroke-width="8"/>`];
+  const glyph = iconPaths ? `<g transform="translate(30 30) scale(1.6667)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPaths}</g>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><defs><radialGradient id="f" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></radialGradient><linearGradient id="r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${r1}"/><stop offset="1" stop-color="${r2}"/></linearGradient><clipPath id="c"><path d="${SHAPES[tier]}"/></clipPath></defs>
+<path d="${SHAPES[tier]}" fill="url(#f)" stroke="url(#r)" stroke-width="5" stroke-linejoin="round"/><g clip-path="url(#c)">${patterns[pat]}<ellipse cx="38" cy="22" rx="30" ry="12" fill="#fff" fill-opacity=".18"/></g>${glyph}</svg>`;
+}
+module.exports = { ownedAll, ADMIN_BADGES, ADMIN_BY, grantsOf, badgeSvg, ACHIEVEMENTS: A, BY_ID, CATS, evaluate, computeStats, unlockedMap, ownedFrom, ownedCount, publicAch, rarity, rarityLabel, publicCos };

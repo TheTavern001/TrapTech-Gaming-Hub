@@ -87,7 +87,7 @@ module.exports = function v4(app, A, h) {
     const dqRows = res ? res.standings.filter(r => r.disqualified) : [];
     const ids = [...top, ...dqRows].map(r => r.user_id).filter(Boolean);
     const runs = windowRuns(g, ids); const byU = new Map(); for (const r of runs) { if (!byU.has(r.user_id)) byU.set(r.user_id, []); byU.get(r.user_id).push(r); }
-    const users = new Map(db.prepare(`SELECT id, username, created_at, banned FROM users WHERE id IN (${ids.map(() => '?').join(',') || 'NULL'})`).all(...ids).map(u => [u.id, u]));
+    const users = new Map(db.prepare(`SELECT id, username, created_at, banned, potato FROM users WHERE id IN (${ids.map(() => '?').join(',') || 'NULL'})`).all(...ids).map(u => [u.id, u]));
     const otherIp = db.prepare(`SELECT DISTINCT u.username FROM runs r JOIN users u ON u.id = r.user_id WHERE r.ip_hash = ? AND r.user_id <> ? LIMIT 10`);
     const otherDev = db.prepare(`SELECT DISTINCT u.username FROM runs r JOIN users u ON u.id = r.user_id WHERE r.ip_hash = ? AND r.ua_hash = ? AND r.user_id <> ? LIMIT 10`);
     const entry = (r) => {
@@ -107,7 +107,7 @@ module.exports = function v4(app, A, h) {
       if (mism) flags.push({ level: 'low', code: 'duration_mismatch', text: `${mism} run${mism > 1 ? 's' : ''} where the client duration differs from server time` });
       if (u.created_at && u.created_at > g.start_at - 864e5) flags.push({ level: 'low', code: 'new_account', text: 'Account created within 24h of the giveaway start (or during it)' });
       if (ips.length > 5) flags.push({ level: 'low', code: 'many_ips', text: `${ips.length} different IP hashes` });
-      return { user_id: r.user_id, username: r.username, joined_at: u.created_at || null, banned: !!u.banned, rank: r.rank, final_rank: r.final_rank ?? null, place: r.place ?? null, draw_pos: r.draw_pos ?? null,
+      return { user_id: r.user_id, username: r.username, potato: u.potato || '', potato_url: u.potato ? `https://potato.im/${u.potato}` : '', joined_at: u.created_at || null, banned: !!u.banned, rank: r.rank, final_rank: r.final_rank ?? null, place: r.place ?? null, draw_pos: r.draw_pos ?? null,
         score: r.score, attempts: r.attempts, reached_at: r.reached_at, best_run_id: r.best_run_id, tiebreak: r.tiebreak || null,
         winner: res ? !!r.winner : r.rank <= R.winnerCount(g), state: r.state || (res ? null : 'live'), disqualified: !!r.disqualified, dq_reason: r.dq_reason || null,
         flags, ip_hashes: ips.map(x => x.slice(0, 8)), shared_ip_accounts: [...shared], shared_device_accounts: [...dev], runs: info.reverse() };

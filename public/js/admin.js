@@ -19,7 +19,7 @@ const demoTag = (d) => d ? '<span class="demo-tag">DEMO</span>' : '';
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 let GAMES = [];
 
-const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['bookings', 'calendar-check', 'Bookings'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['tournaments', 'swords', 'Tournaments'], ['announcements', 'megaphone', 'Announcements'], ['reports', 'file-text', 'Reports'], ['settings', 'settings', 'Settings']];
+const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['channels', 'store', 'Brand Channels'], ['bookings', 'calendar-check', 'Bookings'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['tournaments', 'swords', 'Tournaments'], ['announcements', 'megaphone', 'Announcements'], ['badges', 'badge-check', 'Badges'], ['fairplay', 'scan-eye', 'Fair Play'], ['reports', 'file-text', 'Reports'], ['settings', 'settings', 'Settings']];
 function frame(section, title, inner, actions = '') {
   document.title = `${title.replace(/<[^>]+>/g, '')} - Admin - The Gaming Hub by Trap Tech Solutions`;
   root.innerHTML = `<div class="adm">
@@ -27,7 +27,7 @@ function frame(section, title, inner, actions = '') {
       ${NAV.map(([k, i, l]) => `<a href="/admin${k ? '/' + k : ''}" class="${section === k ? 'on' : ''}">${icon(i)}${l}</a>`).join('')}
       <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a>
       <div class="side-tt"><span>Powered by</span><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions"></div></aside>
-    <main class="amain"><div class="tt-bar">${icon('zap')} Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v4</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
+    <main class="amain"><div class="tt-bar">${icon('zap')} Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v5</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
 }
 document.addEventListener('click', async (e) => {
   if (e.target.closest('[data-logout]')) { e.preventDefault(); await fetch('/api/admin/logout', { method: 'POST' }); return loginView(); }
@@ -57,6 +57,9 @@ async function render() {
     if (s === 'giveaways' && !id) return giveaways();
     if (s === 'giveaways') return manageGiveaway(id);
     if (s === 'bookings') return bookings();
+    if (s === 'channels') return channels(id);
+    if (s === 'badges') return badges();
+    if (s === 'fairplay') return fairplay(new URLSearchParams(location.search).get('status') || 'open');
     if (s === 'players') return players();
     if (s === 'leaderboards') return leaderboards();
     if (s === 'announcements') return announcements();
@@ -124,9 +127,12 @@ const IMAGES = ['/assets/giveaways/store-credit-art.webp', '/assets/giveaways/ps
 async function manageGiveaway(id) {
   const isNew = id === 'new';
   const pre = new URLSearchParams(location.search).get('game'); const preG = GAMES.find(x => x.id === pre);
-  let g = { title: preG ? `${preG.title} Giveaway` : '', host: '', prize: '', image: preG ? preG.art : IMAGES[0], start_at: nowS(), end_at: nowS() + 7 * 864e5, game_ids: [preG ? preG.id : 'jetpack-dash'], rules: 'Must be 18+ (21+ where required). No purchase necessary. One account per person. Winner will be contacted via their Potato username.', active: true,
+  let g = { title: preG ? `${preG.title} Giveaway` : '', host: '', prize: '', image: preG ? preG.art : IMAGES[0], start_at: nowS(), end_at: nowS() + 7 * 864e5, game_ids: [preG ? preG.id : 'jetpack-dash'], rules: 'Must be 18+ (21+ where required). No purchase necessary. One account per person. Winners are contacted by Trap Tech on Potato.', active: true,
     tier: 'basic', brand_color: '', brand_logo: '', featured: false, min_score: 0, prize_tiers_raw: '' };
   let entrants = [], stats = null;
+  const [chs, ed] = await Promise.all([api('/api/admin/channels'), api('/api/admin/eligibility-defaults')]);
+  const CH = chs.ok ? chs.channels : []; const DEF = ed.ok ? ed.defaults : {};
+  if (isNew) Object.assign(g, DEF, { channel_id: null, link_url: '', link_label: '' });
   if (!isNew) { const r = await api('/api/admin/giveaways/' + id); if (!r.ok) return frame('giveaways', 'Not found', `<div class="err">${esc(r.error)}</div>`); g = r.giveaway; entrants = r.entrants; stats = r.stats; }
   const sel = new Set(g.game_ids && g.game_ids.length ? g.game_ids : [g.game_id]);
   const lockA = g.finalized_at ? 'disabled' : '';
@@ -139,7 +145,7 @@ async function manageGiveaway(id) {
           <input class="input" id="img" style="margin-top:8px" placeholder="...or an image URL (https://...) or /assets/... path" value="${esc(g.image)}"></div>
         <div class="form-grid">
           <div class="field full"><label class="lbl">Title</label><input class="input" id="title" value="${esc(g.title)}" maxlength="120" required></div>
-          <div class="field"><label class="lbl">Host</label><input class="input" id="host" value="${esc(g.host)}" placeholder="e.g. HighTimes" maxlength="80"></div>
+          <div class="field"><label class="lbl">Host</label><input class="input" id="host" value="${esc(g.host)}" placeholder="e.g. Canopy Club" maxlength="80"></div>
           <div class="field"><label class="lbl">Prize</label><input class="input" id="prize" value="${esc(g.prize)}" placeholder="$250 store credit" maxlength="200"></div>
           <div class="field"><label class="lbl">Start Date & Time</label><input class="input" type="datetime-local" id="start" value="${toLocalInput(g.start_at)}" ${lockA}></div>
           <div class="field"><label class="lbl">End Date & Time</label><input class="input" type="datetime-local" id="end" value="${toLocalInput(g.end_at)}" ${lockA}></div>
@@ -152,6 +158,22 @@ async function manageGiveaway(id) {
           <div class="field"><label class="lbl">Number of winners <span class="muted small">(0 = one per prize tier)</span></label><input class="input" type="number" min="0" max="100" id="wcount" value="${g.winner_count_raw ?? 0}" ${lockA}></div>
           <div class="field"><label class="lbl">Brand color</label><div style="display:flex;gap:8px"><input type="color" id="bcolor" value="${esc(g.brand_color || '#7c3aed')}" style="width:56px;height:48px;border:0;background:none"><label class="check" style="margin:0"><input type="checkbox" id="usecolor" ${g.brand_color ? 'checked' : ''}> Use brand color</label></div></div>
           <div class="field"><label class="lbl">Brand logo URL</label><input class="input" id="blogo" value="${esc(g.brand_logo)}" placeholder="/assets/... or https://..." maxlength="300"></div>
+          <div class="field"><label class="lbl">Brand channel</label><select class="input" id="chan"><option value="">No channel</option>${CH.map(c => `<option value="${c.id}" ${+g.channel_id === c.id ? 'selected' : ''}>${esc(c.name)} (${esc(c.tier)})</option>`).join('')}</select><div class="hint">Giveaways are grouped on the brand's channel page. <a href="/admin/channels">Manage channels</a></div></div>
+          <div class="field"><label class="lbl">Sponsor link <span class="muted small">(Premium/Elite - tracked)</span></label><input class="input" id="glink" value="${esc(g.link_url || '')}" placeholder="https://brand.example/..." maxlength="300"><input class="input" id="glinkl" value="${esc(g.link_label || '')}" placeholder="Button label, e.g. Visit Canopy Club" maxlength="40" style="margin-top:6px"></div>
+          <fieldset class="field full elig-fs" id="elig-fs"><legend class="lbl">${icon('shield-check')} Eligibility rules (anti-camping)</legend>
+            <label class="check"><input type="checkbox" id="e-join" ${g.require_join ? 'checked' : ''}> Players must tap "Enter giveaway" (only joined players are ranked/drawn)</label>
+            <div class="form-grid">
+              <div class="field"><label class="lbl">Min runs in last 7 days</label><input class="input" type="number" min="0" max="100" id="e-runs" value="${g.elig_min_runs7 ?? 0}"></div>
+              <div class="field"><label class="lbl">Account age (days)</label><input class="input" type="number" min="0" max="365" id="e-age" value="${g.elig_account_age_days ?? 0}"></div>
+              <div class="field"><label class="lbl">Max live entries per player</label><input class="input" type="number" min="0" max="50" id="e-max" value="${g.elig_max_active ?? 0}"></div>
+              <div class="field"><label class="lbl">Win cooldown (days)</label><input class="input" type="number" min="0" max="365" id="e-cool" value="${g.elig_win_cooldown_days ?? 0}"></div>
+              <div class="field"><label class="lbl">Min XP in last 7 days <span class="muted small">(alternative to runs)</span></label><input class="input" type="number" min="0" id="e-xp" value="${g.elig_min_xp7 ?? 0}"></div>
+            </div>
+            <label class="check"><input type="checkbox" id="e-brand" ${g.elig_brand_month ? 'checked' : ''}> One win per player per brand per 30 days</label>
+            <label class="check"><input type="checkbox" id="e-fol" ${g.elig_followers_only ? 'checked' : ''}> Followers of the brand channel only</label>
+            <label class="check"><input type="checkbox" id="e-w" ${g.weight_mode === 'activity' ? 'checked' : ''}> Random draws: activity entries (1 + 1 per 5 runs, max 5)</label>
+            <div class="hint">0 = off. Defaults: join required, 3 runs/7 days, 2-day account age, max 3 live entries, 30-day win cooldown, one win per brand per month. Rules show on the giveaway page and in its Official Rules.</div>
+          </fieldset>
           <div class="field full"><label class="lbl">Prize tiers <span class="muted small">(one per line, e.g. "1st - PS5 bundle")</span></label><textarea class="input" id="ptiers" maxlength="1000" style="min-height:70px" placeholder="1st - ...&#10;2nd - ...&#10;3rd - ...&#10;Random draw - ...">${esc(g.prize_tiers_raw || '')}</textarea></div>
           <div class="field full"><label class="lbl">Rules</label><textarea class="input" id="rules" maxlength="4000">${esc(g.rules)}</textarea></div>
         </div>
@@ -196,7 +218,9 @@ async function manageGiveaway(id) {
   $('#gf').addEventListener('submit', async (e) => {
     e.preventDefault();
     const body = { title: $('#title').value, host: $('#host').value, prize: $('#prize').value, image: $('#img').value.trim(), start_at: new Date($('#start').value).getTime(), end_at: new Date($('#end').value).getTime(), entry_method: 'play', game_ids: GAMES.map(x => x.id).filter(k => sel.has(k)), rules: $('#rules').value, active: $('#active').checked,
-      tier: $('#tier').value, min_score: +$('#minscore').value || 0, brand_color: $('#usecolor').checked ? $('#bcolor').value : '', brand_logo: $('#blogo').value.trim(), featured: $('#featured').checked, prize_tiers: $('#ptiers').value, win_method: $('#wmethod').value, winner_count: +$('#wcount').value || 0 };
+      tier: $('#tier').value, min_score: +$('#minscore').value || 0, brand_color: $('#usecolor').checked ? $('#bcolor').value : '', brand_logo: $('#blogo').value.trim(), featured: $('#featured').checked, prize_tiers: $('#ptiers').value, win_method: $('#wmethod').value, winner_count: +$('#wcount').value || 0,
+      channel_id: $('#chan').value || null, link_url: $('#glink').value.trim(), link_label: $('#glinkl').value.trim(), require_join: $('#e-join').checked, elig_min_runs7: +$('#e-runs').value || 0, elig_account_age_days: +$('#e-age').value || 0,
+      elig_max_active: +$('#e-max').value || 0, elig_win_cooldown_days: +$('#e-cool').value || 0, elig_min_xp7: +$('#e-xp').value || 0, elig_brand_month: $('#e-brand').checked, elig_followers_only: $('#e-fol').checked, weight_mode: $('#e-w').checked ? 'activity' : '' };
     if (g.finalized_at) Object.assign(body, { start_at: g.start_at, end_at: g.end_at });
     const r = await api(isNew ? '/api/admin/giveaways' : '/api/admin/giveaways/' + id, { method: isNew ? 'POST' : 'PUT', body });
     if (!r.ok) { $('#gm').innerHTML = `<div class="err">${esc(r.error)}</div>`; window.scrollTo(0, 0); return; }
@@ -229,7 +253,7 @@ async function loadReview(id, g) {
     <div class="rq-flags">${e.flags.length ? e.flags.map(flagChip).join('') : `<span class="flag f-ok">${icon('circle-check')}No flags</span>`}</div>
     ${runsTbl(e)}
     <div class="rq-act">${dq ? `<button class="btn ghost sm" data-reinstate>${icon('rotate-ccw')} Reinstate</button>`
-      : `${r.finalized && e.state === 'pending' ? `<button class="btn sm" data-confirm>${icon('badge-check')} Confirm winner</button>` : ''}<button class="btn danger sm" data-dq-open>${icon('user-x')} Disqualify</button>
+      : `${e.winner || e.state ? (e.potato ? `<span class="potato-contact"><a class="btn sm ghost" data-potato href="${esc(e.potato_url)}" target="_blank" rel="noopener">${icon('message-circle')} Contact on Potato</a><code>@${esc(e.potato)}</code><button class="btn sm ghost" data-copy="@${esc(e.potato)}" aria-label="Copy Potato username">${icon('copy')}</button></span>` : `<span class="pill amber" data-nopotato>${icon('triangle-alert')} No Potato username on file</span>`) : ''}${r.finalized && e.state === 'pending' ? `<button class="btn sm" data-confirm>${icon('badge-check')} Confirm winner</button>` : ''}<button class="btn danger sm" data-dq-open>${icon('user-x')} Disqualify</button>
          <div class="dq-form hidden"><input class="input" data-reason maxlength="300" placeholder="Reason (shown to the player and logged)"><button class="btn danger sm" data-dq-go>Confirm disqualification</button></div>`}</div>
   </div>`;
   box.innerHTML = `<div class="rq-head small muted">${r.finalized ? `Final standings locked ${dt(r.giveaway.finalized_at)}. Confirm each winner after checking their runs. Disqualifying a winner promotes the next place automatically.` : 'Live preview: the giveaway has not ended yet. Confirmation opens once the final standings are locked.'} ${fmt(r.total)} ranked • ${r.ms}ms</div>
@@ -239,9 +263,10 @@ async function loadReview(id, g) {
   $('#audit').innerHTML = r.audit.length ? `<div class="wrap-x"><table class="tbl sm"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Player</th><th>Detail</th></tr></thead><tbody>${r.audit.map(a => { let d = a.detail; try { const o = JSON.parse(d); d = Object.entries(o).map(([k, v]) => `${k}: ${typeof v === 'string' && v.length > 24 ? v.slice(0, 24) + '...' : v}`).join(' • '); } catch {} return `<tr data-action="${esc(a.action)}"><td class="small">${dt(a.created_at)}</td><td>${esc(a.actor)}</td><td><b>${esc(AUDIT_L[a.action] || a.action)}</b></td><td>${esc(a.username || '')}</td><td class="small muted">${esc(d)}</td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">No events yet.</div>';
   $('#rqn').onchange = () => loadReview(id, g);
   box.onclick = async (e) => {
+    const cp = e.target.closest('[data-copy]'); if (cp) { try { await navigator.clipboard.writeText(cp.dataset.copy); toast('Copied ' + cp.dataset.copy); } catch { prompt('Copy:', cp.dataset.copy); } return; }
     const it = e.target.closest('.rq-item'); if (!it) return; const uid = +it.dataset.u; const name = it.dataset.name;
     if (e.target.closest('[data-dq-open]')) { $('.dq-form', it).classList.toggle('hidden'); const inp = $('[data-reason]', it); if (inp) inp.focus(); return; }
-    if (e.target.closest('[data-confirm]')) { const x = await api(`/api/admin/giveaways/${id}/confirm`, { method: 'POST', body: { user_id: uid } }); if (!x.ok) return toast(x.error); toast(`${name} confirmed as winner #${x.winner.place}. They've been notified.`); return manageGiveaway(id); }
+    if (e.target.closest('[data-confirm]')) { const x = await api(`/api/admin/giveaways/${id}/confirm`, { method: 'POST', body: { user_id: uid } }); if (!x.ok) return toast(x.error); toast(`${name} confirmed as winner #${x.winner.place}. Notified in-app + Giveaway Winner badge granted. Message them on Potato to arrange the prize.`); return manageGiveaway(id); }
     if (e.target.closest('[data-dq-go]')) {
       const reason = $('[data-reason]', it).value.trim(); if (!reason) { toast('Enter a reason first'); $('[data-reason]', it).focus(); return; }
       const x = await api(`/api/admin/giveaways/${id}/disqualify`, { method: 'POST', body: { user_id: uid, reason } }); if (!x.ok) return toast(x.error);
@@ -255,7 +280,7 @@ async function loadReview(id, g) {
 async function bookings() {
   const r = await api('/api/admin/bookings');
   frame('bookings', 'Bookings', `<div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th>Contact</th><th>Type / Package</th><th>Dates</th><th>Details</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>
-    ${r.bookings.length ? r.bookings.map(b => `<tr data-id="${b.id}"><td>${b.id}</td><td><b>${esc(b.brand)}</b>${demoTag(b.is_demo)}<div class="small muted">${ago(b.created_at)}${b.username ? ' • ' + esc(b.username) : ''}</div></td><td class="small">${esc(b.contact_name)}<br>${esc(b.contact)}</td><td class="small">${esc(b.event_type || '-')}<br><span class="pill ${b.package === 'elite' ? 'gold' : ''}">${esc(b.package)}</span>${b.package_snapshot ? `<div class="small muted" data-snap>${esc(b.package_snapshot)}</div>` : ''}</td><td class="small">${esc(b.start_date || '?')}<br>→ ${esc(b.end_date || '?')}</td><td class="small" style="max-width:260px;white-space:pre-wrap">${esc(b.details)}</td>
+    ${r.bookings.length ? r.bookings.map(b => `<tr data-id="${b.id}"><td>${b.id}</td><td><b>${esc(b.brand)}</b>${demoTag(b.is_demo)}<div class="small muted">${ago(b.created_at)}${b.username ? ' • ' + esc(b.username) : ''}</div></td><td class="small">${esc(b.contact_name)}<br>${esc(b.contact)}${b.business_type ? `<div class="tiny muted">${esc(b.business_type)}${b.licensed_confirmed ? ' • licensed ✓' : ''}</div>` : ''}${b.email ? `<div><a href="mailto:${esc(b.email)}">${esc(b.email)}</a></div>` : ''}${b.potato ? `<div><a class="btn sm ghost" href="https://potato.im/${esc(b.potato)}" target="_blank" rel="noopener">${icon('message-circle')} @${esc(b.potato)} on Potato</a></div>` : ''}</td><td class="small">${esc(b.event_type || '-')}<br><span class="pill ${b.package === 'elite' ? 'gold' : ''}">${esc(b.package)}</span>${b.package_snapshot ? `<div class="small muted" data-snap>${esc(b.package_snapshot)}</div>` : ''}</td><td class="small">${esc(b.start_date || '?')}<br>→ ${esc(b.end_date || '?')}</td><td class="small" style="max-width:260px;white-space:pre-wrap">${esc(b.details)}</td>
       <td><select class="input" data-st style="height:36px;width:120px">${['pending', 'approved', 'declined', 'done'].map(s => `<option ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
       <td><input class="input" data-note value="${esc(b.admin_note)}" placeholder="Internal note" style="height:36px;min-width:140px"></td>
       <td style="white-space:nowrap"><button class="btn sm" data-save>Save</button> <button class="iconbtn" data-del aria-label="Delete">${icon('trash-2')}</button></td></tr>`).join('') : '<tr><td colspan="9" class="empty">No booking requests yet.</td></tr>'}
@@ -405,3 +430,67 @@ async function settings() {
 }
 
 render();
+
+// ---------- v5: brand channels ----------
+async function channels(editId) {
+  const r = await api('/api/admin/channels');
+  const c = editId && editId !== 'new' ? r.channels.find(x => String(x.id) === String(editId)) : null;
+  const f = c || { name: '', slug: '', tagline: '', logo: '', color: '#7c3aed', tier: 'basic', link_url: '', link_label: '', business_type: '', active: 1 };
+  frame('channels', 'Brand Channels', `<p class="muted small" style="margin-top:0">Each sponsor gets its own channel: its giveaways, followers and (Premium/Elite) a tracked link. Players follow the brands they like, so giveaways stay separated by brand and campers can be limited per brand.</p>
+    <div class="cols" style="margin-top:0;grid-template-columns:1.2fr 1fr">
+      <div class="card wrap-x"><table class="tbl" id="ch-tbl"><thead><tr><th>Channel</th><th>Tier</th><th class="num">Followers</th><th class="num">Link clicks</th><th>Visible</th><th></th></tr></thead><tbody>
+        ${r.channels.length ? r.channels.map(x => `<tr data-ch="${x.id}"><td><b>${esc(x.name)}</b>${demoTag(x.is_demo)}<div class="small muted">/c/${esc(x.slug)}</div></td><td><span class="pill ${x.tier === 'elite' ? 'gold' : ''}">${esc(x.tier)}</span></td><td class="num">${fmt(x.followers)}</td><td class="num">${fmt(x.clicks)}</td><td>${x.active ? '<span class="pill green">on</span>' : '<span class="pill red">off</span>'}</td><td><a class="btn sm" href="/admin/channels/${x.id}">Edit</a></td></tr>`).join('') : '<tr><td colspan="6" class="empty">No channels yet.</td></tr>'}
+      </tbody></table></div>
+      <form class="card pad" id="chf"><h2 style="margin-bottom:10px">${c ? 'Edit channel' : 'New channel'}</h2><div id="chm"></div>
+        <div class="field"><label class="lbl">Brand name</label><input class="input" id="c-name" value="${esc(f.name)}" maxlength="60" required></div>
+        <div class="field"><label class="lbl">Slug <span class="muted small">(URL: /c/slug)</span></label><input class="input" id="c-slug" value="${esc(f.slug)}" maxlength="40" placeholder="auto from name"></div>
+        <div class="field"><label class="lbl">Tagline</label><input class="input" id="c-tag" value="${esc(f.tagline)}" maxlength="160"></div>
+        <div class="field"><label class="lbl">Logo</label><input class="input" id="c-logo" value="${esc(f.logo)}" placeholder="/assets/... or https://..." maxlength="300"></div>
+        <div class="form-grid"><div class="field"><label class="lbl">Tier</label><select class="input" id="c-tier">${['basic', 'premium', 'elite'].map(t => `<option ${f.tier === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+          <div class="field"><label class="lbl">Color</label><input type="color" id="c-color" value="${esc(f.color || '#7c3aed')}" style="width:56px;height:44px;border:0;background:none"></div></div>
+        <div class="field"><label class="lbl">Channel link <span class="muted small">(shown for Premium/Elite only)</span></label><input class="input" id="c-link" value="${esc(f.link_url)}" placeholder="https://..." maxlength="300"><input class="input" id="c-linkl" value="${esc(f.link_label)}" placeholder="Button label" maxlength="40" style="margin-top:6px"></div>
+        <div class="field"><label class="lbl">Business type</label><input class="input" id="c-bt" value="${esc(f.business_type)}" maxlength="80"></div>
+        <label class="check"><input type="checkbox" id="c-active" ${f.active ? 'checked' : ''}> Visible</label>
+        <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" style="flex:1">${icon('check')} ${c ? 'Save' : 'Create channel'}</button>${c ? `<button class="btn danger" type="button" id="c-del">${icon('trash-2')}</button>` : ''}</div>
+      </form></div>`, `<a class="btn sm" href="/admin/channels/new">${icon('plus')} New channel</a>`);
+  $('#chf').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = { name: $('#c-name').value, slug: $('#c-slug').value, tagline: $('#c-tag').value, logo: $('#c-logo').value.trim(), tier: $('#c-tier').value, color: $('#c-color').value, link_url: $('#c-link').value.trim(), link_label: $('#c-linkl').value, business_type: $('#c-bt').value, active: $('#c-active').checked };
+    const x = await api(c ? '/api/admin/channels/' + c.id : '/api/admin/channels', { method: c ? 'PUT' : 'POST', body });
+    if (!x.ok) { $('#chm').innerHTML = `<div class="err">${esc(x.error)}</div>`; return; }
+    toast('Saved'); nav('/admin/channels');
+  });
+  const d = $('#c-del'); if (d) d.onclick = async () => { if (!confirm('Delete this channel? Its giveaways stay but lose the channel.')) return; await api('/api/admin/channels/' + c.id, { method: 'DELETE' }); toast('Deleted'); nav('/admin/channels'); };
+}
+
+// ---------- v5: admin-only badges ----------
+async function badges() {
+  const r = await api('/api/admin/badges');
+  frame('badges', 'Special Badges', `<p class="muted small" style="margin-top:0">Special badges can't be unlocked by playing. Grant them to staff, the Trap Tech team, verified hosts/sponsors, beta testers, founders and community MVPs. "Giveaway Winner" is granted automatically when you confirm a winner. Every grant and revoke is logged.</p>
+    <div class="badge-defs">${r.badges.map(b => `<div class="card bdef" data-badge="${esc(b.id)}"><img src="${esc(b.art)}" alt="" width="52" height="52"><div><b>${esc(b.name)}</b><div class="tiny muted">${esc(b.desc)}</div><div class="tiny">${fmt(b.holders)} holder${b.holders === 1 ? '' : 's'}</div></div></div>`).join('')}</div>
+    <form class="card pad" id="bgf" style="margin-top:14px"><h2 style="margin-bottom:10px">${icon('badge-plus')} Grant or revoke</h2><div id="bgm"></div>
+      <div class="form-grid"><div class="field"><label class="lbl">Player username</label><input class="input" id="bg-user" placeholder="username" autocapitalize="none" required></div>
+        <div class="field"><label class="lbl">Badge</label><select class="input" id="bg-badge">${r.badges.map(b => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}</select></div>
+        <div class="field full"><label class="lbl">Note <span class="muted small">(logged)</span></label><input class="input" id="bg-note" maxlength="200" placeholder="Why?"></div></div>
+      <div style="display:flex;gap:8px"><button class="btn" id="bg-grant" style="flex:1">${icon('badge-plus')} Grant badge</button><button class="btn danger" type="button" id="bg-revoke">${icon('badge-minus')} Revoke</button></div></form>
+    <div class="cols"><div class="card"><div class="panel-h"><h2>Current holders</h2></div><div class="wrap-x"><table class="tbl sm" id="bg-holders"><thead><tr><th>Player</th><th>Badge</th><th>By</th><th>Note</th><th>When</th></tr></thead><tbody>${r.grants.map(g => `<tr><td>${esc(g.username)}</td><td>${esc((r.badges.find(b => b.id === g.badge_id) || {}).name || g.badge_id)}</td><td>${esc(g.granted_by)}</td><td class="small muted">${esc(g.note)}</td><td class="small">${dt(g.created_at)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Nobody yet.</td></tr>'}</tbody></table></div></div>
+      <div class="card"><div class="panel-h"><h2>${icon('scroll-text')} Audit log</h2></div><div class="wrap-x"><table class="tbl sm" id="bg-audit"><thead><tr><th>When</th><th>Action</th><th>Player</th><th>Badge</th><th>Actor</th><th>Note</th></tr></thead><tbody>${r.audit.map(a => `<tr><td class="small">${dt(a.created_at)}</td><td><b>${esc(a.action)}</b></td><td>${esc(a.username)}</td><td>${esc(a.badge_id)}</td><td>${esc(a.actor)}</td><td class="small muted">${esc(a.note)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">No events yet.</td></tr>'}</tbody></table></div></div></div>`);
+  const send = async (act) => { const x = await api('/api/admin/badges/' + act, { method: 'POST', body: { username: $('#bg-user').value.trim(), badge: $('#bg-badge').value, note: $('#bg-note').value } });
+    if (!x.ok) { $('#bgm').innerHTML = `<div class="err">${esc(x.error)}</div>`; return; } toast(act === 'grant' ? 'Badge granted - player notified' : 'Badge revoked'); badges(); };
+  $('#bgf').addEventListener('submit', (e) => { e.preventDefault(); send('grant'); });
+  $('#bg-revoke').onclick = () => { if ($('#bg-user').value.trim()) send('revoke'); };
+}
+
+// ---------- v5: fair-play review (anti-cheat) ----------
+async function fairplay(status) {
+  const r = await api('/api/admin/flags?status=' + status);
+  const L = { open: 'Held for review', note: 'Notes (counted)', cleared: 'Cleared', confirmed: 'Confirmed cheating' };
+  frame('fairplay', 'Fair Play Review', `<p class="muted small" style="margin-top:0">Only physically impossible scores are rejected. Everything else is saved. <b>Held</b> runs are hidden from leaderboards and giveaways until you clear them; <b>notes</b> count normally and are just for your awareness. Memory Match runs are replayed on the server from the run seed. Nobody is ever banned automatically.</p>
+    <div class="tabs" id="fp-tabs">${Object.entries(L).map(([k, l]) => `<a href="/admin/fairplay?status=${k}" class="${k === status ? 'on' : ''}" style="padding:8px 12px">${l} <span class="pill">${fmt(r.counts[k] || 0)}</span></a>`).join('')}</div>
+    <div id="fp-list">${r.flags.length ? r.flags.map(f => `<div class="card pad fp-item" data-run="${f.run_id}"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>${esc(f.username)}</b><span class="muted small">${esc(GAMES.find(g => g.id === f.game_id)?.title || f.game_id)} • run #${f.run_id}</span><b class="orb">${fmt(f.score)}</b><span class="small muted">${(f.elapsed_ms / 1000).toFixed(1)}s server time • ${dt(f.created_at)}</span>${f.verify ? `<span class="pill green">${esc(f.verify)}</span>` : ''}</div>
+      <div class="rq-flags" style="margin:8px 0">${f.reasons.map(x => `<span class="flag f-${x.sev >= 2 ? 'high' : 'low'}">${icon(x.sev >= 2 ? 'shield-alert' : 'info')}${esc(x.text)}</span>`).join('')}</div>
+      <div class="small muted">Previous runs: ${f.history.map(h => fmt(h.score)).join(', ') || 'none'}</div>
+      ${status === 'open' || status === 'note' ? `<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input class="input" data-note placeholder="Note (optional)" style="flex:1;min-width:160px;height:38px"><button class="btn sm" data-clear>${icon('circle-check')} Clear - score counts</button><button class="btn danger sm" data-confirm-cheat>${icon('ban')} Confirm cheating - keep excluded</button></div>` : `<div class="tiny muted" style="margin-top:6px">${esc(f.reviewed_by || '')} ${f.reviewed_at ? dt(f.reviewed_at) : ''} ${esc(f.note || '')}</div>`}</div>`).join('') : '<div class="empty card">Nothing here. </div>'}</div>`);
+  $('#fp-list').onclick = async (e) => { const it = e.target.closest('.fp-item'); if (!it) return; const act = e.target.closest('[data-clear]') ? 'clear' : e.target.closest('[data-confirm-cheat]') ? 'confirm' : null; if (!act) return;
+    const x = await api(`/api/admin/flags/${it.dataset.run}/${act}`, { method: 'POST', body: { note: ($('[data-note]', it) || {}).value || '' } }); if (!x.ok) return toast(x.error); toast(act === 'clear' ? 'Cleared - the run now counts' : 'Kept excluded'); fairplay(status); };
+}

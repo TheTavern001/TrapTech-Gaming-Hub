@@ -8,6 +8,7 @@ const cfg = require('./config');
 const db = require('./db');
 const boards = require('./boards');
 const ach = require('./achievements');
+const AC = require('./anticheat');
 const COS = require('./cosmetics');
 const PK = require('./packages');
 const { gameBoard, globalBoard, ranked, giveawayEntrants, giveawayStatus, activeGiveawaysFor, giveawayGameIds } = boards;
@@ -82,7 +83,7 @@ function currentUser(req) {
   // cookie first; X-Session header for in-app browsers (Potato / WebViews) that block cookies
   const tok = verify(cfg.SESSION_SECRET, parseCookies(req).gh_sess || String(req.headers['x-session'] || ''));
   if (!tok || tok.e < now()) return null;
-  const u = db.prepare('SELECT id, username, created_at, banned, is_demo, eq_banner, eq_frame, eq_title, eq_badge FROM users WHERE id=?').get(tok.u);
+  const u = db.prepare('SELECT id, username, created_at, banned, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect FROM users WHERE id=?').get(tok.u);
   if (!u || u.banned) return null;
   return u;
 }
@@ -101,6 +102,7 @@ const USERNAME_RE = /^[A-Za-z0-9_.-]{3,20}$/;
 app.post('/api/auth/signup', limiter('signup', 10, 3600e3), (req, res) => {
   const username = str(req.body.username, 40); const password = String(req.body.password || '');
   if (!USERNAME_RE.test(username)) return bad(res, 400, 'Username must be 3-20 characters: letters, numbers, _ . - (no spaces).');
+  { const pf = require('./profanity').check(username); if (!pf.ok) return bad(res, 400, pf.reason); }
   if (password.length < 8 || password.length > 200) return bad(res, 400, 'Password must be at least 8 characters.');
   if (!req.body.agree) return bad(res, 400, 'Please agree to the Terms of Service and Privacy Policy.');
   // 21+ only (cannabis-brand sponsors). Neutral date-of-birth check, validated on the server.
@@ -115,7 +117,9 @@ app.post('/api/auth/signup', limiter('signup', 10, 3600e3), (req, res) => {
   const referrer = refCode ? db.prepare('SELECT id FROM users WHERE ref_code=? AND banned=0').get(refCode) : null;
   if (db.prepare('SELECT 1 FROM users WHERE username=?').get(username)) return bad(res, 409, 'That Potato username is taken.');
   const hash = bcrypt.hashSync(password, 10);
-  const info = db.prepare('INSERT INTO users (username, pass_hash, created_at, last_seen, birth_date, referred_by) VALUES (?,?,?,?,?,?)').run(username, hash, now(), now(), dob, referrer ? referrer.id : null);
+  const potato = str(req.body.potato, 40).replace(/^@/, '') || (/^[A-Za-z0-9_]{3,32}$/.test(username) ? username : '');
+  if (potato && !/^[A-Za-z0-9_]{3,32}$/.test(potato)) return bad(res, 400, 'Potato usernames use letters, numbers and _ (3-32 characters).');
+  const info = db.prepare('INSERT INTO users (username, pass_hash, created_at, last_seen, birth_date, referred_by, potato) VALUES (?,?,?,?,?,?,?)').run(username, hash, now(), now(), dob, referrer ? referrer.id : null, potato);
   const user = { id: info.lastInsertRowid, username };
   if (referrer) require('./notify').notify(referrer.id, 'referral', `${username} signed up with your invite`, 'It counts as soon as they finish their first scored run.', '/u/' + encodeURIComponent(username), 'gift');
   logActivity('player', `New player registered: ${username}`, user.id);
@@ -146,7 +150,7 @@ app.post('/api/auth/password', requireUser, limiter('pw', 10, 3600e3), (req, res
 
 app.get('/api/me', (req, res) => {
   const u = currentUser(req);
-  res.json({ ok: true, user: u ? { username: u.username, created_at: u.created_at, cos: ach.publicCos(u), ...H.meExtras(u) } : null, now: now() });
+  res.json({ ok: true, user: u ? { username: u.username, created_at: u.created_at, cos: ach.publicCos(u), potato: db.prepare('SELECT potato FROM users WHERE id=?').get(u.id).potato, ...H.meExtras(u), ...(H.meV5 ? H.meV5(u) : {}) } : null, now: now() });
 });
 
 // ---------- games & leaderboards ----------
@@ -189,8 +193,9 @@ app.post('/api/run/start', requireUser, (req, res) => {
   if (!rateLimit(`start-u:${req.user.id}`, 20, 60e3) || !rateLimit(`start-ip:${ipHash(req)}`, 40, 60e3)) return bad(res, 429, 'Too many runs started, wait a moment.');
   const rid = crypto.randomBytes(16).toString('hex');
   const t = now();
-  db.prepare('INSERT INTO run_tokens (rid,user_id,game_id,started_at,ip_hash) VALUES (?,?,?,?,?)').run(rid, req.user.id, gameId, t, ipHash(req));
-  res.json({ ok: true, token: sign(cfg.RUN_SECRET, { rid, u: req.user.id, g: gameId, t }), started_at: t });
+  const seed = AC.newSeed();
+  db.prepare('INSERT INTO run_tokens (rid,user_id,game_id,started_at,ip_hash,seed) VALUES (?,?,?,?,?,?)').run(rid, req.user.id, gameId, t, ipHash(req), seed);
+  res.json({ ok: true, token: sign(cfg.RUN_SECRET, { rid, u: req.user.id, g: gameId, t }), started_at: t, seed });
 });
 
 app.post('/api/score', requireUser, (req, res) => {
@@ -213,10 +218,13 @@ app.post('/api/score', requireUser, (req, res) => {
   if (!Number.isInteger(coins) || coins < 0 || coins > 1_000_000) return reject(400, 'Invalid coin value.');
   // per-game plausibility caps against SERVER-measured elapsed time (see config.js GAMES[].ac)
   const elapsedS = (t - row.started_at) / 1000;
-  const maxScore = Math.min(ac.max, Math.floor(ac.perSec * elapsedS + ac.grace));
-  if (score > maxScore) return reject(422, `Score rejected: ${score}${unit} in ${elapsedS.toFixed(1)}s is not possible in ${game.title} (max ${maxScore}${unit}).`);
-  if (coins > ac.coinsPerSec * elapsedS + 10) return reject(422, 'Coin count rejected as implausible.');
-  const durationMs = Math.max(0, Math.min(Math.round(Number(req.body.duration_ms) || 0), t - row.started_at + 5000));
+  const rawDur = Math.round(Number(req.body.duration_ms) || 0);
+  const durationMs = Math.max(0, Math.min(rawDur, t - row.started_at + 5000));
+  // v5 anti-cheat (src/anticheat.js): only physically impossible runs are rejected; suspicious ones are kept + flagged
+  const tel = req.body.tel && typeof req.body.tel === 'object' ? req.body.tel : null;
+  const verdict = AC.assess({ userId: req.user.id, game: { ...game, id: row.game_id }, score, elapsedS, durationMs: rawDur, tel, seed: row.seed, log: Array.isArray(req.body.log) ? req.body.log : null });
+  if (verdict.reject) return reject(422, `Score rejected: ${score}${unit} in ${elapsedS.toFixed(1)}s is not possible in ${game.title} (max ${verdict.cap}${unit}).`);
+  if (coins > 2 * ac.coinsPerSec * elapsedS + 20) return reject(422, 'Coin count rejected as implausible.');
 
   // single-use: atomically claim the token
   const claim = db.prepare("UPDATE run_tokens SET used_at=?, status='accepted' WHERE rid=? AND used_at IS NULL").run(t, row.rid);
@@ -224,7 +232,8 @@ app.post('/api/score', requireUser, (req, res) => {
 
   const prevBest = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=?').get(req.user.id, row.game_id).b;
   const levelBefore = H.levelOf(req.user.id);
-  const gws = activeGiveawaysFor(row.game_id, t).filter(g => row.started_at >= g.start_at);
+  const gws = activeGiveawaysFor(row.game_id, t).filter(g => row.started_at >= g.start_at)
+    .filter(g => !g.require_join || db.prepare('SELECT 1 FROM giveaway_entries WHERE giveaway_id=? AND user_id=? AND left_at IS NULL').get(g.id, req.user.id));
   const newEntries = [];
   for (const g of gws) {
     if (score < (g.min_score || 0)) continue;
@@ -232,11 +241,12 @@ app.post('/api/score', requireUser, (req, res) => {
     const had = db.prepare(`SELECT 1 FROM runs WHERE user_id=? AND game_id IN (${ph}) AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
     if (!had) newEntries.push(g);
   }
-  const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash) VALUES (?,?,?,?,?,?,?,?,?)')
-    .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req));
+  const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req), row.seed || '', verdict.verify || '', verdict.held || 0);
+  AC.record(info.lastInsertRowid, req.user.id, row.game_id, score, verdict, t);
   for (const g of newEntries) logActivity('entry', `${req.user.username} entered "${g.title}"`, req.user.id, g.id);
   const isBest = prevBest === null || prevBest === undefined || score > prevBest;
-  if (isBest && score >= (game.tiers ? game.tiers[0] : 100)) logActivity('highscore', `New high score (${game.title}): ${req.user.username} - ${score.toLocaleString('en-US')}${unit}`, req.user.id, info.lastInsertRowid);
+  if (isBest && !verdict.held && score >= (game.tiers ? game.tiers[0] : 100)) logActivity('highscore', `New high score (${game.title}): ${req.user.username} - ${score.toLocaleString('en-US')}${unit}`, req.user.id, info.lastInsertRowid);
 
   const board = gameBoard(row.game_id);
   const rank = board.findIndex(r => r.user_id === req.user.id) + 1;
@@ -256,7 +266,11 @@ app.post('/api/score', requireUser, (req, res) => {
   const unlocked = ach.evaluate(req.user.id, { games: [row.game_id] }).fresh;
   for (const a of unlocked) if (['gold', 'epic', 'legendary'].includes(a.tier) && !a.hidden) logActivity('achievement', `${req.user.username} unlocked "${a.name}"`, req.user.id);
   const extra = H.afterRun(req.user, levelBefore);
-  res.json({ ok: true, run_id: info.lastInsertRowid, share_url: `/s/${info.lastInsertRowid}`, level: extra.level, level_up: extra.level_up || null, xp_gained: extra.level.xp - levelBefore.xp, game_id: row.game_id, score, coins, personal_best: isBest, best: Math.max(score, prevBest || 0), rank, players: board.length, giveaways: counted, giveaway_status: giveawayStatusOut, unlocked });
+  if (H.settleChallenges) H.settleChallenges(req.user.id);
+  const first = board[0]; const toFirst = first && first.user_id !== req.user.id ? first.score - Math.max(score, prevBest || 0) + 1 : 0;
+  let points = null; try { const before = require('./shop').balance(req.user.id); const after = require('./shop').sync(req.user.id); points = { balance: after, gained: after - before }; } catch (e) { console.error('points sync', e.message); }
+  res.json({ ok: true, held: !!verdict.held, verified: verdict.verify === 'replay-ok', held_reason: verdict.held ? 'Huge score! It is in a quick fair-play review and will appear on the leaderboards and giveaways as soon as a Trap Tech admin verifies it. Your score is saved and nothing is deleted.' : null,
+    to_first: toFirst > 0 ? toFirst : 0, is_first: !!(first && first.user_id === req.user.id), points, run_id: info.lastInsertRowid, share_url: `/s/${info.lastInsertRowid}`, level: extra.level, level_up: extra.level_up || null, xp_gained: extra.level.xp - levelBefore.xp, game_id: row.game_id, score, coins, personal_best: isBest, best: Math.max(score, prevBest || 0), rank, players: board.length, giveaways: counted, giveaway_status: giveawayStatusOut, unlocked });
 });
 
 // ---------- giveaways ----------
@@ -275,6 +289,7 @@ function giveawayPublic(g, withWinners = true) {
     status: giveawayStatus(g), entrants: entrants.length, demo: !!g.is_demo, top: entrants.slice(0, 3).map(publicRow),
     win_method: g.win_method || 'score', winner_count: R.winnerCount(g), finalized_at: g.finalized_at || null, draw_commit: g.draw_commit || null,
     entrants_hash: g.entrants_hash || null, tiebreak_rules: R.TIEBREAK_RULES };
+  if (H.v5Giveaway) Object.assign(out, H.v5Giveaway(g));
   if (withWinners) {
     const res = g.finalized_at ? R.results(g) : null;
     // after the lock, winners come from the immutable final standings (pending until an admin confirms)
@@ -318,7 +333,7 @@ function profileFor(user) {
     cos: ach.publicCos(user), achievements, achievements_total: ach.ACHIEVEMENTS.length, recent };
 }
 app.get('/api/profile/:username', (req, res) => {
-  const u = db.prepare('SELECT id, username, created_at, is_demo, eq_banner, eq_frame, eq_title, eq_badge FROM users WHERE username=? AND banned=0').get(String(req.params.username));
+  const u = db.prepare('SELECT id, username, created_at, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect FROM users WHERE username=? AND banned=0').get(String(req.params.username));
   if (!u) return bad(res, 404, 'Player not found');
   const me = currentUser(req);
   // catch up on achievements that depend on things other people did (giveaway draws, leaderboard moves)
@@ -355,26 +370,33 @@ app.get('/api/achievements', (req, res) => {
   res.json({ ok: true, user: who, is_me: !!me, cats: ach.CATS, achievements: r.list, players: r.players, unlocked: r.fresh });
 });
 function cosmeticsFor(user) {
-  const unl = ach.unlockedMap(user.id); const own = ach.ownedFrom(unl);
+  const unl = ach.unlockedMap(user.id); const own = ach.ownedAll(user.id, unl);
   const source = {}; for (const a of ach.ACHIEVEMENTS) for (const r of a.rewards) source[`${r.type}:${r.id}`] = a;
+  const SH = require('./shop');
   const item = (type, x) => { const a = source[`${type}:${x.id}`]; const owned = own[type].has(x.id);
-    return { id: x.id, name: x.name, owned, from: a ? (a.hidden && !unl.has(a.id) ? 'Secret achievement' : a.name) : 'Free', default: COS.DEFAULTS[type] === x.id, ...(type === 'frame' ? { anim: x.anim } : {}) }; };
+    return { id: x.id, name: x.name, owned, from: a ? (a.hidden && !unl.has(a.id) ? 'Secret achievement' : a.name) : x.id === 'staff-glow' ? 'Staff only' : 'Free', default: COS.DEFAULTS[type] === x.id, ...(type === 'frame' ? { anim: x.anim } : {}) }; };
+  const shopItem = (it) => ({ id: it.id, name: it.name, owned: own[it.type].has(it.id), from: 'Points Shop', rarity: it.rarity, ...(it.type === 'frame' ? { anim: it.extra.split('|')[1] } : {}) });
+  const shopOf = (type) => SH.ITEMS.filter(i => i.type === type).map(shopItem);
+  const grants = ach.grantsOf(user.id);
   return {
-    banners: COS.BANNERS.map(b => item('banner', b)), frames: COS.FRAMES.map(f => item('frame', f)), titles: COS.TITLES.map(t => item('title', t)),
-    badges: ach.ACHIEVEMENTS.filter(a => unl.has(a.id)).map(a => ({ id: a.id, name: a.name, icon: a.icon, tier: a.tier, owned: true })),
-    equipped: { banner: user.eq_banner || COS.DEFAULTS.banner, frame: user.eq_frame || 'none', title: user.eq_title || COS.DEFAULTS.title, badge: user.eq_badge || '' },
-    owned_count: ach.ownedCount(own), badge_count: own.badge.size,
-    totals: { banners: COS.BANNERS.length, frames: COS.FRAMES.length, titles: COS.TITLES.length, badges: ach.ACHIEVEMENTS.length },
+    banners: [...COS.BANNERS.map(b => item('banner', b)), ...shopOf('banner')], frames: [...COS.FRAMES.map(f => item('frame', f)), ...shopOf('frame')], titles: [...COS.TITLES.map(t => item('title', t)), ...shopOf('title')],
+    colors: shopOf('color'), effects: shopOf('effect'),
+    badges: [...grants.map(g => { const b = ach.ADMIN_BY[g.badge_id]; return { id: 'adm:' + b.id, name: b.name, icon: b.icon, tier: 'admin', owned: true }; }),
+      ...ach.ACHIEVEMENTS.filter(a => unl.has(a.id)).map(a => ({ id: a.id, name: a.name, icon: a.icon, tier: a.tier, owned: true })),
+      ...SH.ITEMS.filter(i => i.type === 'badge' && own.badge.has('shop:' + i.id)).map(i => ({ id: 'shop:' + i.id, name: i.name, icon: i.extra, tier: i.rarity, owned: true }))],
+    equipped: { banner: user.eq_banner || COS.DEFAULTS.banner, frame: user.eq_frame || 'none', title: user.eq_title || COS.DEFAULTS.title, badge: user.eq_badge || '', color: user.eq_color || '', effect: user.eq_effect || '' },
+    owned_count: ach.ownedCount(own) + own.color.size + own.effect.size, badge_count: own.badge.size,
+    totals: { banners: COS.BANNERS.length + shopOf('banner').length, frames: COS.FRAMES.length + shopOf('frame').length, titles: COS.TITLES.length + shopOf('title').length, badges: ach.ACHIEVEMENTS.length },
   };
 }
 app.get('/api/cosmetics', requireUser, (req, res) => res.json({ ok: true, ...cosmeticsFor(req.user), cos: ach.publicCos(req.user) }));
 app.post('/api/me/cosmetics', requireUser, limiter('equip', 60, 60e3), (req, res) => {
-  const own = ach.ownedFrom(ach.unlockedMap(req.user.id));
+  const own = ach.ownedAll(req.user.id);
   const upd = {};
-  for (const [k, col] of [['banner', 'eq_banner'], ['frame', 'eq_frame'], ['title', 'eq_title'], ['badge', 'eq_badge']]) {
+  for (const [k, col] of [['banner', 'eq_banner'], ['frame', 'eq_frame'], ['title', 'eq_title'], ['badge', 'eq_badge'], ['color', 'eq_color'], ['effect', 'eq_effect']]) {
     if (req.body[k] === undefined) continue;
     const v = String(req.body[k] || '');
-    if (k === 'badge' && v === '') { upd[col] = ''; continue; }
+    if ((k === 'badge' || k === 'color' || k === 'effect') && v === '') { upd[col] = ''; continue; }
     if (!own[k].has(v)) return bad(res, 403, `You haven't unlocked that ${k} yet.`);
     upd[col] = v;
   }
@@ -388,7 +410,7 @@ app.get('/cosmetics.css', (req, res) => { res.setHeader('Content-Type', 'text/cs
 const COS_CSS = COS.css();
 
 // ---------- community ----------
-const userCos = (id) => { const u = id && db.prepare('SELECT username, is_demo, eq_banner, eq_frame, eq_title, eq_badge FROM users WHERE id=?').get(id); return u ? { username: u.username, demo: !!u.is_demo, cos: ach.publicCos(u) } : null; };
+const userCos = (id) => { const u = id && db.prepare('SELECT username, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect FROM users WHERE id=?').get(id); return u ? { username: u.username, demo: !!u.is_demo, cos: ach.publicCos(u) } : null; };
 app.get('/api/community', (req, res) => {
   const tab = req.query.tab || 'all';
   const ann = db.prepare('SELECT id, title, body, created_at, is_demo FROM announcements ORDER BY created_at DESC LIMIT 30').all().map(a => ({ kind: 'announcement', key: `a:${a.id}`, ...a }));
@@ -508,7 +530,11 @@ function readGiveaway(b) {
     brand_logo: str(b.brand_logo, 300), featured: b.featured ? 1 : 0, min_score: Math.max(0, Math.min(10_000_000, parseInt(b.min_score || '0', 10) || 0)),
     prize_tiers: str(b.prize_tiers, 1000),
     win_method: b.win_method === 'random' ? 'random' : 'score', winner_count: Math.max(0, Math.min(100, parseInt(b.winner_count || '0', 10) || 0)),
+    channel_id: parseInt(b.channel_id, 10) || null, link_url: str(b.link_url, 300), link_label: str(b.link_label, 40),
+    ...require('./eligibility').read(b),
   };
+  if (g.link_url && !/^https:\/\/[^\s"'<>]{4,300}$/.test(g.link_url)) return [null, 'Sponsor link must be an https:// URL.'];
+  if (g.channel_id && !db.prepare('SELECT 1 FROM channels WHERE id=?').get(g.channel_id)) return [null, 'Unknown channel.'];
   if (!g.title) return [null, 'Title is required.'];
   if (!Number.isFinite(g.start_at) || !Number.isFinite(g.end_at)) return [null, 'Start and end date/time are required.'];
   if (g.end_at <= g.start_at) return [null, 'End time must be after start time.'];
@@ -530,7 +556,7 @@ A.get('/giveaways', (req, res) => {
   const list = db.prepare('SELECT * FROM giveaways ORDER BY start_at DESC').all().map(g => ({ ...giveawayPublic(g), active: !!g.active }));
   res.json({ ok: true, giveaways: list, now: now() });
 });
-const GW_COLS = 'title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,tier,brand_color,brand_logo,featured,min_score,prize_tiers,win_method,winner_count';
+const GW_COLS = 'title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,tier,brand_color,brand_logo,featured,min_score,prize_tiers,win_method,winner_count,channel_id,link_url,link_label,' + require('./eligibility').FIELDS.join(',');
 A.post('/giveaways', (req, res) => {
   const [g, err, gameIds] = readGiveaway(req.body || {}); if (err) return bad(res, 400, err);
   const t = now();
@@ -544,7 +570,7 @@ A.post('/giveaways', (req, res) => {
 A.get('/giveaways/:id', (req, res) => {
   const g = R.ready(db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id)); if (!g) return bad(res, 404, 'Not found');
   const entrants = giveawayEntrants(g);
-  res.json({ ok: true, giveaway: { ...giveawayPublic(g), active: !!g.active, prize_tiers_raw: g.prize_tiers || '', winner_count_raw: g.winner_count || 0 }, entrants: entrants.map(publicRow), stats: boards.giveawayStats(g), now: now() });
+  res.json({ ok: true, giveaway: { ...giveawayPublic(g), active: !!g.active, prize_tiers_raw: g.prize_tiers || '', winner_count_raw: g.winner_count || 0, ...require('./eligibility').rulesOf(g), require_join: g.require_join || 0, channel_id: g.channel_id || null, link_url: g.link_url || '', link_label: g.link_label || '' }, entrants: entrants.map(publicRow), stats: boards.giveawayStats(g), now: now() });
 });
 A.put('/giveaways/:id', (req, res) => {
   const ex = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!ex) return bad(res, 404, 'Not found');
@@ -699,8 +725,11 @@ Object.assign(H, { requireUser, currentUser, publicRow });
 require('./v3')(app, A, H);
 Object.assign(H, { csv, sendCsv, iso, giveawayPublic, ipHash });
 require('./v4')(app, A, H);
+require('./v5')(app, A, H);
+require('./v5b')(app, A, H);
 
 const demo = require('./demo');
+try { demo.v5(); } catch (e) { console.error('demo v5 migration failed', e); }
 A.post('/demo/seed', (req, res) => res.json({ ok: true, ...demo.seed() }));
 A.post('/demo/wipe', (req, res) => res.json({ ok: true, ...demo.wipe() }));
 app.use('/api/admin', A);
@@ -715,8 +744,8 @@ app.get(['/admin', '/admin/*'], (req, res) => res.sendFile(path.join(PUB, 'admin
 const INDEX_FILE = path.join(PUB, 'index.html');
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const PAGE_TITLES = { '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/tournaments': 'Tournaments', '/season': 'Season Pass', '/quests': 'Daily Quests',
-  '/achievements': 'Achievements & Rewards', '/community': 'Community', '/host': 'Host a Giveaway - Trap Tech Solutions', '/book': 'Book a Branded Game or Giveaway', '/about': 'About Trap Tech Solutions',
-  '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/search': 'Search', '/notifications': 'Notifications', '/settings': 'Settings', '/invite': 'Invite Friends' };
+  '/achievements': 'Achievements & Rewards', '/community': 'Community', '/host': 'Sponsor the Hub - Trap Tech Solutions', '/book': 'Book a Sponsorship', '/about': 'About Trap Tech Solutions',
+  '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/search': 'Search', '/notifications': 'Notifications', '/settings': 'Settings', '/invite': 'Invite Friends', '/channels': 'Brand Channels', '/friends': 'Friends & Challenges', '/shop': 'Points Shop' };
 function pageMeta(p, origin) {
   let m = null, mm;
   if ((mm = p.match(/^\/s\/(\d+)$/))) { const o = H.og.run(+mm[1]); if (o) m = { ...o, img: `/og/run/${mm[1]}.png` }; }

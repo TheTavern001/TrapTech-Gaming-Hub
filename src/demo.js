@@ -47,7 +47,7 @@ function seed() {
     const insG = db.prepare(`INSERT INTO giveaways (title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,created_at,updated_at,is_demo)
       VALUES (?,?,?,?,?,?,'play','jetpack-dash',?,1,?,?,1)`);
     const rules = 'Must be 21+ and a legal US resident where not void. No purchase necessary. One account per person. Winner will be drawn from players who play the linked game during the giveaway window and contacted via their Potato username.';
-    insG.run('$250 Store Credit', 'HighTimes', '$250 store credit', '/assets/giveaways/store-credit-art.webp', t - 3 * D, t + 2 * D + 14 * H + 32 * 60e3, rules, t, t);
+    insG.run('$250 Store Credit', 'Canopy Club', '$250 store credit', '/assets/giveaways/store-credit-art.webp', t - 3 * D, t + 2 * D + 14 * H + 32 * 60e3, rules, t, t);
     insG.run('PS5 + Games Bundle', 'Terp Tavern', 'PlayStation 5 console + 3 games', '/assets/giveaways/ps5-bundle-art.webp', t - 1 * D, t + 5 * D + 18 * H + 42 * 60e3, rules, t, t);
     insG.run('Neon Merch Drop', 'Trap Tech Solutions', 'Hoodie + hat + sticker pack', '/assets/brand/hero-banner.webp', t + 2 * D, t + 9 * D, rules, t, t);
     const past = insG.run('Launch Week Cash Prize', 'The Gaming Hub', '$100 cash', '/assets/giveaways/store-credit-art.webp', t - 20 * D, t - 13 * D, rules, t, t).lastInsertRowid;
@@ -64,11 +64,11 @@ function seed() {
     setG('Neon Merch Drop', ['spin-to-win', 'blazed-roulette'], { tier: 'basic' });
     setG('Launch Week Cash Prize', ['jetpack-dash'], { tier: 'basic' });
     const insB = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,start_date,end_date,details,status,created_at,is_demo) VALUES (?,?,?,?,?,?,?,?,?,?,1)`);
-    insB.run('HighTimes', 'Promo Team', 'promo@example.com', 'Giveaway', 'premium', '2026-10-12', '2026-10-26', 'Two-week giveaway with branded game skin.', 'pending', t - 12 * 60e3);
+    insB.run('Canopy Club', 'Promo Team', 'promo@example.com', 'Giveaway', 'premium', '2026-10-12', '2026-10-26', 'Two-week giveaway with branded game skin.', 'pending', t - 12 * 60e3);
     insB.run('Terp Tavern', 'Sam', 'discord: terptavern', 'Custom Game', 'elite', '2026-11-01', '2026-11-30', 'Full campaign, custom game + leaderboard.', 'approved', t - 2 * D);
     db.prepare('INSERT INTO announcements (title, body, created_at, is_demo) VALUES (?,?,?,1)').run('Big things coming!', 'New games, bigger giveaways, and more ways to win. Stay tuned and keep flying in Jetpack Dash!', t - 3 * H);
     insA.run('entry', 'TerpQueen entered "$250 Store Credit"', null, t - 3 * 60e3);
-    insA.run('booking', 'Booking request submitted: HighTimes (premium)', null, t - 12 * 60e3);
+    insA.run('booking', 'Booking request submitted: Canopy Club (premium)', null, t - 12 * 60e3);
     insA.run('highscore', 'New high score (Jetpack Dash): BlazedKing - 4,120m', null, t - 15 * 60e3);
 
     // ---------- v3 demo: tournaments, follows, check-in streaks, broadcast notifications ----------
@@ -120,7 +120,45 @@ function seed() {
       upd.run(pick('banner', COS.DEFAULTS.banner), pick('frame', 'none'), pick('title', COS.DEFAULTS.title), badge, id);
     }
   } catch (e) { console.error('achievement eval failed', e); }
+  v5();
   return { seeded: true, players: ids.length };
+}
+
+// v5 demo: brand channels, channel-scoped giveaways with anti-camping rules, joined entries and follows (idempotent)
+function v5() {
+  const t = Date.now(); const D = 864e5;
+  if (!db.prepare('SELECT 1 FROM giveaways WHERE is_demo=1').get()) return;
+  const E = require('./eligibility');
+  db.transaction(() => {
+    db.prepare("UPDATE giveaways SET host='Canopy Club' WHERE is_demo=1 AND host='HighTimes'").run();
+    db.prepare("UPDATE bookings SET brand='Canopy Club' WHERE is_demo=1 AND brand='HighTimes'").run();
+    db.prepare("UPDATE activity SET message=replace(message,'HighTimes','Canopy Club') WHERE is_demo=1").run();
+    const CH = [
+      ['canopy-club', 'Canopy Club', 'Licensed dispensary - weekly drops for the community (demo brand)', '#e11d2a', 'premium', 'https://example.com/canopy-club', 'Visit Canopy Club', 'Cannabis products seller (dispensary/brand/delivery)', '/assets/channels/canopy-club.svg'],
+      ['terp-tavern', 'Terp Tavern', 'Independent terpene brand + gaming nights (demo brand)', '#10b981', 'elite', 'https://example.com/terp-tavern', 'Shop Terp Tavern', 'Cannabis products seller (dispensary/brand/delivery)', '/assets/channels/terp-tavern.svg'],
+      ['trap-tech-drops', 'Trap Tech Drops', 'Merch and hub launch giveaways from the team behind the Gaming Hub', '#8b5cf6', 'basic', '', '', 'Other business', '/assets/brand/traptech-mark.svg'],
+      ['neon-threads', 'Neon Threads', 'Independent streetwear label (demo brand)', '#22d3ee', 'basic', '', '', 'Apparel / streetwear brand', '/assets/channels/neon-threads.svg'],
+    ];
+    const insC = db.prepare('INSERT OR IGNORE INTO channels (slug,name,tagline,color,tier,link_url,link_label,business_type,logo,created_at,is_demo) VALUES (?,?,?,?,?,?,?,?,?,?,1)');
+    for (const c of CH) insC.run(...c, t - 30 * D);
+    const cid = (slug) => db.prepare('SELECT id FROM channels WHERE slug=?').get(slug).id;
+    const assign = { '$250 Store Credit': 'canopy-club', 'PS5 + Games Bundle': 'terp-tavern', 'Neon Merch Drop': 'trap-tech-drops', 'Launch Week Cash Prize': 'trap-tech-drops' };
+    for (const g of db.prepare('SELECT * FROM giveaways WHERE is_demo=1 AND channel_id IS NULL').all()) {
+      const slug = assign[g.title]; if (!slug) continue;
+      const c = db.prepare('SELECT * FROM channels WHERE slug=?').get(slug);
+      db.prepare('UPDATE giveaways SET channel_id=?, link_url=?, link_label=? WHERE id=?').run(c.id, c.link_url, c.link_label, g.id);
+      if (g.end_at > t && !g.finalized_at) {
+        db.prepare(`UPDATE giveaways SET ${E.FIELDS.map(k => `${k}=@${k}`).join(',')} WHERE id=${g.id}`).run({ ...E.DEFAULTS, weight_mode: g.win_method === 'random' ? 'activity' : '' });
+        // demo players who played a linked game inside the window joined it
+        const games = db.prepare('SELECT game_id FROM giveaway_games WHERE giveaway_id=?').all(g.id).map(r => r.game_id);
+        const ph = games.map(() => '?').join(',');
+        const players = db.prepare(`SELECT DISTINCT r.user_id FROM runs r JOIN users u ON u.id=r.user_id WHERE u.is_demo=1 AND r.game_id IN (${ph}) AND r.created_at >= ?`).all(...games, g.start_at);
+        for (const p of players) db.prepare('INSERT OR IGNORE INTO giveaway_entries (giveaway_id, user_id, joined_at) VALUES (?,?,?)').run(g.id, p.user_id, g.start_at + 3600e3);
+      }
+    }
+    const users = db.prepare('SELECT id FROM users WHERE is_demo=1 ORDER BY id').all();
+    users.forEach((u, i) => { for (const slug of ['canopy-club', 'terp-tavern', 'trap-tech-drops', 'neon-threads'].filter((_, k) => (i + k) % 3 !== 0)) db.prepare('INSERT OR IGNORE INTO channel_follows (user_id, channel_id, created_at) VALUES (?,?,?)').run(u.id, cid(slug), t - (i + 1) * D); });
+  })();
 }
 
 function wipe() {
@@ -134,10 +172,11 @@ function wipe() {
     db.prepare('DELETE FROM runs WHERE is_demo=1').run();
     r.tournaments = db.prepare('DELETE FROM tournaments WHERE is_demo=1').run().changes;
     db.prepare('DELETE FROM notifications WHERE is_demo=1').run();
+    r.channels = db.prepare('DELETE FROM channels WHERE is_demo=1').run().changes;
   })();
   return r;
 }
-module.exports = { seed, wipe };
+module.exports = { seed, wipe, v5 };
 if (require.main === module) {
   const cmd = process.argv[2];
   console.log(cmd === 'wipe' ? wipe() : seed());

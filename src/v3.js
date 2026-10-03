@@ -14,7 +14,7 @@ const boards = require('./boards');
 
 module.exports = function v3(app, A, h) {
   const { now, bad, requireUser, currentUser, limiter, logActivity, str, publicRow } = h;
-  const userRow = db.prepare('SELECT id, username, created_at, is_demo, eq_banner, eq_frame, eq_title, eq_badge, banned, ref_code FROM users WHERE username=?');
+  const userRow = db.prepare('SELECT id, username, created_at, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect, banned, ref_code FROM users WHERE username=?');
   const pub = (u) => ({ username: u.username, demo: !!u.is_demo, cos: ach.publicCos(u) });
   const fmt = (n) => Number(n || 0).toLocaleString('en-US');
   const scoreText = (n, gid) => { const g = cfg.GAME_MAP[gid]; return g && g.unit === 'm' ? `${fmt(n)}m` : `${fmt(n)} ${g ? g.unit : 'pts'}`; };
@@ -157,7 +157,7 @@ module.exports = function v3(app, A, h) {
     res.json({ ok: true, unlocked, ref_code: ensureRefCode(req.user.id) });
   });
   function runCard(id) {
-    const r = db.prepare('SELECT r.*, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.banned FROM runs r JOIN users u ON u.id=r.user_id WHERE r.id=?').get(id);
+    const r = db.prepare('SELECT r.*, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect, u.banned FROM runs r JOIN users u ON u.id=r.user_id WHERE r.id=?').get(id);
     if (!r || r.banned) return null;
     const g = cfg.GAME_MAP[r.game_id] || {}; const board = boards.gameBoard(r.game_id); const rank = board.findIndex(x => x.user_id === r.user_id) + 1;
     const best = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=?').get(r.user_id, r.game_id).b;

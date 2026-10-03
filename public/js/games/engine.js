@@ -9,6 +9,13 @@ export const rnd = (a, b) => a + Math.random() * (b - a);
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const lerp = (a, b, t) => a + (b - a) * t;
 export function roundRect(ctx, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+// v5: seeded RNG (mulberry32), identical to src/anticheat.js so the server can replay seeded games
+export function seeded(seedHex) { let a = parseInt(String(seedHex || '').slice(0, 8) || '0', 16) >>> 0; if (!seedHex) return Math.random; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+export function shuffle(arr, r = Math.random) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+// v5: input telemetry (count + rhythm of inputs). Sent with the score so the server can spot bots without hurting real players.
+export class Telemetry { constructor() { this.reset(); } reset() { this.n = 0; this.last = 0; this.sum = 0; this.sq = 0; this.min = 0; this.k = 0; }
+  hit() { const t = performance.now(); if (this.last) { const d = t - this.last; this.sum += d; this.sq += d * d; this.k++; this.min = this.min ? Math.min(this.min, d) : d; } this.last = t; this.n++; }
+  out() { const m = this.k ? this.sum / this.k : 0; return { n: this.n, mean: Math.round(m), sd: Math.round(Math.sqrt(Math.max(0, this.k ? this.sq / this.k - m * m : 0))), min: Math.round(this.min) }; } }
 export const fmt = (n) => Math.floor(n).toLocaleString('en-US');
 
 export class Synth {
@@ -45,7 +52,7 @@ export class Game {
   constructor(canvas, opts = {}) {
     this.c = canvas; this.ctx = canvas.getContext('2d');
     this.onEnd = opts.onEnd || (() => {}); this.onState = opts.onState || (() => {});
-    this.best = opts.best || 0; this.sfx = new Synth();
+    this.best = opts.best || 0; this.sfx = new Synth(); this.tel = new Telemetry(); this.seed = opts.seed || ''; this.r = seeded(this.seed); this.log = [];
     this.state = 'ready'; this.t = 0; this.parts = []; this.pops = []; this.running = false;
     this._bind(); this.resize(); this.reset(); this.layout(); this._inited = true;
     this.ready = Promise.resolve(this.load ? this.load() : null).then(() => this.draw());
@@ -62,14 +69,14 @@ export class Game {
     this._h = {
       pd: (e) => { e.preventDefault(); try { this.c.setPointerCapture(e.pointerId); } catch {} const [x, y] = pos(e); this.sfx._ctx();
         if (this.state === 'ready') { this.begin(); if (this.startOnTapOnly) return; }
-        if (this.state === 'play') this.onDown(x, y, e); },
+        if (this.state === 'play') { this.tel.hit(); this.onDown(x, y, e); } },
       pm: (e) => { if (this.state === 'play') { const [x, y] = pos(e); this.onMove(x, y, e); } },
       pu: (e) => { if (this.state === 'play') { const [x, y] = pos(e); this.onUp(x, y, e); } },
       kd: (e) => {
         if (e.code === 'KeyP' || e.code === 'Escape') { this.togglePause(); return; }
         if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
         if (this.state === 'ready' && !e.repeat && (e.code === 'Space' || e.code === 'Enter')) { this.sfx._ctx(); this.begin(); if (this.startOnTapOnly) return; }
-        if (this.state === 'play') this.onKey(e.code, true, e);
+        if (this.state === 'play') { if (!e.repeat) this.tel.hit(); this.onKey(e.code, true, e); }
       },
       ku: (e) => { if (this.state === 'play') this.onKey(e.code, false, e); },
       vis: () => { if (document.hidden && this.state === 'play') this.pause(true); },
@@ -113,13 +120,15 @@ export class Game {
   begin() { if (this.state !== 'ready') return; this.state = 'play'; this.startedAt = performance.now(); this.playT = 0; this.onState('play'); }
   pause(v = true) { if (this.state !== 'play' && this.state !== 'paused') return; this.state = v ? 'paused' : 'play'; this.last = performance.now(); this.onState(this.state); this.draw(); }
   togglePause() { if (this.state === 'play') this.pause(true); else if (this.state === 'paused') this.pause(false); }
-  restart() { this.state = 'ready'; this.parts = []; this.pops = []; this.reset(); this.layout(); this.onState('ready'); this.draw(); }
+  // v5: server seed for this run (from /api/run/start). Re-deals the board if the run has not started yet.
+  setSeed(s) { this.seed = s || ''; this.r = seeded(this.seed); if (this.state === 'ready') { this.log = []; this.reset(); this.layout(); this.draw(); } }
+  restart() { this.state = 'ready'; this.parts = []; this.pops = []; this.r = seeded(this.seed); this.log = []; this.tel.reset(); this.reset(); this.layout(); this.onState('ready'); this.draw(); }
   // End the run and submit the current score (used at game over and by "End run & save")
   finish() {
     if (this.state === 'over') return; const wasReady = this.state === 'ready'; this.state = 'over';
     if (wasReady) return;
     const score = Math.max(0, Math.floor(this.score || 0)); if (score > this.best) this.best = score;
-    this.onState('over'); this.onEnd({ score, coins: Math.floor(this.coins || 0), duration_ms: Math.round(performance.now() - this.startedAt) });
+    this.onState('over'); this.onEnd({ score, coins: Math.floor(this.coins || 0), duration_ms: Math.round(performance.now() - this.startedAt), tel: this.tel.out(), log: this.log.length ? this.log.slice(0, 5000) : undefined });
   }
   endNow() { if (this.state === 'play' || this.state === 'paused') this.finish(); }
   // ----- helpers -----

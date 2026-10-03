@@ -11,7 +11,10 @@ const EXTRA = ['target', 'disc-3', 'dices', 'palette', 'link', 'unlink', 'badge-
   'user-minus', 'download', 'copy', 'settings', 'scale', 'triangle-alert', 'heart-pulse', 'smartphone', 'wifi-off', 'x', 'check', 'shuffle', 'play', 'zap', 'clock', 'external-link',
   'building-2', 'code-xml', 'sparkle', 'eye', 'circle-alert', 'list-checks', 'network', 'bell-off', 'inbox', 'cake', 'ban', 'house', 'arrow-right', 'globe', 'cookie', 'accessibility', 'moon', 'activity',
   // v4
-  'shield-alert', 'printer', 'fingerprint', 'radio', 'user-x', 'hash', 'gavel', 'lock', 'list-ordered', 'scroll'];
+  'shield-alert', 'printer', 'fingerprint', 'radio', 'user-x', 'hash', 'gavel', 'lock', 'list-ordered', 'scroll',
+  // v5
+  'thermometer','package','armchair','cog','anchor','piggy-bank','rotate-ccw','car-front','calendar-heart','tickets','thumbs-up','signal','ticket-check','calendar-check-2','crown','users-round','party-popper','shield-half','graduation-cap','hand-metal','castle','flask-conical','flame-kindling','sparkles','wand-sparkles','trending-up','flag-triangle-right','circle-check-big','eye-off',
+  'puzzle', 'store', 'shopping-bag', 'coins', 'award', 'star', 'frame', 'paintbrush', 'type', 'badge-plus', 'badge-minus', 'crosshair', 'leaf', 'diamond', 'banknote', 'history', 'sticker', 'scan-eye', 'user-plus', 'user-round-check', 'monitor-smartphone', 'log-in', 'log-out', 'ticket', 'heart', 'message-circle', 'shield-plus', 'wallet', 'circle-dollar-sign', 'sparkles', 'square-pen', 'trophy', 'medal', 'gift', 'crown', 'flame', 'timer', 'refresh-cw', 'filter', 'rotate-ccw', 'circle-slash', 'vibrate', 'volume-2'];
 const names = [...new Set([...Object.keys(prev), ...EXTRA])];
 const out = {};
 for (const n of names) {

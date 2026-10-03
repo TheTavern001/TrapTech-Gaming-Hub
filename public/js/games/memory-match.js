@@ -1,5 +1,5 @@
 // Memory Match - original code/art (canvas-drawn neon glyphs).
-import { Game, TAU, rnd, clamp, roundRect, fmt } from './engine.js';
+import { Game, TAU, rnd, clamp, roundRect, fmt, shuffle } from './engine.js';
 const LEVELS = [[4, 3], [4, 4], [5, 4], [6, 4], [6, 5]];
 const GLYPHS = ['star', 'heart', 'diamond', 'bolt', 'moon', 'crown', 'hex', 'ring', 'tri', 'plus', 'drop', 'note', 'flame', 'square', 'spark'];
 const GCOL = ['#fde047', '#f472b6', '#22d3ee', '#facc15', '#c4b5fd', '#fbbf24', '#34d399', '#60a5fa', '#fb7185', '#a3e635', '#38bdf8', '#e879f9', '#fb923c', '#5eead4', '#f0abfc'];
@@ -7,11 +7,12 @@ export class MemoryMatch extends Game {
   get title() { return 'MEMORY MATCH'; }
   get hint() { return 'Memorize the cards, then tap two at a time to find pairs. Chain matches for up to x5 combo. Clear boards for extra time.'; }
   get startOnTapOnly() { return true; }
-  reset() { this.score = 0; this.coins = 0; this.level = 0; this.time = 45; this.combo = 0; this.bestCombo = 0; this.pairs = 0; this.newLevel(); }
+  reset() { this.used = 0; this.score = 0; this.coins = 0; this.level = 0; this.time = 45; this.combo = 0; this.bestCombo = 0; this.pairs = 0; this.newLevel(); }
   newLevel() {
     let [c, r] = LEVELS[Math.min(this.level, LEVELS.length - 1)]; this.cols = c; this.rows = r;
-    const n = c * r / 2; const ids = []; const pool = GLYPHS.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, n);
-    for (const i of pool) ids.push(i, i); ids.sort(() => Math.random() - 0.5);
+    // v5: dealt from the server seed (same algorithm as src/anticheat.js) so the run can be replayed + verified
+    const n = c * r / 2; const ids = []; const pool = shuffle(GLYPHS.map((_, i) => i), this.r).slice(0, n);
+    for (const i of pool) ids.push(i, i); shuffle(ids, this.r);
     this.cards = ids.map((g, k) => ({ g, k, open: false, done: false, flip: 0, shake: 0 }));
     this.sel = []; this.lock = 0; this.peek = this.level === 0 ? 1.6 : 1.2; this.clearT = 0; this.layout();
   }
@@ -33,7 +34,7 @@ export class MemoryMatch extends Game {
   onKey() {}
   pick(cd) {
     if (cd.open || cd.done || this.sel.length >= 2) return;
-    cd.open = true; this.sel.push(cd); this.sfx.tone(600 + this.sel.length * 120, 0.06, { type: 'triangle', vol: 0.25 });
+    cd.open = true; this.sel.push(cd); this.log.push([Math.round(this.used * 1000), cd.k]); this.sfx.tone(600 + this.sel.length * 120, 0.06, { type: 'triangle', vol: 0.25 });
     if (this.sel.length === 2) {
       const [a, b] = this.sel;
       if (a.g === b.g) {
@@ -55,7 +56,7 @@ export class MemoryMatch extends Game {
   update(dt) {
     if (this.peek > 0) { this.peek -= dt; return; }
     if (this.clearT > 0) { this.clearT -= dt; if (this.clearT <= 0) { this.level++; this.newLevel(); } return; }
-    this.time -= dt;
+    this.time -= dt; this.used += dt;
     if (this.lock > 0) { this.lock -= dt; if (this.lock <= 0) { for (const c of this.sel) c.open = false; this.sel = []; } }
     for (const c of this.cards) { const tgt = c.open || c.done ? 1 : 0; c.flip += (tgt - c.flip) * Math.min(1, dt * 14); if (c.shake > 0) c.shake -= dt; }
     if (this.time <= 0) { this.time = 0; this.sfx.lose(); this.finish(); }

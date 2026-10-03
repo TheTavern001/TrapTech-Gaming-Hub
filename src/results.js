@@ -25,7 +25,7 @@ const winnerCount = (g) => g.winner_count > 0 ? g.winner_count : Math.max(1, Str
 const capSql = () => `(CASE r.game_id ${cfg.GAMES.map(x => `WHEN '${x.id}' THEN MIN(${x.ac.max}, ${x.ac.perSec} * (r.created_at - r.started_at) / 1000.0 + ${x.ac.grace})`).join(' ')} ELSE 0 END)`;
 const capFor = (run) => { const a = cfg.GAME_MAP[run.game_id].ac; return Math.min(a.max, Math.floor(a.perSec * (run.created_at - run.started_at) / 1000 + a.grace)); };
 
-const U = 'u.id AS user_id, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.created_at AS joined_at';
+const U = 'u.id AS user_id, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect, u.created_at AS joined_at';
 const cache = new Map();
 // Live standings (deterministic). Excludes banned players, players disqualified from this giveaway and impossible (over-cap) runs.
 function liveStandings(g) {
@@ -38,7 +38,7 @@ function liveStandings(g) {
   const ph = games.map(() => '?').join(',');
   const rows = db.prepare(`
     WITH w AS (SELECT r.id, r.user_id, r.game_id, r.score, r.created_at FROM runs r
-               WHERE r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.score <= ${capSql()}),
+               WHERE r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql()} OR r.verify = 'cleared')),
     att AS (SELECT user_id, COUNT(*) AS attempts FROM w GROUP BY user_id),
     q AS (SELECT * FROM w WHERE score >= @min),
     -- best run per player per game: highest score, then the first run that reached it
@@ -68,7 +68,7 @@ function excludedRuns(g) {
   const games = gamesOf(g.id); if (!games.length) return [];
   const ph = games.map(() => '?').join(',');
   return db.prepare(`SELECT r.id, r.user_id, u.username, r.game_id, r.score, r.started_at, r.created_at, r.duration_ms, r.ip_hash FROM runs r JOIN users u ON u.id = r.user_id
-    WHERE r.game_id IN (${ph}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? AND r.score > ${capSql()} ORDER BY r.score DESC LIMIT 200`)
+    WHERE r.game_id IN (${ph}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? AND (r.held <> 0 OR (r.score > ${capSql()} AND r.verify <> 'cleared')) ORDER BY r.score DESC LIMIT 200`)
     .all(...games, g.start_at, g.start_at, g.end_at).map(r => ({ ...r, cap: capFor(r) }));
 }
 
@@ -127,13 +127,13 @@ function finalize(g, actor = 'system', opts = {}) {
 }
 function notifyProvisional(g, w, quiet) {
   audit(g.id, 'system', 'provisional_winner', w.username, { place: w.place, score: w.score });
-  if (!quiet && w.user_id) N.notify(w.user_id, 'winner', `You placed #${w.place} in "${g.title}"!`, 'Winner pending verification. An admin is reviewing the final standings, and we will confirm here once your result is verified (21+, fair play).', `/giveaways/${g.id}/results`, 'party-popper');
+  if (!quiet && w.user_id) N.notify(w.user_id, 'winner', `You placed #${w.place} in "${g.title}"!`, 'Winner pending verification. An admin is reviewing the final standings, and we will confirm here once your result is verified (21+, fair play). Make sure your Potato username is set in Settings: that is how the Trap Tech team will contact winners.', `/giveaways/${g.id}/results`, 'party-popper');
 }
 
 // Final results from the locked snapshot (+ disqualifications/confirmations, which never change the snapshot itself)
 function results(g) {
   if (!g.finalized_at) return null;
-  const snap = db.prepare(`SELECT r.*, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge FROM giveaway_results r LEFT JOIN users u ON u.id = r.user_id WHERE r.giveaway_id=? ORDER BY r.rank`).all(g.id);
+  const snap = db.prepare(`SELECT r.*, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect FROM giveaway_results r LEFT JOIN users u ON u.id = r.user_id WHERE r.giveaway_id=? ORDER BY r.rank`).all(g.id);
   const dq = new Map(db.prepare('SELECT user_id, reason, created_at FROM giveaway_dq WHERE giveaway_id=?').all(g.id).map(d => [d.user_id, d]));
   const conf = new Map(db.prepare('SELECT user_id, created_at FROM giveaway_confirm WHERE giveaway_id=?').all(g.id).map(c => [c.user_id, c]));
   const order = g.win_method === 'random' ? [...snap].sort((a, b) => a.draw_pos - b.draw_pos) : snap;
@@ -181,7 +181,10 @@ function confirm(g, userId, actor = 'admin', note = '') {
   db.prepare('INSERT INTO giveaway_confirm (giveaway_id, user_id, place, note, created_at) VALUES (?,?,?,?,?)').run(g.id, userId, w.place, String(note || '').slice(0, 300), t);
   db.prepare('INSERT OR IGNORE INTO winners (giveaway_id, user_id, method, score, drawn_at) VALUES (?,?,?,?,?)').run(g.id, userId, g.win_method === 'random' ? 'random' : 'top', w.score, t);
   audit(g.id, actor, 'confirmed', w.username, { place: w.place, score: w.score, note });
-  N.notify(userId, 'winner', `Confirmed: you won "${g.title}"!`, `Place #${w.place}. Prize: ${g.prize || g.title}. ${g.host || 'The host'} or the Trap Tech team will contact you to verify eligibility (21+) and deliver your prize.`, `/giveaways/${g.id}/results`, 'party-popper');
+  const pot = (db.prepare('SELECT potato FROM users WHERE id=?').get(userId) || {}).potato;
+  N.notify(userId, 'winner', `Confirmed: you won "${g.title}"!`, `Place #${w.place}. Prize: ${g.prize || g.title}. The Trap Tech team will message you on Potato${pot ? ` (@${pot})` : ''} to verify eligibility (21+) and arrange your prize. ${pot ? 'Keep an eye on your Potato chats.' : 'Add your Potato username in Settings so we can reach you.'} We will never ask you for a password or payment.`, `/giveaways/${g.id}/results`, 'party-popper');
+  try { db.prepare("INSERT OR IGNORE INTO badge_grants (user_id, badge_id, granted_by, note, created_at) VALUES (?, 'giveaway-winner', 'system', ?, ?)").run(userId, `Won "${g.title}"`.slice(0, 200), t);
+    db.prepare("INSERT INTO badge_audit (user_id, username, badge_id, action, actor, note, created_at) VALUES (?,?,?,?,?,?,?)").run(userId, w.username || '', 'giveaway-winner', 'grant', 'system', `Auto: confirmed winner of "${g.title}"`.slice(0, 200), t); } catch (e) { /* badge tables optional */ }
   return { ok: true, winner: w };
 }
 // Public verification bundle for random draws (and the locked list for every giveaway)

@@ -117,7 +117,7 @@ function seasonBoard(limit = 50, t = Date.now()) {
   const s = seasonAt(t);
   const ids = db.prepare(`SELECT DISTINCT user_id FROM (SELECT user_id FROM runs WHERE created_at BETWEEN ? AND ? UNION SELECT user_id FROM checkins WHERE created_at BETWEEN ? AND ? UNION SELECT user_id FROM quest_claims WHERE created_at BETWEEN ? AND ?)`).all(s.start_at, s.end_at, s.start_at, s.end_at, s.start_at, s.end_at).map(r => r.user_id);
   const rows = ids.map(id => ({ id, xp: xpFor(id, s.start_at, s.end_at) })).sort((a, b) => b.xp - a.xp).slice(0, limit);
-  const U = db.prepare('SELECT id AS user_id, username, is_demo, eq_banner, eq_frame, eq_title, eq_badge, banned FROM users WHERE id=?');
+  const U = db.prepare('SELECT id AS user_id, username, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect, banned FROM users WHERE id=?');
   return rows.map(r => ({ ...U.get(r.id), score: r.xp, tier: Math.min(TIERS, Math.floor(r.xp / TIER_XP_S)) })).filter(r => r.username && !r.banned).map((r, i) => ({ rank: i + 1, ...r }));
 }
 

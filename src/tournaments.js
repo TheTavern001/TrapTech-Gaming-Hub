@@ -5,7 +5,7 @@
 // No state is stored besides the tournament itself, so results can't drift from the validated runs.
 const db = require('./db');
 const cfg = require('./config');
-const U = 'u.id AS user_id, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge';
+const U = 'u.id AS user_id, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect';
 const ROUNDS = ['Quarterfinals', 'Semifinals', 'Final'];
 const SEED_ORDER = [[1, 8], [4, 5], [3, 6], [2, 7]];
 

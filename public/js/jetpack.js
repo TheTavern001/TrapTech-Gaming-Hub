@@ -1,4 +1,5 @@
 import { ls } from './store.js';
+import { Telemetry } from './games/engine.js';
 // Jetpack Dash - original HTML5 canvas side-scroller for The Gaming Hub.
 // Code: original. Sprites/sounds: Kenney (CC0) - see /CREDITS.md.
 const H = 540;              // logical world height
@@ -50,7 +51,7 @@ export class JetpackDash {
     this.onEnd = opts.onEnd || (() => {});
     this.onState = opts.onState || (() => {});
     this.best = opts.best || 0;
-    this.sfx = new Sfx(this.base);
+    this.sfx = new Sfx(this.base); this.tel = new Telemetry();
     this.input = false; this.running = false; this.paused = false; this.destroyed = false;
     this._bind();
     this.resize();
@@ -60,7 +61,7 @@ export class JetpackDash {
 
   // ---------- setup ----------
   _bind() {
-    const down = (e) => { if (e.target === this.c) e.preventDefault(); this.input = true; if (this.state === 'ready') this.begin(); };
+    const down = (e) => { if (e.target === this.c) e.preventDefault(); this.input = true; if (this.state === 'ready') this.begin(); else if (this.state === 'play') this.tel.hit(); };
     const up = () => { this.input = false; };
     this._h = {
       pd: (e) => down(e), pu: up,
@@ -118,7 +119,8 @@ export class JetpackDash {
   begin() { if (this.state !== 'ready') return; this.state = 'play'; this.startedAt = performance.now(); this.onState('play'); }
   pause(v = true) { if (this.state !== 'play' && this.state !== 'paused') return; this.state = v ? 'paused' : 'play'; this.input = false; this.last = performance.now(); this.onState(this.state); this.draw(); }
   togglePause() { if (this.state === 'play') this.pause(true); else if (this.state === 'paused') this.pause(false); }
-  restart() { this.reset(); this.draw(); }
+  restart() { this.tel.reset(); this.reset(); this.draw(); }
+  setSeed() {}
   get score() { return Math.floor(this.dist); }
 
   frame(now) {
@@ -216,7 +218,7 @@ export class JetpackDash {
     this.state = 'over'; this.sfx.play('sfx_lose');
     if (this.finalScore > this.best) this.best = this.finalScore;
     this.onState('over');
-    this.onEnd({ score: this.finalScore, coins: this.coins, duration_ms: this.finalMs });
+    this.onEnd({ score: this.finalScore, coins: this.coins, duration_ms: this.finalMs, tel: this.tel.out() });
   }
   _collide() {
     const p = this.p; const r = p.r - 4;
