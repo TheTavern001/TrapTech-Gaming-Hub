@@ -1,5 +1,6 @@
 import { icon } from './icons.js';
 import { ls, ss, copyText } from './store.js';
+import * as V7 from './v7.js';
 
 // ---------------- core ----------------
 const $app = document.getElementById('app');
@@ -93,7 +94,7 @@ function topbar(path) {
   return `<header class="topbar">
     <button class="iconbtn menu-btn" data-act="menu" aria-label="Open menu">${icon('menu')}</button>
     <a href="/" aria-label="The Gaming Hub home"><img class="logo" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="150" height="28"></a><a class="hd-tt" href="/about" aria-label="By Trap Tech Solutions"><span>by</span>${TT('mono', 30, 'only-ph')}${TT('horizontal', 30, 'only-wide')}</a>
-    <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/host" class="${path.startsWith('/host') || path.startsWith('/book') ? 'on' : ''}">${icon('briefcase')}Host</a></nav>
+    <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/sponsor" class="${path.startsWith('/sponsor') ? 'on' : ''}">${icon('briefcase')}Sponsor</a></nav>
     <span class="spacer"></span>
     ${S.me && S.me.streak && S.me.streak.current ? `<a class="streak-chip" href="/quests" aria-label="${S.me.streak.current}-day streak - daily quests">${icon('flame')}<b>${S.me.streak.current}</b></a>` : ''}
     <a class="iconbtn" href="/search" aria-label="Search">${icon('search')}</a>
@@ -102,7 +103,7 @@ function topbar(path) {
     <button class="iconbtn more-btn" data-act="menu" aria-label="More options">${icon('ellipsis-vertical')}</button>
   </header>`;
 }
-const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/host', 'Host a giveaway'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
+const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/sponsor', 'Sponsor a Host'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
 function footer() {
   return `<footer class="site-foot" role="contentinfo">
     <div class="sf-in">
@@ -115,8 +116,8 @@ function bottomnav(path) {
   const act = navActive(path);
   return `<nav class="bottomnav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}<span>${l}</span></a>`).join('')}</nav>`;
 }
-const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/host': 'Sponsor the Hub',
-  '/book': 'Book a Branded Game', '/quests': 'Daily Quests', '/season': 'Season Pass', '/tournaments': 'Tournaments', '/notifications': 'Notifications', '/search': 'Search', '/invite': 'Invite Friends',
+const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/sponsor': 'Sponsor a Host',
+  '/quests': 'Daily Quests', '/season': 'Season Pass', '/tournaments': 'Tournaments', '/notifications': 'Notifications', '/search': 'Search', '/invite': 'Invite Friends',
   '/about': 'About Trap Tech Solutions', '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/settings': 'Settings' };
 function setTitle(t) { document.title = t ? `${t} | The Gaming Hub by Trap Tech Solutions` : 'The Gaming Hub by Trap Tech Solutions'; }
 function shell(path, inner, { cls = '', title } = {}) {
@@ -158,13 +159,12 @@ function openMenu() {
     <div class="dr-sec">Friends</div>
     <a href="/friends">${icon('users')}Friends &amp; Challenges</a>
     <a href="/invite">${icon('gift')}Invite Friends</a>
-    <a href="/channels">${icon('store')}Brand Channels</a>
+    <a href="/settings#v7-brand">${icon('store')}Your brand</a>
     <div class="dr-sec">More</div>
-    <a href="/host">${icon('briefcase')}Sponsor the Hub</a>
+    <a href="/sponsor">${icon('briefcase')}Sponsor a Host</a>
     ${S.me ? `<a href="/notifications">${icon('bell')}Notifications${S.me.unread ? `<span class="pill-mini">${S.me.unread}</span>` : ''}</a><a href="/settings">${icon('settings')}Settings</a><button class="link" data-act="signout">${icon('log-out')}Sign out</button>`
            : `<a href="/signin">${icon('log-in')}Sign in</a><a href="/signup">${icon('user-plus')}Create account</a><a href="/settings">${icon('settings')}Settings</a>`}
     <a href="/about">${icon('building-2')}About Trap Tech</a>
-    <a href="/admin">${icon('layout-dashboard')}Admin</a>
     <div class="dr-legal"><a href="/terms">Terms</a> • <a href="/privacy">Privacy</a> • <a href="/rules">Rules</a> • <a href="/responsible-play">Responsible play</a></div>
     <a class="dr-tt" href="/about"><span>Built by</span>${TT('horizontal', 44)}</a>
   </div><div style="flex:1" data-close></div>`;
@@ -335,6 +335,7 @@ route(/^\/signup$/, (m, url) => {
         ${dobFields('dob', ss.getItem('gh_dob') || '')}
         <div class="hint" id="dob-hint">The Gaming Hub features cannabis-brand sponsors, so every player must be 21+. Prize winners are verified.</div>
         <div class="field ic">${icon('gift')}<input class="input" id="ref" placeholder="Invite code (optional)" maxlength="12" autocapitalize="characters" value="${esc(url.searchParams.get('ref') || ls.getItem('gh_ref') || '')}"></div>
+        ${V7.signupBrandField(url)}
         <label class="check"><input type="checkbox" id="agree"> <span>I'm 21+ and agree to the <a href="/terms">Terms of Service</a>, <a href="/privacy">Privacy Policy</a> &amp; <a href="/rules">Official Rules</a></span></label>
         <button class="btn block" type="submit">Create Account</button>
       </form>
@@ -359,6 +360,7 @@ route(/^\/signup$/, (m, url) => {
     if (!r.ok) return fail(r.error);
     ls.removeItem('gh_ref');
     S.guest = false; ls.removeItem('gh_guest'); ls.setItem('gh_username', r.user.username); await refreshMe();
+    await V7.afterSignup().catch(() => {});
     toast(`Account created. Welcome, ${r.user.username}!`); achToast(r.unlocked); go(url.searchParams.get('next') || '/games/jetpack-dash', true);
   });
 });
@@ -373,7 +375,7 @@ route(/^\/(home)?$/, async () => {
   if (!S.me && !S.guest && !ls.getItem('gh_seen_splash')) return splash();
   const [gw, lb, tn, q] = await Promise.all([api('/api/giveaways?status=active'), api('/api/leaderboard?game=global&limit=5'), api('/api/tournaments'), S.me ? api('/api/quests') : Promise.resolve(null)]);
   const live = gw.ok ? gw.giveaways : [];
-  const takeover = live.find(x => x.tier === 'elite' && x.featured);
+  const takeover = live.find(x => (x.placements || []).includes('hero')); // v7: hero takeover is a sponsor placement
   const featuredGw = live.filter(x => x.featured && x !== takeover);
   const g0 = live.find(x => x !== takeover) || null;
   const featured = S.games.slice(0, 4);
@@ -410,15 +412,15 @@ route(/^\/(home)?$/, async () => {
       <a class="card pad ach-promo" href="/achievements"><span class="ai">${icon('medal')}</span><div><b>Achievements &amp; Rewards</b><div class="small muted">100+ achievements unlock banners, frames and titles. Cosmetic only, no cash value.</div></div>${icon('chevron-right')}</a>
       <a class="card pad ach-promo" href="/invite"><span class="ai">${icon('gift')}</span><div><b>Invite friends</b><div class="small muted">Share your code - earn exclusive Crew Builder cosmetics when friends play.</div></div>${icon('chevron-right')}</a>
     </div>
-    <div class="section-h"><h2>Host a Game</h2><a href="/host">Learn more</a></div>
-    <a class="banner" href="/host" style="display:block;color:var(--text)"><h2>Get Your Brand in the Game</h2><div class="small" style="color:#d9dcff">Trap Tech Solutions builds your branded giveaway or custom game - from a simple prize drop to a full 30-day takeover.</div></a>
+    <div class="section-h"><h2>Sponsor a Host</h2><a href="/sponsor">Learn more</a></div>
+    <a class="banner" href="/sponsor" style="display:block;color:var(--text)"><h2>Get Your Brand in the Game</h2><div class="small" style="color:#d9dcff">Pick the features you want and get a free quote. Trap Tech Solutions builds your branded giveaway, from a simple prize drop to a full takeover.</div></a>
     <div class="footer-note">${TT('badge', 64)}Powering the next generation of online gaming</div>`);
   tickCountdowns(); wireDaily();
   if (S.me && q && q.ok && !q.streak.checked_today) doCheckin();
 });
 const brandStyle = (g) => g.brand_color && /^#[0-9a-f]{3,8}$/i.test(g.brand_color) ? `--brand:${g.brand_color};` : '';
-const TIER_L = { basic: 'Basic', premium: 'Premium', elite: 'Elite' };
-const tierPill = (g) => g.tier && TIER_L[g.tier] ? `<span class="tier-pill ${g.tier}">${g.tier === 'elite' ? icon('gem') : g.tier === 'premium' ? icon('star') : ''}${TIER_L[g.tier]}</span>` : '';
+// v7: no tiers. The pill shows who can enter (brand members only / open to everyone).
+const tierPill = (g) => V7.audiencePill(g);
 const brandMark = (g) => g.brand_logo ? `<img class="brand-logo" src="${esc(g.brand_logo)}" alt="${esc(g.host)}">` : brandBlock(g.host);
 function heroTakeover(g) {
   return `<a class="hero-take" href="/giveaways/${g.id}" style="${brandStyle(g)}${g.image ? `--img:url('${esc(g.image)}')` : ''}">
@@ -463,9 +465,9 @@ route(/^\/games\/([\w-]+)$/, async (m) => {
   const g = gameById(m[1]); if (!g) return shell('/games', `<div class="empty">Game not found. <a href="/games">All games</a></div>`);
   const fav = () => JSON.parse(ls.getItem('gh_favs') || '[]');
   const [lb, gw, sp] = await Promise.all([api(`/api/leaderboard?game=${g.id}&limit=5`), api('/api/giveaways?status=active'), api(`/api/games/${g.id}/sponsor`)]);
-  const esp = sp.ok && sp.sponsor && sp.sponsor.link ? sp.sponsor : null; // Elite: outbound link on the game page
+  const esp = sp.ok && sp.sponsor && sp.sponsor.link ? sp.sponsor : null; // sponsor placement: outbound link on the game page
   const linked = (gw.giveaways || []).filter(x => (x.game_ids || []).includes(g.id));
-  const sponsor = linked.find(x => (x.tier === 'premium' || x.tier === 'elite') && (x.brand_color || x.brand_logo));
+  const sponsor = linked.find(x => (x.placements || []).some(p => p === 'skin' || p === 'featured' || p === 'hero') && (x.brand_color || x.brand_logo));
   const T = ['Bronze', 'Silver', 'Gold'];
   shell('/games', `<div class="two-col" style="${sponsor ? brandStyle(sponsor) : ''}">
     <div class="gd-hero" style="background-image:url('${(g.artTall || g.art)}')">
@@ -626,7 +628,7 @@ function giveawayCard(g) {
   return `<div class="card gw branded ${g.featured ? 'feat' : ''}" style="${brandStyle(g)}">
     <div class="row"><div>
       ${tierPill(g)}${g.featured ? `<span class="tier-pill feat">${icon('sparkles')}Featured</span>` : ''}
-      <h3>${esc(g.title)}${demoTag(g.demo)}</h3><div class="host">Hosted by ${g.channel ? `<a href="/c/${esc(g.channel.slug)}" class="ch-link">${esc(g.channel.name)}</a>` : esc(g.host || 'The Gaming Hub')}</div>
+      <h3>${esc(g.title)}${demoTag(g.demo)}</h3><div class="host">Hosted by ${g.channel ? `<span class="ch-link">${esc(g.channel.name)}</span>` : esc(g.host || 'The Gaming Hub')}</div>
       ${brandMark(g)}
     </div>${g.image ? `<div class="art" style="background-image:url('${esc(g.image)}')"></div>` : '<div></div>'}</div>
     <div class="gw-games">${(g.game_ids || []).map(id => { const x = gameById(id); return x ? `<span class="gchip"><img src="${x.art}" alt="">${esc(x.title)}</span>` : ''; }).join('')}${g.min_score ? `<span class="gchip rule">${icon('target')} Min ${fmt(g.min_score)}</span>` : ''}${g.prize_tiers && g.prize_tiers.length ? `<span class="gchip rule">${icon('trophy')} ${g.prize_tiers.length} prize tiers</span>` : ''}${g.require_join ? `<span class="gchip rule">${icon('shield-check')} Eligibility rules</span>` : ''}</div>
@@ -638,17 +640,17 @@ function giveawayCard(g) {
 }
 route(/^\/giveaways$/, async (m, url) => {
   let tab = url.searchParams.get('tab') || 'active';
-  let mine = url.searchParams.get('following') === '1'; let follow = [];
-  if (S.me) { const f = await api('/api/me/channels'); follow = f.ok ? f.slugs : []; }
-  shell('/giveaways', `<div class="gw-head"><h1>Giveaways</h1><a class="btn sm ghost" href="/channels">${icon('store')} Brand channels</a></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
-    ${S.me ? `<div class="chip-row"><button class="chip ${mine ? 'on' : ''}" id="f-follow" aria-pressed="${mine}">${icon('heart')} Channels I follow (${follow.length})</button><a class="chip" href="/me/entries">${icon('ticket')} My entries</a></div>` : ''}
+  let mine = url.searchParams.get('mine') === '1'; let myBrand = null;
+  if (S.me) { const f = await api('/api/me/brand'); myBrand = f.ok ? f.brand : null; }
+  shell('/giveaways', `<div class="gw-head"><h1>Giveaways</h1><a class="btn sm ghost" href="/settings#v7-brand">${icon('store')} ${myBrand ? esc(myBrand.name) : 'Join a brand'}</a></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
+    ${S.me ? `<div class="chip-row"><button class="chip ${mine ? 'on' : ''}" id="f-follow" aria-pressed="${mine}">${icon('store')} I can enter</button><a class="chip" href="/me/entries">${icon('ticket')} My entries</a></div>` : ''}
     <div id="list" class="gw-list"><div class="skeleton"></div></div>
-    <p class="small dim center">No purchase necessary. Join a giveaway and play a linked game while it is live. Each giveaway shows its eligibility rules. <a href="/host#faq">How giveaways work</a></p>`);
+    <p class="small dim center">No purchase necessary. Join a giveaway and play a linked game while it is live. Each giveaway shows who can enter and its eligibility rules. <a href="/rules">Official Rules</a></p>`);
   async function load() {
-    history.replaceState({}, '', `/giveaways?tab=${tab}${mine ? '&following=1' : ''}`);
+    history.replaceState({}, '', `/giveaways?tab=${tab}${mine ? '&mine=1' : ''}`);
     const r = await api('/api/giveaways?status=' + tab); const el = document.getElementById('list'); if (!el) return;
-    const list = r.ok ? r.giveaways.filter(g => !mine || (g.channel && follow.includes(g.channel.slug))) : [];
-    el.innerHTML = list.length ? list.map(giveawayCard).join('') : `<div class="empty card" style="grid-column:1/-1">${mine ? `No ${tab} giveaways from channels you follow. <a href="/channels">Find channels</a>` : `No ${tab} giveaways right now.`}</div>`;
+    const list = r.ok ? r.giveaways.filter(g => !mine || g.open_to_all !== false || (myBrand && g.brand && g.brand.id === myBrand.id)) : [];
+    el.innerHTML = list.length ? list.map(giveawayCard).join('') : `<div class="empty card" style="grid-column:1/-1">${mine ? `No ${tab} giveaways you can enter. <a href="/settings#v7-brand">Join a brand</a>` : `No ${tab} giveaways right now.`}</div>`;
     tickCountdowns();
   }
   document.getElementById('t').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (!b) return; tab = b.dataset.k; document.querySelectorAll('#t button').forEach(x => x.classList.toggle('on', x === b)); load(); });
@@ -664,7 +666,7 @@ route(/^\/giveaways\/(\d+)$/, async (m) => {
   shell('/giveaways', `<div class="narrow">
     <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>${esc(g.title)}${demoTag(g.demo)}</h1></div>
     <div class="card gw branded" style="${brandStyle(g)}">
-      <div class="row"><div><div class="host">Hosted by ${g.channel ? `<a href="/c/${esc(g.channel.slug)}" class="ch-link" id="gw-channel">${esc(g.channel.name)}</a>` : esc(g.host)}</div>${brandMark(g)}<div style="margin-top:10px"><span class="pill ${g.status === 'active' ? 'green' : g.status === 'upcoming' ? '' : 'red'}">${g.status.toUpperCase()}</span> ${tierPill(g)}</div></div>
+      <div class="row"><div><div class="host">Hosted by ${g.channel ? `<span class="ch-link" id="gw-channel">${esc(g.channel.name)}</span>` : esc(g.host)}</div>${brandMark(g)}<div style="margin-top:10px"><span class="pill ${g.status === 'active' ? 'green' : g.status === 'upcoming' ? '' : 'red'}">${g.status.toUpperCase()}</span> ${tierPill(g)}</div></div>
       ${g.image ? `<div class="art" style="background-image:url('${esc(g.image)}')"></div>` : '<div></div>'}</div>
       <p style="margin:12px 0 4px"><b>Prize:</b> ${esc(g.prize || g.title)}</p>
       ${g.prize_tiers.length ? `<div class="ptiers">${g.prize_tiers.map((p, i) => `<div><span>${icon(/random/i.test(p) ? 'shuffle' : i === 0 ? 'crown' : 'trophy')}</span>${esc(p)}</div>`).join('')}</div>` : ''}
@@ -698,7 +700,7 @@ async function eligCard(g) {
   const slots = e.checks.find(c => c.id === 'slots');
   el.innerHTML = `<h2>${icon('shield-check')} Eligibility</h2>
     <div class="elig-status ${e.joined ? 'joined' : ok ? 'ok' : 'no'}" id="elig-status">${icon(e.joined ? 'ticket' : ok ? 'circle-check' : 'circle-alert')} <b>${esc(e.message)}</b></div>
-    <ul class="elig-checks">${e.checks.map(c => `<li class="${c.ok ? 'ok' : 'no'}" data-chk="${c.id}">${icon(c.ok ? 'check' : 'x')}<span><b>${esc(c.label)}</b><small>${esc(c.hint)}</small></span>${c.id === 'follow' && !c.ok ? `<a class="btn sm ghost" href="/c/${esc(c.channel)}">Follow</a>` : ''}</li>`).join('')}</ul>
+    <ul class="elig-checks">${e.checks.map(c => `<li class="${c.ok ? 'ok' : 'no'}" data-chk="${c.id}">${icon(c.ok ? 'check' : 'x')}<span><b>${esc(c.label)}</b><small>${esc(c.hint)}</small></span>${c.id === 'brand_member' && !c.ok ? `<a class="btn sm ghost" href="/settings#v7-brand">Your brand</a>` : ''}</li>`).join('')}</ul>
     ${potatoChk && !potatoChk.ok ? `<form class="potato-form" id="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="potato-in" placeholder="Your Potato username" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></form>` : ''}
     ${slots && !slots.ok ? `<div class="small muted">Your live entries: ${slots.entries.map(x => `<a href="/giveaways/${x.id}">${esc(x.title)}</a>`).join(', ')}. <a href="/me/entries">Manage entries</a></div>` : ''}
     ${e.entries ? `<div class="elig-entries">${icon('ticket')} Draw entries: <b>${e.entries.count}</b> of ${e.entries.max}${e.entries.count < e.entries.max ? ` • ${e.entries.next_at - e.entries.runs} more run${e.entries.next_at - e.entries.runs === 1 ? '' : 's'} for ${e.entries.count + 1}` : ''}</div>` : ''}
@@ -716,30 +718,7 @@ route(/^\/me\/entries$/, async () => {
     <div class="card">${r.entries.length ? r.entries.map(x => `<div class="mini-row ent-row"><a href="/giveaways/${x.id}"><b>${esc(x.title)}</b></a><span class="small muted">ends ${new Date(x.end_at).toLocaleDateString()}</span><button class="btn sm ghost" data-leave="${x.id}">Leave</button></div>`).join('') : `<div class="empty">You're not in any live giveaways. <a href="/giveaways">Browse giveaways</a></div>`}</div></div>`);
   document.querySelectorAll('[data-leave]').forEach(b => b.onclick = async () => { const x = await api(`/api/giveaways/${b.dataset.leave}/leave`, { method: 'POST' }); toast(x.ok ? 'Left giveaway' : x.error); render(); });
 });
-// ---------------- v5: brand channels ----------------
-const chLogo = (c, size = 44) => c.logo ? `<img class="ch-logo" src="${esc(c.logo)}" alt="" width="${size}" height="${size}" loading="lazy">` : `<span class="ch-logo ph" style="width:${size}px;height:${size}px">${esc((c.name || '?')[0])}</span>`;
-route(/^\/channels$/, async () => {
-  const r = await api('/api/channels');
-  shell('/giveaways', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Brand channels</h1></div>
-    <p class="muted small">Every sponsor has its own channel. Follow the brands you like to see their giveaways first. Brands are independent businesses and creators; cannabis sellers are licensed.</p>
-    <div class="ch-list">${(r.channels || []).map(c => `<a class="card ch-card" href="/c/${esc(c.slug)}" style="--bc:${esc(c.color || '#8b5cf6')}">${chLogo(c)}<div><b>${esc(c.name)}${demoTag(c.demo)}</b><div class="small muted">${esc(c.tagline)}</div><div class="tiny muted">${fmt(c.followers)} followers • ${c.live} live giveaway${c.live === 1 ? '' : 's'}</div></div>${c.following ? `<span class="pill green">${icon('check')} Following</span>` : ''}</a>`).join('') || '<div class="empty card">No channels yet.</div>'}</div>
-    <p class="small dim center"><a href="/host">Get your own brand channel</a></p></div>`);
-});
-route(/^\/c\/([\w-]+)$/, async (m) => {
-  const r = await api('/api/channels/' + m[1]); if (!r.ok) return shell('/giveaways', `<div class="empty">Channel not found. <a href="/channels">All channels</a></div>`);
-  const c = r.channel; const by = (st) => r.giveaways.filter(g => g.status === st);
-  shell('/giveaways', `<div class="narrow ch-page">
-    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>${esc(c.name)}${demoTag(c.demo)}</h1></div>
-    <div class="card ch-head ${c.tier}" style="--bc:${esc(c.color || '#8b5cf6')}">${chLogo(c, 72)}<div class="ch-meta"><div class="small muted">${esc(c.tagline)}</div><div class="tiny muted" id="ch-followers">${fmt(c.followers)} followers</div>
-      <div class="btn-row">${S.me ? `<button class="btn sm ${c.following ? 'ghost' : ''}" id="ch-follow" aria-pressed="${c.following}">${icon(c.following ? 'check' : 'heart')} ${c.following ? 'Following' : 'Follow'}</button>` : `<a class="btn sm" href="/signin?next=/c/${esc(c.slug)}">${icon('heart')} Follow</a>`}${c.link ? `<a class="btn sm ghost" id="ch-link" href="${esc(c.link.url)}" rel="noopener sponsored">${icon('external-link')} ${esc(c.link.label)}</a>` : ''}</div></div></div>
-    <div class="section-h"><h2>${icon('gift')} Live giveaways</h2></div><div class="gw-list">${by('active').map(giveawayCard).join('') || '<div class="empty card">No live giveaways right now.</div>'}</div>
-    ${by('upcoming').length ? `<div class="section-h"><h2>Upcoming</h2></div><div class="gw-list">${by('upcoming').map(giveawayCard).join('')}</div>` : ''}
-    ${by('past').length ? `<div class="section-h"><h2>Past</h2></div><div class="gw-list">${by('past').map(giveawayCard).join('')}</div>` : ''}
-    ${r.winners.length ? `<div class="card pad"><h2>${icon('crown')} Recent winners</h2>${r.winners.map(w => `<div class="mini-row">${avatar(w.username)}<b>${esc(w.username)}</b><span class="small muted">${esc(w.title)}</span></div>`).join('')}</div>` : ''}
-  </div>`, { title: c.name });
-  tickCountdowns();
-  const f = document.getElementById('ch-follow'); if (f) f.onclick = async () => { const x = await api(`/api/channels/${c.slug}/follow`, { method: 'POST', body: {} }); if (!x.ok) return toast(x.error); c.following = x.following; f.className = `btn sm ${x.following ? 'ghost' : ''}`; f.setAttribute('aria-pressed', String(x.following)); f.innerHTML = `${icon(x.following ? 'check' : 'heart')} ${x.following ? 'Following' : 'Follow'}`; document.getElementById('ch-followers').textContent = `${fmt(x.followers)} followers`; };
-});
+// v7: the brand channel pages (/channels, /c/<slug>) are replaced by brand invite links (/join/<code>, see v7.js).
 
 // ---------------- v4: winner rules, live standings, final results ----------------
 // Same text as src/results.js TIEBREAK_RULES (the API also sends it as tiebreak_rules).
@@ -1025,122 +1004,7 @@ route(/^\/achievements$/, async (m, url) => {
   achToast(r.unlocked);
 });
 
-// ---------------- host / booking ----------------
-const PKG_IMG = { basic: '/assets/packages/basic.webp', premium: '/assets/packages/premium.webp', elite: '/assets/packages/elite.webp' };
-let PK = null;
-async function loadPackages() { if (!PK) { const r = await api('/api/packages'); if (r.ok) PK = r; } return PK; }
-const DIM_ROWS = [['exposure', 'monitor-smartphone', 'Where you are shown'], ['reach', 'users', 'How players find you'], ['duration', 'calendar-range', 'Duration'], ['branding', 'palette', 'Branding'], ['links', 'link', 'Links to your site / Potato channel'], ['winners', 'trophy', 'Winners'], ['analytics', 'chart-column', 'Analytics'], ['winner_contact', 'message-circle', 'Winner contact']];
-const priceBlock = (pk, t) => `<div class="pk-price">${t.regular_price && t.regular_price !== t.price ? `<span class="launch-pill">${icon('sparkles')} ${esc(pk.launch_label || 'Launch pricing')}</span>` : ''}<b>${esc(t.price)}</b>${t.regular_price && t.regular_price !== t.price ? `<s class="reg" aria-label="Regular price">${esc(t.regular_price)}</s>` : ''}<span>${esc(t.price_note)}</span></div>`;
-route(/^\/host$/, async (m, url) => {
-  const pk = await loadPackages(); if (!pk) return shell('/host', `<div class="empty">Could not load packages.</div>`);
-  const T = pk.tiers;
-  shell('/host', `<div class="narrow host">
-    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Sponsor the Hub</h1></div>
-    <div class="banner"><h2>Launch your brand <span class="grad-text">in the game</span></h2><div style="color:#d9dcff">Built for upcoming and independent brands: put your prize in front of players who are already competing. Start small with Basic, grow into Premium or Elite. Booking is free - we confirm everything with you on Potato.</div></div>
-    <div class="who-chips" aria-label="Who sponsors">${['Licensed cannabis brands', 'Dispensaries & delivery', 'Streamers & creators', 'Gaming channels', 'Apparel & streetwear', 'Glass & smoke-gear shops', 'Artists & musicians', 'Shops & local business'].map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>
-    <div class="pk3" id="tiers">${T.map(t => `<div class="card pk ${t.id}" data-tier="${t.id}">
-      ${t.badge ? `<span class="pk-badge">${esc(t.badge)}</span>` : ''}
-      <div class="pk-h"><img src="${PKG_IMG[t.id] || PKG_IMG.basic}" alt="" width="48" height="48" loading="lazy"><div><h3>${esc(t.name)}</h3><div class="pk-tag">${esc(t.tagline)}</div></div></div>
-      ${priceBlock(pk, t)}
-      <div class="pk-who"><span>${icon('users')} Who it's for</span>${esc(t.who)}</div>
-      <dl class="pk-dims">${DIM_ROWS.map(([k, ic, l]) => t.dims && t.dims[k] ? `<div class="dim d-${k}"><dt>${icon(ic)} ${l}</dt><dd>${esc(t.dims[k])}</dd></div>` : '').join('')}</dl>
-      <details class="pk-more"><summary>Everything included ${icon('chevron-down')}</summary><ul class="pk-f">${t.features.map(f => `<li>${icon(/^everything in/i.test(f) ? 'layers' : 'check')}<span>${esc(f)}</span></li>`).join('')}</ul></details>
-      <a class="btn block ${t.id === 'premium' ? '' : 'ghost'}" href="/book?package=${t.id}" data-pick="${t.id}">Book ${esc(t.name)}</a>
-    </div>`).join('')}</div>
-    ${pk.launch_note ? `<p class="small dim center launch-note">${icon('sparkles')} ${esc(pk.launch_note)}</p>` : ''}
-    <div class="section-h"><h2>${icon('chart-column')} Compare side by side</h2></div>
-    <div class="card cmp-wrap"><table class="cmp"><thead><tr><th></th>${T.map(t => `<th class="${t.id}">${esc(t.name)}<small>${esc(t.price)}${t.regular_price && t.regular_price !== t.price ? ` <s>${esc(t.regular_price)}</s>` : ''}</small></th>`).join('')}</tr></thead>
-      <tbody>${(pk.compare || []).map(row => `<tr><td>${esc(row[0])}</td>${[1, 2, 3].map(i => `<td>${cmpCell(row[i])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-    ${pk.why_links ? `<div class="card pad why-links"><h3>${icon('link')} Why links are a paid feature</h3><p class="muted">${esc(pk.why_links)}</p></div>` : ''}
-    <div class="section-h" id="addons"><h2>${icon('puzzle')} Custom &amp; add-ons</h2></div>
-    <div class="addons">${(pk.addons || []).map(a => `<div class="card addon" data-addon="${esc(a.id)}"><div><b>${esc(a.name)}</b><div class="small muted">${esc(a.desc)}</div></div><span class="ap">${esc(a.price)}</span></div>`).join('')}
-      <div class="card addon custom"><div><b>Fully custom</b><div class="small muted">Tournaments, stream events, sponsored leaderboards or a brand-new custom game. Tell us the idea; we quote it.</div></div><a class="btn sm" href="/book?package=custom">Request</a></div></div>
-    <div class="section-h" id="multi"><h2>${icon('layers')} Many brands at once - how it stays fair</h2></div>
-    <div class="howto">${(pk.multi_brand || []).map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${esc(t)}</b><div class="small muted">${esc(d)}</div></div></div>`).join('')}</div>
-    <div class="card tt-build">
-      <div class="ttb-head">${TT('horizontal', 50)}<span class="pill">${icon('code-xml')} Built in-house</span></div>
-      <h2>Trap Tech Solutions builds your brand's game</h2>
-      <p class="muted">The Gaming Hub is designed, built and operated by Trap Tech Solutions. Every package is set up by our own team: giveaway card, channel page and brand theme, plus game skins, prize tiers and reports on Elite.</p>
-      <ul class="ttb-list"><li>${icon('gamepad-2')} Branded HTML5 games that work on any phone and inside Potato</li><li>${icon('shield-check')} Server-side anti-cheat and verifiable winner draws</li><li>${icon('scale')} Official rules with "no purchase necessary", run by Trap Tech as operator</li><li>${icon('message-circle')} Winners contacted on Potato by our team</li></ul>
-      <a class="btn sm ghost" href="/about">${icon('building-2')} About Trap Tech</a>
-    </div>
-    <div class="section-h"><h2>How booking works</h2></div>
-    <div class="howto">${[['Pick a tier', 'Basic, Premium, Elite or custom, plus any add-ons.'], ['Send a free request', 'Your brand, prize, dates and an email and/or Potato username. No payment now.'], ['Confirm on Potato', `Message us on Potato at @${esc(pk.potato_handle || 'TrapTechSolutions')} - we confirm details and the quote.`], ['We build & launch', 'We set up your channel, giveaway and games, contact winners on Potato and send your stats.']].map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${t}</b><div class="small muted">${d}</div></div></div>`).join('')}</div>
-    <div class="section-h" id="faq"><h2>${icon('circle-help')} Sponsor FAQ</h2></div>
-    <div class="faq">${(pk.faq || []).map(([q, a], i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary>${esc(q)}${icon('chevron-down')}</summary><p>${esc(a)}</p></details>`).join('')}</div>
-    <p class="small dim center">Sponsors must comply with all laws that apply to their business, products and advertising. See the <a href="/terms">Terms</a> and <a href="/rules">Official Rules</a>.</p>
-  </div>`);
-  const h = location.hash.slice(1); if (h) document.getElementById(h)?.scrollIntoView();
-});
-function cmpCell(v) {
-  const s = String(v || '').trim();
-  if (!s || s === '-' || /^no$/i.test(s)) return `<span class="no">${icon('x')}</span>`;
-  if (/^(yes|✓)$/i.test(s)) return `<span class="yes">${icon('check')}</span>`;
-  return esc(s);
-}
-route(/^\/book$/, async (m, url) => {
-  const pk = await loadPackages(); const T = pk ? pk.tiers : []; const AD = (pk && pk.addons) || [];
-  const BT = await api('/api/business-types'); const TYPES = BT.types || []; const CANN = BT.cannabis;
-  const B = { step: 1, package: url.searchParams.get('package') || 'basic', business_type: '', brand: '', event_type: '', contact_name: '', email: '', potato: S.me ? S.me.username : '', licensed: false, addons: [], start_date: '', end_date: '', details: '' };
-  if (B.package !== 'custom' && !T.some(t => t.id === B.package)) B.package = 'basic';
-  const EV = ['Giveaway', 'Multi-game Giveaway', 'Brand Takeover', 'Tournament', 'Sponsored Leaderboard', 'Stream Event', 'Custom Game', 'Other'];
-  const save = () => { document.querySelectorAll('[data-b]').forEach(i => { B[i.dataset.b] = i.value.trim(); }); const lc = document.getElementById('licensed'); if (lc) B.licensed = lc.checked; const ad = document.querySelectorAll('[data-ad]'); if (ad.length) B.addons = [...ad].filter(x => x.checked).map(x => x.dataset.ad); };
-  const tierOf = () => T.find(t => t.id === B.package);
-  const summary = () => { const t = tierOf(); return t ? `<div class="pk-sel ${t.id}" id="pksel"><img src="${PKG_IMG[t.id]}" alt=""><div><small>SELECTED PACKAGE</small><b>${esc(t.name)}</b><span>${esc(t.tagline)}</span></div><div class="pr"><b>${esc(t.price)}</b><span>${t.regular_price && t.regular_price !== t.price ? `<s>${esc(t.regular_price)}</s> ` : ''}${esc(t.price_note)}</span></div></div>` : `<div class="pk-sel custom" id="pksel"><div><small>SELECTED</small><b>Custom</b><span>Quote on request</span></div></div>`; };
-  function draw(err = '') {
-    const st = (n, l) => `<div class="st ${B.step >= n ? 'on' : ''}"><i>${n}</i>${l}</div>`;
-    let body = '';
-    if (B.step === 1) body = `
-      <div class="field"><label class="lbl">Package</label><div class="tierpick" id="tp">${[...T.map(t => [t.id, t.name, t.price]), ['custom', 'Custom', 'Quote']].map(([k, l, p]) => `<button type="button" data-t="${k}" class="${B.package === k ? 'on' : ''} ${k}"><b>${esc(l)}</b><span>${esc(p)}</span></button>`).join('')}</div></div>
-      <div class="field"><label class="lbl" for="bt">Business type</label><select class="input" id="bt" data-b="business_type"><option value="">Select your business type</option>${TYPES.map(e => `<option ${B.business_type === e ? 'selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
-      <div id="lic-wrap">${B.business_type === CANN ? `<label class="check lic"><input type="checkbox" id="licensed" ${B.licensed ? 'checked' : ''}> <span>I confirm my business is licensed and legally permitted to operate and advertise in my jurisdiction <b class="req">(required)</b></span></label>` : ''}</div>
-      <div class="field"><label class="lbl">Channel / Brand Name</label><input class="input" data-b="brand" value="${esc(B.brand)}" placeholder="Your channel or brand name" maxlength="120"></div>
-      <div class="field"><label class="lbl">Your Name <span class="muted small">(optional)</span></label><input class="input" data-b="contact_name" value="${esc(B.contact_name)}" placeholder="Who should we talk to?" maxlength="120"></div>
-      <div class="lbl" style="margin-top:4px">How can we reach you? <span class="muted small">(at least one)</span></div>
-      <div class="field ic">${icon('message-circle')}<input class="input" id="b-potato" data-b="potato" value="${esc(B.potato)}" placeholder="Potato username, e.g. @yourbrand" maxlength="40" autocapitalize="none"></div>
-      <div class="field ic">${icon('mail')}<input class="input" id="b-email" type="email" data-b="email" value="${esc(B.email)}" placeholder="Email (optional if Potato given)" maxlength="160" autocapitalize="none"></div>`;
-    else if (B.step === 2) body = `
-      <div class="field"><label class="lbl">Event Type</label><select class="input" data-b="event_type"><option value="">Select an option</option>${EV.map(e => `<option ${B.event_type === e ? 'selected' : ''}>${e}</option>`).join('')}</select></div>
-      <label class="lbl" style="font-weight:600;font-size:.85rem">Preferred Dates</label>
-      <div class="grid2" style="margin-top:6px"><div class="field"><label class="lbl small">Start Date</label><input class="input" type="date" data-b="start_date" value="${esc(B.start_date)}"></div><div class="field"><label class="lbl small">End Date</label><input class="input" type="date" data-b="end_date" value="${esc(B.end_date)}"></div></div>
-      ${AD.length ? `<div class="lbl">Add-ons <span class="muted small">(optional)</span></div><div class="ad-pick">${AD.map(a => `<label class="check"><input type="checkbox" data-ad="${esc(a.id)}" ${B.addons.includes(a.id) ? 'checked' : ''}> <span><b>${esc(a.name)}</b> <span class="muted small">${esc(a.price)}</span></span></label>`).join('')}</div>` : ''}
-      <div class="field"><label class="lbl">Prize, games &amp; details</label><textarea class="input" data-b="details" maxlength="4000" placeholder="Prize, which games you'd like, brand colors / logo link, rules (age, region) or any special requests...">${esc(B.details)}</textarea></div>`;
-    else { const t = tierOf(); body = `<div class="card pad" style="background:rgba(5,8,26,.7)">${[['Package', t ? `${t.name} - ${t.price} ${t.price_note}` : 'Custom - quote on request'], ['Add-ons', B.addons.map(id => (AD.find(a => a.id === id) || {}).name).filter(Boolean).join(', ') || '-'], ['Business type', B.business_type], ...(B.business_type === CANN ? [['License', 'Confirmed licensed & legally permitted to advertise']] : []), ['Brand', B.brand], ['Event type', B.event_type || '-'], ['Contact', [B.contact_name, B.potato ? '@' + B.potato.replace(/^@/, '') + ' on Potato' : '', B.email].filter(Boolean).join(' • ')], ['Dates', `${B.start_date || 'flexible'} → ${B.end_date || 'flexible'}`], ['Details', B.details || '-']].map(([k, v]) => `<div class="rv-row" data-rv="${k.toLowerCase()}"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</div>
-      <p class="small muted">No payment is taken. After you send this, message us on Potato to confirm.</p>`; }
-    shell('/book', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Book a Sponsorship</h1></div>
-      ${summary()}
-      <div class="steps">${st(1, 'Details')}<span class="bar"></span>${st(2, 'Dates & add-ons')}<span class="bar"></span>${st(3, 'Review')}</div>
-      <div class="card pad">${err ? `<div class="err">${esc(err)}</div>` : ''}${body}
-      <div style="display:flex;gap:10px;margin-top:6px">${B.step > 1 ? `<button class="btn ghost" id="prev" style="flex:1">Back</button>` : ''}<button class="btn" id="next" style="flex:2">${B.step < 3 ? 'Next Step' : 'Submit Request'}</button></div></div>
-      <p class="small dim center"><a href="/host">Compare packages</a> • <a href="/host#faq">Sponsor FAQ</a></p></div>`);
-    const tp = document.getElementById('tp'); if (tp) tp.onclick = (e) => { const b = e.target.closest('[data-t]'); if (!b) return; save(); B.package = b.dataset.t; draw(); };
-    const bt = document.getElementById('bt'); if (bt) bt.onchange = () => { save(); B.licensed = false; draw(); };
-    document.getElementById('next').onclick = async () => {
-      save(); B.potato = B.potato.replace(/^@/, '');
-      if (B.step === 1) {
-        if (!B.business_type) return draw('Please choose your business type.');
-        if (B.business_type === CANN && !B.licensed) return draw('Please confirm your business is licensed and legally permitted to operate and advertise in your jurisdiction.');
-        if (!B.brand) return draw('Channel / brand name is required.');
-        if (!B.email && !B.potato) return draw('Add a Potato username or an email (at least one) so we can reach you.');
-        if (B.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(B.email)) return draw('That email address does not look right.');
-      }
-      if (B.step === 2 && B.start_date && B.end_date && B.end_date < B.start_date) return draw('End date must be after the start date.');
-      if (B.step < 3) { B.step++; return draw(); }
-      const btn = document.getElementById('next'); btn.disabled = true;
-      const r = await api('/api/bookings', { method: 'POST', body: B });
-      if (!r.ok) { btn.disabled = false; return draw(r.error); }
-      const hd = r.potato_handle || 'TrapTechSolutions';
-      shell('/book', `<div class="narrow"><div class="card pad center glow-purple book-done" style="margin-top:30px"><div style="font-size:3rem;color:var(--green)">${icon('calendar-check')}</div><h1>Request Sent!</h1>
-        <p class="muted">Booking reference <b>#${r.id}</b> for <b id="booked-pkg">${esc(r.package_snapshot)}</b>.</p>
-        <div class="potato-confirm" id="potato-confirm"><div class="pc-ic">${icon('message-circle')}</div><div><b>Message us on Potato at <span class="handle">@${esc(hd)}</span> to confirm your booking.</b><div class="small muted">Send your reference <b>#${r.id}</b>. We reply there with your quote and launch date${B.email ? ` (we may also email ${esc(B.email)})` : ''}.</div></div></div>
-        <div class="btn-row center-row"><button class="btn" id="copy-handle">${icon('copy')} Copy @${esc(hd)}</button><a class="btn ghost" href="https://potato.im/${encodeURIComponent(hd)}" rel="noopener">${icon('external-link')} Open in Potato</a></div>
-        <a class="btn block ghost" href="/" style="margin-top:10px">Back to Home</a><p class="tiny muted" style="margin:12px 0 0">Your branded game and giveaway will be built by Trap Tech Solutions.</p></div></div>`);
-      document.getElementById('copy-handle').onclick = async () => { if (await copyText('@' + hd, 'Copy our Potato username')) toast('Copied @' + hd); };
-    };
-    const prev = document.getElementById('prev'); if (prev) prev.onclick = () => { save(); B.step--; draw(); };
-  }
-  draw();
-});
+// v7: /host + /book (tiers, public prices) are replaced by /sponsor (feature picker + quote; see v7.js).
 
 // ---------------- community ----------------
 route(/^\/community$/, async () => {
@@ -1424,7 +1288,7 @@ route(/^\/terms$/, () => legal('/terms', 'Terms of Service', 'October 3, 2026', 
   <h2>7. Sponsors</h2><p>Sponsors can be any legitimate business or creator. Every sponsor must comply with all laws and regulations that apply to its business, products and advertising, and is responsible for its prizes as described on the giveaway page. Sponsors that sell cannabis products must be licensed and legally permitted to operate and advertise in their jurisdiction; Trap Tech does not accept unlicensed sellers. Sponsor content is for adults 21+ in locations where such content is legal.</p>
   <h2>8. Disclaimers & liability</h2><p>The Hub is provided "as is". To the extent allowed by law, ${OP} is not liable for indirect or consequential damages, lost data or service interruptions.</p>
   <h2>9. Changes</h2><p>We may update these Terms. We will post the new date above; continued use means you accept the update.</p>
-  <h2>10. Contact</h2><p>Questions? Contact ${OP} via the <a href="/book">contact form</a>.</p>
+  <h2>10. Contact</h2><p>Questions? Contact ${OP} via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
 route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 3, 2026', `
   <p>${OP} operates The Gaming Hub. This policy explains what we collect and why.</p>
@@ -1434,7 +1298,7 @@ route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 3, 2026'
   <h2>Sharing</h2><p>We do not sell your data. When you win a giveaway we may share the details needed to deliver the prize with the sponsor brand.</p>
   <h2>Retention & deletion</h2><p>We keep data while your account is active. Ask us to delete your account at any time and we remove your profile, runs and related data.</p>
   <h2>Age</h2><p>The Hub is for adults 21+. We do not knowingly collect data from anyone under 21.</p>
-  <h2>Contact</h2><p>${OP} - via the <a href="/book">contact form</a>.</p>
+  <h2>Contact</h2><p>${OP} - via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
 function rulesHTML(g) {
   const name = g ? `"${esc(g.title)}"` : '[GIVEAWAY NAME]';
@@ -1480,7 +1344,7 @@ route(/^\/responsible-play$/, () => legal('/responsible-play', 'Responsible Play
 route(/^\/about$/, () => shell('/about', `<div class="narrow">
   <div class="about-hero card"><div class="about-tt">${TT('mono', 150, 'ab-mono')}${TT('lockup', 150, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
     <p class="muted">Trap Tech Solutions is the studio behind The Gaming Hub. We design, build and run every part of it: the games, leaderboards, tournaments, giveaways, achievements and the admin tools brands use.</p>
-    <div class="btn-row center-row"><a class="btn" href="/host">${icon('briefcase')} Work with us</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
+    <div class="btn-row center-row"><a class="btn" href="/sponsor">${icon('briefcase')} Sponsor a Host</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
   <div class="about-grid">${[['gamepad-2', 'Original games', '8 original HTML5 games so far, made to play great on phones, with skill-based scoring and server-side anti-cheat.'], ['gift', 'Brand giveaways', 'Basic, Premium and Elite packages, from a simple prize drop to a full 30-day branded takeover.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Points only, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
   <div class="card pad"><h2 style="margin-bottom:6px">The Gaming Hub by Trap Tech Solutions</h2><p class="small muted">Version 3 • Built by Trap Tech Solutions. Every game, banner and badge is original work. See <a href="/terms">Terms</a>, <a href="/privacy">Privacy</a>, <a href="/rules">Official Rules</a> and <a href="/responsible-play">Responsible play</a>.</p></div>
 </div>`));
@@ -1572,13 +1436,13 @@ route(/^\/settings$/, () => {
       <div class="field"><input class="input" type="password" id="np2" placeholder="New password (min 8)" autocomplete="new-password" aria-label="New password"></div>
       <button class="btn ghost block" type="submit">Change password</button></form>
       <form id="potf" class="potato-set"><label class="lbl" for="pot">Potato username <span class="muted small">(private - only Trap Tech sees it, to contact you if you win)</span></label><div class="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="pot" value="${esc(S.me.potato || '')}" placeholder="yourhandle" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></div></form>
-      <button class="btn danger block" data-act="signout" style="margin-top:10px">${icon('log-out')} Sign out</button></div>` : `<div class="card pad cta-card"><div style="flex:1"><b>Not signed in</b><div class="small muted">Sign in to manage your account.</div></div><a class="btn sm" href="/signin?next=/settings">Sign in</a></div>`}
+      <button class="btn danger block" data-act="signout" style="margin-top:10px">${icon('log-out')} Sign out</button></div>${V7.brandCard()}` : `<div class="card pad cta-card"><div style="flex:1"><b>Not signed in</b><div class="small muted">Sign in to manage your account.</div></div><a class="btn sm" href="/signin?next=/settings">Sign in</a></div>`}
     <div class="card pad"><h2 style="margin-bottom:10px">App</h2>
       <div class="set-row"><div><b>${icon('smartphone')} Install the app</b><div class="small muted">${standalone ? 'Installed - you are using the app.' : 'Add The Gaming Hub to your home screen. Works offline for the app shell.'}</div></div><button class="btn sm" id="install" ${installEvt ? '' : 'disabled'}>${standalone ? 'Installed' : 'Install'}</button></div>
       ${!standalone ? '<p class="tiny muted" style="margin:0 0 8px">On iPhone: tap Share, then "Add to Home Screen".</p>' : ''}
       <div class="set-row"><div><b>${icon('accessibility')} Reduce motion</b><div class="small muted">Turns off decorative animations.</div></div><label class="toggle"><input type="checkbox" id="rm" ${rm ? 'checked' : ''}><span></span></label></div>
     </div>
-    <div class="card pad about-mini">${TT('badge', 56)}<div><b>The Gaming Hub v5</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
+    <div class="card pad about-mini">${TT('badge', 56)}<div><b>The Gaming Hub v7</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
     <div class="card legal-links">${[['/terms', 'file-text', 'Terms of Service'], ['/privacy', 'shield', 'Privacy Policy'], ['/rules', 'scale', 'Official Giveaway Rules'], ['/responsible-play', 'heart-pulse', 'Responsible play']].map(([h, ic, l]) => `<a class="act-row" href="${h}">${icon(ic)}<span class="g">${l}</span>${icon('chevron-right')}</a>`).join('')}</div>
   </div>`);
   document.getElementById('rm').onchange = (e) => { ls.setItem('gh_reduce_motion', e.target.checked ? '1' : '0'); document.documentElement.classList.toggle('reduce-motion', e.target.checked); };
@@ -1596,6 +1460,8 @@ addEventListener('pointerdown', unlockAudio, true); addEventListener('touchend',
 if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigator.serviceWorker.register('/sw.js').catch(() => {}); } catch {} });
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
+// v7 pages (Sponsor a Host, brands, shop & seasons) - public/js/v7.js
+V7.install({ route, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render });
 // ---------------- boot ----------------
 (async function boot() {
   const [me, games] = await Promise.all([api('/api/me'), api('/api/games')]);

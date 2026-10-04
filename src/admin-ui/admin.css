@@ -142,3 +142,13 @@
 .badge-defs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
 .bdef { display: flex; gap: 10px; align-items: center; padding: 10px; }
 .fp-item { margin-top: 10px; }
+/* v7 sponsor quote builder + price sheet + brands */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs a { padding: 8px 14px; border-radius: 99px; border: 1px solid rgba(99,102,241,.45); color: var(--text, #eef0ff); text-decoration: none; font-weight: 600; font-size: .85rem; display: inline-flex; gap: 6px; align-items: center; }
+.tabs a.on { background: linear-gradient(135deg, #7c3aed, #3b82f6); border-color: transparent; }
+.input.sm { height: 34px; padding: 4px 8px; font-size: .85rem; } .input.num { text-align: right; }
+.qtbl td { vertical-align: middle; } .qtbl td:first-child .input { min-width: 180px; } .qtbl td .input.num { width: 90px; }
+.qsum { display: flex; justify-content: flex-end; gap: 22px; margin-top: 10px; font-size: .95rem; } .qsum b { font-size: 1.15rem; margin-left: 6px; }
+tr.sel td { background: rgba(124,58,237,.14); }
+.plc { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0 12px; } .plc .check { margin: 4px 0; }
+code.inv { cursor: pointer; padding: 2px 6px; border-radius: 6px; background: rgba(99,102,241,.16); }

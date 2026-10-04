@@ -23,7 +23,7 @@ const demoTag = (d) => d ? '<span class="demo-tag">DEMO</span>' : '';
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 let GAMES = [];
 
-const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['channels', 'store', 'Brand Channels'], ['bookings', 'calendar-check', 'Bookings'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['tournaments', 'swords', 'Tournaments'], ['announcements', 'megaphone', 'Announcements'], ['badges', 'badge-check', 'Badges'], ['fairplay', 'scan-eye', 'Fair Play'], ['reports', 'file-text', 'Reports'], ['security', 'shield-check', 'Security'], ['settings', 'settings', 'Settings']];
+const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['channels', 'store', 'Brands'], ['sponsor', 'briefcase', 'Sponsor requests'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['tournaments', 'swords', 'Tournaments'], ['announcements', 'megaphone', 'Announcements'], ['badges', 'badge-check', 'Badges'], ['fairplay', 'scan-eye', 'Fair Play'], ['reports', 'file-text', 'Reports'], ['security', 'shield-check', 'Security'], ['settings', 'settings', 'Settings']];
 function frame(section, title, inner, actions = '') {
   document.title = `${title.replace(/<[^>]+>/g, '')} - Admin - The Gaming Hub by Trap Tech Solutions`;
   root.innerHTML = `<div class="adm">
@@ -53,7 +53,9 @@ async function render() {
     if (s === 'games') return games();
     if (s === 'giveaways' && !id) return giveaways();
     if (s === 'giveaways') return manageGiveaway(id);
-    if (s === 'bookings') return bookings();
+    if (s === 'bookings') return nav(AP + '/sponsor');
+    if (s === 'sponsor' && id === 'prices') return sponsorPrices();
+    if (s === 'sponsor') return sponsorAdmin(id);
     if (s === 'channels') return channels(id);
     if (s === 'badges') return badges();
     if (s === 'fairplay') return fairplay(new URLSearchParams(location.search).get('status') || 'open');
@@ -126,10 +128,10 @@ async function manageGiveaway(id) {
   const isNew = id === 'new';
   const pre = new URLSearchParams(location.search).get('game'); const preG = GAMES.find(x => x.id === pre && x.giveaway !== false);
   let g = { title: preG ? `${preG.title} Giveaway` : '', host: '', prize: '', image: preG ? preG.art : IMAGES[0], start_at: nowS(), end_at: nowS() + 7 * 864e5, game_ids: [preG ? preG.id : 'jetpack-dash'], rules: 'Must be 18+ (21+ where required). No purchase necessary. One account per person. Winners are contacted by Trap Tech on Potato.', active: true,
-    tier: 'basic', brand_color: '', brand_logo: '', featured: false, min_score: 0, prize_tiers_raw: '' };
+    placements: [], open_to_all: true, brand_color: '', brand_logo: '', featured: false, min_score: 0, prize_tiers_raw: '' };
   let entrants = [], stats = null;
-  const [chs, ed] = await Promise.all([api('/api/admin/channels'), api('/api/admin/eligibility-defaults')]);
-  const CH = chs.ok ? chs.channels : []; const DEF = ed.ok ? ed.defaults : {};
+  const [chs, ed] = await Promise.all([api('/api/admin/brands'), api('/api/admin/eligibility-defaults')]);
+  const CH = chs.ok ? chs.brands : []; const DEF = ed.ok ? ed.defaults : {};
   if (isNew) Object.assign(g, DEF, { channel_id: null, link_url: '', link_label: '' });
   if (!isNew) { const r = await api('/api/admin/giveaways/' + id); if (!r.ok) return frame('giveaways', 'Not found', `<div class="err">${esc(r.error)}</div>`); g = r.giveaway; entrants = r.entrants; stats = r.stats; }
   const sel = new Set(g.game_ids && g.game_ids.length ? g.game_ids : [g.game_id]);
@@ -150,14 +152,15 @@ async function manageGiveaway(id) {
           ${g.finalized_at ? `<div class="field full"><div class="hint lockhint">${icon('lock')} Final standings were locked ${dt(g.finalized_at)}. Dates, games, minimum score and winner rules can no longer change.</div></div>` : ''}
           <div class="field full"><label class="lbl">Games that count <span class="muted small" id="gpn"></span></label><div class="gpicker" id="gpk">${GAMES.filter(x => x.giveaway !== false).map(x => `<button type="button" class="gp ${sel.has(x.id) ? 'on' : ''}" data-g="${x.id}" aria-pressed="${sel.has(x.id)}"><span class="ck">${icon('check')}</span><img src="${x.art}" alt=""><b>${esc(x.title)}</b></button>`).join('')}</div>
             <div class="hint" style="margin:6px 0 0">Tap to select one or more games. With several games, a player's giveaway score is the sum of their best score in each.</div></div>
-          <div class="field"><label class="lbl">Package tier</label><select class="input" id="tier">${[['', 'None'], ['basic', 'Basic'], ['premium', 'Premium'], ['elite', 'Elite']].map(([k, l]) => `<option value="${k}" ${g.tier === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+          <fieldset class="field full plc-fs"><legend class="lbl">Sponsor placements <span class="muted small">(what the sponsor's accepted quote includes)</span></legend><div class="plc">${PLACE_L.map(([k, l]) => `<label class="check"><input type="checkbox" data-plc="${k}" ${(g.placements || []).includes(k) ? 'checked' : ''}> ${l}</label>`).join('')}</div></fieldset>
           <div class="field"><label class="lbl">Minimum score to qualify</label><input class="input" type="number" min="0" id="minscore" value="${g.min_score || 0}" ${lockA}></div>
           <div class="field"><label class="lbl">Winner selection</label><select class="input" id="wmethod" ${lockA}><option value="score" ${g.win_method !== 'random' ? 'selected' : ''}>Top score (skill)</option><option value="random" ${g.win_method === 'random' ? 'selected' : ''}>Verifiable random draw</option></select></div>
           <div class="field"><label class="lbl">Number of winners <span class="muted small">(0 = one per prize tier)</span></label><input class="input" type="number" min="0" max="100" id="wcount" value="${g.winner_count_raw ?? 0}" ${lockA}></div>
           <div class="field"><label class="lbl">Brand color</label><div style="display:flex;gap:8px"><input type="color" id="bcolor" value="${esc(g.brand_color || '#7c3aed')}" style="width:56px;height:48px;border:0;background:none"><label class="check" style="margin:0"><input type="checkbox" id="usecolor" ${g.brand_color ? 'checked' : ''}> Use brand color</label></div></div>
           <div class="field"><label class="lbl">Brand logo URL</label><input class="input" id="blogo" value="${esc(g.brand_logo)}" placeholder="/assets/... or https://..." maxlength="300"></div>
-          <div class="field"><label class="lbl">Brand channel</label><select class="input" id="chan"><option value="">No channel</option>${CH.map(c => `<option value="${c.id}" ${+g.channel_id === c.id ? 'selected' : ''}>${esc(c.name)} (${esc(c.tier)})</option>`).join('')}</select><div class="hint">Giveaways are grouped on the brand's channel page. <a href="/admin/channels">Manage channels</a></div></div>
-          <div class="field"><label class="lbl">Sponsor link <span class="muted small">(Premium/Elite - tracked)</span></label><input class="input" id="glink" value="${esc(g.link_url || '')}" placeholder="https://brand.example/..." maxlength="300"><input class="input" id="glinkl" value="${esc(g.link_label || '')}" placeholder="Button label, e.g. Visit Canopy Club" maxlength="40" style="margin-top:6px"></div>
+          <div class="field"><label class="lbl">Brand</label><select class="input" id="chan"><option value="">No brand (hub-wide)</option>${CH.map(c => `<option value="${c.id}" ${+g.channel_id === c.id ? 'selected' : ''}>${esc(c.name)} (${fmt(c.members)} members)</option>`).join('')}</select>
+            <label class="check" style="margin:8px 0 0"><input type="checkbox" id="opentoall" ${g.open_to_all !== false ? 'checked' : ''}> Open to everyone <span class="muted small">(off = only this brand's members can enter)</span></label><div class="hint"><a href="/admin/channels">Manage brands &amp; invite links</a></div></div>
+          <div class="field"><label class="lbl">Sponsor link <span class="muted small">(shown where the placements allow - tracked)</span></label><input class="input" id="glink" value="${esc(g.link_url || '')}" placeholder="https://brand.example/..." maxlength="300"><input class="input" id="glinkl" value="${esc(g.link_label || '')}" placeholder="Button label, e.g. Visit Canopy Club" maxlength="40" style="margin-top:6px"></div>
           <fieldset class="field full elig-fs" id="elig-fs"><legend class="lbl">${icon('shield-check')} Eligibility rules (anti-camping)</legend>
             <label class="check"><input type="checkbox" id="e-join" ${g.require_join ? 'checked' : ''}> Players must tap "Enter giveaway" (only joined players are ranked/drawn)</label>
             <div class="form-grid">
@@ -168,7 +171,6 @@ async function manageGiveaway(id) {
               <div class="field"><label class="lbl">Min XP in last 7 days <span class="muted small">(alternative to runs)</span></label><input class="input" type="number" min="0" id="e-xp" value="${g.elig_min_xp7 ?? 0}"></div>
             </div>
             <label class="check"><input type="checkbox" id="e-brand" ${g.elig_brand_month ? 'checked' : ''}> One win per player per brand per 30 days</label>
-            <label class="check"><input type="checkbox" id="e-fol" ${g.elig_followers_only ? 'checked' : ''}> Followers of the brand channel only</label>
             <label class="check"><input type="checkbox" id="e-w" ${g.weight_mode === 'activity' ? 'checked' : ''}> Random draws: activity entries (1 + 1 per 5 runs, max 5)</label>
             <div class="hint">0 = off. Defaults: join required, 3 runs/7 days, 2-day account age, max 3 live entries, 30-day win cooldown, one win per brand per month. Rules show on the giveaway page and in its Official Rules.</div>
           </fieldset>
@@ -176,7 +178,7 @@ async function manageGiveaway(id) {
           <div class="field full"><label class="lbl">Rules</label><textarea class="input" id="rules" maxlength="4000">${esc(g.rules)}</textarea></div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;margin:4px 0 10px"><label class="toggle"><input type="checkbox" id="active" ${g.active ? 'checked' : ''}><span></span></label><b>Active</b><span class="small muted">(visible on the public site)</span></div>
-        <div style="display:flex;align-items:center;gap:12px;margin:0 0 16px"><label class="toggle"><input type="checkbox" id="featured" ${g.featured ? 'checked' : ''}><span></span></label><b>Featured</b><span class="small muted">(home page slot; Elite + featured = hero takeover)</span></div>
+        <div style="display:flex;align-items:center;gap:12px;margin:0 0 16px"><label class="toggle"><input type="checkbox" id="featured" ${g.featured ? 'checked' : ''}><span></span></label><b>Featured</b><span class="small muted">(home page Featured row; the hero takeover is the "Home hero" placement)</span></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="submit" style="flex:1">${icon('check')} Save Changes</button>${isNew ? '' : `<button class="btn danger" type="button" id="del">${icon('trash-2')} Delete</button>`}</div>
         <p class="small muted">Times are in your browser's time zone (${Intl.DateTimeFormat().resolvedOptions().timeZone}). Runs started before the start time or submitted after the end time do not count.</p>
       </form>
@@ -216,9 +218,9 @@ async function manageGiveaway(id) {
   $('#gf').addEventListener('submit', async (e) => {
     e.preventDefault();
     const body = { title: $('#title').value, host: $('#host').value, prize: $('#prize').value, image: $('#img').value.trim(), start_at: new Date($('#start').value).getTime(), end_at: new Date($('#end').value).getTime(), entry_method: 'play', game_ids: GAMES.filter(x => x.giveaway !== false).map(x => x.id).filter(k => sel.has(k)), rules: $('#rules').value, active: $('#active').checked,
-      tier: $('#tier').value, min_score: +$('#minscore').value || 0, brand_color: $('#usecolor').checked ? $('#bcolor').value : '', brand_logo: $('#blogo').value.trim(), featured: $('#featured').checked, prize_tiers: $('#ptiers').value, win_method: $('#wmethod').value, winner_count: +$('#wcount').value || 0,
+      placements: [...document.querySelectorAll('[data-plc]')].filter(x => x.checked).map(x => x.dataset.plc), open_to_all: !$('#chan').value || $('#opentoall').checked, min_score: +$('#minscore').value || 0, brand_color: $('#usecolor').checked ? $('#bcolor').value : '', brand_logo: $('#blogo').value.trim(), featured: $('#featured').checked, prize_tiers: $('#ptiers').value, win_method: $('#wmethod').value, winner_count: +$('#wcount').value || 0,
       channel_id: $('#chan').value || null, link_url: $('#glink').value.trim(), link_label: $('#glinkl').value.trim(), require_join: $('#e-join').checked, elig_min_runs7: +$('#e-runs').value || 0, elig_account_age_days: +$('#e-age').value || 0,
-      elig_max_active: +$('#e-max').value || 0, elig_win_cooldown_days: +$('#e-cool').value || 0, elig_min_xp7: +$('#e-xp').value || 0, elig_brand_month: $('#e-brand').checked, elig_followers_only: $('#e-fol').checked, weight_mode: $('#e-w').checked ? 'activity' : '' };
+      elig_max_active: +$('#e-max').value || 0, elig_win_cooldown_days: +$('#e-cool').value || 0, elig_min_xp7: +$('#e-xp').value || 0, elig_brand_month: $('#e-brand').checked, elig_followers_only: false, weight_mode: $('#e-w').checked ? 'activity' : '' };
     if (g.finalized_at) Object.assign(body, { start_at: g.start_at, end_at: g.end_at });
     const r = await api(isNew ? '/api/admin/giveaways' : '/api/admin/giveaways/' + id, { method: isNew ? 'POST' : 'PUT', body });
     if (!r.ok) { $('#gm').innerHTML = `<div class="err">${esc(r.error)}</div>`; window.scrollTo(0, 0); return; }
@@ -274,21 +276,7 @@ async function loadReview(id, g) {
   };
 }
 
-// ---------- bookings ----------
-async function bookings() {
-  const r = await api('/api/admin/bookings');
-  frame('bookings', 'Bookings', `<div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th>Contact</th><th>Type / Package</th><th>Dates</th><th>Details</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>
-    ${r.bookings.length ? r.bookings.map(b => `<tr data-id="${b.id}"><td>${b.id}</td><td><b>${esc(b.brand)}</b>${demoTag(b.is_demo)}<div class="small muted">${ago(b.created_at)}${b.username ? ' • ' + esc(b.username) : ''}</div></td><td class="small">${esc(b.contact_name)}<br>${esc(b.contact)}${b.business_type ? `<div class="tiny muted">${esc(b.business_type)}${b.licensed_confirmed ? ' • licensed ✓' : ''}</div>` : ''}${b.email ? `<div><a href="mailto:${esc(b.email)}">${esc(b.email)}</a></div>` : ''}${b.potato ? `<div><a class="btn sm ghost" href="https://potato.im/${esc(b.potato)}" target="_blank" rel="noopener">${icon('message-circle')} @${esc(b.potato)} on Potato</a></div>` : ''}</td><td class="small">${esc(b.event_type || '-')}<br><span class="pill ${b.package === 'elite' ? 'gold' : ''}">${esc(b.package)}</span>${b.package_snapshot ? `<div class="small muted" data-snap>${esc(b.package_snapshot)}</div>` : ''}</td><td class="small">${esc(b.start_date || '?')}<br>→ ${esc(b.end_date || '?')}</td><td class="small" style="max-width:260px;white-space:pre-wrap">${esc(b.details)}</td>
-      <td><select class="input" data-st style="height:36px;width:120px">${['pending', 'approved', 'declined', 'done'].map(s => `<option ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
-      <td><input class="input" data-note value="${esc(b.admin_note)}" placeholder="Internal note" style="height:36px;min-width:140px"></td>
-      <td style="white-space:nowrap"><button class="btn sm" data-save>Save</button> <button class="iconbtn" data-del aria-label="Delete">${icon('trash-2')}</button></td></tr>`).join('') : '<tr><td colspan="9" class="empty">No booking requests yet.</td></tr>'}
-  </tbody></table></div>`, `<a class="btn ghost sm" href="/api/admin/export/bookings.csv" target="_blank">${icon('download')} CSV</a>`);
-  root.querySelector('.tbl').addEventListener('click', async (e) => {
-    const tr = e.target.closest('tr[data-id]'); if (!tr) return; const id = tr.dataset.id;
-    if (e.target.closest('[data-save]')) { await api('/api/admin/bookings/' + id, { method: 'PUT', body: { status: $('[data-st]', tr).value, admin_note: $('[data-note]', tr).value } }); toast('Booking updated'); }
-    if (e.target.closest('[data-del]') && confirm('Delete booking #' + id + '?')) { await api('/api/admin/bookings/' + id, { method: 'DELETE' }); bookings(); }
-  });
-}
+// v7: bookings -> sponsor requests + quote builder (see sponsorAdmin below)
 
 // ---------- players ----------
 async function players(q = '') {
@@ -387,28 +375,12 @@ async function reports() {
 
 // ---------- settings ----------
 async function settings() {
-  const [s, pk, ac, bk] = await Promise.all([api('/api/admin/stats'), api('/api/admin/packages'), api('/api/admin/achievements'), api('/api/admin/backups')]);
+  const [s, ac, bk] = await Promise.all([api('/api/admin/stats'), api('/api/admin/achievements'), api('/api/admin/backups')]);
   const kb = (n) => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
   const bst = bk.status || {}; const gh = bst.last_github;
   frame('settings', 'Settings', `
-    <div class="card pad" id="pkg-editor"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="flex:1">${icon('briefcase')} Sponsor packages <span class="muted small">(shown on /host)</span></h2><a class="btn ghost sm" href="/host" target="_blank">${icon('external-link')} View page</a></div>
-      <p class="muted small">Edit prices, names and features for each tier. Prices are placeholders - set your real prices here. Changes are live as soon as you save.</p>
-      <div id="pkm"></div>
-      <div class="pk-ed">${pk.tiers.map((t, i) => `<div class="card pad pk-t" data-i="${i}"><h3 class="orb" style="margin:0 0 10px;text-transform:uppercase">${esc(t.id)}</h3>
-        <div class="form-grid"><div class="field"><label class="lbl">Name</label><input class="input" data-f="name" value="${esc(t.name)}"></div><div class="field"><label class="lbl">Launch price</label><input class="input" data-f="price" value="${esc(t.price)}" placeholder="$49"></div><div class="field"><label class="lbl">Regular price <span class="muted small">(shown struck through)</span></label><input class="input" data-f="regular_price" value="${esc(t.regular_price || '')}" placeholder="$79"></div><div class="field"><label class="lbl">Duration</label><input class="input" data-f="duration" value="${esc(t.duration || '')}" placeholder="7 days"></div>
-        <div class="field"><label class="lbl">Price note</label><input class="input" data-f="price_note" value="${esc(t.price_note)}" placeholder="per giveaway"></div><div class="field"><label class="lbl">Badge</label><input class="input" data-f="badge" value="${esc(t.badge)}" placeholder="Most popular"></div>
-        <div class="field full"><label class="lbl">Tagline</label><input class="input" data-f="tagline" value="${esc(t.tagline)}"></div>
-        <div class="field full"><label class="lbl">Who it's for</label><input class="input" data-f="who" value="${esc(t.who)}"></div>
-        ${['exposure', 'reach', 'duration', 'branding', 'links', 'winners', 'analytics', 'winner_contact'].map(k => `<div class="field full"><label class="lbl">${k.replace('_', ' ')}</label><input class="input" data-dim="${k}" value="${esc((t.dims || {})[k] || '')}"></div>`).join('')}
-        <div class="field full"><label class="lbl">Features (one per line)</label><textarea class="input" data-f="features" style="min-height:150px">${esc(t.features.join('\n'))}</textarea></div></div></div>`).join('')}</div>
-      <div class="form-grid"><div class="field"><label class="lbl">Launch label</label><input class="input" id="pk-ll" value="${esc(pk.launch_label || '')}" placeholder="Launch pricing"></div><div class="field"><label class="lbl">Admin Potato handle <span class="muted small">(booking confirmation: "Message us on Potato at @...")</span></label><input class="input" id="pk-ph" value="${esc(pk.potato_handle || '')}" placeholder="TrapTechSolutions"></div>
-        <div class="field full"><label class="lbl">Launch note</label><input class="input" id="pk-ln" value="${esc(pk.launch_note || '')}"></div>
-        <div class="field full"><label class="lbl">Why links are paid</label><textarea class="input" id="pk-wl">${esc(pk.why_links || '')}</textarea></div></div>
-      <div class="field"><label class="lbl">Add-ons <span class="muted small">(one per line: id | Name | Price | Description)</span></label><textarea class="input" id="pk-ad" style="min-height:140px;font-size:.8rem">${esc((pk.addons || []).map(a => [a.id, a.name, a.price, a.desc].join(' | ')).join('\n'))}</textarea></div>
-      <div class="field"><label class="lbl">Many brands at once <span class="muted small">(one per line: Title | Text)</span></label><textarea class="input" id="pk-mb" style="min-height:120px;font-size:.8rem">${esc((pk.multi_brand || []).map(r => r.join(' | ')).join('\n'))}</textarea></div>
-      <div class="field"><label class="lbl">Comparison table <span class="muted small">(one row per line: Label | Basic | Premium | Elite; use "yes" or "-" for check / cross)</span></label><textarea class="input" id="pk-cmp" style="min-height:220px;font-family:monospace;font-size:.8rem">${esc(pk.compare.map(r => r.join(' | ')).join('\n'))}</textarea></div>
-      <div class="field"><label class="lbl">FAQ <span class="muted small">(one per line: Question | Answer)</span></label><textarea class="input" id="pk-faq" style="min-height:180px;font-size:.8rem">${esc(pk.faq.map(r => r.join(' | ')).join('\n'))}</textarea></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="pk-save">${icon('check')} Save packages</button><button class="btn ghost" id="pk-reset">${icon('rotate-ccw')} Reset to defaults</button></div></div>
+    <div class="card pad" id="pkg-editor"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="flex:1">${icon('briefcase')} Sponsor prices</h2><a class="btn sm" href="/admin/sponsor/prices">${icon('pencil')} Edit the price sheet</a></div>
+      <p class="muted small" style="margin:6px 0 0">Prices are admin-only: sponsors pick features on <a href="/sponsor" target="_blank">/sponsor</a> and get a quote built from this sheet.</p></div>
     <div class="cols">
     <div class="card pad"><h2 style="margin-bottom:8px">Demo data</h2><p class="muted">Sample players, giveaways, bookings and announcements used for previews are tagged <span class="demo-tag">DEMO</span>. Currently: ${s.demo.players} demo players, ${s.demo.giveaways} demo giveaways.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn danger" id="wipe">${icon('trash-2')} Wipe demo data</button><button class="btn ghost" id="seed">${icon('sparkles')} Load demo data</button></div>
@@ -424,50 +396,44 @@ async function settings() {
   $('#bk-now').onclick = async (e) => { e.target.disabled = true; const r = await api('/api/admin/backups', { method: 'POST' }); toast(r.ok ? `Backup saved${r.push ? (r.push.ok ? ' and pushed to GitHub' : ' (GitHub push failed: ' + r.push.error + ')') : ''}` : 'Backup failed: ' + r.error); settings(); };
   $('#wipe').onclick = async () => { if (!confirm('Delete all demo data? Real players and giveaways are not touched.')) return; const r = await api('/api/admin/demo/wipe', { method: 'POST' }); toast(`Removed ${r.players} demo players, ${r.giveaways} giveaways`); settings(); };
   $('#seed').onclick = async () => { const r = await api('/api/admin/demo/seed', { method: 'POST' }); toast(r.seeded ? 'Demo data loaded' : r.note); settings(); };
-  $('#pk-save').onclick = async () => {
-    const tiers = [...document.querySelectorAll('.pk-t')].map(el => { const o = { dims: {} }; el.querySelectorAll('[data-f]').forEach(i => { o[i.dataset.f] = i.dataset.f === 'features' ? i.value.split('\n').map(x => x.trim()).filter(Boolean) : i.value; }); el.querySelectorAll('[data-dim]').forEach(i => { o.dims[i.dataset.dim] = i.value; }); return o; });
-    const split = (v) => v.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.split('|').map(x => x.trim()));
-    const faq = $('#pk-faq').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf('|'); return i < 0 ? [l, ''] : [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
-    const addons = split($('#pk-ad').value).map(([id, name, price, desc]) => ({ id, name, price, desc }));
-    const multi_brand = $('#pk-mb').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf('|'); return i < 0 ? [l, ''] : [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
-    const r = await api('/api/admin/packages', { method: 'PUT', body: { tiers, compare: split($('#pk-cmp').value), faq, addons, multi_brand, launch_label: $('#pk-ll').value, launch_note: $('#pk-ln').value, potato_handle: $('#pk-ph').value, why_links: $('#pk-wl').value } });
-    $('#pkm').innerHTML = r.ok ? '<div class="ok-msg">Packages saved - live on /host.</div>' : `<div class="err">${esc(r.error)}</div>`; if (r.ok) toast('Packages saved');
-  };
-  $('#pk-reset').onclick = async () => { if (!confirm('Reset all package names, prices, features, comparison and FAQ to the defaults?')) return; await api('/api/admin/packages/reset', { method: 'POST' }); toast('Packages reset'); settings(); };
 }
 
 render();
 
-// ---------- v5: brand channels ----------
+// ---------- brands (v5 channels table) ----------
 async function channels(editId) {
   const r = await api('/api/admin/channels');
   const c = editId && editId !== 'new' ? r.channels.find(x => String(x.id) === String(editId)) : null;
   const f = c || { name: '', slug: '', tagline: '', logo: '', color: '#7c3aed', tier: 'basic', link_url: '', link_label: '', business_type: '', active: 1 };
-  frame('channels', 'Brand Channels', `<p class="muted small" style="margin-top:0">Each sponsor gets its own channel: its giveaways, followers and (Premium/Elite) a tracked link. Players follow the brands they like, so giveaways stay separated by brand and campers can be limited per brand.</p>
+  const br = await api('/api/admin/brands'); const BI = Object.fromEntries((br.brands || []).map(b => [b.id, b]));
+  frame('channels', 'Brands', `<p class="muted small" style="margin-top:0">Players belong to one brand at a time. They join with the brand's invite link or code (or pick a brand at signup) and can switch every ${br.cooldown_days || 30} days. A brand's giveaways are for its members unless the giveaway is marked "Open to everyone".</p>
     <div class="cols" style="margin-top:0;grid-template-columns:1.2fr 1fr">
-      <div class="card wrap-x"><table class="tbl" id="ch-tbl"><thead><tr><th>Channel</th><th>Tier</th><th class="num">Followers</th><th class="num">Link clicks</th><th>Visible</th><th></th></tr></thead><tbody>
-        ${r.channels.length ? r.channels.map(x => `<tr data-ch="${x.id}"><td><b>${esc(x.name)}</b>${demoTag(x.is_demo)}<div class="small muted">/c/${esc(x.slug)}</div></td><td><span class="pill ${x.tier === 'elite' ? 'gold' : ''}">${esc(x.tier)}</span></td><td class="num">${fmt(x.followers)}</td><td class="num">${fmt(x.clicks)}</td><td>${x.active ? '<span class="pill green">on</span>' : '<span class="pill red">off</span>'}</td><td><a class="btn sm" href="/admin/channels/${x.id}">Edit</a></td></tr>`).join('') : '<tr><td colspan="6" class="empty">No channels yet.</td></tr>'}
+      <div class="card wrap-x"><table class="tbl" id="ch-tbl"><thead><tr><th>Brand</th><th>Invite link</th><th class="num">Members</th><th class="num">Link clicks</th><th>Visible</th><th></th></tr></thead><tbody>
+        ${r.channels.length ? r.channels.map(x => `<tr data-ch="${x.id}"><td><b>${esc(x.name)}</b>${demoTag(x.is_demo)}<div class="small muted">${esc(x.slug)}</div></td><td>${BI[x.id] ? `<code class="inv" data-inv="${esc(location.origin + BI[x.id].invite_path)}" title="Click to copy">/join/${esc(BI[x.id].invite_code)}</code> <button type="button" class="btn ghost sm" data-newcode="${x.id}" title="New code (old link stops working)">${icon('refresh-cw')}</button>` : ''}</td><td class="num">${fmt(BI[x.id] ? BI[x.id].members : 0)}</td><td class="num">${fmt(x.clicks)}</td><td>${x.active ? '<span class="pill green">on</span>' : '<span class="pill red">off</span>'}</td><td><a class="btn sm" href="/admin/channels/${x.id}">Edit</a></td></tr>`).join('') : '<tr><td colspan="6" class="empty">No brands yet.</td></tr>'}
       </tbody></table></div>
-      <form class="card pad" id="chf"><h2 style="margin-bottom:10px">${c ? 'Edit channel' : 'New channel'}</h2><div id="chm"></div>
+      <form class="card pad" id="chf"><h2 style="margin-bottom:10px">${c ? 'Edit brand' : 'New brand'}</h2><div id="chm"></div>
         <div class="field"><label class="lbl">Brand name</label><input class="input" id="c-name" value="${esc(f.name)}" maxlength="60" required></div>
-        <div class="field"><label class="lbl">Slug <span class="muted small">(URL: /c/slug)</span></label><input class="input" id="c-slug" value="${esc(f.slug)}" maxlength="40" placeholder="auto from name"></div>
+        <div class="field"><label class="lbl">Slug <span class="muted small">(players can also type it as the brand code)</span></label><input class="input" id="c-slug" value="${esc(f.slug)}" maxlength="40" placeholder="auto from name"></div>
         <div class="field"><label class="lbl">Tagline</label><input class="input" id="c-tag" value="${esc(f.tagline)}" maxlength="160"></div>
         <div class="field"><label class="lbl">Logo</label><input class="input" id="c-logo" value="${esc(f.logo)}" placeholder="/assets/... or https://..." maxlength="300"></div>
-        <div class="form-grid"><div class="field"><label class="lbl">Tier</label><select class="input" id="c-tier">${['basic', 'premium', 'elite'].map(t => `<option ${f.tier === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-          <div class="field"><label class="lbl">Color</label><input type="color" id="c-color" value="${esc(f.color || '#7c3aed')}" style="width:56px;height:44px;border:0;background:none"></div></div>
-        <div class="field"><label class="lbl">Channel link <span class="muted small">(shown for Premium/Elite only)</span></label><input class="input" id="c-link" value="${esc(f.link_url)}" placeholder="https://..." maxlength="300"><input class="input" id="c-linkl" value="${esc(f.link_label)}" placeholder="Button label" maxlength="40" style="margin-top:6px"></div>
+        <div class="form-grid"><div class="field"><label class="lbl">Color</label><input type="color" id="c-color" value="${esc(f.color || '#7c3aed')}" style="width:56px;height:44px;border:0;background:none"></div></div>
+        <div class="field"><label class="lbl">Brand link <span class="muted small">(fallback for giveaways with a link placement)</span></label><input class="input" id="c-link" value="${esc(f.link_url)}" placeholder="https://..." maxlength="300"><input class="input" id="c-linkl" value="${esc(f.link_label)}" placeholder="Button label" maxlength="40" style="margin-top:6px"></div>
         <div class="field"><label class="lbl">Business type</label><input class="input" id="c-bt" value="${esc(f.business_type)}" maxlength="80"></div>
         <label class="check"><input type="checkbox" id="c-active" ${f.active ? 'checked' : ''}> Visible</label>
-        <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" style="flex:1">${icon('check')} ${c ? 'Save' : 'Create channel'}</button>${c ? `<button class="btn danger" type="button" id="c-del">${icon('trash-2')}</button>` : ''}</div>
-      </form></div>`, `<a class="btn sm" href="/admin/channels/new">${icon('plus')} New channel</a>`);
+        <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" style="flex:1">${icon('check')} ${c ? 'Save' : 'Create brand'}</button>${c ? `<button class="btn danger" type="button" id="c-del">${icon('trash-2')}</button>` : ''}</div>
+      </form></div>`, `<a class="btn sm" href="/admin/channels/new">${icon('plus')} New brand</a>`);
+  $('#ch-tbl').onclick = async (e) => {
+    const inv = e.target.closest('[data-inv]'); if (inv) { try { await navigator.clipboard.writeText(inv.dataset.inv); toast('Invite link copied'); } catch { toast(inv.dataset.inv); } return; }
+    const nc = e.target.closest('[data-newcode]'); if (nc && confirm('Make a new invite code? The old link stops working.')) { const x = await api(`/api/admin/brands/${nc.dataset.newcode}/new-code`, { method: 'POST' }); toast(x.ok ? 'New code: ' + x.invite_code : x.error); channels(editId); }
+  };
   $('#chf').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const body = { name: $('#c-name').value, slug: $('#c-slug').value, tagline: $('#c-tag').value, logo: $('#c-logo').value.trim(), tier: $('#c-tier').value, color: $('#c-color').value, link_url: $('#c-link').value.trim(), link_label: $('#c-linkl').value, business_type: $('#c-bt').value, active: $('#c-active').checked };
+    const body = { name: $('#c-name').value, slug: $('#c-slug').value, tagline: $('#c-tag').value, logo: $('#c-logo').value.trim(), color: $('#c-color').value, link_url: $('#c-link').value.trim(), link_label: $('#c-linkl').value, business_type: $('#c-bt').value, active: $('#c-active').checked };
     const x = await api(c ? '/api/admin/channels/' + c.id : '/api/admin/channels', { method: c ? 'PUT' : 'POST', body });
     if (!x.ok) { $('#chm').innerHTML = `<div class="err">${esc(x.error)}</div>`; return; }
     toast('Saved'); nav('/admin/channels');
   });
-  const d = $('#c-del'); if (d) d.onclick = async () => { if (!confirm('Delete this channel? Its giveaways stay but lose the channel.')) return; await api('/api/admin/channels/' + c.id, { method: 'DELETE' }); toast('Deleted'); nav('/admin/channels'); };
+  const d = $('#c-del'); if (d) d.onclick = async () => { if (!confirm('Delete this brand? Its giveaways stay (as hub-wide) and its members become brand-less.')) return; await api('/api/admin/channels/' + c.id, { method: 'DELETE' }); toast('Deleted'); nav('/admin/channels'); };
 }
 
 // ---------- v5: admin-only badges ----------
@@ -545,4 +511,89 @@ async function security() {
   };
   $('#bcf').onsubmit = async (e) => { e.preventDefault(); const x = await api('/api/admin/security/backup-codes', { method: 'POST', body: { code: $('#bc-code').value } }); $('#bc-out').textContent = x.ok ? 'Save these now (old codes no longer work):\n' + x.backup_codes.join('\n') : x.error; };
   $('#lo-all').onclick = async () => { if (!confirm('Sign out every admin session, including this one?')) return; await api('/api/admin/security/logout-all', { method: 'POST' }); location.href = AP + '/'; };
+}
+
+// ---------- v7: Sponsor a Host - requests, quote builder, price sheet (admin-only prices) ----------
+const PLACE_L = [['giveaway', 'Link on the giveaway page'], ['game', 'Link on the game page'], ['announcement', 'Link in the launch announcement'], ['featured', 'Home Featured row'], ['hero', 'Home hero takeover'], ['skin', 'Branded game skin / theme'], ['open', 'Open to every hub player']];
+const usd = (c) => '$' + ((Math.round(c) || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const QS_PILL = { draft: ['', 'Draft'], sent: ['amber', 'Sent'], accepted: ['green', 'Accepted'], declined: ['red', 'Declined'], paid: ['green', 'Paid'] };
+const qPill = (st) => { const [c, l] = QS_PILL[st] || QS_PILL.draft; return `<span class="pill ${c}">${l}</span>`; };
+async function sponsorAdmin(id) {
+  const r = await api('/api/admin/sponsor/requests'); const list = r.requests || [];
+  const cur = id ? (await api('/api/admin/sponsor/requests/' + id)) : null; const q = cur && cur.ok ? cur.request : null;
+  const tabs = `<div class="tabs" style="margin:0 0 12px"><a class="on" href="/admin/sponsor">${icon('inbox')} Requests</a><a href="/admin/sponsor/prices">${icon('banknote')} Price sheet</a></div>`;
+  const row = (b) => `<tr data-id="${b.id}" class="${q && q.id === b.id ? 'sel' : ''}"><td>${b.id}</td><td><a href="/admin/sponsor/${b.id}"><b>${esc(b.brand)}</b></a>${demoTag(b.is_demo)}<div class="small muted">${ago(b.created_at)} • ${esc(b.business_type || '')}${b.licensed_confirmed ? ' • licensed' : ''}</div></td><td class="num">${b.features.length}</td><td>${qPill(b.quote.status)}</td><td class="num">${usd(b.quote.total_cents)}</td></tr>`;
+  let editor = `<div class="card pad"><p class="muted">Pick a request to build its quote. The draft is totalled automatically from the <a href="/admin/sponsor/prices">price sheet</a>; adjust lines, add custom items or a discount, then send it to the sponsor's private status page.</p></div>`;
+  if (q) {
+    const Q = q.quote; const locked = ['accepted', 'paid'].includes(Q.status); const L = Q.lines.map(l => ({ ...l }));
+    const statusUrl = location.origin + '/sponsor/status/' + q.public_token;
+    editor = `<div class="card pad" id="qb"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">#${q.id} ${esc(q.brand)}</h2>${qPill(Q.status)}</div>
+      <div class="small muted" style="margin:4px 0 10px">${esc(q.contact || '')}${q.contact_name ? ' • ' + esc(q.contact_name) : ''} • dates ${esc(q.start_date || 'flexible')} → ${esc(q.end_date || 'flexible')}${q.username ? ' • player @' + esc(q.username) : ''}</div>
+      <details ${Q.saved ? '' : 'open'}><summary class="lbl">${icon('list-checks')} Asked for (${q.features.length})</summary><ul class="small" style="margin:6px 0 10px;padding-left:18px">${q.features.map(f => `<li>${esc(f.name)}${f.unit !== 'flat' ? ` - ${f.qty}${f.unit === 'week' ? ' wk' : ''}` : ''}${f.note ? ` <span class="muted">(${esc(f.note)})</span>` : ''}</li>`).join('')}</ul>
+        ${q.details ? `<p class="small"><b>Details:</b> ${esc(q.details)}</p>` : ''}${q.notes ? `<p class="small"><b>Notes:</b> ${esc(q.notes)}</p>` : ''}
+        ${cur.placements.length ? `<p class="small"><b>Giveaway placements to tick:</b> ${cur.placements.map(k => esc((PLACE_L.find(x => x[0] === k) || [k, k])[1])).join(', ')}</p>` : ''}</details>
+      <div id="qm"></div>
+      <div class="wrap-x"><table class="tbl qtbl"><thead><tr><th>Line</th><th class="num">Qty</th><th class="num">Unit $</th><th class="num">Amount</th><th></th></tr></thead><tbody id="ql"></tbody></table></div>
+      ${locked ? '' : `<button class="btn ghost sm" id="q-add" type="button">${icon('plus')} Custom line</button> <button class="btn ghost sm" id="q-auto" type="button" title="Rebuild from the price sheet">${icon('rotate-ccw')} Re-total from price sheet (${usd(Q.auto_total_cents)})</button>`}
+      <div class="form-grid" style="margin-top:10px"><div class="field"><label class="lbl" for="q-pct">Discount %</label><input class="input" id="q-pct" type="number" min="0" max="100" step="1" value="${Q.discount_pct || 0}" ${locked ? 'disabled' : ''}></div>
+        <div class="field"><label class="lbl" for="q-off">Discount $</label><input class="input" id="q-off" type="number" min="0" step="0.01" value="${(Q.discount_cents || 0) / 100}" ${locked ? 'disabled' : ''}></div>
+        <div class="field"><label class="lbl" for="q-days">Valid for (days)</label><input class="input" id="q-days" type="number" min="1" max="90" value="${Q.valid_until ? Math.max(1, Math.round((Q.valid_until - Date.now()) / 864e5)) : 14}" ${locked ? 'disabled' : ''}></div>
+        <div class="field full"><label class="lbl" for="q-note">Note to the sponsor</label><textarea class="input" id="q-note" maxlength="2000" ${locked ? 'disabled' : ''}>${esc(Q.note || '')}</textarea></div></div>
+      <div class="qsum"><span>Subtotal <b id="q-sub"></b></span><span>Total <b id="q-tot"></b></span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        ${locked ? '' : `<button class="btn ghost" id="q-save">${icon('check')} Save draft</button><button class="btn" id="q-send">${icon('mail')} ${Q.status === 'sent' ? 'Re-send' : 'Send to sponsor'}</button>`}
+        ${Q.status === 'accepted' ? `<button class="btn" id="q-paid">${icon('banknote')} Mark paid</button>` : ''}
+        ${['draft', 'sent'].includes(Q.status) ? `<button class="btn danger sm" id="q-dec">Mark declined</button>` : ''}
+        <button class="btn ghost sm" id="q-link" title="${esc(statusUrl)}">${icon('copy')} Copy sponsor status link</button>
+        <button class="btn danger sm" id="q-del">${icon('trash-2')}</button></div>
+      <p class="tiny muted">${Q.sent_at ? `Sent ${dt(Q.sent_at)}. ` : ''}${Q.responded_at ? `Answered ${dt(Q.responded_at)}. ` : ''}${Q.paid_at ? `Paid ${dt(Q.paid_at)}. ` : ''}Saving a draft after sending takes the quote back to draft until you send again. Accepted quotes are locked.</p></div>`;
+    frame('sponsor', 'Sponsor requests', `${tabs}<div class="cols" style="margin-top:0;grid-template-columns:1fr 1.3fr"><div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th class="num">Features</th><th>Quote</th><th class="num">Total</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>${editor}</div>`,
+      `<a class="btn ghost sm" href="/api/admin/export/bookings.csv" target="_blank">${icon('download')} CSV</a>`);
+    const P = (await api('/api/admin/sponsor/prices')).prices || {};
+    const total = () => { const sub = L.reduce((t, l) => t + (Number(l.amount_cents) || 0), 0); const pct = +$('#q-pct').value || 0; const off = Math.round((+$('#q-off').value || 0) * 100); return [sub, Math.max(0, Math.round(sub * (1 - Math.min(100, pct) / 100)) - off)]; };
+    const paint = () => {
+      $('#ql').innerHTML = L.map((l, i) => `<tr data-i="${i}"><td><input class="input sm" data-k="label" value="${esc(l.label)}" ${locked ? 'disabled' : ''} aria-label="Line label"></td><td class="num"><input class="input sm num" type="number" min="0" data-k="qty" value="${l.qty}" ${locked || l.custom ? 'disabled' : ''} aria-label="Quantity"></td><td class="num"><input class="input sm num" type="number" step="0.01" data-k="unit" value="${(l.unit_cents || 0) / 100}" ${locked || l.custom ? 'disabled' : ''} aria-label="Unit price"></td><td class="num">${l.custom && !locked ? `<input class="input sm num" type="number" step="0.01" data-k="amount" value="${(l.amount_cents || 0) / 100}" aria-label="Amount">` : usd(l.amount_cents)}</td><td>${locked ? '' : `<button type="button" class="btn ghost sm" data-rm="${i}" aria-label="Remove line">${icon('x')}</button>`}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No lines.</td></tr>';
+      const [sub, tot] = total(); $('#q-sub').textContent = usd(sub); $('#q-tot').textContent = usd(tot);
+    };
+    paint();
+    $('#ql').oninput = (e) => { const tr = e.target.closest('[data-i]'); if (!tr) return; const l = L[+tr.dataset.i]; const k = e.target.dataset.k; const v = e.target.value;
+      if (k === 'label') l.label = v; else if (k === 'qty') l.qty = +v || 0; else if (k === 'unit') l.unit_cents = Math.round((+v || 0) * 100); else if (k === 'amount') l.amount_cents = Math.round((+v || 0) * 100);
+      if (!l.custom) l.amount_cents = Math.round(l.qty * l.unit_cents); if (k !== 'label') { const c = tr.children[3]; if (!l.custom) c.textContent = usd(l.amount_cents); } const [sub, tot] = total(); $('#q-sub').textContent = usd(sub); $('#q-tot').textContent = usd(tot); };
+    $('#ql').onclick = (e) => { const b = e.target.closest('[data-rm]'); if (b) { L.splice(+b.dataset.rm, 1); paint(); } };
+    ['#q-pct', '#q-off'].forEach(s => { const el = $(s); if (el) el.oninput = () => { const [sub, tot] = total(); $('#q-sub').textContent = usd(sub); $('#q-tot').textContent = usd(tot); }; });
+    const body = () => ({ lines: L, discount_pct: +$('#q-pct').value || 0, discount_cents: Math.round((+$('#q-off').value || 0) * 100), valid_days: +$('#q-days').value || 14, note: $('#q-note').value });
+    const msg = (t, ok) => { $('#qm').innerHTML = `<div class="${ok ? 'ok-msg' : 'err'}">${esc(t)}</div>`; };
+    const save = async () => { const x = await api(`/api/admin/sponsor/requests/${q.id}/quote`, { method: 'PUT', body: body() }); if (!x.ok) msg(x.error); return x.ok; };
+    const status = async (st, text) => { const x = await api(`/api/admin/sponsor/requests/${q.id}/status`, { method: 'POST', body: { status: st } }); if (!x.ok) return msg(x.error); toast(text); sponsorAdmin(q.id); };
+    const on = (s, f) => { const el = $(s); if (el) el.onclick = f; };
+    on('#q-add', () => { L.push({ label: 'Custom item', qty: 1, unit_cents: 0, amount_cents: 0, custom: true }); paint(); });
+    on('#q-auto', () => { if (!confirm('Replace the lines with a fresh total from the price sheet?')) return; L.length = 0; for (const f of q.features) { const fe = f; const billable = fe.unit === 'flat' ? 1 : fe.qty - (fe.id === 'weeks' ? 1 : 0); if (billable <= 0 && fe.id !== 'winner-contact') continue; L.push({ feature_id: fe.id, label: fe.name + (fe.unit !== 'flat' ? ` (${fe.qty}${fe.unit === 'week' ? ' weeks' : ''})` : ''), qty: Math.max(billable, 1), unit_cents: P[fe.id] || 0, amount_cents: fe.id === 'winner-contact' ? 0 : Math.max(billable, 1) * (P[fe.id] || 0) }); } paint(); });
+    on('#q-save', async () => { if (await save()) { toast('Draft saved'); sponsorAdmin(q.id); } });
+    on('#q-send', async () => { if (!confirm(`Send this ${$('#q-tot').textContent} quote to ${q.brand}? They see it on their private status page.`)) return; if (await save()) status('sent', 'Quote sent'); });
+    on('#q-paid', () => { if (confirm('Mark this accepted quote as paid?')) status('paid', 'Marked paid'); });
+    on('#q-dec', () => { if (confirm('Mark this request declined?')) status('declined', 'Marked declined'); });
+    on('#q-link', async () => { try { await navigator.clipboard.writeText(statusUrl); toast('Status link copied'); } catch { prompt('Sponsor status link', statusUrl); } });
+    on('#q-del', async () => { if (!confirm(`Delete request #${q.id}? This cannot be undone.`)) return; await api('/api/admin/bookings/' + q.id, { method: 'DELETE' }); toast('Deleted'); nav(AP + '/sponsor'); });
+    return;
+  }
+  frame('sponsor', 'Sponsor requests', `${tabs}<div class="cols" style="margin-top:0;grid-template-columns:1fr 1.3fr"><div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th class="num">Features</th><th>Quote</th><th class="num">Total</th></tr></thead><tbody>${list.map(row).join('') || '<tr><td colspan="5" class="empty">No sponsor requests yet.</td></tr>'}</tbody></table></div>${editor}</div>`,
+    `<a class="btn ghost sm" href="/api/admin/export/bookings.csv" target="_blank">${icon('download')} CSV</a>`);
+}
+async function sponsorPrices() {
+  const [r, st] = await Promise.all([api('/api/admin/sponsor/prices'), api('/api/admin/sponsor/settings')]);
+  const U = { flat: 'once', week: 'per week', each: 'each' };
+  frame('sponsor', 'Sponsor price sheet', `<div class="tabs" style="margin:0 0 12px"><a href="/admin/sponsor">${icon('inbox')} Requests</a><a class="on" href="/admin/sponsor/prices">${icon('banknote')} Price sheet</a></div>
+    <p class="muted small" style="margin-top:0">Admin-only. Sponsors never see these prices: they pick features and get a quote built from this sheet, which you can still adjust per request. Seed prices come from the old Basic/Premium/Elite + add-on prices.</p><div id="pm"></div>
+    <form id="pf">${r.groups.map(gr => `<div class="card pad" style="margin-bottom:12px"><h2 style="margin-bottom:8px">${esc(gr)}</h2><table class="tbl"><thead><tr><th>Feature</th><th>Unit</th><th class="num">Seed</th><th class="num">Price $</th></tr></thead><tbody>
+      ${r.features.filter(f => f.group === gr).map(f => `<tr><td><b>${esc(f.name)}</b><div class="tiny muted">${esc(f.desc)}${f.free ? ` (${f.free} included free)` : ''}</div></td><td class="small">${U[f.unit]}</td><td class="num small muted">${usd(f.seed)}</td><td class="num"><input class="input sm num" type="number" min="0" step="0.01" data-p="${f.id}" value="${(r.prices[f.id] || 0) / 100}" ${f.included ? 'disabled' : ''} aria-label="${esc(f.name)} price" style="width:110px"></td></tr>`).join('')}</tbody></table></div>`).join('')}
+      <div class="card pad" style="margin-bottom:12px"><h2 style="margin-bottom:8px">${icon('message-circle')} Contact &amp; FAQ</h2>
+        <div class="field"><label class="lbl" for="ph">Trap Tech Potato handle <span class="muted small">(shown to sponsors)</span></label><input class="input" id="ph" value="${esc(st.potato_handle || '')}" placeholder="TrapTechSolutions"></div>
+        <div class="field"><label class="lbl" for="faq">Sponsor FAQ <span class="muted small">(one per line: Question | Answer; questions about price/pay/cost are hidden from sponsors)</span></label><textarea class="input" id="faq" style="min-height:160px;font-size:.8rem">${esc((st.faq || []).map(x => x.join(' | ')).join('\n'))}</textarea></div></div>
+      <button class="btn">${icon('check')} Save prices &amp; settings</button></form>`);
+  $('#pf').onsubmit = async (e) => {
+    e.preventDefault(); const prices = {}; document.querySelectorAll('[data-p]').forEach(i => { if (!i.disabled) prices[i.dataset.p] = Math.round((+i.value || 0) * 100); });
+    const faq = $('#faq').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf('|'); return i < 0 ? [l, ''] : [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
+    const [a, b] = await Promise.all([api('/api/admin/sponsor/prices', { method: 'PUT', body: { prices } }), api('/api/admin/sponsor/settings', { method: 'PUT', body: { potato_handle: $('#ph').value.trim(), faq } })]);
+    $('#pm').innerHTML = a.ok && b.ok ? '<div class="ok-msg">Saved. New drafts use these prices.</div>' : `<div class="err">${esc(a.error || b.error)}</div>`; if (a.ok && b.ok) toast('Prices saved');
+  };
 }

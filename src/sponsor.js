@@ -208,6 +208,13 @@ module.exports = function sponsor(app, A, h) {
   // ---------- admin ----------
   A.get('/sponsor/prices', (req, res) => res.json({ ok: true, prices: prices(), features: FEATURES.map(f => ({ ...f, seed: f.price })), groups: GROUPS }));
   A.put('/sponsor/prices', (req, res) => res.json({ ok: true, prices: setPrices(req.body && req.body.prices) }));
+  // Potato handle shown to sponsors + the sponsor FAQ (stored with the legacy package settings)
+  A.get('/sponsor/settings', (req, res) => { const pk = PK.getPackages(); res.json({ ok: true, potato_handle: pk.potato_handle || '', faq: pk.faq || [] }); });
+  A.put('/sponsor/settings', (req, res) => {
+    const pk = PK.getPackages(); const b = req.body || {};
+    const [v, err] = PK.sanitize({ ...pk, potato_handle: b.potato_handle !== undefined ? String(b.potato_handle).replace(/^@/, '') : pk.potato_handle, faq: Array.isArray(b.faq) ? b.faq : pk.faq });
+    if (err) return bad(res, 400, err); PK.savePackages(v); res.json({ ok: true, potato_handle: v.potato_handle, faq: v.faq });
+  });
   A.get('/sponsor/requests', (req, res) => res.json({ ok: true, requests: db.prepare('SELECT b.*, u.username FROM bookings b LEFT JOIN users u ON u.id=b.user_id ORDER BY b.created_at DESC LIMIT 500').all().map(adminView) }));
   A.get('/sponsor/requests/:id', (req, res) => { const b = db.prepare('SELECT b.*, u.username FROM bookings b LEFT JOIN users u ON u.id=b.user_id WHERE b.id=?').get(req.params.id); if (!b) return bad(res, 404, 'Not found'); res.json({ ok: true, request: adminView(b), placements: placementsFromFeatures(featuresOf(b)) }); });
   A.put('/sponsor/requests/:id/quote', (req, res) => { const r = saveQuote(+req.params.id, req.body || {}, req.admin && req.admin.username); r.ok ? res.json(r) : bad(res, 400, r.error); });
