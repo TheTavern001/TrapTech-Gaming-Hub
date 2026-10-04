@@ -256,7 +256,7 @@ function client() {
   if (qOpen) { r = await C(`/api/quests/${qOpen.idx}/claim`, { body: {} }); ok(r.status === 400, 'an unfinished quest cannot be claimed'); }
   r = await C('/api/quests/3/claim', { body: {} }); ok(r.status === 400 || (r.body.ok && Q.quests.every(q => q.done)), 'bonus needs all 3 quests claimed first');
   r = await C('/api/season'); const SN = r.body.season;
-  ok(SN.number >= 1 && SN.name && SN.track.length === 20 && SN.track.some(t => t.reward) && SN.xp > 0 && SN.end_at > Date.now(), `season ${SN.number} "${SN.name}": 20-tier free track, C has ${SN.xp} season XP`);
+  ok(SN.number >= 1 && SN.name && SN.track.length === 60 && SN.track.filter(t => t.item).length === 13 && SN.perks.length === 6 && SN.xp > 0 && SN.end_at > Date.now() && SN.length_days === 56, `season ${SN.number} "${SN.name}": 8-week season, 60-level free track (13 cosmetics, 6 perks), C has ${SN.xp} season XP`);
   ok(r.body.board.some(x => x.username === uc), 'C is on the season leaderboard');
 
   console.log('# v3: follows, friends leaderboard, notifications');

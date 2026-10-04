@@ -1133,29 +1133,6 @@ route(/^\/quests$/, async () => {
 });
 
 // ---------------- season pass ----------------
-route(/^\/season$/, async () => {
-  const r = await api('/api/season'); const s = r.season;
-  const days = Math.max(0, Math.ceil((s.end_at - nowS()) / 864e5));
-  shell('/season', `<div class="narrow wide">
-    <div class="season-hero card">
-      <div class="sh-bg bn-season-one"></div>
-      <div class="sh-in"><div class="tiny orb" style="color:var(--gold)">SEASON ${s.number}</div><h1>${esc(s.name)}</h1>
-        <p class="small">${new Date(s.start_at).toLocaleDateString()} - ${new Date(s.end_at).toLocaleDateString()} • ${days} days left</p>
-        ${r.signed_in ? `<div class="sh-tier"><b>Tier ${s.tier}</b><span>/ ${s.tiers}</span></div><div class="xpbar lg"><i style="width:${s.tier >= s.tiers ? 100 : Math.round(s.into / s.tier_xp * 100)}%"></i></div><div class="tiny">${fmt(s.xp)} season XP • ${s.tier >= s.tiers ? 'Track complete!' : `${fmt(s.tier_xp - s.into)} XP to tier ${s.tier + 1}`}</div>`
-          : `<a class="btn sm" href="/signup?next=/season">Sign up to start earning</a>`}
-      </div></div>
-    <div class="nocash">${icon('shield')} <span><b>Free track only.</b> There is no paid pass. Every tier is earned by playing, and rewards are cosmetic with no cash value.</span></div>
-    <div class="section-h"><h2>${icon('list-checks')} Reward track</h2><span class="small muted">${s.tier_xp} XP per tier</span></div>
-    <div class="track" role="list">${s.track.map(t => `<div class="tier ${t.unlocked ? 'on' : ''} ${t.reward ? 'rw' : ''}" role="listitem"><span class="tn">${t.tier}</span>${t.reward ? `<span class="tr">${icon(t.reward.startsWith('Banner') ? 'image' : t.reward.startsWith('Frame') ? 'circle-dot' : 'award')}<em>${esc(t.reward)}</em></span>` : `<span class="tr dim">${icon(t.unlocked ? 'check' : 'lock')}</span>`}</div>`).join('')}</div>
-    <div class="season-grid">
-      <div class="card pad"><h2 style="margin-bottom:8px">How to earn season XP</h2>
-        <ul class="ttb-list"><li>${icon('gamepad-2')} Finish any run: +10 XP, +10 per tier reached</li><li>${icon('scroll-text')} Claim daily quests: +40-120 XP, +100 bonus</li><li>${icon('flame')} Daily check-in: +20-50 XP</li><li>${icon('medal')} Unlock achievements: +25-400 XP</li></ul>
-        <div class="btn-row"><a class="btn sm" href="/quests">Daily quests</a><a class="btn sm ghost" href="/games">Play</a></div></div>
-      <div class="card"><div class="panel-h"><h2>${icon('trophy')} Season leaderboard</h2></div>
-        ${r.board.length ? `<table class="lb"><tbody>${r.board.slice(0, 15).map(x => `<tr class="${S.me && x.username === S.me.username ? 'me' : ''}"><td class="rk">${x.rank}</td><td>${whoHTML(x)}</td><td class="sc">${fmt(x.score)} XP<div class="tiny muted">Tier ${x.tier}</div></td></tr>`).join('')}</tbody></table>` : emptyState('trophy', 'No season XP yet', 'Play a run to get on the board.')}</div>
-    </div></div>`);
-});
-
 // ---------------- tournaments ----------------
 route(/^\/tournaments$/, async () => {
   const r = await api('/api/tournaments'); const list = r.ok ? r.tournaments : [];
@@ -1354,49 +1331,7 @@ route(/^\/about$/, () => shell('/about', `<div class="narrow">
 let installEvt = null;
 addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; const b = document.getElementById('install'); if (b) b.disabled = false; });
 // ---------------- v5: friends + play together (challenges). No messaging: only follows, scores and preset actions. ----------------
-// ---------------- v5: Points Shop (cosmetic only) ----------------
-const SHOP_TYPE = { banner: 'Banner', frame: 'Avatar frame', title: 'Title', color: 'Name color', effect: 'Profile effect', badge: 'Badge' };
-function shopPreview(it) {
-  const me = (S.me && S.me.username) || 'player';
-  if (it.type === 'banner') return `<span class="sp-prev bn-${esc(it.id)}"></span>`;
-  if (it.type === 'frame') return `<span class="sp-prev sp-center">${framed(me, false, { frame: it.id }, 'lg')}</span>`;
-  if (it.type === 'title') return `<span class="sp-prev sp-center"><span class="ptitle big">${esc(it.name)}</span></span>`;
-  if (it.type === 'color') return `<span class="sp-prev sp-center"><span class="pname nc-${esc(it.id)}"><span class="nm"><span class="nt sp-name">${esc(me)}</span></span></span></span>`;
-  if (it.type === 'effect') return `<span class="sp-prev bn-default fx ${esc(it.id)}"></span>`;
-  return `<span class="sp-prev sp-center"><span class="eqbadge big t-${esc(it.rarity)}">${icon(it.icon || 'award')}</span></span>`;
-}
-route(/^\/shop$/, async () => {
-  if (!S.me) return shell('/shop', `<div class="narrow">${pageHead('Points Shop', 'Spend Hub Points on cosmetics.')}<div class="card pad center"><p>Sign in to earn Hub Points from every run, quest, streak and achievement.</p><a class="btn" href="/signin?next=/shop">Sign in</a> <a class="btn ghost" href="/signup?next=/shop">Create account</a></div></div>`);
-  const draw = async () => {
-    const r = await api('/api/shop'); if (!r.ok) return shell('/shop', `<div class="empty">${esc(r.error)}</div>`);
-    const left = (t) => { const ms = Math.max(0, t - Date.now()); const h = Math.floor(ms / 3600e3); return h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : `${h}h ${Math.floor(ms % 3600e3 / 60e3)}m`; };
-    const card = (it) => `<div class="card shop-item r-${esc(it.rarity)} ${it.owned ? 'owned' : ''}" data-item="${esc(it.id)}">${shopPreview(it)}
-      <div class="si-body"><div class="si-top"><b>${esc(it.name)}</b><span class="rar-chip r-${esc(it.rarity)}">${esc(it.rarity_label)}</span></div>
-      <div class="tiny muted">${esc(SHOP_TYPE[it.type])} • ${esc(it.theme)}</div>
-      ${it.owned ? `<a class="btn sm ghost block" href="/u/${encodeURIComponent(S.me.username)}?tab=${it.type}#customize">${icon('check')} Owned - equip</a>` : `<button class="btn sm block ${r.balance < it.price ? 'ghost' : ''}" data-buy="${esc(it.id)}" ${r.balance < it.price ? 'aria-disabled="true"' : ''}>${icon('coins')} ${fmt(it.price)}</button>`}</div></div>`;
-    shell('/shop', `<div class="narrow">
-      <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Points Shop</h1></div>
-      <div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><div class="tiny muted orb">HUB POINTS</div><b class="sb-n" id="pts-bal">${fmt(r.balance)}</b><div class="tiny muted">${fmt(r.earned)} earned all-time</div></div><a class="btn sm ghost" href="#earn">How to earn</a></div>
-      <div class="nocash">${icon('shield')} <span><b>Cosmetic only.</b> ${esc(r.disclaimer)}</span></div>
-      <div class="section-h"><h2>${icon('sparkles')} Weekly drops</h2><span class="small muted">Rotates in ${left(r.weekly_ends)}</span></div>
-      <div class="shop-grid" id="shop-weekly">${r.weekly.map(card).join('')}</div>
-      <div class="section-h"><h2>${icon('clock')} Daily picks</h2><span class="small muted">New picks in ${left(r.daily_ends)}</span></div>
-      <div class="shop-grid" id="shop-daily">${r.daily.map(card).join('')}</div>
-      ${r.owned.length ? `<div class="section-h"><h2>${icon('package')} Your collection</h2><span class="small muted">${r.owned.length} / ${r.total_items}</span></div><div class="shop-owned">${r.owned.map(it => `<span class="chip">${esc(it.name)}</span>`).join('')}</div>` : ''}
-      <div class="card pad" id="earn"><h2 style="font-size:1rem;margin-bottom:8px">${icon('trending-up')} How to earn Hub Points</h2>
-        <ul class="earn-list"><li><b>+${r.earn.run}</b> per finished run (first ${r.earn.runDailyCap} runs each day)</li><li><b>+${r.earn.pb}</b> bonus for a new personal best</li><li><b>+${r.earn.quest}</b> per daily quest claimed</li><li><b>+${r.earn.checkinPerDay}</b> per streak day on check-in (up to +${r.earn.checkinMax})</li>
-        <li><b>+${r.earn.ach.bronze} to +${r.earn.ach.legendary}</b> per achievement (Bronze to Legendary)</li><li><b>+${r.earn.challenge}</b> per friend challenge won</li><li><b>+${r.earn.referral}</b> when an invited friend plays their first run</li></ul>
-        <p class="tiny muted">Prices: Common ${fmt(r.rarity.common.price)}, Rare ${fmt(r.rarity.rare.price)}, Epic ${fmt(r.rarity.epic.price)}, Legendary ${fmt(r.rarity.legendary.price)}. Points can't be bought and are never used for giveaway entries.</p></div>
-    </div>`);
-    document.querySelectorAll('[data-buy]').forEach(b => b.onclick = async () => {
-      if (b.getAttribute('aria-disabled') === 'true') return toast('Not enough Hub Points yet - keep playing!');
-      b.disabled = true; const x = await api('/api/shop/buy', { method: 'POST', body: { item: b.dataset.buy } });
-      if (!x.ok) { b.disabled = false; return toast(x.error); }
-      toast(`${x.item.name} added to your collection`); draw();
-    });
-  };
-  await draw();
-});
+// ---------------- v7: Points Shop + Season pass live in public/js/economy.js (installed via v7.js) ----------------
 
 route(/^\/friends$/, async (m, url) => {
   if (!S.me) return go('/signin?next=/friends', true);
@@ -1462,7 +1397,7 @@ if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigat
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
 // v7 pages (Sponsor a Host, brands, shop & seasons) - public/js/v7.js
-V7.install({ route, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render });
+V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS });
 // ---------------- boot ----------------
 (async function boot() {
   const [me, games] = await Promise.all([api('/api/me'), api('/api/games')]);

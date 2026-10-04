@@ -106,6 +106,7 @@ const DEFAULTS = { banner: 'midnight', frame: 'none', title: 'rookie' };
 const BY = { banner: Object.fromEntries(BANNERS.map(b => [b.id, b])), frame: Object.fromEntries(FRAMES.map(f => [f.id, f])), title: Object.fromEntries(TITLES.map(t => [t.id, t])), color: {}, effect: {} };
 // v5: shop items join the same lookup maps (ownership is checked separately)
 for (const i of require('./shop').ITEMS) { if (BY[i.type]) BY[i.type][i.id] = { id: i.id, name: i.name, shop: true, anim: i.type === 'frame' ? i.extra.split('|')[1] : undefined }; }
+require('./shop').attach(BY); // v7: generated shop items resolve from their id (src/shop-gen.js)
 
 function css() {
   return [

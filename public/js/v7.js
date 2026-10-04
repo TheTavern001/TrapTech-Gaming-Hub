@@ -1,6 +1,7 @@
 // v7 front-end pages: Sponsor a Host (feature picker + private quote status page), brand affiliation (invite links,
 // signup brand pick, "Your brand" card in Settings). Shop & seasons pages are added below by the economy section.
 // install(ctx) is called once from app.js with its helpers.
+import * as ECON from './economy.js';
 let C = null; // { route, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead }
 const money = (c) => '$' + (Math.round(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const day = (t) => new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -180,5 +181,5 @@ export function install(ctx) {
   route(/^\/join\/([A-Za-z0-9-]{3,40})$/, joinPage);
   route(/^\/channels$/, () => go('/settings#v7-brand', true));
   route(/^\/c\/[\w-]+$/, () => go('/giveaways', true));
-  if (ctx.economy) ctx.economy(ctx);
+  ECON.install(ctx); // shop + seasons pages (public/js/economy.js)
 }

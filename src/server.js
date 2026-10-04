@@ -390,14 +390,14 @@ function cosmeticsFor(user) {
   const item = (type, x) => { const a = source[`${type}:${x.id}`]; const owned = own[type].has(x.id);
     return { id: x.id, name: x.name, owned, from: a ? (a.hidden && !unl.has(a.id) ? 'Secret achievement' : a.name) : x.id === 'staff-glow' ? 'Staff only' : 'Free', default: COS.DEFAULTS[type] === x.id, ...(type === 'frame' ? { anim: x.anim } : {}) }; };
   const shopItem = (it) => ({ id: it.id, name: it.name, owned: own[it.type].has(it.id), from: 'Points Shop', rarity: it.rarity, ...(it.type === 'frame' ? { anim: it.extra.split('|')[1] } : {}) });
-  const shopOf = (type) => SH.ITEMS.filter(i => i.type === type).map(shopItem);
+  const shopOf = (type) => SH.listFor(own[type], type).map(shopItem); // v7: owned + on-sale items (the generated catalog is endless)
   const grants = ach.grantsOf(user.id);
   return {
     banners: [...COS.BANNERS.map(b => item('banner', b)), ...shopOf('banner')], frames: [...COS.FRAMES.map(f => item('frame', f)), ...shopOf('frame')], titles: [...COS.TITLES.map(t => item('title', t)), ...shopOf('title')],
     colors: shopOf('color'), effects: shopOf('effect'),
     badges: [...grants.map(g => { const b = ach.ADMIN_BY[g.badge_id]; return { id: 'adm:' + b.id, name: b.name, icon: b.icon, tier: 'admin', owned: true }; }),
       ...ach.ACHIEVEMENTS.filter(a => unl.has(a.id)).map(a => ({ id: a.id, name: a.name, icon: a.icon, tier: a.tier, owned: true })),
-      ...SH.ITEMS.filter(i => i.type === 'badge' && own.badge.has('shop:' + i.id)).map(i => ({ id: 'shop:' + i.id, name: i.name, icon: i.extra, tier: i.rarity, owned: true }))],
+      ...SH.listFor(own.badge, 'badge').filter(i => own.badge.has('shop:' + i.id)).map(i => ({ id: 'shop:' + i.id, name: i.name, icon: i.extra, tier: i.rarity, owned: true }))],
     equipped: { banner: user.eq_banner || COS.DEFAULTS.banner, frame: user.eq_frame || 'none', title: user.eq_title || COS.DEFAULTS.title, badge: user.eq_badge || '', color: user.eq_color || '', effect: user.eq_effect || '' },
     owned_count: ach.ownedCount(own) + own.color.size + own.effect.size, badge_count: own.badge.size,
     totals: { banners: COS.BANNERS.length + shopOf('banner').length, frames: COS.FRAMES.length + shopOf('frame').length, titles: COS.TITLES.length + shopOf('title').length, badges: ach.ACHIEVEMENTS.length },
@@ -420,8 +420,9 @@ app.post('/api/me/cosmetics', requireUser, limiter('equip', 60, 60e3), (req, res
   const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
   res.json({ ok: true, cos: ach.publicCos(u), unlocked });
 });
-app.get('/cosmetics.css', (req, res) => { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=3600'); res.send(COS_CSS); });
-const COS_CSS = COS.css();
+// v7: rebuilt when the shop's live set of generated items changes (new day / new purchases); see src/shop.js css()
+let COS_CSS = { k: '', css: '' }; const cosCss = () => { const k = require('./shop').cssKey(); if (COS_CSS.k !== k) COS_CSS = { k, css: COS.css() }; return COS_CSS.css; };
+app.get('/cosmetics.css', (req, res) => { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=600'); res.send(cosCss()); });
 
 // ---------- community ----------
 const userCos = (id) => { const u = id && db.prepare('SELECT username, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect FROM users WHERE id=?').get(id); return u ? { username: u.username, demo: !!u.is_demo, cos: ach.publicCos(u) } : null; };

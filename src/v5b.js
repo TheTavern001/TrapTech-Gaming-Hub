@@ -19,13 +19,14 @@ module.exports = function v5b(app, A, h) {
 
   h.meV5 = (u) => ({ points: SH.balance(u.id), staff: !!db.prepare("SELECT 1 FROM badge_grants WHERE user_id=? AND badge_id IN ('staff','traptech-team')").get(u.id) });
   // ---------- Points + shop ----------
-  app.get('/api/shop', requireUser, (req, res) => {
-    const bal = SH.sync(req.user.id); const own = SH.owned(req.user.id); const rot = SH.rotation();
-    res.json({ ok: true, balance: bal, earned: SH.earned(req.user.id), daily: rot.daily.map(i => SH.pub(i, own.has(i.id))), weekly: rot.weekly.map(i => SH.pub(i, own.has(i.id))),
-      daily_ends: rot.daily_ends, weekly_ends: rot.weekly_ends, owned: SH.ITEMS.filter(i => own.has(i.id)).map(i => SH.pub(i, true)), total_items: SH.ITEMS.length,
-      earn: SH.EARN, rarity: SH.RARITY, themes: SH.THEMES,
-      disclaimer: 'Hub Points are cosmetic only. They have no cash value, cannot be bought, sold, traded or transferred, and cannot be redeemed for prizes or giveaway entries.' });
+  // v7: daily / weekly featured / season shop / events / earned, from the economy engine (src/shop.js, docs/ECONOMY.md). Open to guests.
+  app.get('/api/shop', (req, res) => {
+    const me = h.currentUser(req); const bal = me ? SH.sync(me.id) : 0; const own = me ? SH.owned(me.id) : new Set(); const v = SH.view(me);
+    const mine = [...own].map(id => SH.BY_ID[id]).filter(Boolean);
+    res.json({ ok: true, signed_in: !!me, balance: bal, earned: me ? SH.earned(me.id) : 0, ...v, owned: mine.map(i => SH.pub(i, true)), total_items: SH.ITEMS.length,
+      earn: SH.EARN, rarity: SH.RARITY, themes: SH.THEMES, now: now(), disclaimer: SH.DISCLAIMER });
   });
+  SH.routes(app, A, h); require('./seasons').routes(app, A, h);
   app.post('/api/shop/buy', requireUser, limiter('shopbuy', 20, 60e3), (req, res) => {
     const r = SH.buy(req.user, str(req.body.item, 60)); if (!r.ok) return bad(res, 400, r.error);
     res.json(r);
