@@ -31,6 +31,7 @@ module.exports = function v4(app, A, h) {
   app.get('/api/giveaways/:id/standings', (req, res) => {
     const t0 = process.hrtime.bigint();
     const g = getG(req.params.id, true); if (!g) return bad(res, 404, 'Giveaway not found');
+    const hid = h.v7Hidden && h.v7Hidden(g); if (hid) return res.json({ ...hid, giveaway: gInfo(g), now: now() }); // v7: hidden until it ends
     const { rows, res: fin } = standingsOf(g);
     const per = Math.min(Math.max(parseInt(req.query.per || '50', 10) || 50, 5), 1000);
     const q = str(req.query.q, 40).toLowerCase();
@@ -57,7 +58,7 @@ module.exports = function v4(app, A, h) {
       rows: list.slice((page - 1) * per, page * per).map(row), me,
       winners: fin ? fin.winners.map(w => ({ place: w.place, username: w.username, score: w.score, state: w.state })) : [],
       winners_state: fin ? (fin.winners.length && fin.winners.every(w => w.state === 'confirmed') ? 'confirmed' : fin.winners.length ? 'pending' : 'none') : null,
-      tiebreak_rules: R.TIEBREAK_RULES, score_rule: R.SCORE_RULE, random_rule: R.RANDOM_RULE, refresh_ms: 10000, now: now() };
+      tiebreak_rules: R.TIEBREAK_RULES, score_rule: (h.v7Rule && h.v7Rule(g)) || R.SCORE_RULE, random_rule: R.RANDOM_RULE, refresh_ms: 10000, now: now() };
     out.ms = Number(process.hrtime.bigint() - t0) / 1e6;
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Server-Timing', `standings;dur=${out.ms.toFixed(1)}`);
     res.json(out);

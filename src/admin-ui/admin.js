@@ -1,4 +1,5 @@
 import { icon } from '/js/icons.js';
+import '/api/admin/ui/admin-icons.js';
 // v7: served only from the secret admin path (src/admin-sec.js rewrites '/admin' + '/api/admin' to it at serve time).
 const AP = '/admin';
 const CSRF = (document.querySelector('meta[name=csrf]') || {}).content || '';
@@ -23,17 +24,47 @@ const demoTag = (d) => d ? '<span class="demo-tag">DEMO</span>' : '';
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 let GAMES = [];
 
-const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['channels', 'store', 'Brands'], ['sponsor', 'briefcase', 'Sponsor requests'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['tournaments', 'swords', 'Tournaments'], ['announcements', 'megaphone', 'Announcements'], ['badges', 'badge-check', 'Badges'], ['fairplay', 'scan-eye', 'Fair Play'], ['reports', 'file-text', 'Reports'], ['security', 'shield-check', 'Security'], ['settings', 'settings', 'Settings']];
+// v7 items 22-23: grouped navigation filtered by the signed-in role's permissions (owner / admin / moderator)
+const NAV_G = [
+  ['', [['', 'layout-dashboard', 'Dashboard', 'dashboard.view'], ['analytics', 'chart-line', 'Analytics', 'analytics.view']]],
+  ['Giveaways', [['giveaways', 'gift', 'Giveaways', 'giveaways.view', 'drafts'], ['game-rules', 'list-checks', 'Game rules', 'giveaways.view'], ['games', 'gamepad-2', 'Games', 'giveaways.view'], ['tournaments', 'swords', 'Tournaments', 'giveaways.edit'], ['leaderboards', 'trophy', 'Leaderboards', 'giveaways.view']]],
+  ['Players', [['players', 'users', 'Players', 'users.view'], ['moderation', 'scan-eye', 'Moderation', 'moderation.queue', 'mod'], ['reports', 'file-text', 'Exports', 'giveaways.view']]],
+  ['Live ops', [['events', 'party-popper', 'Specials & events', 'events.manage'], ['seasons', 'calendar-range', 'Seasons', 'seasons.manage'], ['shop', 'shopping-bag', 'Shop', 'shop.manage'], ['badges', 'badge-check', 'Badges', 'badges.award'], ['announcements', 'megaphone', 'Announcements', 'announcements.post']]],
+  ['Business', [['sponsor', 'briefcase', 'Sponsor requests', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
+  ['Admin', [['team', 'shield-half', 'Team & roles', 'dashboard.view'], ['log', 'history', 'Action log', 'actionlog.view'], ['security', 'shield-check', 'Security', 'dashboard.view'], ['settings', 'settings', 'Settings', 'settings.manage'], ['system', 'server-cog', 'System', 'settings.manage']]],
+];
+let V7 = null, V7ME = null, V7AT = 0;
+const canV7 = (k) => !V7ME || !k || !!(V7ME.perms || {})[k];
+function navHTML(section) {
+  const cnt = (c) => { if (!V7ME || !c) return ''; const n = c === 'mod' ? (V7ME.counts.flags || 0) + (V7ME.counts.reports || 0) : V7ME.counts[c] || 0; return n ? `<b class="cnt">${n > 99 ? '99+' : n}</b>` : ''; };
+  return NAV_G.map(([g, items]) => { const vis = items.filter(x => canV7(x[3])); if (!vis.length) return '';
+    return `${g ? `<div class="grp">${g}</div>` : ''}${vis.map(([k, i, l, , c]) => `<a href="/admin${k ? '/' + k : ''}" class="${section === k ? 'on' : ''}">${icon(i)}${l}${cnt(c)}</a>`).join('')}`; }).join('');
+}
+function whoHTML() {
+  const m = V7ME ? V7ME.admin : { display_name: ME.name || ME.username, role: ME.role || 'admin' }; const role = m.role || 'admin';
+  const badge = role === 'owner' ? `<span class="role-badge owner">${icon('crown')}Owner</span><span class="org">Owner • Trap Tech Solutions</span>` : role === 'admin' ? `<span class="role-badge admin">${icon('shield-check')}Admin</span>` : `<span class="role-badge mod">${icon('shield')}Moderator</span>`;
+  return `<a class="who mini-row" href="/admin/team" style="margin:0;color:inherit;text-decoration:none"><span class="av" style="background:${role === 'owner' ? 'linear-gradient(135deg,#f59e0b,#fde68a)' : 'linear-gradient(135deg,#7c3aed,#22d3ee)'}">${esc((m.display_name || m.username || 'TT').slice(0, 2).toUpperCase())}</span><div class="who-role"><b>${esc(m.display_name || m.username)}</b>${badge}</div></a>`;
+}
+async function loadV7(force) {
+  if (!V7ME || force || Date.now() - V7AT > 30000) { try { const r = await api('/api/admin/v7/me'); if (r.ok) { V7ME = r; V7AT = Date.now(); } } catch (e) { if (e.message === 'auth') throw e; } }
+  if (!V7) {
+    if (!document.querySelector('link[data-v7css]')) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/api/admin/ui/admin-v7.css'; l.dataset.v7css = '1'; document.head.appendChild(l); }
+    V7 = await import('/api/admin/ui/admin-v7.js');
+  }
+  V7.init({ api, frame, icon, toast, nav, perms: V7ME ? V7ME.perms : {}, counts: V7ME ? V7ME.counts : {}, GAMES, ME: V7ME ? V7ME.admin : ME });
+  return V7;
+}
 function frame(section, title, inner, actions = '') {
   document.title = `${title.replace(/<[^>]+>/g, '')} - Admin - The Gaming Hub by Trap Tech Solutions`;
   root.innerHTML = `<div class="adm">
-    <aside class="side" aria-label="Admin navigation"><div class="brand"><img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub"><b>Admin Dashboard</b></div>
-      ${NAV.map(([k, i, l]) => `<a href="/admin${k ? '/' + k : ''}" class="${section === k ? 'on' : ''}">${icon(i)}${l}</a>`).join('')}
+    <aside class="side" aria-label="Admin navigation"><div class="brand"><img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub"><b>Trap Tech Admin</b></div>
+      <button class="mnav-btn" type="button" data-mnav aria-expanded="false">${icon('menu')}<span>Menu</span></button>${navHTML(section)}
       <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a>
       <div class="side-tt"><span>Powered by</span><picture><source type="image/webp" srcset="/assets/brand/tt-horizontal-360.webp"><img src="/assets/brand/tt-horizontal-920.png" alt="Trap Tech Solutions" width="150" height="40"></picture></div></aside>
-    <main class="amain"><div class="tt-bar"><picture><source type="image/webp" srcset="/assets/brand/tt-mono-80.webp"><img src="/assets/brand/tt-mono-192.png" alt="" width="18" height="24" style="height:24px;width:auto;vertical-align:-7px"></picture> Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v7</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">${esc((ME.name || 'TT').slice(0, 2).toUpperCase())}</span><div><b>${esc(ME.name || ME.username)}</b><div class="small muted" style="text-transform:capitalize">${esc(ME.role || 'admin')}</div></div></div></div>${inner}</main></div>`;
+    <main class="amain"><div class="tt-bar"><picture><source type="image/webp" srcset="/assets/brand/tt-mono-80.webp"><img src="/assets/brand/tt-mono-192.png" alt="" width="18" height="24" style="height:24px;width:auto;vertical-align:-7px"></picture> Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v7</span></div><div class="ahead"><h1>${title}</h1>${actions}${whoHTML()}</div>${inner}</main></div>`;
 }
 document.addEventListener('click', async (e) => {
+  const mb = e.target.closest('[data-mnav]'); if (mb) { const sd = mb.closest('.side'); sd.classList.toggle('open'); mb.setAttribute('aria-expanded', sd.classList.contains('open')); return; }
   if (e.target.closest('[data-logout]')) { e.preventDefault(); await fetch('/api/admin/logout', { method: 'POST', headers: { 'X-CSRF-Token': CSRF } }); return loginView(); }
   const a = e.target.closest('a[href^="/admin"]'); if (!a || a.target) return;
   e.preventDefault(); history.pushState({}, '', a.getAttribute('href')); render();
@@ -48,8 +79,11 @@ async function render() {
   if (!GAMES.length) GAMES = (await (await fetch('/api/games')).json()).games;
   const parts = location.pathname.slice(AP.length).split('/').filter(Boolean);
   try {
-    const [s, id] = parts;
+    const [s, id, sub] = parts;
+    const v7 = await loadV7();
+    if (s && (await v7.route(s, id, sub)) !== false) return;
     if (!s) return dashboard();
+    if (s === 'system') return settings();
     if (s === 'games') return games();
     if (s === 'giveaways' && !id) return giveaways();
     if (s === 'giveaways') return manageGiveaway(id);

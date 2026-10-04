@@ -36,7 +36,8 @@ function liveStandings(g) {
   const key = `${g.id}:${g.updated_at}:${sig.m}:${sig.c}:${dq.c}:${dq.m}:${games.join()}:${en.c}:${en.j}:${en.l}`;
   const hit = cache.get(g.id); if (hit && hit.key === key && now() - hit.at < 5000) return hit.rows;
   const ph = games.map(() => '?').join(',');
-  const rows = db.prepare(`
+  const X = module.exports.scoring; // v7 builder score rules (src/admin-scoring.js); legacy giveaways keep this query
+  const rows = X && X.custom(g) ? X.standings(g, games, capSql(), E()) : db.prepare(`
     WITH w AS (SELECT r.id, r.user_id, r.game_id, r.score, r.created_at FROM runs r
                WHERE r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql()} OR r.verify = 'cleared')),
     att AS (SELECT user_id, COUNT(*) AS attempts FROM w GROUP BY user_id),
@@ -47,10 +48,10 @@ function liveStandings(g) {
     bb AS (SELECT user_id, id, created_at, SUM(score) OVER (PARTITION BY user_id) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)
     SELECT ${U}, bb.tot AS score, bb.created_at AS reached_at, bb.id AS best_run_id, att.attempts
     FROM bb JOIN att ON att.user_id = bb.user_id JOIN users u ON u.id = bb.user_id
-    WHERE bb.rl = 1 AND u.banned = 0 AND NOT EXISTS (SELECT 1 FROM giveaway_dq d WHERE d.giveaway_id = @gid AND d.user_id = bb.user_id)
+    WHERE bb.rl = 1 AND u.banned = 0 AND u.shadow_banned = 0 AND NOT EXISTS (SELECT 1 FROM giveaway_dq d WHERE d.giveaway_id = @gid AND d.user_id = bb.user_id)
     ${g.require_join ? 'AND EXISTS (SELECT 1 FROM giveaway_entries e WHERE e.giveaway_id = @gid AND e.user_id = bb.user_id AND e.left_at IS NULL)' : ''}
     ORDER BY score DESC, reached_at ASC, att.attempts ASC, best_run_id ASC`).all(...games, { s: g.start_at, e: g.end_at, min: g.min_score || 0, gid: g.id });
-  tag(rows); rows.forEach(r => { r.weight = E().weightOf(g, r.attempts); });
+  tag(rows); rows.forEach(r => { if (r.weight == null) r.weight = E().weightOf(g, r.attempts); });
   cache.set(g.id, { key, rows, at: now() });
   if (cache.size > 20) for (const [id, c] of cache) if (now() - c.at > 5000) cache.delete(id); // only a 5 s cache: keep it small
   return rows;
@@ -98,10 +99,11 @@ function finalize(g, actor = 'system', opts = {}) {
   g = ensureCommit(g);
   cache.delete(g.id);
   const rows = liveStandings(g).map(r => ({ ...r })); const t = now();
-  const weighted = g.win_method === 'random' && g.weight_mode === 'activity';
+  const drawn = g.win_method === 'random' || g.win_method === 'hybrid'; // hybrid (v7 builder): top win_split by rank, the rest drawn
+  const weighted = drawn && (g.weight_mode === 'activity' || rows.some(r => r.weight > 1));
   rows.forEach(r => { r.weighted = weighted; if (!weighted) r.weight = 1; });
   const hash = sha256(rows.map(lineOf).join('\n'));
-  if (g.win_method === 'random') {
+  if (drawn) {
     rows.forEach(r => { r.draw_key = hmac(g.draw_seed, `${hash}:${r.username}`); });
     const k = (r) => weighted ? wKey(r.draw_key, r.weight) : 0;
     [...rows].sort((a, b) => weighted ? (k(a) - k(b)) || (a.draw_key < b.draw_key ? -1 : 1) : a.draw_key < b.draw_key ? -1 : 1).forEach((r, i) => { r.draw_pos = i + 1; });
@@ -111,7 +113,7 @@ function finalize(g, actor = 'system', opts = {}) {
     const claim = db.prepare('UPDATE giveaways SET finalized_at=?, entrants_hash=? WHERE id=? AND finalized_at IS NULL').run(t, hash, g.id);
     if (claim.changes !== 1) return false;
     for (const r of rows) ins.run(g.id, r.rank, r.user_id, r.username, r.score, r.best_run_id, r.reached_at, r.attempts, r.draw_key || null, r.draw_pos || null, t, weighted ? r.weight : null);
-    audit(g.id, actor, 'finalized', null, { entrants: rows.length, entrants_hash: hash, method: g.win_method, winners: winnerCount(g), ...(g.win_method === 'random' ? { seed_revealed: g.draw_seed, draw_commit: g.draw_commit } : {}) });
+    audit(g.id, actor, 'finalized', null, { entrants: rows.length, entrants_hash: hash, method: g.win_method, winners: winnerCount(g), ...(drawn ? { seed_revealed: g.draw_seed, draw_commit: g.draw_commit } : {}) });
     return true;
   })();
   if (!done) return db.prepare('SELECT * FROM giveaways WHERE id=?').get(g.id);
@@ -137,7 +139,8 @@ function results(g) {
   const snap = db.prepare(`SELECT r.*, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect FROM giveaway_results r LEFT JOIN users u ON u.id = r.user_id WHERE r.giveaway_id=? ORDER BY r.rank`).all(g.id);
   const dq = new Map(db.prepare('SELECT user_id, reason, created_at FROM giveaway_dq WHERE giveaway_id=?').all(g.id).map(d => [d.user_id, d]));
   const conf = new Map(db.prepare('SELECT user_id, created_at FROM giveaway_confirm WHERE giveaway_id=?').all(g.id).map(c => [c.user_id, c]));
-  const order = g.win_method === 'random' ? [...snap].sort((a, b) => a.draw_pos - b.draw_pos) : snap;
+  let order = g.win_method === 'random' ? [...snap].sort((a, b) => a.draw_pos - b.draw_pos) : snap;
+  if (g.win_method === 'hybrid') { const top = snap.filter(r => r.user_id != null && !dq.has(r.user_id)).slice(0, g.win_split || 0); const s = new Set(top); order = [...top, ...snap.filter(r => !s.has(r)).sort((a, b) => a.draw_pos - b.draw_pos)]; }
   let place = 0; const n = winnerCount(g);
   for (const r of order) {
     const d = r.user_id != null ? dq.get(r.user_id) : null;
@@ -195,9 +198,9 @@ function verifyBundle(g) {
   if (!res) return out;
   const lines = db.prepare('SELECT * FROM giveaway_results WHERE giveaway_id=? ORDER BY rank').all(g.id).map(r => lineOf({ ...r, weighted: r.weight != null }));
   out.entrants_hash = g.entrants_hash; out.entrant_lines = lines; out.hash_ok = sha256(lines.join('\n')) === g.entrants_hash;
-  if (g.win_method === 'random') {
+  if (g.win_method === 'random' || g.win_method === 'hybrid') {
     out.seed = g.draw_seed; out.seed_ok = sha256(g.draw_seed) === g.draw_commit;
-    out.weighted = g.weight_mode === 'activity'; out.weight_rule = 'key = -ln((int(first 13 hex of HMAC, base 16) + 1) / (2^52 + 1)) / weight; lowest key wins';
+    out.weighted = g.weight_mode === 'activity' || res.standings.some(r => r.weight > 1); out.weight_rule = 'key = -ln((int(first 13 hex of HMAC, base 16) + 1) / (2^52 + 1)) / weight; lowest key wins';
     out.draw_order = res.standings.map(r => ({ pos: r.draw_pos, username: r.username, key: r.draw_key, weight: r.weight || 1, disqualified: r.disqualified }));
   }
   return out;

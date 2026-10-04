@@ -20,7 +20,9 @@ app.disable('x-powered-by');
 // on-the-fly gzip is only used for dynamic responses (JSON, HTML). Smaller zlib windows keep per-response memory low.
 app.use(require('./static-gz')(path.join(cfg.ROOT, 'public')));
 app.use(require('compression')({ threshold: 1024, memLevel: 7, windowBits: 14 }));
+const V7A = require('./admin-v7'); app.use(V7A.bigJson); // v7 admin: larger JSON bodies only for signed-in builder/settings/import routes
 app.use(express.json({ limit: '32kb' }));
+app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mode
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
 app.get('/healthz', (req, res) => { try { db.prepare('SELECT 1').get(); res.json({ ok: true }); } catch (e) { res.status(500).json({ ok: false }); } });
@@ -300,6 +302,7 @@ function giveawayPublic(g, withWinners = true) {
     win_method: g.win_method || 'score', winner_count: R.winnerCount(g), finalized_at: g.finalized_at || null, draw_commit: g.draw_commit || null,
     entrants_hash: g.entrants_hash || null, tiebreak_rules: R.TIEBREAK_RULES };
   if (H.v5Giveaway) Object.assign(out, H.v5Giveaway(g));
+  if (H.v7Giveaway) H.v7Giveaway(g, out); // v7 builder: subtitle, description, banner, prizes, hidden board, official rules
   if (withWinners) {
     const res = g.finalized_at ? R.results(g) : null;
     // after the lock, winners come from the immutable final standings (pending until an admin confirms)
@@ -321,7 +324,8 @@ app.get('/api/giveaways/:id', (req, res) => {
   if (!g) return bad(res, 404, 'Giveaway not found');
   const entrants = giveawayEntrants(g); const me = currentUser(req);
   const mine = me ? entrants.find(e => e.user_id === me.id) : null;
-  res.json({ ok: true, giveaway: giveawayPublic(g), leaderboard: entrants.slice(0, 25).map(publicRow), me: mine ? publicRow(mine) : null, now: now() });
+  const hidden = H.v7Hidden && H.v7Hidden(g); // v7: leaderboard hidden until the end
+  res.json({ ok: true, giveaway: giveawayPublic(g), leaderboard: hidden ? [] : entrants.slice(0, 25).map(publicRow), me: mine && !hidden ? publicRow(mine) : null, now: now() });
 });
 
 // ---------- profiles ----------
@@ -737,6 +741,7 @@ A.get('/backups/download', async (req, res, next) => {
 
 // ---------- v3 routes (streaks, quests, seasons, tournaments, follows, notifications, referrals, sharing, search) ----------
 Object.assign(H, { requireUser, currentUser, publicRow });
+V7A.routes(app, A, H); // v7 admin overhaul: giveaway builder, players, live ops, roles (src/admin-v7.js)
 require('./v3')(app, A, H);
 Object.assign(H, { csv, sendCsv, sendCsvPaged, iso, giveawayPublic, ipHash });
 require('./v4')(app, A, H);

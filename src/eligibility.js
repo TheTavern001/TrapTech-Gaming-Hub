@@ -84,6 +84,7 @@ function check(user, g, t = now()) {
     checks.push({ id: 'slots', ok, label: `Max ${r.elig_max_active} live entries at once`, have: act.length, need: r.elig_max_active, entries: act,
       hint: ok ? `${act.length} of ${r.elig_max_active} entry slots used` : `You're in ${act.length} live giveaways (max ${r.elig_max_active}). Leave one to join this one.` });
   }
+  for (const fn of module.exports.extra) { try { checks.push(...fn(u, g, t)); } catch (e) { /* v7 builder checks never break the page */ } }
   const potatoOk = /^[A-Za-z0-9_]{3,32}$/.test(u.potato || '');
   checks.push({ id: 'potato', ok: potatoOk, label: 'Potato username on file', hint: potatoOk ? `Winner contact: @${u.potato} on Potato` : 'Add your Potato username so we can contact you if you win', potato: u.potato || '' });
   const eligible = checks.every(c => c.ok);
@@ -118,4 +119,4 @@ function lockViolation(g, userId, t = now()) {
   if (g.elig_brand_month && g.channel_id) { const w = lastWin(userId, t - 30 * D, g.channel_id); if (w) return `One win per brand per 30 days: already won this brand on ${fmtDate(w)}`; }
   return null;
 }
-module.exports = { DEFAULTS, FIELDS, WEIGHT, read, rulesOf, describe, check, join, leave, activeEntries, weightOf, lockViolation, lastWin };
+module.exports = { extra: [], DEFAULTS, FIELDS, WEIGHT, read, rulesOf, describe, check, join, leave, activeEntries, weightOf, lockViolation, lastWin };

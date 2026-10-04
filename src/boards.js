@@ -10,14 +10,14 @@ function gameBoard(gameId, since = 0, until = Infinity, opts = {}) {
   return db.prepare(`
     SELECT ${U}, MAX(r.score) AS score, COUNT(*) AS runs, MAX(r.created_at) AS last_at, MIN(r.created_at) AS first_at
     FROM runs r JOIN users u ON u.id = r.user_id
-    WHERE r.game_id = ? AND ${startCol} >= ? AND r.created_at >= ? AND r.created_at <= ? AND u.banned = 0 AND r.held = 0
+    WHERE r.game_id = ? AND ${startCol} >= ? AND r.created_at >= ? AND r.created_at <= ? AND u.banned = 0 AND u.shadow_banned = 0 AND r.held = 0
     GROUP BY u.id ORDER BY score DESC, last_at ASC`).all(gameId, since, since, until2);
 }
 function globalBoard(since = 0) {
   return db.prepare(`
     SELECT ${U}, SUM(b.best) AS score, SUM(b.n) AS runs, MAX(b.last_at) AS last_at
     FROM (SELECT user_id, game_id, MAX(score) AS best, COUNT(*) AS n, MAX(created_at) AS last_at FROM runs WHERE created_at >= ? AND held = 0 GROUP BY user_id, game_id) b
-    JOIN users u ON u.id = b.user_id WHERE u.banned = 0
+    JOIN users u ON u.id = b.user_id WHERE u.banned = 0 AND u.shadow_banned = 0
     GROUP BY u.id ORDER BY score DESC, last_at ASC`).all(since);
 }
 const ranked = (rows) => rows.map((r, i) => ({ rank: i + 1, ...r }));
