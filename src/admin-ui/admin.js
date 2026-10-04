@@ -1,14 +1,17 @@
-import { icon } from './icons.js';
+import { icon } from '/js/icons.js';
+// v7: served only from the secret admin path (src/admin-sec.js rewrites '/admin' + '/api/admin' to it at serve time).
+const AP = '/admin';
+const CSRF = (document.querySelector('meta[name=csrf]') || {}).content || '';
 const $ = (s, r = document) => r.querySelector(s);
 const root = document.getElementById('admin');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (n) => Number(n || 0).toLocaleString('en-US');
 let offset = 0; const nowS = () => Date.now() + offset;
 async function api(path, opts = {}) {
-  const res = await fetch(path, { credentials: 'same-origin', headers: opts.body ? { 'Content-Type': 'application/json' } : {}, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const res = await fetch(path, { credentials: 'same-origin', ...opts, headers: { ...(opts.body ? { 'Content-Type': 'application/json' } : {}), 'X-CSRF-Token': CSRF }, body: opts.body ? JSON.stringify(opts.body) : undefined });
   let d; try { d = await res.json(); } catch { d = { ok: false, error: 'HTTP ' + res.status }; }
   if (d.now) offset = d.now - Date.now();
-  if (res.status === 401 && !path.endsWith('/login')) { loginView(); throw new Error('auth'); }
+  if (res.status === 401 && !path.includes('/security/')) { loginView(); throw new Error('auth'); }
   return d;
 }
 const ago = (ms) => { const s = Math.max(0, (nowS() - ms) / 1000); return s < 60 ? 'just now' : s < 3600 ? `${Math.floor(s / 60)}m ago` : s < 86400 ? `${Math.floor(s / 3600)}h ago` : `${Math.floor(s / 86400)}d ago`; };
@@ -19,37 +22,30 @@ const demoTag = (d) => d ? '<span class="demo-tag">DEMO</span>' : '';
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 let GAMES = [];
 
-const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['channels', 'store', 'Brand Channels'], ['bookings', 'calendar-check', 'Bookings'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['tournaments', 'swords', 'Tournaments'], ['announcements', 'megaphone', 'Announcements'], ['badges', 'badge-check', 'Badges'], ['fairplay', 'scan-eye', 'Fair Play'], ['reports', 'file-text', 'Reports'], ['settings', 'settings', 'Settings']];
+const NAV = [['', 'layout-dashboard', 'Dashboard'], ['games', 'gamepad-2', 'Games'], ['giveaways', 'gift', 'Giveaways'], ['channels', 'store', 'Brand Channels'], ['bookings', 'calendar-check', 'Bookings'], ['players', 'users', 'Players'], ['leaderboards', 'trophy', 'Leaderboards'], ['tournaments', 'swords', 'Tournaments'], ['announcements', 'megaphone', 'Announcements'], ['badges', 'badge-check', 'Badges'], ['fairplay', 'scan-eye', 'Fair Play'], ['reports', 'file-text', 'Reports'], ['security', 'shield-check', 'Security'], ['settings', 'settings', 'Settings']];
 function frame(section, title, inner, actions = '') {
   document.title = `${title.replace(/<[^>]+>/g, '')} - Admin - The Gaming Hub by Trap Tech Solutions`;
   root.innerHTML = `<div class="adm">
     <aside class="side" aria-label="Admin navigation"><div class="brand"><img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub"><b>Admin Dashboard</b></div>
       ${NAV.map(([k, i, l]) => `<a href="/admin${k ? '/' + k : ''}" class="${section === k ? 'on' : ''}">${icon(i)}${l}</a>`).join('')}
       <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a>
-      <div class="side-tt"><span>Powered by</span><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions"></div></aside>
-    <main class="amain"><div class="tt-bar">${icon('zap')} Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v5</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
+      <div class="side-tt"><span>Powered by</span><picture><source type="image/webp" srcset="/assets/brand/tt-horizontal-360.webp"><img src="/assets/brand/tt-horizontal-920.png" alt="Trap Tech Solutions" width="150" height="40"></picture></div></aside>
+    <main class="amain"><div class="tt-bar"><picture><source type="image/webp" srcset="/assets/brand/tt-mono-80.webp"><img src="/assets/brand/tt-mono-192.png" alt="" width="18" height="24" style="height:24px;width:auto;vertical-align:-7px"></picture> Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v7</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
 }
 document.addEventListener('click', async (e) => {
-  if (e.target.closest('[data-logout]')) { e.preventDefault(); await fetch('/api/admin/logout', { method: 'POST' }); return loginView(); }
+  if (e.target.closest('[data-logout]')) { e.preventDefault(); await fetch('/api/admin/logout', { method: 'POST', headers: { 'X-CSRF-Token': CSRF } }); return loginView(); }
   const a = e.target.closest('a[href^="/admin"]'); if (!a || a.target) return;
   e.preventDefault(); history.pushState({}, '', a.getAttribute('href')); render();
 });
 window.addEventListener('popstate', render);
 const nav = (p) => { history.pushState({}, '', p); render(); };
 
-function loginView() {
-  root.innerHTML = `<div class="card login glow-purple"><img src="/assets/brand/hub-logo.svg" alt="" style="width:220px;margin:0 auto 10px"><h1 class="center">Admin Login</h1><p class="center small muted" style="margin:-4px 0 14px">Powered by Trap Tech Solutions</p>
-    <form id="lf"><div id="m"></div><div class="field ic">${icon('lock')}<input class="input" type="password" id="pw" placeholder="Admin password" autocomplete="current-password" autofocus></div><button class="btn block">Log in</button></form></div>`;
-  $('#lf').addEventListener('submit', async (e) => {
-    e.preventDefault(); const r = await api('/api/admin/login', { method: 'POST', body: { password: $('#pw').value } });
-    if (!r.ok) { $('#m').innerHTML = `<div class="err">${esc(r.error)}</div>`; return; } render();
-  });
-}
+function loginView() { location.href = AP + '/'; }
 
 async function render() {
   const me = await (await fetch('/api/admin/me')).json(); if (!me.admin) return loginView();
   if (!GAMES.length) GAMES = (await (await fetch('/api/games')).json()).games;
-  const parts = location.pathname.replace(/^\/admin\/?/, '').split('/').filter(Boolean);
+  const parts = location.pathname.slice(AP.length).split('/').filter(Boolean);
   try {
     const [s, id] = parts;
     if (!s) return dashboard();
@@ -66,6 +62,7 @@ async function render() {
     if (s === 'tournaments') return tournaments(id);
     if (s === 'reports') return reports();
     if (s === 'settings') return settings();
+    if (s === 'security') return security();
     frame('', 'Not found', '<div class="empty">Unknown admin page.</div>');
   } catch (err) { if (err.message !== 'auth') { console.error(err); frame('', 'Error', `<div class="err">${esc(err.message)}</div>`); } }
 }
@@ -502,4 +499,47 @@ async function fairplay(status) {
       ${status === 'open' || status === 'note' ? `<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input class="input" data-note placeholder="Note (optional)" style="flex:1;min-width:160px;height:38px"><button class="btn sm" data-clear>${icon('circle-check')} Clear - score counts</button><button class="btn danger sm" data-confirm-cheat>${icon('ban')} Confirm cheating - keep excluded</button></div>` : `<div class="tiny muted" style="margin-top:6px">${esc(f.reviewed_by || '')} ${f.reviewed_at ? dt(f.reviewed_at) : ''} ${esc(f.note || '')}</div>`}</div>`).join('') : '<div class="empty card">Nothing here. </div>'}</div>`);
   $('#fp-list').onclick = async (e) => { const it = e.target.closest('.fp-item'); if (!it) return; const act = e.target.closest('[data-clear]') ? 'clear' : e.target.closest('[data-confirm-cheat]') ? 'confirm' : null; if (!act) return;
     const x = await api(`/api/admin/flags/${it.dataset.run}/${act}`, { method: 'POST', body: { note: ($('[data-note]', it) || {}).value || '' } }); if (!x.ok) return toast(x.error); toast(act === 'clear' ? 'Cleared - the run now counts' : 'Kept excluded'); fairplay(status); };
+}
+
+// ---------- v7: security (2FA, password, sessions, sign-in audit log) ----------
+async function security() {
+  const r = await api('/api/admin/security');
+  const EV = { 'login-ok': ['log-in', 'green', 'Signed in'], 'password-ok': ['fingerprint', '', 'Password OK, waiting for code'], 'login-fail': ['circle-x', 'red', 'Wrong password'], 'totp-fail': ['circle-x', 'red', 'Wrong authenticator code'],
+    'locked-out': ['lock', 'red', 'Blocked (locked out)'], 'rate-limited': ['timer', 'red', 'Rate limited'], 'reset-ok': ['shield-plus', 'green', 'Reset with ADMIN_RESET_TOKEN'], 'reset-fail': ['circle-x', 'red', 'Wrong reset token'],
+    'logout': ['log-out', '', 'Signed out'], 'logout-all': ['log-out', '', 'Signed out everywhere'], 'password-changed': ['fingerprint', 'green', 'Password changed'], 'password-change-fail': ['circle-x', 'red', 'Password change refused'], 'backup-codes-regenerated': ['refresh-cw', '', 'New backup codes'] };
+  frame('security', 'Security', `
+    <div class="grid2" style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+      <div class="card pad"><h2 style="margin-top:0">${icon('shield-check')} Sign-in protection</h2>
+        <ul class="small" style="margin:0;padding-left:18px;line-height:1.7">
+          <li>Secret admin address (ADMIN_PATH). Old /admin links return 404.</li>
+          <li>Password: <b>${esc(r.password_source)}</b>${r.password_set_at ? ' (changed ' + ago(r.password_set_at) + ')' : ''}</li>
+          <li>Authenticator app: <b>${r.totp_enrolled_at ? 'on since ' + dt(r.totp_enrolled_at) : 'not set up'}</b></li>
+          <li>Backup codes left: <b>${r.backup_codes_left}</b></li>
+          <li>Failed attempts in the last 24 h: <b>${r.failed_24h}</b></li>
+          <li>Client IP source: <b>${r.trust_cf ? 'Cloudflare (CF-Connecting-IP)' : 'direct connection'}</b></li>
+          ${r.reset_token_active ? '<li style="color:#fca5a5"><b>ADMIN_RESET_TOKEN is set.</b> Remove it from the host settings and restart.</li>' : ''}
+        </ul></div>
+      <div class="card pad"><h2 style="margin-top:0">${icon('fingerprint')} Change password</h2>
+        <form id="pwf" style="display:grid;gap:8px"><div id="pwm"></div>
+          <input class="input" type="password" id="pw-cur" placeholder="Current password" autocomplete="current-password" required>
+          <input class="input" type="password" id="pw-new" placeholder="New password (12+ characters)" autocomplete="new-password" minlength="12" required>
+          <input class="input" id="pw-code" placeholder="Authenticator code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+          <button class="btn">Change password and sign out everywhere</button></form>
+        <p class="tiny muted">Stored as a bcrypt hash in the database; it replaces the ADMIN_PASSWORD env var from now on.</p></div>
+      <div class="card pad"><h2 style="margin-top:0">${icon('refresh-cw')} Backup codes &amp; sessions</h2>
+        <form id="bcf" style="display:grid;gap:8px"><input class="input" id="bc-code" placeholder="Authenticator code" inputmode="numeric" maxlength="6" required><button class="btn ghost">Make 10 new backup codes</button></form><pre id="bc-out" class="small" style="white-space:pre-wrap"></pre>
+        <p class="small" style="margin:10px 0 6px">${r.sessions.length} active admin session${r.sessions.length === 1 ? '' : 's'}</p>
+        <button class="btn ghost sm" id="lo-all">${icon('log-out')} Sign out all sessions</button></div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="panel-h"><h2>${icon('scroll-text')} Sign-in audit log</h2><span class="small muted">last 200 events</span></div>
+      <div class="wrap-x"><table class="tbl" id="sec-log"><thead><tr><th>When</th><th>Event</th><th>Network</th><th>Device</th></tr></thead><tbody>
+      ${r.log.map(l => { const e = EV[l.event] || ['circle-dot', '', l.event]; return `<tr data-ev="${esc(l.event)}"><td class="small" style="white-space:nowrap">${dt(l.at)}</td><td><span class="pill ${e[1]}">${icon(e[0])} ${esc(e[2])}</span>${l.detail ? `<div class="tiny muted">${esc(l.detail)}</div>` : ''}</td><td class="small">${esc(l.ip_hint)}</td><td class="tiny muted">${esc((l.ua || '').slice(0, 70))}</td></tr>`; }).join('') || '<tr><td colspan="4" class="empty">No events yet.</td></tr>'}
+      </tbody></table></div></div>`);
+  $('#pwf').onsubmit = async (e) => {
+    e.preventDefault(); const x = await api('/api/admin/security/password', { method: 'POST', body: { current: $('#pw-cur').value, new_password: $('#pw-new').value, code: $('#pw-code').value } });
+    if (!x.ok) { $('#pwm').innerHTML = `<div class="err">${esc(x.error)}</div>`; return; }
+    alert(x.note); location.href = AP + '/';
+  };
+  $('#bcf').onsubmit = async (e) => { e.preventDefault(); const x = await api('/api/admin/security/backup-codes', { method: 'POST', body: { code: $('#bc-code').value } }); $('#bc-out').textContent = x.ok ? 'Save these now (old codes no longer work):\n' + x.backup_codes.join('\n') : x.error; };
+  $('#lo-all').onclick = async () => { if (!confirm('Sign out every admin session, including this one?')) return; await api('/api/admin/security/logout-all', { method: 'POST' }); location.href = AP + '/'; };
 }

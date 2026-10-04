@@ -100,8 +100,9 @@ function startSession(req, res, user) {
   return t;
 }
 const requireUser = (req, res, next) => { const u = currentUser(req); if (!u) return bad(res, 401, 'Please sign in first.'); req.user = u; next(); };
-function isAdmin(req) { const t = verify(cfg.SESSION_SECRET + ':admin', parseCookies(req).gh_admin); return !!(t && t.adm && t.e > now()); }
-const requireAdmin = (req, res, next) => isAdmin(req) ? next() : bad(res, 401, 'Admin login required.');
+// v7: admin lives at a secret path with password + authenticator (TOTP), lockouts, CSRF and an audit log (src/admin-sec.js)
+const ADMSEC = require('./admin-sec');
+const requireAdmin = ADMSEC.requireAdmin;
 
 const USERNAME_RE = /^[A-Za-z0-9_.-]{3,20}$/;
 
@@ -485,13 +486,6 @@ app.post('/api/bookings', limiter('booking', 15, 3600e3), (req, res) => {
 app.get('/api/business-types', (req, res) => res.json({ ok: true, types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE }));
 
 // ---------- admin ----------
-app.post('/api/admin/login', limiter('admin-login', 10, 15 * 60e3), (req, res) => {
-  if (!safeEq(String(req.body.password || ''), cfg.ADMIN_PASSWORD)) return bad(res, 401, 'Wrong admin password.');
-  setCookie(req, res, 'gh_admin', sign(cfg.SESSION_SECRET + ':admin', { adm: 1, e: now() + 12 * 3600e3 }), 12 * 3600e3);
-  res.json({ ok: true });
-});
-app.post('/api/admin/logout', (req, res) => { setCookie(req, res, 'gh_admin', '', 0); res.json({ ok: true }); });
-app.get('/api/admin/me', (req, res) => res.json({ ok: true, admin: isAdmin(req) }));
 const A = express.Router();
 A.use(requireAdmin);
 
@@ -781,14 +775,13 @@ const demo = require('./demo');
 try { demo.v5(); } catch (e) { console.error('demo v5 migration failed', e); }
 A.post('/demo/seed', (req, res) => res.json({ ok: true, ...demo.seed() }));
 A.post('/demo/wipe', (req, res) => res.json({ ok: true, ...demo.wipe() }));
-app.use('/api/admin', A);
+ADMSEC.mount(app, express, A); // secret-path admin (old /admin + /api/admin are plain 404s)
 
 app.use('/api', (req, res) => bad(res, 404, 'Not found'));
 
 // ---------- static ----------
 const PUB = path.join(cfg.ROOT, 'public');
 app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
-app.get(['/admin', '/admin/*'], (req, res) => res.sendFile(path.join(PUB, 'admin.html')));
 // Per-page <title> / description / Open Graph + Twitter card tags for share links (crawlers don't run JS).
 const INDEX_FILE = path.join(PUB, 'index.html');
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
