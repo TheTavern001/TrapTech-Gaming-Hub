@@ -23,6 +23,9 @@ const ALPH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const newCode = () => { for (;;) { const b = crypto.randomBytes(8); let c = ''; for (const x of b) c += ALPH[x % ALPH.length]; if (!db.prepare('SELECT 1 FROM channels WHERE invite_code=?').get(c)) return c; } };
 function ensureCodes() { for (const c of db.prepare('SELECT id FROM channels WHERE invite_code IS NULL').all()) db.prepare('UPDATE channels SET invite_code=? WHERE id=?').run(newCode(), c.id); }
 ensureCodes();
+// v7 logo refresh: the old Trap Tech mark/logo files were replaced by the new brand art
+db.prepare("UPDATE channels SET logo='/assets/brand/tt-badge-256.png' WHERE logo LIKE '/assets/brand/traptech-mark%' OR logo LIKE '/assets/brand/logo-%'").run();
+db.prepare("UPDATE giveaways SET brand_logo='/assets/brand/tt-badge-256.png' WHERE brand_logo LIKE '/assets/brand/traptech-mark%' OR brand_logo LIKE '/assets/brand/logo-%'").run();
 // one-time migration from v5 follows: a player's brand = the channel they followed most recently; giveaways without a
 // channel become hub-wide, channel giveaways become brand-only (and need joining, so the member check always runs).
 if (!db.prepare("SELECT 1 FROM settings WHERE key='brands_v7_migrated'").get()) {

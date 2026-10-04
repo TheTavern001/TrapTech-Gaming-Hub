@@ -136,7 +136,7 @@ function v5() {
     const CH = [
       ['canopy-club', 'Canopy Club', 'Licensed dispensary - weekly drops for the community (demo brand)', '#e11d2a', 'premium', 'https://example.com/canopy-club', 'Visit Canopy Club', 'Cannabis products seller (dispensary/brand/delivery)', '/assets/channels/canopy-club.svg'],
       ['terp-tavern', 'Terp Tavern', 'Independent terpene brand + gaming nights (demo brand)', '#10b981', 'elite', 'https://example.com/terp-tavern', 'Shop Terp Tavern', 'Cannabis products seller (dispensary/brand/delivery)', '/assets/channels/terp-tavern.svg'],
-      ['trap-tech-drops', 'Trap Tech Drops', 'Merch and hub launch giveaways from the team behind the Gaming Hub', '#8b5cf6', 'basic', '', '', 'Other business', '/assets/brand/traptech-mark.svg'],
+      ['trap-tech-drops', 'Trap Tech Drops', 'Merch and hub launch giveaways from the team behind the Gaming Hub', '#8b5cf6', 'basic', '', '', 'Other business', '/assets/brand/tt-badge-256.png'],
       ['neon-threads', 'Neon Threads', 'Independent streetwear label (demo brand)', '#22d3ee', 'basic', '', '', 'Apparel / streetwear brand', '/assets/channels/neon-threads.svg'],
     ];
     const insC = db.prepare('INSERT OR IGNORE INTO channels (slug,name,tagline,color,tier,link_url,link_label,business_type,logo,created_at,is_demo) VALUES (?,?,?,?,?,?,?,?,?,?,1)');

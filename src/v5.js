@@ -165,7 +165,7 @@ module.exports = function v5(app, A, h) {
     db.prepare('UPDATE channels SET slug=@slug,name=@name,tagline=@tagline,logo=@logo,color=@color,link_url=@link_url,link_label=@link_label,tier=@tier,business_type=@business_type,active=@active WHERE id=' + (parseInt(req.params.id, 10) || 0)).run(c);
     res.json({ ok: true });
   });
-  A.delete('/channels/:id', (req, res) => { db.prepare('UPDATE giveaways SET channel_id=NULL WHERE channel_id=?').run(req.params.id); db.prepare('DELETE FROM channels WHERE id=?').run(req.params.id); res.json({ ok: true }); });
+  A.delete('/channels/:id', (req, res) => { db.prepare('UPDATE giveaways SET channel_id=NULL, open_to_all=1 WHERE channel_id=?').run(req.params.id); db.prepare('UPDATE users SET brand_id=NULL WHERE brand_id=?').run(req.params.id); db.prepare('DELETE FROM channels WHERE id=?').run(req.params.id); res.json({ ok: true }); });
   A.get('/giveaways/:id/clicks', (req, res) => res.json({ ok: true, clicks: db.prepare("SELECT placement, COUNT(*) AS n, COUNT(DISTINCT COALESCE(user_id, ip_hash)) AS uniq FROM link_clicks WHERE kind='g' AND ref_id=? GROUP BY placement").all(req.params.id) }));
   A.get('/eligibility-defaults', (req, res) => res.json({ ok: true, defaults: E.DEFAULTS, weight: E.WEIGHT }));
   A.get('/giveaways/:id/entries', (req, res) => res.json({ ok: true, entries: db.prepare('SELECT u.username, e.joined_at, e.left_at FROM giveaway_entries e JOIN users u ON u.id=e.user_id WHERE e.giveaway_id=? ORDER BY e.joined_at').all(req.params.id) }));

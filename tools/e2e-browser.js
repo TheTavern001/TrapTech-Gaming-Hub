@@ -239,10 +239,14 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   console.log('# v5: brand channels, Hub Points shop, friends & challenges (no messaging), special badges');
   await m.goto(BASE + '/games'); await m.waitForSelector('.gcard'); await v5(m, 'games-grid-new-thumbnails', true);
   ok((await m.evaluate(() => [...document.querySelectorAll('main .gcard img, main .gcard [style*="background"]')].some(e => /cards\/v5\//.test(e.getAttribute('src') || e.getAttribute('style') || '')))), 'game cards use the new v5 thumbnails');
-  await m.goto(BASE + '/channels'); await m.waitForSelector('.ch-card'); ok((await m.locator('.ch-card').count()) >= 1, `brand channels list (${await m.locator('.ch-card').count()} channels)`); await v5(m, 'channels-list');
-  await m.click('.ch-card >> nth=0'); await m.waitForSelector('.ch-head');
-  { const fb = await m.$('#ch-follow'); if (fb) { const was = await fb.getAttribute('aria-pressed'); await fb.click(); await m.waitForFunction((w) => document.querySelector('#ch-follow').getAttribute('aria-pressed') !== w, was); ok(true, 'follow a brand channel from its page'); } }
-  await v5(m, 'channel-page', true);
+  { const code = await m.evaluate(async () => { const r = await (await fetch('/api/brands')).json(); return r.brands[0] && r.brands[0].slug; });
+    await m.goto(BASE + '/settings#v7-brand'); await m.waitForSelector('#v7-brand #br-pick'); await v5(m, 'settings-your-brand');
+    ok((await m.textContent('#v7-brand')).includes('not in a brand') || (await m.$('#v7-brand .br-mine')), 'Settings: Your brand card');
+    await m.selectOption('#br-pick', code); m.once('dialog', d => d.accept()); await m.click('#br-f button'); await m.waitForSelector('#v7-brand .br-mine');
+    ok(true, 'player joins a brand from Settings (one brand at a time)'); }
+  { const r = await m.evaluate(async () => (await fetch('/api/me/brand')).json()); const inv = r.brand.slug; // the brand slug works as a code too
+    await m.goto(BASE + '/join/' + inv); await m.waitForSelector('.br-card'); ok((await m.textContent('.br-card')).includes("You're in"), 'brand invite page recognises a member'); await v5(m, 'brand-invite'); }
+  { const r = await m.evaluate(async () => (await fetch('/channels')).status); ok(r === 200, '/channels now redirects inside the app (no channel pages)'); }
   await m.goto(BASE + '/shop'); await m.waitForSelector('.shop-item');
   ok((await m.locator('#shop-daily .shop-item').count()) >= 4 && (await m.locator('#shop-weekly .shop-item').count()) >= 2 && (await m.textContent('main')).match(/cosmetic/i), 'Hub Points shop: daily + weekly rotation, cosmetic-only note');
   ok(+(await m.textContent('#pts-bal')).replace(/\D/g, '') > 0, `points balance earned from play (${(await m.textContent('#pts-bal')).trim()})`);
@@ -255,42 +259,28 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await m.locator('#special-section .special-b').count()) >= 8, 'achievements page: special (admin-only) badges section'); await m.evaluate(() => document.getElementById('special-section')?.scrollIntoView()); await v5(m, 'achievements-special-badges');
   ok((await m.textContent('main')).match(/Centurion|Iron Thumbs|One Percenter/), 'hard Legendary achievements listed');
 
-  console.log('# v5: sponsor tiers / booking with business type + Potato contact');
-  await m.goto(BASE + '/host'); await m.waitForSelector('.pk');
-  const prices = await m.locator('.pk .pk-price b').allTextContents();
-  ok(prices.join() === '$49,$149,$399', 'launch prices shown (admin-editable)', prices);
-  const regs = await m.locator('.pk .pk-price s.reg').allTextContents();
-  ok(regs.join() === '$79,$229,$599' && (await m.locator('.pk .launch-pill').count()) === 3, 'regular prices struck through next to a "Launch pricing" label', regs);
-  ok((await m.locator('.pk.basic .pk-dims .dim').count()) === 8 && (await m.locator('.pk.elite .pk-dims .dim').count()) === 8, 'every tier spells out the same 8 dimensions in plain words');
-  const lk = await m.locator('.pk-dims .d-links dd').allTextContents();
-  ok(/No outbound link/.test(lk[0]) && /1 outbound link/.test(lk[1]) && /3 placements/.test(lk[2]), 'link promotion differs per tier (none / 1 / 3)', lk);
-  ok((await m.textContent('.host')).includes('upcoming and independent brands') && !/underground/i.test(await m.textContent('.host')), 'copy targets upcoming/independent brands (no "underground")');
-  ok((await m.locator('.addons .addon').count()) >= 6 && (await m.isVisible('.why-links')) && (await m.locator('#multi ~ .howto .card').first().isVisible()), 'add-ons, why-links-are-paid and many-brands sections');
-  ok((await m.locator('.cmp tbody tr').count()) >= 10, 'comparison table rendered'); ok((await m.locator('.faq details').count()) >= 5, 'FAQ rendered');
-  await v5(m, 'host-tiers'); await m.evaluate(() => document.querySelector('.pk.premium').scrollIntoView()); await v5(m, 'host-tier-premium');
-  await m.evaluate(() => document.querySelector('.pk.elite').scrollIntoView()); await v5(m, 'host-tier-elite');
-  await m.evaluate(() => document.querySelector('.cmp-wrap').scrollIntoView()); await v5(m, 'host-compare');
-  await m.evaluate(() => document.getElementById('addons').scrollIntoView()); await v5(m, 'host-addons');
-  await m.evaluate(() => document.getElementById('multi').scrollIntoView()); await v5(m, 'host-multi-brand');
-  ok((await m.textContent('.tt-build')).includes("Trap Tech Solutions builds your brand's game"), 'host page: Trap Tech builds your branded game');
-  await m.click('.pk.elite [data-pick=elite]'); await m.waitForSelector('[data-b=brand]');
-  ok((await m.textContent('#pksel')).includes('Elite') && (await m.textContent('#pksel')).includes('$399'), 'booking form carries the chosen tier (Elite $399)');
-  await m.click('#tp [data-t=premium]'); ok((await m.textContent('#pksel')).includes('Premium'), 'tier can be switched in the form'); await m.click('#tp [data-t=elite]');
+  console.log('# v7: Sponsor a Host - feature picker, no tiers, no public prices, quote status page');
+  await m.goto(BASE + '/host'); await m.waitForSelector('.sp-f'); ok(m.url().endsWith('/sponsor'), '/host redirects to /sponsor');
+  ok(!/\$\d/.test(await m.textContent('main')) && !/\b(Basic|Premium|Elite)\b/.test(await m.textContent('main')), 'no prices and no tier names on the sponsor page');
+  ok((await m.locator('.sp-f').count()) >= 20 && (await m.locator('.sp-g').count()) >= 5, `one combined feature list (${await m.locator('.sp-f').count()} features)`);
+  ok((await m.textContent('.tt-build')).includes('Trap Tech Solutions'), 'sponsor page: built by Trap Tech');
+  await v5(m, 'sponsor-features');
+  await m.click('.sp-f[data-f=featured] .sp-chk'); await m.click('.sp-f[data-f=featured] [data-d="1"]'); await m.click('.sp-f[data-f=game-skin] .sp-chk');
+  ok((await m.textContent('.sp-f[data-f=featured] .sp-qty b')).includes('2 weeks') && (await m.textContent('#next')).includes('4 picked'), 'quantity stepper + picked count');
+  await m.click('#next'); await m.waitForSelector('#bt');
   ok(!(await m.$('#licensed')), 'no license question before a business type is chosen');
-  await m.selectOption('#bt', 'Streamer / content creator'); await sleep(100); ok(!(await m.$('#licensed')), 'streamer: books with no license question');
+  await m.selectOption('#bt', 'Streamer / content creator'); await sleep(100); ok(!(await m.$('#licensed')), 'streamer: no license question');
   await m.selectOption('#bt', 'Cannabis products seller (dispensary/brand/delivery)'); await m.waitForSelector('#licensed');
   ok((await m.textContent('.check.lic')).includes('I confirm my business is licensed and legally permitted to operate and advertise in my jurisdiction'), 'cannabis seller: required licensed-business checkbox appears');
-  await m.fill('[data-b=brand]', brand); await m.fill('#b-email', ''); await m.fill('#b-potato', '');
+  await m.fill('#sb-brand', brand); await m.fill('#sb-email', ''); await m.fill('#sb-potato', '');
   await m.click('#next'); ok((await m.textContent('.err')).includes('licensed'), 'cannot continue without confirming the license');
   await m.check('#licensed'); await m.click('#next'); ok((await m.textContent('.err')).includes('Potato username or an email'), 'needs an email or Potato username');
-  await m.fill('#b-potato', '@uitest_brand');
-  await m.evaluate(() => { const e = document.querySelector('.err'); if (e) e.remove(); }); await v5(m, 'booking-potato-contact');
-  await m.click('#next'); await m.selectOption('[data-b=event_type]', 'Giveaway'); await m.fill('[data-b=start_date]', '2026-11-01'); await m.fill('[data-b=end_date]', '2026-11-15');
-  await m.check('[data-ad=push]'); await m.fill('[data-b=details]', 'Headless browser test booking');
-  await m.click('#next'); ok((await m.textContent('main')).includes(brand) && (await m.textContent('[data-rv=package]')).includes('Elite - $399') && (await m.textContent('[data-rv=add-ons]')).includes('Push') && (await m.textContent('[data-rv=contact]')).includes('@uitest_brand'), 'review shows package, add-on and Potato contact');
-  await m.click('#next'); await m.waitForSelector('#potato-confirm');
-  ok((await m.textContent('#booked-pkg')).includes('Elite') && (await m.textContent('#potato-confirm')).includes('Message us on Potato at @TrapTechSolutions to confirm your booking'), 'confirmation: "Message us on Potato at @<admin handle> to confirm your booking"');
-  await v5(m, 'booking-confirmation');
+  await m.fill('#sb-potato', '@uitest_brand'); await m.fill('#sb-s', '2026-11-01'); await m.fill('#sb-e', '2026-11-15'); await m.fill('#sb-d', 'Headless browser test request'); await m.fill('#sb-n', 'Budget flexible');
+  await m.evaluate(() => { const e = document.querySelector('.err'); if (e) e.remove(); }); await v5(m, 'sponsor-details');
+  await m.click('#next'); ok((await m.textContent('main')).includes(brand) && (await m.textContent('.rv')).includes('Home page Featured row (2 weeks)') && (await m.textContent('.rv')).includes('@uitest_brand'), 'review lists the picked features and Potato contact');
+  await m.click('#next'); await m.waitForURL(/\/sponsor\/status\//); await m.waitForSelector('.sp-state');
+  ok((await m.textContent('.sp-state')).includes('Request received') && !(await m.$('.sp-quote')) && (await m.textContent('.sp-asked')).includes('Branded game skin'), 'private status page: received, no price yet, features listed');
+  const sponsorStatusUrl = m.url().split('?')[0]; await v5(m, 'sponsor-status-pending', true);
 
   console.log('# community');
   await m.click('.bottomnav >> text=Community'); await m.waitForSelector('.post'); await shot(m, 'mobile-15-community'); await v3(m, 'm19-community');
@@ -412,16 +402,15 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await d.goto(BASE + '/leaderboard'); await d.waitForSelector('.lb'); await shot(d, 'desktop-04-leaderboard');
   await d.goto(BASE + '/giveaways'); await d.waitForSelector('.gw'); await shot(d, 'desktop-05-giveaways', true);
   await d.goto(BASE + '/u/' + uname); await d.waitForSelector('.prof-head'); await shot(d, 'desktop-06-profile', true);
-  await d.goto(BASE + '/host'); await d.waitForSelector('.pk'); await shot(d, 'desktop-07-host', true);
+  await d.goto(BASE + '/sponsor'); await d.waitForSelector('.sp-f'); await shot(d, 'desktop-07-sponsor', true);
   await d.goto(BASE + '/achievements'); await d.waitForSelector('.ach'); await shot(d, 'desktop-07b-achievements');
-  await d.goto(BASE + '/book?package=elite'); await d.waitForSelector('[data-b=brand]'); await shot(d, 'desktop-08-booking');
   await d.goto(BASE + '/games'); await d.waitForSelector('.gcard'); await v3(d, 'd02-games');
   if (tBr) { await d.goto(BASE + '/tournaments/' + tBr.id); await d.waitForSelector('.bracket .bk-m'); await v3(d, 'd03-tournament-bracket', true); }
   await d.goto(BASE + '/tournaments'); await d.waitForSelector('.t-card'); await v3(d, 'd03b-tournaments', true);
   await d.goto(BASE + '/season'); await d.waitForSelector('.track .tier'); await v3(d, 'd04-season', true);
   await d.goto(BASE + '/u/' + uname); await d.waitForSelector('.prof-head'); await v3(d, 'd05-profile');
   await d.goto(BASE + '/achievements'); await d.waitForSelector('.ach'); await v3(d, 'd06-achievements');
-  await d.goto(BASE + '/host'); await d.waitForSelector('.tt-build'); await v3(d, 'd07-host', true);
+  await d.goto(BASE + '/sponsor'); await d.waitForSelector('.tt-build'); await v3(d, 'd07-sponsor', true);
   await d.goto(BASE + '/about'); await d.waitForSelector('.about-hero'); await v3(d, 'd08-about', true);
   await d.goto(BASE + '/leaderboard'); await d.waitForSelector('.lb'); await v3(d, 'd09-leaderboard');
   await d.goto(BASE + '/giveaways'); await d.waitForSelector('.gw'); await v3(d, 'd10-giveaways');
@@ -440,8 +429,8 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await a.textContent('.amain')).includes('Total Players'), 'admin dashboard loads'); await shot(a, 'desktop-11-admin-dashboard', true);
   ok((await a.textContent('.tt-bar')).includes('Powered by Trap Tech Solutions') && await a.isVisible('.side-tt img'), 'admin header: Powered by Trap Tech Solutions'); await v3(a, 'd12-admin-dashboard');
   ok((await a.textContent('.amain')).includes('12/12 games live'), 'dashboard: 12/12 games live');
-  console.log('# v5 admin: brand channels, grant badge, fair play');
-  await a.goto(BASE + AP + '/channels'); await a.waitForFunction(() => document.querySelector('.ahead h1')); await v5(a, 'admin-brand-channels');
+  console.log('# admin: brands, grant badge, fair play');
+  await a.goto(BASE + AP + '/channels'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Brands'); ok((await a.locator('code.inv').count()) >= 1, 'admin Brands page shows invite links'); await v5(a, 'admin-brands');
   await a.goto(BASE + AP + '/badges'); await a.waitForSelector('#bgf'); await a.fill('#bg-user', uname); await a.selectOption('#bg-badge', 'beta-tester'); await a.fill('#bg-note', 'UI test grant'); await a.click('#bg-grant'); await sleep(900);
   ok((await a.textContent('.amain')).includes(uname), 'admin grants a special badge (shows in holders/audit)'); await v5(a, 'admin-grant-badge', true);
   { const sb = await a.evaluate(async (u) => (await (await fetch('/api/users/' + u + '/special-badges')).json()).granted.map(b => b.id), uname); ok(sb.includes('beta-tester'), 'granted badge is visible on the public profile API', sb); }
@@ -454,7 +443,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await a.inputValue('#title')) === 'Plinko Giveaway' && (await a.locator('#gpk .gp.on').count()) === 1 && (await a.getAttribute('#gpk .gp.on', 'data-g')) === 'plinko', 'Create-giveaway-for-game prefills title + game');
   await a.click('#gpk .gp[data-g=memory-match]'); await a.click('#gpk .gp[data-g=high-score]');
   ok((await a.locator('#gpk .gp.on').count()) === 3, 'visual game picker multi-select (3 games)');
-  await a.fill('#title', 'UI Test Plinko Giveaway'); await a.fill('#host', 'UI Brand'); await a.selectOption('#tier', 'premium'); await a.check('#usecolor'); await a.fill('#minscore', '0');
+  await a.fill('#title', 'UI Test Plinko Giveaway'); await a.fill('#host', 'UI Brand'); await a.check('[data-plc=featured]'); await a.check('#usecolor'); await a.fill('#minscore', '0');
   await shot(a, 'desktop-11b-admin-giveaway-picker');
   await a.click('#gf button[type=submit]'); await a.waitForSelector('#wcard'); const linkGid = a.url().split('/').pop();
   ok((await a.textContent('.amain')).includes('Live campaign stats'), 'manage page shows live campaign stats');
@@ -515,13 +504,19 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   const csv = await a.evaluate(async (u) => (await fetch(u)).text(), (await a.getAttribute('a[href*="export/leaderboard.csv?giveaway"]', 'href')));
   ok(csv.startsWith('rank,username,score') && csv.includes(uname), 'giveaway CSV export downloads with entrants');
   const gidUrl = a.url();
-  // bookings
-  await a.click('.side >> text=Bookings'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Bookings');
-  ok((await a.textContent('.tbl')).includes(brand), 'booking from the public form shows in admin');
-  ok((await a.locator('tr', { hasText: brand }).locator('[data-snap]').textContent()).includes('Elite - $399'), 'admin booking shows chosen tier + price');
-  const row = a.locator('tr', { hasText: brand }); await row.locator('[data-st]').selectOption('approved'); await row.locator('[data-save]').click(); await sleep(600);
-  await a.reload(); await a.waitForSelector('.tbl'); ok((await a.locator('tr', { hasText: brand }).locator('[data-st]').inputValue()) === 'approved', 'admin updates booking status');
-  await shot(a, 'desktop-13-admin-bookings');
+  // sponsor requests -> quote builder -> sponsor accepts
+  await a.click('.side >> text=Sponsor requests'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Sponsor requests');
+  ok((await a.textContent('.tbl')).includes(brand), 'sponsor request from the public form shows in admin');
+  await a.click(`text=${brand}`); await a.waitForSelector('#qb');
+  ok(+(await a.textContent('#q-tot')).replace(/[^0-9.]/g, '') > 0 && (await a.textContent('#qb')).includes('Branded game skin'), 'draft quote is auto-totalled from the admin price sheet');
+  await a.click('#q-add'); { const rows = a.locator('#ql tr'); const last = rows.nth((await rows.count()) - 1); await last.locator('[data-k=label]').fill('UI custom line'); await last.locator('[data-k=amount]').fill('10'); }
+  await a.fill('#q-pct', '10'); const qTotal = await a.textContent('#q-tot'); await shot(a, 'desktop-13-admin-quote', true);
+  a.once('dialog', d => d.accept()); await a.click('#q-send'); await a.waitForFunction(() => /Sent/.test(document.querySelector('#qb .pill')?.textContent || ''));
+  ok(true, 'admin sends the quote');
+  { const sp = await dctx.newPage(); await sp.goto(sponsorStatusUrl); await sp.waitForSelector('#sp-acc'); ok((await sp.textContent('#sp-total')) === qTotal, `sponsor sees the same total (${qTotal})`);
+    sp.once('dialog', d => d.accept()); await sp.click('#sp-acc'); await sp.waitForSelector('.sp-state.st-accepted'); ok(true, 'sponsor accepts on the status page'); await sp.close(); }
+  await a.reload(); await a.waitForSelector('#q-paid'); a.once('dialog', d => d.accept()); await a.click('#q-paid'); await a.waitForFunction(() => /Paid/.test(document.querySelector('#qb .pill')?.textContent || '')); ok(true, 'admin marks the accepted quote paid');
+  await a.click('text=Price sheet'); await a.waitForSelector('[data-p=base]'); ok((await a.locator('[data-p]').count()) >= 20, 'admin-only price sheet lists every feature'); await shot(a, 'desktop-13b-admin-price-sheet');
   // players
   await a.click('.side >> text=Players'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Players'); ok((await a.textContent('.tbl')).includes(uname), 'admin players list shows new player');
   await shot(a, 'desktop-14-admin-players');

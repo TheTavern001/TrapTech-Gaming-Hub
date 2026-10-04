@@ -71,7 +71,7 @@ setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: 
     // every page: renders, no horizontal overflow
     STEP = tag + ' pages';
     const pages = ['/', '/games', '/leaderboard', '/giveaways', ...(gid ? [`/giveaways/${gid}`, `/giveaways/${gid}/live`, `/giveaways/${gid}/rules`] : []), '/tournaments', '/community', '/achievements', '/quests', '/season',
-      '/host', '/book', '/about', '/terms', '/privacy', '/rules', '/responsible-play', '/search', '/notifications', '/settings', '/invite', '/u/' + uname, ...GAMES.map(g => '/games/' + g)];
+      '/sponsor', '/shop', '/about', '/terms', '/privacy', '/rules', '/responsible-play', '/search', '/notifications', '/settings', '/invite', '/u/' + uname, ...GAMES.map(g => '/games/' + g)];
     const bad = [];
     for (const u of pages) {
       await nav(u); await p.waitForSelector('main#main', { timeout: 15000 }); await sleep(250);

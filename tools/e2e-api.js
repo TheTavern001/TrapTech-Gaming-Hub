@@ -155,11 +155,11 @@ function client() {
   for (const g of GAMES) { const js = await anon('/js/' + g.module); ok(js.status === 200 && String(js.body).includes('class ' + g.cls), `game module served: ${g.module}`); }
   // multi-game + min-score giveaways created BEFORE C plays
   const t1 = Date.now();
-  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Multi Giveaway', host: 'E2E Brand', start_at: t1 - 60e3, end_at: t1 + 3600e3, game_ids: ['plinko', 'memory-match'], tier: 'premium', brand_color: '#22d3ee', featured: true, min_score: 0, prize_tiers: '1st - test\nRandom - test', active: true } });
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Multi Giveaway', host: 'E2E Brand', start_at: t1 - 60e3, end_at: t1 + 3600e3, game_ids: ['plinko', 'memory-match'], placements: ['featured', 'giveaway'], brand_color: '#22d3ee', featured: true, min_score: 0, prize_tiers: '1st - test\nRandom - test', active: true } });
   ok(r.body.ok, 'admin creates multi-game giveaway (plinko + memory-match)', r.body); const gmulti = r.body.id;
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E MinScore Giveaway', host: 'E2E', start_at: t1 - 60e3, end_at: t1 + 3600e3, game_ids: ['terp-tapper'], min_score: 1000, active: true } });
   ok(r.body.ok, 'admin creates min-score giveaway (terp-tapper, 1000+)'); const gmin = r.body.id;
-  r = await anon('/api/giveaways/' + gmulti); ok(r.body.giveaway.game_ids.join() === 'plinko,memory-match' && r.body.giveaway.tier === 'premium' && r.body.giveaway.prize_tiers.length === 2 && r.body.giveaway.featured, 'public giveaway exposes game_ids, tier, prize tiers, featured', r.body.giveaway);
+  r = await anon('/api/giveaways/' + gmulti); ok(r.body.giveaway.game_ids.join() === 'plinko,memory-match' && r.body.giveaway.placements.includes('featured') && !('tier' in r.body.giveaway) && r.body.giveaway.prize_tiers.length === 2 && r.body.giveaway.featured, 'public giveaway exposes game_ids, placements (no tier), prize tiers, featured', r.body.giveaway);
   const PLAUS = { 'jetpack-dash': 50, 'drift-rush': 300, plinko: 600, 'spin-to-win': 800, 'memory-match': 400, 'high-score': 250, 'blazed-roulette': 1150, 'terp-tapper': 600, 'stack-2048': 300, 'munchies-snake': 100, 'brick-breaker': 500, 'sky-hopper': 5 };
   const toks = {};
   for (const g of GAMES) { r = await C('/api/run/start', { body: { game_id: g.id } }); ok(r.body.ok, `run/start ${g.id}`); toks[g.id] = r.body.token; }
@@ -194,29 +194,19 @@ function client() {
   r = await ADM(`/api/admin/giveaways/${gmulti}/games`, { body: { game_id: 'high-score', linked: false } }); ok(r.status === 400, 'cannot unlink the last game of a giveaway');
   r = await ADM(`/api/admin/giveaways/${gmulti}`); ok(r.body.giveaway.game_ids.join() === 'high-score' && r.body.stats && r.body.stats.plays >= 1, 'admin giveaway detail has game_ids + live stats', r.body.stats);
 
-  console.log('# v2: packages + booking with tier');
-  r = await anon('/api/packages'); const PK = r.body;
-  ok(PK.tiers.map(t => t.id).join() === 'basic,premium,elite' && PK.tiers.every(t => t.price && t.features.length >= 5 && t.who), 'packages: 3 tiers with price, who-for and features');
-  ok(PK.compare.length >= 10 && PK.faq.length >= 5, `packages: comparison table (${PK.compare.length} rows) + FAQ (${PK.faq.length})`);
-  const adm0 = (await ADM('/api/admin/packages')).body; const { ok: _ok, defaults: _def, ...orig } = adm0;
-  const wasDefault = JSON.stringify(orig) === JSON.stringify(_def);
-  const edited = JSON.parse(JSON.stringify(orig)); edited.tiers[1].price = '$175'; edited.tiers[1].features.push('E2E extra feature');
-  r = await ADM('/api/admin/packages', { method: 'PUT', body: edited }); ok(r.body.ok, 'admin edits Premium price + features');
-  r = await anon('/api/packages'); ok(r.body.tiers[1].price === '$175' && r.body.tiers[1].features.includes('E2E extra feature'), 'edited price/features are live on /api/packages');
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com', business_type: 'Gaming channel / esports', package: 'premium' } }); ok(r.body.ok && r.body.package === 'premium' && r.body.package_snapshot.includes('$175'), 'booking carries chosen tier + price snapshot', r.body); const bid2 = r.body.id;
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', potato: 'e2e_brand', business_type: 'Cannabis products seller (dispensary/brand/delivery)', licensed: true, package: 'elite', addons: ['push', 'bogus'] } }); ok(r.body.package === 'elite' && /Elite/.test(r.body.package_snapshot), 'elite booking snapshot', r.body.package_snapshot); const bid3 = r.body.id;
-  ok(r.body.licensed_confirmed === true && /Push notification blast/.test(r.body.package_snapshot) && !/bogus/.test(r.body.package_snapshot) && r.body.potato_handle === 'TrapTechSolutions', 'v5: cannabis seller booking with license + add-on + Potato handle in reply');
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com', business_type: 'Cannabis products seller (dispensary/brand/delivery)', package: 'basic' } }); ok(r.status === 400 && /licensed/.test(r.body.error), 'v5: cannabis seller without license confirmation rejected');
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', business_type: 'Artist / musician', package: 'basic' } }); ok(r.status === 400 && /Potato username/.test(r.body.error), 'v5: booking needs email or Potato username');
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com', package: 'basic' } }); ok(r.status === 400 && /business type/.test(r.body.error), 'v5: booking needs a business type');
-  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', potato: '@e2e_glass', business_type: 'Glass / smoke-gear shop', package: 'basic' } }); ok(r.body.ok && r.body.licensed_confirmed === false, 'v5: non-cannabis business books with no license question'); const bid4 = r.body.id;
-  { const P = (await anon('/api/packages')).body; ok(P.tiers.every(t => t.regular_price && t.dims && Object.keys(t.dims).length === 8) && P.addons.length >= 6 && P.multi_brand.length >= 3 && P.launch_label, 'v5: tiers have launch + regular price, 8 dimensions; add-ons + multi-brand sections');
-    const e2 = JSON.parse(JSON.stringify(orig)); e2.tiers[2].regular_price = '$649'; e2.potato_handle = '@E2E_Handle'; r = await ADM('/api/admin/packages', { method: 'PUT', body: e2 });
-    r = await anon('/api/packages'); ok(r.body.tiers[2].regular_price === '$649' && r.body.potato_handle === 'E2E_Handle', 'v5: admin edits regular price + Potato handle'); }
-  r = await ADM('/api/admin/packages', { method: 'PUT', body: { tiers: [{ name: 'x' }] } }); ok(r.status === 400, 'packages need exactly 3 tiers');
-  if (wasDefault) await ADM('/api/admin/packages/reset', { body: {} }); else await ADM('/api/admin/packages', { method: 'PUT', body: orig });
-  r = await anon('/api/packages'); ok(r.body.tiers[1].price === orig.tiers[1].price, 'packages restored after test');
-  r = await ADM('/api/admin/bookings'); ok(r.body.bookings.some(b => b.id === bid2 && b.package_snapshot.includes('Premium')), 'admin sees booking package snapshot');
+  console.log('# v7: Sponsor a Host (features, no public tiers or prices)');
+  r = await anon('/api/packages'); ok(r.status === 404, 'old public package/price list is gone');
+  r = await anon('/api/sponsor/catalog'); const CAT = r.body;
+  ok(CAT.ok && CAT.features.length >= 20 && !/price|_cents/.test(JSON.stringify(CAT.features)) && CAT.potato_handle, `one feature list without prices (${CAT.features.length} features)`);
+  r = await anon('/api/sponsor/requests', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com', business_type: 'Gaming channel / esports', features: [{ id: 'weeks', qty: 2 }, { id: 'featured', qty: 1 }] } }); ok(r.body.ok && r.body.token && r.body.features.some(f => /2 weeks/.test(f)), 'quote request carries the picked features', r.body); const bid2 = r.body.id;
+  r = await anon('/api/sponsor/requests', { body: { brand: 'E2E Brand Tier', potato: 'e2e_brand', business_type: CAT.cannabis, licensed: true, features: [{ id: 'push', qty: 1 }, { id: 'bogus' }] } }); const bid3 = r.body.id;
+  ok(r.body.licensed_confirmed === true && r.body.features.some(f => /alert blast/.test(f)) && !r.body.features.some(f => /bogus/.test(f)) && r.body.potato_handle === 'TrapTechSolutions', 'cannabis seller request with license + Potato handle in reply', r.body);
+  r = await anon('/api/sponsor/requests', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com', business_type: CAT.cannabis } }); ok(r.status === 400 && /licensed/.test(r.body.error), 'cannabis seller without license confirmation rejected');
+  r = await anon('/api/sponsor/requests', { body: { brand: 'E2E Brand Tier', business_type: 'Artist / musician' } }); ok(r.status === 400 && /Potato username/.test(r.body.error), 'request needs email or Potato username');
+  r = await anon('/api/sponsor/requests', { body: { brand: 'E2E Brand Tier', email: 'e2e@example.com' } }); ok(r.status === 400 && /business type/.test(r.body.error), 'request needs a business type');
+  r = await anon('/api/bookings', { body: { brand: 'E2E Brand Tier', potato: '@e2e_glass', business_type: 'Glass / smoke-gear shop', package: 'basic' } }); ok(r.body.ok && r.body.licensed_confirmed === false, 'old /api/bookings alias still works (non-cannabis, no license question)'); const bid4 = r.body.id;
+  r = await ADM('/api/admin/sponsor/requests/' + bid2); ok(r.body.request.quote.total_cents > 0 && r.body.request.quote.status === 'draft', 'admin gets an auto-totalled draft quote');
+  r = await ADM('/api/admin/bookings'); ok(r.body.bookings.some(b => b.id === bid2 && /Featured row/.test(b.package_snapshot)), 'admin sees the request feature snapshot');
 
   console.log('# v2: achievements + cosmetics');
   r = await C('/api/achievements'); const AL = r.body.achievements;
@@ -356,35 +346,34 @@ function client() {
   // ======================= v5 =======================
   const DBP = require(path.join(__dirname, '..', 'src', 'config.js')).DB_PATH; const sdb = new (require('better-sqlite3'))(DBP);
   const play = async (cl, game, score, wait = 1200, extra = {}) => { let x; for (let k = 0; k < 6; k++) { x = await cl('/api/run/start', { body: { game_id: game } }); if (x.status !== 429) break; await sleep(12000); } if (!x.body.ok) return x; const tk = x.body.token; const seed = x.body.seed; if (wait) await sleep(wait); const body = { token: tk, score, coins: 0, duration_ms: wait, tel: { n: 12, mean: 310, sd: 95, min: 120 }, ...extra }; for (let k = 0; k < 6; k++) { x = await cl('/api/score', { body }); if (x.status !== 429 || x.body.rejected) break; await sleep(12000); } x.seed = seed; return x; };
-  console.log('# v5: brand channels + paid links');
-  r = await anon('/api/channels'); ok(r.body.ok && r.body.channels.length >= 4 && r.body.channels.some(c => c.slug === 'terp-tavern' && c.tier === 'elite'), 'public brand channel list (demo channels)');
-  r = await anon('/api/channels/terp-tavern'); ok(r.body.channel && Array.isArray(r.body.giveaways) && r.body.giveaways.every(g => g.channel && g.channel.slug === 'terp-tavern'), 'channel page lists only that brand\'s giveaways');
-  r = await ADM('/api/admin/channels', { body: { name: 'E2E Brand', slug: 'e2e-brand', tier: 'elite', link_url: 'https://example.com/brand', link_label: 'Shop' } }); ok(r.body.ok, 'admin creates an Elite brand channel'); const chE = r.body.id;
-  r = await ADM('/api/admin/channels', { body: { name: 'E2E Basic', slug: 'e2e-basic', tier: 'basic', link_url: 'https://example.com/basic' } }); const chB = r.body.id;
-  r = await ADM('/api/admin/channels', { body: { name: 'Bad', link_url: 'http://insecure.example' } }); ok(r.status === 400, 'channel link must be https');
-  r = await anon('/api/channels/e2e-brand'); ok(r.body.channel.link && r.body.channel.link.url === `/go/c/${chE}?p=channel`, 'Elite channel shows a tracked link');
-  r = await anon('/api/channels/e2e-basic'); ok(r.body.channel.link === null, 'Basic channel: no outbound link (links are a paid placement)');
-  let rr2 = await fetch(BASE + `/go/c/${chE}?p=channel`, { redirect: 'manual' }); ok(rr2.status === 302 && rr2.headers.get('location') === 'https://example.com/brand', '/go redirect sends to the sponsor URL');
-  rr2 = await fetch(BASE + `/go/c/${chB}?p=channel`, { redirect: 'manual' }); ok(rr2.status === 302 && rr2.headers.get('location') === '/', '/go refuses placements the tier did not pay for');
-  r = await ADM('/api/admin/channels'); ok(r.body.channels.find(c => c.id === chE).clicks === 1 && r.body.channels.find(c => c.id === chB).clicks === 0, 'click analytics count only valid clicks');
-  r = await C('/api/channels/e2e-brand/follow', { body: { on: true } }); ok(r.body.following && r.body.followers === 1, 'player follows a brand channel');
-  r = await C('/api/me/channels'); ok(r.body.slugs.includes('e2e-brand'), '/api/me/channels lists followed channels');
+  console.log('# v7: brands (one per player) + paid link placements');
+  r = await anon('/api/brands'); ok(r.body.ok && r.body.brands.length >= 4 && r.body.brands.some(c => c.slug === 'terp-tavern') && r.body.cooldown_days === 30, 'public brand list (demo brands)');
+  for (const p of ['/api/channels', '/api/channels/terp-tavern', '/api/me/channels']) { r = await anon(p); ok(r.status === 404, `${p} removed`); }
+  r = await ADM('/api/admin/channels', { body: { name: 'E2E Brand', slug: 'e2e-brand', link_url: 'https://example.com/brand', link_label: 'Shop' } }); ok(r.body.ok, 'admin creates a brand'); const chE = r.body.id;
+  r = await ADM('/api/admin/channels', { body: { name: 'E2E Basic', slug: 'e2e-basic', link_url: 'https://example.com/basic' } }); const chB = r.body.id;
+  r = await ADM('/api/admin/channels', { body: { name: 'Bad', link_url: 'http://insecure.example' } }); ok(r.status === 400, 'brand link must be https');
+  r = await ADM('/api/admin/brands'); const invE = (r.body.brands.find(b => b.id === chE) || {}).invite_code; ok(/^[A-Z2-9]{8}$/.test(invE || ''), 'new brand gets an invite code');
+  r = await C('/api/me/brand', { body: { code: invE, via: 'link' } }); ok(r.body.ok && r.body.brand.slug === 'e2e-brand', 'player joins the brand via its invite code');
+  r = await C('/api/me/brand', { body: { code: 'e2e-basic' } }); ok(r.status === 400 && /30 days/.test(r.body.error), 'switching again within 30 days is refused');
 
   console.log('# v5: eligibility + explicit entries (anti-camping)');
   const t5 = Date.now();
-  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Brand Giveaway', host: 'E2E Brand', start_at: t5 - 60e3, end_at: t5 + 3600e3, game_id: 'high-score', active: true, tier: 'elite', channel_id: chE, link_url: 'https://example.com/gw', link_label: 'Visit E2E',
-    require_join: true, elig_min_runs7: 3, elig_account_age_days: 0, elig_max_active: 3, elig_win_cooldown_days: 30, elig_brand_month: true, elig_followers_only: true } });
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Brand Giveaway', host: 'E2E Brand', start_at: t5 - 60e3, end_at: t5 + 3600e3, game_id: 'high-score', active: true, placements: ['giveaway', 'game'], channel_id: chE, link_url: 'https://example.com/gw', link_label: 'Visit E2E',
+    require_join: true, elig_min_runs7: 3, elig_account_age_days: 0, elig_max_active: 3, elig_win_cooldown_days: 30, elig_brand_month: true } });
   ok(r.body.ok, 'admin creates a channel giveaway with eligibility rules'); const gE = r.body.id;
-  r = await anon(`/api/giveaways/${gE}/eligibility`); ok(r.body.require_join && r.body.rules.some(x => x.includes('Followers only')) && r.body.rules.some(x => x.includes('Win cooldown')) && r.body.rules.some(x => x.includes('Potato')), 'public eligibility rules in plain language');
+  r = await anon(`/api/giveaways/${gE}/eligibility`); ok(r.body.require_join && r.body.rules.some(x => x.includes('members only')) && r.body.rules.some(x => x.includes('Win cooldown')) && r.body.rules.some(x => x.includes('Potato')), 'public eligibility rules in plain language');
   r = await D(`/api/giveaways/${gE}/eligibility`); const dAct = r.body.checks.find(c => c.id === 'activity');
-  ok(!r.body.eligible && dAct && !dAct.ok && /Play \d more runs? to qualify/.test(dAct.hint) && r.body.checks.find(c => c.id === 'follow').ok === false, 'ineligible player sees exactly what to do ("Play N more runs")', r.body.checks);
+  ok(!r.body.eligible && dAct && !dAct.ok && /Play \d more runs? to qualify/.test(dAct.hint) && r.body.checks.find(c => c.id === 'brand_member').ok === false, 'ineligible player sees exactly what to do ("Play N more runs", join the brand)', r.body.checks);
   r = await D(`/api/giveaways/${gE}/join`, { body: {} }); ok(r.status === 400 && r.body.status && !r.body.status.eligible, 'ineligible player cannot join');
   r = await A(`/api/giveaways/${gE}/eligibility`); ok(r.body.checks.some(c => c.id === 'cooldown' && !c.ok && /won recently/.test(c.hint)), 'recent winner is on win cooldown');
   for (let i = 0; i < 3; i++) await play(C, 'high-score', 5, 300);
   r = await C(`/api/giveaways/${gE}/eligibility`); ok(r.body.eligible && r.body.can_join && r.body.message.includes('Enter giveaway'), 'eligible player: "You\'re eligible - tap Enter giveaway"', r.body);
   r = await play(C, 'high-score', 20, 300); ok(r.body.ok && !(r.body.giveaways || []).some(g => g.id === gE), 'runs before joining do not count for a join-required giveaway');
   r = await C(`/api/giveaways/${gE}/join`, { body: {} }); ok(r.body.ok && r.body.status.joined, 'eligible player joins');
-  r = await anon(`/api/giveaways/${gE}`); ok(r.body.giveaway.joined_count === 1 && r.body.giveaway.link && r.body.giveaway.link.url === `/go/g/${gE}?p=giveaway` && r.body.giveaway.channel.slug === 'e2e-brand', 'giveaway shows entrants, channel and the paid sponsor link');
+  r = await anon(`/api/giveaways/${gE}`); ok(r.body.giveaway.joined_count === 1 && r.body.giveaway.link && r.body.giveaway.link.url === `/go/g/${gE}?p=giveaway` && r.body.giveaway.channel.slug === 'e2e-brand' && r.body.giveaway.brand.slug === 'e2e-brand' && r.body.giveaway.open_to_all === false, 'giveaway shows entrants, brand (members only) and the paid sponsor link');
+  let rr2 = await fetch(BASE + `/go/g/${gE}?p=giveaway`, { redirect: 'manual' }); ok(rr2.status === 302 && rr2.headers.get('location') === 'https://example.com/gw', '/go redirect sends to the sponsor URL');
+  rr2 = await fetch(BASE + `/go/g/${gE}?p=announcement`, { redirect: 'manual' }); ok(rr2.status === 302 && rr2.headers.get('location') === '/', '/go refuses placements the sponsor did not pay for');
+  r = await anon('/api/games/high-score/sponsor'); ok(r.body.sponsor && r.body.sponsor.giveaway_id === gE, 'game-page link placement shows the sponsor on the game page');
   r = await play(C, 'high-score', 25, 300); ok((r.body.giveaways || []).some(g => g.id === gE && g.rank === 1), 'after joining, runs count');
   const gMs = []; for (let i = 0; i < 3; i++) { r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Slot ' + i, host: 'T', start_at: t5 - 60e3, end_at: t5 + 3600e3, game_id: 'plinko', active: true, require_join: true, elig_max_active: 3 } }); gMs.push(r.body.id); }
   r = await C(`/api/giveaways/${gMs[0]}/join`, { body: {} }); ok(r.body.ok, 'join 2nd live giveaway');
@@ -496,7 +485,7 @@ function client() {
   console.log('# static pages');
   for (const p of ['/', '/leaderboard', '/giveaways', '/games/jetpack-dash', '/admin']) { r = await anon(p); ok(r.status === 200 && String(r.body).includes('<!doctype html>'), `GET ${p} serves HTML`); }
   r = await anon('/js/jetpack.js'); ok(r.status === 200 && String(r.body).includes('class JetpackDash'), 'game JS served');
-  for (const p of ['/achievements', '/host', '/games/plinko', '/play/terp-tapper']) { r = await anon(p); ok(r.status === 200, `GET ${p} serves HTML`); }
+  for (const p of ['/achievements', '/sponsor', '/join/ABCDEFGH', '/games/plinko', '/play/terp-tapper']) { r = await anon(p); ok(r.status === 200, `GET ${p} serves HTML`); }
   r = await anon('/assets/cards/jetpack-dash.webp'); ok(r.status === 200, 'card art served');
 
   if (!process.env.KEEP) {
