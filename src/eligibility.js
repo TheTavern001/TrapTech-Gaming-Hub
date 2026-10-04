@@ -29,7 +29,7 @@ function describe(g, channel) {
   if (r.elig_max_active) out.push(`You can be entered in up to ${r.elig_max_active} live giveaways at once - choose which; leave one to free a slot.`);
   if (r.elig_win_cooldown_days) out.push(`Win cooldown: no new wins for ${r.elig_win_cooldown_days} days after you win a giveaway.`);
   if (r.elig_brand_month && channel) out.push(`One win per player per brand per 30 days (${channel.name}).`);
-  if (r.elig_followers_only && channel) out.push(`Followers only: follow ${channel.name}'s channel to enter.`);
+  out.push(require('./brands').RULE_TEXT(g)); // v7 brand affiliation: who can enter
   if (g.win_method === 'random' && r.weight_mode === 'activity') out.push(`Activity entries: 1 entry + 1 more per ${WEIGHT.per} runs in the giveaway window (max ${WEIGHT.max}). Free play only - nothing can be bought.`);
   out.push('Have your Potato username on your account so Trap Tech can contact you if you win.');
   return out;
@@ -64,9 +64,11 @@ function check(user, g, t = now()) {
     const ready = u.created_at + r.elig_account_age_days * D; const ok = t >= ready;
     checks.push({ id: 'age', ok, label: `Account ${r.elig_account_age_days}+ days old`, hint: ok ? 'Account age OK' : `New accounts can enter from ${fmtDate(ready)}` });
   }
-  if (r.elig_followers_only && channel) {
-    const ok = !!db.prepare('SELECT 1 FROM channel_follows WHERE user_id=? AND channel_id=?').get(u.id, channel.id);
-    checks.push({ id: 'follow', ok, label: `Follow ${channel.name}`, hint: ok ? `Following ${channel.name}` : `Follow ${channel.name} to enter`, channel: channel.slug });
+  if (channel && !g.open_to_all) { // v7: brand giveaways are for that brand's members (one brand per player)
+    const mine = db.prepare('SELECT c.id, c.name FROM users u JOIN channels c ON c.id=u.brand_id WHERE u.id=?').get(u.id); const ok = !!(mine && mine.id === channel.id);
+    const sw = require('./brands').status(u.id, t);
+    checks.push({ id: 'brand_member', ok, label: `${channel.name} member`, channel: channel.slug, brand_id: channel.id,
+      hint: ok ? `You're in ${channel.name}` : mine ? (sw.can_switch ? `This giveaway is for ${channel.name} members. You're in ${mine.name} - switch brands to enter.` : `This giveaway is for ${channel.name} members. You're in ${mine.name} and can switch from ${fmtDate(sw.can_switch_at)}.`) : `This giveaway is for ${channel.name} members. Join ${channel.name} with its invite link or code to enter.` });
   }
   if (r.elig_win_cooldown_days) {
     const w = lastWin(u.id, t - r.elig_win_cooldown_days * D); const ok = !w;
@@ -111,6 +113,7 @@ function boardsStatus(g) { const t = now(); return t < g.start_at ? 'upcoming' :
 const weightOf = (g, attempts) => (g.win_method === 'random' && g.weight_mode === 'activity') ? Math.min(WEIGHT.max, 1 + Math.floor((attempts || 0) / WEIGHT.per)) : 1;
 // at lock time: winners who became ineligible (won elsewhere meanwhile) are skipped with a logged reason
 function lockViolation(g, userId, t = now()) {
+  if (g.channel_id && !g.open_to_all) { const m = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId); if (!m || m.brand_id !== g.channel_id) return 'Not a member of this brand when the giveaway ended (brand giveaways are for members only)'; }
   if (g.elig_win_cooldown_days) { const w = lastWin(userId, t - g.elig_win_cooldown_days * D); if (w) return `Win cooldown: already won a giveaway on ${fmtDate(w)} (${g.elig_win_cooldown_days}-day cooldown)`; }
   if (g.elig_brand_month && g.channel_id) { const w = lastWin(userId, t - 30 * D, g.channel_id); if (w) return `One win per brand per 30 days: already won this brand on ${fmtDate(w)}`; }
   return null;

@@ -12,52 +12,26 @@ const D = 864e5;
 const SLUG = /^[a-z0-9][a-z0-9-]{1,38}$/;
 const URL_RE = /^https:\/\/[^\s"'<>]{4,300}$/;
 const HEX = /^#[0-9a-fA-F]{6}$/;
-// link placements each tier pays for (see /host): Basic none, Premium giveaway page, Elite giveaway + game page + announcement
-const LINK_PLACEMENTS = { basic: [], premium: ['giveaway', 'channel'], elite: ['giveaway', 'channel', 'game', 'announcement'] };
-const allows = (tier, placement) => (LINK_PLACEMENTS[tier] || []).includes(placement);
+// v7: no tiers. What a giveaway shows (outbound links, featured row, hero, game skin) comes from the placements the
+// sponsor's accepted quote included (giveaways.placements; legacy giveaways map their old tier, see src/sponsor.js).
+const SP = require('./sponsor');
+const LINK_PLACEMENTS = SP.PLACES;
+const allows = (g, placement) => SP.placementsOf(g).includes(placement);
+const B = require('./brands');
 
 module.exports = function v5(app, A, h) {
   const { now, bad, currentUser, requireUser, str, limiter, logActivity, ipHash } = h;
-  const channelPublic = (c, user) => c && ({ id: c.id, slug: c.slug, name: c.name, tagline: c.tagline, logo: c.logo, color: c.color, tier: c.tier, demo: !!c.is_demo,
-    link: c.link_url && allows(c.tier, 'channel') ? { url: `/go/c/${c.id}?p=channel`, label: c.link_label || 'Visit' } : null,
-    followers: db.prepare('SELECT COUNT(*) AS c FROM channel_follows WHERE channel_id=?').get(c.id).c,
-    following: !!(user && db.prepare('SELECT 1 FROM channel_follows WHERE channel_id=? AND user_id=?').get(c.id, user.id)) });
   h.channelOf = (g) => g.channel_id ? db.prepare('SELECT * FROM channels WHERE id=?').get(g.channel_id) : null;
-  h.channelPublic = channelPublic;
   // extra public giveaway fields (merged into giveawayPublic)
   h.v5Giveaway = (g) => {
-    const c = h.channelOf(g); const tier = g.tier || (c && c.tier) || 'basic';
+    const c = h.channelOf(g); const au = B.audience(g); const places = SP.placementsOf(g);
     return { channel: c ? { slug: c.slug, name: c.name, logo: c.logo, color: c.color } : null, require_join: !!g.require_join,
+      brand: au.brand, open_to_all: au.open, placements: places, featured: !!g.featured || places.includes('featured'), tier: undefined,
       eligibility_rules: E.describe(g, c), rules_cfg: E.rulesOf(g), joined_count: g.require_join ? db.prepare('SELECT COUNT(*) AS c FROM giveaway_entries WHERE giveaway_id=? AND left_at IS NULL').get(g.id).c : null,
-      link: g.link_url && allows(tier, 'giveaway') ? { url: `/go/g/${g.id}?p=giveaway`, label: g.link_label || `Visit ${g.host || 'sponsor'}` } : null };
+      link: (g.link_url || (c && c.link_url)) && allows(g, 'giveaway') ? { url: `/go/g/${g.id}?p=giveaway`, label: g.link_label || `Visit ${g.host || 'sponsor'}` } : null };
   };
 
-  // ---------- channels ----------
-  app.get('/api/channels', (req, res) => {
-    const me = currentUser(req);
-    const list = db.prepare('SELECT * FROM channels WHERE active=1 ORDER BY CASE tier WHEN \'elite\' THEN 0 WHEN \'premium\' THEN 1 ELSE 2 END, name').all().map(c => {
-      const live = db.prepare('SELECT COUNT(*) AS c FROM giveaways WHERE channel_id=? AND active=1 AND start_at<=? AND end_at>?').get(c.id, now(), now()).c;
-      return { ...channelPublic(c, me), live };
-    });
-    res.json({ ok: true, channels: list });
-  });
-  app.get('/api/channels/:slug', (req, res) => {
-    const c = db.prepare('SELECT * FROM channels WHERE slug=? AND active=1').get(String(req.params.slug)); if (!c) return bad(res, 404, 'Channel not found');
-    const me = currentUser(req);
-    const gws = db.prepare('SELECT * FROM giveaways WHERE channel_id=? AND active=1 ORDER BY start_at DESC').all(c.id).map(g => h.giveawayPublic(R.ready(g)));
-    const winners = db.prepare(`SELECT u.username, g.title, c2.created_at FROM giveaway_confirm c2 JOIN giveaways g ON g.id=c2.giveaway_id JOIN users u ON u.id=c2.user_id WHERE g.channel_id=? ORDER BY c2.created_at DESC LIMIT 10`).all(c.id);
-    res.json({ ok: true, channel: channelPublic(c, me), giveaways: gws, winners });
-  });
-  app.post('/api/channels/:slug/follow', requireUser, limiter('chfollow', 60, 60e3), (req, res) => {
-    const c = db.prepare('SELECT * FROM channels WHERE slug=? AND active=1').get(String(req.params.slug)); if (!c) return bad(res, 404, 'Channel not found');
-    const had = db.prepare('SELECT 1 FROM channel_follows WHERE user_id=? AND channel_id=?').get(req.user.id, c.id);
-    const want = req.body.on === undefined ? !had : !!req.body.on;
-    if (want && !had) db.prepare('INSERT INTO channel_follows (user_id, channel_id, created_at) VALUES (?,?,?)').run(req.user.id, c.id, now());
-    if (!want && had) db.prepare('DELETE FROM channel_follows WHERE user_id=? AND channel_id=?').run(req.user.id, c.id);
-    res.json({ ok: true, following: want, followers: db.prepare('SELECT COUNT(*) AS c FROM channel_follows WHERE channel_id=?').get(c.id).c });
-  });
-  app.get('/api/me/channels', requireUser, (req, res) => res.json({ ok: true, slugs: db.prepare('SELECT c.slug FROM channel_follows f JOIN channels c ON c.id=f.channel_id WHERE f.user_id=?').all(req.user.id).map(r => r.slug) }));
-
+  // v7: the public brand-channel pages (/api/channels, follow) are gone; brands are joined via invite links (src/brands.js)
   // ---------- eligibility + entries ----------
   const pubG = (id) => { const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(id); return g ? R.ready(g) : null; };
   app.get('/api/giveaways/:id/eligibility', (req, res) => {
@@ -95,18 +69,17 @@ module.exports = function v5(app, A, h) {
   // ---------- paid outbound links (tracked) ----------
   app.get('/go/:kind/:id', (req, res) => {
     const placement = String(req.query.p || '');
-    let url = null, tier = 'basic', refId = parseInt(req.params.id, 10) || 0;
-    if (req.params.kind === 'g') { const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(refId); const c = g && h.channelOf(g); if (g) { url = g.link_url || (c && c.link_url); tier = g.tier || (c && c.tier) || 'basic'; } }
-    else if (req.params.kind === 'c') { const c = db.prepare('SELECT * FROM channels WHERE id=? AND active=1').get(refId); if (c) { url = c.link_url; tier = c.tier; } }
-    if (!url || !URL_RE.test(url) || !allows(tier, placement)) return res.redirect(302, '/');
+    let url = null, ok = false; const refId = parseInt(req.params.id, 10) || 0;
+    if (req.params.kind === 'g') { const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(refId); const c = g && h.channelOf(g); if (g) { url = g.link_url || (c && c.link_url); ok = allows(g, placement); } }
+    if (!url || !URL_RE.test(url) || !ok) return res.redirect(302, '/');
     const u = currentUser(req);
     db.prepare('INSERT INTO link_clicks (kind, ref_id, placement, user_id, ip_hash, created_at) VALUES (?,?,?,?,?,?)').run(req.params.kind, refId, placement, u ? u.id : null, ipHash(req), now());
     res.redirect(302, url);
   });
-  // sponsor link shown on a game page (Elite only): the active Elite giveaway that links this game
+  // sponsor link shown on a game page: the live giveaway linking this game whose quote included the game-page link
   app.get('/api/games/:id/sponsor', (req, res) => {
     const t = now();
-    const g = db.prepare(`SELECT g.* FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id WHERE gg.game_id=? AND g.active=1 AND g.start_at<=? AND g.end_at>? AND (g.tier='elite') ORDER BY g.end_at LIMIT 1`).get(String(req.params.id), t, t);
+    const g = db.prepare(`SELECT g.* FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id WHERE gg.game_id=? AND g.active=1 AND g.start_at<=? AND g.end_at>? ORDER BY g.end_at`).all(String(req.params.id), t, t).find(x => allows(x, 'game'));
     if (!g) return res.json({ ok: true, sponsor: null });
     const c = h.channelOf(g); const url = g.link_url || (c && c.link_url);
     res.json({ ok: true, sponsor: { giveaway_id: g.id, title: g.title, host: g.host, logo: g.brand_logo || (c && c.logo) || '', color: g.brand_color || (c && c.color) || '', link: url ? { url: `/go/g/${g.id}?p=game`, label: g.link_label || `Visit ${g.host}` } : null } });

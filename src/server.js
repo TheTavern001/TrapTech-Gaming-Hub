@@ -454,35 +454,7 @@ app.post('/api/community/react', requireUser, limiter('react', 60, 60e3), (req, 
   res.json({ ok: true, key, mine: !had || req.body.on === true, hype: db.prepare('SELECT COUNT(*) AS c FROM reactions WHERE item_key=?').get(key).c, unlocked });
 });
 
-// ---------- hosting packages & bookings ----------
-app.get('/api/packages', (req, res) => res.json({ ok: true, ...PK.getPackages() }));
-app.post('/api/bookings', limiter('booking', 15, 3600e3), (req, res) => {
-  const b = req.body || {};
-  const brand = str(b.brand, 120);
-  const email = str(b.email, 160).toLowerCase();
-  const potato = str(b.potato, 40).replace(/^@/, '');
-  if (!brand) return bad(res, 400, 'Channel / brand name is required.');
-  if (!email && !potato) return bad(res, 400, 'Add an email or a Potato username (at least one) so we can reach you.');
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return bad(res, 400, 'That email address does not look right.');
-  if (potato && !/^[A-Za-z0-9_]{3,32}$/.test(potato)) return bad(res, 400, 'Potato usernames use letters, numbers and _ only.');
-  const businessType = PK.BUSINESS_TYPES.includes(b.business_type) ? b.business_type : '';
-  if (!businessType) return bad(res, 400, 'Please choose your business type.');
-  const isCannabis = businessType === PK.CANNABIS_TYPE;
-  if (isCannabis && b.licensed !== true) return bad(res, 400, 'Cannabis product sellers must confirm the business is licensed and legally permitted to operate and advertise in its jurisdiction.');
-  const pk = PK.getPackages();
-  const tier = pk.tiers.find(t => t.id === b.package);
-  const pkg = tier ? tier.id : 'custom';
-  const addons = (Array.isArray(b.addons) ? b.addons : []).filter(id => (pk.addons || []).some(a => a.id === id));
-  const addonNames = addons.map(id => pk.addons.find(a => a.id === id).name);
-  const snapshot = (tier ? `${tier.name} - ${tier.price}${tier.regular_price && tier.regular_price !== tier.price ? ` (${pk.launch_label || 'launch'}; regular ${tier.regular_price})` : ''}${tier.price_note ? ' ' + tier.price_note : ''}` : 'Custom - quote on request') + (addonNames.length ? ' + ' + addonNames.join(', ') : '');
-  const contact = [email, potato ? '@' + potato + ' (Potato)' : ''].filter(Boolean).join(' / ');
-  const me = currentUser(req);
-  const info = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,package_snapshot,start_date,end_date,details,user_id,created_at,ip_hash,business_type,email,potato,licensed_confirmed,addons)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(brand, str(b.contact_name, 120), contact, str(b.event_type, 60), pkg, snapshot,
-    str(b.start_date, 20), str(b.end_date, 20), str(b.details, 4000), me ? me.id : null, now(), ipHash(req), businessType, email, potato, isCannabis ? 1 : 0, addons.join(','));
-  logActivity('booking', `Booking request submitted: ${brand} (${tier ? tier.name : 'Custom'})`, me ? me.id : null, info.lastInsertRowid);
-  res.json({ ok: true, id: info.lastInsertRowid, package: pkg, package_snapshot: snapshot, potato_handle: pk.potato_handle, licensed_confirmed: isCannabis });
-});
+// ---------- Sponsor a Host (feature picker + quotes) lives in src/sponsor.js; old /api/bookings kept there as an alias ----------
 app.get('/api/business-types', (req, res) => res.json({ ok: true, types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE }));
 
 // ---------- admin ----------
@@ -536,6 +508,10 @@ function readGiveaway(b) {
     channel_id: parseInt(b.channel_id, 10) || null, link_url: str(b.link_url, 300), link_label: str(b.link_label, 40),
     ...require('./eligibility').read(b),
   };
+  // v7 brands + placements: a giveaway with a brand is members-only unless "open to everyone"; no brand = hub-wide
+  g.open_to_all = !g.channel_id ? 1 : b.open_to_all ? 1 : 0;
+  if (g.channel_id && !g.open_to_all) g.require_join = 1;
+  g.placements = Array.isArray(b.placements) ? JSON.stringify(b.placements.filter(x => require('./sponsor').PLACES.includes(x))) : (typeof b.placements === 'string' && b.placements.startsWith('[') ? b.placements : null);
   if (g.link_url && !/^https:\/\/[^\s"'<>]{4,300}$/.test(g.link_url)) return [null, 'Sponsor link must be an https:// URL.'];
   if (g.channel_id && !db.prepare('SELECT 1 FROM channels WHERE id=?').get(g.channel_id)) return [null, 'Unknown channel.'];
   if (!g.title) return [null, 'Title is required.'];
@@ -559,7 +535,7 @@ A.get('/giveaways', (req, res) => {
   const list = db.prepare('SELECT * FROM giveaways ORDER BY start_at DESC').all().map(g => ({ ...giveawayPublic(g), active: !!g.active }));
   res.json({ ok: true, giveaways: list, now: now() });
 });
-const GW_COLS = 'title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,tier,brand_color,brand_logo,featured,min_score,prize_tiers,win_method,winner_count,channel_id,link_url,link_label,' + require('./eligibility').FIELDS.join(',');
+const GW_COLS = 'title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,tier,brand_color,brand_logo,featured,min_score,prize_tiers,win_method,winner_count,channel_id,link_url,link_label,open_to_all,placements,' + require('./eligibility').FIELDS.join(',');
 A.post('/giveaways', (req, res) => {
   const [g, err, gameIds] = readGiveaway(req.body || {}); if (err) return bad(res, 400, err);
   const t = now();
@@ -578,6 +554,8 @@ A.get('/giveaways/:id', (req, res) => {
 A.put('/giveaways/:id', (req, res) => {
   const ex = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!ex) return bad(res, 404, 'Not found');
   const [g, err, gameIds] = readGiveaway(req.body || {}); if (err) return bad(res, 400, err);
+  if ((req.body || {}).placements === undefined) g.placements = ex.placements; // forms that don't edit placements keep them
+  if ((req.body || {}).open_to_all === undefined && g.channel_id && g.channel_id === ex.channel_id) { g.open_to_all = ex.open_to_all ? 1 : 0; if (!g.open_to_all) g.require_join = 1; }
   if (ex.finalized_at) {
     const cur = giveawayGameIds(ex.id);
     const changed = ['start_at', 'end_at', 'min_score', 'win_method', 'winner_count'].filter(k => Number.isFinite(ex[k]) ? Number(ex[k]) !== Number(g[k]) : String(ex[k]) !== String(g[k]));
@@ -736,13 +714,7 @@ A.get('/export/bookings.csv', (req, res) => {
   sendCsv(res, 'bookings.csv', rows, ['id', 'brand', 'business_type', 'licensed_confirmed', 'contact_name', 'email', 'potato', 'contact', 'event_type', 'package', 'package_snapshot', 'addons', 'start_date', 'end_date', 'details', 'status', 'admin_note', 'created_at', 'is_demo']);
 });
 
-// hosting packages (prices/features shown on /host)
-A.get('/packages', (req, res) => res.json({ ok: true, ...PK.getPackages(), defaults: PK.DEFAULT_PACKAGES }));
-A.put('/packages', (req, res) => {
-  const [v, err] = PK.sanitize(req.body || {}); if (err) return bad(res, 400, err);
-  PK.savePackages(v); res.json({ ok: true, ...v });
-});
-A.post('/packages/reset', (req, res) => { PK.resetPackages(); res.json({ ok: true, ...PK.getPackages() }); });
+// v7: the public package/tier editor is replaced by the admin-only sponsor price sheet (/sponsor/prices in src/sponsor.js)
 A.get('/achievements', (req, res) => {
   const rr = ach.rarity();
   res.json({ ok: true, players: rr.total, unlocks: db.prepare('SELECT COUNT(*) AS c FROM user_achievements').get().c,
@@ -768,6 +740,8 @@ Object.assign(H, { requireUser, currentUser, publicRow });
 require('./v3')(app, A, H);
 Object.assign(H, { csv, sendCsv, sendCsvPaged, iso, giveawayPublic, ipHash });
 require('./v4')(app, A, H);
+require('./sponsor')(app, A, H); // v7 Sponsor a Host: feature picker, admin price sheet, quotes
+require('./brands').routes(app, A, H); // v7 brand affiliation (invite links, one brand per player)
 require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
 

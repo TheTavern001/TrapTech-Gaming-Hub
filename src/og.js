@@ -72,7 +72,7 @@ const templates = {
     ${T(60, 380, 34, '#e9e6ff', `${clip(d.username, 20)}${d.title ? ' • ' + clip(d.title, 22) : ''}`, { font: 'Exo 2', weight: 800 })}
     ${T(60, 430, 28, '#fde047', d.rank ? `#${d.rank} of ${d.players} players${d.best ? ' • personal best' : ''}` : 'New run', { font: 'Exo 2', weight: 800 })}
     <rect x="60" y="460" width="330" height="62" rx="31" fill="url(#nv)"/>${T(225, 501, 24, '#fff', 'CAN YOU BEAT IT?', { anchor: 'middle', weight: 800 })}`, { art: d.art }),
-  giveaway: (d) => frame(`${T(60, 180, 24, '#fde047', (d.tier ? d.tier.toUpperCase() + ' GIVEAWAY' : 'GIVEAWAY'), { weight: 700, ls: 3 })}
+  giveaway: (d) => frame(`${T(60, 180, 24, '#fde047', 'FREE GIVEAWAY', { weight: 700, ls: 3 })}
     ${T(60, 260, d.title.length > 18 ? 52 : 66, '#fff', clip(d.title, 26))}
     ${T(60, 320, 32, '#c7cdf5', `Hosted by ${clip(d.host, 28)}`, { font: 'Exo 2', weight: 800 })}
     ${T(60, 370, 28, '#22d3ee', d.when, { font: 'Exo 2', weight: 800 })}
