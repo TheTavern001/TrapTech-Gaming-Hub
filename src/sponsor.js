@@ -170,7 +170,7 @@ const publicCatalog = () => ({ groups: GROUPS, features: FEATURES.map(f => ({ id
 module.exports = function sponsor(app, A, h) {
   const { now, bad, currentUser, str, limiter, logActivity, ipHash } = h;
   h.placementsOf = placementsOf;
-  app.get('/api/sponsor/catalog', (req, res) => { const pk = PK.getPackages(); res.json({ ok: true, ...publicCatalog(), business_types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE, potato_handle: pk.potato_handle, faq: (pk.faq || []).filter(f => !/pay|price|cost/i.test(f[0])).concat([['When do I pay?', 'Not now. A request is free. Trap Tech looks at the features you picked and sends you a quote on your private status page. You only pay after you accept it, settled with Trap Tech Solutions on Potato.']]) }); });
+  app.get('/api/sponsor/catalog', (req, res) => { const pk = PK.getPackages(); res.json({ ok: true, ...publicCatalog(), business_types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE, potato_handle: pk.potato_handle, faq: (pk.faq || []).filter(f => !/pay|price|cost/i.test(f[0]) && !/\$\d|\b(basic|premium|elite|tiers?)\b/i.test(f.join(' '))).concat([['When do I pay?', 'Not now. A request is free. Trap Tech looks at the features you picked and sends you a quote on your private status page. You only pay after you accept it, settled with Trap Tech Solutions on Potato.']]) }); });
   const create = (req, res) => {
     const b = req.body || {};
     const brand = str(b.brand, 120); const email = str(b.email, 160).toLowerCase(); const potato = str(b.potato, 40).replace(/^@/, '');

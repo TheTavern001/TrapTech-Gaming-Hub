@@ -76,7 +76,7 @@ const DEFAULT_PACKAGES = {
   why_links: 'Outbound links are a paid feature because they send players off the hub to your website or Potato channel - that click is the most valuable thing we sell. Basic stays cheap by showing your name only; Premium adds one link; Elite puts links in three places.',
   multi_brand: [
     ['Every brand gets its own channel', 'Each sponsor has a channel page with its giveaways. Players follow the channels they like and can filter to them.'],
-    ['Placements rotate fairly', 'Only one Elite hero takeover runs at a time (booked by date). Premium and Elite share the Home Featured row in rotation, so no brand buries another.'],
+    ['Placements rotate fairly', 'Only one hero takeover runs at a time (booked by date). Featured-row sponsors share the Home Featured row in rotation, so no brand buries another.'],
     ['Players choose, not camp', 'Players can be entered in a limited number of giveaways at once and must pick which ones. Wins have cooldowns and a one-win-per-brand-per-month limit. Your entrants actually played and chose you.'],
     ['Alerts are capped', 'At most one push blast per day across all brands, so your alert isn\'t lost in a flood.'],
   ],
@@ -86,7 +86,7 @@ const DEFAULT_PACKAGES = {
     ['How are winners picked and contacted?', 'By the published rules: best score with fixed tiebreakers, or a verifiable random draw. Results lock automatically at the end time. Trap Tech verifies winners and contacts them on Potato.'],
     ['How do you stop giveaway camping and cheating?', 'Eligibility rules (recent activity, account age, max simultaneous entries, win cooldowns), seeded runs with server checks, and admin review of top entrants before any prize goes out.'],
     ['Are the casino-style games gambling?', 'No. Plinko, Spin to Win and Blazed Roulette use free points only. No real money, no purchase, no cash value.'],
-    ['What do I need to provide?', 'The prize, your dates, rules (age, regions), your brand name and prize photo. Premium and Elite also use your logo, colors and link. You deliver the prize and follow giveaway and advertising laws where you run it.'],
+    ['What do I need to provide?', 'The prize, your dates, rules (age, regions), your brand name and prize photo. Your logo, colors and links are used if you picked those features. You deliver the prize and follow giveaway and advertising laws where you run it.'],
     ['When do I pay?', 'Not now. A booking request is free. We confirm details and a quote with you on Potato before anything goes live.'],
   ],
 };

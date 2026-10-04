@@ -30,7 +30,7 @@ const env0 = loadEnv();
     console.log('# Sponsor a Host: public side has no tiers and no prices');
     r = await anon('/api/sponsor/catalog'); const cat = r.body;
     ok(cat.ok && cat.features.length >= 20 && cat.groups.length >= 5, `one combined feature list (${cat.features && cat.features.length} features in ${cat.groups && cat.groups.length} groups)`);
-    const catTxt = JSON.stringify(cat); ok(!/price|_cents|\$\d/i.test(catTxt.replace(/"faq":.*$/, '')) && !/\b(basic|premium|elite)\b/i.test(catTxt), 'catalog shows no prices and no tier names');
+    const catTxt = JSON.stringify(cat); ok(!/price|_cents|\$\d/i.test(catTxt.replace(/"faq":.*$/, '')) && !/\b(basic|premium|elite)\b/i.test(catTxt), 'catalog shows no prices and no tier names', (catTxt.replace(/"faq":.*$/, '').match(/.{0,60}(price|_cents|\$\d|\b(basic|premium|elite)\b).{0,30}/i) || [''])[0]);
     ok(!/\$\d/.test(JSON.stringify(cat.faq || [])), 'sponsor FAQ shows no prices');
     r = await anon('/api/packages'); ok(r.status === 404, 'old /api/packages (public price list) is gone');
     const js = await (await fetch(BASE + '/js/app.js')).text(); ok(!/\$\d+\s*\/\s*week|\bElite\b|\bPremium\b/.test(js), 'app.js has no public prices or tier names');
