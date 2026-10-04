@@ -3,6 +3,7 @@
 const { chromium } = require('playwright-core');
 const fs = require('fs'); const path = require('path');
 const BASE = process.env.BASE || 'http://localhost:8787';
+const AP = '/' + require('./admin-auth').loadEnv().ADMIN_PATH; // v7 secret admin path
 const SHOTS = path.join(__dirname, '..', 'screenshots');
 const V2 = path.join(SHOTS, 'v2'); const V3 = path.join(SHOTS, 'v3');
 fs.mkdirSync(V2, { recursive: true }); fs.mkdirSync(V3, { recursive: true });
@@ -431,20 +432,21 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   // ---------- admin ----------
   console.log('# admin');
   const a = await dctx.newPage(); watch(a, 'admin');
-  await a.goto(BASE + '/admin'); await a.waitForSelector('#pw');
-  await a.fill('#pw', 'wrong'); await a.click('#lf button'); await a.waitForSelector('.err'); ok(true, 'admin wrong password rejected');
-  await shot(a, 'desktop-10-admin-login'); ok((await a.textContent('.login')).includes('Powered by Trap Tech Solutions'), 'admin login: Powered by Trap Tech Solutions');
-  await a.fill('#pw', env.ADMIN_PASSWORD); await a.click('#lf button'); await a.waitForSelector('.stats');
+  { const r404 = await a.goto(BASE + AP + '/'); ok(r404.status() === 404, 'old /admin URL is a plain 404'); }
+  await a.goto(BASE + AP + '/'); await a.waitForSelector('#un');
+  await a.fill('#un', 'owner'); await a.fill('#pw', 'wrong'); await a.click('#f button'); await a.waitForSelector('.err'); ok(true, 'admin wrong password rejected');
+  await shot(a, 'desktop-10-admin-login'); ok(await a.isVisible('.aa-brand picture img'), 'admin sign-in page shows the Trap Tech lockup');
+  ok(await require('./admin-auth').browserLogin(a, BASE), 'admin signs in with password + authenticator code'); await a.waitForSelector('.stats');
   ok((await a.textContent('.amain')).includes('Total Players'), 'admin dashboard loads'); await shot(a, 'desktop-11-admin-dashboard', true);
   ok((await a.textContent('.tt-bar')).includes('Powered by Trap Tech Solutions') && await a.isVisible('.side-tt img'), 'admin header: Powered by Trap Tech Solutions'); await v3(a, 'd12-admin-dashboard');
   ok((await a.textContent('.amain')).includes('12/12 games live'), 'dashboard: 12/12 games live');
   console.log('# v5 admin: brand channels, grant badge, fair play');
-  await a.goto(BASE + '/admin/channels'); await a.waitForFunction(() => document.querySelector('.ahead h1')); await v5(a, 'admin-brand-channels');
-  await a.goto(BASE + '/admin/badges'); await a.waitForSelector('#bgf'); await a.fill('#bg-user', uname); await a.selectOption('#bg-badge', 'beta-tester'); await a.fill('#bg-note', 'UI test grant'); await a.click('#bg-grant'); await sleep(900);
+  await a.goto(BASE + AP + '/channels'); await a.waitForFunction(() => document.querySelector('.ahead h1')); await v5(a, 'admin-brand-channels');
+  await a.goto(BASE + AP + '/badges'); await a.waitForSelector('#bgf'); await a.fill('#bg-user', uname); await a.selectOption('#bg-badge', 'beta-tester'); await a.fill('#bg-note', 'UI test grant'); await a.click('#bg-grant'); await sleep(900);
   ok((await a.textContent('.amain')).includes(uname), 'admin grants a special badge (shows in holders/audit)'); await v5(a, 'admin-grant-badge', true);
   { const sb = await a.evaluate(async (u) => (await (await fetch('/api/users/' + u + '/special-badges')).json()).granted.map(b => b.id), uname); ok(sb.includes('beta-tester'), 'granted badge is visible on the public profile API', sb); }
   await a.click('#bg-revoke'); await sleep(700);
-  await a.goto(BASE + '/admin/fairplay'); await a.waitForSelector('#fp-tabs'); ok((await a.textContent('.amain')).includes('Nobody is ever banned automatically'), 'admin Fair Play queue (soft flags, no auto-bans)'); await v5(a, 'admin-fair-play', true);
+  await a.goto(BASE + AP + '/fairplay'); await a.waitForSelector('#fp-tabs'); ok((await a.textContent('.amain')).includes('Nobody is ever banned automatically'), 'admin Fair Play queue (soft flags, no auto-bans)'); await v5(a, 'admin-fair-play', true);
   console.log('# admin: one-click giveaway linking');
   await a.click('.side >> text=Games'); await a.waitForSelector('.agame');
   ok((await a.locator('.agame').count()) === 12, 'admin games page shows 12 game cards');
@@ -456,15 +458,15 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await shot(a, 'desktop-11b-admin-giveaway-picker');
   await a.click('#gf button[type=submit]'); await a.waitForSelector('#wcard'); const linkGid = a.url().split('/').pop();
   ok((await a.textContent('.amain')).includes('Live campaign stats'), 'manage page shows live campaign stats');
-  const linkedNow = await a.evaluate(async (id) => (await (await fetch('/api/admin/giveaways/' + id)).json()).giveaway.game_ids, linkGid);
+  const linkedNow = await a.evaluate(async (id) => (await (await fetch('/' + location.pathname.split('/')[1] + '/api/giveaways/' + id)).json()).giveaway.game_ids, linkGid);
   ok(linkedNow.join() === 'plinko,memory-match,high-score', 'saved giveaway counts the 3 picked games', linkedNow);
   await a.click('.side >> text=Games'); await a.waitForSelector('.agame');
   ok(await a.isChecked(`.agame[data-game=plinko] [data-link="${linkGid}"]`), 'plinko card shows the new giveaway linked (toggle on)');
   await a.click(`.agame[data-game=drift-rush] .glink[data-gw="${linkGid}"] .toggle span`); await a.waitForFunction((id) => document.querySelector(`.agame[data-game=drift-rush] [data-link="${id}"]`)?.checked, linkGid);
-  const after = await a.evaluate(async (id) => (await (await fetch('/api/admin/giveaways/' + id)).json()).giveaway.game_ids, linkGid);
+  const after = await a.evaluate(async (id) => (await (await fetch('/' + location.pathname.split('/')[1] + '/api/giveaways/' + id)).json()).giveaway.game_ids, linkGid);
   ok(after.includes('drift-rush'), 'toggle on Drift Rush card links it to the giveaway', after);
   await a.click(`.agame[data-game=high-score] .glink[data-gw="${linkGid}"] .toggle span`); await a.waitForFunction((id) => !document.querySelector(`.agame[data-game=high-score] [data-link="${id}"]`)?.checked, linkGid);
-  ok(!(await a.evaluate(async (id) => (await (await fetch('/api/admin/giveaways/' + id)).json()).giveaway.game_ids, linkGid)).includes('high-score'), 'toggle off unlinks High Score');
+  ok(!(await a.evaluate(async (id) => (await (await fetch('/' + location.pathname.split('/')[1] + '/api/giveaways/' + id)).json()).giveaway.game_ids, linkGid)).includes('high-score'), 'toggle off unlinks High Score');
   await shot(a, 'desktop-11c-admin-games-linking', true);
   // create giveaway
   await a.click('.side >> text=Giveaways'); await a.waitForSelector('.tbl'); await a.click('text=New Giveaway');
@@ -525,7 +527,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await shot(a, 'desktop-14-admin-players');
   await a.click('.side >> text=Leaderboards'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Leaderboards'); await a.selectOption('#p', 'weekly'); await sleep(600); ok((await a.textContent('.tbl')).includes(uname), 'admin weekly leaderboard');
   await a.click('.side >> text=Reports'); await a.waitForSelector('.stat'); await shot(a, 'desktop-15-admin-reports');
-  const runsCsv = await a.evaluate(async () => (await fetch('/api/admin/export/runs.csv')).text()); ok(runsCsv.includes(uname), 'runs CSV export');
+  const runsCsv = await a.evaluate(async () => (await fetch('/' + location.pathname.split('/')[1] + '/api/export/runs.csv')).text()); ok(runsCsv.includes(uname), 'runs CSV export');
   await a.click('.side >> text=Announcements'); await a.fill('#at', 'UI test announcement'); await a.fill('#ab', 'hello'); await a.click('#af button'); await sleep(700);
   ok((await a.textContent('.amain')).includes('UI test announcement'), 'admin posts announcement');
   console.log('# v3: admin tournaments');
@@ -538,13 +540,13 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await a.locator('tr', { hasText: 'UI Test Cup' }).textContent()).includes('live'), 'admin creates a live timed tournament');
   await v3(a, 'd14-admin-tournaments');
   // admin mobile layout
-  const am = await mctx.newPage(); watch(am, 'admin-mobile'); await am.goto(BASE + '/admin'); await am.fill('#pw', env.ADMIN_PASSWORD); await am.click('#lf button'); await am.waitForSelector('.stats'); await shot(am, 'mobile-16-admin-dashboard');
+  const am = await mctx.newPage(); watch(am, 'admin-mobile'); await require('./admin-auth').browserLogin(am, BASE); await am.waitForSelector('.stats'); await shot(am, 'mobile-16-admin-dashboard');
   await am.goto(gidUrl); await am.waitForSelector('#gf'); await shot(am, 'mobile-17-admin-manage-giveaway');
-  await am.goto(BASE + '/admin/games'); await am.waitForSelector('.agame'); await am.evaluate(() => document.querySelector('.agame[data-game=drift-rush]').scrollIntoView()); await v2(am, 'admin-game-giveaway-linking');
+  await am.goto(BASE + AP + '/games'); await am.waitForSelector('.agame'); await am.evaluate(() => document.querySelector('.agame[data-game=drift-rush]').scrollIntoView()); await v2(am, 'admin-game-giveaway-linking');
   await am.evaluate(() => document.querySelector('.agame[data-game=plinko]').scrollIntoView()); await v2(am, 'admin-game-giveaway-linking-2');
-  await am.goto(BASE + '/admin/giveaways/new?game=terp-tapper'); await am.waitForSelector('#gpk'); await am.click('#gpk .gp[data-g=spin-to-win]'); await am.evaluate(() => document.getElementById('gpk').scrollIntoView({ block: 'center' })); await v2(am, 'admin-giveaway-game-picker');
-  await am.goto(BASE + '/admin/settings'); await am.waitForSelector('#pkg-editor'); await v2(am, 'admin-package-editor');
-  await am.goto(BASE + '/admin/tournaments'); await am.waitForSelector('#tf'); await v3(am, 'm33-admin-tournaments');
+  await am.goto(BASE + AP + '/giveaways/new?game=terp-tapper'); await am.waitForSelector('#gpk'); await am.click('#gpk .gp[data-g=spin-to-win]'); await am.evaluate(() => document.getElementById('gpk').scrollIntoView({ block: 'center' })); await v2(am, 'admin-giveaway-game-picker');
+  await am.goto(BASE + AP + '/settings'); await am.waitForSelector('#pkg-editor'); await v2(am, 'admin-package-editor');
+  await am.goto(BASE + AP + '/tournaments'); await am.waitForSelector('#tf'); await v3(am, 'm33-admin-tournaments');
 
   // ---------- cleanup of UI test data (keeps demo data) ----------
   if (!process.env.KEEP) {
@@ -552,11 +554,11 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
     const res = await a.evaluate(async (uname) => {
       const j = (u, o) => fetch(u, o).then(r => r.json());
       const out = [];
-      const gs = await j('/api/admin/giveaways'); for (const g of gs.giveaways.filter(g => g.title.startsWith('UI Test'))) { await fetch('/api/admin/giveaways/' + g.id, { method: 'DELETE' }); out.push('giveaway ' + g.id); }
-      const bs = await j('/api/admin/bookings'); for (const b of bs.bookings.filter(b => b.brand.startsWith('UI Test Brand'))) { await fetch('/api/admin/bookings/' + b.id, { method: 'DELETE' }); out.push('booking ' + b.id); }
-      const ts = await j('/api/admin/tournaments'); for (const t of ts.tournaments.filter(t => t.title.startsWith('UI Test'))) { await fetch('/api/admin/tournaments/' + t.id, { method: 'DELETE' }); out.push('tournament ' + t.id); }
-      const an = await j('/api/admin/announcements'); for (const x of an.announcements.filter(x => x.title === 'UI test announcement')) { await fetch('/api/admin/announcements/' + x.id, { method: 'DELETE' }); out.push('announcement'); }
-      const ps = await j('/api/admin/players?q=ui_'); for (const p of ps.players.filter(p => p.username.startsWith('ui_'))) { await fetch('/api/admin/players/' + p.id, { method: 'DELETE' }); out.push('player ' + p.username); }
+      const gs = await j('/' + location.pathname.split('/')[1] + '/api/giveaways'); for (const g of gs.giveaways.filter(g => g.title.startsWith('UI Test'))) { await fetch('/' + location.pathname.split('/')[1] + '/api/giveaways/' + g.id, { method: 'DELETE', headers: { 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content } }); out.push('giveaway ' + g.id); }
+      const bs = await j('/' + location.pathname.split('/')[1] + '/api/bookings'); for (const b of bs.bookings.filter(b => b.brand.startsWith('UI Test Brand'))) { await fetch('/' + location.pathname.split('/')[1] + '/api/bookings/' + b.id, { method: 'DELETE', headers: { 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content } }); out.push('booking ' + b.id); }
+      const ts = await j('/' + location.pathname.split('/')[1] + '/api/tournaments'); for (const t of ts.tournaments.filter(t => t.title.startsWith('UI Test'))) { await fetch('/' + location.pathname.split('/')[1] + '/api/tournaments/' + t.id, { method: 'DELETE', headers: { 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content } }); out.push('tournament ' + t.id); }
+      const an = await j('/' + location.pathname.split('/')[1] + '/api/announcements'); for (const x of an.announcements.filter(x => x.title === 'UI test announcement')) { await fetch('/' + location.pathname.split('/')[1] + '/api/announcements/' + x.id, { method: 'DELETE', headers: { 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content } }); out.push('announcement'); }
+      const ps = await j('/' + location.pathname.split('/')[1] + '/api/players?q=ui_'); for (const p of ps.players.filter(p => p.username.startsWith('ui_'))) { await fetch('/' + location.pathname.split('/')[1] + '/api/players/' + p.id, { method: 'DELETE', headers: { 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content } }); out.push('player ' + p.username); }
       return out;
     }, uname);
     console.log('  removed', res.join(', '));

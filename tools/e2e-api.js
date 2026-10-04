@@ -4,6 +4,7 @@ const fs = require('fs'); const path = require('path');
 const BASE = process.env.BASE || 'http://localhost:8787';
 const ENV_FILE = path.join(__dirname, '..', '.env');
 const env = { ...(fs.existsSync(ENV_FILE) ? Object.fromEntries(fs.readFileSync(ENV_FILE, 'utf8').split('\n').filter(Boolean).map(l => l.split(/=(.*)/s).slice(0, 2))) : {}), ...(process.env.ADMIN_PASSWORD ? { ADMIN_PASSWORD: process.env.ADMIN_PASSWORD } : {}) };
+const AP = '/' + (process.env.ADMIN_PATH || env.ADMIN_PATH); // v7 secret admin path
 let pass = 0, fail = 0;
 const ok = (cond, msg, extra) => { if (cond) { pass++; console.log('  PASS', msg); } else { fail++; console.log('  FAIL', msg, extra !== undefined ? JSON.stringify(extra).slice(0, 300) : ''); } };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -18,7 +19,7 @@ function client() {
 }
 (async () => {
   console.log('BASE', BASE);
-  const A = client(), B = client(), ADM = client(), anon = client();
+  const A = client(), B = client(), ADM = require('./admin-auth').adminClient(BASE), anon = client(); // v7: secret admin path + TOTP + CSRF (tools/admin-auth.js)
   const ua = 'e2e_' + Math.random().toString(36).slice(2, 8), ub = 'e2e_' + Math.random().toString(36).slice(2, 8);
   console.log('# accounts');
   let r = await A('/api/auth/signup', { body: { username: 'bad name', password: 'x', agree: true, dob: '1990-05-05' } }); ok(r.status === 400, 'signup rejects invalid username');
@@ -33,8 +34,9 @@ function client() {
 
   console.log('# admin + giveaway');
   r = await ADM('/api/admin/stats'); ok(r.status === 401, 'admin API requires login');
-  r = await ADM('/api/admin/login', { body: { password: 'nope' } }); ok(r.status === 401, 'wrong admin password rejected');
-  r = await ADM('/api/admin/login', { body: { password: env.ADMIN_PASSWORD } }); ok(r.body.ok, 'admin login');
+  r = await ADM('/api/admin/login', { body: { username: 'owner', password: 'nope' } }); ok(r.status === 401, 'wrong admin password rejected');
+  r = await ADM.login(); ok(r.body.ok, 'admin login (password + authenticator code)', r.body);
+  r = await anon('/api/admin/stats'); ok(r.status === 404, 'old /api/admin path is a plain 404 (admin lives at the secret ADMIN_PATH)');
   const t0 = Date.now();
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Test Giveaway', host: 'Test Host', prize: 'Bragging rights', image: '/assets/giveaways/ps5-bundle-art.webp', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', rules: 'test', active: true } });
   ok(r.body.ok, 'admin creates giveaway'); const gid = r.body.id;
@@ -85,7 +87,7 @@ function client() {
   r = await ADM(`/api/admin/export/leaderboard.csv?giveaway=${gid}`); ok(r.ct.includes('text/csv') && r.body.includes(ua) && r.body.split('\n')[0].startsWith('rank,username,score'), 'giveaway entrants CSV export');
   r = await ADM('/api/admin/export/runs.csv'); ok(r.body.includes(ua), 'runs CSV export');
   r = await ADM('/api/admin/export/leaderboard.csv?game=jetpack-dash&period=weekly'); ok(r.body.includes(ua), 'leaderboard CSV export');
-  r = await anon('/api/admin/export/runs.csv'); ok(r.status === 401, 'CSV export requires admin');
+  r = await anon(AP + '/api/export/runs.csv'); ok(r.status === 401, 'CSV export requires admin');
 
   console.log('# v4: final standings lock + winner workflow');
   const crypto = require('crypto'); const sha = (x) => crypto.createHash('sha256').update(x).digest('hex');
@@ -116,7 +118,7 @@ function client() {
   r = await ADM(`/api/admin/export/giveaway/${gshort}/final.csv`); ok(r.ct.includes('text/csv') && r.body.split('\r\n')[0].startsWith('rank,place,username,score,best_run_id,reached_at,attempts') && r.body.includes(',confirmed,'), 'final standings CSV');
   r = await ADM(`/api/admin/export/giveaway/${gshort}/runs.csv`); ok(r.body.split('\r\n')[0].startsWith('giveaway_id,username') && r.body.includes(ua) && r.body.includes(ub), 'all entrants + runs CSV');
   r = await ADM(`/api/admin/export/giveaway/${gid}/final.csv`); ok(r.status === 409, 'final CSV only after the lock');
-  r = await anon(`/api/admin/export/giveaway/${gshort}/final.csv`); ok(r.status === 401, 'exports require admin');
+  r = await anon(`${AP}/api/export/giveaway/${gshort}/final.csv`); ok(r.status === 401, 'exports require admin');
   r = await ADM(`/api/admin/giveaways/${gshort}`); const gsa = r.body.giveaway;
   const putBody = (x) => ({ title: gsa.title, host: gsa.host, prize: gsa.prize, image: gsa.image, start_at: gsa.start_at, end_at: gsa.end_at, game_ids: gsa.game_ids, rules: gsa.rules, active: true, ...x });
   r = await ADM(`/api/admin/giveaways/${gshort}`, { method: 'PUT', body: putBody({ end_at: gsa.end_at + 3600e3 }) }); ok(r.status === 409, 'locked giveaway: end time cannot change');
@@ -453,7 +455,7 @@ function client() {
   ok(achs.find(a => a.id === 'ref-1').name === 'Crew Builder' && achs.find(a => a.id === 'ref-5').name === 'Squad Goals', 'referral badges renamed (Crew Builder, Squad Goals)');
   r = await anon('/badges/leg-top1.svg'); ok(r.status === 200 && r.ct.includes('svg') && String(r.body).includes('<path'), 'unique badge art served as SVG');
   const a1 = (await anon('/badges/runs-10.svg')).body, a2 = (await anon('/badges/runs-50.svg')).body; ok(a1 !== a2, 'each badge has different art');
-  r = await anon('/api/admin/badges'); ok(r.status === 401, 'badge admin needs admin login');
+  r = await anon(AP + '/api/badges'); ok(r.status === 401, 'badge admin needs admin login');
   r = await D('/api/me/cosmetics', { body: { badge: 'adm:staff' } }); ok(r.status === 403, 'players cannot equip admin badges they were not granted');
   r = await ADM('/api/admin/badges/grant', { body: { username: ud, badge: 'verified-host', note: 'E2E grant' } }); ok(r.body.ok, 'admin grants "Verified Host"');
   r = await ADM('/api/admin/badges/grant', { body: { username: ud, badge: 'verified-host' } }); ok(r.status === 409, 'double grant refused');

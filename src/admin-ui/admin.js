@@ -2,6 +2,7 @@ import { icon } from '/js/icons.js';
 // v7: served only from the secret admin path (src/admin-sec.js rewrites '/admin' + '/api/admin' to it at serve time).
 const AP = '/admin';
 const CSRF = (document.querySelector('meta[name=csrf]') || {}).content || '';
+const ME_EL = document.querySelector('meta[name=admin-user]'); const ME = { username: ME_EL ? ME_EL.content : '', role: ME_EL ? ME_EL.dataset.role : '', name: ME_EL ? ME_EL.dataset.name : '' };
 const $ = (s, r = document) => r.querySelector(s);
 const root = document.getElementById('admin');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -30,7 +31,7 @@ function frame(section, title, inner, actions = '') {
       ${NAV.map(([k, i, l]) => `<a href="/admin${k ? '/' + k : ''}" class="${section === k ? 'on' : ''}">${icon(i)}${l}</a>`).join('')}
       <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a>
       <div class="side-tt"><span>Powered by</span><picture><source type="image/webp" srcset="/assets/brand/tt-horizontal-360.webp"><img src="/assets/brand/tt-horizontal-920.png" alt="Trap Tech Solutions" width="150" height="40"></picture></div></aside>
-    <main class="amain"><div class="tt-bar"><picture><source type="image/webp" srcset="/assets/brand/tt-mono-80.webp"><img src="/assets/brand/tt-mono-192.png" alt="" width="18" height="24" style="height:24px;width:auto;vertical-align:-7px"></picture> Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v7</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">TT</span><div><b>TrapTech Admin</b><div class="small muted">Admin</div></div></div></div>${inner}</main></div>`;
+    <main class="amain"><div class="tt-bar"><picture><source type="image/webp" srcset="/assets/brand/tt-mono-80.webp"><img src="/assets/brand/tt-mono-192.png" alt="" width="18" height="24" style="height:24px;width:auto;vertical-align:-7px"></picture> Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v7</span></div><div class="ahead"><h1>${title}</h1>${actions}<div class="who mini-row" style="margin:0"><span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">${esc((ME.name || 'TT').slice(0, 2).toUpperCase())}</span><div><b>${esc(ME.name || ME.username)}</b><div class="small muted" style="text-transform:capitalize">${esc(ME.role || 'admin')}</div></div></div></div>${inner}</main></div>`;
 }
 document.addEventListener('click', async (e) => {
   if (e.target.closest('[data-logout]')) { e.preventDefault(); await fetch('/api/admin/logout', { method: 'POST', headers: { 'X-CSRF-Token': CSRF } }); return loginView(); }
@@ -98,11 +99,11 @@ async function games() {
       <div class="agh"><img src="${g.art}" alt=""><div><b>${esc(g.title)}</b><div class="small muted">${esc(g.category)} • <span class="pill green">LIVE</span></div></div></div>
       <div class="agstats"><div><b>${fmt(g.runs)}</b><span>runs</span></div><div><b>${fmt(g.players)}</b><span>players</span></div><div><b>${fmt(g.best)}${unit(g)}</b><span>best</span></div></div>
       <div class="small muted agac">Anti-cheat: max ${fmt(g.ac.perSec)}${unit(g)}/s${g.ac.max < 1e7 ? `, cap ${fmt(g.ac.max)}` : ''}</div>
-      <a class="btn block sm" href="/admin/giveaways/new?game=${g.id}" data-create="${g.id}">${icon('plus')} Create giveaway for this game</a>
+      ${g.giveaway === false ? `<div class="small muted agfun" data-fun="${g.id}">${icon('dices')} <b>Just for fun.</b> This is a chance game, so it can't be linked to giveaways. Giveaways only use skill-based, endless games.</div>` : `<a class="btn block sm" href="/admin/giveaways/new?game=${g.id}" data-create="${g.id}">${icon('plus')} Create giveaway for this game</a>
       <div class="aglinks"><div class="small muted" style="margin:10px 0 4px">${icon('link')} Linked giveaways</div>
         ${g.giveaways.length ? g.giveaways.map(x => `<label class="glink ${x.linked ? 'on' : ''}" data-gw="${x.id}"><span class="toggle"><input type="checkbox" data-link="${x.id}" data-game="${g.id}" ${x.linked ? 'checked' : ''}><span></span></span>
           <span class="gl-t"><b>${esc(x.title)}</b>${demoTag(x.demo)}<span class="small muted">${statusPill(x.status)} ${x.games} game${x.games === 1 ? '' : 's'}${x.active ? '' : ' • hidden'}</span></span></label>`).join('')
-          : '<div class="small muted">No live or upcoming giveaways.</div>'}</div>
+          : '<div class="small muted">No live or upcoming giveaways.</div>'}</div>`}
     </div>`).join('')}</div>`, `<a class="btn sm" href="/admin/giveaways/new">${icon('plus')} New Giveaway</a>`);
   root.querySelector('.ggrid').addEventListener('change', async (e) => {
     const cb = e.target.closest('[data-link]'); if (!cb) return;
@@ -123,7 +124,7 @@ async function giveaways() {
 const IMAGES = ['/assets/giveaways/store-credit-art.webp', '/assets/giveaways/ps5-bundle-art.webp', '/assets/brand/hero-banner.webp', '/assets/cards/v5/jetpack-dash.webp', '/assets/cards/v5/drift-rush.webp', '/assets/cards/v5/plinko.webp', '/assets/cards/v5/spin-to-win.webp', '/assets/cards/v5/memory-match.webp', '/assets/cards/v5/blazed-roulette.webp', '/assets/cards/v5/terp-tapper.webp'];
 async function manageGiveaway(id) {
   const isNew = id === 'new';
-  const pre = new URLSearchParams(location.search).get('game'); const preG = GAMES.find(x => x.id === pre);
+  const pre = new URLSearchParams(location.search).get('game'); const preG = GAMES.find(x => x.id === pre && x.giveaway !== false);
   let g = { title: preG ? `${preG.title} Giveaway` : '', host: '', prize: '', image: preG ? preG.art : IMAGES[0], start_at: nowS(), end_at: nowS() + 7 * 864e5, game_ids: [preG ? preG.id : 'jetpack-dash'], rules: 'Must be 18+ (21+ where required). No purchase necessary. One account per person. Winners are contacted by Trap Tech on Potato.', active: true,
     tier: 'basic', brand_color: '', brand_logo: '', featured: false, min_score: 0, prize_tiers_raw: '' };
   let entrants = [], stats = null;
@@ -147,7 +148,7 @@ async function manageGiveaway(id) {
           <div class="field"><label class="lbl">Start Date & Time</label><input class="input" type="datetime-local" id="start" value="${toLocalInput(g.start_at)}" ${lockA}></div>
           <div class="field"><label class="lbl">End Date & Time</label><input class="input" type="datetime-local" id="end" value="${toLocalInput(g.end_at)}" ${lockA}></div>
           ${g.finalized_at ? `<div class="field full"><div class="hint lockhint">${icon('lock')} Final standings were locked ${dt(g.finalized_at)}. Dates, games, minimum score and winner rules can no longer change.</div></div>` : ''}
-          <div class="field full"><label class="lbl">Games that count <span class="muted small" id="gpn"></span></label><div class="gpicker" id="gpk">${GAMES.map(x => `<button type="button" class="gp ${sel.has(x.id) ? 'on' : ''}" data-g="${x.id}" aria-pressed="${sel.has(x.id)}"><span class="ck">${icon('check')}</span><img src="${x.art}" alt=""><b>${esc(x.title)}</b></button>`).join('')}</div>
+          <div class="field full"><label class="lbl">Games that count <span class="muted small" id="gpn"></span></label><div class="gpicker" id="gpk">${GAMES.filter(x => x.giveaway !== false).map(x => `<button type="button" class="gp ${sel.has(x.id) ? 'on' : ''}" data-g="${x.id}" aria-pressed="${sel.has(x.id)}"><span class="ck">${icon('check')}</span><img src="${x.art}" alt=""><b>${esc(x.title)}</b></button>`).join('')}</div>
             <div class="hint" style="margin:6px 0 0">Tap to select one or more games. With several games, a player's giveaway score is the sum of their best score in each.</div></div>
           <div class="field"><label class="lbl">Package tier</label><select class="input" id="tier">${[['', 'None'], ['basic', 'Basic'], ['premium', 'Premium'], ['elite', 'Elite']].map(([k, l]) => `<option value="${k}" ${g.tier === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
           <div class="field"><label class="lbl">Minimum score to qualify</label><input class="input" type="number" min="0" id="minscore" value="${g.min_score || 0}" ${lockA}></div>
@@ -214,7 +215,7 @@ async function manageGiveaway(id) {
   paintGp();
   $('#gf').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const body = { title: $('#title').value, host: $('#host').value, prize: $('#prize').value, image: $('#img').value.trim(), start_at: new Date($('#start').value).getTime(), end_at: new Date($('#end').value).getTime(), entry_method: 'play', game_ids: GAMES.map(x => x.id).filter(k => sel.has(k)), rules: $('#rules').value, active: $('#active').checked,
+    const body = { title: $('#title').value, host: $('#host').value, prize: $('#prize').value, image: $('#img').value.trim(), start_at: new Date($('#start').value).getTime(), end_at: new Date($('#end').value).getTime(), entry_method: 'play', game_ids: GAMES.filter(x => x.giveaway !== false).map(x => x.id).filter(k => sel.has(k)), rules: $('#rules').value, active: $('#active').checked,
       tier: $('#tier').value, min_score: +$('#minscore').value || 0, brand_color: $('#usecolor').checked ? $('#bcolor').value : '', brand_logo: $('#blogo').value.trim(), featured: $('#featured').checked, prize_tiers: $('#ptiers').value, win_method: $('#wmethod').value, winner_count: +$('#wcount').value || 0,
       channel_id: $('#chan').value || null, link_url: $('#glink').value.trim(), link_label: $('#glinkl').value.trim(), require_join: $('#e-join').checked, elig_min_runs7: +$('#e-runs').value || 0, elig_account_age_days: +$('#e-age').value || 0,
       elig_max_active: +$('#e-max').value || 0, elig_win_cooldown_days: +$('#e-cool').value || 0, elig_min_xp7: +$('#e-xp').value || 0, elig_brand_month: $('#e-brand').checked, elig_followers_only: $('#e-fol').checked, weight_mode: $('#e-w').checked ? 'activity' : '' };
@@ -506,12 +507,14 @@ async function security() {
   const r = await api('/api/admin/security');
   const EV = { 'login-ok': ['log-in', 'green', 'Signed in'], 'password-ok': ['fingerprint', '', 'Password OK, waiting for code'], 'login-fail': ['circle-x', 'red', 'Wrong password'], 'totp-fail': ['circle-x', 'red', 'Wrong authenticator code'],
     'locked-out': ['lock', 'red', 'Blocked (locked out)'], 'rate-limited': ['timer', 'red', 'Rate limited'], 'reset-ok': ['shield-plus', 'green', 'Reset with ADMIN_RESET_TOKEN'], 'reset-fail': ['circle-x', 'red', 'Wrong reset token'],
-    'logout': ['log-out', '', 'Signed out'], 'logout-all': ['log-out', '', 'Signed out everywhere'], 'password-changed': ['fingerprint', 'green', 'Password changed'], 'password-change-fail': ['circle-x', 'red', 'Password change refused'], 'backup-codes-regenerated': ['refresh-cw', '', 'New backup codes'] };
+    'logout': ['log-out', '', 'Signed out'], 'logout-all': ['log-out', '', 'Signed out everywhere'], 'password-changed': ['fingerprint', 'green', 'Password changed'], 'password-change-fail': ['circle-x', 'red', 'Password change refused'], 'backup-codes-regenerated': ['refresh-cw', '', 'New backup codes'], 'account-created': ['user-plus', 'green', 'Admin account created'], 'account-updated': ['user-check', '', 'Admin account changed'], 'account-reset': ['shield-plus', '', 'Admin sign-in reset by owner'], 'account-removed': ['user-x', 'red', 'Admin account removed'] };
   frame('security', 'Security', `
     <div class="grid2" style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
       <div class="card pad"><h2 style="margin-top:0">${icon('shield-check')} Sign-in protection</h2>
         <ul class="small" style="margin:0;padding-left:18px;line-height:1.7">
           <li>Secret admin address (ADMIN_PATH). Old /admin links return 404.</li>
+          <li>Signed in as <b>${esc(r.account.username)}</b> (${esc(r.account.role)})</li>
+          ${r.account.must_change ? '<li style="color:#fcd34d"><b>You are using a temporary password. Choose your own below.</b></li>' : ''}
           <li>Password: <b>${esc(r.password_source)}</b>${r.password_set_at ? ' (changed ' + ago(r.password_set_at) + ')' : ''}</li>
           <li>Authenticator app: <b>${r.totp_enrolled_at ? 'on since ' + dt(r.totp_enrolled_at) : 'not set up'}</b></li>
           <li>Backup codes left: <b>${r.backup_codes_left}</b></li>
@@ -528,12 +531,12 @@ async function security() {
         <p class="tiny muted">Stored as a bcrypt hash in the database; it replaces the ADMIN_PASSWORD env var from now on.</p></div>
       <div class="card pad"><h2 style="margin-top:0">${icon('refresh-cw')} Backup codes &amp; sessions</h2>
         <form id="bcf" style="display:grid;gap:8px"><input class="input" id="bc-code" placeholder="Authenticator code" inputmode="numeric" maxlength="6" required><button class="btn ghost">Make 10 new backup codes</button></form><pre id="bc-out" class="small" style="white-space:pre-wrap"></pre>
-        <p class="small" style="margin:10px 0 6px">${r.sessions.length} active admin session${r.sessions.length === 1 ? '' : 's'}</p>
+        <p class="small" style="margin:10px 0 6px">${r.sessions.length} active session${r.sessions.length === 1 ? '' : 's'} on your account</p>
         <button class="btn ghost sm" id="lo-all">${icon('log-out')} Sign out all sessions</button></div>
     </div>
     <div class="card" style="margin-top:16px"><div class="panel-h"><h2>${icon('scroll-text')} Sign-in audit log</h2><span class="small muted">last 200 events</span></div>
-      <div class="wrap-x"><table class="tbl" id="sec-log"><thead><tr><th>When</th><th>Event</th><th>Network</th><th>Device</th></tr></thead><tbody>
-      ${r.log.map(l => { const e = EV[l.event] || ['circle-dot', '', l.event]; return `<tr data-ev="${esc(l.event)}"><td class="small" style="white-space:nowrap">${dt(l.at)}</td><td><span class="pill ${e[1]}">${icon(e[0])} ${esc(e[2])}</span>${l.detail ? `<div class="tiny muted">${esc(l.detail)}</div>` : ''}</td><td class="small">${esc(l.ip_hint)}</td><td class="tiny muted">${esc((l.ua || '').slice(0, 70))}</td></tr>`; }).join('') || '<tr><td colspan="4" class="empty">No events yet.</td></tr>'}
+      <div class="wrap-x"><table class="tbl" id="sec-log"><thead><tr><th>When</th><th>Account</th><th>Event</th><th>Network</th><th>Device</th></tr></thead><tbody>
+      ${r.log.map(l => { const e = EV[l.event] || ['circle-dot', '', l.event]; return `<tr data-ev="${esc(l.event)}"><td class="small" style="white-space:nowrap">${dt(l.at)}</td><td class="small">${esc(l.username || '-')}</td><td><span class="pill ${e[1]}">${icon(e[0])} ${esc(e[2])}</span>${l.detail ? `<div class="tiny muted">${esc(l.detail)}</div>` : ''}</td><td class="small">${esc(l.ip_hint)}</td><td class="tiny muted">${esc((l.ua || '').slice(0, 70))}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">No events yet.</td></tr>'}
       </tbody></table></div></div>`);
   $('#pwf').onsubmit = async (e) => {
     e.preventDefault(); const x = await api('/api/admin/security/password', { method: 'POST', body: { current: $('#pw-cur').value, new_password: $('#pw-new').value, code: $('#pw-code').value } });
