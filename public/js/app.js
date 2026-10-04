@@ -31,6 +31,13 @@ function avatar(name, demo, cls = '') {
   const a = h % 360, b = (a + 60) % 360;
   return `<span class="av ${cls}" style="background:linear-gradient(135deg,hsl(${a} 80% 55%),hsl(${b} 80% 40%))">${esc(String(name).slice(0, 2).toUpperCase())}</span>`;
 }
+// v7: Trap Tech Solutions brand art (cut from Reese's own logos by tools/build-brand-v7.py). WebP srcset + PNG fallback.
+const TT_ART = { mono: [[40, 80, 192], 146 / 192, 192], horizontal: [[180, 360, 920], 920 / 248, 920], lockup: [[300, 600], 600 / 410, 600], chrome: [[280, 560], 560 / 121, 560], badge: [[128, 256], 1, 256] };
+function TT(k, h, cls = '', alt = 'Trap Tech Solutions') {
+  const [ws, ar, png] = TT_ART[k]; const w = Math.round(h * ar); const byH = k === 'mono';
+  const set = ws.map(n => `/assets/brand/tt-${k}-${n}.webp ${byH ? Math.round(n * ar) : n}w`).join(', ');
+  return `<picture class="ttp ttp-${k} ${cls}"><source type="image/webp" srcset="${set}" sizes="${w}px"><img src="/assets/brand/tt-${k}-${png}.png" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async"></picture>`;
+}
 // equipped cosmetics (banner / frame / title / badge) - cosmetic only, no cash value
 function framed(name, demo, cos, cls = '') { const f = (cos && cos.frame) || 'none'; return `<span class="frame fr-${esc(f)} ${cls ? 'f-' + cls : ''}">${avatar(name, demo, cls)}</span>`; }
 const badgeIcon = (b) => b ? `<span class="eqbadge t-${esc(b.tier)}" title="${esc(b.name)}${b.tier === 'admin' ? ' (granted by the Trap Tech team)' : ''}">${icon(b.icon)}</span>` : '';
@@ -85,7 +92,7 @@ function topbar(path) {
   const act = navActive(path);
   return `<header class="topbar">
     <button class="iconbtn menu-btn" data-act="menu" aria-label="Open menu">${icon('menu')}</button>
-    <a href="/" aria-label="The Gaming Hub home"><img class="logo" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub by Trap Tech Solutions" width="150" height="35"></a>
+    <a href="/" aria-label="The Gaming Hub home"><img class="logo" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="150" height="28"></a><a class="hd-tt" href="/about" aria-label="By Trap Tech Solutions"><span>by</span>${TT('mono', 30, 'only-ph')}${TT('horizontal', 30, 'only-wide')}</a>
     <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/host" class="${path.startsWith('/host') || path.startsWith('/book') ? 'on' : ''}">${icon('briefcase')}Host</a></nav>
     <span class="spacer"></span>
     ${S.me && S.me.streak && S.me.streak.current ? `<a class="streak-chip" href="/quests" aria-label="${S.me.streak.current}-day streak - daily quests">${icon('flame')}<b>${S.me.streak.current}</b></a>` : ''}
@@ -99,7 +106,7 @@ const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/host', 'Host a giveaway'],
 function footer() {
   return `<footer class="site-foot" role="contentinfo">
     <div class="sf-in">
-      <a class="sf-brand" href="/about" aria-label="About Trap Tech Solutions"><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions" width="200" height="22"><span>Built by Trap Tech Solutions</span></a>
+      <a class="sf-brand" href="/about" aria-label="About Trap Tech Solutions">${TT('horizontal', 54)}<span>Built by Trap Tech Solutions</span></a>
       <nav class="sf-links" aria-label="Footer">${FOOT_LINKS.map(([h, l]) => `<a href="${h}">${l}</a>`).join('')}</nav>
       <p class="sf-note">21+ only. No purchase necessary to enter or win. Points, XP and cosmetics have no cash value. © ${new Date().getFullYear()} Trap Tech Solutions. The Gaming Hub is powered by Trap Tech.</p>
     </div></footer>`;
@@ -159,7 +166,7 @@ function openMenu() {
     <a href="/about">${icon('building-2')}About Trap Tech</a>
     <a href="/admin">${icon('layout-dashboard')}Admin</a>
     <div class="dr-legal"><a href="/terms">Terms</a> • <a href="/privacy">Privacy</a> • <a href="/rules">Rules</a> • <a href="/responsible-play">Responsible play</a></div>
-    <a class="dr-tt" href="/about"><span>Built by</span><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions" width="150" height="16"></a>
+    <a class="dr-tt" href="/about"><span>Built by</span>${TT('horizontal', 44)}</a>
   </div><div style="flex:1" data-close></div>`;
   d.addEventListener('click', (e) => { if (e.target.closest('a, button') || e.target.hasAttribute('data-close')) setTimeout(() => d.remove(), 0); });
   d.addEventListener('keydown', (e) => { if (e.key === 'Escape') d.remove(); });
@@ -227,13 +234,13 @@ function ageGate() {
   setTitle('Age check');
   const blocked = ss.getItem('gh_age_block') === '1';
   $app.innerHTML = `<div class="gate" role="dialog" aria-labelledby="gate-h">
-    <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub by Trap Tech Solutions" width="220" height="144">
+    <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub" width="220" height="130">
     ${blocked ? `<div class="card pad gate-card"><h1 id="gate-h">Sorry</h1><p class="muted">The Gaming Hub features cannabis-brand sponsors and is only available to adults 21 and older.</p><p class="small"><a href="/responsible-play">Responsible play</a> • <a href="/about">About Trap Tech</a></p></div>`
     : `<form class="card pad gate-card" id="gate" novalidate><h1 id="gate-h">Welcome</h1><p class="muted">Please enter your date of birth to continue.</p>
       ${dobFields('gate')}<div class="hint" id="gate-hint">You must be 21 or older. We don't store this unless you create an account.</div><div id="gmsg"></div>
       <button class="btn block" type="submit">Enter</button>
       <p class="tiny muted" style="margin:12px 0 0">By entering you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>. Free to play. No purchase necessary.</p></form>`}
-    <a class="gate-tt" href="/about"><span>Built by</span><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions" width="170" height="19"></a>
+    <a class="gate-tt" href="/about"><span>Built by</span>${TT('lockup', 86)}</a>
   </div>`;
   const f = $app.querySelector('#gate'); if (!f) return;
   $app.querySelector('#gate-m').focus();
@@ -253,7 +260,7 @@ route(/^\/welcome$/, () => splash());
 function splash() {
   $app.innerHTML = `<div class="splash">
     <div>
-      <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub by Trap Tech Solutions" width="330" height="215">
+      <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub" width="330" height="195">
       <div class="tagline">PLAY <b>•</b> COMPETE <b>•</b> WIN <b>•</b> CONNECT</div>
       <p class="splash-sub">Free arcade games, tournaments and brand giveaways.<br>No purchase necessary. 21+.</p>
     </div>
@@ -262,7 +269,7 @@ function splash() {
       <p class="small muted" style="margin:16px 0 4px">Already have an account?</p>
       <a href="/signin" class="orb" style="font-weight:700;font-size:.85rem;background:var(--grad-v);-webkit-background-clip:text;background-clip:text;color:transparent">SIGN IN</a>
       <p style="margin:10px 0 0"><a href="/" data-guest class="small muted">Just browsing? Continue as Guest</a></p>
-      <a class="tt-sig" href="/about"><span>Built by</span><img class="traptech" src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" style="height:40px"></a>
+      <a class="tt-sig" href="/about"><span>Built by</span>${TT('lockup', 92)}</a>
     </div></div>`;
   setTitle('Welcome');
   ls.setItem('gh_seen_splash', '1');
@@ -280,7 +287,7 @@ route(/^\/signin$/, (m, url) => {
   const remembered = ls.getItem('gh_username') || '';
   $app.innerHTML = `<div class="auth">
     <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button></div>
-    <img class="logo-h" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="220" height="52">
+    <img class="logo-h" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="220" height="41">
     <div class="card glow-purple" style="margin-top:14px">
       <h1>Welcome Back</h1><p class="sub">Sign in with your Potato username and password.</p>
       <form id="f" novalidate>
@@ -295,7 +302,7 @@ route(/^\/signin$/, (m, url) => {
       <div class="or">OR</div>
       <p class="center small muted" style="margin:0">Just here to browse? <a href="${esc(url.searchParams.get('next') || '/')}" id="guest">Continue as Guest</a></p>
     </div>
-    <a class="tt-sig" href="/about"><span>Powered by Trap Tech</span><img src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" style="height:38px"></a>
+    <a class="tt-sig" href="/about"><span>Powered by Trap Tech</span>${TT('horizontal', 46)}</a>
   </div>`;
   setTitle('Sign in');
   wireEyes($app);
@@ -314,7 +321,7 @@ route(/^\/signup$/, (m, url) => {
   if (S.me) return go('/', true);
   $app.innerHTML = `<div class="auth">
     <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button></div>
-    <img class="logo-h" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="220" height="52">
+    <img class="logo-h" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="220" height="41">
     <div class="card glow-purple" style="margin-top:14px">
       <h1 style="text-align:left">Create Your Account</h1><p class="sub" style="text-align:left">Choose a unique Potato username and set your password.</p>
       <form id="f" novalidate>
@@ -333,7 +340,7 @@ route(/^\/signup$/, (m, url) => {
       </form>
       <p class="center small muted" style="margin:16px 0 0">Already have an account? <a href="/signin">Sign In</a></p>
     </div>
-    <a class="tt-sig" href="/about"><span>Powered by Trap Tech</span><img src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" style="height:38px"></a>
+    <a class="tt-sig" href="/about"><span>Powered by Trap Tech</span>${TT('horizontal', 46)}</a>
   </div>`;
   setTitle('Create account');
   wireEyes($app);
@@ -405,7 +412,7 @@ route(/^\/(home)?$/, async () => {
     </div>
     <div class="section-h"><h2>Host a Game</h2><a href="/host">Learn more</a></div>
     <a class="banner" href="/host" style="display:block;color:var(--text)"><h2>Get Your Brand in the Game</h2><div class="small" style="color:#d9dcff">Trap Tech Solutions builds your branded giveaway or custom game - from a simple prize drop to a full 30-day takeover.</div></a>
-    <div class="footer-note"><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions">Powering the next generation of online gaming</div>`);
+    <div class="footer-note">${TT('badge', 64)}Powering the next generation of online gaming</div>`);
   tickCountdowns(); wireDaily();
   if (S.me && q && q.ok && !q.streak.checked_today) doCheckin();
 });
@@ -504,7 +511,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
       <canvas id="game" data-game="${g.id}"></canvas>
       <div class="rotate-tip hidden" id="rot">Tip: rotate your phone for a bigger view</div>
       <div class="overlay hidden" id="ov"></div>
-      <div class="boot-ov" id="boot" role="status" aria-live="polite"><img src="${esc(g.art)}" alt="" class="boot-art"><div class="boot-t">${esc(g.title)}</div><div class="boot-tt">${icon('zap')} A Trap Tech game</div><div class="boot-bar"><i></i></div></div>
+      <div class="boot-ov" id="boot" role="status" aria-live="polite"><img src="${esc(g.art)}" alt="" class="boot-art"><div class="boot-t">${esc(g.title)}</div><div class="boot-tt">${TT('mono', 22)} A Trap Tech game</div><div class="boot-bar"><i></i></div></div>
     </div></div>`;
   setTitle(`Play ${g.title}`);
   const bootAt = Date.now();
@@ -1051,7 +1058,7 @@ route(/^\/host$/, async (m, url) => {
     <div class="section-h" id="multi"><h2>${icon('layers')} Many brands at once - how it stays fair</h2></div>
     <div class="howto">${(pk.multi_brand || []).map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${esc(t)}</b><div class="small muted">${esc(d)}</div></div></div>`).join('')}</div>
     <div class="card tt-build">
-      <div class="ttb-head"><img src="/assets/brand/traptech-wordmark.svg" alt="Trap Tech Solutions" width="190" height="48"><span class="pill">${icon('code-xml')} Built in-house</span></div>
+      <div class="ttb-head">${TT('horizontal', 50)}<span class="pill">${icon('code-xml')} Built in-house</span></div>
       <h2>Trap Tech Solutions builds your brand's game</h2>
       <p class="muted">The Gaming Hub is designed, built and operated by Trap Tech Solutions. Every package is set up by our own team: giveaway card, channel page and brand theme, plus game skins, prize tiers and reports on Elite.</p>
       <ul class="ttb-list"><li>${icon('gamepad-2')} Branded HTML5 games that work on any phone and inside Potato</li><li>${icon('shield-check')} Server-side anti-cheat and verifiable winner draws</li><li>${icon('scale')} Official rules with "no purchase necessary", run by Trap Tech as operator</li><li>${icon('message-circle')} Winners contacted on Potato by our team</li></ul>
@@ -1471,7 +1478,7 @@ route(/^\/responsible-play$/, () => legal('/responsible-play', 'Responsible Play
 
 // ---------------- About Trap Tech Solutions ----------------
 route(/^\/about$/, () => shell('/about', `<div class="narrow">
-  <div class="about-hero card"><img src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" width="260" height="78"><h1>We build the games your brand plays.</h1>
+  <div class="about-hero card"><div class="about-tt">${TT('mono', 150, 'ab-mono')}${TT('lockup', 150, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
     <p class="muted">Trap Tech Solutions is the studio behind The Gaming Hub. We design, build and run every part of it: the games, leaderboards, tournaments, giveaways, achievements and the admin tools brands use.</p>
     <div class="btn-row center-row"><a class="btn" href="/host">${icon('briefcase')} Work with us</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
   <div class="about-grid">${[['gamepad-2', 'Original games', '8 original HTML5 games so far, made to play great on phones, with skill-based scoring and server-side anti-cheat.'], ['gift', 'Brand giveaways', 'Basic, Premium and Elite packages, from a simple prize drop to a full 30-day branded takeover.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Points only, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
@@ -1571,7 +1578,7 @@ route(/^\/settings$/, () => {
       ${!standalone ? '<p class="tiny muted" style="margin:0 0 8px">On iPhone: tap Share, then "Add to Home Screen".</p>' : ''}
       <div class="set-row"><div><b>${icon('accessibility')} Reduce motion</b><div class="small muted">Turns off decorative animations.</div></div><label class="toggle"><input type="checkbox" id="rm" ${rm ? 'checked' : ''}><span></span></label></div>
     </div>
-    <div class="card pad about-mini"><img src="/assets/brand/traptech-stacked.svg" alt="Trap Tech Solutions" width="170" height="51"><div><b>The Gaming Hub v5</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
+    <div class="card pad about-mini">${TT('badge', 56)}<div><b>The Gaming Hub v5</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
     <div class="card legal-links">${[['/terms', 'file-text', 'Terms of Service'], ['/privacy', 'shield', 'Privacy Policy'], ['/rules', 'scale', 'Official Giveaway Rules'], ['/responsible-play', 'heart-pulse', 'Responsible play']].map(([h, ic, l]) => `<a class="act-row" href="${h}">${icon(ic)}<span class="g">${l}</span>${icon('chevron-right')}</a>`).join('')}</div>
   </div>`);
   document.getElementById('rm').onchange = (e) => { ls.setItem('gh_reduce_motion', e.target.checked ? '1' : '0'); document.documentElement.classList.toggle('reduce-motion', e.target.checked); };

@@ -1,6 +1,6 @@
 'use strict';
 // Server-rendered share images (Open Graph / social cards), 1200x630 PNG. SVG templates rendered with resvg.
-// Fonts: Orbitron + Exo 2 (SIL OFL), converted to TTF in src/og-fonts. Logos: The Gaming Hub + Trap Tech Solutions.
+// Fonts: Orbitron + Exo 2 (SIL OFL), converted to TTF in src/og-fonts. Logos: The Gaming Hub + Trap Tech Solutions (v7: Reese's real TT monogram + chrome lockup, tools/build-brand-v7.py).
 //
 // Low-memory design (Deplexo free plan = 128 MB RAM):
 //  - @resvg/resvg-js is only loaded the first time an image has to be rendered (most requests never need it).
@@ -24,7 +24,7 @@ let Resvg = null; // lazy
 const resvg = () => Resvg || (Resvg = require('@resvg/resvg-js'));
 
 // Image slots used by the templates: [width, height, preserveAspectRatio]. Pre-scaled art is generated for these boxes.
-const BOX = { logo: [300, 76, 'xMidYMid meet'], tt: [260, 40, 'xMidYMid meet'], art: [380, 380, 'xMidYMid slice'] };
+const BOX = { logo: [300, 76, 'xMidYMid meet'], tt: [260, 70, 'xMidYMid meet'], art: [380, 380, 'xMidYMid slice'] };
 const scaledName = (rel, [w, h]) => rel.replace(/^\/+/, '').replace(/\.(webp|png)$/, '') + `@${w}x${h}.png`;
 const brandCache = new Map(); // only the 2 fixed brand images (a few KB each after scaling)
 function dataUri(rel, box = BOX.art) {
@@ -58,7 +58,7 @@ function frame(inner, { art = null, accent = '#a855f7' } = {}) {
   ${a ? `<rect x="752" y="112" width="396" height="396" rx="34" fill="url(#nv)" opacity=".75"/><image x="760" y="120" width="380" height="380" preserveAspectRatio="xMidYMid slice" clip-path="url(#artc)" xlink:href="${a}"/>` : ''}
   ${inner}
   <text x="60" y="580" font-family="Exo 2" font-weight="600" font-size="22" fill="#9aa3d0">Free to play • Points &amp; cosmetics only • 21+</text>
-  ${tt ? `<text x="1140" y="548" text-anchor="end" font-family="Orbitron" font-weight="700" font-size="14" fill="#9aa3d0" letter-spacing="3">BUILT BY</text><image x="880" y="556" width="260" height="40" xlink:href="${tt}"/>` : ''}
+  ${tt ? `<text x="1140" y="532" text-anchor="end" font-family="Orbitron" font-weight="700" font-size="14" fill="#9aa3d0" letter-spacing="3">BUILT BY</text><image x="880" y="540" width="260" height="70" xlink:href="${tt}"/>` : ''}
 </svg>`;
 }
 const T = (x0, y, size, fill, text, { font = 'Orbitron', weight = 900, anchor = 'start', ls = 0 } = {}) =>

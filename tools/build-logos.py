@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Builds the crisp vector logos (v5). Text is converted to outlines from Orbitron (SIL OFL 1.1, already bundled in
+"""Builds the crisp vector Gaming Hub logos (v5; v7: the Trap Tech credit is no longer baked in, the site shows
+Reese's real Trap Tech art next to it, see tools/build-brand-v7.py). Text is converted to outlines from Orbitron (SIL OFL 1.1, already bundled in
 public/fonts) so the SVGs render identically everywhere with no font loading. Output: public/assets/brand/*.svg"""
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -43,20 +44,8 @@ def write(name, data):
     print('wrote', name, len(data), 'bytes')
 
 STROKE = 'stroke="#1b1f3f" stroke-width="{w}" stroke-linejoin="round" paint-order="stroke"'
-# Trap Tech mark
-write('traptech-mark.svg', svg(100, 100, CHROME.format(id='ttc'), tt_mark(0, 0, 100), 'Trap Tech Solutions'))
-# Trap Tech horizontal wordmark
-d1, w1 = text_path(F900, 'TRAP TECH', 76, 46, 34, 0.06)
-d2, w2 = text_path(F900, 'SOLUTIONS', 76 + w1 + 14, 46, 34, 0.06)
-W = 76 + w1 + 14 + w2 + 6
-write('traptech-wordmark.svg', svg(W, 64, CHROME.format(id='ttc') + PURPLE.format(id='ttp'),
-  tt_mark(4, 2, 60) + f'<path d="{d1}" fill="url(#ttc)" {STROKE.format(w=1.6)}/><path d="{d2}" fill="url(#ttp)" {STROKE.format(w=1.6)}/>', 'Trap Tech Solutions'))
-# Trap Tech stacked
-d1, w1 = text_path(F900, 'TRAP TECH', 96, 44, 32, 0.06)
-d2, w2 = text_path(F900, 'SOLUTIONS', 96, 86, 32, 0.06)
-W = 96 + max(w1, w2) + 6
-write('traptech-stacked.svg', svg(W, 100, CHROME.format(id='ttc') + PURPLE.format(id='ttp'),
-  tt_mark(2, 6, 86) + f'<path d="{d1}" fill="url(#ttc)" {STROKE.format(w=1.5)}/><path d="{d2}" fill="url(#ttp)" {STROKE.format(w=1.5)}/>', 'Trap Tech Solutions'))
+# v7: the old vector Trap Tech marks (traptech-mark/wordmark/stacked) are retired; Trap Tech art now comes from
+# Reese's own brand images via tools/build-brand-v7.py.
 
 # --- Gaming Hub mark: neon controller + crown (120 x 110 box)
 CTRL = ('M30 40 H90 C106 40 114 52 117 70 L120 88 C122 101 110 108 101 99 L90 88 H30 L19 99 C10 108 -2 101 0 88 L3 70 C6 52 14 40 30 40 Z')
@@ -78,10 +67,9 @@ write('favicon.svg', svg(120, 120, HDEFS, '<rect width="120" height="120" rx="26
 dT, wT = text_path(F900, 'THE', 132, 30, 18, 0.1)
 dG, wG = text_path(F900, 'GAMING', 130, 76, 46, 0.02)
 dH, wH = text_path(F900, 'HUB', 130 + wG + 14, 76, 46, 0.02)
-dB, wB = text_path(F700, 'BY TRAP TECH SOLUTIONS', 134, 102, 14.5, 0.14)
 W = 130 + wG + 14 + wH + 6
-write('hub-logo.svg', svg(W, 112, HDEFS,
-  hub_mark(2, 4, 118) + f'<path d="{dT}" fill="url(#hc)" {STROKE.format(w=1.2)}/><path d="{dG}" fill="url(#hc)" {STROKE.format(w=2)}/><path d="{dH}" fill="url(#hp)" {STROKE.format(w=2)}/><path d="{dB}" fill="#c9cde6"/>', 'The Gaming Hub by Trap Tech Solutions'))
+write('hub-logo.svg', svg(W, 88, HDEFS,
+  hub_mark(2, 4, 118) + f'<path d="{dT}" fill="url(#hc)" {STROKE.format(w=1.2)}/><path d="{dG}" fill="url(#hc)" {STROKE.format(w=2)}/><path d="{dH}" fill="url(#hp)" {STROKE.format(w=2)}/>', 'The Gaming Hub'))
 # Gaming Hub stacked (centered)
 dG, wG = text_path(F900, 'GAMING', 0, 0, 48, 0.02); dH, wH = text_path(F900, 'HUB', 0, 0, 48, 0.02)
 W = max(wG + 12 + wH, 260) + 20; cx = W / 2
@@ -89,6 +77,5 @@ dT, wT = text_path(F900, 'THE', 0, 0, 18, 0.1)
 dT, _ = text_path(F900, 'THE', cx - wT / 2, 158, 18, 0.1)
 x0 = cx - (wG + 12 + wH) / 2
 dG, _ = text_path(F900, 'GAMING', x0, 206, 48, 0.02); dH, _ = text_path(F900, 'HUB', x0 + wG + 12, 206, 48, 0.02)
-_, wB = text_path(F700, 'BY TRAP TECH SOLUTIONS', 0, 0, 14, 0.14); dB, _ = text_path(F700, 'BY TRAP TECH SOLUTIONS', cx - wB / 2, 232, 14, 0.14)
-write('hub-stacked.svg', svg(W, 244, HDEFS,
-  hub_mark(cx - 75, 4, 150) + f'<path d="{dT}" fill="url(#hc)" {STROKE.format(w=1.2)}/><path d="{dG}" fill="url(#hc)" {STROKE.format(w=2)}/><path d="{dH}" fill="url(#hp)" {STROKE.format(w=2)}/><path d="{dB}" fill="#c9cde6"/>', 'The Gaming Hub by Trap Tech Solutions'))
+write('hub-stacked.svg', svg(W, 216, HDEFS,
+  hub_mark(cx - 75, 4, 150) + f'<path d="{dT}" fill="url(#hc)" {STROKE.format(w=1.2)}/><path d="{dG}" fill="url(#hc)" {STROKE.format(w=2)}/><path d="{dH}" fill="url(#hp)" {STROKE.format(w=2)}/>', 'The Gaming Hub'))

@@ -1,0 +1,23 @@
+/* v7 (Trap Tech brand art, shop, seasons, Sponsor a Host, brands). Loaded after app.css. */
+/* ---- Trap Tech brand art ---- */
+.ttp { display: inline-block; line-height: 0; } .ttp img { height: 100%; width: auto; max-width: 100%; }
+.ttp img { filter: drop-shadow(0 0 10px rgba(57,255,20,.18)); }
+.topbar .logo { height: 30px; }
+.hd-tt { display: inline-flex; align-items: center; gap: 5px; color: var(--dim); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; margin-left: -4px; }
+.hd-tt .ttp img { height: 30px; }
+.hd-tt .only-wide { display: none; }
+@media (min-width: 900px) { .hd-tt .only-ph { display: none; } .hd-tt .only-wide { display: inline-block; } .hd-tt .ttp-horizontal img { height: 28px; } }
+@media (max-width: 370px) { .hd-tt span { display: none; } .hd-tt .ttp img { height: 26px; } .topbar .logo { height: 26px; } }
+.sf-brand .ttp img { height: 54px; opacity: 1; }
+.dr-tt .ttp img { height: 44px; }
+.gate-tt .ttp img { height: 86px; }
+.tt-sig .ttp img { height: auto; max-height: 92px; width: auto; }
+.tt-sig .ttp-horizontal img { max-height: 46px; }
+.footer-note .ttp { display: block; margin: 0 auto 6px; } .footer-note .ttp img { height: 64px; }
+.ttb-head .ttp img { height: 50px; }
+.about-tt { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.about-tt .ttp img { height: 150px; width: auto; filter: drop-shadow(0 0 22px rgba(57,255,20,.28)); }
+@media (max-width: 420px) { .about-tt .ab-mono img { height: 108px; } .about-tt .ab-lock img { height: 118px; } }
+.about-hero .about-tt img { width: auto; }
+.about-mini .ttp img { height: 56px; width: 56px; }
+.boot-tt .ttp img { height: 22px; vertical-align: -5px; }
