@@ -199,3 +199,4 @@
 [dir=rtl] svg.lucide,[dir=rtl] .icon{transform:none}
 [dir=rtl] .sf-links,[dir=rtl] .bnav,[dir=rtl] .hd-nav{direction:rtl}
 [dir=rtl] .gcanvas,[dir=rtl] canvas{direction:ltr}
+[dir=rtl] [dir=ltr]{text-align:left}

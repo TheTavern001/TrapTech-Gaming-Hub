@@ -28,10 +28,11 @@ const LEGAL = { '/rules': '@rules_summary', '/terms': '@legal_summary', '/privac
 function legalBanner() {
   const key = LEGAL[location.pathname]; const old = document.getElementById('i18n-legal');
   if (!key || lang === 'en') { if (old) old.remove(); return; } if (old) return;
-  const host = document.querySelector('#app .narrow, #app main, #app'); if (!host) return;
+  const art = document.querySelector('#app .legal article, #app article.prose'); if (!art) return;
+  art.setAttribute('dir', 'ltr'); art.setAttribute('lang', 'en'); // the authoritative English text keeps its own direction
   const d = document.createElement('div'); d.id = 'i18n-legal'; d.className = 'card pad i18n-legal'; d.dataset.noi18n = '';
   d.innerHTML = `<b></b><p></p><p class="small muted"></p>`; d.children[0].textContent = dict['@summary_title'] || 'Summary'; d.children[1].textContent = dict[key] || ''; d.children[2].textContent = dict['@legal_note'] || '';
-  host.prepend(d);
+  art.before(d);
 }
 function langPicker() {
   const foot = document.querySelector('.site-foot .sf-in, .splash .cta, #set-lang'); if (!foot || foot.querySelector('#lang-pick')) return;
