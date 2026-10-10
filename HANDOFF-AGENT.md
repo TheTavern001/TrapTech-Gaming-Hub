@@ -29,6 +29,7 @@ Remaining:
 - Maze Muncher DONE (neon tube maze, original hero + haze-wisp enemies).
 - Shared car set DONE (assets3d/rc-*.glb from tools/blender/hub-cars.py, used by racer3x). Moto Lanes DONE 7/7 (near traffic + overtakers, overpasses, gantries, yellow edge line).
 - Alien Rows DONE (Kenney Space Shooter CC0 art).
+- Cloud Hopper DONE (Kenney Jumper Pack CC0 art).
 - Next (Reese order): Cloud Hopper, Road Hopper, the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)

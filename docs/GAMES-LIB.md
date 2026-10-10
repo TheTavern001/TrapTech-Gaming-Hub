@@ -351,3 +351,8 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Candidates: Kenney Space Shooter Remastered (CC0) art on our build vs vendoring JS invaders clones (most copy the reference's alien sprites; rejected). Chose new art on our build.
 - Upgrade: sprite enemies (3 ship types by row, 30/20/10 pts) with a march wobble, a sprite player ship with an animated engine flame, glowing green/red lasers, a spinning UFO, gradient shield bricks, a scrolling nebula background with a green glow, and a glowing ground line. Rules and scoring are unchanged.
 - Tests: e2e PASS (60 FPS). Bug pass PASS (4x throttle 27 FPS, memory +0.0 MB). Side-by-side: docs/audit/alien-rows-vs-ref.jpg. Rating: visual 7/10, feel 7/10.
+
+## Cloud Hopper - DONE (2026-10-10 06:15 ET)
+- Candidates: Kenney Jumper Pack (CC0, made for this genre) on our build vs vendoring doodle-jump JS clones (they copy the reference's doodle art; rejected).
+- Upgrade: 4-layer parallax sky, illustrated floating-island platforms (grass = normal, snow = moving, cracked wood = breaks, frosted cake = vanishes), springs with a pop animation, flapping fly enemies, and an animated bunny hero (jump/stand/hurt poses, facing flip, squash and stretch). Rules and scoring are unchanged.
+- Tests: e2e PASS (60/55 FPS). Bug pass PASS (4x throttle 20 FPS, memory +0.1 MB). Side-by-side: docs/audit/cloud-hopper-vs-ref.jpg. Rating: visual 8/10, feel 7/10.
