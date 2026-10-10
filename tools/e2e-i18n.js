@@ -18,6 +18,9 @@ let pass = 0, fail = 0; const ok = (c, m, x) => { if (c) { pass++; console.log('
   const lg = await p.textContent('#i18n-legal').catch(() => ''); ok(lg.includes('الإنجليزية') && /Official Giveaway Rules|Eligibility|eligible/i.test(await p.textContent('#app')), 'rules: Arabic summary + English-authoritative note; English rules stay');
   await p.screenshot({ path: path.join(__dirname, '..', 'docs', 'i18n-ar-rules.png') });
   await p.selectOption('#lang-pick', 'en'); await p.waitForTimeout(2200); ok(await attr(p, 'dir') === 'ltr' && !(await p.$('#i18n-legal')), 'back to English: ltr, no summary');
+  { const de = JSON.parse(fs.readFileSync(path.join(dir, 'de.json'))); ok(files.every(f => Object.keys(JSON.parse(fs.readFileSync(path.join(dir, f)))).length >= 450), 'every language covers player page body text (>= 450 strings)');
+    await p.selectOption('#lang-pick', 'de'); await p.waitForTimeout(1500); await p.goto(BASE + '/about'); await p.waitForTimeout(1500);
+    ok((await p.textContent('main')).includes(de['Built by Trap Tech Solutions']), 'About page body text is translated (German)'); }
   ok(!p.errs.length, 'no JS errors while switching', p.errs.join(' | '));
   for (const [loc, want, m] of [['zh-TW', 'zh-TW', 'zh-TW -> Traditional Chinese'], ['zh-CN', 'zh-CN', 'zh-CN -> Simplified'], ['he-IL', 'he', 'Hebrew detected'], ['tl-PH', 'fil', 'Tagalog -> Filipino'], ['sv-SE', 'en', 'unsupported language falls back to English']]) {
     p = await page(loc); await p.goto(BASE + '/'); await p.waitForTimeout(1300); ok(await attr(p, 'lang') === want, m); if (want === 'he') ok(await attr(p, 'dir') === 'rtl', 'Hebrew -> rtl'); }
