@@ -47,6 +47,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Slab Stack (Stack-style) DONE (06:11)
 - Neon Flipper (Pinball) DONE (06:32)
 - Light Cycle (Tron) DONE (06:36)
+- Bud Bar (Tapper) UPGRADED (06:46); polish backlog: Neon Flipper ramps + spinner
 - Missile Guard (Missile Command) UPGRADED (06:44)
 - Star Swarm (Galaga) UPGRADED (06:41)
 - Knife Toss (Knife Hit) UPGRADED (06:08)

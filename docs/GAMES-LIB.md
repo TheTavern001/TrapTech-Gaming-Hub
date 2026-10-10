@@ -543,3 +543,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Source hunt (GitHub "missile command javascript", js13k, itch.io, Gitee "导弹指挥官"): the open-source remakes are flat-line canvas ports at our level or older (some unlicensed). Our rules (3 silos, split warheads, wave bonus) are complete. Decision: art pass.
 - Art: night sky gradient with a glowing moon, two parallax ridge lines, lit skyline cities (procedural towers with warm and green windows), armoured dome silos with a visible missile rack per round, glowing warheads with fading smoke trails, pulsing interceptor target reticles, additive layered fireballs with shock rings, burning ruins with rising smoke, "SKYSHIELD DISPENSARY DISTRICT 21+" footer.
 - Tests: e2e PASS (60 fps). Bug pass PASS (41 fps throttled). Rating: visual 7.5/10, feel 7/10.
+
+## Bud Bar (Tapper) - UPGRADED (2026-10-10 06:46 ET)
+- Source hunt (GitHub "tapper html5/javascript", js13k, itch.io, Gitee): no permissive Tapper remake above prototype level was found. Our 4-counter serve/empties rules are complete. Decision: art pass.
+- Art: wood-panelled lounge with a neon "BUD BAR - DISPENSARY - LOUNGE - 21+" sign, side doors, polished counters with panelled fronts and brass trim, chrome dispensers with leaf badges, a budtender in a green cap and apron, varied customers (skin, hair, beards, cap/top hat/cowboy hat, walk bob), glass product jars with a bud inside and glint, empty jars sliding back, lane glow, smash and serve particles.
+- Tests: e2e PASS (60 fps). Bug pass PASS (51 fps throttled). Rating: visual 7/10, feel 7/10.
+- Backlog note (polish pass): Neon Flipper ramps + spinner (requested 2026-10-10).
