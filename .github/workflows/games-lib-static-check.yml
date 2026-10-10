@@ -26,5 +26,8 @@ jobs:
           node --check tools/games-lib-integrity-audit.js
           node --check tools/games-lib-static-check.js
           node --check tools/e2e-games-lib.js
+      - name: Parse inline JavaScript in the library page
+        run: |
+          node -e "const fs=require('fs'); const s=fs.readFileSync('public/games-lib/index.html','utf8'); const blocks=[...s.matchAll(/<script[^>]*>([\\s\\S]*?)<\\/script>/gi)]; if(!blocks.length) throw Error('No inline library script found'); for(const b of blocks) new Function(b[1]); console.log('Library inline script syntax OK');"
       - name: Check registry, catalog, docs and local assets
         run: node tools/games-lib-static-check.js
