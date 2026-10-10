@@ -30,7 +30,7 @@ Remaining:
 - Shared car set DONE (assets3d/rc-*.glb from tools/blender/hub-cars.py, used by racer3x). Moto Lanes DONE 7/7 (near traffic + overtakers, overpasses, gantries, yellow edge line).
 - Alien Rows DONE (Kenney Space Shooter CC0 art).
 - Cloud Hopper DONE (Kenney Jumper Pack CC0 art).
-- Next (Reese order): Cloud Hopper, Road Hopper, the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Next (Reese order): Road Hopper, the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).
