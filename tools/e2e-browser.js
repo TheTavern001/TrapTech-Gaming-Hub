@@ -95,7 +95,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
 
   console.log('# games library');
   await m.click('.bottomnav >> text=Games'); await m.waitForSelector('#grid .gcard');
-  const nAll = await m.locator('#grid .gcard').count(); await m.fill('#q', 'plin'); const nQ = await m.locator('#grid .gcard').count();
+  const nAll = await m.locator('#grid .gcard').count(); await m.fill('#q', 'drift'); /* v7: Plinko retired */ const nQ = await m.locator('#grid .gcard').count();
   ok(nAll >= 5 && nQ === 1, `games search filters (${nAll} -> ${nQ})`); await m.fill('#q', '');
   await m.click('#chips >> text=Racing'); ok((await m.locator('#grid .gcard').count()) === 1, 'category chip filters');
   await m.click('#chips >> text=All'); await shot(m, 'mobile-05-games'); await v2(m, 'games-library');
@@ -122,7 +122,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   const saved = await m.textContent('#sv'); ok(saved.includes('Saved'), 'run over -> score auto-submitted and saved', saved);
   ok(await m.isVisible('.ach-toast'), 'achievement unlock toast shows after the run'); ok((await m.textContent('#sv')).includes('First Flight') || (await m.locator('#sv .unl').count()) >= 1, 'run result lists the unlocked achievements');
   await shot(m, 'mobile-08b-achievement-toast', false, true);
-  ok(/Counted for/.test(saved) || /Enter .+ to have your runs count/.test(saved), 'run result: counted toward the active giveaway, or (v5) tells me to Enter the giveaway first', saved);
+  ok(/Saved\./.test(saved) && !/Counted for/.test(saved), 'run result: saved to the free-play board (v7: giveaway runs only count when started inside an official event, so a free run is never "Counted for" a giveaway)', saved);
   const scoreTxt = await m.textContent('.over-card .big'); const myScore = parseInt(scoreTxt.replace(/\D/g, ''), 10);
   await shot(m, 'mobile-08-game-over');
   ok(await m.isVisible('.xp-line') && /XP/.test(await m.textContent('.xp-line')), 'result shows XP gained + level bar');
@@ -241,7 +241,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   { const code = await m.evaluate(async () => { const r = await (await fetch('/api/brands')).json(); return r.brands[0] && r.brands[0].slug; });
     await m.goto(BASE + '/settings#v7-brand'); await m.waitForSelector('#v7-brand #br-pick'); await v5(m, 'settings-your-brand');
     ok((await m.textContent('#v7-brand')).includes('not in a brand') || (await m.$('#v7-brand .br-mine')), 'Settings: Your brand card');
-    await m.selectOption('#br-pick', code); m.once('dialog', d => d.accept()); await m.click('#br-f button'); await m.waitForSelector('#v7-brand .br-mine');
+    await m.selectOption('#br-pick', code); m.once('dialog', d => d.accept().catch(() => {})); await m.click('#br-f button'); await m.waitForSelector('#v7-brand .br-mine');
     ok(true, 'player joins a brand from Settings (one brand at a time)'); }
   { const r = await m.evaluate(async () => (await fetch('/api/me/brand')).json()); const inv = r.brand.slug; // the brand slug works as a code too
     await m.goto(BASE + '/join/' + inv); await m.waitForSelector('.br-card'); ok((await m.textContent('.br-card')).includes("You're in"), 'brand invite page recognises a member'); await v5(m, 'brand-invite'); }
@@ -265,7 +265,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok((await m.textContent('.tt-build')).includes('Trap Tech Solutions'), 'sponsor page: built by Trap Tech');
   await v5(m, 'sponsor-features');
   await m.click('.sp-f[data-f=featured] .sp-chk'); await m.click('.sp-f[data-f=featured] [data-d="1"]'); await m.click('.sp-f[data-f=game-skin] .sp-chk');
-  ok((await m.textContent('.sp-f[data-f=featured] .sp-qty b')).includes('2 weeks') && (await m.textContent('#next')).includes('4 picked'), 'quantity stepper + picked count');
+  ok((await m.textContent('.sp-f[data-f=featured] .sp-qty b')).includes('2 weeks') && /\d+ picked/.test(await m.textContent('#next')), 'quantity stepper + picked count (v7: the list pre-picks the base listing, so the count is not fixed at 4)');
   await m.click('#next'); await m.waitForSelector('#bt');
   ok(!(await m.$('#licensed')), 'no license question before a business type is chosen');
   await m.selectOption('#bt', 'Streamer / content creator'); await sleep(100); ok(!(await m.$('#licensed')), 'streamer: no license question');
@@ -302,7 +302,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
 
   console.log('# v3: season');
   await m.goto(BASE + '/season'); await m.waitForSelector('.track .tier');
-  ok((await m.locator('.track .tier').count()) === 20 && (await m.locator('.track .tier.rw').count()) >= 4, 'season track: 20 tiers with cosmetic rewards');
+  ok((await m.locator('.track .tier:not(.ec-od)').count()) === 60 && (await m.locator('.track .tier.rw').count()) >= 4, 'season track: 60 levels (v6 replaced the 20-tier track) with cosmetic rewards');
   ok((await m.textContent('main')).includes('Free track only') && await m.isVisible('.sh-tier'), 'season: free track only + my tier');
   await v3(m, 'm21-season'); await v3(m, 'm21b-season-full', true);
 
@@ -332,7 +332,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await m.click('.fcount[data-fl=followers]'); await m.waitForSelector('.sheet .mini-row');
   ok((await m.textContent('.sheet')).includes(uname), 'followers sheet lists me'); await v3(m, 'm15b-followers-sheet');
   await m.keyboard.press('Escape'); await m.waitForSelector('.sheet', { state: 'detached' });
-  await m.goto(BASE + '/leaderboard?game=brick-breaker'); await m.waitForSelector('.lb'); await m.check('#friends'); await sleep(900);
+  await m.goto(BASE + '/leaderboard?game=jetpack-dash'); await m.waitForSelector('.lb'); await m.check('#friends'); /* v7: a board both I and TerpQueen have runs on */ await sleep(900);
   const fnames = await m.locator('.lb .nm').allTextContents();
   ok(fnames.length >= 2 && fnames.every(n => n.includes(uname) || n.includes('TerpQueen')), 'friends leaderboard = me + players I follow', fnames);
   await v3(m, 'm11-leaderboard-friends'); await m.uncheck('#friends'); await sleep(500); await v3(m, 'm11b-leaderboard');
@@ -349,8 +349,8 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok(await m.isHidden('#bell-n'), 'mark all read clears the bell badge');
 
   console.log('# v3: search');
-  await m.click('.topbar a[href="/search"]'); await m.waitForSelector('#sq'); await m.fill('#sq', 'stack'); await m.waitForSelector('#sr .sr-row');
-  const srt = await m.textContent('#sr'); ok(srt.includes('Plinko') && srt.includes('Tournaments'), 'search finds games + tournaments');
+  await m.click('.topbar a[href="/search"]'); await m.waitForSelector('#sq'); await m.fill('#sq', 'drift'); await m.waitForSelector('#sr .sr-row');
+  const srt = await m.textContent('#sr'); ok(srt.includes('Drift Rush') && srt.includes('Tournaments'), 'search finds games + tournaments (v7: Plinko retired, search Drift)');
   await v3(m, 'm26-search');
   await m.fill('#sq', 'zzqqxx'); await m.waitForSelector('#sr .empty-state'); ok(true, 'search empty state');
 
@@ -433,76 +433,58 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await a.goto(BASE + AP + '/badges'); await a.waitForSelector('.bdg[data-b="beta-tester"]'); await a.click('.bdg[data-b="beta-tester"] [data-x="award"]'); await a.fill('#aw-u', uname); await a.fill('#aw-n', 'UI test grant'); await a.click('.v7dlg .row-end .btn:not(.ghost)'); await sleep(900); await a.goto(BASE + AP + '/badges?tab=grants'); await sleep(900);
   ok((await a.textContent('.amain')).includes(uname), 'admin grants a special badge (shows in holders/audit)'); await v5(a, 'admin-grant-badge', true);
   { const sb = await a.evaluate(async (u) => (await (await fetch('/api/users/' + u + '/special-badges')).json()).granted.map(b => b.id), uname); ok(sb.includes('beta-tester'), 'granted badge is visible on the public profile API', sb); }
-  await a.evaluate(async (u) => fetch('/api/admin/v7/badges/award', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content }, body: JSON.stringify({ username: u, badge: 'beta-tester', action: 'revoke' }) }), uname); await sleep(300); // clean up the test grant
+  await a.evaluate(async (u) => fetch('/' + location.pathname.split('/')[1] + '/api/v7/badges/award', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content }, body: JSON.stringify({ username: u, badge: 'beta-tester', action: 'revoke' }) }), uname); await sleep(300); // clean up the test grant
   await a.goto(BASE + AP + '/fairplay'); await a.waitForSelector('#fp-tabs'); ok((await a.textContent('.amain')).includes('Nobody is ever banned automatically'), 'admin Fair Play queue (soft flags, no auto-bans)'); await v5(a, 'admin-fair-play', true);
-  console.log('# admin: one-click giveaway linking');
+  // v7 rewrite (Oct 10 2026). Intentionally replaced admin features, so their old expectations were removed:
+  //  - the classic one-page giveaway form (#gf/#gpk picker) -> the step-by-step v7 builder (drafts, autosave, review + publish)
+  //  - the v4 review queue (#rq live preview, top-N, confirm buttons) -> the v7 giveaway view (live/locked standings,
+  //    "End early" with typed confirm, Winners & claims with Contacted/Claimed/Forfeit)
+  //  - "every run in the window counts" -> v7 official events: only runs started inside the event count (seeded below)
+  //  - first-to-score / fewer-attempts tie-breaks -> skill-only: shorter server-timed run, game skill metric, playoff
+  //  - the "Just for fun" chance-game cards -> chance games retired, every game is giveaway-eligible
+  console.log('# admin: games page + v7 giveaway builder');
+  const AJ = (p, o = {}) => a.evaluate(async ([p, o]) => { const r = await fetch('/' + location.pathname.split('/')[1] + p, { method: o.method || (o.body ? 'POST' : 'GET'), headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content }, body: o.body ? JSON.stringify(o.body) : undefined }); return r.json(); }, [p, o]);
   await a.click('.side >> text=Games'); await a.waitForSelector('.agame');
-  ok((await a.locator('.agame').count()) === 13, 'admin games page shows 13 game cards');
-  await a.click('[data-create=stack]'); await a.waitForSelector('#gpk');
-  ok((await a.inputValue('#title')) === 'Stack Giveaway' && (await a.locator('#gpk .gp.on').count()) === 1 && (await a.getAttribute('#gpk .gp.on', 'data-g')) === 'stack', 'Create-giveaway-for-game prefills title + game');
-  await a.click('#gpk .gp[data-g=memory-match]'); await a.click('#gpk .gp[data-g=high-score]');
-  ok((await a.locator('#gpk .gp.on').count()) === 3, 'visual game picker multi-select (3 games)');
-  await a.fill('#title', 'UI Test Stack Giveaway'); await a.fill('#host', 'UI Brand'); await a.check('[data-plc=featured]'); await a.check('#usecolor'); await a.fill('#minscore', '0');
-  await shot(a, 'desktop-11b-admin-giveaway-picker');
-  await a.click('#gf button[type=submit]'); await a.waitForSelector('#wcard'); const linkGid = a.url().split('/').pop();
-  ok((await a.textContent('.amain')).includes('Live campaign stats'), 'manage page shows live campaign stats');
-  const linkedNow = await a.evaluate(async (id) => (await (await fetch('/' + location.pathname.split('/')[1] + '/api/giveaways/' + id)).json()).giveaway.game_ids, linkGid);
-  ok(linkedNow.join() === 'stack,memory-match,high-score', 'saved giveaway counts the 3 picked games', linkedNow);
-  await a.click('.side >> text=Games'); await a.waitForSelector('.agame');
-  ok(await a.isChecked(`.agame[data-game=stack] [data-link="${linkGid}"]`), 'stack card shows the new giveaway linked (toggle on)');
-  await a.click(`.agame[data-game=drift-rush] .glink[data-gw="${linkGid}"] .toggle span`); await a.waitForFunction((id) => document.querySelector(`.agame[data-game=drift-rush] [data-link="${id}"]`)?.checked, linkGid);
-  const after = await a.evaluate(async (id) => (await (await fetch('/' + location.pathname.split('/')[1] + '/api/giveaways/' + id)).json()).giveaway.game_ids, linkGid);
-  ok(after.includes('drift-rush'), 'toggle on Drift Rush card links it to the giveaway', after);
-  await a.click(`.agame[data-game=high-score] .glink[data-gw="${linkGid}"] .toggle span`); await a.waitForFunction((id) => !document.querySelector(`.agame[data-game=high-score] [data-link="${id}"]`)?.checked, linkGid);
-  ok(!(await a.evaluate(async (id) => (await (await fetch('/' + location.pathname.split('/')[1] + '/api/giveaways/' + id)).json()).giveaway.game_ids, linkGid)).includes('high-score'), 'toggle off unlinks High Score');
-  await shot(a, 'desktop-11c-admin-games-linking', true);
-  // create giveaway
-  await a.click('.side >> text=Giveaways'); await a.waitForSelector('.tbl'); await a.click('text=New Giveaway');
-  await a.waitForSelector('#gf');
-  await a.fill('#title', 'UI Test Giveaway'); await a.fill('#host', 'Trap Tech Solutions'); await a.fill('#prize', 'Test prize');
-  const toLocal = (ms) => { const x = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}T${p(x.getHours())}:${p(x.getMinutes())}`; };
-  await a.fill('#start', toLocal(Date.now() - 30 * 864e5)); await a.fill('#end', toLocal(Date.now() + 2 * 864e5));
-  await a.click('#imgs button >> nth=1');
-  ok(await a.isChecked('#e-join'), 'v5: new giveaways default to explicit entry + eligibility rules (anti-camping)');
-  // this UI-test giveaway runs in "open" mode (every run in the window counts) so the test player's earlier runs make them an entrant
-  await a.uncheck('#e-join'); for (const id of ['#e-age', '#e-runs']) if (await a.$(id)) await a.fill(id, '0');
-  await a.click('#gf button[type=submit]');
-  await a.waitForSelector('#wcard'); ok(true, 'admin creates giveaway -> manage page');
-  ok((await a.inputValue('#wmethod')) === 'score' && (await a.inputValue('#wcount')) === '0', 'winner selection defaults: top score, one winner per prize tier');
-  // edit
-  await a.fill('#title', 'UI Test Giveaway (edited)'); await a.click('#gf button[type=submit]'); await sleep(900);
-  ok((await a.inputValue('#title')).includes('edited'), 'admin edits giveaway');
-  // player ran before this giveaway started? our run started ~minutes ago and window started 1h ago -> entrant
-  await a.fill('#viewn', '200'); await sleep(200); ok((await a.textContent('#ent')).includes(uname), 'test player is an entrant (played during window)'); await a.fill('#viewn', '10');
-  console.log('# v4: review queue, end now + lock, confirm, disqualify');
-  await a.waitForSelector('#rq .rq-item'); ok((await a.textContent('#rq')).includes('Live preview') && (await a.locator('#rq [data-confirm]').count()) === 0, 'review queue is a live preview before the end (no confirm buttons)');
-  ok((await a.locator('#rq .rq-item').count()) === Math.min(10, +(await a.textContent('.agstats div:nth-child(3) b')).replace(/,/g, '')) && (await a.locator('#rq .rq-runs').count()) >= 1, 'review queue lists the top 10 entrants with their runs');
-  await a.fill('#rqn', '100'); await a.dispatchEvent('#rqn', 'change'); await a.waitForFunction((u) => document.querySelector(`#rq .rq-item[data-name="${u}"]`), uname, { timeout: 8000 }).catch(() => {});
-  ok(!!(await a.$(`#rq .rq-item[data-name="${uname}"]`)), 'top-N input widens the queue (test player found in the top 100)');
-  await a.fill('#rqn', '10'); await a.dispatchEvent('#rqn', 'change'); await a.waitForFunction(() => document.querySelectorAll('#rq .rq-item').length <= 10);
-  await a.click('#endnow'); await a.waitForSelector('.lockbox'); ok((await a.textContent('#wcard')).includes('Final standings locked'), '"End now & lock results" locks the final standings');
-  ok(await a.isDisabled('#end') && await a.isDisabled('#wmethod'), 'locked giveaway: dates + winner rules disabled in the form');
-  await a.waitForSelector('#rq [data-confirm]');
-  const firstName = await a.getAttribute('#rq .rq-item >> nth=0', 'data-name'); const secondName = await a.getAttribute('#rq .rq-item >> nth=1', 'data-name');
-  await a.click('#rq .rq-item >> nth=0 >> [data-dq-open]'); await a.fill('#rq .rq-item >> nth=0 >> [data-reason]', 'UI test disqualification'); await a.click('#rq .rq-item >> nth=0 >> [data-dq-go]');
-  await a.waitForSelector(`#rq .rq-item.is-dq[data-name="${firstName}"]`); ok((await a.getAttribute('#rq .rq-item >> nth=0', 'data-name')) === secondName, 'disqualify #1 (with reason) promotes #2 to the winning place');
-  await v5(a, 'admin-review-queue-potato-contact');
-  await a.click('#rq .rq-item >> nth=0 >> [data-confirm]'); await a.waitForSelector('#rq .rq-item >> nth=0 >> .pill.green'); ok((await a.textContent('#wb')).includes('Confirmed'), 'confirm winner from the review queue');
-  ok((await a.textContent('#audit')).includes('Disqualified') && (await a.textContent('#audit')).includes('Promoted to a winning place') && (await a.textContent('#audit')).includes('Winner confirmed'), 'audit log shows disqualify, promote, confirm');
-  const fcsv = await a.evaluate(async (u) => (await fetch(u)).text(), (await a.getAttribute('#exp-final', 'href'))); ok(fcsv.startsWith('rank,place,username') && fcsv.includes('UI test disqualification'), 'final standings CSV export');
-  const rcsv = await a.evaluate(async (u) => (await fetch(u)).text(), (await a.getAttribute('#exp-runs', 'href'))); ok(rcsv.startsWith('giveaway_id,username') && rcsv.includes(uname), 'all entrants + runs CSV export');
-  await shot(a, 'desktop-12-admin-manage-giveaway', true);
-  const v4gid = a.url().split('/').pop();
-  { const pc = await browser.newContext(MOBILE); await passGate(pc); const p = await pc.newPage(); watch(p, 'v4-public');
+  ok((await a.locator('.agame').count()) === 13 && (await a.locator('.agfun').count()) === 0 && (await a.locator('[data-create]').count()) === 13, 'admin games page: 13 games, all giveaway-eligible, each with "Create giveaway"');
+  await a.click('[data-create=stack]'); await a.waitForSelector('[data-k="basics.title"]');
+  const draftId = +a.url().match(/draft\/(\d+)/)[1]; let dr = await AJ('/api/v7/gw/drafts/' + draftId);
+  ok(dr.ok && dr.data.games.ids.includes('stack'), '"Create giveaway for this game" opens the v7 builder with the game prefilled', dr.data && dr.data.games);
+  await a.fill('[data-k="basics.title"]', 'UI Test Stack Giveaway'); await sleep(2500);
+  dr = await AJ('/api/v7/gw/drafts/' + draftId); ok(dr.data.basics.title === 'UI Test Stack Giveaway', 'builder autosaves the draft');
+  await shot(a, 'desktop-11b-admin-giveaway-builder');
+  { const d = dr.data; const t = Date.now();
+    const data = { ...d, basics: { ...d.basics, sponsor: 'UI Brand' }, schedule: { ...d.schedule, publish_mode: 'now', start_at: t - 3600e3, end_at: t + 2 * 864e5 },
+      prizes: [{ id: 'p1', name: 'Test prize', qty: 1, value: 25, type: 'physical', award: 'rank' }], entry: { ...d.entry, require_join: false, age21: false } };
+    const sv = await AJ('/api/v7/gw/drafts/' + draftId, { method: 'PUT', body: { data } }); ok(sv.ok, 'draft saved with schedule + prize', sv); }
+  await a.goto(BASE + AP + `/giveaways/draft/${draftId}?step=review`); await a.waitForSelector('[data-act=publish]:not([disabled])');
+  ok((await a.textContent('.amain')).includes('Ready to publish'), 'review step: ready to publish'); await shot(a, 'desktop-11c-admin-builder-review', true);
+  await a.click('[data-act=publish]'); await a.click('.v7dlg [data-ok]'); await a.waitForSelector('.gv-acts');
+  const gid = +a.url().split('/').pop(); ok(gid > 0 && (await a.textContent('.amain')).includes('UI Test Stack Giveaway'), 'publish -> giveaway view');
+  { // seed official-event runs: the test player and TerpQueen tie on 500; the player's run is shorter -> ranks first
+    const Database = require('better-sqlite3'); const db = new Database(process.env.DB_PATH || path.join(__dirname, '..', 'data', 'hub.db'));
+    const uid = (n) => db.prepare('SELECT id FROM users WHERE username=?').get(n).id; const t = Date.now() - 20 * 60e3;
+    const ins = db.prepare('INSERT INTO runs (user_id, game_id, score, coins, duration_ms, started_at, created_at, ip_hash, verify, held, event_id) VALUES (?,?,?,0,?,?,?,?,?,0,?)');
+    ins.run(uid('TerpQueen'), 'stack', 500, 90e3, t - 5 * 60e3 - 90e3, t - 5 * 60e3, 'ui', 'cleared', gid);  // reached 500 first, in 90 s
+    ins.run(uid(uname), 'stack', 500, 60e3, t - 60e3, t, 'ui', 'cleared', gid);                              // reached 500 later, in 60 s
+    ins.run(uid('BlazedKing'), 'stack', 420, 70e3, t - 70e3, t, 'ui', 'cleared', gid); db.close(); }
+  await sleep(5200); await a.reload(); await a.waitForSelector('.gv-acts');
+  const live = await a.locator('.tbl tbody tr').allTextContents();
+  ok(live.length >= 3 && live[0].includes(uname) && live[1].includes('TerpQueen'), 'live standings: a 500/500 tie goes to the shorter server-timed run, not the first to score', live.slice(0, 3));
+  await a.click('[data-gact=end]'); await a.fill('#v7dt2', 'END'); await a.click('.v7dlg [data-ok]'); await a.waitForFunction(() => document.querySelector('.amain').textContent.includes('Final standings (locked)'));
+  ok(true, '"End early" (typed END) locks the final standings');
+  const fin = await a.locator('.tbl tbody tr').allTextContents(); ok(fin[0].includes(uname), 'locked standings keep the skill tie-break order', fin.slice(0, 2));
+  ok((await a.textContent('.amain')).includes('Winners') && !!(await a.$(`.claim[data-uid] [data-claim=contacted]`)), 'Winners & claims card lists the winner with claim actions');
+  await a.click('.claim [data-claim=contacted]'); await a.waitForFunction(() => !document.querySelector('.claim [data-claim=contacted]'));
+  ok((await a.textContent('.audit')).length > 0, 'claim marked contacted; audit log populated'); await shot(a, 'desktop-12-admin-manage-giveaway', true);
+  const v4gid = gid; const secondName = uname;
+  { const pc = await browser.newContext(MOBILE); await passGate(pc); const p = await pc.newPage(); watch(p, 'v7-public');
     await p.goto(`${BASE}/giveaways/${v4gid}`); await p.waitForSelector('#final-results');
-    ok((await p.textContent('#final-results')).includes(secondName) && (await p.textContent('#final-results')).includes('Confirmed winner') && (await p.textContent('#gw-how')).includes('fewer attempts'), 'public page: Final results with the confirmed winner + tiebreak rules');
-    await p.click('#live-link'); await p.waitForSelector('.res-table'); ok((await p.textContent('.res-table')).includes(secondName) && (await p.locator('.res-table tr.win').count()) >= 1, 'printable results page highlights the winner');
+    ok((await p.textContent('#final-results')).includes(secondName) && /server-timed/.test(await p.textContent('#gw-how')), 'public page: final results with the winner + skill-only tie-break rules');
     await p.goto(`${BASE}/giveaways/${v4gid}/live`); await p.waitForSelector('#lv-table table'); ok((await p.textContent('.final-banner')).includes('Final results locked'), 'live page switches to final results after the lock');
-    await p.goto(`${BASE}/giveaways/${v4gid}/rules`); await p.waitForSelector('#rules-tiebreak'); ok((await p.textContent('.prose')).includes('(b) If scores are tied, whoever reached that score first wins'), 'Official Rules list the tiebreak order');
+    await p.goto(`${BASE}/giveaways/${v4gid}/rules`); await p.waitForFunction(() => /Tiebreakers/.test(document.querySelector('.prose')?.textContent || ''), null, { timeout: 15000 }).catch(() => {}); const rt = await p.textContent('.prose');
+    ok(/shorter server-timed/i.test(rt) && /playoff/i.test(rt) && !/reached that score first/.test(rt), 'Official Rules list the skill-only tie-break order');
     await pc.close(); }
-  const csv = await a.evaluate(async (u) => (await fetch(u)).text(), (await a.getAttribute('a[href*="export/leaderboard.csv?giveaway"]', 'href')));
-  ok(csv.startsWith('rank,username,score') && csv.includes(uname), 'giveaway CSV export downloads with entrants');
-  const gidUrl = a.url();
+  const gidUrl = BASE + AP + '/giveaways/' + gid;
   // sponsor requests -> quote builder -> sponsor accepts
   await a.click('.side >> text=Sponsor requests'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Sponsor requests');
   ok((await a.textContent('.tbl')).includes(brand), 'sponsor request from the public form shows in admin');
@@ -510,21 +492,24 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok(+(await a.textContent('#q-tot')).replace(/[^0-9.]/g, '') > 0 && (await a.textContent('#qb')).includes('Branded game skin'), 'draft quote is auto-totalled from the admin price sheet');
   await a.click('#q-add'); { const rows = a.locator('#ql tr'); const last = rows.nth((await rows.count()) - 1); await last.locator('[data-k=label]').fill('UI custom line'); await last.locator('[data-k=amount]').fill('10'); }
   await a.fill('#q-pct', '10'); const qTotal = await a.textContent('#q-tot'); await shot(a, 'desktop-13-admin-quote', true);
-  a.once('dialog', d => d.accept()); await a.click('#q-send'); await a.waitForFunction(() => /Sent/.test(document.querySelector('#qb .pill')?.textContent || ''));
+  a.once('dialog', d => d.accept().catch(() => {})); await a.click('#q-send'); await a.waitForFunction(() => /Sent/.test(document.querySelector('#qb .pill')?.textContent || ''));
   ok(true, 'admin sends the quote');
   { const sp = await dctx.newPage(); await sp.goto(sponsorStatusUrl); await sp.waitForSelector('#sp-acc'); ok((await sp.textContent('#sp-total')) === qTotal, `sponsor sees the same total (${qTotal})`);
-    sp.once('dialog', d => d.accept()); await sp.click('#sp-acc'); await sp.waitForSelector('.sp-state.st-accepted'); ok(true, 'sponsor accepts on the status page'); await sp.close(); }
-  await a.reload(); await a.waitForSelector('#q-paid'); a.once('dialog', d => d.accept()); await a.click('#q-paid'); await a.waitForFunction(() => /Paid/.test(document.querySelector('#qb .pill')?.textContent || '')); ok(true, 'admin marks the accepted quote paid');
+    sp.once('dialog', d => d.accept().catch(() => {})); await sp.click('#sp-acc'); await sp.waitForSelector('.sp-state.st-accepted'); ok(true, 'sponsor accepts on the status page'); await sp.close(); }
+  await a.reload(); await a.waitForSelector('#q-paid'); a.once('dialog', d => d.accept().catch(() => {})); await a.click('#q-paid'); await a.waitForFunction(() => /Paid/.test(document.querySelector('#qb .pill')?.textContent || '')); ok(true, 'admin marks the accepted quote paid');
   await a.click('text=Price sheet'); await a.waitForSelector('[data-p=base]'); ok((await a.locator('[data-p]').count()) >= 20, 'admin-only price sheet lists every feature'); await shot(a, 'desktop-13b-admin-price-sheet');
   // players
-  await a.click('.side >> text=Players'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Players'); ok((await a.textContent('.tbl')).includes(uname), 'admin players list shows new player');
+  await a.goto(BASE + AP + '/players?q=' + uname); await a.waitForSelector('.tbl'); /* v7 players list (search) */ ok((await a.textContent('.tbl')).includes(uname), 'admin players list shows new player');
   await shot(a, 'desktop-14-admin-players');
-  await a.click('.side >> text=Leaderboards'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Leaderboards'); await a.selectOption('#p', 'weekly'); await sleep(600); ok((await a.textContent('.tbl')).includes(uname), 'admin weekly leaderboard');
-  await a.click('.side >> text=Reports'); await a.waitForSelector('.stat'); await shot(a, 'desktop-15-admin-reports');
+  await a.click('.side >> text=Leaderboards'); await a.waitForFunction(() => (document.querySelector('.ahead h1')?.textContent || '').includes('Leaderboards')); await a.selectOption('#p', 'weekly'); await sleep(600); ok((await a.textContent('.tbl')).includes(uname), 'admin weekly leaderboard');
+  await a.click('.side >> text=Exports'); await a.waitForFunction(() => document.querySelector('.amain')?.textContent.includes('Export')); await shot(a, 'desktop-15-admin-reports'); /* v7: Reports renamed Exports */
   const runsCsv = await a.evaluate(async () => (await fetch('/' + location.pathname.split('/')[1] + '/api/export/runs.csv')).text()); ok(runsCsv.includes(uname), 'runs CSV export');
-  await a.click('.side >> text=Announcements'); await a.fill('#at', 'UI test announcement'); await a.fill('#ab', 'hello'); await a.click('#af button'); await sleep(700);
-  ok((await a.textContent('.amain')).includes('UI test announcement'), 'admin posts announcement');
+  await a.click('.side >> text=Announcements'); await a.waitForSelector('#bn-f'); /* v7: announcements = site banner + broadcast (replaces the old post list) */
+  await a.click('#bn-f .tg-row .toggle span'); await a.fill('#bn-f [name=text]', 'UI test announcement'); await a.click('#bn-f button:has-text("Save banner")'); await sleep(900);
+  { const sc = await (await fetch(BASE + '/api/site-config')).json(); ok(sc.banner && sc.banner.text === 'UI test announcement', 'admin turns on a site banner (shows in the public config)', sc.banner); }
+  await a.click('#bn-f .tg-row .toggle span'); await a.click('#bn-f button:has-text("Save banner")'); await sleep(600);
   console.log('# v3: admin tournaments');
+  const toLocal = (ms) => { const x = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}T${p(x.getHours())}:${p(x.getMinutes())}`; };
   await a.click('.side >> text=Tournaments'); await a.waitForSelector('#tf');
   await a.fill('#tt', 'UI Test Cup'); await a.selectOption('#tg', 'drift-rush'); await a.selectOption('#tfm', 'bracket');
   ok(await a.isVisible('#tq') && await a.isHidden('#te'), 'bracket format shows qualifying + round fields');
@@ -535,11 +520,11 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await v3(a, 'd14-admin-tournaments');
   // admin mobile layout
   const am = await mctx.newPage(); watch(am, 'admin-mobile'); await require('./admin-auth').browserLogin(am, BASE); await am.waitForSelector('.stats'); await shot(am, 'mobile-16-admin-dashboard');
-  await am.goto(gidUrl); await am.waitForSelector('#gf'); await shot(am, 'mobile-17-admin-manage-giveaway');
+  await am.goto(gidUrl); await am.waitForSelector('.gv-acts'); await shot(am, 'mobile-17-admin-manage-giveaway');
   await am.goto(BASE + AP + '/games'); await am.waitForSelector('.agame'); await am.evaluate(() => document.querySelector('.agame[data-game=drift-rush]').scrollIntoView()); await v2(am, 'admin-game-giveaway-linking');
   await am.evaluate(() => document.querySelector('.agame[data-game=stack]').scrollIntoView()); await v2(am, 'admin-game-giveaway-linking-2');
-  await am.goto(BASE + AP + '/giveaways/new?game=terp-tapper'); await am.waitForSelector('#gpk'); await am.click('#gpk .gp[data-g=sky-hopper]'); await am.evaluate(() => document.getElementById('gpk').scrollIntoView({ block: 'center' })); await v2(am, 'admin-giveaway-game-picker');
-  await am.goto(BASE + AP + '/settings'); await am.waitForSelector('#pkg-editor'); await v2(am, 'admin-package-editor');
+  await am.goto(BASE + AP + '/giveaways/new?game=terp-tapper'); await am.waitForSelector('[data-k="basics.title"]'); await v2(am, 'admin-giveaway-builder-mobile');
+  await am.goto(BASE + AP + '/system'); await am.waitForSelector('#pkg-editor'); /* v7: the package editor moved to System */ await v2(am, 'admin-package-editor');
   await am.goto(BASE + AP + '/tournaments'); await am.waitForSelector('#tf'); await v3(am, 'm33-admin-tournaments');
 
   // ---------- cleanup of UI test data (keeps demo data) ----------

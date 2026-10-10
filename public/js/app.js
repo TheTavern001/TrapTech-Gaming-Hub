@@ -1355,7 +1355,7 @@ route(/^\/giveaways\/(\d+)\/rules$/, async (m) => {
 });
 route(/^\/responsible-play$/, () => legal('/responsible-play', 'Responsible Play', 'October 3, 2026', `
   <p>The Gaming Hub is meant to be fun. Here's how we keep it that way:</p>
-  <ul><li><b>No real money.</b> There is no wagering on the Hub. Plinko, Spin to Win and Blazed Roulette give you a fixed number of free drops, spins or chips in each run, and you score points only. Points have no cash value and can't be bought.</li>
+  <ul><li><b>No real money.</b> There is no wagering on the Hub. Every game is skill-based and you score points only. Points have no cash value and can't be bought.</li>
   <li><b>21+ only.</b> Sponsor content comes from adult brands, including cannabis brands. Please keep the Hub away from minors.</li>
   <li><b>Take breaks.</b> Streaks are a bonus and not a chore. Missing a day only resets the streak counter, and you never lose rewards you've already unlocked.</li>
   <li><b>Consume responsibly.</b> If you use cannabis, follow your local laws. Never drive impaired.</li>
