@@ -433,7 +433,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await a.goto(BASE + AP + '/badges'); await a.waitForSelector('.bdg[data-b="beta-tester"]'); await a.click('.bdg[data-b="beta-tester"] [data-x="award"]'); await a.fill('#aw-u', uname); await a.fill('#aw-n', 'UI test grant'); await a.click('.v7dlg .row-end .btn:not(.ghost)'); await sleep(900); await a.goto(BASE + AP + '/badges?tab=grants'); await sleep(900);
   ok((await a.textContent('.amain')).includes(uname), 'admin grants a special badge (shows in holders/audit)'); await v5(a, 'admin-grant-badge', true);
   { const sb = await a.evaluate(async (u) => (await (await fetch('/api/users/' + u + '/special-badges')).json()).granted.map(b => b.id), uname); ok(sb.includes('beta-tester'), 'granted badge is visible on the public profile API', sb); }
-  await a.click('#bg-revoke'); await sleep(700);
+  await a.evaluate(async (u) => fetch('/api/admin/v7/badges/award', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name=csrf]').content }, body: JSON.stringify({ username: u, badge: 'beta-tester', action: 'revoke' }) }), uname); await sleep(300); // clean up the test grant
   await a.goto(BASE + AP + '/fairplay'); await a.waitForSelector('#fp-tabs'); ok((await a.textContent('.amain')).includes('Nobody is ever banned automatically'), 'admin Fair Play queue (soft flags, no auto-bans)'); await v5(a, 'admin-fair-play', true);
   console.log('# admin: one-click giveaway linking');
   await a.click('.side >> text=Games'); await a.waitForSelector('.agame');

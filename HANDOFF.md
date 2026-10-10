@@ -54,6 +54,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 The latest results are in PROGRESS-V7.md (phase 9).
 
 ## Known limits / follow-ups
+- **Two older suites are not green:**  (138 pass / 12 fail) and  (165 pass / 10 fail, then it stops at the old admin giveaway-linking screen). Both still assume v4-v6 admin screens and rules (for example the one-click linking UI, the old badge form, first-to-score tie-breaks) that the v7 admin overhaul replaced. The v7 admin is covered by  and , and the player side by  (176/0). One e2e-admin check (a 500/500 tie in a builder giveaway) still came out in submission order, so the v7 builder's standings path needs a look to confirm it uses the duration tie-break.
 - The checkout sweep polls mempool.space about once a minute while orders are open. If mempool.space is down, orders wait. Nothing is lost, and the admin can verify by hand.
 - The BTC/USD price comes from a free API at checkout. If it's unreachable, checkout shows "try again" and never guesses a price.
 - Idle RSS is ~75 MB and the measured peak is 87 MB, against the ~100 MB budget on the 128 MB plan.
