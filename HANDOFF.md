@@ -59,3 +59,4 @@ The latest results are in PROGRESS-V7.md (phase 9).
 - The BTC/USD price comes from a free API at checkout. If it's unreachable, checkout shows "try again" and never guesses a price.
 - Idle RSS is ~75 MB and the measured peak is 87 MB, against the ~100 MB budget on the 128 MB plan.
 - `scripts/build-assets.js` is still untracked on purpose.
+- Games-library suite (other worker's): 61/62; only cloud-hopper failed, and the failure was in the test harness (its random signup username was rejected by the username filter), not in the game.
