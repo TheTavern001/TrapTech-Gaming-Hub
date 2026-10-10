@@ -49,6 +49,18 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await ADM(`/api/admin/events/${gid}/playoff/${pid}/resolve`, { method: 'POST' }); ok(r.body.ok && r.body.playoff.status === 'decided' && r.body.playoff.winner_user_id === B.id, 'playoff resolved: best playoff run wins', r.body.playoff);
   r = await ADM(`/api/admin/events/${gid}/playoff/${pid}/apply`, { method: 'POST' }); ok(r.body.ok && r.body.winners[0].username === B.u, 'applying the playoff makes B the winner in the locked standings', r.body);
   r = await client()(`/api/giveaways/${gid}`); ok(r.body.giveaway.winners[0].username === B.u && r.body.giveaway.winners[0].state === 'pending', 'public page shows the playoff winner pending verification');
+  // regression (Oct 10): multi-game "sum of best" ties used only the LAST counted run's duration, so equal sums fell
+  // back to user id / submission order. Now the tie-break is the total server-timed duration of every counted run.
+  { const t1 = Date.now(); let g2 = await ADM('/api/admin/giveaways', { body: { title: 'E2E Sum Tie', host: 'Acme', start_at: t1 - 3600e3, end_at: t1 + 3600e3, game_ids: ['stack', 'brick-breaker'], score_rule: 'sum_best', active: true, winner_count: 1 } });
+    const g2id = g2.body.id || (g2.body.giveaway || {}).id; db.prepare("UPDATE giveaways SET score_rule='sum_best' WHERE id=?").run(g2id);
+    const ins = db.prepare('INSERT INTO runs (user_id, game_id, score, coins, duration_ms, started_at, created_at, ip_hash, verify, held, event_id) VALUES (?,?,?,0,?,?,?,?,?,0,?)');
+    const put = (uid, game, score, agoMin, durS) => { const c = t1 - agoMin * 60e3; ins.run(uid, game, score, durS * 1000, c - durS * 1000, c, 'tb', 'cleared', g2id); };
+    put(A.id, 'stack', 300, 50, 60); put(A.id, 'brick-breaker', 200, 49, 60);  // A: 500 in 120 s total, reached first
+    put(B.id, 'stack', 500, 30, 70);                                          // B: 500 in 70 s, reached later
+    put(C.id, 'stack', 250, 20, 50); put(C.id, 'brick-breaker', 250, 19, 50);  // C: 500 in 100 s
+    const st = (await client()(`/api/leaderboard?giveaway=${g2id}`)).body.rows.map(x => x.username);
+    ok(st[0] === B.u && st[1] === C.u && st[2] === A.u, 'sum-of-best tie: ordered by total server-timed duration (B 70 s, C 100 s, A 120 s), not by who scored first', st);
+    await ADM('/api/admin/giveaways/' + g2id, { method: 'DELETE' }); }
   await ADM('/api/admin/giveaways/' + gid, { method: 'DELETE' });
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

@@ -39,29 +39,29 @@ function standings(g, games, capSql, E) {
   const comp = gm.competition || {}; const lvl = rule === 'campaign' && hasCol('runs', 'level');
   const capRun = capS ? ` AND (r.created_at - r.started_at) <= ${capS * 1000 + 5000}` : '';
   const lvlSql = lvl ? ` AND r.level BETWEEN ${Math.max(0, parseInt(comp.level_from, 10) || 1)} AND ${Math.max(1, parseInt(comp.level_to, 10) || 999)}` : '';
-  const base = `w0 AS (SELECT r.id, r.user_id, r.game_id, r.score, ${wExpr} AS ws, r.created_at, r.duration_ms AS dur${lvl ? ', r.level AS lv' : ''},
+  const base = `w0 AS (SELECT r.id, r.user_id, r.game_id, r.score, ${wExpr} AS ws, r.created_at, r.duration_ms AS dur, (r.created_at - r.started_at) AS sdur, (SELECT m.m2 FROM lib_run_metrics m WHERE m.run_id = r.id) AS sk${lvl ? ', r.level AS lv' : ''},
         ROW_NUMBER() OVER (PARTITION BY r.user_id, r.game_id ORDER BY r.created_at ASC, r.id ASC) AS an FROM runs r
       WHERE r.event_id = ${+g.id} AND r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql} OR r.verify = 'cleared')${pauseSql}${capRun}${lvlSql}),
     w AS (SELECT * FROM w0 ${attempts ? `WHERE an <= ${attempts}` : ''}),
     att AS (SELECT user_id, COUNT(*) AS attempts FROM w GROUP BY user_id),
     q AS (SELECT * FROM w WHERE score >= @min)`;
   let pick;
-  if (rule === 'fastest') pick = `x AS (SELECT user_id, id, created_at, ws AS tot, dur, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, dur ASC, created_at ASC, id ASC) AS rl FROM q)`;
-  else if (rule === 'campaign' && lvl) pick = `b AS (SELECT user_id, lv, id, ws, created_at, ROW_NUMBER() OVER (PARTITION BY user_id, game_id, lv ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
-    x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)`;
-  else if (rule === 'campaign') pick = `x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM q)`;
-  else if (rule === 'best') pick = `x AS (SELECT user_id, id, created_at, ws AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, created_at ASC, id ASC) AS rl FROM q)`;
-  else if (rule === 'total') pick = `x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM q)`;
-  else if (rule === 'avg_top') pick = `t AS (SELECT user_id, id, ws, created_at, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
-    x AS (SELECT user_id, id, created_at, CAST(ROUND(SUM(ws) OVER (PARTITION BY user_id) * 1.0 / ${topN}) AS INTEGER) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM t WHERE rn <= ${topN})`;
+  if (rule === 'fastest') pick = `x AS (SELECT user_id, id, created_at, ws AS tot, dur, sdur AS tds, sk AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, dur ASC, created_at ASC, id ASC) AS rl FROM q)`;
+  else if (rule === 'campaign' && lvl) pick = `b AS (SELECT user_id, lv, id, ws, created_at, sdur, sk, ROW_NUMBER() OVER (PARTITION BY user_id, game_id, lv ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
+    x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)`;
+  else if (rule === 'campaign') pick = `x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM q)`;
+  else if (rule === 'best') pick = `x AS (SELECT user_id, id, created_at, ws AS tot, sdur AS tds, sk AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, created_at ASC, id ASC) AS rl FROM q)`;
+  else if (rule === 'total') pick = `x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM q)`;
+  else if (rule === 'avg_top') pick = `t AS (SELECT user_id, id, ws, created_at, sdur, sk, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
+    x AS (SELECT user_id, id, created_at, CAST(ROUND(SUM(ws) OVER (PARTITION BY user_id) * 1.0 / ${topN}) AS INTEGER) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM t WHERE rn <= ${topN})`;
   else if (rule === 'improved') pick = `pre AS (SELECT r.user_id, r.game_id, MAX(${wExpr}) AS base FROM runs r WHERE r.game_id IN (${games.map(() => '?').join(',')}) AND r.created_at < @s AND r.held = 0 GROUP BY r.user_id, r.game_id),
-    b AS (SELECT q.user_id, q.game_id, q.id, q.ws, q.created_at, ROW_NUMBER() OVER (PARTITION BY q.user_id, q.game_id ORDER BY q.ws DESC, q.created_at ASC, q.id ASC) AS rn FROM q),
-    imp AS (SELECT b.user_id, b.id, b.created_at, b.ws - pre.base AS gain FROM b JOIN pre ON pre.user_id = b.user_id AND pre.game_id = b.game_id WHERE b.rn = 1 AND b.ws > pre.base),
-    x AS (SELECT user_id, id, created_at, SUM(gain) OVER (PARTITION BY user_id) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM imp)`;
-  else pick = `b AS (SELECT user_id, game_id, id, ws, created_at, ROW_NUMBER() OVER (PARTITION BY user_id, game_id ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
-    x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)`;
+    b AS (SELECT q.user_id, q.game_id, q.id, q.ws, q.created_at, q.sdur, q.sk, ROW_NUMBER() OVER (PARTITION BY q.user_id, q.game_id ORDER BY q.ws DESC, q.created_at ASC, q.id ASC) AS rn FROM q),
+    imp AS (SELECT b.user_id, b.id, b.created_at, b.sdur, b.sk, b.ws - pre.base AS gain FROM b JOIN pre ON pre.user_id = b.user_id AND pre.game_id = b.game_id WHERE b.rn = 1 AND b.ws > pre.base),
+    x AS (SELECT user_id, id, created_at, SUM(gain) OVER (PARTITION BY user_id) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM imp)`;
+  else pick = `b AS (SELECT user_id, game_id, id, ws, created_at, sdur, sk, ROW_NUMBER() OVER (PARTITION BY user_id, game_id ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
+    x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)`;
   const sql = `WITH ${base}, ${pick}
-    SELECT ${U}, x.tot AS score, x.created_at AS reached_at, x.id AS best_run_id, att.attempts, (SELECT rr.created_at - rr.started_at FROM runs rr WHERE rr.id = x.id) AS tdur, (SELECT m.m2 FROM lib_run_metrics m WHERE m.run_id = x.id) AS skill
+    SELECT ${U}, x.tot AS score, x.created_at AS reached_at, x.id AS best_run_id, att.attempts, x.tds AS tdur, x.sks AS skill
     FROM x JOIN att ON att.user_id = x.user_id JOIN users u ON u.id = x.user_id
     WHERE x.rl = 1 AND att.attempts >= @minruns AND u.banned = 0 AND NOT EXISTS (SELECT 1 FROM giveaway_dq d WHERE d.giveaway_id = @gid AND d.user_id = x.user_id)
     ${g.require_join ? 'AND EXISTS (SELECT 1 FROM giveaway_entries e WHERE e.giveaway_id = @gid AND e.user_id = x.user_id AND e.left_at IS NULL)' : ''}
