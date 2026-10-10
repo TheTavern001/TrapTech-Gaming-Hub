@@ -6,7 +6,7 @@
   async function post(p, b) { const r = await fetch(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(b) }); let j = {}; try { j = await r.json(); } catch (e) {} j.status = r.status; return j; }
   H.start = async function (id) {
     H.id = id; H.ev = []; H.last = 0; H.n = 0; H.tel = { n: 0, last: 0, sum: 0, sq: 0, k: 0, min: 0 }; H.token = null; H.seed = null; H.t0 = performance.now();
-    try { const qs = new URLSearchParams(location.search); const po = qs.get('playoff'); const event = qs.get('event') || qs.get('event_code') || qs.get('giveaway_id'); const body = { game_id: id }; if (po) body.playoff = po; if (event) body.event = event; const r = await post('/api/run/start', body); if (r.ok) { H.token = r.token; H.seed = r.seed; H.guest = false; } else { H.guest = r.status === 401; H.err = r.error; } } catch (e) { H.guest = true; }
+    try { const qs = new URLSearchParams(location.search); const po = qs.get('playoff'); const event = qs.get('event') || qs.get('event_code') || qs.get('giveaway_id') || qs.get('giveaway'); const body = { game_id: id }; if (po) body.playoff = po; if (event) body.event = event; const r = await post('/api/run/start', body); if (r.ok) { H.token = r.token; H.seed = r.seed; H.guest = false; } else { H.guest = r.status === 401; H.err = r.error; } } catch (e) { H.guest = true; }
     H.t0 = performance.now(); return H.seed;
   };
   // kind: short string (<=6 chars); value: points for scoring kinds, progression value for marks (w/r/t/x)
