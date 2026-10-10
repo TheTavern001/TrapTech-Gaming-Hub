@@ -55,7 +55,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
         if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') if (WRITE_THUMB(g.slug)) await page.locator('#gl, canvas').first().screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
       }
       R.desktop.fps = await page.evaluate(() => window.__GL.fps);
-      if (!shot && WRITE_THUMB(g.slug)) await page.locator('#gl, canvas').first().screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 });
+      // no fallback thumbnail: a frame taken after the run ended would be a game-over screen (use tools/games-lib-thumb.js)
       // end the run through the game's own game-over path (same code path as dying) if the bot is still alive
       await page.evaluate(() => { if (window.__GL.state === 'play') { if (window.__GL.g.paused) window.__GL.g.paused = false; window.__GL.g.end('test end'); } });
       await page.waitForFunction(() => window.__GL.lastSubmit, null, { timeout: 8000 }).catch(() => {});
