@@ -1,16 +1,15 @@
 # Games Library (The Gaming Hub)
 
-> Reconciled manually against `src/games-lib.js` on branch `games-lib-integrity-audit`. Run `node tools/games-lib-build.js` to regenerate the project’s canonical report when a local Node environment is available.
+> Registry reconciliation for branch `games-lib-integrity-audit`. `src/games-lib.js` is the registry source of truth. This report does not imply browser or mobile tests have passed.
 
-## Current source-of-truth counts
-- Registry entries: **99**
-- Categories: Endless Runners: 11 | Driving: 16 | Physics & Destruction: 5 | Tower Defense: 4 | Survival & Horde: 5 | Arcade Shooters: 5 | Puzzle & Brain: 11 | Reflex & Skill: 15 | Combat: 2 | Sports: 10 | Specialty: 4 | Cannabis: 11
-- All entries are configured as giveaway-eligible in the source registry, but this is configuration—not proof that a fresh competitive-integrity, performance, mobile, or asset-license audit passed.
-- Current branch adds **Neon Circuit**, an original endless arcade racer. It has not been run in the browser or passed the automated test harness in this environment.
-- A saved E2E report must not be treated as fresh unless the test run is repeated against the exact commit under review.
+- Source registry entries: **100**
+- Public catalog entries: **100**
+- New original games on this branch: Neon Circuit and Rift Survival.
+- All games still require fresh browser tests, real mobile performance checks, visual review, scoring-integrity validation, and asset-license review before being described as verified.
 
 ## Registry
-| # | Hub name | Internal reference | Category | Tier | Mode | Build | Score model | Rate ceiling/s | Fresh verification |
+
+| # | Hub name | Internal reference | Category | Tier | Mode | Build | Scoring model | Points/sec ceiling | Verification |
 |---:|---|---|---|---|---|---|---|---:|---|
 | 1 | Sky Flap | Flappy Bird | Endless Runners | A+ | endless | built | 1 point per gate passed | 2 | Not freshly verified |
 | 2 | Block Drop | Tetris | Puzzle & Brain | A+ | endless | built | Lines 100/300/500/800 x level + soft drop | 220 | Not freshly verified |
@@ -111,33 +110,32 @@
 | 97 | Skee Roll | Skee-Ball | Reflex & Skill | A | endless | built | Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame | 100 | Not freshly verified |
 | 98 | Castle Crush | Crush the Castle | Physics & Destruction | A | endless-levels | built | Blocks 5-25, kings 300, castle bonus 500 x stones left + 200 x level | 400 | Not freshly verified |
 | 99 | Neon Circuit | Original neon arcade racer | Driving | A | endless | built | Energy cells 25 + near-miss 5; score is awarded during play | 120 | Not freshly verified |
+| 100 | Rift Survival | Original arena survival game | Survival & Horde | A | endless | built | Eliminations 10+wave bonus; shards 25; survival time 2/sec | 180 | Not freshly verified |
 
-## Quality gate before a game counts as finished
+## Mandatory acceptance gate
 
-1. Game loads without console/page errors on desktop and a mobile viewport.
-2. Legitimate scores are accepted and forged scores are rejected by the server.
-3. Score rules and rate ceiling are consistent with the game’s actual scoring loop; stronger event-log/replay validation is preferred over a rate ceiling alone.
-4. Mobile controls, pause/resume, visibility changes, orientation, restart, and end-of-run flow work correctly.
-5. Performance is measured on target mobile hardware; target is stable 60 FPS where practical, with no sustained sub-30 FPS sections.
-6. Art, sound, fonts, code, and trademarks have documented commercial-use rights; attribution alone is not permission.
-7. AAA/premium visual review includes a captured gameplay frame against a reference target and a human quality score of at least 7/10.
-8. Only after all gates pass should the game be marked verified / giveaway-ready.
+1. Desktop and mobile browsers load the game without console errors.
+2. Legitimate score submission succeeds and forged score submission is rejected by the server.
+3. Pause/resume, visibility changes, orientation, touch controls, restart, and end-of-run work correctly.
+4. Profile actual frame time on target phones. Aim for stable 60 FPS; investigate any sustained drop below 50 FPS and reject sustained below-30 FPS.
+5. Replace placeholder-looking geometry where it undermines the visual target; use original or commercially cleared models, materials, lighting, animation, VFX, and audio.
+6. Capture a representative screenshot and perform side-by-side human review; visual quality must reach at least 7/10 before calling a game finished.
+7. Record third-party code, art, sound, font, and trademark permissions. Attribution does not grant commercial rights.
+8. Do not label a game giveaway-ready based solely on registry metadata.
 
-## Known integrity issues requiring a fresh run
+## Known defects to reproduce
 
-- Desert Dash (registry slug `dino-dash`): previous report flagged broken/undefined FPS instrumentation; reproduce and repair the measurement before using it to assess performance.
-- Rail Rush, Lane Racer, Moto Lanes: previous handoff reported low frame-rate results. Reprofile and optimize rather than accepting old labels as current proof.
-- Catalog and documentation were stale compared with source registry; this branch reconciles `catalog.json` to 99 source entries and this document lists those same entries.
-- No source code, score logic, or deployment should be treated as fixed until tests are run against the branch commit and the resulting evidence is reviewed.
+- Desert Dash (`dino-dash`): previous report flagged broken/undefined FPS instrumentation.
+- Rail Rush, Lane Racer, and Moto Lanes: prior handoff reported low FPS; these need new profiling before fixes are declared.
+- New games Neon Circuit and Rift Survival are added but have not been run in the browser or on a physical phone in this environment.
 
-## Test harness
-
-Run locally from repository root after installing dependencies and starting the test server:
+## Suggested test sequence
 
 ```sh
 node tools/games-lib-integrity-audit.js
 BASE=http://localhost:8795 node tools/e2e-games-lib.js neon-circuit
+BASE=http://localhost:8795 node tools/e2e-games-lib.js rift-survival
 BASE=http://localhost:8795 node tools/e2e-games-lib.js dino-dash,rail-rush,lane-racer,moto-lanes
 ```
 
-The integrity script checks structural mismatches and stale evidence; it does not replace the E2E browser tests, mobile performance profiling, visual review, or legal asset audit.
+The audit script is structural only. It does not replace E2E testing, device profiling, visual review, or legal asset review.
