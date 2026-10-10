@@ -196,7 +196,7 @@ app.get('/api/leaderboard', (req, res) => {
   res.json({ ok: true, game, period, total: rows.length, rows: rows.slice(0, limit).map(publicRow), me: mine && publicRow(mine), now: now() });
 });
 Object.assign(H, { now, bad, limiter, logActivity, str });
-const publicRow = (r) => ({ rank: r.rank, username: r.username, score: r.score, runs: r.runs, last_at: r.last_at, demo: !!r.is_demo, cos: ach.publicCos(r) });
+const publicRow = (r) => ({ rank: r.rank, username: r.username, score: r.score, runs: r.runs, last_at: r.last_at, demo: !!r.is_demo, cos: ach.publicCos(r), ...(r.tiebreak !== undefined ? { tiebreak: r.tiebreak || null, exact_tie: !!r.exact_tie } : {}) });
 
 // ---------- runs / anti-cheat ----------
 app.post('/api/run/start', requireUser, (req, res) => {

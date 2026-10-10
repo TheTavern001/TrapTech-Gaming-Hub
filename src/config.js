@@ -135,7 +135,12 @@ const RETIRED = [
 ];
 // v7 (item 21): pure-chance games stay playable "just for fun" but can never be linked to (or count for) a giveaway.
 // Every giveaway-eligible game is skill-based, endless and uncapped.
-const JUST_FOR_FUN = new Set(['plinko', 'spin-to-win', 'blazed-roulette']);
+// Reese, Oct 10 2026: EVERY game must be giveaway-eligible (100%). The three pure-chance games (Plinko, Spin to Win,
+// Blazed Roulette) are retired from the catalog: their boards are archived (src/games-v7.js), old runs/challenges keep
+// resolving a title, and open giveaways/tournaments linked to them move to Stack. Skill rebuilds can return later as new games.
+const CHANCE_RETIRED = ['plinko', 'spin-to-win', 'blazed-roulette'];
+for (const id of CHANCE_RETIRED) { const i = GAMES.findIndex(g => g.id === id); if (i >= 0) { const [g] = GAMES.splice(i, 1); RETIRED.push({ ...g, title: g.title + ' (retired)', retired: true, playable: false, replacedBy: 'stack' }); } }
+const JUST_FOR_FUN = new Set(); // no just-for-fun games any more
 // v7 anti-cheat level per game (src/ac-levels.js, docs/ANTI-CHEAT.md). Every game gets L1 + L2; L3 = event log checked
 // against the game rules; L4 = the server re-simulates the run from the seed + input log and computes the real score.
 const AC_LEVEL = { 'jetpack-dash': 2, 'sky-hopper': 2, stack: 4, 'memory-match': 4 }; // everything else: 3

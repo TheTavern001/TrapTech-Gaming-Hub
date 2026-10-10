@@ -2,7 +2,7 @@
 // v7 item 22: giveaway score rules for builder-made giveaways. results.liveStandings() calls standings() whenever
 // custom(g) is true, and keeps its original query for everything else (legacy giveaways are untouched).
 // Every rule returns rows with the same shape and the same deterministic tiebreaks as v4:
-//   score DESC, reached_at ASC (when the deciding run was set), attempts ASC, best_run_id ASC.
+//   score DESC, then skill only: shorter server-timed deciding run, then the game's skill metric, then a sudden-death playoff.
 // Rules (per-game weight w multiplies every run score of that game, rounded to an integer):
 //   best      best single weighted run across the linked games
 //   sum_best  sum of the best weighted run per linked game (the v4 default)
@@ -61,12 +61,12 @@ function standings(g, games, capSql, E) {
   else pick = `b AS (SELECT user_id, game_id, id, ws, created_at, ROW_NUMBER() OVER (PARTITION BY user_id, game_id ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
     x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)`;
   const sql = `WITH ${base}, ${pick}
-    SELECT ${U}, x.tot AS score, x.created_at AS reached_at, x.id AS best_run_id, att.attempts
+    SELECT ${U}, x.tot AS score, x.created_at AS reached_at, x.id AS best_run_id, att.attempts, (SELECT rr.created_at - rr.started_at FROM runs rr WHERE rr.id = x.id) AS tdur, (SELECT m.m2 FROM lib_run_metrics m WHERE m.run_id = x.id) AS skill
     FROM x JOIN att ON att.user_id = x.user_id JOIN users u ON u.id = x.user_id
     WHERE x.rl = 1 AND att.attempts >= @minruns AND u.banned = 0 AND NOT EXISTS (SELECT 1 FROM giveaway_dq d WHERE d.giveaway_id = @gid AND d.user_id = x.user_id)
     ${g.require_join ? 'AND EXISTS (SELECT 1 FROM giveaway_entries e WHERE e.giveaway_id = @gid AND e.user_id = x.user_id AND e.left_at IS NULL)' : ''}
     ${hasCol('users', 'shadow_banned') ? 'AND u.shadow_banned = 0' : ''}
-    ORDER BY score DESC, ${rule === 'fastest' ? 'x.dur ASC, ' : ''}reached_at ASC, att.attempts ASC, best_run_id ASC`;
+    ORDER BY score DESC, ${rule === 'fastest' ? 'x.dur ASC, ' : ''}tdur ASC, (skill IS NULL) ASC, skill DESC, u.id ASC`; // skill-only tie-breaks (Reese, Oct 10 2026)
   const params = rule === 'improved' ? [...games, ...games] : [...games];
   const rows = db.prepare(sql).all(...params, { s: g.start_at, e: g.end_at, min: g.min_score || 0, gid: g.id, minruns: g.min_runs || 0 });
   // free bonus entries for random draws (never bought: quests completed + friends invited who played in the window)

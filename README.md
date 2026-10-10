@@ -178,8 +178,10 @@ Community feed), Reports (CSV exports and rejected anti-cheat submissions), Sett
 - **Deterministic winner rules.** Score giveaways rank each entrant by their best qualifying score. A qualifying run starts and finishes inside the window,
   meets the minimum score and is within the game's plausibility cap for its server-measured duration; with several linked games it is the sum of the best per game.
   Tiebreakers, shown on the giveaway page, the live board and in Official Rules section 5:
-  (a) higher score wins; (b) if tied, whoever reached that score first (server timestamp of the run that set it); (c) then fewer attempts (runs in the window);
-  (d) then the earlier-submitted run (lower run ID). Every place is unique.
+  SKILL-ONLY (Reese, Oct 2026): (a) higher score wins; (b) if tied, the shorter server-timed run(s) to that score; (c) then the game's
+  skill metric from the validated event log (src/games-lib-playoff.js `metricsFor`); (d) an exact tie on a winning place is settled by a
+  sudden-death playoff (same seed, one run each) that the admin starts from the event (POST /api/admin/events/:id/playoff, then /apply).
+  First-to-score, fewest attempts and submission time are never used.
 - **Verifiable random draws** (`win_method=random`) use commit-reveal. When the giveaway is created, the server picks a secret seed and publishes
   `draw_commit = SHA-256(seed)`. At the end it locks the entrant list, publishes `entrants_hash = SHA-256(lines "rank|username|score|run_id|reached_at|attempts")`
   and reveals the seed. Draw keys are `HMAC-SHA256(seed, entrants_hash + ":" + username)`, sorted ascending. One entry per player, so nobody can be drawn twice.

@@ -537,7 +537,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   if (!document.getElementById('game')) return; // navigated away while loading
   let token = null; let tokenErr = null;
   const eventRef = url.searchParams.get('event') || giveawayId || undefined; // v7: official event run (server validates)
-  const getToken = async () => { token = null; tokenErr = null; if (!S.me) return; const r = await api('/api/run/start', { method: 'POST', body: { game_id: g.id, event: eventRef } }); if (r.ok) { token = r.token; if (S.game && S.game.setSeed) S.game.setSeed(r.seed); } else tokenErr = r.error; };
+  const getToken = async () => { token = null; tokenErr = null; if (!S.me) return; const r = await api('/api/run/start', { method: 'POST', body: { game_id: g.id, event: eventRef, playoff: url.searchParams.get('playoff') || undefined } }); if (r.ok) { token = r.token; if (S.game && S.game.setSeed) S.game.setSeed(r.seed); } else tokenErr = r.error; };
   const ov = document.getElementById('ov');
   const canvas = document.getElementById('game');
   const game = new Cls(canvas, { best, onEnd: (res) => finish(res), onState: (s) => { const pb = document.getElementById('pause'); if (pb) pb.innerHTML = icon(s === 'paused' ? 'play' : 'pause'); if (s === 'paused') showPause(); else if (s === 'play') ov.classList.add('hidden'); } });
@@ -757,8 +757,8 @@ route(/^\/me\/entries$/, async () => {
 
 // ---------------- v4: winner rules, live standings, final results ----------------
 // Same text as src/results.js TIEBREAK_RULES (the API also sends it as tiebreak_rules).
-const TB_RULES = ['Higher score wins.', 'If scores are tied, whoever reached that score first wins (server timestamp of the run that set it).', 'If still tied, the player with fewer attempts (runs in the giveaway window) wins.', 'If still tied, the earlier-submitted run (lower run ID) wins.'];
-const TB_TAG = { time: 'Tie: reached first', attempts: 'Tie: fewer attempts', run: 'Tie: earlier run' };
+const TB_RULES = ['Higher score wins.', 'If scores are tied, the shorter server-timed run (or runs) to that score wins.', "If still tied, the game's skill metric from the validated event log wins.", 'If still exactly tied: sudden-death playoff (one run each, same seed).'];
+const TB_TAG = { time: 'Tie: faster run', skill: 'Tie: skill metric', playoff: 'Tie: playoff', exact: 'Exact tie: playoff' };
 const tbList = (g) => `<ol class="tb-rules">${((g && g.tiebreak_rules) || TB_RULES).map(x => `<li>${esc(x)}</li>`).join('')}</ol>`;
 const stamp = (ms) => ms ? new Date(ms).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' }) : '';
 const placeIc = (p) => p === 1 ? 'crown' : p <= 3 ? 'medal' : 'trophy';

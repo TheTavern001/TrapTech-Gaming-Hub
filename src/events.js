@@ -125,6 +125,34 @@ function routes(app, A, H) {
       pick(b.booking_status, ['none', 'requested', 'quoted', 'accepted', 'booked'], g.booking_status), pick(b.payment_status, ['n/a', 'unpaid', 'paid', 'refunded', 'comped'], g.payment_status), Date.now(), g.id);
     res.json({ ok: true, event: eventPublic(find(g.id)) });
   });
+  // sudden-death playoff for an exact skill tie on a winning place (src/games-lib-playoff.js; admin page /games-lib/admin-playoffs.html)
+  A.get('/events/:id/ties', (req, res) => { const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false });
+    const R = require('./results'); const res2 = g.finalized_at ? R.results(g) : null;
+    const live = R.liveStandings(g).filter(r => r.exact_tie).map(r => ({ user_id: r.user_id, username: r.username, score: r.score, tdur: r.tdur, skill: r.skill }));
+    res.json({ ok: true, finalized: !!g.finalized_at, playoff_needed: res2 ? res2.playoff_needed : null, live_exact_ties: live,
+      playoffs: db.prepare('SELECT id FROM lib_playoffs WHERE giveaway_id=? ORDER BY id').all(g.id).map(r => require('./games-lib-playoff').getPlayoff(r.id)) }); });
+  A.post('/events/:id/playoff', (req, res) => { const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });
+    const R = require('./results'); const rr = g.finalized_at ? R.results(g) : null; const tied = rr && rr.playoff_needed;
+    if (!tied || tied.length < 2) return res.status(400).json({ ok: false, error: 'No exact tie on a winning place (lock the results first).' });
+    const top = Math.max(...tied.map(t => t.score)); const ids = tied.filter(t => t.score === top).map(t => t.user_id);
+    const gameId = String((req.body && req.body.game_id) || gamesOf(g.id)[0]);
+    try { const P = require('./games-lib-playoff'); const p = P.createPlayoff({ giveawayId: g.id, gameId, userIds: ids, windowMin: (req.body && req.body.window_min) || 60, note: 'Official event ' + g.event_code });
+      for (const u of ids) require('./notify').notify(u, 'giveaway', `Sudden-death playoff: ${g.title}`, `You are exactly tied for a winning place. Play ONE run of ${(cfg.GAME_MAP[gameId] || {}).title || gameId} before ${new Date(p.closes_at).toLocaleString('en-US', { timeZone: 'America/New_York' })} ET. Everyone gets the same seed.`, `/play/${gameId}?playoff=${p.id}`, 'swords');
+      require('./results').audit(g.id, 'admin', 'playoff_started', null, { playoff_id: p.id, game_id: gameId, players: ids });
+      res.json({ ok: true, playoff: p }); } catch (e) { res.status(400).json({ ok: false, error: e.message }); } });
+  A.post('/events/:id/playoff/:pid/resolve', (req, res) => { const P = require('./games-lib-playoff'); const p = P.getPlayoff(+req.params.pid); const g = find(req.params.id);
+    if (!g || !p || p.giveaway_id !== g.id) return res.status(404).json({ ok: false, error: 'Unknown playoff.' });
+    try { res.json({ ok: true, playoff: P.resolve(p.id) }); } catch (e) { res.status(400).json({ ok: false, error: e.message }); } });
+  // apply a decided playoff to the locked standings: the tied group is reordered by playoff finish (winner first)
+  A.post('/events/:id/playoff/:pid/apply', (req, res) => { const g = find(req.params.id); const P = require('./games-lib-playoff');
+    let p = P.getPlayoff(+req.params.pid); if (!g || !p || p.giveaway_id !== g.id) return res.status(404).json({ ok: false, error: 'Unknown playoff.' });
+    while (p && p.status === 'tied') { const nx = db.prepare('SELECT id FROM lib_playoffs WHERE parent_id=? ORDER BY id DESC LIMIT 1').get(p.id); p = nx ? P.getPlayoff(nx.id) : null; }
+    if (!p || p.status !== 'decided') return res.status(409).json({ ok: false, error: 'The playoff is not decided yet (resolve it after its window closes).' });
+    const order = [...p.entries].map(e => e.run_id != null ? e : { ...e, score: -1, m1: null, m2: null }).sort((a, b) => P.cmp(p.game_id, a, b));
+    const i = order.findIndex(e => e.user_id === p.winner_user_id); if (i > 0) order.unshift(order.splice(i, 1)[0]);
+    order.forEach((e, k) => db.prepare('UPDATE giveaway_results SET playoff_pos=? WHERE giveaway_id=? AND user_id=?').run(k + 1, g.id, e.user_id));
+    require('./results').audit(g.id, 'admin', 'playoff_applied', null, { playoff_id: p.id, order: order.map(e => e.user_id) });
+    res.json({ ok: true, winners: require('./results').results(db.prepare('SELECT * FROM giveaways WHERE id=?').get(g.id)).winners }); });
   A.post('/events/:id/regen-code', (req, res) => { const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false }); const c = newCode(); db.prepare('UPDATE giveaways SET event_code=? WHERE id=?').run(c, g.id); res.json({ ok: true, code: c }); });
 }
 // called after any giveaway insert so new giveaways always get a code

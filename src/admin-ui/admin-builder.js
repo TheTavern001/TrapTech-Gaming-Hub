@@ -5,7 +5,7 @@ import { cropUpload } from './admin-crop.js';
 
 const STEPS = [['basics', 'Basics', 'type'], ['media', 'Media', 'image'], ['schedule', 'Schedule', 'calendar-clock'], ['games', 'Games', 'gamepad-2'], ['prizes', 'Prizes', 'gift'],
   ['entry', 'Entry rules', 'shield-check'], ['features', 'Features', 'sparkles'], ['winners', 'Winners', 'crown'], ['rules', 'Official rules', 'scale'], ['review', 'Review', 'rocket']];
-const TIEBREAKS = ['Higher score ranks higher.', 'Same score: the player who reached it first wins.', 'Still tied: fewer attempts in the window wins.', 'Still tied: the earlier run (lower run ID) wins.'];
+const TIEBREAKS = ['Higher score ranks higher.', 'Same score: the shorter server-timed run wins.', 'Still tied: the game\'s skill metric from the validated event log wins.', 'Still exactly tied: sudden-death playoff (same seed, one run each), started from the event admin.'];
 const QUICK = [['15 min', 15 * 60e3], ['37 min', 37 * 60e3], ['1 hour', 3600e3], ['6 hours', 6 * 3600e3], ['1 day', 864e5], ['3 days', 3 * 864e5], ['1 week', 7 * 864e5], ['2 weeks', 14 * 864e5], ['1 month', 30 * 864e5], ['3 months', 91 * 864e5]];
 let M = null; const S = { id: 0, d: null, v: null, step: 'basics', saved_at: 0, base: 0, timer: null, saving: false, pending: false, draft: null, view: 'card', device: 'phone' };
 const ord = (n) => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th');

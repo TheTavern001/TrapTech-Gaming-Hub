@@ -27,20 +27,29 @@ const M2 = { 'lane-racer': ['n', 'More near misses'], 'road-brawl': ['k', 'More 
   'zig-path': ['g', 'More gems'], 'road-hopper': ['c', 'More coins'], 'block-drop': ['l', 'More line clears'], 'duck-shot': ['k', 'More birds hit'], 'castle-crush': ['w', 'More castles cleared'],
   'sling-siege': ['k', 'More targets'], 'trim-rush': ['c', 'More clean trims'], 'cab-rush': ['f', 'More fares'], 'park-getaway': ['b', 'More cash bags'], 'derby-smash': ['w', 'More wrecks'],
   'missile-guard': ['k', 'More warheads stopped'], 'knife-toss': ['a', 'More apples'], 'bat-boy': ['h', 'More hits'] };
-function metricsFor(slugOrId) { const slug = String(slugOrId).replace(/^gl-/, ''); const m = M2[slug];
+// core catalog games (Reese: skill-only tie-breaks for ALL games). 'eff' = more points per scoring action; 'coins' = more
+// coins collected (server plausibility-checked against the server-timed run); a count key = more events of that kind.
+const CORE = { 'jetpack-dash': ['coins', 'More coins collected'], 'sky-hopper': ['coins', 'More coins collected'], 'drift-rush': ['d', 'More drift banks'],
+  'memory-match': ['eff', 'Fewer misses: more points per flip'], 'high-score': ['eff', 'Bigger combos: more points per hit'], 'terp-tapper': ['eff', 'Bigger combos: more points per note'],
+  'munchies-snake': ['f', 'More snacks eaten'], 'brick-breaker': ['eff', 'Bigger chains: more points per brick'], 'void-swarm': ['k', 'More drones destroyed'],
+  stack: ['eff', 'More perfect drops: more points per slab'], 'grow-guard': ['eff', 'More points per defence action'], 'sling-smash': ['b', 'More bots smashed'],
+  'haze-defense': ['eff', 'More points per pop (higher wave tiers)'] };
+function metricsFor(slugOrId) { const c = CORE[slugOrId]; if (c) return [{ id: 'faster', label: 'Faster run (server-timed) to the same score', dir: 'asc' }, c[0] === 'eff' ? { id: 'eff', label: c[1], dir: 'desc' } : c[0] === 'coins' ? { id: 'coins', label: c[1], dir: 'desc' } : { id: 'count:' + c[0], label: c[1], dir: 'desc' }];
+  return metricsForLib(slugOrId); }
+function metricsForLib(slugOrId) { const slug = String(slugOrId).replace(/^gl-/, ''); const m = M2[slug];
   return [{ id: 'faster', label: 'Faster run (server-timed) to the same score', dir: 'asc' }, m ? { id: 'count:' + m[0], label: m[1], dir: 'desc' } : { id: 'eff', label: 'Higher efficiency: more points per scoring action (combos, chains, multipliers)', dir: 'desc' }]; }
 
 // derive m1/m2 from the stored run + its event log; invalid (log does not add up to the score) -> metrics null = ranks last on ties
-function derive(gameId, score, elapsedMs, ev) { const ms = metricsFor(gameId); const e = ev && Array.isArray(ev.e) ? ev.e : [];
+function derive(gameId, score, elapsedMs, ev, coins = null) { const ms = metricsFor(gameId); const e = ev && Array.isArray(ev.e) ? ev.e : [];
   let sum = 0, n = 0; const cnt = {}; for (let i = 0; i + 2 < e.length + 0.5 && i + 2 <= e.length - 1; i += 3) { const k = String(e[i + 1]); if (k[0] === '#') continue; const v = Number(e[i + 2]) || 0; sum += v; if (v > 0) n++; cnt[k] = (cnt[k] || 0) + 1; }
   const valid = e.length >= 3 ? Math.abs(sum - score) <= Math.max(2, score * 0.001) : score === 0;
   const m1 = Math.max(0, Math.round(elapsedMs)); let m2 = null; const d = ms[1].id;
-  if (d.startsWith('count:')) m2 = cnt[d.slice(6)] || 0; else m2 = n ? Math.round(score / n * 100) / 100 : 0;
+  if (d === 'coins') return { m1, m2: coins == null ? null : coins, valid: 1 }; if (d.startsWith('count:')) m2 = cnt[d.slice(6)] || 0; else m2 = n ? Math.round(score / n * 100) / 100 : 0;
   return { m1, m2: valid ? m2 : null, valid: valid ? 1 : 0 }; }
 
 function isLib(gameId) { return /^gl-/.test(String(gameId)); }
-function record(runId, userId, gameId, score, startedAt, createdAt, ev, rid) { if (!isLib(gameId)) return; try {
-  const d = derive(gameId, score, createdAt - startedAt, ev);
+function record(runId, userId, gameId, score, startedAt, createdAt, ev, rid) { try { // every game (core + library) since Oct 10 2026
+  const coins = (db.prepare('SELECT coins FROM runs WHERE id=?').get(runId) || {}).coins; const d = derive(gameId, score, createdAt - startedAt, ev, coins == null ? null : coins);
   db.prepare('INSERT OR REPLACE INTO lib_run_metrics (run_id,user_id,game_id,score,m1,m2,valid,created_at) VALUES (?,?,?,?,?,?,?,?)').run(runId, userId, gameId, score, d.m1, d.m2, d.valid, createdAt);
   if (rid) { const pe = db.prepare('SELECT * FROM lib_playoff_entries WHERE rid=?').get(rid); if (pe && pe.run_id == null) db.prepare('UPDATE lib_playoff_entries SET run_id=?, score=?, m1=?, m2=? WHERE playoff_id=? AND user_id=?').run(runId, score, d.m1, d.m2, pe.playoff_id, pe.user_id); }
   } catch (e) { console.error('[games-lib-playoff] record', e.message); } }
@@ -57,7 +66,7 @@ function rank(gameId, start, end, userIds) { const rows = db.prepare(`SELECT m.*
 
 // ---- playoffs ------------------------------------------------------------------------------------------------------
 function createPlayoff({ giveawayId, gameId, userIds, windowMin, adminId, parentId, round, note }) {
-  if (!isLib(gameId)) throw new Error('playoffs are for library games'); const ids = [...new Set((userIds || []).map(Number).filter(Boolean))]; if (ids.length < 2) throw new Error('need at least 2 tied players');
+  const ids = [...new Set((userIds || []).map(Number).filter(Boolean))]; if (ids.length < 2) throw new Error('need at least 2 tied players');
   const t = Date.now(), seed = crypto.randomBytes(16).toString('hex'); const w = Math.max(10, Math.min(7 * 24 * 60, Number(windowMin) || 60));
   const id = db.prepare('INSERT INTO lib_playoffs (giveaway_id,game_id,round,seed,opens_at,closes_at,status,parent_id,created_by,created_at,note) VALUES (?,?,?,?,?,?,?,?,?,?,?)').run(giveawayId || null, gameId, round || 1, seed, t, t + w * 60e3, 'open', parentId || null, adminId || null, t, note || '').lastInsertRowid;
   const ins = db.prepare('INSERT INTO lib_playoff_entries (playoff_id,user_id) VALUES (?,?)'); for (const u of ids) ins.run(id, u); return getPlayoff(id); }

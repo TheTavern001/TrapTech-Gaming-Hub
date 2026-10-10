@@ -97,7 +97,7 @@ function client() {
   const crypto = require('crypto'); const sha = (x) => crypto.createHash('sha256').update(x).digest('hex');
   r = await anon(`/api/giveaways/${gshort}`); let gs = r.body.giveaway;
   ok(gs.finalized_at && gs.finalized_at >= gs.end_at && gs.winners.length === 1 && gs.winners[0].username === ua && gs.winners[0].state === 'pending' && gs.winners_state === 'pending', 'ended giveaway: standings locked, #1 shown as "pending verification"', gs.winners);
-  ok(gs.tiebreak_rules.length === 4 && gs.tiebreak_rules[1].includes('reached that score first') && gs.tiebreak_rules[2].includes('fewer attempts'), 'giveaway API publishes the tiebreak rules');
+  ok(gs.tiebreak_rules.length === 4 && gs.tiebreak_rules[1].includes('server-timed run') && gs.tiebreak_rules[2].includes('skill metric') && gs.tiebreak_rules[3].includes('playoff') && !/first wins|fewer attempts|lower run ID/.test(gs.tiebreak_rules.join(' ')), 'giveaway API publishes the tiebreak rules');
   r = await A(`/api/giveaways/${gshort}/standings`); ok(r.body.finalized && r.body.total === 2 && r.body.me.rank === 1 && r.body.me.of === 2 && r.body.me.gap_to_next === null, 'standings: A is #1 of 2 (final)', r.body.me);
   r = await B(`/api/giveaways/${gshort}/standings`); ok(r.body.me.rank === 2 && r.body.me.gap_to_next === 40 && r.body.me.next_username === ua, 'standings: B is #2, 40 behind A', r.body.me);
   r = await anon(`/api/giveaways/${gshort}/standings?q=${ub}`); ok(r.body.matched === 1 && r.body.rows[0].username === ub && r.body.rows[0].rank === 2, 'standings search by username');
@@ -157,7 +157,7 @@ function client() {
   const C = client(); const uc = 'e2e_' + Math.random().toString(36).slice(2, 8);
   r = await C('/api/auth/signup', { body: { username: uc, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.body.ok, 'signup C (game runner) ' + uc);
   r = await anon('/api/games'); const GAMES = r.body.games;
-  ok(GAMES.length === 16 && GAMES.every(g => g.playable && g.module && g.ac && g.tiers), 'all 16 games are playable with module + caps + tiers', GAMES.map(g => g.id));
+  ok(GAMES.length === 13 && GAMES.every(g => g.playable && g.module && g.ac && g.tiers), 'all 13 games (all giveaway-eligible) are playable with module + caps + tiers', GAMES.map(g => g.id));
   for (const g of GAMES) { const js = await anon('/js/' + g.module); ok(js.status === 200 && String(js.body).includes('class ' + g.cls), `game module served: ${g.module}`); }
   // multi-game + min-score giveaways created BEFORE C plays
   const t1 = Date.now();
@@ -170,8 +170,8 @@ function client() {
   await sleep(61e3); // L2 per-IP submit limit (30/min): let earlier submissions age out
   const toks = {};
   for (const g of GAMES) { r = await C('/api/run/start', { body: { game_id: g.id, event: g.id === 'terp-tapper' ? gmin : g.id === 'memory-match' ? gmulti : undefined } }); ok(r.body.ok, `run/start ${g.id}`); toks[g.id] = r.body.token; }
-  r = await C('/api/run/start', { body: { game_id: 'plinko' } }); const tokPl = r.body.token;
-  r = await C('/api/run/start', { body: { game_id: 'blazed-roulette' } }); const tokRo = r.body.token;
+  r = await C('/api/run/start', { body: { game_id: 'void-swarm' } }); const tokPl = r.body.token;
+  r = await C('/api/run/start', { body: { game_id: 'plinko' } }); ok(r.status === 400, 'retired chance game (Plinko) cannot be started');
   await sleep(2600);
   let allUnlocked = [];
   for (const g of GAMES) {
@@ -181,13 +181,12 @@ function client() {
     allUnlocked.push(...(r.body.unlocked || []));
     if (g.id === 'terp-tapper') ok(r.body.giveaway_status === 'below_min_score', 'run below the giveaway minimum score is not counted (below_min_score)', r.body.giveaway_status);
   }
-  r = await C('/api/score', { body: { token: tokPl, score: 9000, coins: 0 } }); ok(r.status === 422 && /Plinko/.test(r.body.error), 'Plinko: 9000 pts in ~3s rejected by per-game cap', r.body);
-  r = await C('/api/score', { body: { token: tokRo, score: 50000, coins: 0 } }); ok(r.status === 422, 'Blazed Roulette: 50,000 chips rejected (absolute cap 3,800)', r.body);
+  r = await C('/api/score', { body: { token: tokPl, score: 90000, coins: 0 } }); ok(r.status === 422 && /Void Swarm/.test(r.body.error), 'Void Swarm: 90,000 pts in ~3s rejected by the per-game rate cap', r.body);
   for (const g of GAMES) { r = await anon(`/api/leaderboard?game=${g.id}&limit=500`); ok(r.body.rows.some(x => x.username === uc && x.score === PLAUS[g.id]), `${g.id} leaderboard has C`); }
   const ids = new Set(allUnlocked.map(a => a.id));
   ok(ids.has('first-run') && ids.has('variety-3') && ids.has('variety-all'), 'runs unlock first-run, variety-3 and variety-all (played every game)', [...ids]);
-  ok(ids.has('plinko-bronze') === false, 'no bronze for plinko at 600 (< 900 threshold)');
-  ok(ids.has('blazed-roulette-bronze') === false && ids.has('memory-match-bronze') === false, 'thresholds respected server-side');
+  ok(ids.has('brick-breaker-bronze') === false, 'no bronze for brick-breaker at 500 (< 1150 threshold)');
+  ok(ids.has('memory-match-bronze') === false, 'thresholds respected server-side');
 
   await sleep(61e3); /* 18 submits just now = submit_burst note; let it age out */ r = await C('/api/score', { body: { token: toks.tt2, score: 600, coins: 0, duration_ms: 2300 } }); ok(r.body.ok && r.body.giveaways.some(g => g.id === gmulti), 'terp-tapper event run for the multi-game event', r.body);
   console.log('# v2: multi-game giveaway + one-click linking');
@@ -223,7 +222,7 @@ function client() {
   ok(AL.length >= 100 && AL.length <= 140, `achievement catalog size ${AL.length}`);
   ok(AL.find(a => a.id === 'first-run').unlocked && AL.every(a => typeof a.rarity_pct === 'number' && a.rarity), 'achievements list has unlocked state + rarity');
   ok(AL.filter(a => a.hidden && !a.unlocked).every(a => a.name === 'Secret achievement'), 'secret achievements stay hidden until unlocked');
-  const pg = AL.find(a => a.id === 'plinko-bronze'); ok(pg.progress === 600 && pg.target === 830, 'progress is reported (plinko 600/830)', pg);
+  const pg = AL.find(a => a.id === 'brick-breaker-bronze'); ok(pg && pg.progress === 500 && pg.target === 1150, 'progress is reported (brick-breaker 500/1150)', pg);
   r = await C('/api/cosmetics'); const CZ = r.body; const ownedB = CZ.banners.filter(b => b.owned && !b.default); const lockedB = CZ.banners.find(b => !b.owned);
   ok(CZ.totals.banners >= 30 && CZ.totals.frames >= 15 && CZ.totals.titles >= 30, `cosmetic catalog: ${CZ.totals.banners} banners, ${CZ.totals.frames} frames, ${CZ.totals.titles} titles`);
   ok(ownedB.length >= 1, 'C owns at least one unlocked banner', CZ.banners.filter(b => b.owned).map(b => b.id));
@@ -231,7 +230,7 @@ function client() {
   r = await C('/api/me/cosmetics', { body: { banner: ownedB[0].id } }); ok(r.body.ok && r.body.cos.banner === ownedB[0].id, 'equip owned banner ' + ownedB[0].id);
   ok((r.body.unlocked || []).some(a => a.id === 'equip-banner'), 'equipping a banner unlocks "equip-banner"', r.body.unlocked);
   const ownedT = CZ.titles.find(t => t.owned && !t.default); if (ownedT) { r = await C('/api/me/cosmetics', { body: { title: ownedT.id } }); ok(r.body.ok, 'equip owned title ' + ownedT.id); }
-  r = await anon('/api/leaderboard?game=plinko&limit=500'); const lrow = r.body.rows.find(x => x.username === uc);
+  r = await anon('/api/leaderboard?game=brick-breaker&limit=500'); const lrow = r.body.rows.find(x => x.username === uc);
   ok(lrow && lrow.cos && lrow.cos.banner === ownedB[0].id && lrow.cos.title, 'leaderboard row carries equipped banner + title', lrow && lrow.cos);
   r = await anon('/api/profile/' + uc); ok(r.body.profile.cos.banner === ownedB[0].id && r.body.profile.achievements.length >= 4, 'profile shows equipped banner + unlocked achievements');
   r = await anon('/cosmetics.css'); ok(r.status === 200 && String(r.body).includes('.bn-' + ownedB[0].id + '{'), 'cosmetics.css serves banner classes');
@@ -278,8 +277,8 @@ function client() {
   r = await anon('/api/follows/' + uc + '?type=followers'); ok(r.body.users.some(u => u.username === ua), "C's followers list has A (public)");
   r = await A('/api/profile/' + uc); ok(r.body.profile.i_follow === true && r.body.profile.followers >= 1 && r.body.profile.level && r.body.profile.level.level >= 1, 'profile shows follow state, follower count and level');
   r = await A('/api/me'); ok(r.body.user.following >= 1, '/api/me has following count');
-  r = await A('/api/leaderboard?game=plinko&friends=1'); ok(r.body.rows.length >= 1 && r.body.rows.every(x => [ua, uc].includes(x.username)) && r.body.rows.some(x => x.username === uc), 'friends leaderboard = me + players I follow', r.body.rows && r.body.rows.map(x => x.username));
-  r = await anon('/api/leaderboard?game=plinko&friends=1'); ok(r.status === 401, 'friends leaderboard needs sign-in');
+  r = await A('/api/leaderboard?game=brick-breaker&friends=1'); ok(r.body.rows.length >= 1 && r.body.rows.every(x => [ua, uc].includes(x.username)) && r.body.rows.some(x => x.username === uc), 'friends leaderboard = me + players I follow', r.body.rows && r.body.rows.map(x => x.username));
+  r = await anon('/api/leaderboard?game=brick-breaker&friends=1'); ok(r.status === 401, 'friends leaderboard needs sign-in');
   r = await A('/api/community?tab=following'); ok(r.body.ok && Array.isArray(r.body.items), 'community "following" tab works');
   r = await C('/api/notifications'); const nf = r.body.items.find(n => n.type === 'follow' && n.title.includes(ua));
   ok(nf && nf.unread && r.body.unread >= 1, 'C gets a "followed you" notification', r.body.items.slice(0, 3));
@@ -313,29 +312,29 @@ function client() {
   r = await anon('/'); ok(/<meta name="author" content="Trap Tech Solutions">/.test(r.body) && /og:image" content="https?:\/\/[^"]+\/og\/default\.png/.test(r.body) && /rel="manifest"/.test(r.body), 'home HTML: Trap Tech author meta, absolute OG image, manifest link');
 
   console.log('# v3: search');
-  r = await anon('/api/search?q=plinko'); ok(r.body.games.some(g => g.id === 'plinko'), 'search finds games');
+  r = await anon('/api/search?q=stack'); ok(r.body.games.some(g => g.id === 'stack'), 'search finds games');
   r = await anon('/api/search?q=' + uc); ok(r.body.players.some(u => u.username === uc), 'search finds players');
   r = await anon('/api/search?q=' + encodeURIComponent('E2E Multi')); ok(r.body.giveaways.some(g => g.id === gmulti), 'search finds giveaways');
   r = await anon('/api/search?q='); ok(r.body.ok && !r.body.games.length, 'empty search returns nothing');
 
   console.log('# v3: tournaments (timed + bracket)');
   const tStart = t1 - 60e3;
-  r = await ADM('/api/admin/tournaments', { body: { title: 'E2E Timed Cup', game_id: 'plinko', format: 'timed', start_at: tStart, end_at: Date.now() + 3600e3, prize: 'Finalist title', description: 'e2e' } });
+  r = await ADM('/api/admin/tournaments', { body: { title: 'E2E Timed Cup', game_id: 'brick-breaker', format: 'timed', start_at: tStart, end_at: Date.now() + 3600e3, prize: 'Finalist title', description: 'e2e' } });
   ok(r.body.ok, 'admin creates a timed tournament'); const tid = r.body.id;
   r = await anon('/api/tournaments/' + tid); let T = r.body.tournament;
-  ok(T.status === 'live' && T.format === 'timed' && T.board[0] && T.board[0].username === uc && T.board[0].score === 600, 'timed tournament is live; board ranks best score in the window', T.board && T.board.slice(0, 2));
+  ok(T.status === 'live' && T.format === 'timed' && T.board[0] && T.board[0].username === uc && T.board[0].score === 500, 'timed tournament is live; board ranks best score in the window', T.board && T.board.slice(0, 2));
   r = await C('/api/tournaments/' + tid); ok(r.body.tournament.me && r.body.tournament.me.rank === 1, 'tournament shows my rank');
   r = await A('/api/notifications'); ok(r.body.items.some(n => n.type === 'tournament' && n.link === '/tournaments/' + tid && n.broadcast), 'new tournament is broadcast to players');
   r = await anon('/api/tournaments'); ok(r.body.tournaments.some(t => t.id === tid), 'tournament list has the timed event');
-  r = await ADM('/api/admin/tournaments', { body: { title: 'E2E Bracket', game_id: 'plinko', format: 'bracket', start_at: tStart, qual_end_at: Date.now() - 500, round_ms: 3600e3 } });
+  r = await ADM('/api/admin/tournaments', { body: { title: 'E2E Bracket', game_id: 'brick-breaker', format: 'bracket', start_at: tStart, qual_end_at: Date.now() - 500, round_ms: 3600e3 } });
   ok(r.body.ok, 'admin creates a bracket tournament (qualifying just ended)'); const tbid = r.body.id;
   r = await anon('/api/tournaments/' + tbid); T = r.body.tournament;
   ok(T.status === 'quarterfinals' && T.bracket.rounds.length === 3 && T.bracket.rounds[0].matches.length === 4 && T.bracket.rounds.map(x => x.name).join() === 'Quarterfinals,Semifinals,Final' && T.bracket.rounds[1].matches.length === 2 && T.bracket.rounds[2].matches[0].tbd && T.bracket.rounds[0].state === 'live', 'bracket: 3 rounds (later rounds TBD), 4 quarterfinal matches', T.bracket && T.bracket.rounds.map(x => x.name));
   ok(T.bracket.seeds[0].username === uc && T.bracket.rounds[0].matches[0].a.username === uc && T.qualifying[0].username === uc, 'top qualifier is seed 1 in match 1');
   ok(T.end_at === T.qual_end_at + 3 * 3600e3, 'bracket end = qualifying end + 3 rounds');
-  r = await ADM('/api/admin/tournaments', { body: { title: '', game_id: 'plinko', start_at: Date.now() } }); ok(r.status === 400, 'tournament needs a title');
+  r = await ADM('/api/admin/tournaments', { body: { title: '', game_id: 'brick-breaker', start_at: Date.now() } }); ok(r.status === 400, 'tournament needs a title');
   r = await ADM('/api/admin/tournaments', { body: { title: 'x', game_id: 'nope', start_at: Date.now(), end_at: Date.now() + 1 } }); ok(r.status === 400, 'tournament needs a valid game');
-  r = await ADM('/api/admin/tournaments/' + tid, { method: 'PUT', body: { title: 'E2E Timed Cup Renamed', game_id: 'plinko', format: 'timed', start_at: tStart, end_at: Date.now() + 3600e3 } }); ok(r.body.ok, 'admin edits tournament');
+  r = await ADM('/api/admin/tournaments/' + tid, { method: 'PUT', body: { title: 'E2E Timed Cup Renamed', game_id: 'brick-breaker', format: 'timed', start_at: tStart, end_at: Date.now() + 3600e3 } }); ok(r.body.ok, 'admin edits tournament');
   r = await ADM('/api/admin/tournaments'); ok(r.body.tournaments.some(t => t.id === tid && t.title === 'E2E Timed Cup Renamed'), 'admin tournament list reflects edit');
   r = await anon('/api/tournaments'); const demoBr = r.body.tournaments.find(t => t.demo && t.format === 'bracket');
   if (demoBr) { r = await anon('/api/tournaments/' + demoBr.id); const b = r.body.tournament.bracket; ok(b.rounds[0].state === 'done' && b.rounds[0].matches.filter(m => m.a && m.b).every(m => m.winner === 'a' || m.winner === 'b'), 'demo bracket: finished quarterfinals have winners'); }
@@ -495,7 +494,7 @@ function client() {
   console.log('# static pages');
   for (const p of ['/', '/leaderboard', '/giveaways', '/games/jetpack-dash']) { r = await anon(p); ok(r.status === 200 && String(r.body).includes('<!doctype html>'), `GET ${p} serves HTML`); }
   r = await anon('/js/jetpack.js'); ok(r.status === 200 && String(r.body).includes('class JetpackDash'), 'game JS served');
-  for (const p of ['/achievements', '/sponsor', '/join/ABCDEFGH', '/games/plinko', '/play/terp-tapper']) { r = await anon(p); ok(r.status === 200, `GET ${p} serves HTML`); }
+  for (const p of ['/achievements', '/sponsor', '/join/ABCDEFGH', '/games/stack', '/play/terp-tapper']) { r = await anon(p); ok(r.status === 200, `GET ${p} serves HTML`); }
   r = await anon('/assets/cards/jetpack-dash.webp'); ok(r.status === 200, 'card art served');
 
   if (!process.env.KEEP) {
