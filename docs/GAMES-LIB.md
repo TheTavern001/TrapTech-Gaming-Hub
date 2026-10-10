@@ -521,3 +521,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Table: 3 pop bumpers, 2 slingshots, a 3-target drop bank (5000 x mult), 3 rollover lanes (all lit = multiplier up to x6; flipper buttons rotate the lit lanes), ball save at launch, extra ball at 40k and rising. Endless with 3 balls.
 - Art: neon-tube walls on a purple grid playfield, chrome bumpers with leaf caps and hit rings, glowing slings, gold targets, glossy flippers, chrome ball with trail, plunger with charge, "HAZE ARCADE 21+" centre art. Two-thumb touch (left/right halves, multi-touch), Z/M or arrow keys.
 - Tests: e2e PASS (60 fps). Bug pass PASS (49 fps throttled). Rating: visual 7.5/10, feel 7/10. Note: the table is simple next to a full real-world table (no ramps yet); a ramp and spinner are possible later upgrades.
+
+## Light Cycle (Tron light cycles) - DONE (2026-10-10 06:36 ET)
+- Source hunt (GitHub "tron light cycle javascript", Gitee "贪吃蛇 光轮", itch.io, js13k): most clones are unlicensed 2-player keyboard demos with flat lines; the MIT ones lack AI. Decision: build our own.
+- Gameplay: fixed-tick grid sim with interpolated bikes. Rival AI flood-fills for open space and cuts in front of the player (per-bike aggression). Swipe, tap left/right to turn, or arrow keys. Endless rounds: clear the arena, the next round adds a rival (up to 5) and speeds up. Score: 100 x round per rival derezzed, 500 x round per round cleared, near-miss grind bonus, survival.
+- Art: dark blueprint grid with major lines, glowing arena border, 3-layer additive neon trails, glossy bikes with coloured light strips, derez bursts and rings, grind sparks, countdown, "GRID LOUNGE 21+" floor art.
+- Tests: e2e PASS (60 fps). Bug pass PASS (47 fps throttled). A flood-fill bot reached round 3 (2,509 points in 51 s). Rating: visual 7/10, feel 7.5/10.

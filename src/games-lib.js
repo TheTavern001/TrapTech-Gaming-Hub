@@ -49,6 +49,7 @@ const LIST = [
   T('gem-rush', 'Gem Rush', 'Bejeweled', 6, 'A', 'endless', 220, true, 'Jewels 10 x cascade, Flame and Star gem blasts (blitz clock refilled by matches)', '3 days'),
   T('slab-stack', 'Slab Stack', 'Stack', 7, 'A', 'endless', 25, true, 'Slab 1, perfect drop 1 + combo (max 11)', '3 days'),
   T('neon-flipper', 'Neon Flipper', 'Pinball', 6, 'A', 'endless', 2500, true, 'Bumper 100, sling 10, target 250, lane 500, bank 5000 (all x multiplier up to 6)', '3 days'),
+  T('light-cycle', 'Light Cycle', 'Tron light cycles', 7, 'A', 'endless', 600, true, 'Rival derezzed 100 x round, round clear 500 x round, near-miss 2, survival 1 per 10 cells', '3 days'),
   T('roof-runner', 'Roof Runner', 'Canabalt', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('helix-drop', 'Helix Drop', 'Helix Jump', 7, 'A', 'endless', 40, true, 'Floors passed with combo, fireball smashes', '3 days'),
   T('hex-spin', 'Hex Spin', 'Super Hexagon', 7, 'A', 'endless', 12, true, 'Survival time in 0.1s', '3 days'),
