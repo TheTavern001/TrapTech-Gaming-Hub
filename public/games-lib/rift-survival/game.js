@@ -22,7 +22,7 @@ Kit.run({
     const p = g.player;
     g.elapsed += dt;
     g.wave = 1 + Math.floor(g.elapsed / 18);
-    if (g.wave !== g.lastWave) { g.lastWave = g.wave; g.add(g.wave * 10, 'w'); g.mark('wave', g.wave); g.sfx('power'); }
+    if (g.wave !== g.lastWave) { g.lastWave = g.wave; g.add(g.wave * 10, 'b'); g.mark('wave', g.wave); g.sfx('power'); }
     p.invuln = Math.max(0, p.invuln - dt);
     p.x = Kit.clamp(p.x + g.ax() * p.speed * dt, 20, g.W - 20);
     p.y = Kit.clamp(p.y + g.ay() * p.speed * dt, 28, g.H - 28);
