@@ -60,3 +60,5 @@ MDN's Canvas optimization guidance recommends caching repeated drawing work, red
 - Added CI syntax checks for the main Hub ES module and library adapter, plus static guards for library route/query forwarding. These changes still need end-to-end browser tests; they are not evidence that the official event flow has passed.
 
 - Restricted the admin giveaway builder's new library-game additions to the two original titles only (Neon Circuit and Rift Survival); the rest of the 100-entry library is not newly exposed through this change. The builder UI and publish flow still require a browser regression test.
+
+- Raised Neon Circuit and Rift Survival to anti-cheat level L3 with per-game score-event rules; Rift wave bonuses now use a score-bearing event kind, and `#wave` progress markers are excluded from score sums. This prevents the event log from treating progress markers as points and checks that submitted scoring events add up to the claimed score. It is still not full deterministic replay, and forged-score browser tests remain required.
