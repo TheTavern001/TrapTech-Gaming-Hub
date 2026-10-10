@@ -52,6 +52,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Smoke Rings (Cannabis ring-blowing) DONE (07:00)
 - Bud Sort (Cannabis sorting) DONE (07:03)
 - Pest Patrol (Cannabis tap-squash) DONE (07:08)
+- Cup Toss (Cannabis lounge cup pong) DONE (07:14)
 - Bud Bar (Tapper) UPGRADED (06:46); polish backlog: Neon Flipper ramps + spinner
 - Missile Guard (Missile Command) UPGRADED (06:44)
 - Star Swarm (Galaga) UPGRADED (06:41)

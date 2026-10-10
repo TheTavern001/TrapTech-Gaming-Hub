@@ -583,3 +583,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Art: soil floor with pebbles, magenta/blue LED grow-light bar and glow, baked cannabis plants with serrated 7-leaflet fan leaves that yellow as they're damaged, animated legs on every bug, splats, particle bursts.
 - Perf: plants are pre-baked per HP (throttled fps 34 -> 42).
 - Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
+
+## Cup Toss (Cannabis lounge: Cup Pong-style swipe throw) - DONE (2026-10-10 07:14 ET)
+- Source hunt: GitHub "beer pong html5" / "cup pong three.js" (unlicensed, or GPL with heavy Unity WebGL builds over 10 MB), itch.io "pong cups" (asset-locked), js13k (none). Decision: build our own as a light pseudo-3D canvas game.
+- Gameplay (21+): swipe up to throw. Direction aims, length sets power, and a dotted arc shows the start of the flight. The ball flies a ballistic arc with table bounces (+50) and rim rattles (+30). A 10-cup rack scores 100 per cup x streak (up to x5). Sinking the whole rack re-racks it farther back, it starts to sway from rack 3, and you get +2 balls. A miss costs a ball (5 to start).
+- Art: lounge back wall with bokeh lights and bottle shelf, neon "THE HIGH TABLE 21+" sign, perspective felt table with leaf watermark, glossy red cups with beer-tone fill and leaf print, depth-sorted ball with shadow, splash rings and particles.
+- Tests: aimed bot with noise made 50/55 cups over 5 racks. e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
