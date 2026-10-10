@@ -533,3 +533,8 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Art: Kenney Space Shooter Remastered (CC0) meteors (4 big, 2 medium, 2 small variants), ship, red UFO, laser bolts, thruster flame and shield bubble; a code-painted nebula with a "PLANET KUSH 21+" ringed planet, parallax star layer.
 - Feel: rock hit flash, spinning rock shards, a shockwave ring per break, a flickering thruster flame, a shield bubble during invulnerability, ship-icon lives and a glowing score HUD.
 - Tests: e2e PASS (60 fps). Bug pass PASS (50 fps throttled). Folder size 104 KB. Rating: visual 7.5/10, feel 7/10.
+
+## Star Swarm (Galaga) - UPGRADED (2026-10-10 06:41 ET)
+- Source hunt (GitHub "galaga javascript", Gitee "小蜜蜂 H5", js13k, itch.io): the faithful clones ship ripped Namco sprites (rejected); MIT remakes are vector or flat circles. Our formation/dive/entry rules were already right. Decision: art pass with our own pixel sprites.
+- Art: original 13x11 pixel-art designs (hornet, moth and a two-hit queen that changes colour when damaged), 2-frame wing flaps, drop-shadowed pixels; our own fighter; enemies face their flight path on entry and spin on dives; twinkling multicolour scrolling starfield; pixel ring explosions; arcade HUD (1UP, HIGH SCORE, reserve ships, stage flags); "HIVE ARCADE 21+" footer.
+- Tests: e2e PASS (60 fps). Bug pass PASS (60 fps throttled). Rating: visual 7.5/10, feel 7/10.
