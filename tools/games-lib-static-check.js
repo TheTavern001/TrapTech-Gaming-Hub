@@ -69,6 +69,9 @@ if (!libraryPage.includes('id="category"') || !libraryPage.includes('id="eligibi
 if (!doc.includes('wave transition bonus 10 × wave')) errors.push('Games Library documentation has stale Rift Survival scoring text.');
 const riftSource = fs.existsSync(path.join(pub, 'rift-survival', 'game.js')) ? fs.readFileSync(path.join(pub, 'rift-survival', 'game.js'), 'utf8') : '';
 if (!/g\.player\s*=\s*\{[^}]*\br\s*:\s*\d+/s.test(riftSource)) errors.push('Rift Survival player collision radius is missing; enemy damage may never trigger.');
+const playoffPath = path.join(root, 'src', 'games-lib-playoff.js');
+const playoffSource = fs.existsSync(playoffPath) ? fs.readFileSync(playoffPath, 'utf8') : '';
+if (!playoffSource.includes("'neon-circuit': ['e'") || !playoffSource.includes("'rift-survival': ['s'")) errors.push('New original games are missing game-specific skill tie-break metrics.');
 const docRows = (doc.match(/^\|\s*\d+\s*\|/gm) || []).length;
 if (docRows !== games.length) errors.push('Documentation row count mismatch: ' + docRows + ' vs ' + games.length);
 
