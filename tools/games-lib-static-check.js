@@ -57,6 +57,9 @@ const hubApp = fs.existsSync(hubAppPath) ? fs.readFileSync(hubAppPath, 'utf8') :
 const libraryPage = fs.existsSync(libraryPagePath) ? fs.readFileSync(libraryPagePath, 'utf8') : '';
 if (!hubApp.includes('href="/games-lib/index.html"')) errors.push('Main Hub /games page is missing the Games Library entry point.');
 if (!hubApp.includes("fetch('/api/games-lib'")) errors.push('Main Hub does not read the live Games Library count.');
+const adapterPath = path.join(pub, 'adapter.js');
+const adapter = fs.existsSync(adapterPath) ? fs.readFileSync(adapterPath, 'utf8') : '';
+if (!adapter.includes("qs.get('event')") || !adapter.includes('body.event = event')) errors.push('Library adapter does not forward official event references to server run validation.');
 if (hubApp.includes('150+ more games')) errors.push('Main Hub contains a stale Games Library count.');
 for (const slug of ['neon-circuit', 'rift-survival']) {
   if (!libraryPage.includes(slug)) errors.push('Library page is missing new-game spotlight for ' + slug);
