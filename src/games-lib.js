@@ -7,6 +7,7 @@
 const CATS = ['Endless Runners', 'Driving', 'Physics & Destruction', 'Tower Defense', 'Survival & Horde', 'Arcade Shooters', 'Puzzle & Brain', 'Reflex & Skill', 'Combat', 'Sports', 'Specialty', 'Cannabis'];
 const SOURCES = {
   built: { kind: 'built', source: 'Original Hub build (public/games-lib/kit.js engine)', licence: 'MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art' },
+  m2048: { kind: 'vendored', source: 'github.com/gabrielecirulli/2048', licence: 'MIT (Gabriele Cirulli); LICENSE kept; Clear Sans font Apache-2.0' },
   trex: { kind: 'vendored', source: 'github.com/wayou/t-rex-runner (extracted from Chromium neterror resources)', licence: 'BSD-3-Clause (code + sprites + sounds, Chromium Authors); LICENSE kept' },
 };
 const T = (slug, title, ref, cat, tier, comp, rate, give, scoring, evlen, src) => ({ slug, title, ref, cat, tier, comp, rate, give, scoring, evlen, src: src || 'built' });
@@ -18,6 +19,7 @@ const LIST = [
   T('alien-rows', 'Alien Rows', 'Space Invaders', 5, 'A+', 'endless', 140, true, 'Aliens 10-30, saucer 100-300, wave bonus', '3 days'),
   T('cloud-hopper', 'Cloud Hopper', 'Doodle Jump', 0, 'A+', 'endless', 60, true, 'Height climbed + pickups', '3 days'),
   T('road-hopper', 'Road Hopper', 'Crossy Road', 0, 'A+', 'endless', 8, true, '1 per furthest row + coins 5', '3 days'),
+  T('bud-merge', 'Bud Merge', '2048', 11, 'A+', 'endless', 60, true, 'Sum of merged tiles (endless, no win stop)', '1-3 days', 'm2048'),
   T('dino-dash', 'Desert Dash', 'Chrome T-Rex Runner', 0, 'A+', 'endless', 25, true, 'Distance (Chromium meter)', '1-3 days', 'trex'),
   T('neon-snake', 'Neon Serpent', 'Snake', 10, 'A+', 'endless', 60, true, 'Food 10 x speed level, gold 50', '3 days'),
   T('brick-blitz', 'Brick Blitz', 'Breakout', 10, 'A+', 'endless', 260, true, 'Bricks 10-50 x combo, wall bonus', '3 days'),

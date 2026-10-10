@@ -40,7 +40,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*(401|404|422)/.test(m.text())) R.errors.push('desktop: ' + m.text()); });
       page.on('pageerror', e => R.errors.push('desktop pageerror: ' + e.message));
       await page.goto(BASE + g.url, { waitUntil: 'load' }); await page.waitForTimeout(500); await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 15000 }).catch(() => {});
-      const box = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
+      const box = await page.evaluate(() => { const c = document.querySelector('canvas') || document.getElementById('gl'); const r = c.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
       await page.keyboard.press('Space'); await page.mouse.click(box.x + box.w / 2, box.y + box.h / 2); await page.waitForTimeout(900);
       R.desktop.started = await page.evaluate(() => window.__GL && window.__GL.state);
       let shot = false; const end = Date.now() + PLAY_MS;
@@ -49,10 +49,10 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
         const r = Math.random();
         if (r < 0.45) { const k = KEYS[Math.floor(Math.random() * KEYS.length)]; await page.keyboard.down(k); await page.waitForTimeout(60 + Math.random() * 160); await page.keyboard.up(k); }
         else { const x = box.x + box.w * (0.15 + Math.random() * 0.7), y = box.y + box.h * (0.3 + Math.random() * 0.6); await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 80, { steps: 3 }); await page.waitForTimeout(40 + Math.random() * 200); await page.mouse.up(); }
-        if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') await page.locator('canvas#gl').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
+        if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') await page.locator('#gl').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
       }
       R.desktop.fps = await page.evaluate(() => window.__GL.fps);
-      if (!shot) await page.locator('canvas#gl').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 });
+      if (!shot) await page.locator('#gl').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 });
       // end the run through the game's own game-over path (same code path as dying) if the bot is still alive
       await page.evaluate(() => { if (window.__GL.state === 'play') { if (window.__GL.g.paused) window.__GL.g.paused = false; window.__GL.g.end('test end'); } });
       await page.waitForFunction(() => window.__GL.lastSubmit, null, { timeout: 8000 }).catch(() => {});
