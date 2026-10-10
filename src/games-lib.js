@@ -8,6 +8,7 @@ const CATS = ['Endless Runners', 'Driving', 'Physics & Destruction', 'Tower Defe
 const SOURCES = {
   built: { kind: 'built', source: 'Original Hub build (public/games-lib/kit.js engine)', licence: 'MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art' },
   m2048: { kind: 'vendored', source: 'github.com/gabrielecirulli/2048', licence: 'MIT (Gabriele Cirulli); LICENSE kept; Clear Sans font Apache-2.0' },
+  hextris: { kind: 'vendored', source: 'github.com/Hextris/hextris', licence: 'GPL-3.0 (client code, source served unminified); LICENSE kept' },
   trex: { kind: 'vendored', source: 'github.com/wayou/t-rex-runner (extracted from Chromium neterror resources)', licence: 'BSD-3-Clause (code + sprites + sounds, Chromium Authors); LICENSE kept' },
 };
 const T = (slug, title, ref, cat, tier, comp, rate, give, scoring, evlen, src) => ({ slug, title, ref, cat, tier, comp, rate, give, scoring, evlen, src: src || 'built' });
@@ -20,6 +21,7 @@ const LIST = [
   T('cloud-hopper', 'Cloud Hopper', 'Doodle Jump', 0, 'A+', 'endless', 60, true, 'Height climbed + pickups', '3 days'),
   T('road-hopper', 'Road Hopper', 'Crossy Road', 0, 'A+', 'endless', 8, true, '1 per furthest row + coins 5', '3 days'),
   T('bud-merge', 'Bud Merge', '2048', 11, 'A+', 'endless', 60, true, 'Sum of merged tiles (endless, no win stop)', '1-3 days', 'm2048'),
+  T('hex-stack', 'Hex Stack', 'Hextris', 6, 'A', 'endless', 80, true, 'Cleared blocks x combo (endless, speeds up)', '1-3 days', 'hextris'),
   T('dino-dash', 'Desert Dash', 'Chrome T-Rex Runner', 0, 'A+', 'endless', 25, true, 'Distance (Chromium meter)', '1-3 days', 'trex'),
   T('neon-snake', 'Neon Serpent', 'Snake', 10, 'A+', 'endless', 60, true, 'Food 10 x speed level, gold 50', '3 days'),
   T('brick-blitz', 'Brick Blitz', 'Breakout', 10, 'A+', 'endless', 260, true, 'Bricks 10-50 x combo, wall bonus', '3 days'),

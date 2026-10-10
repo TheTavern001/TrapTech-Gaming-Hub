@@ -19,12 +19,12 @@ Remaining:
 - Phase 9: v6→v7 migration test, memory <~100 MB, all suites green, screenshots `screenshots/v7/final/`, `HANDOFF.md`, `FINALIZE.md`.
 
 ### B. Games library — `docs/GAMES-LIB.md`, code in `public/games-lib/`, `src/games-lib*.js`, tests `tools/e2e-games-lib.js`, audit `tools/games-lib-audit.js`, assets `public/games-lib/assets3d/ASSETS.md`, hunt log `docs/GAMES-LIB-ASSET-HUNT.md`
-- 61 games registered, 100% giveaway-eligible (endless, uncapped, server-validated skill tie-breaks + sudden-death playoffs in `src/games-lib-playoff.js`).
+- 62 games registered, 100% giveaway-eligible (endless, uncapped, server-validated skill tie-breaks + sudden-death playoffs in `src/games-lib-playoff.js`).
 - Rule (Reese): ONE game at a time. A game is done only when it rates 7+, its side-by-side `docs/audit/<slug>-vs-ref.jpg` reads as the same tier, and the bug pass is clean (`node tools/games-lib-bugpass.js <slug>`: seeded runs, pause, tab, rotate, 4x CPU throttle, memory). Commit after each.
-- Status: Rail Rush DONE (3D, realistic PBR hero). Ruin Runner DONE 7/7 (turns, ravines, Poly Haven PBR). Lane Racer PASS tests. Bud Merge (vendored MIT 2048) PASS. Moto Lanes passes tests + bug pass, but its visuals are BELOW tier (6/10): the reference is realistic and we only have the cartoon CC0 car pack.
-- Parked: `/workspace/parked/hex-stack` (vendored Hextris, GPL-3.0; ads, analytics and an external score beacon stripped; bridge written; e2e not yet passing because of a missing #buttonCont element; fix already applied in the parked copy). Not registered.
+- Status: Rail Rush DONE (3D, realistic PBR hero). Ruin Runner DONE 7/7 (turns, ravines, Poly Haven PBR). Lane Racer PASS tests. Bud Merge (vendored MIT 2048) PASS. Moto Lanes ON HOLD (Reese choosing realistic cars); passes tests + bug pass, visuals below tier (6/10): the reference is realistic and we only have the cartoon CC0 car pack.
+- Hex Stack DONE (vendored Hextris, GPL-3.0, stripped ads/analytics/score beacon; e2e + bug pass PASS).
 - Tools: `tools/e2e-games-lib.js` (supports DOM games via `#gl`), `tools/games-lib-bugpass.js`, `tools/games-lib-audit.js`. Bots: /tmp/jt.js (Ruin Runner turns), /tmp/lrbot2.js (racers, in-page).
-- Next: realistic traffic cars for Moto Lanes (needs a decision, see GAMES-LIB.md); then Hex Stack, Clumsy Bird, the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Next: Clumsy Bird (vendor), the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).

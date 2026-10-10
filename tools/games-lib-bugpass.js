@@ -8,12 +8,12 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'];
     const ctx = await b.newContext({ ...devices['iPhone 13'] }); const p = await ctx.newPage(); const cdp = await ctx.newCDPSession(p);
     p.on('pageerror', e => R.errors.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|favicon/.test(m.text())) R.errors.push(m.text()); });
     const st = () => p.evaluate(() => window.__GL ? __GL.state : 'none'), sc = () => p.evaluate(() => window.__GL ? __GL.score : -1);
-    const start = async () => { await p.touchscreen.tap(195, 500); await p.keyboard.press('Space'); await p.waitForTimeout(800); };
+    const start = async () => { await p.touchscreen.tap(195, 500); await p.keyboard.press('Space'); if (await st() === 'over') await p.keyboard.press('Enter'); for (let i = 0; i < 10 && (await st()) !== 'play'; i++) await p.waitForTimeout(300); };
     const play = async (ms) => { const end = Date.now() + ms; while (Date.now() < end) { if (Math.random() < 0.5) await p.keyboard.press(KEYS[Math.floor(Math.random() * 5)]); else await p.touchscreen.tap(60 + Math.random() * 270, 300 + Math.random() * 400); await p.waitForTimeout(120 + Math.random() * 200); if (await st() === 'over') { await p.waitForTimeout(700); await start(); } } };
     try { await p.goto(BASE + '/games-lib/' + slug + '/index.html'); await p.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 30000 });
       // 1. three seeded runs
-      let runs = 0; for (let i = 0; i < 3; i++) { await start(); runs += (await st()) === 'play' ? 1 : 0; await play(5000); await p.evaluate(() => { if (__GL.state === 'play') __GL.g.end('bugpass'); }); await p.waitForTimeout(1800); }
-      R.checks.seededRuns = runs === 3 ? 'ok' : 'started ' + runs + '/3';
+      let runs = 0; for (let i = 0; i < 3; i++) { await start(); { const s0 = await st(); runs += s0 === 'play' ? 1 : 0; if (s0 !== 'play') R.errors.length, (R.startStates = (R.startStates || []).concat(s0 + '@' + i + ':' + await p.evaluate(() => String(window.gameState)))); } await play(5000); await p.evaluate(() => { if (__GL.state === 'play') __GL.g.end('bugpass'); }); await p.waitForTimeout(1800); }
+      R.checks.seededRuns = runs === 3 ? 'ok' : 'started ' + runs + '/3 ' + (R.startStates || []).join(',');
       // 2. pause/resume freezes score
       await start(); await play(1500); const pausable = await p.evaluate(() => { try { __GL.g.paused = true; return true; } catch (e) { return false; } }); const s1 = await sc(); await p.waitForTimeout(1500); const s2 = await sc();
       await p.evaluate(() => { try { __GL.g.paused = false; } catch (e) {} }); R.checks.pause = !pausable ? 'n/a' : s1 === s2 ? 'ok' : 'score moved while paused ' + s1 + '->' + s2;
