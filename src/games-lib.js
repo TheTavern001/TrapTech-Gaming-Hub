@@ -69,6 +69,7 @@ const LIST = [
   T('strain-crush', 'Strain Crush', 'Strain match-3 (Candy Crush style)', 11, 'C', 'endless', 400, true, '10 per gem x cascade chain; matches refill the clock', '3 days'),
   T('bud-bar', 'Bud Bar', 'Dispensary tapper (Tapper style)', 11, 'C', 'endless', 80, true, 'Serve 50, empties 25', '3 days'),
   T('green-dash', 'Green Dash', 'Delivery runner', 11, 'C', 'endless', 60, true, 'Distance + deliveries 100', '3 days'),
+  T('roll-up', 'Roll Up', 'Cannabis rolling precision game (Perfect Slices / timing style)', 11, 'C', 'endless', 900, true, 'Step accuracy 0-100 x streak multiplier (up to x5), order bonus 2 x average accuracy', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
   T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('hill-glider', 'Hill Glider', 'Tiny Wings', 0, 'A', 'endless', 60, true, 'Distance m + perfect slides 25', '3 days'),

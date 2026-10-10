@@ -48,6 +48,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Neon Flipper (Pinball) DONE (06:32)
 - Light Cycle (Tron) DONE (06:36)
 - Toad Cross (Frogger) DONE (06:53)
+- Roll Up (Cannabis rolling precision) DONE (06:56)
 - Bud Bar (Tapper) UPGRADED (06:46); polish backlog: Neon Flipper ramps + spinner
 - Missile Guard (Missile Command) UPGRADED (06:44)
 - Star Swarm (Galaga) UPGRADED (06:41)

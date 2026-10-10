@@ -558,3 +558,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Controls: tap = hop forward, swipe any direction, arrows/WASD. Hops are eased with a squash-and-stretch toad.
 - Art: code-drawn top-down vehicles with windows, lights and shadows; logs with bark and end rings; turtles with paddling legs; drifting water ripples; asphalt with lane dashes; paved start.
 - Tests: e2e PASS (60 fps). Bug pass PASS (41 fps throttled). A path-finding bot filled 4 homes in 60 s. Rating: visual 7.5/10, feel 7.5/10.
+
+## Roll Up (Cannabis: rolling precision) - DONE (2026-10-10 06:56 ET)
+- Source hunt (GitHub/itch.io "joint rolling game", "rolling simulator" html5, js13k, Gitee): only unlicensed jam toys and commercial mobile apps. Timing-meter mechanic modelled on Perfect Slices / golf-swing meters. Decision: build our own.
+- Gameplay (21+): each order (random strain ticket) runs GRIND (stop the needle in the zone), FILL (hold to pour, release on the line), three ROLL tucks and SEAL. Accuracy 0-100 per step; 90+ = PERFECT and builds a streak multiplier up to x5; under 25 is a botch and costs a leaf (3 leaves). Endless: speed ramps and the zone narrows per order. Order bonus = 2 x average accuracy.
+- Art: wooden rolling tray with a felt insert and "HIGH TIDE ROLLING CO. 21+" emboss, order ticket, spinning chrome grinder, textured paper that rolls into a cone with crutch and seal stripe, bud particles, smoke puffs, big PERFECT/GOOD/MEH/BOTCHED pops.
+- Tests: e2e PASS (60 fps). Bug pass PASS (49 fps throttled). Rating: visual 7/10, feel 7/10.
