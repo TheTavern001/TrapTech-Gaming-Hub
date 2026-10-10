@@ -601,3 +601,11 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: rotate left/right and thrust (arrows/WASD, or the 3 on-screen buttons with multi-touch). Land at under 40 speed and under 14 degrees tilt on a lit pad: x2 wide, x3, x5 narrow. Score is (50 + softness + uprightness) x pad. Each landing refuels +250 and moves to a rougher sector with stronger gravity, so it's endless. A crash costs a lander (3); out of fuel ends the run. Live SPEED/TILT/ALT readout turns green when you're safe to land.
 - Art: starfield, crescent-lit Earth with continents and clouds, gradient regolith with craters and a glowing ridge line, gold-foil lander with legs, blue-white exhaust plume, dust particles, blinking pad beacons.
 - Tests: PD-controller bot lands repeatedly (2 in 60 s). e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
+
+## Pin Strike (Sports: Bowling) - DONE (2026-10-10 07:47 ET)
+- Source hunt: GitHub "bowling three.js" / "bowling html5" (cannon.js demos with no licence; one MIT Babylon.js demo at about 6 MB with no scoring or touch), itch.io (Unity WebGL), js13k "bowl" (none). Decision: build our own as a light pseudo-3D canvas game.
+- Gameplay: swipe up to bowl. Where you start the swipe sets your position, the direction aims, a curved swipe adds hook (applied mid-lane), and swipe speed sets power, plus slight aim wobble. Top-down impulse physics with sub-steps: a fallen pin sweeps a wider radius, pins rebound off the kickbacks, and pin friction is tuned so the result depends on entry angle.
+  - Calibration sweep over 18 positions/angles: pinfall 6-10, with strikes only near the pocket.
+  - Endless frames with real strike (+2 rolls) and spare (+1 roll) bonuses. A frame under 7 pins costs a life (3).
+- Art: neon alley backdrop with the "HIGH ROLLER LANES" sign, masking curtain, maple lane with boards, oil sheen, arrows, foul line and leaf inlay. Bezier-shaded pins with green stripes, glossy green ball with finger holes, depth sorting. The camera dollies down the lane behind the ball.
+- Tests: random swiping bot got frames of 10,8,9,8,10,... e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
