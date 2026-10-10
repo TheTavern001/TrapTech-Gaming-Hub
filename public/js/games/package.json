@@ -1,0 +1,1 @@
+{ "type": "module", "private": true, "description": "browser game modules; also lets Node import stack-core.js for the server replay" }

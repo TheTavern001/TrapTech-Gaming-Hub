@@ -1,0 +1,54 @@
+// Cup Toss - original swipe-to-throw cup pong (Hub build, Cannabis lounge theme, 21+). Pseudo-3D table: world (x, z) and height y
+// projected with perspective; the ball flies a ballistic arc, bounces on the table and rattles off the rims. Swipe up to throw:
+// direction = aim, length/speed = power. Sink all cups to re-rack (rack slides farther away and sways). Misses cost a ball; rack clears refund.
+(function () {
+  const HZ = 0.62, VY0 = 760, F = 700; // horizon, eye height-ish, focal
+  function proj(x, y, z) { const s = F / (z + 300); return { x: 200 + x * s, y: 150 + (VY0 - 120 - y) * s * 0.5 - 40, s }; }
+  let BG = null;
+  function bg(W, H) { if (BG) return BG; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d'); const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1a0f24'); g.addColorStop(0.45, '#2a1838'); g.addColorStop(1, '#120a18'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < 7; i++) { const x = 30 + i * 58; c.fillStyle = ['#ff4fd8', '#9dff7a', '#ffd23f', '#4f8bff'][i % 4]; c.globalAlpha = 0.18; c.beginPath(); c.arc(x, 186, 26, 0, 7); c.fill(); c.globalAlpha = 1; c.beginPath(); c.arc(x, 186, 5, 0, 7); c.fill(); }
+    c.save(); c.translate(200, 118); c.fillStyle = '#9dff7a'; c.shadowColor = '#9dff7a'; c.shadowBlur = 16; c.font = 'bold 24px Georgia, serif'; c.textAlign = 'center'; c.fillText('\u2618 THE HIGH TABLE', 0, 0); c.shadowBlur = 0; c.font = 'bold 10px sans-serif'; c.fillStyle = '#ffd88a'; c.fillText('LOUNGE \u00b7 21+ ONLY', 0, 18); c.restore();
+    c.fillStyle = '#2a1a12'; c.fillRect(0, 262, W, 10); for (let i = 0; i < 9; i++) { const x = 20 + i * 44; c.fillStyle = ['#2f9e44', '#a16207', '#7c3aed', '#0e7490'][i % 4]; Kit.rr(c, x, 232 + (i % 2) * 4 - 0, 16, 30 - (i % 2) * 4, 3); c.fill(); c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(x + 3, 236, 2, 18); }
+    // table (z 0..900, x -170..170)
+    const a = proj(-170, 0, 0), b = proj(170, 0, 0), cc = proj(170, 0, 820), d = proj(-170, 0, 820); const tg = c.createLinearGradient(0, d.y, 0, a.y); tg.addColorStop(0, '#0f3d2a'); tg.addColorStop(1, '#1f6b46'); c.fillStyle = tg; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.lineTo(cc.x, cc.y); c.lineTo(d.x, d.y); c.fill(); c.strokeStyle = '#e8d8a8'; c.lineWidth = 3; c.stroke();
+    const m1 = proj(0, 0, 0), m2 = proj(0, 0, 820); c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = 2; c.beginPath(); c.moveTo(m1.x, m1.y); c.lineTo(m2.x, m2.y); c.stroke();
+    c.fillStyle = '#3a2416'; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.lineTo(b.x, b.y + 26); c.lineTo(a.x, a.y + 26); c.fill();
+    const lc = proj(0, 0, 450); c.save(); c.globalAlpha = 0.12; c.translate(lc.x, lc.y); c.scale(1, 0.35); c.fillStyle = '#9dff7a'; c.font = 'bold 120px serif'; c.textAlign = 'center'; c.fillText('\u2618', 0, 40); c.restore();
+    return (BG = cv); }
+  const CR = 22, CH = 46; // cup radius & height (world)
+  function rack(g) { g.cups = []; const z0 = 440 + Math.min(160, g.racks * 35), rows = 4; for (let r = 0; r < rows; r++) for (let i = 0; i <= r; i++) g.cups.push({ x: (i - r / 2) * CR * 2.1, z: z0 + (rows - 1 - r) * CR * 1.85 - 30, hit: 0 }); g.sway = g.racks >= 2 ? Math.min(60, 20 + g.racks * 8) : 0; }
+  function cupX(g, cp) { return cp.x + Math.sin(g.t * 0.9) * g.sway; }
+  function drawCup(c, g, cp) { const x = cupX(g, cp); const b = proj(x, 0, cp.z), t = proj(x, CH, cp.z); const rb = CR * b.s * 0.85, rt = CR * t.s; c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(b.x + 3, b.y + 2, rb * 1.1, rb * 0.35, 0, 0, 7); c.fill();
+    const gr = c.createLinearGradient(t.x - rt, 0, t.x + rt, 0); gr.addColorStop(0, '#7a1020'); gr.addColorStop(0.35, '#ef4444'); gr.addColorStop(0.55, '#ff9a9a'); gr.addColorStop(1, '#7a1020'); c.fillStyle = gr; c.beginPath(); c.moveTo(t.x - rt, t.y); c.lineTo(b.x - rb, b.y); c.ellipse(b.x, b.y, rb, rb * 0.3, 0, Math.PI, 0, true); c.lineTo(t.x + rt, t.y); c.fill();
+    c.fillStyle = '#5a0a14'; c.beginPath(); c.ellipse(t.x, t.y, rt, rt * 0.32, 0, 0, 7); c.fill(); c.fillStyle = '#c9a26a'; c.beginPath(); c.ellipse(t.x, t.y + rt * 0.06, rt * 0.82, rt * 0.22, 0, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = Math.max(1, 2 * t.s); c.beginPath(); c.ellipse(t.x, t.y, rt, rt * 0.32, 0, 0, 7); c.stroke();
+    c.fillStyle = '#9dff7a'; c.globalAlpha = 0.85; c.font = `bold ${Math.max(6, 14 * b.s) | 0}px serif`; c.textAlign = 'center'; c.fillText('\u2618', (t.x + b.x) / 2, (t.y + b.y) / 2 + 4 * b.s); c.globalAlpha = 1; }
+  function meter(t) { const p = (t * 0.8) % 2; return p < 1 ? p : 2 - p; } // power oscillates 0..1..0 while held
+  function throwBall(g, aim, m) { const b = g.ball, pw = 0.55 + m * 0.6; b.vz = 470 * pw + 80; b.vy = 360 * pw + 60; b.vx = aim * b.vz * 0.42; b.live = true; g.sfx('whoosh'); }
+  function newBall(g) { g.ball = { x: 0, y: 70, z: 60, vx: 0, vy: 0, vz: 0, live: false, bounces: 0, rim: 0 }; }
+  Kit.run({ id: 'gl-cup-toss', title: 'CUP TOSS', help: '21+ only. Press and hold: the power meter rises and falls; swipe up and release to throw\nAim with swipe direction - mind the wobble\nSink every cup to re-rack. Racks slide back and start to sway', bg: '#1a0f24',
+    init(g) { g.racks = 0; g.balls = 5; g.streak = 0; g.made = 0; rack(g); newBall(g); g.sw = null; g.trail = []; g.sp = []; g.hud = ''; },
+    update(g, dt) { const P = g.ptr, b = g.ball;
+      g.wob = Math.sin(g.t * 1.7) * 0.1 + Math.sin(g.t * 2.9 + 1) * 0.04; // aim wobble (the hand isn't steady)
+      if (!b.live) { if (P.pressed) { g.sw = { x: P.x, y: P.y, t: g.t, pts: [] }; } if (g.sw && P.down) { g.sw.pts.push([P.x, P.y]); g.pm = meter(g.t - g.sw.t); }
+        if (P.released && g.sw) { const dx = P.x - P.sx, dy = P.sy - P.y; if (dy > 40) throwBall(g, dx / Math.max(60, dy) + g.wob, meter(g.t - g.sw.t)); g.sw = null; g.pm = 0; }
+        if (g.keys[' ']) { g.kh = g.kh == null ? g.t : g.kh; g.pm = meter(g.t - g.kh); } else if (g.kh != null) { throwBall(g, g.wob, meter(g.t - g.kh)); g.kh = null; g.pm = 0; }
+        return; }
+      const n = 4, h = dt / n; for (let k = 0; k < n; k++) { b.vy -= 980 * h; b.x += b.vx * h; b.y += b.vy * h; b.z += b.vz * h;
+        if (b.y <= 6 && b.vy < 0 && Math.abs(b.x) < 170 && b.z < 820) { b.y = 6; b.vy = -b.vy * 0.55; b.vz *= 0.8; b.vx *= 0.8; b.bounces++; g.sfx('click'); }
+        for (const cp of g.cups) { if (cp.hit) continue; const cx = cupX(g, cp), dx = b.x - cx, dz = b.z - cp.z, d = Math.hypot(dx, dz);
+          if (b.y < CH + 4 && b.y > CH - 14 && b.vy < 0) { if (d < CR - 6) { cp.hit = 1; b.live = false; const pts = (100 + (b.bounces ? 50 : 0) + (b.rim ? 30 : 0)) * Math.min(5, 1 + g.streak); g.streak++; g.made++; g.mark('m', g.made); g.add(pts, 'cup'); const p = proj(cx, CH, cp.z); g.float(p.x, p.y - 20, (b.bounces ? 'BOUNCE ' : b.rim ? 'RATTLE ' : '') + '+' + pts, '#9dff7a', 18); g.burst(p.x, p.y, ['#9dff7a', '#fff', '#ffd23f'], 18, 180); g.sfx('coin'); g.shake(3); g.splash = { x: p.x, y: p.y, l: 0.5 }; break; }
+            if (d < CR + 5 && d >= CR - 6) { const nx = dx / (d || 1), nz = dz / (d || 1); const vn = b.vx * nx + b.vz * nz; b.vx -= 1.6 * vn * nx; b.vz -= 1.6 * vn * nz; b.vy = Math.abs(b.vy) * 0.45; b.rim++; g.sfx('hit'); } } }
+        if (!b.live) break; }
+      if (b.live && (b.z > 1100 || b.z < -50 || b.y < -200 || Math.abs(b.x) > 400 || (b.bounces > 3))) { b.live = false; g.streak = 0; g.balls--; g.sfx('bad'); g.float(200, 560, 'MISS', '#ff5a5a', 22); if (g.balls <= 0) return g.end('Out of balls'); }
+      if (!b.live) { if (g.cups.every(c => c.hit)) { g.racks++; g.mark('r', g.racks); g.add(500 * g.racks, 'rack'); g.balls = Math.min(8, g.balls + 2); g.float(200, 250, 'RE-RACK +2 BALLS', '#ffd23f', 24); g.sfx('power'); rack(g); } setTimeout(() => {}, 0); newBall(g); }
+      if (g.splash) { g.splash.l -= dt; if (g.splash.l <= 0) g.splash = null; } },
+    draw(g, c) { c.drawImage(bg(g.W, g.H), 0, 0); const b = g.ball;
+      const cups = g.cups.filter(cp => !cp.hit).sort((a, b) => b.z - a.z); const bp = proj(b.x, b.y, b.z), sh = proj(b.x, 0, b.z);
+      const drawBall = () => { if (Math.abs(b.x) < 170 && b.z < 820 && b.z > 0) { c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(sh.x, sh.y, 7 * sh.s, 2.5 * sh.s, 0, 0, 7); c.fill(); } const r = Math.max(2.5, 10 * bp.s); const gg = c.createRadialGradient(bp.x - r * 0.3, bp.y - r * 0.3, 1, bp.x, bp.y, r); gg.addColorStop(0, '#fff'); gg.addColorStop(1, '#f0b860'); c.fillStyle = gg; c.beginPath(); c.arc(bp.x, bp.y, r, 0, 7); c.fill(); };
+      let drawn = false; for (const cp of cups) { if (!drawn && b.z > cp.z + 4) { drawBall(); drawn = true; } drawCup(c, g, cp); } if (!drawn) drawBall();
+      if (g.splash) { c.strokeStyle = 'rgba(157,255,122,' + g.splash.l * 2 + ')'; c.lineWidth = 3; c.beginPath(); c.ellipse(g.splash.x, g.splash.y, (0.5 - g.splash.l) * 90, (0.5 - g.splash.l) * 28, 0, 0, 7); c.stroke(); }
+      if (!b.live) { c.fillStyle = 'rgba(255,255,255,' + (0.45 + Math.sin(g.t * 5) * 0.25) + ')'; c.font = 'bold 13px sans-serif'; c.textAlign = 'center'; c.fillText('HOLD \u00b7 TIME THE POWER \u00b7 SWIPE UP', 200, 720); { const P = g.ptr, aim = (g.ptr.down && P.sy - P.y > 20 ? (P.x - P.sx) / Math.max(60, P.sy - P.y) : 0) + g.wob; const o = proj(0, 70, 60); c.save(); c.translate(o.x, o.y - 20); c.rotate(Math.atan(aim * 0.9)); const ag = c.createLinearGradient(0, 0, 0, -110); ag.addColorStop(0, 'rgba(157,255,122,.0)'); ag.addColorStop(1, 'rgba(157,255,122,.75)'); c.fillStyle = ag; c.beginPath(); c.moveTo(-6, 0); c.lineTo(-4, -96); c.lineTo(-12, -96); c.lineTo(0, -116); c.lineTo(12, -96); c.lineTo(4, -96); c.lineTo(6, 0); c.fill(); c.restore();
+          const mx = 360, my = 470, mh = 190; c.fillStyle = 'rgba(0,0,0,.5)'; Kit.rr(c, mx - 4, my - 4, 22, mh + 8, 8); c.fill(); const mg = c.createLinearGradient(0, my + mh, 0, my); mg.addColorStop(0, '#22c55e'); mg.addColorStop(0.6, '#facc15'); mg.addColorStop(1, '#ef4444'); c.fillStyle = mg; const pm = g.pm || 0; Kit.rr(c, mx, my + mh * (1 - pm), 14, mh * pm, 6); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 9px sans-serif'; c.textAlign = 'center'; c.fillText('POWER', mx + 7, my + mh + 16); }
+        if (g.sw && g.sw.pts.length > 1) { c.strokeStyle = 'rgba(157,255,122,.6)'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); g.sw.pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); } } },
+    hudDraw(g, c) { c.textAlign = 'left'; c.font = 'bold 22px sans-serif'; c.fillStyle = '#fff'; c.fillText(Math.floor(g.score).toLocaleString('en-US'), 14, 32); c.font = 'bold 11px sans-serif'; c.fillStyle = '#9dff7a'; c.fillText('RACK ' + (g.racks + 1) + (g.streak > 1 ? '  \u00b7  STREAK x' + Math.min(5, 1 + g.streak - 1) : ''), 14, 48); c.textAlign = 'right'; c.font = 'bold 14px sans-serif'; c.fillStyle = '#f0b860'; c.fillText('\u25cf'.repeat(Math.max(0, g.balls)), g.W - 14, 30); } });
+})();

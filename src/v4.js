@@ -31,6 +31,7 @@ module.exports = function v4(app, A, h) {
   app.get('/api/giveaways/:id/standings', (req, res) => {
     const t0 = process.hrtime.bigint();
     const g = getG(req.params.id, true); if (!g) return bad(res, 404, 'Giveaway not found');
+    const hid = h.v7Hidden && h.v7Hidden(g); if (hid) return res.json({ ...hid, giveaway: gInfo(g), now: now() }); // v7: hidden until it ends
     const { rows, res: fin } = standingsOf(g);
     const per = Math.min(Math.max(parseInt(req.query.per || '50', 10) || 50, 5), 1000);
     const q = str(req.query.q, 40).toLowerCase();
@@ -57,7 +58,7 @@ module.exports = function v4(app, A, h) {
       rows: list.slice((page - 1) * per, page * per).map(row), me,
       winners: fin ? fin.winners.map(w => ({ place: w.place, username: w.username, score: w.score, state: w.state })) : [],
       winners_state: fin ? (fin.winners.length && fin.winners.every(w => w.state === 'confirmed') ? 'confirmed' : fin.winners.length ? 'pending' : 'none') : null,
-      tiebreak_rules: R.TIEBREAK_RULES, score_rule: R.SCORE_RULE, random_rule: R.RANDOM_RULE, refresh_ms: 10000, now: now() };
+      tiebreak_rules: R.TIEBREAK_RULES, score_rule: (h.v7Rule && h.v7Rule(g)) || R.SCORE_RULE, random_rule: R.RANDOM_RULE, refresh_ms: 10000, now: now() };
     out.ms = Number(process.hrtime.bigint() - t0) / 1e6;
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Server-Timing', `standings;dur=${out.ms.toFixed(1)}`);
     res.json(out);
@@ -76,7 +77,7 @@ module.exports = function v4(app, A, h) {
       .all(...games, ...userIds, g.start_at, g.start_at, g.end_at);
   }
   const runInfo = (r, best) => { const cap = R.capFor(r); const el = r.created_at - r.started_at; return { id: r.id, game_id: r.game_id, score: r.score, duration_ms: r.duration_ms, elapsed_ms: el,
-    rate: el > 0 ? +(r.score / (el / 1000)).toFixed(2) : null, per_sec_cap: cfg.GAME_MAP[r.game_id].ac.perSec, cap, pct_cap: cap > 0 ? Math.round(r.score / cap * 100) : null, over_cap: r.score > cap,
+    rate: el > 0 ? +(r.score / (el / 1000)).toFixed(2) : null, per_sec_cap: (cfg.gameInfo(r.game_id) || { ac: {} }).ac.perSec, cap, pct_cap: cap > 0 ? Math.round(r.score / cap * 100) : null, over_cap: r.score > cap,
     ip: r.ip_hash ? r.ip_hash.slice(0, 8) : '', device: r.ua_hash ? r.ua_hash.slice(0, 6) : '', created_at: r.created_at, best: r.id === best }; };
   function review(g, n) {
     const { rows, res } = standingsOf(g);
@@ -162,7 +163,7 @@ module.exports = function v4(app, A, h) {
     const games = R.gamesOf(g.id); const { rows } = standingsOf(g);
     const rankOf = new Map(rows.map(r => [r.user_id, r])); const bestIds = new Set(rows.map(r => r.best_run_id));
     const dq = new Map(db.prepare('SELECT user_id, reason FROM giveaway_dq WHERE giveaway_id=?').all(g.id).map(d => [d.user_id, d.reason]));
-    const runs = games.length ? db.prepare(`SELECT r.*, u.username FROM runs r JOIN users u ON u.id = r.user_id WHERE r.game_id IN (${games.map(() => '?').join(',')}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? ORDER BY u.username COLLATE NOCASE, r.created_at`)
+    const runs = games.length ? db.prepare(`SELECT r.*, u.username FROM runs r JOIN users u ON u.id = r.user_id WHERE r.event_id = ${+g.id} AND r.game_id IN (${games.map(() => '?').join(',')}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? ORDER BY u.username COLLATE NOCASE, r.created_at`)
       .all(...games, g.start_at, g.start_at, g.end_at) : [];
     const out = runs.map(r => { const cap = R.capFor(r); const st = rankOf.get(r.user_id); return { giveaway_id: g.id, username: r.username, user_id: r.user_id,
       standing: st ? st.rank : '', best_total: st ? st.score : '', attempts: st ? st.attempts : '', run_id: r.id, game_id: r.game_id, score: r.score, coins: r.coins,

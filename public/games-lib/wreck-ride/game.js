@@ -1,0 +1,73 @@
+// Wreck Ride - original ragdoll physics bike ride (Hub build, Happy Wheels-style). Matter.js (MIT) bike + jointed ragdoll rider
+// held on by breakable grip joints; fixed 120 Hz step with render interpolation. All art code-drawn.
+(function () { const M = window.Matter, B = M.Bodies, C = M.Constraint, DT = 1 / 120, SEG = 40;
+  function hgt(x) { if (x < 500) return 360; const k = Math.min(1, (x - 500) / 3000); let y = 360 + (x - 500) * 0.12 + Math.sin(x * 0.006) * 50 * k + Math.sin(x * 0.017 + 2) * 18 * k; const r = ramp(x); return y - r; }
+  function ramp(x) { const p = ((x - 900) % 1300 + 1300) % 1300; if (x < 900) return 0; if (p < 160) return p * 0.55; if (p < 175) return 88; return 0; }
+  const base = (x) => 360 + (x - 500) * 0.12;
+  function build(g) { const eng = M.Engine.create({ gravity: { y: 1.1 }, positionIterations: 10, velocityIterations: 8 }); g.eng = eng; g.segs = new Map(); g.segHi = -SEG * 10; g.props = [];
+    const grp = M.Body.nextGroup(true), x0 = 200, y0 = 300; const o = { collisionFilter: { group: grp } };
+    g.fr = B.rectangle(x0, y0, 90, 14, { ...o, density: 0.003, chamfer: { radius: 6 } });
+    g.wh = [-42, 42].map(dx => B.circle(x0 + dx, y0 + 26, 20, { ...o, density: 0.0018, friction: 1.3, frictionStatic: 3, restitution: 0.1 }));
+    const sus = g.wh.map((w, i) => [C.create({ bodyA: g.fr, pointA: { x: i ? 42 : -42, y: 6 }, bodyB: w, length: 20, stiffness: 0.2, damping: 0.2 }), C.create({ bodyA: g.fr, pointA: { x: i ? 14 : -14, y: 0 }, bodyB: w, stiffness: 0.1, damping: 0.1 })]).flat();
+    // ragdoll (same group so it doesn't fight the bike)
+    const P = (x, y, w, h, d) => B.rectangle(x0 + x, y0 + y, w, h, { ...o, density: d || 0.0012, friction: 0.6, chamfer: { radius: Math.min(w, h) / 2 - 0.5 } });
+    const R = g.rag = { torso: P(-6, -42, 16, 40), head: B.circle(x0 - 2, y0 - 76, 12, { ...o, density: 0.001, friction: 0.6 }), ua: P(6, -50, 8, 24), la: P(22, -40, 7, 22), th: P(4, -18, 10, 26), sh: P(18, -6, 9, 24) };
+    const J = (a, pa, b, pb, s) => C.create({ bodyA: a, pointA: pa, bodyB: b, pointB: pb, length: 0, stiffness: s || 0.9, damping: 0.1 });
+    g.joints = [J(R.torso, { x: 0, y: -20 }, R.head, { x: 0, y: 10 }), J(R.torso, { x: 0, y: -16 }, R.ua, { x: 0, y: -11 }), J(R.ua, { x: 0, y: 11 }, R.la, { x: 0, y: -10 }), J(R.torso, { x: 0, y: 18 }, R.th, { x: 0, y: -12 }), J(R.th, { x: 0, y: 12 }, R.sh, { x: 0, y: -11 }),
+      J(R.torso, { x: 0, y: -20 }, R.head, { x: 0, y: 14 }, 0.4)];
+    // pose springs (keep the rider sitting) + grips on the bike: these break on hard impacts
+    g.grips = [J(g.fr, { x: -8, y: -6 }, R.torso, { x: 0, y: 18 }, 0.8), J(g.fr, { x: 34, y: -24 }, R.la, { x: 0, y: 10 }, 0.6), J(g.fr, { x: 14, y: 4 }, R.sh, { x: 0, y: 11 }, 0.6), C.create({ bodyA: g.fr, pointA: { x: -12, y: -50 }, bodyB: R.torso, pointB: { x: 0, y: -20 }, length: 0, stiffness: 0.05, damping: 0.1 })];
+    M.Composite.add(eng.world, [g.fr, ...g.wh, ...sus, ...Object.values(R), ...g.joints, ...g.grips]); g.onBike = true; terrain(g, x0);
+    M.Events.on(eng, 'collisionStart', (ev) => { for (const pr of ev.pairs) for (const [a, b] of [[pr.bodyA, pr.bodyB], [pr.bodyB, pr.bodyA]]) { if (a === R.head && (b.isStatic || b.isSpike)) g.headHit = Math.max(g.headHit || 0, Math.hypot(R.head.velocity.x, R.head.velocity.y) + (b.isSpike ? 20 : 0)); if ((a === g.fr || g.wh.includes(a)) && b.isSpike) g.spiked = true; if (b.isCrate && !b.hit && (a === g.fr || g.wh.includes(a))) { b.hit = true; g.crates = (g.crates || 0) + 1; } } }); }
+  function terrain(g, cx) { while (g.segHi < cx + 1600) { const a = g.segHi, b = a + SEG; const ya = hgt(a), yb = hgt(b); const v = [{ x: a, y: ya }, { x: b, y: yb }, { x: b, y: Math.max(ya, yb) + 160 }, { x: a, y: Math.max(ya, yb) + 160 }];
+      const body = B.fromVertices((a + b) / 2, 0, [v], { isStatic: true, friction: 1.1 }); M.Body.setPosition(body, { x: body.position.x + (a - body.bounds.min.x), y: body.position.y + (Math.min(ya, yb) - body.bounds.min.y) }); M.Composite.add(g.eng.world, body); g.segs.set(a, body);
+      if (a > 1200 && Math.floor(a / SEG) % 23 === 7 && !ramp(a) && !ramp(a + 60)) { for (let i = 0; i < 3; i++) { const cr = B.rectangle(a + 20, hgt(a + 20) - 18 - i * 34, 32, 32, { density: 0.0006, friction: 0.7, chamfer: { radius: 3 } }); cr.isCrate = true; M.Composite.add(g.eng.world, cr); g.props.push(cr); } }
+      if (a > 2400 && Math.floor(a / SEG) % 31 === 15 && !ramp(a) && !ramp(a + 60)) { const sp = B.rectangle(a + 20, hgt(a + 20) - 4, 50, 8, { isStatic: true, angle: Math.atan2(hgt(a + 45) - hgt(a - 5), 50) }); sp.isSpike = true; M.Composite.add(g.eng.world, sp); g.props.push(sp); }
+      g.segHi = b; }
+    for (const [a, body] of g.segs) if (a < cx - 900) { M.Composite.remove(g.eng.world, body); g.segs.delete(a); } g.props = g.props.filter(p => { if (p.position.x < cx - 900) { M.Composite.remove(g.eng.world, p); return false; } return true; }); }
+  function detach(g, why) { if (!g.onBike) return; g.onBike = false; M.Composite.remove(g.eng.world, g.grips); g.why = why; g.endT = 1.6; g.sfx('hit'); g.shake(12, 0.4); for (const b of Object.values(g.rag)) b.collisionFilter = { group: 0, category: 2, mask: 1 }; }
+  const lerp = (a, b, t) => a + (b - a) * t;
+  function body(c, g, b, f) { const p = g.prev && g.prev.get(b); const x = p ? lerp(p.x, b.position.x, g.alpha) : b.position.x, y = p ? lerp(p.y, b.position.y, g.alpha) : b.position.y, a = p ? lerp(p.a, b.angle, g.alpha) : b.angle; c.save(); c.translate(x, y); c.rotate(a); f(); c.restore(); }
+  const OL = '#1d1a24';
+  function limb(c, w, h, col) { c.fillStyle = col; c.strokeStyle = OL; c.lineWidth = 2.5; Kit.rr(c, -w / 2, -h / 2, w, h, w / 2); c.fill(); c.stroke(); }
+  Kit.run({ id: 'gl-wreck-ride', title: 'WRECK RIDE', orient: 'l', help: 'Right side / Right = pedal, Left side / Left = brake & lean back\nUp / Down lean in the air. Keep your head off the ground!', bg: '#9fd8ff',
+    buttons: [{ id: 'B', key: 'ArrowLeft', label: 'BACK' }, { id: 'G', key: 'ArrowRight', label: 'GO' }],
+    init(g) { build(g); g.cam = 0; g.camY = 0; g.dist = 0; g.acc = 0; g.alpha = 1; g.prev = new Map(); g.rot = 0; g.lastA = null; g.air = 0; g.headHit = 0; g.spiked = false; g.crates = 0; g.paid = 0; g.stars = []; },
+    update(g, dt) { let gas = g.keys.ArrowRight || g.keys.d ? 1 : 0, back = g.keys.ArrowLeft || g.keys.a ? 1 : 0; const up = g.keys.ArrowUp || g.keys.w, dn = g.keys.ArrowDown || g.keys.s; if (g.ptr.down) { if (g.ptr.x > g.W / 2) gas = 1; else back = 1; }
+      g.acc += Math.min(dt, 0.1); const all = [g.fr, ...g.wh, ...Object.values(g.rag), ...g.props]; for (const b of all) g.prev.set(b, { x: b.position.x, y: b.position.y, a: b.angle });
+      while (g.acc >= DT) { g.acc -= DT; let gr = 0; for (const w of g.wh) { w.gnd = w.position.y + 20 >= hgt(w.position.x) - 4; if (w.gnd) gr++; } g.gr = gr;
+        if (g.onBike) { const w = g.wh[0]; const tgt = gas ? 0.42 : back ? -0.2 : null; if (tgt !== null) for (const w2 of g.wh) M.Body.setAngularVelocity(w2, w2.angularVelocity + (tgt - w2.angularVelocity) * 0.07);
+          const lean = ((back || up) ? -1 : 0) + ((dn) ? 1 : 0) + (gas && !gr ? 0.4 : 0); M.Body.setAngularVelocity(g.fr, g.fr.angularVelocity + lean * (gr ? 0.0004 : 0.0028)); }
+        M.Engine.update(g.eng, DT * 1000); }
+      g.alpha = g.acc / DT; const fr = g.fr, cx = fr.position.x, cy = fr.position.y;
+      if (g.onBike) { const hd = g.rag.head.position; const spd = Math.hypot(fr.velocity.x, fr.velocity.y); g.stall = spd < 0.25 ? (g.stall || 0) + dt : 0; if (g.headHit > 3.2 || hd.y + 13 >= hgt(hd.x) - 1) detach(g, 'Head first!'); else if (g.stall > 4) detach(g, 'Stalled out'); else if (g.spiked) detach(g, 'Spike strip!'); else { for (const j of g.grips.slice(0, 3)) { const a = M.Constraint.pointAWorld(j), b = M.Constraint.pointBWorld(j); if (Math.hypot(a.x - b.x, a.y - b.y) > 26) { detach(g, 'Thrown off!'); break; } } } g.headHit = 0;
+        if (g.gr === 0) { g.air += dt; if (g.lastA != null) g.rot += fr.angle - g.lastA; } else { if (Math.abs(g.rot) > Math.PI * 1.7) { const n = Math.round(Math.abs(g.rot) / 6.283) || 1; g.add(150 * n, 'f'); g.float(g.W / 2, 110, (n > 1 ? n + 'x ' : '') + (g.rot < 0 ? 'BACKFLIP' : 'FRONTFLIP') + ' +' + 150 * n, '#ffd23f', 24); g.sfx('power'); } else if (g.air > 0.9) { g.add(20, 'j'); g.float(g.W / 2, 110, 'BIG AIR +20', '#7dff9a', 18); } g.rot = 0; g.air = 0; } g.lastA = fr.angle;
+        const m = Math.floor((cx - 200) / 10); if (m > g.dist) { g.add(m - g.dist, 'm'); g.dist = m; } if (g.crates > g.paid) { g.add(25 * (g.crates - g.paid), 'k'); g.float(g.W / 2, 140, 'SMASH +25', '#ff9a4a', 16); g.paid = g.crates; g.sfx('pop'); }
+        if (gas && g.frames % 6 === 0) Kit.sfx('engine', Math.min(1, Math.hypot(fr.velocity.x, fr.velocity.y) / 12)); }
+      else { g.endT -= dt; if (g.endT <= 0) return g.end(g.why); }
+      const fx = g.onBike ? cx : g.rag.torso.position.x, fy = g.onBike ? cy : g.rag.torso.position.y; terrain(g, fx); g.cam = Kit.lerp(g.cam, fx - g.W * 0.36 - Math.min(140, fr.velocity.x * 10), Math.min(1, dt * 4)); g.camY = Kit.lerp(g.camY, fy - g.H * 0.55, Math.min(1, dt * 3));
+      g.hud = ''; },
+    draw(g, c) { const W = g.W, H = g.H, cam = g.cam, cy = g.camY;
+      const sky = c.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#5fb8ff'); sky.addColorStop(1, '#d8f0ff'); c.fillStyle = sky; c.fillRect(0, 0, W, H);
+      c.fillStyle = 'rgba(255,255,255,.85)'; for (let i = 0; i < 6; i++) { const x = ((i * 260 - cam * 0.1) % 1560 + 1560) % 1560 - 200, y = 50 + (i * 37) % 90; c.beginPath(); c.ellipse(x, y, 60, 18, 0, 0, 7); c.ellipse(x + 40, y - 10, 40, 18, 0, 0, 7); c.fill(); }
+      for (const [pf, col, amp, off] of [[0.2, '#8fc7a0', 70, 0], [0.45, '#6fae7e', 50, 120]]) { c.fillStyle = col; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 20) { const wx = x + cam * pf; c.lineTo(x, H * 0.55 + off * 0.3 - (cy * pf * 0.3) + Math.sin(wx * 0.004 + off) * amp + Math.sin(wx * 0.011) * amp * 0.3); } c.lineTo(W, H); c.fill(); }
+      // billboard (21+ branding) far layer
+      { const bx = ((1200 - cam * 0.45) % 2400 + 2400) % 2400 - 300, by = H * 0.42 - cy * 0.13; c.fillStyle = '#5a4a3a'; c.fillRect(bx + 40, by + 60, 8, 90); c.fillRect(bx + 150, by + 60, 8, 90); c.fillStyle = '#1b3a24'; Kit.rr(c, bx, by, 200, 70, 6); c.fill(); c.strokeStyle = '#ffd23f'; c.lineWidth = 3; c.stroke(); c.fillStyle = '#9dff7a'; c.font = 'bold 18px system-ui'; c.textAlign = 'center'; c.fillText('\u2618 KUSH CYCLES', bx + 100, by + 32); c.fillStyle = '#ffd23f'; c.font = 'bold 11px system-ui'; c.fillText('RIDE SAFE - 21+', bx + 100, by + 52); }
+      c.save(); c.translate(-cam, -cy);
+      // ground
+      const x0 = Math.floor(cam / 10) * 10 - 20, x1 = cam + W + 20; c.beginPath(); c.moveTo(x0, hgt(x0)); for (let x = x0; x <= x1; x += 10) c.lineTo(x, hgt(x)); c.lineTo(x1, cy + H + 50); c.lineTo(x0, cy + H + 50); c.closePath(); const dg = c.createLinearGradient(0, cy, 0, cy + H); dg.addColorStop(0, '#a0703e'); dg.addColorStop(1, '#5a3a1e'); c.fillStyle = dg; c.fill();
+      c.beginPath(); for (let x = x0; x <= x1; x += 10) x === x0 ? c.moveTo(x, hgt(x)) : c.lineTo(x, hgt(x)); c.strokeStyle = '#4fb34a'; c.lineWidth = 12; c.stroke(); c.strokeStyle = '#7ddb5f'; c.lineWidth = 4; c.stroke();
+      for (let x = Math.floor(x0 / 1300) * 1300 + 900; x < x1; x += 1300) if (x >= 900) { c.fillStyle = '#c99a5a'; c.beginPath(); c.moveTo(x, base(x)); c.lineTo(x + 160, base(x + 160) - 88); c.lineTo(x + 175, base(x + 175) - 88); c.lineTo(x + 175, base(x + 175)); c.closePath(); c.fill(); c.strokeStyle = '#7a5a2e'; c.lineWidth = 3; c.stroke(); for (let k = 20; k < 160; k += 24) { c.beginPath(); c.moveTo(x + k, base(x + k) - k * 0.55); c.lineTo(x + k, base(x + k)); c.stroke(); } }
+      for (const p of g.props) body(c, g, p, () => { if (p.isSpike) { c.fillStyle = '#3a3f4a'; c.fillRect(-25, -2, 50, 6); c.fillStyle = '#d8dde3'; for (let k = -22; k < 25; k += 8) { c.beginPath(); c.moveTo(k, -2); c.lineTo(k + 4, -14); c.lineTo(k + 8, -2); c.fill(); } } else { c.fillStyle = '#c98a3e'; c.strokeStyle = '#6a4220'; c.lineWidth = 3; Kit.rr(c, -16, -16, 32, 32, 3); c.fill(); c.stroke(); c.beginPath(); c.moveTo(-14, -14); c.lineTo(14, 14); c.moveTo(14, -14); c.lineTo(-14, 14); c.stroke(); } });
+      // bike
+      for (const w of g.wh) body(c, g, w, () => { c.fillStyle = '#1d1a24'; c.beginPath(); c.arc(0, 0, 20, 0, 7); c.fill(); c.strokeStyle = '#c8ccd4'; c.lineWidth = 1.5; for (let k = 0; k < 8; k++) { c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(k * 0.785) * 15, Math.sin(k * 0.785) * 15); c.stroke(); } c.fillStyle = '#9aa2ae'; c.beginPath(); c.arc(0, 0, 4, 0, 7); c.fill(); c.strokeStyle = '#3a3a44'; c.lineWidth = 3; c.beginPath(); c.arc(0, 0, 17, 0, 7); c.stroke(); });
+      body(c, g, g.fr, () => { c.strokeStyle = '#e8343a'; c.lineWidth = 6; c.lineCap = 'round'; c.beginPath(); c.moveTo(-42, 18); c.lineTo(-8, -4); c.lineTo(30, -4); c.lineTo(42, 18); c.moveTo(-8, -4); c.lineTo(4, 14); c.lineTo(30, -4); c.moveTo(34, -2); c.lineTo(34, -26); c.stroke(); c.strokeStyle = OL; c.lineWidth = 4; c.beginPath(); c.moveTo(26, -28); c.lineTo(40, -26); c.stroke(); c.fillStyle = '#222'; Kit.rr(c, -20, -12, 22, 7, 3); c.fill(); });
+      // rider (back limbs darker)
+      const R = g.rag; body(c, g, R.th, () => limb(c, 10, 26, '#2a3b5a')); body(c, g, R.sh, () => { limb(c, 9, 24, '#2a3b5a'); c.fillStyle = '#222'; Kit.rr(c, -5, 9, 12, 6, 2); c.fill(); });
+      body(c, g, R.torso, () => { limb(c, 16, 40, '#1f8f58'); c.fillStyle = '#ffd23f'; c.fillRect(-7, -6, 14, 4); });
+      body(c, g, R.ua, () => limb(c, 8, 24, '#1f8f58')); body(c, g, R.la, () => { limb(c, 7, 22, '#f1c9a0'); });
+      body(c, g, R.head, () => { c.fillStyle = '#f1c9a0'; c.strokeStyle = OL; c.lineWidth = 2.5; c.beginPath(); c.arc(0, 0, 12, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#e8343a'; c.beginPath(); c.arc(0, -2, 13, Math.PI * 0.95, Math.PI * 2.05); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.fillRect(-2, -12, 4, 9); c.fillStyle = '#111'; c.beginPath(); c.arc(6, 2, 1.8, 0, 7); c.fill(); });
+      c.restore();
+      if (!g.onBike && g.state === 'play') { c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(0, H / 2 - 30, W, 60); g.txt(g.why.toUpperCase(), W / 2, H / 2, 30, '#fff'); } },
+    hudDraw(g, c) { c.textAlign = 'left'; c.textBaseline = 'top'; c.font = 'bold 26px system-ui'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.55)'; const m = g.dist + ' m'; c.strokeText(m, 14, 30); c.fillStyle = '#fff'; c.fillText(m, 14, 30); c.font = 'bold 15px system-ui'; const s = 'SCORE ' + Math.floor(g.score); c.strokeText(s, 14, 62); c.fillStyle = '#ffd23f'; c.fillText(s, 14, 62); } });
+})();

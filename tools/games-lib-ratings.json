@@ -1,0 +1,17 @@
+{
+ "castle-crush": {
+  "visual": 7,
+  "feel": 7,
+  "notes": "Matter.js physics (fixed step, 2 substeps), textured wood/stone/glass, gradient sky + sun bloom, 3-layer parallax hills, drifting clouds, shot trail, impact dust + shake. Still procedural shapes, no sprite art; trebuchet arm is not animated by physics."
+ },
+ "rail-rush": {
+  "visual": 7,
+  "feel": 7.5,
+  "notes": "v4 PASS: smooth CC0 rigged hero/chaser (Quaternius UBC+UAL, outfits in-shader), code-built liveried trains, curved wood/steel ramps, ballast track, saloon/cliff/clock tower/bridge every row, painted layered backdrop, vertex-colour bake (61-103 calls, 107-128k tris). Bot avg 48s over 4 runs."
+ },
+ "lane-racer": {
+  "visual": 7,
+  "feel": 7,
+  "notes": "v4 PASS (borderline): semi-real Poly Haven asphalt (normal-mapped) + grass, bigger traffic, closer chase cam, hills/fences/barn+silo mid-ground; 63 calls / 86k tris. Bot survives ~20-28s at headless 20fps."
+ }
+}

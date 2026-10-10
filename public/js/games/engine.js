@@ -36,7 +36,8 @@ const _atlas = {};
 // loads /assets/v6/<name>.webp + <name>.json once per page (lazy: only the games that need an atlas ask for it)
 export function loadAtlas(name) {
   if (_atlas[name]) return _atlas[name];
-  return (_atlas[name] = Promise.all([loadImg(ART6 + name + '.webp'), fetch(ART6 + name + '.json').then(r => (r.ok ? r.json() : null)).catch(() => null)])
+  const base = name.startsWith('/') ? name : ART6 + name; // v7: full paths like /assets/v7/snacks
+  return (_atlas[name] = Promise.all([loadImg(base + '.webp'), fetch(base + '.json').then(r => (r.ok ? r.json() : null)).catch(() => null)])
     .then(([img, j]) => (img && j ? { img, f: j.frames, meta: j } : null)));
 }
 // draw atlas frame into a box; returns false when the art is missing so callers can fall back to vector drawing
@@ -255,20 +256,31 @@ export class Game {
     if (this.state !== 'paused') { this._parts(dt); if (this.amb) this.amb.update(dt); }
     this.draw();
   }
-  begin() { if (this.state !== 'ready') return; this.state = 'play'; this.startedAt = performance.now(); this.playT = 0; this.onState('play'); }
+  begin() { if (this.state !== 'ready') return; this._ev = null; this.state = 'play'; this.startedAt = performance.now(); this.playT = 0; this.onState('play'); }
   pause(v = true) { if (this.state !== 'play' && this.state !== 'paused') return; this.state = v ? 'paused' : 'play'; this.last = performance.now(); this.onState(this.state); this.draw(); }
   togglePause() { if (this.state === 'play') this.pause(true); else if (this.state === 'paused') this.pause(false); }
   // v5: server seed for this run (from /api/run/start). Re-deals the board if the run has not started yet.
-  setSeed(s) { this.seed = s || ''; this.r = seeded(this.seed); if (this.state === 'ready') { this.log = []; this.reset(); this.layout(); this.draw(); } }
-  restart() { this.state = 'ready'; this.parts = []; this.pops = []; this.r = seeded(this.seed); this.log = []; this.tel.reset(); this.reset(); this.layout(); this.onState('ready'); this.draw(); }
+  setSeed(s) { this.seed = s || ''; this.r = seeded(this.seed); if (this.state === 'ready') { this.log = []; this._ev = null; this.reset(); this.layout(); this.draw(); } }
+  restart() { this.state = 'ready'; this.parts = []; this.pops = []; this.r = seeded(this.seed); this.log = []; this._ev = null; this.tel.reset(); this.reset(); this.layout(); this.onState('ready'); this.draw(); }
   // End the run and submit the current score (used at game over and by "End run & save")
   finish() {
     if (this.state === 'over') return; const wasReady = this.state === 'ready'; this.state = 'over';
     if (wasReady) return;
     const score = Math.max(0, Math.floor(this.score || 0)); if (score > this.best) this.best = score;
-    this.onState('over'); this.onEnd({ score, coins: Math.floor(this.coins || 0), duration_ms: Math.round(performance.now() - this.startedAt), tel: this.tel.out(), log: this.log.length ? this.log.slice(0, 5000) : undefined });
+    this.onState('over'); this.onEnd({ score, coins: Math.floor(this.coins || 0), duration_ms: Math.round(performance.now() - this.startedAt), tel: this.tel.out(), log: this.log.length ? this.log.slice(0, 5000) : undefined, ev: this.evOut() });
   }
   endNow() { if (this.state === 'play' || this.state === 'paused') this.finish(); }
+  // ----- v7 anti-cheat level 3: event log -----
+  // award(pts, kind) adds points AND records [time, kind, points]; mark(kind, value) records progression (wave, row, life...).
+  // The log is sent with the run; src/ac-levels.js checks it against the game rules (sum = score, values legal for the
+  // current wave/row/multiplier, counts and timing possible). Compact flat encoding: [dt in 10 ms, kind, value, ...].
+  award(pts, kind) { pts = Math.round(pts); this.score += pts; this.mark(kind, pts); return pts; }
+  mark(kind, v = 0) {
+    const L = this._ev || (this._ev = { e: [], last: 0, n: 0, agg: null }); const t = Math.round((this.playT || 0) * 100); L.n++;
+    if (L.e.length < 4500 * 3) { L.e.push(t - L.last, kind, v); L.last = t; }
+    else { const a = L.agg || (L.agg = {}); const r = a[kind] || (a[kind] = [0, 0, 0]); r[0]++; r[1] += v; r[2] = Math.max(r[2], v); L.lastT = t; }
+  }
+  evOut() { const L = this._ev; if (!L) return undefined; return { v: 1, e: L.e, n: L.n, agg: L.agg || undefined, end: Math.round((this.playT || 0) * 100) }; }
   // ----- helpers -----
   burst(x, y, color, n = 12, sp = 220, life = 0.6, size = 4) { for (let i = 0; i < n; i++) { const a = Math.random() * TAU, v = rnd(sp * 0.3, sp); this.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life, max: life, c: Array.isArray(color) ? color[i % color.length] : color, s: rnd(size * 0.5, size * 1.3) }); } }
   pop(x, y, text, color = '#fff', size = 26) { this.pops.push({ x, y, text, color, size, life: 1, max: 1 }); }

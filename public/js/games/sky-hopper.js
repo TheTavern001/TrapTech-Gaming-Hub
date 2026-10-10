@@ -3,12 +3,12 @@ import { Game, TAU, clamp, roundRect, fmt, loadArt, pattern, cover, loadAtlas, l
 // v6: 4-layer seamless parallax night city (original procedural art), glass curtain-wall towers, original Blender-rendered astronaut (fly/hit frames), 3D gold coin spin frames.
 export class SkyHopper extends Game {
   get title() { return 'SKY HOPPER'; }
-  get hint() { return 'Tap (or press Space) to boost up, let go to fall. Fly through the gaps between the towers. Every tower passed is +1, coins in the gaps are a bonus. One hit ends the run.'; }
+  get hint() { return 'Tap (or press Space) to boost up, let go to fall. Fly through the gaps between the towers. Every tower passed is +1, coins in the gaps are a bonus. One hit ends the run. After tower 30 the gaps start sliding.'; }
   async load() { const [a, L, astro, P] = await Promise.all([loadArt({ metal: 'metal-plate.webp', tower: '/assets/v6/sh-tower.webp' }), loadLayers({ sky: 'px-sky.webp', far: 'px-far.webp', mid: 'px-mid.webp', near: 'px-near-roofs.webp' }), loadAtlas('astro'), loadAtlas('props')]); this.art = a; this.L = L; this.AS = astro; this.P = P; }
   layout() { this.hx = Math.min(this.W * 0.3, 160); this.ground = this.H - 40; }
   reset() { this.score = 0; this.coins = 0; this.y = this.H * 0.45; this.vy = 0; this.x = 0; this.pipes = []; this.next = 420; this.dead = 0; this.layout(); }
   gap() { return Math.max(150, 215 - this.score * 2.2); }
-  spd() { return Math.min(300, 185 + this.score * 3); }
+  spd() { return this.score <= 38 ? 185 + this.score * 3 : Math.min(360, 299 + (this.score - 38) * 0.6); } // v7 endless: keeps ramping to 360
   flap() { if (this.dead) return; this.vy = -430; this.sfx.tone(520, 0.07, { type: 'triangle', vol: 0.22, slide: 1.4 }); }
   onDown() { this.flap(); }
   onKey(code, down) { if (down && (code === 'Space' || code === 'ArrowUp' || code === 'KeyW')) this.flap(); }
@@ -16,8 +16,9 @@ export class SkyHopper extends Game {
     this.vy = Math.min(900, this.vy + 1450 * dt); this.y += this.vy * dt;
     if (this.dead) { this.dead -= dt; if (this.dead <= 0) this.finish(); return; }
     const v = this.spd(); this.x += v * dt;
-    while (this.next < this.x + this.W + 80) { const g = this.gap(); const top = 130 + this.r() * (this.ground - 130 - g - 60); this.pipes.push({ x: this.next, top, g, passed: false, coin: this.r() < 0.55, got: false }); this.next += 270 + this.r() * 60; }
-    const r = 18; const hx = this.hx;
+    while (this.next < this.x + this.W + 80) { const g = this.gap(); const lo = 130, hi = this.ground - g - 60; const prev = this.pipes.length ? this.pipes[this.pipes.length - 1].top0 : null; const top = prev == null ? lo + this.r() * (hi - lo) : Math.max(lo, Math.min(hi, prev + (this.r() * 2 - 1) * 240)); /* v7: gaps never jump more than 240 px (tall phones made some jumps impossible) */ const amp = this.score >= 30 ? Math.min(70, 12 + (this.score - 30) * 1.5) : 0; this.pipes.push({ x: this.next, top, top0: top, g, amp, ph: this.r() * 6.28, passed: false, coin: this.r() < 0.55, got: false }); this.next += 270 + this.r() * 60; }
+    const r = 18; const hx = this.hx; this.tt = (this.tt || 0) + dt;
+    for (const p of this.pipes) if (p.amp) { const lo = 130, hi = this.ground - 60 - p.g; p.top = Math.max(lo, Math.min(hi, p.top0 + Math.sin(this.tt * 1.3 + p.ph) * p.amp)); } // sliding gaps after tower 30
     for (const p of this.pipes) {
       const sx = p.x - this.x; const w = 74;
       if (!p.passed && sx + w < hx - r) { p.passed = true; this.score++; this.sfx.tone(880, 0.06, { type: 'sine', vol: 0.25 }); }

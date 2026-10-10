@@ -46,8 +46,8 @@ setInterval(() => { if (Date.now() - T0 > 10 * 60e3) { console.error('WATCHDOG: 
 (async () => {
   console.log('BASE', BASE);
   const leftovers = cleanup(); if (leftovers) console.log('  (removed', leftovers, 'leftover sc_ users)');
-  const ADM = client(), anon = client(), P150 = client();
-  let r = await ADM('/api/admin/login', { body: { password: env.ADMIN_PASSWORD } }); ok(r.body.ok, 'admin login');
+  const ADM = require('./admin-auth').adminClient(BASE), anon = client(), P150 = client(); // v7: secret admin path + TOTP + CSRF
+  let r = await ADM.login(); ok(r.body.ok, 'admin login');
 
   // ---------- seed ----------
   STEP = 'seed'; console.log('# seed 300 players + runs');

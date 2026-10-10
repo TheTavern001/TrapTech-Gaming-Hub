@@ -423,6 +423,7 @@ addCol('runs', 'held', 'INTEGER NOT NULL DEFAULT 0');
 addCol('run_tokens', 'seed', "TEXT NOT NULL DEFAULT ''");
 db.exec('CREATE INDEX IF NOT EXISTS idx_runs_held ON runs(held) WHERE held<>0');
 addCol('giveaway_results', 'weight', 'INTEGER');
+addCol('users', 'shadow_banned', 'INTEGER NOT NULL DEFAULT 0'); // v7 admin: hidden from leaderboards + giveaway standings (src/admin-users.js)
 // Potato username for winner contact: backfill from the hub username where it is a valid Potato handle
 db.prepare("UPDATE users SET potato=username WHERE potato='' AND username NOT GLOB '*[^A-Za-z0-9_]*' AND length(username) >= 3").run();
 // every pre-v2 giveaway keeps its single linked game

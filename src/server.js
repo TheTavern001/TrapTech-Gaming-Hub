@@ -15,12 +15,17 @@ const { gameBoard, globalBoard, ranked, giveawayEntrants, giveawayStatus, active
 
 const app = express();
 app.set('trust proxy', true);
+const PU = require('./public-url'); app.use(PU.redirect()); // v7: PUBLIC_URL + optional CANONICAL_REDIRECT (src/public-url.js)
 app.disable('x-powered-by');
 // Static text assets are gzipped at build time (scripts/deplexo-prebuild.js -> $BUILD_DIR/gz) and served as-is;
 // on-the-fly gzip is only used for dynamic responses (JSON, HTML). Smaller zlib windows keep per-response memory low.
 app.use(require('./static-gz')(path.join(cfg.ROOT, 'public')));
 app.use(require('compression')({ threshold: 1024, memLevel: 7, windowBits: 14 }));
-app.use(express.json({ limit: '32kb' }));
+const V7A = require('./admin-v7'); app.use(V7A.bigJson); // v7 admin: larger JSON bodies only for signed-in builder/settings/import routes
+// v7: score submissions carry the L3 event log / L4 input log (up to ~60 KB); everything else stays at 32 KB
+const jsonSmall = express.json({ limit: '32kb' }), jsonScore = express.json({ limit: '96kb' });
+app.use((req, res, next) => (req.path === '/api/score' ? jsonScore : jsonSmall)(req, res, next));
+app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mode
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
 app.get('/healthz', (req, res) => { try { db.prepare('SELECT 1').get(); res.json({ ok: true }); } catch (e) { res.status(500).json({ ok: false }); } });
@@ -100,8 +105,10 @@ function startSession(req, res, user) {
   return t;
 }
 const requireUser = (req, res, next) => { const u = currentUser(req); if (!u) return bad(res, 401, 'Please sign in first.'); req.user = u; next(); };
-function isAdmin(req) { const t = verify(cfg.SESSION_SECRET + ':admin', parseCookies(req).gh_admin); return !!(t && t.adm && t.e > now()); }
-const requireAdmin = (req, res, next) => isAdmin(req) ? next() : bad(res, 401, 'Admin login required.');
+// v7: admin lives at a secret path with password + authenticator (TOTP), lockouts, CSRF and an audit log (src/admin-sec.js)
+const ADMSEC = require('./admin-sec');
+const EV = require('./events'); // v7 official events vs free play
+const requireAdmin = ADMSEC.requireAdmin;
 
 const USERNAME_RE = /^[A-Za-z0-9_.-]{3,20}$/;
 
@@ -189,7 +196,7 @@ app.get('/api/leaderboard', (req, res) => {
   res.json({ ok: true, game, period, total: rows.length, rows: rows.slice(0, limit).map(publicRow), me: mine && publicRow(mine), now: now() });
 });
 Object.assign(H, { now, bad, limiter, logActivity, str });
-const publicRow = (r) => ({ rank: r.rank, username: r.username, score: r.score, runs: r.runs, last_at: r.last_at, demo: !!r.is_demo, cos: ach.publicCos(r) });
+const publicRow = (r) => ({ rank: r.rank, username: r.username, score: r.score, runs: r.runs, last_at: r.last_at, demo: !!r.is_demo, cos: ach.publicCos(r), ...(r.tiebreak !== undefined ? { tiebreak: r.tiebreak || null, exact_tie: !!r.exact_tie } : {}) });
 
 // ---------- runs / anti-cheat ----------
 app.post('/api/run/start', requireUser, (req, res) => {
@@ -199,13 +206,20 @@ app.post('/api/run/start', requireUser, (req, res) => {
   if (!rateLimit(`start-u:${req.user.id}`, 20, 60e3) || !rateLimit(`start-ip:${ipHash(req)}`, 40, 60e3)) return bad(res, 429, 'Too many runs started, wait a moment.');
   const rid = crypto.randomBytes(16).toString('hex');
   const t = now();
-  const seed = AC.newSeed();
-  db.prepare('INSERT INTO run_tokens (rid,user_id,game_id,started_at,ip_hash,seed) VALUES (?,?,?,?,?,?)').run(rid, req.user.id, gameId, t, ipHash(req), seed);
-  res.json({ ok: true, token: sign(cfg.RUN_SECRET, { rid, u: req.user.id, g: gameId, t }), started_at: t, seed });
+  const PO = req.body.playoff ? require('./games-lib-playoff').checkStart(req.user, gameId, req.body.playoff) : null; if (PO && !PO.ok) return bad(res, PO.status, PO.error); // [games-lib hook] playoff run = shared seed, one start
+  const seed = PO ? PO.seed : AC.newSeed();
+  // v7 official events: an event-run token is only issued after the server validates the event (src/events.js)
+  const evRef = req.body.event || req.body.event_code || req.body.giveaway_id;
+  let ev = null;
+  if (evRef != null && evRef !== '') { const c = EV.checkStart(req, req.user, gameId, evRef, t); if (!c.ok) return bad(res, c.status, c.error, { event_rejected: true }); ev = c.g; }
+  db.prepare('INSERT INTO run_tokens (rid,user_id,game_id,started_at,ip_hash,seed,event_id,sess_hash) VALUES (?,?,?,?,?,?,?,?)').run(rid, req.user.id, gameId, t, ipHash(req), seed, ev ? ev.id : null, ev ? EV.sessHash(req) : '');
+  if (PO) PO.bind(rid); // [games-lib hook]
+  res.json({ ok: true, token: sign(cfg.RUN_SECRET, ev ? { rid, u: req.user.id, g: gameId, t, e: ev.id } : { rid, u: req.user.id, g: gameId, t }), started_at: t, seed,
+    event: ev ? { id: ev.id, code: ev.event_code, label: EV.label(ev), expires_at: t + EV.EVENT_TOKEN_TTL_MS } : null });
 });
 
 app.post('/api/score', requireUser, (req, res) => {
-  if (!rateLimit(`score-ip:${ipHash(req)}`, 30, 60e3)) return bad(res, 429, 'Too many score submissions.');
+  if (!rateLimit(`score-ip:${ipHash(req)}`, 30, 60e3) || !rateLimit(`score-u:${req.user.id}`, 40, 60e3)) return bad(res, 429, 'Too many score submissions.'); // L2 submit frequency (hard)
   const tok = verify(cfg.RUN_SECRET, req.body.token);
   if (!tok) return bad(res, 400, 'Invalid run token.');
   if (tok.u !== req.user.id) return bad(res, 403, 'Run token belongs to another player.');
@@ -218,9 +232,12 @@ app.post('/api/score', requireUser, (req, res) => {
   };
   if (row.used_at) return bad(res, 409, 'This run was already submitted.', { rejected: true });
   if (t - row.started_at > cfg.RUN_TOKEN_TTL_MS) return reject(400, 'Run token expired.');
+  if ((tok.e || null) !== (row.event_id || null)) return reject(400, 'Event run token does not match this run.');
+  const evOrig = row.event_id || null;
+  { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec && ec.demote) row.event_id = null; else if (ec) return reject(ec.status, ec.error); }
   const game = cfg.GAME_MAP[row.game_id]; const ac = game.ac; const unit = game.unit === 'm' ? 'm' : ' ' + game.unit;
   const score = Number(req.body.score); const coins = Number(req.body.coins || 0);
-  if (!Number.isInteger(score) || score < 0 || score > 10_000_000) return reject(400, 'Invalid score value.');
+  if (!Number.isInteger(score) || score < 0 || score > cfg.MAX_SCORE) return reject(400, 'Invalid score value.');
   if (!Number.isInteger(coins) || coins < 0 || coins > 1_000_000) return reject(400, 'Invalid coin value.');
   // per-game plausibility caps against SERVER-measured elapsed time (see config.js GAMES[].ac)
   const elapsedS = (t - row.started_at) / 1000;
@@ -228,7 +245,9 @@ app.post('/api/score', requireUser, (req, res) => {
   const durationMs = Math.max(0, Math.min(rawDur, t - row.started_at + 5000));
   // v5 anti-cheat (src/anticheat.js): only physically impossible runs are rejected; suspicious ones are kept + flagged
   const tel = req.body.tel && typeof req.body.tel === 'object' ? req.body.tel : null;
-  const verdict = AC.assess({ userId: req.user.id, game: { ...game, id: row.game_id }, score, elapsedS, durationMs: rawDur, tel, seed: row.seed, log: Array.isArray(req.body.log) ? req.body.log : null });
+  const verdict = AC.assess({ userId: req.user.id, game: { ...game, id: row.game_id }, score, elapsedS, durationMs: rawDur, tel, seed: row.seed, log: Array.isArray(req.body.log) ? req.body.log : null, ev: req.body.ev && typeof req.body.ev === 'object' ? req.body.ev : null,
+    recent: db.prepare('SELECT COUNT(*) c FROM runs WHERE user_id=? AND created_at>?').get(req.user.id, t - 60e3).c });
+  if (verdict.reject && verdict.why) return reject(422, verdict.why);
   if (verdict.reject) return reject(422, `Score rejected: ${score}${unit} in ${elapsedS.toFixed(1)}s is not possible in ${game.title} (max ${verdict.cap}${unit}).`);
   if (coins > 2 * ac.coinsPerSec * elapsedS + 20) return reject(422, 'Coin count rejected as implausible.');
 
@@ -238,7 +257,7 @@ app.post('/api/score', requireUser, (req, res) => {
 
   const prevBest = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=?').get(req.user.id, row.game_id).b;
   const levelBefore = H.levelOf(req.user.id);
-  const gwsAll = activeGiveawaysFor(row.game_id, t).filter(g => row.started_at >= g.start_at);
+  const gwsAll = row.event_id ? activeGiveawaysFor(row.game_id, t).filter(g => g.id === row.event_id && row.started_at >= g.start_at) : []; // v7: free-play runs never enter giveaways
   const joinedQ = db.prepare('SELECT 1 FROM giveaway_entries WHERE giveaway_id=? AND user_id=? AND left_at IS NULL');
   const gws = gwsAll.filter(g => !g.require_join || joinedQ.get(g.id, req.user.id));
   // v5 anti-camping: giveaways this game feeds that the player has not entered yet (runs only count after "Enter giveaway")
@@ -247,12 +266,13 @@ app.post('/api/score', requireUser, (req, res) => {
   for (const g of gws) {
     if (score < (g.min_score || 0)) continue;
     const games = giveawayGameIds(g.id); const ph = games.map(() => '?').join(',');
-    const had = db.prepare(`SELECT 1 FROM runs WHERE user_id=? AND game_id IN (${ph}) AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
+    const had = db.prepare(`SELECT 1 FROM runs WHERE event_id=${+g.id} AND user_id=? AND game_id IN (${ph}) AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
     if (!had) newEntries.push(g);
   }
-  const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
-    .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req), row.seed || '', verdict.verify || '', verdict.held || 0);
+  const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held,event_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req), row.seed || '', verdict.verify || '', verdict.held || 0, row.event_id || null);
   AC.record(info.lastInsertRowid, req.user.id, row.game_id, score, verdict, t);
+  require('./games-lib-playoff').record(info.lastInsertRowid, req.user.id, row.game_id, score, row.started_at, t, req.body.ev, row.rid); // [games-lib hook] server-derived skill tie-break metrics
   for (const g of newEntries) logActivity('entry', `${req.user.username} entered "${g.title}"`, req.user.id, g.id);
   const isBest = prevBest === null || prevBest === undefined || score > prevBest;
   if (isBest && !verdict.held && score >= (game.tiers ? game.tiers[0] : 100)) logActivity('highscore', `New high score (${game.title}): ${req.user.username} - ${score.toLocaleString('en-US')}${unit}`, req.user.id, info.lastInsertRowid);
@@ -268,7 +288,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const gid = req.body.giveaway_id || req.body.contest;
   if (gid) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(gid);
-    giveawayStatusOut = !g ? 'not_found' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
+    giveawayStatusOut = !g ? 'not_found' : String(evOrig || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
       : !giveawayGameIds(g.id).includes(row.game_id) ? 'game_not_linked' : score < (g.min_score || 0) ? 'below_min_score' : 'counted');
   }
   // achievements are evaluated here, on the server, from the stored runs
@@ -297,8 +317,10 @@ function giveawayPublic(g, withWinners = true) {
     prize_tiers: String(g.prize_tiers || '').split('\n').map(x => x.trim()).filter(Boolean),
     status: giveawayStatus(g), entrants: entrants.length, demo: !!g.is_demo, top: entrants.slice(0, 3).map(publicRow),
     win_method: g.win_method || 'score', winner_count: R.winnerCount(g), finalized_at: g.finalized_at || null, draw_commit: g.draw_commit || null,
-    entrants_hash: g.entrants_hash || null, tiebreak_rules: R.TIEBREAK_RULES };
+    entrants_hash: g.entrants_hash || null, tiebreak_rules: R.TIEBREAK_RULES,
+    event_code: g.event_code || null, event_label: g.event_code ? EV.label(g) : null, official: true };
   if (H.v5Giveaway) Object.assign(out, H.v5Giveaway(g));
+  if (H.v7Giveaway) H.v7Giveaway(g, out); // v7 builder: subtitle, description, banner, prizes, hidden board, official rules
   if (withWinners) {
     const res = g.finalized_at ? R.results(g) : null;
     // after the lock, winners come from the immutable final standings (pending until an admin confirms)
@@ -320,7 +342,8 @@ app.get('/api/giveaways/:id', (req, res) => {
   if (!g) return bad(res, 404, 'Giveaway not found');
   const entrants = giveawayEntrants(g); const me = currentUser(req);
   const mine = me ? entrants.find(e => e.user_id === me.id) : null;
-  res.json({ ok: true, giveaway: giveawayPublic(g), leaderboard: entrants.slice(0, 25).map(publicRow), me: mine ? publicRow(mine) : null, now: now() });
+  const hidden = H.v7Hidden && H.v7Hidden(g); // v7: leaderboard hidden until the end
+  res.json({ ok: true, giveaway: giveawayPublic(g), leaderboard: hidden ? [] : entrants.slice(0, 25).map(publicRow), me: mine && !hidden ? publicRow(mine) : null, now: now() });
 });
 
 // ---------- profiles ----------
@@ -331,14 +354,14 @@ function profileFor(user) {
   const coins = bests.reduce((s, b) => s + (b.coins || 0), 0);
   const wins = db.prepare('SELECT COUNT(*) AS c FROM winners WHERE user_id=?').get(user.id).c;
   const recent = db.prepare('SELECT game_id, score, coins, created_at FROM runs WHERE user_id=? ORDER BY created_at DESC LIMIT 10').all(user.id)
-    .map(r => ({ ...r, game_title: cfg.GAME_MAP[r.game_id]?.title || r.game_id, unit: cfg.GAME_MAP[r.game_id]?.unit || 'pts' }));
+    .map(r => ({ ...r, game_title: cfg.gameInfo(r.game_id)?.title || r.game_id, unit: cfg.gameInfo(r.game_id)?.unit || 'pts' }));
   const gb = globalBoard(0); const grank = gb.findIndex(r => r.user_id === user.id) + 1;
   const entries = db.prepare(`SELECT COUNT(DISTINCT g.id) AS c FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id JOIN runs r ON r.game_id=gg.game_id AND r.user_id=? AND r.started_at>=g.start_at AND r.created_at<=g.end_at AND r.created_at>=g.start_at AND r.score>=g.min_score`).get(user.id).c;
   const unl = ach.unlockedMap(user.id);
   const achievements = [...unl.entries()].sort((a, b) => b[1] - a[1]).map(([id, at]) => { const a = ach.BY_ID[id]; return a && { ...ach.publicAch(a, true), unlocked_at: at }; }).filter(Boolean);
   return { username: user.username, member_since: user.created_at, demo: !!user.is_demo, total_score: total, games_played: plays, coins,
     giveaways_won: wins, giveaways_entered: entries, global_rank: grank || null,
-    best_by_game: bests.map(b => ({ game_id: b.game_id, game_title: cfg.GAME_MAP[b.game_id]?.title || b.game_id, best: b.best, plays: b.n })),
+    best_by_game: bests.map(b => ({ game_id: b.game_id, game_title: cfg.gameInfo(b.game_id)?.title || b.game_id, best: b.best, plays: b.n })),
     cos: ach.publicCos(user), achievements, achievements_total: ach.ACHIEVEMENTS.length, recent };
 }
 app.get('/api/profile/:username', (req, res) => {
@@ -385,14 +408,14 @@ function cosmeticsFor(user) {
   const item = (type, x) => { const a = source[`${type}:${x.id}`]; const owned = own[type].has(x.id);
     return { id: x.id, name: x.name, owned, from: a ? (a.hidden && !unl.has(a.id) ? 'Secret achievement' : a.name) : x.id === 'staff-glow' ? 'Staff only' : 'Free', default: COS.DEFAULTS[type] === x.id, ...(type === 'frame' ? { anim: x.anim } : {}) }; };
   const shopItem = (it) => ({ id: it.id, name: it.name, owned: own[it.type].has(it.id), from: 'Points Shop', rarity: it.rarity, ...(it.type === 'frame' ? { anim: it.extra.split('|')[1] } : {}) });
-  const shopOf = (type) => SH.ITEMS.filter(i => i.type === type).map(shopItem);
+  const shopOf = (type) => SH.listFor(own[type], type).map(shopItem); // v7: owned + on-sale items (the generated catalog is endless)
   const grants = ach.grantsOf(user.id);
   return {
     banners: [...COS.BANNERS.map(b => item('banner', b)), ...shopOf('banner')], frames: [...COS.FRAMES.map(f => item('frame', f)), ...shopOf('frame')], titles: [...COS.TITLES.map(t => item('title', t)), ...shopOf('title')],
     colors: shopOf('color'), effects: shopOf('effect'),
     badges: [...grants.map(g => { const b = ach.ADMIN_BY[g.badge_id]; return { id: 'adm:' + b.id, name: b.name, icon: b.icon, tier: 'admin', owned: true }; }),
       ...ach.ACHIEVEMENTS.filter(a => unl.has(a.id)).map(a => ({ id: a.id, name: a.name, icon: a.icon, tier: a.tier, owned: true })),
-      ...SH.ITEMS.filter(i => i.type === 'badge' && own.badge.has('shop:' + i.id)).map(i => ({ id: 'shop:' + i.id, name: i.name, icon: i.extra, tier: i.rarity, owned: true }))],
+      ...SH.listFor(own.badge, 'badge').filter(i => own.badge.has('shop:' + i.id)).map(i => ({ id: 'shop:' + i.id, name: i.name, icon: i.extra, tier: i.rarity, owned: true }))],
     equipped: { banner: user.eq_banner || COS.DEFAULTS.banner, frame: user.eq_frame || 'none', title: user.eq_title || COS.DEFAULTS.title, badge: user.eq_badge || '', color: user.eq_color || '', effect: user.eq_effect || '' },
     owned_count: ach.ownedCount(own) + own.color.size + own.effect.size, badge_count: own.badge.size,
     totals: { banners: COS.BANNERS.length + shopOf('banner').length, frames: COS.FRAMES.length + shopOf('frame').length, titles: COS.TITLES.length + shopOf('title').length, badges: ach.ACHIEVEMENTS.length },
@@ -415,8 +438,9 @@ app.post('/api/me/cosmetics', requireUser, limiter('equip', 60, 60e3), (req, res
   const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
   res.json({ ok: true, cos: ach.publicCos(u), unlocked });
 });
-app.get('/cosmetics.css', (req, res) => { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=3600'); res.send(COS_CSS); });
-const COS_CSS = COS.css();
+// v7: rebuilt when the shop's live set of generated items changes (new day / new purchases); see src/shop.js css()
+let COS_CSS = { k: '', css: '' }; const cosCss = () => { const k = require('./shop').cssKey(); if (COS_CSS.k !== k) COS_CSS = { k, css: COS.css() }; return COS_CSS.css; };
+app.get('/cosmetics.css', (req, res) => { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=600'); res.send(cosCss()); });
 
 // ---------- community ----------
 const userCos = (id) => { const u = id && db.prepare('SELECT username, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect FROM users WHERE id=?').get(id); return u ? { username: u.username, demo: !!u.is_demo, cos: ach.publicCos(u) } : null; };
@@ -453,45 +477,10 @@ app.post('/api/community/react', requireUser, limiter('react', 60, 60e3), (req, 
   res.json({ ok: true, key, mine: !had || req.body.on === true, hype: db.prepare('SELECT COUNT(*) AS c FROM reactions WHERE item_key=?').get(key).c, unlocked });
 });
 
-// ---------- hosting packages & bookings ----------
-app.get('/api/packages', (req, res) => res.json({ ok: true, ...PK.getPackages() }));
-app.post('/api/bookings', limiter('booking', 15, 3600e3), (req, res) => {
-  const b = req.body || {};
-  const brand = str(b.brand, 120);
-  const email = str(b.email, 160).toLowerCase();
-  const potato = str(b.potato, 40).replace(/^@/, '');
-  if (!brand) return bad(res, 400, 'Channel / brand name is required.');
-  if (!email && !potato) return bad(res, 400, 'Add an email or a Potato username (at least one) so we can reach you.');
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return bad(res, 400, 'That email address does not look right.');
-  if (potato && !/^[A-Za-z0-9_]{3,32}$/.test(potato)) return bad(res, 400, 'Potato usernames use letters, numbers and _ only.');
-  const businessType = PK.BUSINESS_TYPES.includes(b.business_type) ? b.business_type : '';
-  if (!businessType) return bad(res, 400, 'Please choose your business type.');
-  const isCannabis = businessType === PK.CANNABIS_TYPE;
-  if (isCannabis && b.licensed !== true) return bad(res, 400, 'Cannabis product sellers must confirm the business is licensed and legally permitted to operate and advertise in its jurisdiction.');
-  const pk = PK.getPackages();
-  const tier = pk.tiers.find(t => t.id === b.package);
-  const pkg = tier ? tier.id : 'custom';
-  const addons = (Array.isArray(b.addons) ? b.addons : []).filter(id => (pk.addons || []).some(a => a.id === id));
-  const addonNames = addons.map(id => pk.addons.find(a => a.id === id).name);
-  const snapshot = (tier ? `${tier.name} - ${tier.price}${tier.regular_price && tier.regular_price !== tier.price ? ` (${pk.launch_label || 'launch'}; regular ${tier.regular_price})` : ''}${tier.price_note ? ' ' + tier.price_note : ''}` : 'Custom - quote on request') + (addonNames.length ? ' + ' + addonNames.join(', ') : '');
-  const contact = [email, potato ? '@' + potato + ' (Potato)' : ''].filter(Boolean).join(' / ');
-  const me = currentUser(req);
-  const info = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,package_snapshot,start_date,end_date,details,user_id,created_at,ip_hash,business_type,email,potato,licensed_confirmed,addons)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(brand, str(b.contact_name, 120), contact, str(b.event_type, 60), pkg, snapshot,
-    str(b.start_date, 20), str(b.end_date, 20), str(b.details, 4000), me ? me.id : null, now(), ipHash(req), businessType, email, potato, isCannabis ? 1 : 0, addons.join(','));
-  logActivity('booking', `Booking request submitted: ${brand} (${tier ? tier.name : 'Custom'})`, me ? me.id : null, info.lastInsertRowid);
-  res.json({ ok: true, id: info.lastInsertRowid, package: pkg, package_snapshot: snapshot, potato_handle: pk.potato_handle, licensed_confirmed: isCannabis });
-});
+// ---------- Sponsor a Host (feature picker + quotes) lives in src/sponsor.js; old /api/bookings kept there as an alias ----------
 app.get('/api/business-types', (req, res) => res.json({ ok: true, types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE }));
 
 // ---------- admin ----------
-app.post('/api/admin/login', limiter('admin-login', 10, 15 * 60e3), (req, res) => {
-  if (!safeEq(String(req.body.password || ''), cfg.ADMIN_PASSWORD)) return bad(res, 401, 'Wrong admin password.');
-  setCookie(req, res, 'gh_admin', sign(cfg.SESSION_SECRET + ':admin', { adm: 1, e: now() + 12 * 3600e3 }), 12 * 3600e3);
-  res.json({ ok: true });
-});
-app.post('/api/admin/logout', (req, res) => { setCookie(req, res, 'gh_admin', '', 0); res.json({ ok: true }); });
-app.get('/api/admin/me', (req, res) => res.json({ ok: true, admin: isAdmin(req) }));
 const A = express.Router();
 A.use(requireAdmin);
 
@@ -542,6 +531,10 @@ function readGiveaway(b) {
     channel_id: parseInt(b.channel_id, 10) || null, link_url: str(b.link_url, 300), link_label: str(b.link_label, 40),
     ...require('./eligibility').read(b),
   };
+  // v7 brands + placements: a giveaway with a brand is members-only unless "open to everyone"; no brand = hub-wide
+  g.open_to_all = !g.channel_id ? 1 : b.open_to_all ? 1 : 0;
+  if (g.channel_id && !g.open_to_all) g.require_join = 1;
+  g.placements = Array.isArray(b.placements) ? JSON.stringify(b.placements.filter(x => require('./sponsor').PLACES.includes(x))) : (typeof b.placements === 'string' && b.placements.startsWith('[') ? b.placements : null);
   if (g.link_url && !/^https:\/\/[^\s"'<>]{4,300}$/.test(g.link_url)) return [null, 'Sponsor link must be an https:// URL.'];
   if (g.channel_id && !db.prepare('SELECT 1 FROM channels WHERE id=?').get(g.channel_id)) return [null, 'Unknown channel.'];
   if (!g.title) return [null, 'Title is required.'];
@@ -549,6 +542,7 @@ function readGiveaway(b) {
   if (g.end_at <= g.start_at) return [null, 'End time must be after start time.'];
   if (!gameIds.length) return [null, 'Pick at least one game.'];
   for (const id of gameIds) if (!cfg.GAME_MAP[id]) return [null, `Unknown linked game: ${id}`];
+  for (const id of gameIds) if (!cfg.giveawayEligible(id)) return [null, `${cfg.GAME_MAP[id].title} is a just-for-fun chance game, so it can't count for a giveaway.`];
   if (g.image && !IMG_RE.test(g.image)) return [null, 'Image must be a /assets/... path or an https:// URL.'];
   if (g.brand_logo && !IMG_RE.test(g.brand_logo)) return [null, 'Brand logo must be a /assets/... path or an https:// URL.'];
   return [g, null, gameIds];
@@ -565,7 +559,7 @@ A.get('/giveaways', (req, res) => {
   const list = db.prepare('SELECT * FROM giveaways ORDER BY start_at DESC').all().map(g => ({ ...giveawayPublic(g), active: !!g.active }));
   res.json({ ok: true, giveaways: list, now: now() });
 });
-const GW_COLS = 'title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,tier,brand_color,brand_logo,featured,min_score,prize_tiers,win_method,winner_count,channel_id,link_url,link_label,' + require('./eligibility').FIELDS.join(',');
+const GW_COLS = 'title,host,prize,image,start_at,end_at,entry_method,game_id,rules,active,tier,brand_color,brand_logo,featured,min_score,prize_tiers,win_method,winner_count,channel_id,link_url,link_label,open_to_all,placements,' + require('./eligibility').FIELDS.join(',');
 A.post('/giveaways', (req, res) => {
   const [g, err, gameIds] = readGiveaway(req.body || {}); if (err) return bad(res, 400, err);
   const t = now();
@@ -584,6 +578,8 @@ A.get('/giveaways/:id', (req, res) => {
 A.put('/giveaways/:id', (req, res) => {
   const ex = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!ex) return bad(res, 404, 'Not found');
   const [g, err, gameIds] = readGiveaway(req.body || {}); if (err) return bad(res, 400, err);
+  if ((req.body || {}).placements === undefined) g.placements = ex.placements; // forms that don't edit placements keep them
+  if ((req.body || {}).open_to_all === undefined && g.channel_id && g.channel_id === ex.channel_id) { g.open_to_all = ex.open_to_all ? 1 : 0; if (!g.open_to_all) g.require_join = 1; }
   if (ex.finalized_at) {
     const cur = giveawayGameIds(ex.id);
     const changed = ['start_at', 'end_at', 'min_score', 'win_method', 'winner_count'].filter(k => Number.isFinite(ex[k]) ? Number(ex[k]) !== Number(g[k]) : String(ex[k]) !== String(g[k]));
@@ -598,6 +594,7 @@ A.put('/giveaways/:id', (req, res) => {
 A.post('/giveaways/:id/games', (req, res) => {
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
   const gameId = String(req.body.game_id || ''); if (!cfg.GAME_MAP[gameId]) return bad(res, 400, 'Unknown game.');
+  if (req.body.linked && !cfg.giveawayEligible(gameId)) return bad(res, 400, `${cfg.GAME_MAP[gameId].title} is a just-for-fun chance game, so it can't be linked to a giveaway.`);
   if (g.finalized_at) return bad(res, 409, 'Final results are locked, so linked games can\'t change.');
   const cur = giveawayGameIds(g.id);
   let next = req.body.linked ? [...new Set([...cur, gameId])] : cur.filter(x => x !== gameId);
@@ -742,13 +739,7 @@ A.get('/export/bookings.csv', (req, res) => {
   sendCsv(res, 'bookings.csv', rows, ['id', 'brand', 'business_type', 'licensed_confirmed', 'contact_name', 'email', 'potato', 'contact', 'event_type', 'package', 'package_snapshot', 'addons', 'start_date', 'end_date', 'details', 'status', 'admin_note', 'created_at', 'is_demo']);
 });
 
-// hosting packages (prices/features shown on /host)
-A.get('/packages', (req, res) => res.json({ ok: true, ...PK.getPackages(), defaults: PK.DEFAULT_PACKAGES }));
-A.put('/packages', (req, res) => {
-  const [v, err] = PK.sanitize(req.body || {}); if (err) return bad(res, 400, err);
-  PK.savePackages(v); res.json({ ok: true, ...v });
-});
-A.post('/packages/reset', (req, res) => { PK.resetPackages(); res.json({ ok: true, ...PK.getPackages() }); });
+// v7: the public package/tier editor is replaced by the admin-only sponsor price sheet (/sponsor/prices in src/sponsor.js)
 A.get('/achievements', (req, res) => {
   const rr = ach.rarity();
   res.json({ ok: true, players: rr.total, unlocks: db.prepare('SELECT COUNT(*) AS c FROM user_achievements').get().c,
@@ -771,29 +762,37 @@ A.get('/backups/download', async (req, res, next) => {
 
 // ---------- v3 routes (streaks, quests, seasons, tournaments, follows, notifications, referrals, sharing, search) ----------
 Object.assign(H, { requireUser, currentUser, publicRow });
+V7A.routes(app, A, H); // v7 admin overhaul: giveaway builder, players, live ops, roles (src/admin-v7.js)
 require('./v3')(app, A, H);
 Object.assign(H, { csv, sendCsv, sendCsvPaged, iso, giveawayPublic, ipHash });
 require('./v4')(app, A, H);
+require('./sponsor')(app, A, H); // v7 Sponsor a Host: feature picker, admin price sheet, quotes
+require('./brands').routes(app, A, H); // v7 brand affiliation (invite links, one brand per player)
 require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
+require('./events').routes(app, A, H); // v7 official events (event codes, event-run tokens, event boards, vendor QR)
+require('./monetize').routes(app, A, H); // v7 cosmetic-only store: Hub Crowns, Season Pass, Prestige; Bitcoin checkout (BTC_ADDRESS)
+require('./avatars').routes(app, H); // v7 Phase 5 player avatars (GET /avatar/<name>.svg, editor API)
+require('./games-v7')(app); // v7: retired-game archive (Stack 2048 -> Stack)
 
 const demo = require('./demo');
 try { demo.v5(); } catch (e) { console.error('demo v5 migration failed', e); }
 A.post('/demo/seed', (req, res) => res.json({ ok: true, ...demo.seed() }));
 A.post('/demo/wipe', (req, res) => res.json({ ok: true, ...demo.wipe() }));
-app.use('/api/admin', A);
+ADMSEC.mount(app, express, A); // secret-path admin (old /admin + /api/admin are plain 404s)
 
+require('./games-lib').mount(app); // [games-lib hook] GET /api/games-lib
+require('./games-lib-playoff').mount(app, { requireUser, requireAdmin }); // [games-lib hook] skill tie-breaks + sudden-death playoffs
 app.use('/api', (req, res) => bad(res, 404, 'Not found'));
 
 // ---------- static ----------
 const PUB = path.join(cfg.ROOT, 'public');
 app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
-app.get(['/admin', '/admin/*'], (req, res) => res.sendFile(path.join(PUB, 'admin.html')));
 // Per-page <title> / description / Open Graph + Twitter card tags for share links (crawlers don't run JS).
 const INDEX_FILE = path.join(PUB, 'index.html');
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const PAGE_TITLES = { '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/tournaments': 'Tournaments', '/season': 'Season Pass', '/quests': 'Daily Quests',
-  '/achievements': 'Achievements & Rewards', '/community': 'Community', '/host': 'Sponsor the Hub - Trap Tech Solutions', '/book': 'Book a Sponsorship', '/about': 'About Trap Tech Solutions',
+  '/achievements': 'Achievements & Rewards', '/community': 'Community', '/sponsor': 'Sponsor a Host - Trap Tech Solutions', '/about': 'About Trap Tech Solutions',
   '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/search': 'Search', '/notifications': 'Notifications', '/settings': 'Settings', '/invite': 'Invite Friends', '/channels': 'Brand Channels', '/friends': 'Friends & Challenges', '/shop': 'Points Shop' };
 function pageMeta(p, origin) {
   let m = null, mm;
@@ -817,8 +816,9 @@ app.get('*', (req, res) => {
   if (path.extname(req.path)) return res.status(404).send('Not found');
   res.setHeader('Cache-Control', 'no-cache');
   let html = fs.readFileSync(INDEX_FILE, 'utf8');
-  const origin = `${isHttps(req) ? 'https' : 'http'}://${req.get('host')}`;
+  const origin = PU.originOf(req); // v7: PUBLIC_URL when set
   const meta = (() => { try { return pageMeta(req.path.replace(/\/+$/, '') || '/', origin); } catch (e) { console.error(e); return null; } })();
+  if (PU.PUBLIC_URL) html = html.replace('</head>', `<meta name="public-url" content="${escA(PU.PUBLIC_URL)}"><link rel="canonical" href="${escA(PU.PUBLIC_URL + (req.path.replace(/\/+$/, '') || '/'))}"></head>`);
   if (meta) html = html.replace(/<!--META-->[\s\S]*?<!--\/META-->/, meta);
   else html = html.replace(/(content=")\/og\/default\.png"/g, `$1${origin}/og/default.png"`);
   res.type('html').send(html);

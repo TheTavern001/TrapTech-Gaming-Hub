@@ -1,0 +1,11 @@
+body { min-height: 100vh; display: grid; place-items: center; padding: 18px; }
+.adm-auth { width: 100%; max-width: 400px; }
+.aa-card { padding: 22px 18px; display: grid; gap: 10px; }
+.aa-card h1 { font-size: 1.15rem; margin: 4px 0 0; text-align: center; }
+.aa-card form { display: grid; gap: 10px; }
+.aa-brand { display: grid; justify-items: center; gap: 6px; } .aa-brand img { height: auto; }
+.aa-qr { background: #fff; border-radius: 12px; padding: 8px; width: 220px; margin: 0 auto; } .aa-qr svg { display: block; width: 100%; height: auto; }
+.aa-code { font-size: 1.4rem; letter-spacing: .3em; text-align: center; }
+.aa-key { word-break: break-all; user-select: all; }
+.aa-codes { background: rgba(0,0,0,.35); border: 1px solid rgba(99,102,241,.3); border-radius: 10px; padding: 12px; font-size: 1rem; line-height: 1.6; text-align: center; user-select: all; }
+.aa-steps { margin: 0; padding-left: 18px; color: var(--muted); }

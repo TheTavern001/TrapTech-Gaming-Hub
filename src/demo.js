@@ -59,9 +59,9 @@ function seed() {
       for (const gid of games) db.prepare('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) VALUES (?,?)').run(g.id, gid);
       db.prepare(`UPDATE giveaways SET game_id=?, tier=@tier, brand_color=@brand_color, featured=@featured, min_score=@min_score, prize_tiers=@prize_tiers WHERE id=${g.id}`)
         .run(games[0], { tier: '', brand_color: '', featured: 0, min_score: 0, prize_tiers: '', ...extra }); };
-    setG('$250 Store Credit', ['jetpack-dash', 'plinko', 'terp-tapper'], { tier: 'premium', brand_color: '#e11d2a', featured: 1 });
+    setG('$250 Store Credit', ['jetpack-dash', 'stack', 'terp-tapper'], { tier: 'premium', brand_color: '#e11d2a', featured: 1 });
     setG('PS5 + Games Bundle', ['jetpack-dash', 'drift-rush', 'high-score', 'memory-match'], { tier: 'elite', brand_color: '#10b981', featured: 1, prize_tiers: '1st: PlayStation 5 + 3 games\n2nd: $100 store credit\n3rd: Controller + headset\nRandom: 2x Gaming Hub merch packs' });
-    setG('Neon Merch Drop', ['spin-to-win', 'blazed-roulette'], { tier: 'basic' });
+    setG('Neon Merch Drop', ['void-swarm', 'munchies-snake'], { tier: 'basic' });
     setG('Launch Week Cash Prize', ['jetpack-dash'], { tier: 'basic' });
     const insB = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,start_date,end_date,details,status,created_at,is_demo) VALUES (?,?,?,?,?,?,?,?,?,?,1)`);
     insB.run('Canopy Club', 'Promo Team', 'promo@example.com', 'Giveaway', 'premium', '2026-10-12', '2026-10-26', 'Two-week giveaway with branded game skin.', 'pending', t - 12 * 60e3);
@@ -75,15 +75,15 @@ function seed() {
     const insT = db.prepare(`INSERT INTO tournaments (title, game_id, format, description, prize, start_at, qual_end_at, round_ms, end_at, active, created_at, is_demo) VALUES (?,?,?,?,?,?,?,?,?,1,?,1)`);
     insT.run('Weekend Drift Cup', 'drift-rush', 'timed', 'Best single Drift Rush run between the start and the end wins. Play as many runs as you like - only your best counts.', 'Tournament Champ title + Tournament Gold frame (cosmetic)', t - 1 * D, null, null, t + 2 * D, t);
     const bq = t - 18 * H, br = 12 * H;
-    insT.run('Plinko Bracket Battle', 'plinko', 'bracket', 'Qualify with your best Plinko run, then the top 8 go head-to-head in async knockout rounds. Higher best score in each round advances.', 'Finalist title + Bracket Lines banner (cosmetic)', t - 2 * D, bq, br, bq + 3 * br, t);
+    insT.run('Stack Bracket Battle', 'stack', 'bracket', 'Qualify with your best Stack run, then the top 8 go head-to-head in async knockout rounds. Higher best score in each round advances.', 'Finalist title + Bracket Lines banner (cosmetic)', t - 2 * D, bq, br, bq + 3 * br, t);
     insT.run('Terp Tapper Rhythm Open', 'terp-tapper', 'timed', 'Two days of rhythm. Top score takes the crown.', 'Tournament Champ title (cosmetic)', t + 3 * D, null, null, t + 5 * D, t);
     ids.forEach(([id], i) => {
       // drift cup runs (inside the window)
       if (i < 9) { const sc = Math.floor(9000 - i * 700 + rand() * 500); const at = t - (2 + i) * H; insR.run(id, 'drift-rush', sc, 0, 60e3, at - 60e3, at); }
-      // plinko qualifiers (top 8 seeded) + quarterfinal runs + some semifinal runs
-      if (i < 10) { const at = t - 30 * H - i * H; insR.run(id, 'plinko', 3200 - i * 180, 0, 50e3, at - 50e3, at); }
-      if (i < 8) { const at = t - 12 * H - i * 10 * 60e3; insR.run(id, 'plinko', Math.floor(1400 + rand() * 1500), 0, 50e3, at - 50e3, at); }
-      if (i < 8 && rand() < 0.6) { const at = t - 2 * H - i * 5 * 60e3; insR.run(id, 'plinko', Math.floor(1400 + rand() * 1600), 0, 50e3, at - 50e3, at); }
+      // stack qualifiers (v7: Plinko retired) (top 8 seeded) + quarterfinal runs + some semifinal runs
+      if (i < 10) { const at = t - 30 * H - i * H; insR.run(id, 'stack', 900 - i * 40, 0, 90e3, at - 90e3, at); }
+      if (i < 8) { const at = t - 12 * H - i * 10 * 60e3; insR.run(id, 'stack', Math.floor(400 + rand() * 450), 0, 90e3, at - 90e3, at); }
+      if (i < 8 && rand() < 0.6) { const at = t - 2 * H - i * 5 * 60e3; insR.run(id, 'stack', Math.floor(400 + rand() * 500), 0, 90e3, at - 90e3, at); }
       // follows + check-in streaks
       for (let k = 1; k <= 3; k++) { const other = ids[(i + k * 2) % ids.length]; if (other[0] !== id) db.prepare('INSERT OR IGNORE INTO follows (follower_id, followee_id, created_at) VALUES (?,?,?)').run(id, other[0], t - k * D); }
       const PR = require('./progress'); const today = PR.dayNum(t); const streak = Math.max(1, 12 - i);
@@ -136,7 +136,7 @@ function v5() {
     const CH = [
       ['canopy-club', 'Canopy Club', 'Licensed dispensary - weekly drops for the community (demo brand)', '#e11d2a', 'premium', 'https://example.com/canopy-club', 'Visit Canopy Club', 'Cannabis products seller (dispensary/brand/delivery)', '/assets/channels/canopy-club.svg'],
       ['terp-tavern', 'Terp Tavern', 'Independent terpene brand + gaming nights (demo brand)', '#10b981', 'elite', 'https://example.com/terp-tavern', 'Shop Terp Tavern', 'Cannabis products seller (dispensary/brand/delivery)', '/assets/channels/terp-tavern.svg'],
-      ['trap-tech-drops', 'Trap Tech Drops', 'Merch and hub launch giveaways from the team behind the Gaming Hub', '#8b5cf6', 'basic', '', '', 'Other business', '/assets/brand/traptech-mark.svg'],
+      ['trap-tech-drops', 'Trap Tech Drops', 'Merch and hub launch giveaways from the team behind the Gaming Hub', '#8b5cf6', 'basic', '', '', 'Other business', '/assets/brand/tt-mono-192.png'],
       ['neon-threads', 'Neon Threads', 'Independent streetwear label (demo brand)', '#22d3ee', 'basic', '', '', 'Apparel / streetwear brand', '/assets/channels/neon-threads.svg'],
     ];
     const insC = db.prepare('INSERT OR IGNORE INTO channels (slug,name,tagline,color,tier,link_url,link_label,business_type,logo,created_at,is_demo) VALUES (?,?,?,?,?,?,?,?,?,?,1)');

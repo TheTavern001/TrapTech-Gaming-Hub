@@ -1,0 +1,79 @@
+name: Games Library browser smoke tests
+concurrency:
+  group: games-lib-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - v7-wip
+
+jobs:
+  new-originals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      PORT: 8787
+      SECRET: ci-only-secret-do-not-use-in-production-2026
+      ADMIN_PASSWORD: ci-only-admin-password-do-not-use-in-production
+      ADMIN_PATH: ci-hidden-admin-path
+      DATA_DIR: /tmp/hub-data
+      BASE: http://127.0.0.1:8787
+      PLAY_MS: 4500
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install --no-save playwright-core
+      - name: Start isolated test Hub
+        run: |
+          mkdir -p "$DATA_DIR"
+          npm start > /tmp/hub-ci.log 2>&1 &
+          echo $! > /tmp/hub-ci.pid
+          for i in $(seq 1 45); do
+            if curl --fail --silent "$BASE/healthz" >/dev/null; then
+              echo "Hub health check passed"
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/hub-ci.log
+          exit 1
+      - name: Test main Hub and Games Library navigation on mobile viewport
+        run: node tools/e2e-hub-library.js
+      - name: Test new originals on desktop and iPhone viewport
+        run: node tools/e2e-games-lib.js neon-circuit,rift-survival
+      - name: Regression test known performance-risk games (non-blocking diagnostic)
+        continue-on-error: true
+        env:
+          PLAY_MS: 2000
+        run: node tools/e2e-games-lib.js dino-dash,rail-rush,lane-racer,moto-lanes
+      - name: Upload browser regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: games-lib-browser-evidence
+          path: |
+            screenshots/v7/games-lib/e2e-results.json
+            /tmp/hub-ci.log
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Print server logs on failure
+        if: failure()
+        run: cat /tmp/hub-ci.log
+      - name: Stop test Hub
+        if: always()
+        run: if [ -f /tmp/hub-ci.pid ]; then kill "$(cat /tmp/hub-ci.pid)" || true; fi

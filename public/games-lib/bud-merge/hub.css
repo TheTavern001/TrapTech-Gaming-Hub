@@ -1,0 +1,21 @@
+body{background:radial-gradient(circle at 50% 0,#1d4d32,#0b1f14 70%) !important;color:#eaf5e4;padding-top:52px}
+.hubbar{position:fixed;top:0;left:0;right:0;z-index:9;padding:12px 16px;display:flex;gap:16px;align-items:center;font-family:system-ui;background:linear-gradient(90deg,#14532d,#1d6b3a 45%,#c9a227);color:#fff;font-size:14px}
+.hubbar b{letter-spacing:.06em}.hubfoot{text-align:center;opacity:.55;font-size:12px}
+.heading .title{font-size:44px;line-height:1;color:#f2c94c;text-shadow:0 3px 0 #6b4f12}.game-intro{color:#cfe8c6}
+.score-container,.best-container{background:#14532d}.restart-button,.retry-button,.keep-playing-button{background:#c9a227 !important;color:#14280f !important}
+.game-container{background:#24452f;box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 6px #2d5a3b}
+.grid-cell{background:rgba(160,220,140,.12)}
+.tile .tile-inner{color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25);box-shadow:inset 0 -6px 0 rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.25);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -60 100 100'%3E%3Cg fill='%23ffffff' fill-opacity='.13'%3E%3Cpath d='M0 0 Q6-22 0-45 Q-6-22 0 0'/%3E%3Cpath d='M0 0 Q20-17 32-36 Q8-24 0 0'/%3E%3Cpath d='M0 0 Q-20-17 -32-36 Q-8-24 0 0'/%3E%3Cpath d='M0 0 Q25-6 44-14 Q14-14 0 0'/%3E%3Cpath d='M0 0 Q-25-6 -44-14 Q-14-14 0 0'/%3E%3C/g%3E%3C/svg%3E");background-size:90%;background-repeat:no-repeat;background-position:center}
+.game-message{background:rgba(11,31,20,.75)}.game-message p{color:#f2c94c}
+.tile-2 .tile-inner{background-color:#2f5d3a !important}
+.tile-4 .tile-inner{background-color:#3c7a46 !important}
+.tile-8 .tile-inner{background-color:#4f9a4f !important}
+.tile-16 .tile-inner{background-color:#6bb34a !important}
+.tile-32 .tile-inner{background-color:#8fc43f !important}
+.tile-64 .tile-inner{background-color:#b5cf3a !important}
+.tile-128 .tile-inner{background-color:#d9c23a !important}
+.tile-256 .tile-inner{background-color:#f2c94c !important}
+.tile-512 .tile-inner{background-color:#f5b03a !important}
+.tile-1024 .tile-inner{background-color:#f0912e !important}
+.tile-2048 .tile-inner{background-color:#e8702a !important}
+.tile-super .tile-inner{background-color:#ffd76a !important;color:#3b2a00}

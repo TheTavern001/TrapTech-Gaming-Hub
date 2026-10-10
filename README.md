@@ -103,15 +103,23 @@ Every unlock gives a badge plus a cosmetic from `src/cosmetics.js`: **39 profile
 CSS/SVG, served as `/cosmetics.css`). Players equip a banner, frame, title and featured badge on their profile (Customize); these
 show on leaderboards, giveaway entrants, home and community posts.
 
-### Giveaway packages (/host)
-Basic / Premium / Elite tiers with "who it's for", feature lists, a 13-row comparison table and an FAQ. Names, prices
-(placeholders $49 / $149 / $399), notes, badges, features, the comparison table and the FAQ are all editable in
-**Admin > Settings > Hosting packages** (stored in the `settings` table; "Reset to defaults" restores `src/packages.js`).
-The booking form carries the chosen tier and the server stores a price snapshot (e.g. "Elite - $399 per 30-day campaign").
+### Sponsor a Host (/sponsor) and brands
+No tiers and no public prices. A sponsor ticks the features they want from one combined list (giveaway length, extra
+games/winners, Featured row, hero takeover, alerts, branding, links, reports...), adds their brand, contact, dates and
+notes, and sends a free quote request. They get a private status page (`/sponsor/status/<token>`).
+Admins see the request in **Admin > Sponsor requests** with a draft quote totalled from the admin-only
+**price sheet** (seeded from the old v5 prices), adjust it (custom lines, % or $ discount, note, validity), send it,
+and the sponsor accepts or declines on the status page. Accepted quotes are locked; the admin marks them paid after the
+Potato settlement. A giveaway's paid **placements** (giveaway/game/announcement links, Featured row, hero, game skin,
+open to everyone) are ticked on the giveaway form. Old tier giveaways keep their placements (mapped from the tier).
+**Brands:** every player belongs to one brand at a time (invite link `/join/<code>`, brand code, or a pick at signup;
+switch every 30 days; switching leaves live entries in the old brand's members-only giveaways). A brand's giveaways are
+for its members unless marked "Open to everyone"; giveaways with no brand are hub-wide. Admin > Brands shows invite
+links and member counts. Code: `src/sponsor.js`, `src/brands.js`; test: `node tools/e2e-sponsor-brands.js`.
 
 **Create a giveaway:** fastest way: Admin > **Games** > **Create giveaway for this game** (prefilled title, art, game and a 7-day
 window). Or Admin > Giveaways > New Giveaway. Pick one or more games in the visual game picker, then title, host, prize, image,
-start/end (browser time zone), package tier, brand color + logo URL, Featured toggle (home slot; Elite + Featured = home hero takeover),
+start/end (browser time zone), sponsor placements, brand + "open to everyone", brand color + logo URL, Featured toggle (home slot),
 minimum score, prize tiers (one per line) and rules, then Save.
 **One-click linking:** each game card in Admin > Games lists live/upcoming giveaways with an on/off toggle; flip it to make that game
 count (a giveaway always keeps at least one game).
@@ -170,8 +178,10 @@ Community feed), Reports (CSV exports and rejected anti-cheat submissions), Sett
 - **Deterministic winner rules.** Score giveaways rank each entrant by their best qualifying score. A qualifying run starts and finishes inside the window,
   meets the minimum score and is within the game's plausibility cap for its server-measured duration; with several linked games it is the sum of the best per game.
   Tiebreakers, shown on the giveaway page, the live board and in Official Rules section 5:
-  (a) higher score wins; (b) if tied, whoever reached that score first (server timestamp of the run that set it); (c) then fewer attempts (runs in the window);
-  (d) then the earlier-submitted run (lower run ID). Every place is unique.
+  SKILL-ONLY (Reese, Oct 2026): (a) higher score wins; (b) if tied, the shorter server-timed run(s) to that score; (c) then the game's
+  skill metric from the validated event log (src/games-lib-playoff.js `metricsFor`); (d) an exact tie on a winning place is settled by a
+  sudden-death playoff (same seed, one run each) that the admin starts from the event (POST /api/admin/events/:id/playoff, then /apply).
+  First-to-score, fewest attempts and submission time are never used.
 - **Verifiable random draws** (`win_method=random`) use commit-reveal. When the giveaway is created, the server picks a secret seed and publishes
   `draw_commit = SHA-256(seed)`. At the end it locks the entrant list, publishes `entrants_hash = SHA-256(lines "rank|username|score|run_id|reached_at|attempts")`
   and reveals the seed. Draw keys are `HMAC-SHA256(seed, entrants_hash + ":" + username)`, sorted ascending. One entry per player, so nobody can be drawn twice.
@@ -212,7 +222,7 @@ Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store C
 `POST /api/auth/signup|signin|signout`, `GET /api/me`, `GET /api/games`,
 `GET /api/leaderboard?game=global|jetpack-dash&period=all|weekly|monthly&giveaway=ID`,
 `POST /api/run/start`, `POST /api/score`, `GET /api/giveaways?status=active|upcoming|past`, `GET /api/giveaways/:id`,
-`GET /api/profile/:username`, `GET /api/community`, `POST /api/community/react {key}`, `GET /api/packages`, `POST /api/bookings {package,...}`,
+`GET /api/profile/:username`, `GET /api/community`, `POST /api/community/react {key}`, `GET /api/sponsor/catalog`, `POST /api/sponsor/requests {features,...}` (alias `POST /api/bookings`), `GET /api/sponsor/requests/:token`, `GET /api/brands`, `GET|POST /api/me/brand`,
 `GET /api/achievements[?user=]`, `GET /api/cosmetics`, `POST /api/me/cosmetics {banner,frame,title,badge}`, `GET /cosmetics.css`,
 and `/api/admin/*` (cookie session after `POST /api/admin/login`), incl. `GET /api/admin/games` (with linked giveaways),
 `POST /api/admin/giveaways/:id/games {game_id, linked}`, `GET|PUT /api/admin/packages`, `POST /api/admin/packages/reset`, `GET /api/admin/achievements`.
@@ -241,7 +251,9 @@ src/results.js       v4 standings (tiebreaks, cap re-check), final-standings loc
 src/v4.js            v4 routes (live standings, verify, admin review queue, finalize, exports)
 src/v3.js            v3 routes (quests, season, tournaments, follows, notifications, referrals, share, search, OG, admin tournaments)
 src/cosmetics.js     banners / frames / titles (original CSS) -> /cosmetics.css
-src/packages.js      default Basic/Premium/Elite package copy (admin-editable)
+src/sponsor.js       Sponsor a Host: feature list, admin price sheet, quotes, placements
+src/brands.js        brand affiliation (invite codes, one brand per player, giveaway audience)
+src/packages.js      legacy package copy (sponsor FAQ + Potato handle; v5 tier data kept for old bookings)
 public/index.html    player SPA shell (per-page meta injected server-side), manifest.webmanifest + sw.js (PWA); public/js/app.js (router and all pages), public/js/jetpack.js (Jetpack Dash)
 public/js/games/     engine.js (shared canvas game base + WebAudio synth) and the 7 other games
 public/admin.html    admin SPA; public/js/admin.js, public/css/admin.css

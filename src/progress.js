@@ -10,7 +10,7 @@ const dayNum = (ms) => { const [y, m, d] = dayFmt.format(new Date(ms)).split('-'
 const offFmt = new Intl.DateTimeFormat('en-US', { timeZone: cfg.TZ, timeZoneName: 'longOffset' });
 function tzOffsetMs(ms) { const p = offFmt.formatToParts(new Date(ms)).find(x => x.type === 'timeZoneName').value; const m = p.match(/GMT([+-])(\d\d):?(\d\d)?/); return m ? (m[1] === '-' ? -1 : 1) * (+m[2] * 3600e3 + (+m[3] || 0) * 60e3) : 0; }
 // ms timestamp of local midnight that starts hub-day `d`
-function dayStart(d) { const utc = d * 864e5; return utc - tzOffsetMs(utc + 12 * 3600e3); }
+function dayStart(d) { const utc = d * 864e5; const guess = utc - tzOffsetMs(utc + 12 * 3600e3); return utc - tzOffsetMs(guess); } // v7: second pass uses the offset AT midnight (DST days start at the right instant)
 
 // ---------- XP + levels ----------
 const ACH_XP = { bronze: 25, silver: 50, gold: 100, epic: 200, legendary: 400 };
@@ -93,32 +93,12 @@ function claimQuest(userId, idx, t = Date.now()) {
 }
 const questsDone = (userId) => db.prepare('SELECT COUNT(*) AS c FROM quest_claims WHERE user_id=? AND idx<3').get(userId).c;
 
-// ---------- seasons: calendar quarters, Season 1 = Q4 2026. Free 20-tier track, no paid pass. ----------
-const SEASON_NAMES = ['Neon Genesis', 'Purple Haze', 'Chrome Summer', 'Afterglow', 'Static Bloom', 'Night Shift', 'Hyperdrive', 'Low Orbit'];
-const TIER_XP_S = 300, TIERS = 20;
-const TRACK = { 3: 'Title: Season Starter', 5: 'Banner: Season One: Neon Genesis', 10: 'Frame: Season Laurel', 20: 'Title: Season Legend' };
-function seasonAt(t = Date.now()) {
-  const [y, m] = dayFmt.format(new Date(t)).split('-').map(Number);
-  const q = Math.floor((m - 1) / 3); const n = (y - 2026) * 4 + q - 2; // 2026 Q4 (q=3) -> 1
-  const num = Math.max(1, n);
-  const sy = 2026 + Math.floor((num + 2) / 4), sq = (num + 2) % 4;
-  const start = dayStart(Math.round(Date.UTC(sy, sq * 3, 1) / 864e5));
-  const end = dayStart(Math.round(Date.UTC(sq === 3 ? sy + 1 : sy, sq === 3 ? 0 : sq * 3 + 3, 1) / 864e5)) - 1;
-  return { number: num, name: SEASON_NAMES[(num - 1) % SEASON_NAMES.length], start_at: start, end_at: end, tiers: TIERS, tier_xp: TIER_XP_S };
-}
-function seasonProgress(userId, t = Date.now()) {
-  const s = seasonAt(t); const xp = userId ? xpFor(userId, s.start_at, s.end_at) : 0;
-  const tier = Math.min(TIERS, Math.floor(xp / TIER_XP_S));
-  return { ...s, xp, tier, into: tier >= TIERS ? TIER_XP_S : xp % TIER_XP_S, track: Array.from({ length: TIERS }, (_, i) => ({ tier: i + 1, xp: (i + 1) * TIER_XP_S, reward: TRACK[i + 1] || null, unlocked: tier >= i + 1 })) };
-}
-// best season tier ever reached (for achievements); only the current season is computed (seasons are short-lived here)
-const bestSeasonTier = (userId) => seasonProgress(userId).tier;
-function seasonBoard(limit = 50, t = Date.now()) {
-  const s = seasonAt(t);
-  const ids = db.prepare(`SELECT DISTINCT user_id FROM (SELECT user_id FROM runs WHERE created_at BETWEEN ? AND ? UNION SELECT user_id FROM checkins WHERE created_at BETWEEN ? AND ? UNION SELECT user_id FROM quest_claims WHERE created_at BETWEEN ? AND ?)`).all(s.start_at, s.end_at, s.start_at, s.end_at, s.start_at, s.end_at).map(r => r.user_id);
-  const rows = ids.map(id => ({ id, xp: xpFor(id, s.start_at, s.end_at) })).sort((a, b) => b.xp - a.xp).slice(0, limit);
-  const U = db.prepare('SELECT id AS user_id, username, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect, banned FROM users WHERE id=?');
-  return rows.map(r => ({ ...U.get(r.id), score: r.xp, tier: Math.min(TIERS, Math.floor(r.xp / TIER_XP_S)) })).filter(r => r.username && !r.banned).map((r, i) => ({ rank: i + 1, ...r }));
-}
+// ---------- seasons: v7 engine in src/seasons.js (8-week auto-rolling seasons, 60-level free track, perks, soft reset,
+// archive + hall of fame). These names stay here so existing callers keep working; see docs/ECONOMY.md.
+const SE = () => require('./seasons');
+const seasonAt = (t = Date.now()) => SE().seasonAt(t);
+const seasonProgress = (userId, t = Date.now()) => SE().seasonProgress(userId, t);
+const bestSeasonTier = (userId) => SE().bestSeasonTier(userId);
+const seasonBoard = (limit = 50, t = Date.now()) => SE().seasonBoard(limit, t);
 
 module.exports = { dayNum, dayStart, levelFor, xpFor, runXp, ACH_XP, streakInfo, checkin, checkinXp, questsFor, questProgress, claimQuest, questsDone, seasonAt, seasonProgress, bestSeasonTier, seasonBoard };

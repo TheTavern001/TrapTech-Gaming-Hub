@@ -1,6 +1,6 @@
 'use strict';
 // Server-rendered share images (Open Graph / social cards), 1200x630 PNG. SVG templates rendered with resvg.
-// Fonts: Orbitron + Exo 2 (SIL OFL), converted to TTF in src/og-fonts. Logos: The Gaming Hub + Trap Tech Solutions.
+// Fonts: Orbitron + Exo 2 (SIL OFL), converted to TTF in src/og-fonts. Logos: The Gaming Hub + Trap Tech Solutions (v7: Reese's real TT monogram + chrome lockup, tools/build-brand-v7.py).
 //
 // Low-memory design (Deplexo free plan = 128 MB RAM):
 //  - @resvg/resvg-js is only loaded the first time an image has to be rendered (most requests never need it).
@@ -24,7 +24,7 @@ let Resvg = null; // lazy
 const resvg = () => Resvg || (Resvg = require('@resvg/resvg-js'));
 
 // Image slots used by the templates: [width, height, preserveAspectRatio]. Pre-scaled art is generated for these boxes.
-const BOX = { logo: [300, 76, 'xMidYMid meet'], tt: [260, 40, 'xMidYMid meet'], art: [380, 380, 'xMidYMid slice'] };
+const BOX = { logo: [300, 76, 'xMidYMid meet'], tt: [260, 70, 'xMidYMid meet'], art: [380, 380, 'xMidYMid slice'] };
 const scaledName = (rel, [w, h]) => rel.replace(/^\/+/, '').replace(/\.(webp|png)$/, '') + `@${w}x${h}.png`;
 const brandCache = new Map(); // only the 2 fixed brand images (a few KB each after scaling)
 function dataUri(rel, box = BOX.art) {
@@ -58,7 +58,7 @@ function frame(inner, { art = null, accent = '#a855f7' } = {}) {
   ${a ? `<rect x="752" y="112" width="396" height="396" rx="34" fill="url(#nv)" opacity=".75"/><image x="760" y="120" width="380" height="380" preserveAspectRatio="xMidYMid slice" clip-path="url(#artc)" xlink:href="${a}"/>` : ''}
   ${inner}
   <text x="60" y="580" font-family="Exo 2" font-weight="600" font-size="22" fill="#9aa3d0">Free to play • Points &amp; cosmetics only • 21+</text>
-  ${tt ? `<text x="1140" y="548" text-anchor="end" font-family="Orbitron" font-weight="700" font-size="14" fill="#9aa3d0" letter-spacing="3">BUILT BY</text><image x="880" y="556" width="260" height="40" xlink:href="${tt}"/>` : ''}
+  ${tt ? `<text x="1140" y="532" text-anchor="end" font-family="Orbitron" font-weight="700" font-size="14" fill="#9aa3d0" letter-spacing="3">BUILT BY</text><image x="880" y="540" width="260" height="70" xlink:href="${tt}"/>` : ''}
 </svg>`;
 }
 const T = (x0, y, size, fill, text, { font = 'Orbitron', weight = 900, anchor = 'start', ls = 0 } = {}) =>
@@ -72,7 +72,7 @@ const templates = {
     ${T(60, 380, 34, '#e9e6ff', `${clip(d.username, 20)}${d.title ? ' • ' + clip(d.title, 22) : ''}`, { font: 'Exo 2', weight: 800 })}
     ${T(60, 430, 28, '#fde047', d.rank ? `#${d.rank} of ${d.players} players${d.best ? ' • personal best' : ''}` : 'New run', { font: 'Exo 2', weight: 800 })}
     <rect x="60" y="460" width="330" height="62" rx="31" fill="url(#nv)"/>${T(225, 501, 24, '#fff', 'CAN YOU BEAT IT?', { anchor: 'middle', weight: 800 })}`, { art: d.art }),
-  giveaway: (d) => frame(`${T(60, 180, 24, '#fde047', (d.tier ? d.tier.toUpperCase() + ' GIVEAWAY' : 'GIVEAWAY'), { weight: 700, ls: 3 })}
+  giveaway: (d) => frame(`${T(60, 180, 24, '#fde047', 'FREE GIVEAWAY', { weight: 700, ls: 3 })}
     ${T(60, 260, d.title.length > 18 ? 52 : 66, '#fff', clip(d.title, 26))}
     ${T(60, 320, 32, '#c7cdf5', `Hosted by ${clip(d.host, 28)}`, { font: 'Exo 2', weight: 800 })}
     ${T(60, 370, 28, '#22d3ee', d.when, { font: 'Exo 2', weight: 800 })}

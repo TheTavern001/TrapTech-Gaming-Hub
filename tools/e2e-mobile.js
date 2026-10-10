@@ -20,7 +20,7 @@ const PROFILES = [
   { id: 'ios-inapp-wkwebview', dev: { ...I14, userAgent: IOS_INAPP } },
   { id: 'locked-webview', dev: { ...P7, userAgent: AND_WV }, locked: true },
 ];
-const GAMES = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
+const GAMES = ['jetpack-dash', 'drift-rush', 'memory-match', 'high-score', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'stack', 'void-swarm', 'grow-guard', 'sling-smash', 'haze-defense'];
 let STEP = 'start'; const T0 = Date.now();
 setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: hung at', STEP); process.exit(2); } }, 1000).unref();
 (async () => {
@@ -71,7 +71,7 @@ setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: 
     // every page: renders, no horizontal overflow
     STEP = tag + ' pages';
     const pages = ['/', '/games', '/leaderboard', '/giveaways', ...(gid ? [`/giveaways/${gid}`, `/giveaways/${gid}/live`, `/giveaways/${gid}/rules`] : []), '/tournaments', '/community', '/achievements', '/quests', '/season',
-      '/host', '/book', '/about', '/terms', '/privacy', '/rules', '/responsible-play', '/search', '/notifications', '/settings', '/invite', '/u/' + uname, ...GAMES.map(g => '/games/' + g)];
+      '/sponsor', '/shop', '/about', '/terms', '/privacy', '/rules', '/responsible-play', '/search', '/notifications', '/settings', '/invite', '/u/' + uname, ...GAMES.map(g => '/games/' + g)];
     const bad = [];
     for (const u of pages) {
       await nav(u); await p.waitForSelector('main#main', { timeout: 15000 }); await sleep(250);
@@ -98,7 +98,7 @@ setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: 
       const res = await p.evaluate(() => window.__lastResult);
       if (res && res.ok) saved.push(g); else console.log('   not saved', g, res && res.error);
       const audio = await p.evaluate(() => window.__ghAC ? window.__ghAC.state : 'none');
-      if (g === 'plinko') ok(audio === 'running', `audio unlocked by the first tap (AudioContext ${audio})`);
+      if (g === 'jetpack-dash') ok(audio === 'running', `audio unlocked by the first tap (AudioContext ${audio})`);
     }
     ok(saved.length === GAMES.length, `all ${GAMES.length} games saved a run with touch input (${saved.length})`, GAMES.filter(g => !saved.includes(g)));
     // share uses navigator.share or an on-page copy sheet (never window.open / prompt)

@@ -1,0 +1,16 @@
+// Bat Boy - original timing-swing batting (Hub build). Swing at the right moment; sweet spot = home run.
+Kit.run({ id: 'gl-bat-boy', title: 'BAT BOY', help: 'Tap / Space to swing when the ball reaches the plate\n3 strikes and you\'re out - curveballs later', bg: '#14532d',
+  init(g) { g.ball = null; g.next = 1; g.strikes = 0; g.swing = 0; g.hits = []; g.pitches = 0; },
+  update(g, dt) {
+    if (g.tap() && g.swing <= 0) { g.swing = 0.25; g.sfx('whoosh'); const b = g.ball; if (b && !b.hit) { const err = b.y - 560; if (Math.abs(err) < 44) { b.hit = true; const q = 1 - Math.abs(err) / 44; const dist = Math.round(40 + q * q * 120 + g.R(0, 15)); const hr = dist > 140; const v = hr ? 100 : Math.round(dist / 4); g.add(v, 'h'); b.vx = (err / 44) * 500 + g.R(-80, 80); b.vy = -500 - q * 700; g.float(200, 480, hr ? 'HOME RUN! ' + dist + 'm +' + v : dist + 'm +' + v, hr ? '#fbbf24' : '#fff', hr ? 26 : 18); g.sfx(hr ? 'power' : 'good'); g.shake(hr ? 8 : 3); g.burst(200, 560, '#fff', hr ? 40 : 14, 260); } } }
+    g.swing -= dt; g.next -= dt; if (!g.ball && g.next <= 0) { g.pitches++; const lv = Math.min(1, g.pitches / 40); g.ball = { x: 200, y: 160, vy: g.R(380, 520) + lv * 300, curve: g.rnd() < lv * 0.6 ? g.R(-90, 90) : 0, t: 0, hit: false, vx: 0, delay: g.rnd() < lv * 0.3 ? g.R(0.1, 0.35) : 0 }; g.sfx('click'); }
+    const b = g.ball; if (b) { if (b.hit) { b.x += b.vx * dt; b.y += b.vy * dt; b.vy += 300 * dt; if (b.y < -40 || b.x < -40 || b.x > g.W + 40) { g.ball = null; g.next = g.R(0.8, 1.4); } } else { if (b.delay > 0) b.delay -= dt; else { b.t += dt; b.y += b.vy * dt; b.x = 200 + Math.sin(b.t * 3) * b.curve * b.t; } if (b.y > 640) { g.strikes++; g.ball = null; g.next = 1.2; g.sfx('bad'); g.float(200, 400, 'STRIKE ' + g.strikes, '#ef4444', 24); if (g.strikes >= 3) return g.end('Struck out'); } } }
+    g.hud = 'STRIKES ' + '\u25CF'.repeat(g.strikes) + '\u25CB'.repeat(3 - g.strikes);
+  },
+  draw(g, c) {
+    c.fillStyle = '#15803d'; c.fillRect(0, 0, g.W, g.H); c.fillStyle = '#a16207'; c.beginPath(); c.moveTo(200, 120); c.lineTo(380, 600); c.lineTo(20, 600); c.fill(); c.fillStyle = '#ca8a04'; Kit.circ(c, 200, 170, 26, '#ca8a04'); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(186, 560); c.lineTo(214, 560); c.lineTo(214, 572); c.lineTo(200, 582); c.lineTo(186, 572); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.25)'; c.setLineDash([4, 6]); c.strokeRect(150, 516, 100, 88); c.setLineDash([]);
+    c.fillStyle = '#e5e7eb'; Kit.rr(c, 186, 130, 28, 36, 8); c.fill(); Kit.circ(c, 200, 122, 9, '#fcd9b6');
+    const b = g.ball; if (b) { const s = b.hit ? 9 : 4 + (b.y - 160) / 480 * 6; c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(b.x, b.hit ? b.y + 30 : b.y + 10, s, s * 0.4, 0, 0, 7); c.fill(); Kit.circ(c, b.x, b.y, s, '#fff'); c.strokeStyle = '#ef4444'; c.lineWidth = 1; c.beginPath(); c.arc(b.x - s * 0.4, b.y, s * 0.7, -1, 1); c.stroke(); }
+    c.save(); c.translate(150, 590); c.fillStyle = '#3b82f6'; Kit.rr(c, -14, -50, 28, 50, 8); c.fill(); Kit.circ(c, 0, -60, 10, '#fcd9b6'); c.fillStyle = '#1e3a8a'; c.fillRect(-10, -72, 20, 8); c.rotate(g.swing > 0 ? -2.4 + (0.25 - g.swing) * 14 : -2.4); c.fillStyle = '#d97706'; c.fillRect(0, -40, 70, 9); c.restore();
+  } });

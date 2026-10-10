@@ -57,6 +57,11 @@ const BANNERS = [
   // v5 legendary rewards
   ['legend-aurora', 'Legendary Aurora', 'radial-gradient(120% 90% at 0% 0%,rgba(250,204,21,.7),transparent 55%),radial-gradient(120% 90% at 100% 100%,rgba(236,72,153,.7),transparent 55%),conic-gradient(from 90deg,#4c1d95,#1e3a8a,#4c1d95)'],
   ['centurion-flame', 'Centurion Flame', 'radial-gradient(40% 90% at 50% 115%,#fff7ed,#fdba74 30%,#ef4444 60%,transparent 75%),linear-gradient(180deg,#0c0a09,#450a0a)'],
+  // v7 endless games
+  ['glass-tower', 'Glass Tower', 'repeating-linear-gradient(0deg,rgba(255,255,255,.18) 0 2px,transparent 2px 16px),linear-gradient(90deg,#0e7490,#7c3aed 50%,#db2777)'],
+  ['grow-room', 'Grow Room', 'radial-gradient(70% 50% at 50% 0%,rgba(255,196,110,.6),transparent 70%),repeating-linear-gradient(90deg,rgba(163,230,53,.25) 0 6px,transparent 6px 26px),linear-gradient(180deg,#2b1a05,#0b2610)'],
+  ['sling-arc', 'Sling Arc', 'radial-gradient(140% 90% at 0% 100%,transparent 58%,rgba(253,224,71,.8) 59% 60%,transparent 61%),linear-gradient(160deg,#1e293b,#7c2d12 70%,#f59e0b)'],
+  ['haze-track', 'Haze Track', 'radial-gradient(30% 40% at 25% 60%,rgba(226,232,240,.45),transparent 70%),radial-gradient(30% 40% at 70% 35%,rgba(196,181,253,.45),transparent 70%),linear-gradient(90deg,transparent 46%,rgba(34,211,238,.7) 47% 49%,transparent 50%),#0b0820'],
 ].map(([id, name, css]) => ({ id, name, css }));
 
 // Avatar frames: ring background (+ optional animation class defined in app.css)
@@ -90,6 +95,11 @@ const FRAMES = [
   // v5 legendary + admin-granted
   ['legend-crest', 'Legendary Crest', 'conic-gradient(#fde047,#f472b6,#a855f7,#22d3ee,#fde047)', 'spin'],
   ['staff-glow', 'Trap Tech Staff', 'conic-gradient(#ffffff,#a78bfa,#ffffff,#22d3ee,#ffffff)', 'glow'],
+  // v7 endless games
+  ['slab', 'Glass Slab', 'repeating-conic-gradient(#22d3ee 0 30deg,#a855f7 30deg 60deg)', 'spin'],
+  ['ladybug', 'Ladybug', 'repeating-conic-gradient(#dc2626 0 40deg,#111827 40deg 50deg)', 'glow'],
+  ['steel-ball', 'Steel Ball', 'conic-gradient(#f8fafc,#64748b,#e2e8f0,#334155,#f8fafc)', 'spin'],
+  ['prism-laser', 'Prism Laser', 'conic-gradient(#22d3ee,#a3e635,#fde047,#f472b6,#22d3ee)', 'pulse'],
 ].map(([id, name, bg, anim]) => ({ id, name, bg, anim }));
 
 const TITLES = ['Rookie', 'Hub Regular', 'Hub Legend', 'Explorer', 'Daily Driver', 'Unstoppable', 'Contender', 'Giveaway Hunter', 'Lucky Charm',
@@ -99,13 +109,16 @@ const TITLES = ['Rookie', 'Hub Regular', 'Hub Legend', 'Explorer', 'Daily Driver
   'Early Bird', 'Habit Former', 'Questor', 'Quest Legend', 'Level Grinder', 'Veteran', 'Season Starter', 'Season Legend', 'Competitor', 'Finalist', 'Tournament Champ',
   'Social Butterfly', 'Influencer', 'Crew Builder', 'Squad Goals', 'Party Starter', 'Newcomer', 'Hype Sharer',
   // v5 legendary
-  'One Percenter', 'Centurion', 'Grandmaster', 'Iron Thumbs', 'Dynasty']
+  'One Percenter', 'Centurion', 'Grandmaster', 'Iron Thumbs', 'Dynasty',
+  // v7 endless games
+  'Sky Builder', 'Perfect Drop', 'Pest Patrol', 'Head Grower', 'Tower Toppler', 'Bot Buster', 'Haze Buster', 'Orb Popper']
   .map(name => ({ id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name }));
 
 const DEFAULTS = { banner: 'midnight', frame: 'none', title: 'rookie' };
 const BY = { banner: Object.fromEntries(BANNERS.map(b => [b.id, b])), frame: Object.fromEntries(FRAMES.map(f => [f.id, f])), title: Object.fromEntries(TITLES.map(t => [t.id, t])), color: {}, effect: {} };
 // v5: shop items join the same lookup maps (ownership is checked separately)
 for (const i of require('./shop').ITEMS) { if (BY[i.type]) BY[i.type][i.id] = { id: i.id, name: i.name, shop: true, anim: i.type === 'frame' ? i.extra.split('|')[1] : undefined }; }
+require('./shop').attach(BY); // v7: generated shop items resolve from their id (src/shop-gen.js)
 
 function css() {
   return [

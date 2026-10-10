@@ -1,0 +1,9 @@
+/* Hub 21+ green/gold theme for Hex Stack (original) */
+body{background:radial-gradient(circle at 50% 40%,#1d4d32,#0b1f14 75%) !important}
+#startBtn,#restart{filter:hue-rotate(60deg) saturate(1.2)}
+html,body{background:radial-gradient(circle at 50% 45%,#1d4d32,#0b1f14 75%) !important;color:#f2e6b8 !important}
+#highScoreInGameText,#currentHighScore,#highScoreInGameTextHeader{color:#cfe8c6 !important}
+#gameoverscreen{background:rgba(11,31,20,.92) !important;color:#f2e6b8}
+.GOTitle{color:#f2c94c !important}
+#canvas{background:radial-gradient(circle at 50% 45%,#1d4d32,#0b1f14 75%) !important}
+#HIGHSCORE{display:none !important}

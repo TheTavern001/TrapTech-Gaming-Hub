@@ -1,0 +1,3 @@
+- Batch 3 (Endless Runners + Driving + Reflex remaining, Cannabis 3): see docs/REESE-MASTER-CATALOG.md categories 1, 2 and 8; skipped-as-duplicates of core Hub games are listed in "Skipped".
+- Batches 4-8: Physics, Tower Defense, Survival, Arcade Shooters, Puzzle, Combat, Sports, Specialty; Cannabis 10-15 total; Just-for-fun extras licence check.
+- Skipped so far: Stack (already a core Hub game, `stack`, with L4 server replay; not duplicated).

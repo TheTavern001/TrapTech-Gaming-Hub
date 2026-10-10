@@ -143,7 +143,7 @@ export class JetpackDash {
   update(dt) {
     const p = this.p;
     this.t += dt;
-    if (this.state === 'play') this.mps = Math.min(MAX_MPS, START_MPS + this.t * ACCEL_MPS);
+    if (this.state === 'play') { const tm = (MAX_MPS - START_MPS) / ACCEL_MPS; this.mps = this.t <= tm ? START_MPS + this.t * ACCEL_MPS : Math.min(28, MAX_MPS + (this.t - tm) * 0.02); } // v7 endless: keeps ramping to 28 m/s
     else this.mps = Math.max(0, this.mps - 14 * dt); // dying: slide to a stop
     const vx = this.mps * PX_PER_M; const dx = vx * dt;
     this.dist += this.state === 'play' ? this.mps * dt : 0;

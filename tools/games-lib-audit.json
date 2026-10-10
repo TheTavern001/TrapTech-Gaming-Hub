@@ -1,0 +1,50 @@
+{
+ "castle-crush": {
+  "fpsMin": 60,
+  "fpsAvg": 60,
+  "at": "2026-10-10T04:51:17.087Z"
+ },
+ "sky-flap": {
+  "fpsMin": 60,
+  "fpsAvg": 60,
+  "at": "2026-10-10T04:49:45.476Z"
+ },
+ "block-drop": {
+  "fpsMin": 60,
+  "fpsAvg": 60,
+  "at": "2026-10-10T04:49:51.785Z"
+ },
+ "rail-rush": {
+  "fpsMin": 20,
+  "fpsAvg": 28,
+  "jsMs": 1.91,
+  "gpu": {
+   "calls": 103,
+   "tris": 127937,
+   "dpr": 1.5
+  },
+  "at": "2026-10-10T06:01:07.273Z"
+ },
+ "lane-racer": {
+  "fpsMin": 20,
+  "fpsAvg": 36,
+  "jsMs": 1.91,
+  "gpu": {
+   "calls": 76,
+   "tris": 142100,
+   "dpr": 1.5
+  },
+  "at": "2026-10-10T06:35:28.633Z"
+ },
+ "moto-lanes": {
+  "fpsMin": 20,
+  "fpsAvg": 36,
+  "jsMs": 3.53,
+  "gpu": {
+   "calls": 92,
+   "tris": 168151,
+   "dpr": 1.5
+  },
+  "at": "2026-10-10T06:35:14.952Z"
+ }
+}

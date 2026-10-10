@@ -1,0 +1,78 @@
+{
+ "generated_at": "2026-10-10T05:45:51.954Z",
+ "target_completion": 0.05,
+ "simulated_completion": 0.051,
+ "t3_percentile": 0.54,
+ "note": "Tiers per game: T3 = personal-best score at the tuned percentile (all 13 games needed), T2 = 7 percentile points lower, T1 = 14 lower (floor p40). Run once per balance change.",
+ "activity": {
+  "days": 28,
+  "runs": 250
+ },
+ "games": {
+  "jetpack-dash": {
+   "t1": 2050,
+   "t2": 2300,
+   "t3": 2600
+  },
+  "drift-rush": {
+   "t1": 2700,
+   "t2": 3050,
+   "t3": 3400
+  },
+  "memory-match": {
+   "t1": 41700,
+   "t2": 45750,
+   "t3": 50200
+  },
+  "high-score": {
+   "t1": 5950,
+   "t2": 6900,
+   "t3": 8050
+  },
+  "terp-tapper": {
+   "t1": 52600,
+   "t2": 61000,
+   "t3": 70700
+  },
+  "munchies-snake": {
+   "t1": 2200,
+   "t2": 2750,
+   "t3": 3400
+  },
+  "brick-breaker": {
+   "t1": 6200,
+   "t2": 7650,
+   "t3": 9500
+  },
+  "sky-hopper": {
+   "t1": 30,
+   "t2": 35,
+   "t3": 42
+  },
+  "void-swarm": {
+   "t1": 106550,
+   "t2": 127400,
+   "t3": 152350
+  },
+  "stack": {
+   "t1": 1200,
+   "t2": 1400,
+   "t3": 1650
+  },
+  "grow-guard": {
+   "t1": 29600,
+   "t2": 32200,
+   "t3": 35050
+  },
+  "sling-smash": {
+   "t1": 12900,
+   "t2": 15300,
+   "t3": 18150
+  },
+  "haze-defense": {
+   "t1": 29350,
+   "t2": 32050,
+   "t3": 34950
+  }
+ }
+}

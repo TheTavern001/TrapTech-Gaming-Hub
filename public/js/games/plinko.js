@@ -1,4 +1,6 @@
-// Plinko - skill drop. Original code/art. 10 free chips per run, aim + nudge, golden multiplier pegs.
+// Plinko - drop game (just for fun: chance-based, never linked to giveaways). Original code/art. v7: endless. You start with
+// 10 chips; the 200 slots refund 2 chips and the 100 slot refunds 1. Every 5 drops the board levels up: golden pegs speed up,
+// the big slots move and 0-point slots appear. The run ends when you are out of chips.
 // Points only: no money, nothing to buy.
 // v5 art: blurred bar photo backdrop (Poly Haven CC0 HDRI 'warm_bar'), black-walnut board + brushed-metal slots (Poly Haven CC0), chrome pegs. See /CREDITS.md
 import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, coinFrame, Ambient, softShadow } from './engine.js';
@@ -7,7 +9,7 @@ const VALUES = [200, 50, 20, 5, 100, 5, 20, 50, 200];
 const CHIPS = 10, NUDGES = 3, ROWS = 10;
 export class Plinko extends Game {
   get title() { return 'PLINKO'; }
-  get hint() { return 'Drag along the top to aim, release to drop. Tap beside a falling chip to nudge it (3 per chip). Golden pegs multiply!'; }
+  get hint() { return 'Drag along the top to aim, then release to drop. Tap beside a falling chip to nudge it (3 per chip). Golden pegs multiply. 200 slots refund 2 chips and 100 refunds 1, so the run lasts until you run dry.'; }
   layout() {
     const top = 120, bot = this.H - 26;
     const bw = Math.min(this.W - 24, (bot - top) * 0.82); const bx = (this.W - bw) / 2;
@@ -24,7 +26,7 @@ export class Plinko extends Game {
     if (this.aimX === undefined) this.aimX = this.W / 2;
   }
   reset() {
-    this.score = 0; this.coins = 0; this.left = CHIPS; this.chip = null; this.aiming = false; this.aimX = this.W / 2;
+    this.score = 0; this.coins = 0; this.left = CHIPS; this.values = VALUES.slice(); this.drops = 0; this.lvl = 1; this.chip = null; this.aiming = false; this.aimX = this.W / 2;
     this.golden = [{ row: 3, ph: rnd(0, TAU), sp: 0.9 }, { row: 6, ph: rnd(0, TAU), sp: 1.25 }]; this.results = []; this.endT = 0; this.flashSlot = -1; this.flashT = 0;
   }
   goldenPos(gp) { const g = this.g; const y = g.pegTop + gp.row * g.dy; const x = g.bx + g.bw / 2 + Math.sin(this.t * gp.sp + gp.ph) * (g.bw / 2 - g.dx * 0.7); return [x, y]; }
@@ -42,7 +44,7 @@ export class Plinko extends Game {
   }
   drop() {
     if (this.chip || this.left <= 0) return;
-    this.left--; this.chip = { x: this.aimX + rnd(-0.5, 0.5), y: this.g.top + 20, vx: 0, vy: 40, mult: 1, nudges: NUDGES, trail: [], hit: new Set() };
+    this.left--; this.mark('d', this.left); this.chip = { x: this.aimX + rnd(-0.5, 0.5), y: this.g.top + 20, vx: 0, vy: 40, mult: 1, nudges: NUDGES, trail: [], hit: new Set() };
     this.sfx.tone(520, 0.08, { type: 'triangle', vol: 0.3 });
   }
   nudge(x) {
@@ -89,12 +91,19 @@ export class Plinko extends Game {
   }
   land() {
     const c = this.chip; const g = this.g; const i = clamp(Math.floor((c.x - g.bx) / g.dx), 0, 8);
-    const pts = VALUES[i] * c.mult; this.score += pts; this.results.push(pts); if (VALUES[i] === 200) this.coins++;
+    const v0 = this.values[i]; const pts = this.award(v0 * c.mult, 's' + v0); this.results.push(pts); if (v0 === 200) this.coins++;
+    const refund = v0 === 200 ? 2 : v0 === 100 ? 1 : 0; if (refund) { this.left += refund; this.pop(g.bx + g.dx * (i + 0.5), g.slotTop - 44, `+${refund} CHIP${refund > 1 ? 'S' : ''}`, '#c4b5fd', 18); }
+    this.drops++; if (this.drops % 5 === 0) this.levelUp();
     this.flashSlot = i; this.flashT = 0.8; this.chip = null;
     this.pop(g.bx + g.dx * (i + 0.5), g.slotTop - 10, `+${pts}`, pts >= 200 ? '#fde047' : '#22d3ee', pts >= 200 ? 34 : 26);
     this.burst(g.bx + g.dx * (i + 0.5), g.bot - 20, pts >= 100 ? ['#fde047', '#f472b6', '#22d3ee'] : '#22d3ee', pts >= 100 ? 26 : 10, 280, 0.7, 4);
     if (pts >= 100) this.sfx.win(); else this.sfx.tone(440, 0.15, { type: 'triangle', vol: 0.3 });
   }
+  levelUp() { // tougher board every 5 drops: faster golden pegs, big slots move, 0-point slots appear (max 3)
+    this.lvl++; for (const gp of this.golden) gp.sp *= 1.12; const v = [50, 20, 5, 5, 20, 50, 5]; const zeros = Math.min(3, Math.floor((this.lvl - 1) / 2)); for (let z = 0; z < zeros; z++) v[z * 2 % v.length] = 0;
+    const out = Array(9).fill(0); const a = Math.floor(this.r() * 9); let b = Math.floor(this.r() * 9); if (b === a) b = (a + 4) % 9; let c = Math.floor(this.r() * 9); while (c === a || c === b) c = (c + 1) % 9;
+    out[a] = 200; out[b] = 200; out[c] = 100; let k = 0; for (let i = 0; i < 9; i++) if (i !== a && i !== b && i !== c) out[i] = v[k++ % v.length]; this.values = out;
+    this.pop(this.W / 2, this.g.top + 30, `LEVEL ${this.lvl}: SLOTS SHUFFLED`, '#fde047', 20); }
   async load() { this.amb = new Ambient('lounge', 2); const [a, p] = await Promise.all([loadArt({ bg: 'bar-blur.webp', wood: 'wood-dark.webp', metal: 'metal-plate.webp' }), loadAtlas('props')]); this.art = a; this.P = p; }
   render(ctx) {
     const A = this.art || {}; this.photoBg(ctx, A.bg, 'rgba(10,6,20,0.5)'); const g = this.g;
@@ -103,7 +112,7 @@ export class Plinko extends Game {
     ctx.strokeStyle = A.wood ? '#d4a373' : 'rgba(168,85,247,0.6)'; ctx.lineWidth = A.wood ? 5 : 2; ctx.shadowColor = A.wood ? 'rgba(251,191,36,0.5)' : '#a855f7'; ctx.shadowBlur = 10; ctx.stroke(); ctx.restore();
     // slots
     for (let i = 0; i < 9; i++) {
-      const x = g.bx + g.dx * i; const v = VALUES[i]; const hot = this.flashSlot === i && this.flashT > 0;
+      const x = g.bx + g.dx * i; const v = this.values[i]; const hot = this.flashSlot === i && this.flashT > 0;
       const col = v >= 200 ? '#fde047' : v >= 100 ? '#f472b6' : v >= 50 ? '#a855f7' : v >= 20 ? '#3b82f6' : '#334155';
       ctx.save(); ctx.globalAlpha = hot ? 0.95 : 0.55; ctx.fillStyle = col; roundRect(ctx, x + 3, g.slotTop + 8, g.dx - 6, g.slotH - 12, 8); ctx.fill(); ctx.restore();
       this.text(ctx, String(v), x + g.dx / 2, g.slotTop + g.slotH / 2 + 10, { size: Math.min(18, g.dx * 0.32), weight: 900, align: 'center', color: v >= 100 ? '#1a0b2e' : '#fff' });
@@ -127,7 +136,7 @@ export class Plinko extends Game {
     // HUD
     this.hudScore(ctx);
     this.text(ctx, 'CHIPS', this.W - 18, 30, { size: 12, weight: 700, color: '#9aa3d0', align: 'right' });
-    for (let i = 0; i < CHIPS; i++) { const x = this.W - 22 - i * 16; ctx.beginPath(); ctx.arc(x, 48, 6, 0, TAU); ctx.fillStyle = i < this.left ? '#a855f7' : 'rgba(148,163,184,0.25)'; ctx.fill(); }
+    for (let i = 0; i < Math.min(10, this.left); i++) { const x = this.W - 22 - i * 16; ctx.beginPath(); ctx.arc(x, 48, 6, 0, TAU); ctx.fillStyle = i < this.left ? '#a855f7' : 'rgba(148,163,184,0.25)'; ctx.fill(); }
     if (this.results.length) this.text(ctx, `LAST +${this.results[this.results.length - 1]}`, this.W - 18, 82, { size: 13, weight: 700, color: '#22d3ee', align: 'right' });
   }
   drawChip(ctx, x, y, mult, a) {

@@ -10,20 +10,25 @@ const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const hmac = (key, msg) => crypto.createHmac('sha256', key).update(msg).digest('hex');
 
 // Shown verbatim on the giveaway page, the live leaderboard and in the Official Rules.
+// Reese, Oct 10 2026: tie-breaks are SKILL-ONLY. Never first-to-score, fewest attempts or submission time.
+for (const [c, d] of [['tdur', 'INTEGER'], ['skill', 'REAL'], ['playoff_pos', 'INTEGER']]) if (!db.prepare('PRAGMA table_info(giveaway_results)').all().some(x => x.name === c)) db.exec(`ALTER TABLE giveaway_results ADD COLUMN ${c} ${d}`);
+db.exec(`CREATE TABLE IF NOT EXISTS lib_run_metrics (run_id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, game_id TEXT NOT NULL, score INTEGER NOT NULL, m1 REAL, m2 REAL, valid INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL)`);
 const TIEBREAK_RULES = [
   'Higher score wins.',
-  'If scores are tied, whoever reached that score first wins (server timestamp of the run that set it).',
-  'If still tied, the player with fewer attempts (runs in the giveaway window) wins.',
-  'If still tied, the earlier-submitted run (lower run ID) wins.',
+  'If scores are tied, the shorter server-timed run (or runs) to that score wins (timed by our server from run start to finish, not by your device).',
+  'If still tied, the game\'s skill metric from the validated event log wins (for example more drones destroyed, bigger combos or more perfect drops; each game lists its metric).',
+  'If still exactly tied, the tied players play a sudden-death playoff: one run each of the same game with the same seed inside a set window; best score (then the same skill rules) wins, and an exact tie again means another round.',
 ];
+const SKILL_SQL = (alias) => `(SELECT m.m2 FROM lib_run_metrics m WHERE m.run_id = ${alias})`;
 const SCORE_RULE = 'Ranking uses each player\'s best qualifying score: runs must start and finish inside the giveaway window and meet the minimum score. With several linked games, the score is the sum of the best score in each game.';
 const RANDOM_RULE = 'Random-draw giveaways use a verifiable commit-reveal draw. Before the giveaway starts we publish the SHA-256 hash of a secret seed. When it ends we lock the entrant list and publish its SHA-256 hash, then reveal the seed. Each entrant\'s draw key is HMAC-SHA256(seed, entrants_hash + ":" + username), and the lowest keys win in order. Anyone can recompute the result. Each entrant appears once, so nobody can be picked twice.';
 
 const gamesOf = (gid) => db.prepare('SELECT game_id FROM giveaway_games WHERE giveaway_id=? ORDER BY rowid').all(gid).map(r => r.game_id);
 const winnerCount = (g) => g.winner_count > 0 ? g.winner_count : Math.max(1, String(g.prize_tiers || '').split('\n').map(x => x.trim()).filter(Boolean).filter(x => !/random/i.test(x) || g.win_method === 'random').length);
 // SQL expression: max plausible score for a run given server-measured time (same caps as POST /api/score)
-const capSql = () => `(CASE r.game_id ${cfg.GAMES.map(x => `WHEN '${x.id}' THEN MIN(${x.ac.max}, ${x.ac.perSec} * (r.created_at - r.started_at) / 1000.0 + ${x.ac.grace})`).join(' ')} ELSE 0 END)`;
-const capFor = (run) => { const a = cfg.GAME_MAP[run.game_id].ac; return Math.min(a.max, Math.floor(a.perSec * (run.created_at - run.started_at) / 1000 + a.grace)); };
+// v7: per-second rate ceiling with an optional ramp term (cfg.capOf); retired games keep their old caps for history
+const capSql = () => `(CASE r.game_id ${[...cfg.GAMES, ...cfg.RETIRED, ...(cfg.LIB_GAMES || [])].map(x => /* [games-lib hook] */ { const T = '((r.created_at - r.started_at) / 1000.0)'; return `WHEN '${x.id}' THEN MIN(${x.ac.max}, ${x.ac.perSec} * ${T} + ${0.5 * (x.ac.ramp || 0)} * ${T} * ${T} + ${x.ac.grace})`; }).join(' ')} ELSE 0 END)`;
+const capFor = (run) => { const g = cfg.gameInfo(run.game_id); return g ? cfg.capOf(g.ac, (run.created_at - run.started_at) / 1000) : 0; };
 
 const U = 'u.id AS user_id, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect, u.created_at AS joined_at';
 const cache = new Map();
@@ -36,21 +41,24 @@ function liveStandings(g) {
   const key = `${g.id}:${g.updated_at}:${sig.m}:${sig.c}:${dq.c}:${dq.m}:${games.join()}:${en.c}:${en.j}:${en.l}`;
   const hit = cache.get(g.id); if (hit && hit.key === key && now() - hit.at < 5000) return hit.rows;
   const ph = games.map(() => '?').join(',');
-  const rows = db.prepare(`
-    WITH w AS (SELECT r.id, r.user_id, r.game_id, r.score, r.created_at FROM runs r
-               WHERE r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql()} OR r.verify = 'cleared')),
+  const X = module.exports.scoring; // v7 builder score rules (src/admin-scoring.js); legacy giveaways keep this query
+  const rows = X && X.custom(g) ? X.standings(g, games, capSql(), E()) : db.prepare(`
+    WITH w AS (SELECT r.id, r.user_id, r.game_id, r.score, r.created_at, (r.created_at - r.started_at) AS dur, ${SKILL_SQL('r.id')} AS m2 FROM runs r
+               WHERE r.event_id = @gid AND r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql()} OR r.verify = 'cleared')),
     att AS (SELECT user_id, COUNT(*) AS attempts FROM w GROUP BY user_id),
     q AS (SELECT * FROM w WHERE score >= @min),
     -- best run per player per game: highest score, then the first run that reached it
-    b AS (SELECT user_id, game_id, id, score, created_at, ROW_NUMBER() OVER (PARTITION BY user_id, game_id ORDER BY score DESC, created_at ASC, id ASC) AS rn FROM q),
+    b AS (SELECT user_id, game_id, id, score, created_at, dur, m2, ROW_NUMBER() OVER (PARTITION BY user_id, game_id ORDER BY score DESC, dur ASC, m2 DESC, id ASC) AS rn FROM q),
     -- total = sum of per-game bests; "reached at" = when the last of those bests was set (that run is the deciding run)
-    bb AS (SELECT user_id, id, created_at, SUM(score) OVER (PARTITION BY user_id) AS tot, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)
-    SELECT ${U}, bb.tot AS score, bb.created_at AS reached_at, bb.id AS best_run_id, att.attempts
+    bb AS (SELECT user_id, id, created_at, SUM(score) OVER (PARTITION BY user_id) AS tot, SUM(dur) OVER (PARTITION BY user_id) AS tdur,
+          CASE WHEN COUNT(m2) OVER (PARTITION BY user_id) = COUNT(*) OVER (PARTITION BY user_id) THEN SUM(m2) OVER (PARTITION BY user_id) END AS skill,
+          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)
+    SELECT ${U}, bb.tot AS score, bb.created_at AS reached_at, bb.id AS best_run_id, att.attempts, bb.tdur, bb.skill
     FROM bb JOIN att ON att.user_id = bb.user_id JOIN users u ON u.id = bb.user_id
-    WHERE bb.rl = 1 AND u.banned = 0 AND NOT EXISTS (SELECT 1 FROM giveaway_dq d WHERE d.giveaway_id = @gid AND d.user_id = bb.user_id)
+    WHERE bb.rl = 1 AND u.banned = 0 AND u.shadow_banned = 0 AND NOT EXISTS (SELECT 1 FROM giveaway_dq d WHERE d.giveaway_id = @gid AND d.user_id = bb.user_id)
     ${g.require_join ? 'AND EXISTS (SELECT 1 FROM giveaway_entries e WHERE e.giveaway_id = @gid AND e.user_id = bb.user_id AND e.left_at IS NULL)' : ''}
-    ORDER BY score DESC, reached_at ASC, att.attempts ASC, best_run_id ASC`).all(...games, { s: g.start_at, e: g.end_at, min: g.min_score || 0, gid: g.id });
-  tag(rows); rows.forEach(r => { r.weight = E().weightOf(g, r.attempts); });
+    ORDER BY score DESC, bb.tdur ASC, (bb.skill IS NULL) ASC, bb.skill DESC, u.id ASC`).all(...games, { s: g.start_at, e: g.end_at, min: g.min_score || 0, gid: g.id });
+  tag(rows); rows.forEach(r => { if (r.weight == null) r.weight = E().weightOf(g, r.attempts); });
   cache.set(g.id, { key, rows, at: now() });
   if (cache.size > 20) for (const [id, c] of cache) if (now() - c.at > 5000) cache.delete(id); // only a 5 s cache: keep it small
   return rows;
@@ -60,7 +68,7 @@ function tag(rows) {
   rows.forEach((r, i) => {
     r.rank = i + 1; r.runs = r.attempts; r.last_at = r.reached_at; r.first_at = r.reached_at;
     const p = rows[i - 1]; r.tiebreak = null;
-    if (p && p.score === r.score) r.tiebreak = p.reached_at !== r.reached_at ? 'time' : p.attempts !== r.attempts ? 'attempts' : 'run';
+    if (p && p.score === r.score) { r.tiebreak = tbOf(p, r); if (r.tiebreak === 'exact') { p.exact_tie = true; r.exact_tie = true; } }
   });
   return rows;
 }
@@ -69,7 +77,7 @@ function excludedRuns(g) {
   const games = gamesOf(g.id); if (!games.length) return [];
   const ph = games.map(() => '?').join(',');
   return db.prepare(`SELECT r.id, r.user_id, u.username, r.game_id, r.score, r.started_at, r.created_at, r.duration_ms, r.ip_hash FROM runs r JOIN users u ON u.id = r.user_id
-    WHERE r.game_id IN (${ph}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? AND (r.held <> 0 OR (r.score > ${capSql()} AND r.verify <> 'cleared')) ORDER BY r.score DESC LIMIT 200`)
+    WHERE r.event_id = ${+g.id} AND r.game_id IN (${ph}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? AND (r.held <> 0 OR (r.score > ${capSql()} AND r.verify <> 'cleared')) ORDER BY r.score DESC LIMIT 200`)
     .all(...games, g.start_at, g.start_at, g.end_at).map(r => ({ ...r, cap: capFor(r) }));
 }
 
@@ -98,20 +106,21 @@ function finalize(g, actor = 'system', opts = {}) {
   g = ensureCommit(g);
   cache.delete(g.id);
   const rows = liveStandings(g).map(r => ({ ...r })); const t = now();
-  const weighted = g.win_method === 'random' && g.weight_mode === 'activity';
+  const drawn = g.win_method === 'random' || g.win_method === 'hybrid'; // hybrid (v7 builder): top win_split by rank, the rest drawn
+  const weighted = drawn && (g.weight_mode === 'activity' || rows.some(r => r.weight > 1));
   rows.forEach(r => { r.weighted = weighted; if (!weighted) r.weight = 1; });
   const hash = sha256(rows.map(lineOf).join('\n'));
-  if (g.win_method === 'random') {
+  if (drawn) {
     rows.forEach(r => { r.draw_key = hmac(g.draw_seed, `${hash}:${r.username}`); });
     const k = (r) => weighted ? wKey(r.draw_key, r.weight) : 0;
     [...rows].sort((a, b) => weighted ? (k(a) - k(b)) || (a.draw_key < b.draw_key ? -1 : 1) : a.draw_key < b.draw_key ? -1 : 1).forEach((r, i) => { r.draw_pos = i + 1; });
   }
-  const ins = db.prepare('INSERT INTO giveaway_results (giveaway_id, rank, user_id, username, score, best_run_id, reached_at, attempts, draw_key, draw_pos, locked_at, weight) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
+  const ins = db.prepare('INSERT INTO giveaway_results (giveaway_id, rank, user_id, username, score, best_run_id, reached_at, attempts, draw_key, draw_pos, locked_at, weight, tdur, skill) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
   const done = db.transaction(() => {
     const claim = db.prepare('UPDATE giveaways SET finalized_at=?, entrants_hash=? WHERE id=? AND finalized_at IS NULL').run(t, hash, g.id);
     if (claim.changes !== 1) return false;
-    for (const r of rows) ins.run(g.id, r.rank, r.user_id, r.username, r.score, r.best_run_id, r.reached_at, r.attempts, r.draw_key || null, r.draw_pos || null, t, weighted ? r.weight : null);
-    audit(g.id, actor, 'finalized', null, { entrants: rows.length, entrants_hash: hash, method: g.win_method, winners: winnerCount(g), ...(g.win_method === 'random' ? { seed_revealed: g.draw_seed, draw_commit: g.draw_commit } : {}) });
+    for (const r of rows) ins.run(g.id, r.rank, r.user_id, r.username, r.score, r.best_run_id, r.reached_at, r.attempts, r.draw_key || null, r.draw_pos || null, t, weighted ? r.weight : null, r.tdur ?? null, r.skill ?? null);
+    audit(g.id, actor, 'finalized', null, { entrants: rows.length, entrants_hash: hash, method: g.win_method, winners: winnerCount(g), ...(drawn ? { seed_revealed: g.draw_seed, draw_commit: g.draw_commit } : {}) });
     return true;
   })();
   if (!done) return db.prepare('SELECT * FROM giveaways WHERE id=?').get(g.id);
@@ -135,9 +144,12 @@ function notifyProvisional(g, w, quiet) {
 function results(g) {
   if (!g.finalized_at) return null;
   const snap = db.prepare(`SELECT r.*, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect FROM giveaway_results r LEFT JOIN users u ON u.id = r.user_id WHERE r.giveaway_id=? ORDER BY r.rank`).all(g.id);
+  // playoff outcome (admin applied): reorder the tied group by playoff finishing position
+  if (snap.some(r => r.playoff_pos != null)) snap.sort((a, b) => (b.score - a.score) || ((a.tdur ?? 9e15) - (b.tdur ?? 9e15)) || ((b.skill ?? -1e15) - (a.skill ?? -1e15)) || ((a.playoff_pos ?? 1e9) - (b.playoff_pos ?? 1e9)) || (a.rank - b.rank));
   const dq = new Map(db.prepare('SELECT user_id, reason, created_at FROM giveaway_dq WHERE giveaway_id=?').all(g.id).map(d => [d.user_id, d]));
   const conf = new Map(db.prepare('SELECT user_id, created_at FROM giveaway_confirm WHERE giveaway_id=?').all(g.id).map(c => [c.user_id, c]));
-  const order = g.win_method === 'random' ? [...snap].sort((a, b) => a.draw_pos - b.draw_pos) : snap;
+  let order = g.win_method === 'random' ? [...snap].sort((a, b) => a.draw_pos - b.draw_pos) : snap;
+  if (g.win_method === 'hybrid') { const top = snap.filter(r => r.user_id != null && !dq.has(r.user_id)).slice(0, g.win_split || 0); const s = new Set(top); order = [...top, ...snap.filter(r => !s.has(r)).sort((a, b) => a.draw_pos - b.draw_pos)]; }
   let place = 0; const n = winnerCount(g);
   for (const r of order) {
     const d = r.user_id != null ? dq.get(r.user_id) : null;
@@ -147,10 +159,15 @@ function results(g) {
     r.state = r.winner ? (conf.has(r.user_id) ? 'confirmed' : 'pending') : null;
   }
   tagSnap(snap);
-  return { finalized_at: g.finalized_at, method: g.win_method, winner_count: n, entrants: snap.length, entrants_hash: g.entrants_hash,
+  // an unresolved exact skill tie that touches a winning place needs a sudden-death playoff before anyone is confirmed
+  const tiedWin = g.win_method === 'random' ? [] : order.filter(r => r.exact_tie && !r.disqualified && r.place != null && r.place <= n + 1 && snap.some(o => o !== r && o.exact_tie && o.score === r.score && o.tdur === r.tdur && o.skill === r.skill && o.place != null && (o.place <= n || r.place <= n)));
+  for (const r of tiedWin) if (r.winner && r.state !== 'confirmed') r.state = 'playoff';
+  const playoff_needed = tiedWin.length ? tiedWin.map(r => ({ user_id: r.user_id, username: r.username, score: r.score })) : null;
+  return { playoff_needed, finalized_at: g.finalized_at, method: g.win_method, winner_count: n, entrants: snap.length, entrants_hash: g.entrants_hash,
     standings: order, winners: order.filter(r => r.winner).map(r => ({ place: r.place, user_id: r.user_id, username: r.username, score: r.score, state: r.state, rank: r.rank })) };
 }
-function tagSnap(rows) { rows.forEach((r, i) => { const p = rows[i - 1]; r.tiebreak = p && p.score === r.score ? (p.reached_at !== r.reached_at ? 'time' : p.attempts !== r.attempts ? 'attempts' : 'run') : null; }); }
+function tbOf(p, r) { return (p.tdur ?? null) !== (r.tdur ?? null) ? 'time' : (p.skill ?? null) !== (r.skill ?? null) ? 'skill' : (p.playoff_pos != null && r.playoff_pos != null && p.playoff_pos !== r.playoff_pos) ? 'playoff' : 'exact'; }
+function tagSnap(rows) { rows.forEach((r, i) => { const p = rows[i - 1]; r.tiebreak = p && p.score === r.score ? tbOf(p, r) : null; if (r.tiebreak === 'exact') { p.exact_tie = true; r.exact_tie = true; } }); }
 
 function disqualify(g, userId, reason, actor = 'admin') {
   reason = String(reason || '').trim().slice(0, 300); if (!reason) return { ok: false, error: 'A reason is required.' };
@@ -178,6 +195,7 @@ function confirm(g, userId, actor = 'admin', note = '') {
   const res = results(g); if (!res) return { ok: false, error: 'Results are not final yet. The giveaway must end (or be ended early) first.' };
   const w = res.winners.find(x => x.user_id === userId); if (!w) return { ok: false, error: 'Only a current winning place can be confirmed.' };
   if (w.state === 'confirmed') return { ok: false, error: 'Already confirmed.' };
+  if (w.state === 'playoff') return { ok: false, error: 'This place is an exact skill tie. Run the sudden-death playoff from the event first.' };
   const t = now();
   db.prepare('INSERT INTO giveaway_confirm (giveaway_id, user_id, place, note, created_at) VALUES (?,?,?,?,?)').run(g.id, userId, w.place, String(note || '').slice(0, 300), t);
   db.prepare('INSERT OR IGNORE INTO winners (giveaway_id, user_id, method, score, drawn_at) VALUES (?,?,?,?,?)').run(g.id, userId, g.win_method === 'random' ? 'random' : 'top', w.score, t);
@@ -195,9 +213,9 @@ function verifyBundle(g) {
   if (!res) return out;
   const lines = db.prepare('SELECT * FROM giveaway_results WHERE giveaway_id=? ORDER BY rank').all(g.id).map(r => lineOf({ ...r, weighted: r.weight != null }));
   out.entrants_hash = g.entrants_hash; out.entrant_lines = lines; out.hash_ok = sha256(lines.join('\n')) === g.entrants_hash;
-  if (g.win_method === 'random') {
+  if (g.win_method === 'random' || g.win_method === 'hybrid') {
     out.seed = g.draw_seed; out.seed_ok = sha256(g.draw_seed) === g.draw_commit;
-    out.weighted = g.weight_mode === 'activity'; out.weight_rule = 'key = -ln((int(first 13 hex of HMAC, base 16) + 1) / (2^52 + 1)) / weight; lowest key wins';
+    out.weighted = g.weight_mode === 'activity' || res.standings.some(r => r.weight > 1); out.weight_rule = 'key = -ln((int(first 13 hex of HMAC, base 16) + 1) / (2^52 + 1)) / weight; lowest key wins';
     out.draw_order = res.standings.map(r => ({ pos: r.draw_pos, username: r.username, key: r.draw_key, weight: r.weight || 1, disqualified: r.disqualified }));
   }
   return out;
@@ -212,4 +230,4 @@ function sweep() {
   catch (e) { console.error('finalize sweep failed', e); } finally { sweeping = false; }
   return n;
 }
-module.exports = { TIEBREAK_RULES, SCORE_RULE, RANDOM_RULE, liveStandings, excludedRuns, finalize, results, disqualify, reinstate, confirm, verifyBundle, ensureCommit, audit, sweep, winnerCount, capFor, gamesOf, sha256, hmac, lineOf };
+module.exports = { clearCache: () => cache.clear(), TIEBREAK_RULES, SCORE_RULE, RANDOM_RULE, liveStandings, excludedRuns, finalize, results, disqualify, reinstate, confirm, verifyBundle, ensureCommit, audit, sweep, winnerCount, capFor, gamesOf, sha256, hmac, lineOf };
