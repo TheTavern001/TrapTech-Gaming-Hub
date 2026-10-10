@@ -18,6 +18,10 @@ const { gameBoard, globalBoard, ranked, giveawayEntrants, giveawayStatus, active
 const libraryGames = () => require('./games-lib').games;
 const resolveGame = (id) => cfg.GAME_MAP[id] || libraryGames().find(g => g.id === id) || null;
 const HUB_VERSION = 'V1';
+const publicPlayerId = (id) => `TH-${String(Number(id) || 0).padStart(6, '0')}`;
+// Set HUB_OWNER_USER_ID to the stable numeric users.id for the founder account in the production environment.
+// Never accept ownership/badge claims from request parameters or player-editable profile fields.
+const isFounder = (id) => /^\\d+$/.test(String(process.env.HUB_OWNER_USER_ID || '')) && Number(process.env.HUB_OWNER_USER_ID) === Number(id);
 
 const app = express();
 app.set('trust proxy', true);
@@ -145,7 +149,7 @@ app.post('/api/auth/signup', limiter('signup', 10, 3600e3), (req, res) => {
   logActivity('player', `New player registered: ${username}`, user.id);
   const session = startSession(req, res, user);
   const unlocked = ach.evaluate(user.id, { games: [] }).fresh;
-  res.json({ ok: true, user: { username, cos: ach.publicCos({}) }, unlocked, referred: !!referrer, session });
+  res.json({ ok: true, user: { username, user_id: publicPlayerId(user.id), founder: isFounder(user.id), identity_badge: isFounder(user.id) ? 'FOUNDER' : null, cos: ach.publicCos({}) }, unlocked, referred: !!referrer, session });
 });
 
 app.post('/api/auth/signin', limiter('signin', 20, 15 * 60e3), (req, res) => {
@@ -154,7 +158,7 @@ app.post('/api/auth/signin', limiter('signin', 20, 15 * 60e3), (req, res) => {
   if (!u || !bcrypt.compareSync(password, u.pass_hash)) return bad(res, 401, 'Wrong username or password.');
   if (u.banned) return bad(res, 403, 'This account has been suspended.');
   const session = startSession(req, res, u);
-  res.json({ ok: true, user: { username: u.username, cos: ach.publicCos(u) }, session });
+  res.json({ ok: true, user: { username: u.username, user_id: publicPlayerId(u.id), founder: isFounder(u.id), identity_badge: isFounder(u.id) ? 'FOUNDER' : null, cos: ach.publicCos(u) }, session });
 });
 
 app.post('/api/auth/signout', (req, res) => { setCookie(req, res, 'gh_sess', '', 0); res.json({ ok: true }); });
@@ -170,7 +174,7 @@ app.post('/api/auth/password', requireUser, limiter('pw', 10, 3600e3), (req, res
 
 app.get('/api/me', (req, res) => {
   const u = currentUser(req);
-  res.json({ ok: true, user: u ? { username: u.username, created_at: u.created_at, cos: ach.publicCos(u), potato: db.prepare('SELECT potato FROM users WHERE id=?').get(u.id).potato, ...H.meExtras(u), ...(H.meV5 ? H.meV5(u) : {}) } : null, now: now() });
+  res.json({ ok: true, user: u ? { username: u.username, user_id: publicPlayerId(u.id), founder: isFounder(u.id), identity_badge: isFounder(u.id) ? 'FOUNDER' : null, created_at: u.created_at, cos: ach.publicCos(u), potato: db.prepare('SELECT potato FROM users WHERE id=?').get(u.id).potato, ...H.meExtras(u), ...(H.meV5 ? H.meV5(u) : {}) } : null, now: now(), version: HUB_VERSION });
 });
 
 // ---------- games & leaderboards ----------
@@ -203,7 +207,7 @@ app.get('/api/leaderboard', (req, res) => {
   res.json({ ok: true, game, period, total: rows.length, rows: rows.slice(0, limit).map(publicRow), me: mine && publicRow(mine), now: now() });
 });
 Object.assign(H, { now, bad, limiter, logActivity, str });
-const publicRow = (r) => ({ rank: r.rank, username: r.username, score: r.score, runs: r.runs, last_at: r.last_at, demo: !!r.is_demo, cos: ach.publicCos(r), ...(r.tiebreak !== undefined ? { tiebreak: r.tiebreak || null, exact_tie: !!r.exact_tie } : {}) });
+const publicRow = (r) => ({ rank: r.rank, username: r.username, user_id: publicPlayerId(r.user_id), founder: isFounder(r.user_id), identity_badge: isFounder(r.user_id) ? 'FOUNDER' : null, score: r.score, runs: r.runs, last_at: r.last_at, demo: !!r.is_demo, cos: ach.publicCos(r), ...(r.tiebreak !== undefined ? { tiebreak: r.tiebreak || null, exact_tie: !!r.exact_tie } : {}) });
 
 // ---------- runs / anti-cheat ----------
 app.post('/api/run/start', requireUser, (req, res) => {
