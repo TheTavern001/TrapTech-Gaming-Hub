@@ -39,6 +39,7 @@ const vendored = games.filter(g => g.build === 'vendored');
 const tested = new Set(Object.keys(e2e || {}));
 const categoryCounts = Object.fromEntries(CATS.map(cat => [cat, games.filter(g => g.category === cat).length]));
 const gameRows = [];
+const catalogBySlug = new Map((catalog && Array.isArray(catalog.games) ? catalog.games : []).map(g => [g.slug, g]));
 
 if (!exists(DOC)) issues.push('Missing generated docs/GAMES-LIB.md');
 if (!catalog) issues.push('Missing or invalid public/games-lib/catalog.json');
@@ -54,6 +55,28 @@ for (const g of games) {
   const problems = [];
 
   if (!exists(dir)) problems.push('missing game directory');
+  const catalogGame = catalogBySlug.get(g.slug);
+  if (catalog && !catalogGame) problems.push('missing from catalog.json');
+  if (catalogGame) {
+    for (const key of ['id', 'title', 'category', 'url', 'scoring', 'build', 'giveaway', 'endless_mode']) {
+      if (catalogGame[key] !== g[key]) problems.push('catalog mismatch: ' + key);
+    }
+    if (catalogGame.art && typeof catalogGame.art === 'string' && catalogGame.art.startsWith('/')) {
+      const artPath = path.join(ROOT, catalogGame.art.replace(/^\\//, ''));
+      if (!exists(artPath)) warnings.push(g.slug + ': catalog art file missing (' + catalogGame.art + ')');
+    }
+  }
+  if (exists(entry)) {
+    const html = fs.readFileSync(entry, 'utf8');
+    for (const match of html.matchAll(/<script\\b[^>]*\\bsrc=["']([^"']+)["'][^>]*>/gi)) {
+      const src = match[1];
+      if (/^(https?:)?\\/\\//i.test(src) || src.startsWith('data:')) continue;
+      const localPath = path.resolve(dir, src);
+      if (!localPath.startsWith(path.resolve(PUB) + path.sep) || !exists(localPath)) {
+        problems.push('broken local script reference: ' + src);
+      }
+    }
+  }
   if (g.build === 'built' && !exists(code)) problems.push('missing game.js for built game');
   if (g.build === 'vendored' && !exists(code) && !exists(entry)) problems.push('missing vendored entry/build');
   if (g.build === 'built' && !exists(entry)) warnings.push(g.slug + ': missing generated index.html (run tools/games-lib-build.js)');
@@ -76,6 +99,10 @@ const docRows = countDocRows(docText);
 if (docRows !== games.length) issues.push('Registry/docs mismatch: source registry has ' + games.length + ' games, docs/GAMES-LIB.md has ' + docRows + ' rows.');
 if (catalog && Array.isArray(catalog.games) && catalog.games.length !== games.length) {
   issues.push('Registry/catalog mismatch: source registry has ' + games.length + ' games, catalog.json has ' + catalog.games.length + ' entries.');
+}
+if (catalog && Array.isArray(catalog.games)) {
+  const extra = catalog.games.filter(g => !games.some(source => source.slug === g.slug)).map(g => g.slug);
+  if (extra.length) issues.push('Catalog has unregistered games: ' + extra.join(', '));
 }
 if (catalog && (!Array.isArray(catalog.games) || !Array.isArray(catalog.categories))) issues.push('catalog.json has an unexpected schema.');
 if (Array.isArray(EXTERNAL) && EXTERNAL.length) issues.push('External game links exist; these violate the no-redirect library requirement.');
