@@ -616,3 +616,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Art: painted sky with clouds, hills, pine line, mown range stripes, "RANGE" sign, layered target face on a wooden stand, arrow flight shrinking toward the target, stuck arrows, first-person bow with drawn string and leaf grip, wind flag.
 - Fix: my end counter was named `g.end`, which overwrote Kit's `g.end()` game-over function. The first commit (3a6e6d9) went in with a FAIL I missed; renamed it to `g.endN`. Perf: target faces cached per radius and no shadowBlur in the HUD (throttled fps 20 -> 56).
 - Tests: compensating bot (with release jitter) finished 5 ends without losing a life. e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
+
+## Spot Kick (Sports: Soccer Penalty Challenge) - DONE (2026-10-10 07:57 ET)
+- Source hunt: GitHub "penalty shootout html5" (Phaser clones with no licence or using club/FIFA marks), itch.io "penalty" (Unity, asset-locked), js13k "kick" (none). Decision: build our own.
+- Gameplay: swipe to shoot. Direction aims, swipe speed lifts the ball, and a bent swipe curls it in flight. The keeper reads the shot with an error band, dives after a reaction delay, and reaches with body + arms. Error and reaction shrink and reach grows as your goal count rises. Corners score more (100-200), shots through the glowing ring score x2, and the streak multiplier goes up to x4. Wide, post and saved all count as misses; 3 end the run.
+- Art: night stadium with crowd-dot stands and floodlight glows, cannabis-league ad boards, striped pitch with perspective box lines and spot, netted goal with depth, an animated keeper (dive tilt, arms, gloves), shaded ball with green panels, result pop-ups.
+- Tests: random corner-swiping bot scored about 30-40%. e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7/10.
