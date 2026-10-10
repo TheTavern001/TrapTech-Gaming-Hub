@@ -24,7 +24,7 @@
     '###################'];
   const T = 20, OX = 10, OY = 110, COLS = MAP[0].length, ROWS = MAP.length;
   const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-  const GC = ['#ef4444', '#f472b6', '#22d3ee', '#f97316'];
+  const GC = ['#ff5a6e', '#c77dff', '#3fd8c8', '#ffa94d'];
   const wall = (g, x, y) => { if (x < 0 || x >= COLS) return false; const ch = (MAP[y] || '')[x]; return ch === '#' || ch === '-' ; };
   function reset(g) { g.pl = { x: 9, y: 15, px: 9, py: 15, d: [0, 0], nd: [-1, 0], prog: 0 }; g.gh = [[9, 7], [8, 9], [9, 9], [10, 9]].map(([x, y], i) => ({ x, y, d: [0, 0], prog: 0, home: i * 2.5, fr: 0, eaten: false, i })); g.fr = 0; g.ready = 1.2; }
   Kit.run({ id: 'gl-maze-muncher', title: 'MAZE MUNCHER', help: 'Arrows / swipe to steer\nEat every dot, power pellets turn the hunters', bg: '#03051a',
@@ -58,16 +58,35 @@
       g.hud = 'MAZE ' + g.lvl + '  ' + '\u2665'.repeat(g.lives);
     },
     draw(g, c) {
-      for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) { const ch = MAP[y][x]; if (ch === '#') { c.fillStyle = '#1e1b6b'; c.fillRect(OX + x * T + 1, OY + y * T + 1, T - 2, T - 2); c.strokeStyle = '#6366f1'; c.lineWidth = 1.5; c.strokeRect(OX + x * T + 3, OY + y * T + 3, T - 6, T - 6); } if (ch === '-') { c.fillStyle = '#f472b6'; c.fillRect(OX + x * T, OY + y * T + 8, T, 4); } }
-      c.fillStyle = '#fde68a'; for (const k of g.dots) { const [x, y] = k.split(','); c.fillRect(OX + x * T + 8, OY + y * T + 8, 4, 4); }
-      for (const k of g.pw) { const [x, y] = k.split(','); Kit.glow(c, '#fde68a', 10); Kit.circ(c, OX + x * T + 10, OY + y * T + 10, 5 + Math.sin(g.t * 8) * 1.5, '#fde68a'); Kit.noGlow(c); }
-      const p = g.pl; const px = OX + (p.x + p.d[0] * p.prog) * T + 10, py = OY + (p.y + p.d[1] * p.prog) * T + 10; const ang = Math.atan2(p.d[1] || p.nd[1], p.d[0] || p.nd[0]); const m = 0.25 + 0.25 * Math.abs(Math.sin(g.t * 14));
-      Kit.glow(c, '#fbbf24', 14); c.fillStyle = '#fbbf24'; c.beginPath(); c.moveTo(px, py); c.arc(px, py, 9, ang + m, ang + Math.PI * 2 - m); c.fill(); Kit.noGlow(c);
+      c.drawImage(mazeLayer(g.W, g.H), 0, 0, g.W, g.H);
+      for (const k of g.dots) { const [x, y] = k.split(','); const cx = OX + x * T + 10, cy = OY + y * T + 10; c.fillStyle = 'rgba(255,214,120,.25)'; c.beginPath(); c.arc(cx, cy, 4, 0, 7); c.fill(); c.fillStyle = '#ffe6a8'; c.beginPath(); c.arc(cx, cy, 2.1, 0, 7); c.fill(); }
+      for (const k of g.pw) { const [x, y] = k.split(','); const cx = OX + x * T + 10, cy = OY + y * T + 10, s = 1 + Math.sin(g.t * 6) * 0.12; c.save(); c.translate(cx, cy); c.scale(s, s); c.shadowColor = '#7dff9a'; c.shadowBlur = 12; leaf(c, 0, 0, 8, '#6fe38a'); c.restore(); }
+      const p = g.pl; const px = OX + (p.x + p.d[0] * p.prog) * T + 10, py = OY + (p.y + p.d[1] * p.prog) * T + 10; const ang = Math.atan2(p.d[1] || p.nd[1], p.d[0] || p.nd[0]); const m = 0.06 + 0.32 * Math.abs(Math.sin(g.t * 13));
+      c.save(); c.translate(px, py); c.shadowColor = 'rgba(255,220,90,.7)'; c.shadowBlur = 14; const hg = c.createRadialGradient(-3, -4, 1, 0, 0, 10); hg.addColorStop(0, '#fff6c0'); hg.addColorStop(0.45, '#ffd23f'); hg.addColorStop(1, '#e09a10'); c.fillStyle = hg; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 9.5, ang + m, ang + Math.PI * 2 - m); c.closePath(); c.fill(); c.shadowBlur = 0;
+        c.save(); c.rotate(-0.3); leaf(c, 0, -10, 4.5, '#4fd16e'); c.restore();
+        const ex = Math.cos(ang - 1.1) * 4.5, ey = Math.sin(ang - 1.1) * 4.5 - (Math.abs(Math.cos(ang)) > 0.5 ? 0 : 0); c.fillStyle = '#2a1a05'; c.beginPath(); c.arc(ex, Math.min(ey, -1.5), 1.6, 0, 7); c.fill(); c.restore();
       for (const h of g.gh) { const hx = OX + (h.x + h.d[0] * h.prog) * T + 10, hy = OY + (h.y + h.d[1] * h.prog) * T + 10;
-        if (!h.eaten) { const col = h.fr > 0 ? (h.fr < 2 && Math.sin(g.t * 20) > 0 ? '#fff' : '#3b82f6') : GC[h.i]; c.fillStyle = col; c.beginPath(); c.arc(hx, hy - 1, 9, Math.PI, 0); c.lineTo(hx + 9, hy + 9); for (let i = 0; i < 4; i++) c.lineTo(hx + 9 - (i + 0.5) * 4.5, hy + 9 - ((i + Math.floor(g.t * 8)) % 2) * 4); c.lineTo(hx - 9, hy + 9); c.fill(); }
-        Kit.circ(c, hx - 3.5, hy - 2, 3, '#fff'); Kit.circ(c, hx + 3.5, hy - 2, 3, '#fff'); Kit.circ(c, hx - 3.5 + h.d[0] * 1.3, hy - 2 + h.d[1] * 1.3, 1.5, '#111'); Kit.circ(c, hx + 3.5 + h.d[0] * 1.3, hy - 2 + h.d[1] * 1.3, 1.5, '#111'); }
-      if (g.ready > 0 && g.state === 'play') g.txt('READY!', g.W / 2, OY + 11 * T + 10, 20, '#fbbf24');
+        if (!h.eaten) { const fr = h.fr > 0, blink = fr && h.fr < 2 && Math.sin(g.t * 20) > 0; wisp(c, hx + (fr ? Math.sin(g.t * 40) * 0.6 : 0), hy, fr ? (blink ? '#f2f6ff' : '#5b7cff') : GC[h.i], g.t + h.i, fr); }
+        if (!h.fr || h.eaten) { for (const sx of [-3.6, 3.6]) { c.fillStyle = '#fff'; c.beginPath(); c.ellipse(hx + sx, hy - 2, 2.6, 3.2, 0, 0, 7); c.fill(); c.fillStyle = '#16123a'; c.beginPath(); c.arc(hx + sx + h.d[0] * 1.3, hy - 2 + h.d[1] * 1.4, 1.4, 0, 7); c.fill(); } }
+        else { c.fillStyle = '#fff'; c.fillRect(hx - 4.5, hy - 3, 2.2, 2.2); c.fillRect(hx + 2.3, hy - 3, 2.2, 2.2); c.strokeStyle = '#fff'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i <= 4; i++) c.lineTo(hx - 5 + i * 2.5, hy + 3 + (i % 2) * 1.6); c.stroke(); } }
+      if (g.ready > 0 && g.state === 'play') g.txt('READY!', g.W / 2, OY + 11 * T + 10, 20, '#ffd23f');
     } });
+  function leaf(c, x, y, r, col) { c.save(); c.translate(x, y); c.fillStyle = col; for (let i = -2; i <= 2; i++) { c.save(); c.rotate(i * 0.55); c.beginPath(); c.ellipse(0, -r * (0.55 - Math.abs(i) * 0.08), r * 0.2, r * (0.6 - Math.abs(i) * 0.1), 0, 0, 7); c.fill(); c.restore(); } c.restore(); }
+  // enemies are original "haze wisps": soft cloud bodies with trailing curls
+  function wisp(c, x, y, col, t, fr) { c.save(); c.translate(x, y); c.shadowColor = col; c.shadowBlur = 10; const gr = c.createRadialGradient(-2, -4, 1, 0, 0, 12); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.25, col); gr.addColorStop(1, col); c.fillStyle = gr; c.globalAlpha = fr ? 0.85 : 0.95;
+    c.beginPath(); c.arc(0, -2, 8.5, Math.PI, 0); for (let i = 0; i <= 6; i++) { const xx = 8.5 - i * (17 / 6); c.lineTo(xx, 6 + Math.sin(t * 9 + i * 1.3) * 2.2 + (i % 2) * 1.5); } c.closePath(); c.fill();
+    c.globalAlpha = 0.35; c.beginPath(); c.arc(-6, -6, 3.5, 0, 7); c.arc(6, -7, 3, 0, 7); c.fill(); c.restore(); }
+  let ML = null; function mazeLayer(W, H) { if (ML) return ML; const cv = document.createElement('canvas'); cv.width = W * 2; cv.height = H * 2; const c = cv.getContext('2d'); c.scale(2, 2);
+    const bg = c.createRadialGradient(W / 2, H * 0.45, 30, W / 2, H / 2, H * 0.75); bg.addColorStop(0, '#0f1f3a'); bg.addColorStop(1, '#03051a'); c.fillStyle = bg; c.fillRect(0, 0, W, H);
+    const isW = (x, y) => y >= 0 && y < ROWS && x >= 0 && x < COLS && MAP[y][x] === '#';
+    const path = () => { c.beginPath(); for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (isW(x, y)) { const cx = OX + x * T + 10, cy = OY + y * T + 10; c.moveTo(cx, cy); c.lineTo(cx + 0.01, cy); if (isW(x + 1, y)) { c.moveTo(cx, cy); c.lineTo(cx + T, cy); } if (isW(x, y + 1)) { c.moveTo(cx, cy); c.lineTo(cx, cy + T); } } };
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    path(); c.shadowColor = '#4fe3a0'; c.shadowBlur = 14; c.strokeStyle = '#1f8a66'; c.lineWidth = 13; c.stroke(); c.shadowBlur = 0;
+    path(); c.strokeStyle = '#7dffc4'; c.lineWidth = 10; c.stroke();
+    path(); c.strokeStyle = '#0b1830'; c.lineWidth = 7; c.stroke();
+    path(); c.strokeStyle = 'rgba(125,255,196,.12)'; c.lineWidth = 2; c.stroke();
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (MAP[y][x] === '-') { c.fillStyle = '#ffb3d1'; c.fillRect(OX + x * T, OY + y * T + 8.5, T, 3); }
+    return (ML = cv); }
   function eat(g) { const p = g.pl, k = p.x + ',' + p.y;
     if (g.dots.delete(k)) { g.add(10, 'd'); if (g.frames % 2) Kit.tone(520, 0.04, 'triangle', 0.04); }
     if (g.pw.delete(k)) { g.add(50, 'o'); g.fr = Math.max(2.5, 7 - g.lvl * 0.6); for (const h of g.gh) if (!h.eaten) { h.fr = g.fr; h.d = [-h.d[0], -h.d[1]]; } g.combo = 0; g.sfx('power'); g.flash('#3b82f6', 0.1); }
