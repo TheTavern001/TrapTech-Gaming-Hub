@@ -16,3 +16,6 @@
 Notes: never push; scripts/build-assets.js stays untracked. Restart server before e2e-api (rate-limit buckets are in memory).
 
 - 7 follow-up (logo check): the crown TT shield + chrome TRAP TECH / green SOLUTIONS wordmark from brand-src/traptech-v7/flyer-current.jpg is now the only Trap Tech mark in use (tt-mono, tt-horizontal, tt-chrome). The older round badge (tt-badge) and graffiti lockup (tt-lockup) were still in the splash 'Built by', footer, About and the default channel/giveaway logo; all replaced, plus a migration in src/brands.js moves stored tt-badge logos to tt-mono-192.png.
+- 9a: service worker cache bumped to gh-shell-v7.
+- 9b migrations: v6 build (ce165cc, git worktree) seeded a DB (12 demo players, 335 runs, 322 achievements, 4 giveaways) + TheBudTender001 with a run; v7 booted on it twice: 33 -> 69 tables, users 13/13, runs 336/336, achievements 322/322, giveaways 4/4, TheBudTender001 signs in, keeps created_at and run, gets an avatar SVG; second boot clean (tools/v6-migrate-check.js).
+- 9c memory: tools/mem-check.sh with production flags (--max-old-space-size=64) on the migrated DB: idle 75 MB, peak RSS 87 MB after 3 x 91 parallel requests (pages, boards, OG images, avatars, store) - under the 100 MB budget.
