@@ -6,7 +6,7 @@ import * as GV7 from './gw-v7.js'; // v7 admin overhaul: builder giveaway extras
 
 // ---------------- core ----------------
 const $app = document.getElementById('app');
-const S = { me: null, games: [], serverOffset: 0, guest: ls.getItem('gh_guest') === '1', game: null };
+const S = { me: null, games: [], libraryGames: [], serverOffset: 0, guest: ls.getItem('gh_guest') === '1', game: null };
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (n) => Number(n || 0).toLocaleString('en-US');
 const nowS = () => Date.now() + S.serverOffset;
@@ -521,7 +521,10 @@ route(/^\/games\/([\w-]+)$/, async (m) => {
 
 // ---------------- play ----------------
 route(/^\/play\/([\w-]+)$/, async (m, url) => {
-  const g = gameById(m[1]); if (!g || !g.playable) return go('/games/' + m[1], true);
+  const g = gameById(m[1]);
+  const libGame = S.libraryGames.find(x => x.id === m[1]);
+  if (libGame) { location.href = libGame.url + url.search; return; }
+  if (!g || !g.playable) return go('/games/' + m[1], true);
   const giveawayId = url.searchParams.get('giveaway');
   document.body.style.overflow = 'hidden';
   $app.innerHTML = `<div class="play-wrap">
@@ -1450,7 +1453,7 @@ setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshM
 V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS, avatar, bumpAvatar });
 // ---------------- boot ----------------
 (async function boot() {
-  const [me, games] = await Promise.all([api('/api/me'), api('/api/games'), I18N.init()]);
-  S.me = me.user; S.games = games.games || [];
+  const [me, games, library] = await Promise.all([api('/api/me'), api('/api/games'), api('/api/games-lib'), I18N.init()]);
+  S.me = me.user; S.games = games.games || []; S.libraryGames = library.ok && Array.isArray(library.games) ? library.games : [];
   render();
 })();
