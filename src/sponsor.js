@@ -53,6 +53,13 @@ addCol('bookings', 'features', "TEXT NOT NULL DEFAULT ''");          // JSON [{i
 addCol('bookings', 'public_token', "TEXT");
 addCol('bookings', 'notes', "TEXT NOT NULL DEFAULT ''");
 addCol('bookings', 'brand_id', 'INTEGER');
+// v7 Phase 3: the client's giveaway details (never prices) + the official event made from an accepted quote
+addCol('bookings', 'prize', "TEXT NOT NULL DEFAULT ''");
+addCol('bookings', 'brand_color', "TEXT NOT NULL DEFAULT ''");
+addCol('bookings', 'game_ids', "TEXT NOT NULL DEFAULT '[]'");
+addCol('bookings', 'competition', "TEXT NOT NULL DEFAULT 'best'");
+addCol('bookings', 'length_days', 'INTEGER NOT NULL DEFAULT 7');
+addCol('bookings', 'event_id', 'INTEGER');
 addCol('giveaways', 'placements', "TEXT");                           // JSON list of PLACES; NULL = derive from legacy tier
 db.exec(`CREATE TABLE IF NOT EXISTS sponsor_quotes (
   booking_id INTEGER PRIMARY KEY REFERENCES bookings(id) ON DELETE CASCADE,
@@ -151,7 +158,10 @@ function setStatus(id, status, by) {
 function sponsorView(b) {
   const q = quoteRow(b.id); const shown = q && ['sent', 'accepted', 'declined', 'paid'].includes(q.status);
   const pk = PK.getPackages();
+  const ev = b.event_id ? db.prepare('SELECT id, event_code, title, start_at, end_at FROM giveaways WHERE id=?').get(b.event_id) : null;
   return { id: b.id, brand: b.brand, created_at: b.created_at, start_date: b.start_date, end_date: b.end_date, details: b.details, notes: b.notes, business_type: b.business_type,
+    prize: b.prize || '', brand_color: b.brand_color || '', games: JSON.parse(b.game_ids || '[]'), competition: b.competition || 'best', length_days: b.length_days || 7,
+    event: ev ? { code: ev.event_code, url: '/event/' + ev.event_code, qr_svg: require('./events').qrSvg((require('./public-url').PUBLIC_URL || '') + '/event/' + ev.event_code), start_at: ev.start_at, end_at: ev.end_at } : null,
     status: shown ? q.status : (b.status === 'declined' ? 'declined' : 'pending'), potato_handle: pk.potato_handle,
     features: featuresOf(b).map(x => BY[x.id] && ({ id: x.id, label: label(BY[x.id], x.qty), note: x.note })).filter(Boolean),
     quote: shown ? { lines: JSON.parse(q.lines).map(l => ({ label: l.label, qty: l.qty, amount_cents: l.amount_cents, note: l.note })), discount_pct: q.discount_pct, discount_cents: q.discount_cents,
@@ -189,6 +199,9 @@ module.exports = function sponsor(app, A, h) {
     const info = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,package_snapshot,start_date,end_date,details,user_id,created_at,ip_hash,business_type,email,potato,licensed_confirmed,addons,features,public_token,notes)
       VALUES (?,?,?,?,'custom',?,?,?,?,?,?,?,?,?,?,?,'',?,?,?)`).run(brand, str(b.contact_name, 120), contact, str(b.event_type, 60), snapshot.slice(0, 1000),
       str(b.start_date, 20), str(b.end_date, 20), str(b.details, 4000), me ? me.id : null, now(), ipHash(req), businessType, email, potato, isCannabis ? 1 : 0, JSON.stringify(feats), token, str(b.notes, 2000));
+    { const cfg = require('./config'); const gids = (Array.isArray(b.games) ? b.games : []).map(String).filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway && !/^gl-/.test(id)).slice(0, 13);
+      db.prepare('UPDATE bookings SET prize=?, brand_color=?, game_ids=?, competition=?, length_days=? WHERE id=?').run(str(b.prize, 200), /^#[0-9a-fA-F]{6}$/.test(String(b.brand_color || '')) ? b.brand_color : '', JSON.stringify(gids),
+        ['best', 'total', 'random'].includes(b.competition) ? b.competition : 'best', Math.max(1, Math.min(90, parseInt(b.length_days, 10) || 7)), info.lastInsertRowid); }
     logActivity('booking', `Sponsor quote request: ${brand} (${feats.length} features)`, me ? me.id : null, info.lastInsertRowid);
     const pk = PK.getPackages();
     res.json({ ok: true, id: info.lastInsertRowid, token, status_url: '/sponsor/status/' + token, features: feats.map(x => label(BY[x.id], x.qty)), potato_handle: pk.potato_handle, licensed_confirmed: isCannabis });
@@ -216,8 +229,28 @@ module.exports = function sponsor(app, A, h) {
     if (err) return bad(res, 400, err); PK.savePackages(v); res.json({ ok: true, potato_handle: v.potato_handle, faq: v.faq });
   });
   A.get('/sponsor/requests', (req, res) => res.json({ ok: true, requests: db.prepare('SELECT b.*, u.username FROM bookings b LEFT JOIN users u ON u.id=b.user_id ORDER BY b.created_at DESC LIMIT 500').all().map(adminView) }));
-  A.get('/sponsor/requests/:id', (req, res) => { const b = db.prepare('SELECT b.*, u.username FROM bookings b LEFT JOIN users u ON u.id=b.user_id WHERE b.id=?').get(req.params.id); if (!b) return bad(res, 404, 'Not found'); res.json({ ok: true, request: adminView(b), placements: placementsFromFeatures(featuresOf(b)) }); });
+  A.get('/sponsor/requests/:id', (req, res) => { const b = db.prepare('SELECT b.*, u.username, (SELECT event_code FROM giveaways WHERE id = b.event_id) AS event_code FROM bookings b LEFT JOIN users u ON u.id=b.user_id WHERE b.id=?').get(req.params.id); if (!b) return bad(res, 404, 'Not found'); res.json({ ok: true, request: adminView(b), placements: placementsFromFeatures(featuresOf(b)) }); });
   A.put('/sponsor/requests/:id/quote', (req, res) => { const r = saveQuote(+req.params.id, req.body || {}, req.admin && req.admin.username); r.ok ? res.json(r) : bad(res, 400, r.error); });
+  // v7 Phase 3: an ACCEPTED (or paid) quote becomes an official event in one click. Idempotent: a second click returns the same event.
+  A.post('/sponsor/requests/:id/create-event', (req, res) => {
+    const b = db.prepare('SELECT * FROM bookings WHERE id=?').get(+req.params.id); if (!b) return bad(res, 404, 'Request not found.');
+    const q = quoteRow(b.id); if (!q || !['accepted', 'paid'].includes(q.status)) return bad(res, 409, 'The client must accept the quote first.');
+    const EV = require('./events');
+    if (b.event_id) { const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id); if (g) return res.json({ ok: true, existing: true, id: g.id, code: g.event_code, url: '/event/' + g.event_code }); }
+    const cfg = require('./config'); let games = JSON.parse(b.game_ids || '[]').filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway); if (!games.length) games = ['stack'];
+    const day = 86400e3; const parse = (d) => { const t = Date.parse(String(d || '') + 'T12:00:00-04:00'); return Number.isFinite(t) ? t : null; };
+    const start = Math.max(Date.now(), parse(b.start_date) || Date.now() + day); const end = parse(b.end_date) && parse(b.end_date) > start ? parse(b.end_date) : start + (b.length_days || 7) * day;
+    const t = Date.now(); const comp = b.competition || 'best';
+    const id = db.transaction(() => {
+      const info = db.prepare(`INSERT INTO giveaways (title, host, prize, image, start_at, end_at, entry_method, game_id, rules, active, created_at, updated_at, brand_color, win_method, winner_count)
+        VALUES (?,?,?,?,?,?,'play',?,?,1,?,?,?,?,1)`).run(`${b.brand} Official Giveaway`, b.brand, b.prize || 'Prize from ' + b.brand, '', start, end, games[0], String(b.details || '').slice(0, 2000), t, t, b.brand_color || '', comp === 'random' ? 'random' : 'score');
+      const gid = info.lastInsertRowid; for (const gm of games) db.prepare('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) VALUES (?,?)').run(gid, gm);
+      db.prepare("UPDATE giveaways SET vendor=?, booking_id=?, booking_status='booked', payment_status=? WHERE id=?").run(b.brand, b.id, q.status === 'paid' ? 'paid' : 'unpaid', gid);
+      db.prepare('UPDATE bookings SET event_id=? WHERE id=?').run(gid, b.id); return gid; })();
+    EV.ensureCodes(); const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(id);
+    if (require('./results').ensureCommit) require('./results').ensureCommit(g);
+    res.json({ ok: true, id, code: g.event_code, url: '/event/' + g.event_code, active: true, start_at: g.start_at, end_at: g.end_at });
+  });
   A.post('/sponsor/requests/:id/status', (req, res) => { const r = setStatus(+req.params.id, String((req.body || {}).status), req.admin && req.admin.username); r.ok ? res.json(r) : bad(res, 400, r.error); });
 };
 Object.assign(module.exports, { FEATURES, BY, GROUPS, PLACES, prices, setPrices, readFeatures, draftLines, total, adminView, sponsorView, saveQuote, setStatus, placementsOf, placementsFromFeatures, publicCatalog });

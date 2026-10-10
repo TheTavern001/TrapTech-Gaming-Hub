@@ -577,6 +577,7 @@ async function sponsorAdmin(id) {
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         ${locked ? '' : `<button class="btn ghost" id="q-save">${icon('check')} Save draft</button><button class="btn" id="q-send">${icon('mail')} ${Q.status === 'sent' ? 'Re-send' : 'Send to sponsor'}</button>`}
         ${Q.status === 'accepted' ? `<button class="btn" id="q-paid">${icon('banknote')} Mark paid</button>` : ''}
+        ${['accepted', 'paid'].includes(Q.status) ? (q.event_id ? `<a class="btn ghost" href="/event/${esc(q.event_code || '')}" target="_blank">${icon('badge-check')} Event ${esc(q.event_code || '')}</a>` : `<button class="btn" id="q-event">${icon('badge-check')} Create official event</button>`) : ''}
         ${['draft', 'sent'].includes(Q.status) ? `<button class="btn danger sm" id="q-dec">Mark declined</button>` : ''}
         <button class="btn ghost sm" id="q-link" title="${esc(statusUrl)}">${icon('copy')} Copy sponsor status link</button>
         <button class="btn danger sm" id="q-del">${icon('trash-2')}</button></div>
@@ -602,6 +603,7 @@ async function sponsorAdmin(id) {
     const on = (s, f) => { const el = $(s); if (el) el.onclick = f; };
     on('#q-add', () => { L.push({ label: 'Custom item', qty: 1, unit_cents: 0, amount_cents: 0, custom: true }); paint(); });
     on('#q-auto', () => { if (!confirm('Replace the lines with a fresh total from the price sheet?')) return; L.length = 0; for (const f of q.features) { const fe = f; const billable = fe.unit === 'flat' ? 1 : fe.qty - (fe.id === 'weeks' ? 1 : 0); if (billable <= 0 && fe.id !== 'winner-contact') continue; L.push({ feature_id: fe.id, label: fe.name + (fe.unit !== 'flat' ? ` (${fe.qty}${fe.unit === 'week' ? ' weeks' : ''})` : ''), qty: Math.max(billable, 1), unit_cents: P[fe.id] || 0, amount_cents: fe.id === 'winner-contact' ? 0 : Math.max(billable, 1) * (P[fe.id] || 0) }); } paint(); });
+    on('#q-event', async () => { const x = await api(`/api/admin/sponsor/requests/${q.id}/create-event`, { method: 'POST', body: {} }); if (!x.ok) return msg(x.error); toast('Official event ' + x.code + ' created'); sponsorAdmin(q.id); });
     on('#q-save', async () => { if (await save()) { toast('Draft saved'); sponsorAdmin(q.id); } });
     on('#q-send', async () => { if (!confirm(`Send this ${$('#q-tot').textContent} quote to ${q.brand}? They see it on their private status page.`)) return; if (await save()) status('sent', 'Quote sent'); });
     on('#q-paid', () => { if (confirm('Mark this accepted quote as paid?')) status('paid', 'Marked paid'); });
