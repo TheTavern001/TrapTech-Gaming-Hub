@@ -63,6 +63,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Putt Party (mini golf) DONE (08:14)
 - Cue Club (Pool) DONE (08:18)
 - Tile Twin (Mahjong) DONE (09:05)
+- Arrow Hero (Archero) DONE (09:15); library at 91 games
 - Knockout Ring fairness pass (08:59)
 - Bullseye fix: game-over clash + perf (07:54)
 - Cup Toss harder: power meter + aim wobble, bot 68% (07:26)
@@ -72,7 +73,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Knife Toss (Knife Hit) UPGRADED (06:08)
 - Bubble Pop UPGRADED (Bubble Shooter art pass).
 - Rock Buster (Asteroids) UPGRADED (06:39); Kenney CC0 art
-- Next (Reese order): A-tier list one at a time (Bejeweled, Knife Hit, Stack, Pinball, Tron, Asteroids, Galaga, Missile Command, Tapper, Frogger) + remaining Cannabis; international search folded into each hunt. Then: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Next: remaining catalog categories (Survival, Combat, Sports, Puzzle, Specialty) one at a time toward 150+; then bug pass + same-tier audit of older games; Neon Flipper ramps+spinner.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).
