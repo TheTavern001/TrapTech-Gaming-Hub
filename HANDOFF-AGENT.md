@@ -28,7 +28,8 @@ Remaining:
 - Block Drop DONE (glossy tile renderer, clear/drop/lock FX).
 - Maze Muncher DONE (neon tube maze, original hero + haze-wisp enemies).
 - Shared car set DONE (assets3d/rc-*.glb from tools/blender/hub-cars.py, used by racer3x). Moto Lanes DONE 7/7 (near traffic + overtakers, overpasses, gantries, yellow edge line).
-- Next (Reese order): Alien Rows, Cloud Hopper, Road Hopper, the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Alien Rows DONE (Kenney Space Shooter CC0 art).
+- Next (Reese order): Cloud Hopper, Road Hopper, the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).

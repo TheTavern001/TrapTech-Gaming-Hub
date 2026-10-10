@@ -346,3 +346,8 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Added: near-field traffic (cars placed on the road at the start, slower cars ahead, and faster cars overtaking in other lanes; overtakers can't hit you while they're alongside), overpasses (deck, piers, parapets) and sign gantries (green signs with auto-fitted text, including a "Dispensary Row 21+" exit), and a double yellow left edge line. Uses the shared rc-* car set.
 - Cockpit view: not shipped. A first-person view was tried before and framed poorly on portrait phones; the chase camera now matches the reference's composition (close traffic, overpass and signage).
 - Tests: e2e PASS (calls 121, tris 135k, DPR 1.5; under budget). Bug pass PASS. Bot survival averages about 23 s, the same as before. Side-by-side: docs/audit/moto-lanes-vs-ref.jpg. Rating: visual 7/10, feel 7/10.
+
+## Alien Rows - DONE (2026-10-10 05:55 ET)
+- Candidates: Kenney Space Shooter Remastered (CC0) art on our build vs vendoring JS invaders clones (most copy the reference's alien sprites; rejected). Chose new art on our build.
+- Upgrade: sprite enemies (3 ship types by row, 30/20/10 pts) with a march wobble, a sprite player ship with an animated engine flame, glowing green/red lasers, a spinning UFO, gradient shield bricks, a scrolling nebula background with a green glow, and a glowing ground line. Rules and scoring are unchanged.
+- Tests: e2e PASS (60 FPS). Bug pass PASS (4x throttle 27 FPS, memory +0.0 MB). Side-by-side: docs/audit/alien-rows-vs-ref.jpg. Rating: visual 7/10, feel 7/10.
