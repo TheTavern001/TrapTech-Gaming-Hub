@@ -49,6 +49,7 @@ const rule = (fn) => fn;
 const RULES = {
   'gl-neon-circuit': rule((E) => {
     for (const e of E) {
+      if (e.k[0] === '#') continue;
       if (e.k === 'e') { if (e.v < 30 || e.v > 125 || e.v % 5 !== 0) return `energy cell worth ${e.v} is not possible`; }
       else if (e.k === 'n') { if (e.v !== 5) return `near miss worth ${e.v} is not possible`; }
       else return `unknown event ${e.k}`;
@@ -57,6 +58,7 @@ const RULES = {
   }),
   'gl-rift-survival': rule((E) => {
     for (const e of E) {
+      if (e.k[0] === '#') continue;
       if (e.k === 's') { if (e.v !== 25) return `rift shard worth ${e.v} is not possible`; }
       else if (e.k === 'b') { if (e.v < 20 || e.v % 10 !== 0) return `wave bonus ${e.v} is not possible`; }
       else return `unknown event ${e.k}`;
