@@ -62,7 +62,7 @@ for (const g of games) {
       if (catalogGame[key] !== g[key]) problems.push('catalog mismatch: ' + key);
     }
     if (catalogGame.art && typeof catalogGame.art === 'string' && catalogGame.art.startsWith('/')) {
-      const artPath = path.join(ROOT, catalogGame.art.replace(/^\//, ''));
+      const artPath = path.join(ROOT, 'public', catalogGame.art.replace(/^\//, ''));
       if (!exists(artPath)) warnings.push(g.slug + ': catalog art file missing (' + catalogGame.art + ')');
     }
   }
