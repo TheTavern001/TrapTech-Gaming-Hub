@@ -5,7 +5,7 @@
 // always rebuilds the same name, rarity, art and CSS. Art is original SVG/CSS (no third-party assets).
 //   id = [fx-]v7<src><num>s<slot>      src: d daily (num = hub day), w weekly (num = week), s season shop (num = season),
 //                                        k season track reward (num = season), e event (num = event key), b earned (num = gate)
-const ID_RE = /^(?:fx-)?v7([dwskeb])(\d{1,9})s(\d{1,3})$/;
+const ID_RE = /^(?:fx-)?v7([dwskebp])(\d{1,9})s(\d{1,3})$/;
 const TYPES = ['banner', 'frame', 'color', 'title', 'badge', 'effect'];
 const RARITIES = ['common', 'rare', 'epic', 'legendary'];
 
@@ -136,7 +136,7 @@ const RARITY_BY_SRC = {
   w: (r, slot) => slot === 0 ? 'legendary' : wpick(r, [['epic', 75], ['legendary', 25]]),
   s: (r, slot) => ['rare', 'rare', 'epic', 'epic', 'legendary', 'epic'][slot % 6],
   e: (r, slot) => ['rare', 'epic', 'legendary', 'epic'][slot % 4],
-  b: () => 'epic', k: () => 'rare',
+  b: () => 'epic', k: () => 'rare', p: (r, slot) => (slot % 5 === 0 ? 'legendary' : 'epic'), // p = premium season pass track (src/monetize.js)
 };
 const TYPE_W = [['banner', 26], ['frame', 20], ['color', 16], ['title', 16], ['badge', 12], ['effect', 10]];
 const BADGE_ICONS = ['crown', 'gem', 'leaf', 'diamond', 'flame', 'rocket', 'star', 'zap', 'trophy', 'medal', 'sparkles', 'heart', 'music', 'target', 'crosshair', 'castle', 'anchor', 'flask-conical', 'hand-metal', 'moon', 'sunrise', 'flame-kindling', 'wand-sparkles', 'swords', 'piggy-bank', 'banknote', 'shield-half', 'gamepad-2', 'disc-3', 'dices', 'paintbrush', 'cookie', 'cake'];
