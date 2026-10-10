@@ -457,7 +457,7 @@ function gameCard(g, tall = false) {
 route(/^\/games$/, (m, url) => {
   let cat = url.searchParams.get('cat') || 'All'; let q = '';
   const cats = ['All', 'Arcade', 'Racing', 'Puzzle', 'Strategy', 'Physics', 'Just for fun'];
-  shell('/games', `<h1>Games <span class="pill green" style="vertical-align:middle">${S.games.length} playable</span></h1><a class="btn sm" style="margin:-6px 0 12px" href="/games-lib/index.html">Games Library: 150+ more games</a><!-- [games-lib hook] -->
+  shell('/games', `<h1>Games <span class="pill green" style="vertical-align:middle">${S.games.length} playable</span></h1><a class="btn sm" style="margin:-6px 0 12px" href="/games-lib/index.html">Explore the Games Library <span id="lib-count" class="pill" style="margin-left:6px">new originals + full catalog</span></a><!-- [games-lib hook] -->
     <div class="field ic">${icon('search')}<input class="input" id="q" placeholder="Search games..." autocomplete="off"></div>
     <div class="chips" id="chips">${cats.map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('')}</div>
     <div class="grid2 games-grid" id="grid"></div>
@@ -475,6 +475,11 @@ route(/^\/games$/, (m, url) => {
       || `<div class="empty" style="grid-column:1/-1">No games match.</div>`;
   };
   draw();
+  // Games Library catalog is served by the same registry as the dedicated library page.
+  fetch('/api/games-lib', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(lib => {
+    const badge = document.getElementById('lib-count');
+    if (badge && lib && Array.isArray(lib.games)) badge.textContent = lib.games.length + ' library games';
+  }).catch(() => {});
   document.getElementById('q').addEventListener('input', (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
   document.getElementById('chips').addEventListener('click', (e) => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; document.querySelectorAll('#chips .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
 });
