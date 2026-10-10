@@ -110,7 +110,7 @@
 | 97 | Skee Roll | Skee-Ball | Reflex & Skill | A | endless | built | Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame | 100 | Not freshly verified |
 | 98 | Castle Crush | Crush the Castle | Physics & Destruction | A | endless-levels | built | Blocks 5-25, kings 300, castle bonus 500 x stones left + 200 x level | 400 | Not freshly verified |
 | 99 | Neon Circuit | Original neon arcade racer | Driving | A | endless | built | Energy cells 25 + near-miss 5; score is awarded during play | 120 | Not freshly verified |
-| 100 | Rift Survival | Original arena survival game | Survival & Horde | A | endless | built | Eliminations 10+wave bonus; shards 25; survival time 2/sec | 180 | Not freshly verified |
+| 100 | Rift Survival | Original arena survival game | Survival & Horde | A | endless | built | Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop | 180 | Not freshly verified |
 
 ## Mandatory acceptance gate
 
@@ -127,7 +127,7 @@
 
 - Desert Dash (`dino-dash`): previous report flagged broken/undefined FPS instrumentation.
 - Rail Rush, Lane Racer, and Moto Lanes: prior handoff reported low FPS; these need new profiling before fixes are declared.
-- New games Neon Circuit and Rift Survival are added but have not been run in the browser or on a physical phone in this environment.
+- New games Neon Circuit and Rift Survival are added to the Hub library spotlight and have original SVG cover art; they have not been run in the browser or on a physical phone in this environment.
 
 ## Suggested test sequence
 
