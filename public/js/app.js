@@ -1,6 +1,7 @@
 import { icon } from './icons.js';
 import { ls, ss, copyText } from './store.js';
 import * as V7 from './v7.js';
+import * as I18N from './i18n.js'; // v7: multi-language layer (public/i18n/*.json)
 import * as GV7 from './gw-v7.js'; // v7 admin overhaul: builder giveaway extras + admin site settings
 
 // ---------------- core ----------------
@@ -38,12 +39,12 @@ function avatar(name, demo, cls = '') {
   // v7 Phase 5: every player has a custom avatar (server-rendered SVG; initials stay underneath while it loads)
   return `<span class="av ${cls}" style="background:linear-gradient(135deg,hsl(${a} 80% 55%),hsl(${b} 80% 40%))">${esc(String(name).slice(0, 2).toUpperCase())}${name ? `<img class="av-img" src="/avatar/${encodeURIComponent(name)}.svg${AV_BUST[name] ? '?v=' + AV_BUST[name] : ''}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span>`;
 }
-// v7: Trap Tech Solutions brand art (cut from Reese's own logos by tools/build-brand-v7.py). WebP srcset + PNG fallback.
-const TT_ART = { mono: [[40, 80, 192], 146 / 192, 192], horizontal: [[180, 360, 920], 920 / 248, 920], lockup: [[300, 600], 600 / 410, 600], chrome: [[280, 560], 560 / 121, 560], badge: [[128, 256], 1, 256] };
+// v7 (Oct 10): the clean Trap Tech mark from v3 (geometric double-T, TRAP TECH / spaced cyan SOLUTIONS) with a line-art
+// crown, rebuilt as vector SVG by tools/build-brand-tt.py. PNG/WebP copies (same file names) exist for OG images and old links.
+const TT_AR = { mono: 100 / 120, horizontal: 3.5574, lockup: 1.4842, chrome: 3.9036, badge: 1 };
 function TT(k, h, cls = '', alt = 'Trap Tech Solutions') {
-  const [ws, ar, png] = TT_ART[k]; const w = Math.round(h * ar); const byH = k === 'mono';
-  const set = ws.map(n => `/assets/brand/tt-${k}-${n}.webp ${byH ? Math.round(n * ar) : n}w`).join(', ');
-  return `<picture class="ttp ttp-${k} ${cls}"><source type="image/webp" srcset="${set}" sizes="${w}px"><img src="/assets/brand/tt-${k}-${png}.png" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async"></picture>`;
+  const w = Math.round(h * (TT_AR[k] || 1));
+  return `<picture class="ttp ttp-${k} ${cls}"><img src="/assets/brand/tt-${k}.svg" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async"></picture>`;
 }
 // equipped cosmetics (banner / frame / title / badge) - cosmetic only, no cash value
 function framed(name, demo, cos, cls = '') { const f = (cos && cos.frame) || 'none'; return `<span class="frame fr-${esc(f)} ${cls ? 'f-' + cls : ''}">${avatar(name, demo, cls)}</span>`; }
@@ -1362,7 +1363,7 @@ route(/^\/responsible-play$/, () => legal('/responsible-play', 'Responsible Play
 
 // ---------------- About Trap Tech Solutions ----------------
 route(/^\/about$/, () => shell('/about', `<div class="narrow">
-  <div class="about-hero card"><div class="about-tt">${TT('mono', 150, 'ab-mono')}${TT('chrome', 70, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
+  <div class="about-hero card"><div class="about-tt">${TT('horizontal', 84, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
     <p class="muted">Trap Tech Solutions is the studio behind The Gaming Hub. We design, build and run every part of it: the games, leaderboards, tournaments, giveaways, achievements and the admin tools brands use.</p>
     <div class="btn-row center-row"><a class="btn" href="/sponsor">${icon('briefcase')} Sponsor a Host</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
   <div class="about-grid">${[['gamepad-2', 'Original games', '13 original HTML5 skill games, made to play great on phones, with skill-based scoring and server-side anti-cheat.'], ['gift', 'Brand giveaways', 'Sponsors pick exactly the features they want, from a simple prize drop to a full branded takeover, and get a custom quote.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Free to play, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
@@ -1409,6 +1410,7 @@ route(/^\/settings$/, () => {
   const standalone = matchMedia('(display-mode: standalone)').matches;
   const rm = ls.getItem('gh_reduce_motion') === '1';
   shell('/settings', `<div class="narrow">${pageHead('Settings')}
+    <div class="card pad" id="set-lang" style="margin-bottom:12px"></div>
     ${S.me ? `<a class="card pad" href="/avatar" id="set-avatar" style="display:flex;gap:12px;align-items:center;margin-bottom:12px">${avatar(S.me.username, false, 'lg')}<div><b>Your avatar</b><div class="small muted">Change your look: hair, outfit, hats, held items and more.</div></div></a>` : ''}
     ${S.me ? `<div class="card pad"><h2 style="margin-bottom:10px">Account</h2><div class="mini-row" style="margin:0 0 10px">${framed(S.me.username, false, S.me.cos)}${pname(S.me.username, false, S.me.cos)}</div>
       <form id="pwf2"><div id="pwmsg2"></div><div class="field"><input class="input" type="password" id="cur2" placeholder="Current password" autocomplete="current-password" aria-label="Current password"></div>
@@ -1443,7 +1445,7 @@ setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshM
 V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS, avatar, bumpAvatar });
 // ---------------- boot ----------------
 (async function boot() {
-  const [me, games] = await Promise.all([api('/api/me'), api('/api/games')]);
+  const [me, games] = await Promise.all([api('/api/me'), api('/api/games'), I18N.init()]);
   S.me = me.user; S.games = games.games || [];
   render();
 })();

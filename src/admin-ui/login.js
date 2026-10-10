@@ -6,7 +6,7 @@
     return fetch(BASE + p, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'HTTP ' + r.status }; }).then(function (d) { d.status = r.status; return d; }); });
   }
-  var brand = '<div class="aa-brand"><img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="200" height="37"><picture><source type="image/webp" srcset="/assets/brand/tt-horizontal-360.webp"><img src="/assets/brand/tt-horizontal-920.png" alt="Trap Tech Solutions" width="150" height="40"></picture></div>';
+  var brand = '<div class="aa-brand"><img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="200" height="37"><picture><img src="/assets/brand/tt-horizontal.svg" alt="Trap Tech Solutions" width="142" height="40" decoding="async"></picture></div>';
   function card(inner) { root.innerHTML = '<div class="card aa-card">' + brand + inner + '</div>'; }
   function err(d) { var m = document.getElementById('m'); if (m) m.innerHTML = '<div class="err">' + esc(d.error || 'Something went wrong') + (d.retry_after ? ' (about ' + Math.ceil(d.retry_after / 60) + ' min)' : '') + '</div>'; }
   function busy(f, on) { var b = f.querySelector('button'); if (b) b.disabled = on; }

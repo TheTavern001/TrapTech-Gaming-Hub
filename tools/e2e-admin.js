@@ -57,8 +57,8 @@ function player() {
     r = await O('/api/admin/ui/admin-v7.js'); ok(r.status === 200 && String(r.body).includes(AP + '/api') && !String(r.body).includes("'/api/admin"), 'v7 admin UI module served behind auth with secret-path URLs');
     r = await fetch(BASE + AP + '/api/ui/admin-v7.js'); ok(r.status === 401 || r.status === 404, 'v7 admin UI module not served without a session', r.status);
     const meta = (await O('/api/admin/v7/gw/meta')).body;
-    ok(meta.ok && Object.keys(meta.profiles).length === meta.games.length && meta.games.length >= 16, `builder meta has a rules profile for all ${meta.games.length} games`);
-    ok(['plinko', 'spin-to-win', 'blazed-roulette'].every(id => meta.profiles[id].giveaway_compatible === false && meta.profiles[id].chance_locked), 'chance games: profile says not giveaway compatible (locked)');
+    ok(meta.ok && Object.keys(meta.profiles).length === meta.games.length && meta.games.length >= 13, `builder meta has a rules profile for all ${meta.games.length} games`);
+    ok(['plinko', 'spin-to-win', 'blazed-roulette'].every(id => !meta.games.some(g => (g.id || g) === id)) && Object.values(meta.profiles).every(p => p.giveaway_compatible !== false), 'v7: chance games retired, every live game is giveaway compatible');
     ok(meta.comp.endless && meta.comp.campaign && meta.comp.short_session && meta.comp.strategy && meta.winner_rule === 'Highest verified score at close', 'competition types endless/campaign/short session/strategy + verified winner rule');
     ok(Object.keys(meta.ac_levels).join() === 'L1,L2,L3,L4', 'anti-cheat levels L1-L4 listed');
     const card = meta.profiles['sling-smash'];
@@ -69,7 +69,7 @@ function player() {
     r = await O('/api/admin/v7/profiles/jetpack-dash', { method: 'PUT', body: { ...meta.profiles['jetpack-dash'], anticheat_level: 'L3', attempts: 5, recommended_hours: 96, notes: 'e2e edit' } });
     ok(r.body.ok && r.body.profile.anticheat_level === 'L3' && r.body.profile.attempts === 5 && r.body.profile.source === 'admin', 'admin edits a profile (AC L3, 5 attempts, 96 h)', r.body);
     r = await O('/api/admin/v7/gw/meta'); ok(r.body.defaults['jetpack-dash'].attempts === 5 && r.body.defaults['jetpack-dash'].anticheat_level === 'L3', 'builder defaults follow the edited profile', r.body.defaults['jetpack-dash']);
-    r = await O('/api/admin/v7/profiles/plinko', { method: 'PUT', body: { ...meta.profiles.plinko, giveaway_compatible: true } }); ok(r.body.ok && r.body.profile.giveaway_compatible === false, 'a chance game can not be made giveaway compatible from its profile');
+    r = await O('/api/admin/v7/profiles/plinko', { method: 'PUT', body: { giveaway_compatible: true } }); ok(!r.body.ok || r.body.profile.giveaway_compatible === false, 'a chance game can not be made giveaway compatible from its profile');
     await O('/api/admin/v7/profiles/plinko', { method: 'DELETE' });
     r = await O('/api/admin/v7/profiles/nope-game', { method: 'PUT', body: { game: 'x' } }); ok(!r.body.ok, 'unknown game id rejected (use the importer for catalog references)', r.body);
 
@@ -89,7 +89,7 @@ function player() {
     ok(P['ref:subway-surfers'] && P['ref:subway-surfers'].recommended_hours === 72 && P['ref:subway-surfers'].linked === false, 'catalog reference created (Subway Surfers, 72 h)', P['ref:subway-surfers']);
     ok(P['ref:kingdom-rush'] && P['ref:kingdom-rush'].competition_type === 'strategy' && P['ref:kingdom-rush'].attempts === 3 && P['ref:kingdom-rush'].anticheat_level === 'L4' && P['ref:kingdom-rush'].recommended_hours === 120, 'nested card: strategy, Best of 3 -> 3 attempts, "L4 replay" -> L4, 5 days -> 120 h', P['ref:kingdom-rush']);
     ok(P['sling-smash'].source === 'import' && P['sling-smash'].level_from === 1 && P['sling-smash'].level_to === 30 && P['sling-smash'].recommended_hours === 168, 'hub game updated from import: campaign levels 1-30, 7 days', P['sling-smash']);
-    ok(P.plinko.giveaway_compatible === false, 'import can not make a chance game giveaway compatible');
+    ok(!P.plinko || P.plinko.giveaway_compatible === false, 'import can not make a chance game giveaway compatible');
     ok(P['jetpack-dash'].anticheat_level === 'L3' && P['jetpack-dash'].source === 'admin', 'admin edit kept (not overwritten without the option)');
     r = await O('/api/admin/v7/profiles/import', { body: { data: hunt, apply: true, overwrite_admin: true } }); r = await O('/api/admin/v7/profiles');
     ok(r.body.profiles.find(p => p.game_id === 'jetpack-dash').source === 'import', 'overwrite option replaces admin edits');

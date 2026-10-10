@@ -3,7 +3,7 @@
 // API calls, share images and anything sent with Cache-Control: no-store are never cached.
 const CACHE = 'gh-shell-v7';
 const SHELL = ['/', '/css/app.css', '/cosmetics.css', '/js/app.js', '/js/icons.js', '/manifest.webmanifest',
-  '/js/store.js', '/assets/brand/hub-logo.svg', '/assets/brand/hub-stacked.svg', '/assets/brand/tt-mono-80.webp', '/assets/brand/tt-horizontal-180.webp', '/assets/brand/tt-horizontal-360.webp', '/assets/brand/favicon.svg', '/css/v7.css', '/js/v7.js',
+  '/js/store.js', '/assets/brand/hub-logo.svg', '/assets/brand/hub-stacked.svg', '/assets/brand/tt-mono.svg', '/assets/brand/tt-horizontal.svg', '/assets/brand/favicon.svg', '/css/v7.css', '/js/v7.js',
   '/assets/icons/icon-192.png', '/fonts/orbitron-latin-800-normal.woff2', '/fonts/exo-2-latin-600-normal.woff2'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

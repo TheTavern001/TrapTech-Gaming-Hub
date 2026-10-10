@@ -12,7 +12,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 - **Hub Store (cosmetic only), paid in Bitcoin:** Crown packs, the Season Pass and three limited, serial-numbered Prestige items. Nothing in the store affects scores or giveaways (`tools/e2e-payments.js` checks this). Players can also earn next season's pass for free with a 48-quest chain, tuned so about 5% of active players finish it (`docs/PASS-QUESTS.md`).
 - **Avatars:** server-rendered SVG avatars built from 12 part kinds and 70+ parts (free, Crowns, earned through achievements, Prestige-only). The editor is at `/avatar`. Avatars appear on every board, profile and winner list.
 - **Shop rotation and timers:** daily, weekly and event sections with ET midnight resets. The DST bug is fixed: the Nov 1 reset used to fire at 01:00 ET.
-- **Brand:** the crown TT shield and chrome wordmark from Reese's current flyer are used everywhere. The old round badge and graffiti lockup are gone. The About page and landing page are refreshed.
+- **Brand:** the clean v3 Trap Tech mark (geometric double-T, TRAP TECH, spaced cyan SOLUTIONS) now has a minimal line-art crown on top. It is rebuilt as vector SVG (`tools/build-brand-tt.py`, PNG/WebP copies from `tools/build-brand-tt.js`) and used everywhere: header, About, footer, splash, admin and OG images. The flyer art stays in `brand-src/` only. The About page and landing page are refreshed.
 - **Admin:** Store & orders, Official events (share kit, tie report, playoffs), "Create official event" on quotes. Every section is checked by `tools/e2e-admin-tour.js`.
 
 ## Bitcoin checkout: how it works and setup
@@ -42,7 +42,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 ## Tests
 | Suite | How |
 |---|---|
-| API | `tools/fresh-api.sh tools/e2e-api.js` (fresh isolated DB) and the same for `e2e-anticheat`, `e2e-events`, `e2e-tiebreak`, `e2e-payments`, `e2e-avatars`; `SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js` |
+| API | `tools/fresh-api.sh tools/e2e-api.js` (fresh isolated DB) and the same for `e2e-anticheat`, `e2e-events`, `e2e-tiebreak`, `e2e-avatars`; payments needs its mock explorer: `BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 tools/fresh-api.sh tools/e2e-payments.js`; `SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js` |
 | Unit | `node tools/e2e-timers.js`, `node tools/e2e-economy.js` |
 | Admin | `cd tools && node e2e-admin.js && node e2e-admin-sec.js && node e2e-admin-tour.js` |
 | Browser | `cd tools && node e2e-browser.js && node e2e-mobile.js` (screenshots in `docs/screens-v7/`) |
