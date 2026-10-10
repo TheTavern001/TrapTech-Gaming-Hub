@@ -77,6 +77,7 @@ const LIST = [
   T('beat-tiles', 'Beat Tiles', 'Piano Tiles', 6, 'B', 'endless', 20, true, 'Tile 1-3 by timing, long-tile hold 1 per 40 px + 3', '3 days'),
   T('moon-lander', 'Moon Lander', 'Lunar Lander', 10, 'B', 'endless', 60, true, 'Landing (50 + softness + upright) x pad 2-5', '3 days'),
   T('pin-strike', 'Pin Strike', 'Bowling', 9, 'B', 'endless', 40, true, 'Pins + real strike/spare bonuses over endless frames', '3 days'),
+  T('bullseye', 'Bullseye', 'Archery King (Endless Archery)', 8, 'B', 'endless', 60, true, 'Arrow ring x10 (+5 X), end bonus 20 x end', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
   T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('hill-glider', 'Hill Glider', 'Tiny Wings', 0, 'A', 'endless', 60, true, 'Distance m + perfect slides 25', '3 days'),

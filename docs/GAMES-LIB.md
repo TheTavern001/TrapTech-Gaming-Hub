@@ -609,3 +609,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
   - Endless frames with real strike (+2 rolls) and spare (+1 roll) bonuses. A frame under 7 pins costs a life (3).
 - Art: neon alley backdrop with the "HIGH ROLLER LANES" sign, masking curtain, maple lane with boards, oil sheen, arrows, foul line and leaf inlay. Bezier-shaded pins with green stripes, glossy green ball with finger holes, depth sorting. The camera dollies down the lane behind the ball.
 - Tests: random swiping bot got frames of 10,8,9,8,10,... e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
+
+## Bullseye (Combat: Archery King / Endless Archery) - DONE (2026-10-10 07:50 ET)
+- Source hunt: GitHub "archery game html5" (side-view stickman clones with no licence; one MIT three.js demo without scoring), itch.io (Unity), js13k "archer" (none fit first person). Decision: build our own.
+- Gameplay: first-person, World Archery 10-ring target. Drag to aim; the sight sways with breath, steadies for about 1.2-3 s of holding, then tires and wobbles more, plus a slow drift. Release to shoot. Drop grows with distance squared and wind drift shows on the flag, so you aim off to compensate. 3 arrows per end; under 15 points costs a life (3). Distance goes 18 m +6 m per end and the target shrinks, so it's endless. X ring tracked as a skill metric.
+- Art: painted sky with clouds, hills, pine line, mown range stripes, "RANGE" sign, layered target face on a wooden stand, arrow flight shrinking toward the target, stuck arrows, first-person bow with drawn string and leaf grip, wind flag.
+- Tests: compensating bot (with release jitter) finished 5 ends without losing a life. e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
