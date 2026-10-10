@@ -62,15 +62,15 @@ for (const g of games) {
       if (catalogGame[key] !== g[key]) problems.push('catalog mismatch: ' + key);
     }
     if (catalogGame.art && typeof catalogGame.art === 'string' && catalogGame.art.startsWith('/')) {
-      const artPath = path.join(ROOT, catalogGame.art.replace(/^\\//, ''));
+      const artPath = path.join(ROOT, catalogGame.art.replace(/^\//, ''));
       if (!exists(artPath)) warnings.push(g.slug + ': catalog art file missing (' + catalogGame.art + ')');
     }
   }
   if (exists(entry)) {
     const html = fs.readFileSync(entry, 'utf8');
-    for (const match of html.matchAll(/<script\\b[^>]*\\bsrc=["']([^"']+)["'][^>]*>/gi)) {
+    for (const match of html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)) {
       const src = match[1];
-      if (/^(https?:)?\\/\\//i.test(src) || src.startsWith('data:')) continue;
+      if (/^(https?:)?\/\//i.test(src) || src.startsWith('data:')) continue;
       const localPath = path.resolve(dir, src);
       if (!localPath.startsWith(path.resolve(PUB) + path.sep) || !exists(localPath)) {
         problems.push('broken local script reference: ' + src);
