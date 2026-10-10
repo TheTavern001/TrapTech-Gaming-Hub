@@ -20,8 +20,9 @@ const list = games.filter(g => !only.length || only.includes(g.slug));
   if (bad.length) { console.log('FAIL eligibility gate:', bad.join(', ')); process.exitCode = 1; } }
 const PLAY_MS = +(process.env.PLAY_MS || 6000);
 let ip = 0; const nextIp = () => { ip++; return `10.77.${Math.floor(ip / 250) % 250}.${ip % 250 + 1}`; };
+let SEQ = 0; const RUN_ID = (Date.now() % 1e7) * 10 + (process.pid % 10);
 async function signup(xff) {
-  const u = 'gl' + Math.random().toString(36).slice(2, 9);
+  const u = 'tester' + String(RUN_ID) + String(++SEQ).padStart(3, '0'); // digits only: filter-safe, unique per run
   const r = await fetch(BASE + '/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': xff }, body: JSON.stringify({ username: u, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' }) });
   const ck = (r.headers.getSetCookie() || []).map(c => c.split(';')[0]); const j = await r.json(); if (!j.ok) throw new Error('signup failed ' + JSON.stringify(j));
   return ck.map(c => { const i = c.indexOf('='); return { name: c.slice(0, i), value: c.slice(i + 1), url: BASE }; });
