@@ -303,3 +303,10 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 | moto-lanes | ok | ok | auto-pause | ok | ok | +0.2 MB | PASS |
 | ruin-runner | ok | ok | auto-pause | ok | ok | +1.9 MB | PASS |
 | bud-merge | ok | ok | n/a (turn-based) | ok | ok | +0.0 MB | PASS |
+
+## Ruin Runner - rework complete (2026-10-10 03:20 ET)
+- Corner turns: temple-wall junctions with an arrow glyph and a side-branch corridor. Swipe or arrow the right way inside the junction square to make a smooth 90 deg eased swing; a miss means hitting the wall. Spawn spacing 110-200 m, obstacles cleared around junctions.
+- Cliff drops: full-width ravines with stone lips and soft mist; jump them or fall. Arcing coin trails over them.
+- Moodier lighting (deep green fog 16-88 m, lower hemi, warm low sun, -20% exposure), painted jungle-canopy backdrop. Poly Haven CC0 PBR textures (mossy cobblestone path, slate masonry with normal maps). Stone ramps/barriers in the jungle theme, tinted canopy leaves, no purple placeholder plants.
+- Tests: e2e PASS (95 calls / 124k tris, DPR 1.5). Bug pass PASS (seeded x3, pause, tab auto-pause, rotate, 4x throttle, +1.9 MB / 30 s). Turn-aware bot: 45 s alive with 2 turns, ravines cleared.
+- Rating: visual 7/10, feel 7/10. Side-by-side: docs/audit/ruin-runner-vs-ref.jpg (reference, our run, our corner turn). Remaining gap vs the reference: the reference has a busier organic backdrop and water set pieces.
