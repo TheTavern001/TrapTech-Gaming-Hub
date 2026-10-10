@@ -51,3 +51,10 @@ MDN's Canvas optimization guidance recommends caching repeated drawing work, red
 - Android device profiling: **not run**
 - License clearance: **not completed**
 - Merge/deployment: **not performed**
+
+
+## Follow-up deep-check findings
+
+- Fixed a gameplay defect in Rift Survival: enemy collision damage referenced `p.r`, but the player radius had not been initialized. This made the collision comparison evaluate to `NaN`, so contact damage could fail to trigger. The player now has an explicit 13-unit radius, and the static checker guards against recurrence.
+- Found a cross-layer integration gap: official event pages link through `/play/<game-id>?event=...`, while library games launch at static `/games-lib/<slug>/index.html` paths. The main Hub now loads library metadata for route resolution and redirects library game play URLs while preserving the query string. The adapter forwards event/giveaway references to the server's signed-run validation, including the legacy `giveaway` parameter.
+- Added CI syntax checks for the main Hub ES module and library adapter, plus static guards for library route/query forwarding. These changes still need end-to-end browser tests; they are not evidence that the official event flow has passed.
