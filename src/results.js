@@ -230,4 +230,4 @@ function sweep() {
   catch (e) { console.error('finalize sweep failed', e); } finally { sweeping = false; }
   return n;
 }
-module.exports = { TIEBREAK_RULES, SCORE_RULE, RANDOM_RULE, liveStandings, excludedRuns, finalize, results, disqualify, reinstate, confirm, verifyBundle, ensureCommit, audit, sweep, winnerCount, capFor, gamesOf, sha256, hmac, lineOf };
+module.exports = { clearCache: () => cache.clear(), TIEBREAK_RULES, SCORE_RULE, RANDOM_RULE, liveStandings, excludedRuns, finalize, results, disqualify, reinstate, confirm, verifyBundle, ensureCommit, audit, sweep, winnerCount, capFor, gamesOf, sha256, hmac, lineOf };

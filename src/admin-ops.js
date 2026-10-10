@@ -62,13 +62,13 @@ function readEvent(b, old = {}) {
 const evPub = (e, t = now()) => ({ ...e, items: JSON.parse(e.items || '[]'), games: JSON.parse(e.games || '[]'), kind_label: (EVENT_KINDS[e.kind] || {}).label,
   state: e.status === 'cancelled' ? 'cancelled' : t < e.starts_at ? 'scheduled' : t <= e.ends_at ? 'live' : 'ended' });
 function eventsList() { const t = now(); return db.prepare('SELECT * FROM hub_events ORDER BY (ends_at < ?) ASC, starts_at DESC LIMIT 300').all(t).map(e => evPub(e, t)); }
-function createEvent(req, b) {
+function createEvent(req, b) { cfgCache = null; /* v7: public config shows changes at once */
   const [e, err] = readEvent(b); if (err) return { ok: false, error: err }; const t = now();
   const info = db.prepare(`INSERT INTO hub_events (kind,name,description,starts_at,ends_at,recur,multiplier,sale_pct,items,games,theme,banner,notify,created_by,created_at,updated_at)
     VALUES (@kind,@name,@description,@starts_at,@ends_at,@recur,@multiplier,@sale_pct,@items,@games,@theme,@banner,@notify,@by,@t,@t)`).run({ ...e, by: RO.who(req).username, t });
   RO.act(req, 'event.create', 'event:' + info.lastInsertRowid, `${e.kind} ${e.name}`); bust(); return { ok: true, id: info.lastInsertRowid };
 }
-function updateEvent(req, id, b) {
+function updateEvent(req, id, b) { cfgCache = null; /* v7: public config shows changes at once */
   const old = db.prepare('SELECT * FROM hub_events WHERE id=?').get(id); if (!old) return { ok: false, error: 'Event not found.' };
   if (b.status === 'cancelled' || b.status === 'scheduled') { db.prepare('UPDATE hub_events SET status=?, updated_at=? WHERE id=?').run(b.status, now(), id); RO.act(req, 'event.' + (b.status === 'cancelled' ? 'cancel' : 'restore'), 'event:' + id); bust(); return { ok: true }; }
   if (b.end_now) { db.prepare('UPDATE hub_events SET ends_at=?, recur=\'none\', updated_at=? WHERE id=?').run(Math.max(old.starts_at + 1, now()), now(), id); RO.act(req, 'event.end_now', 'event:' + id); bust(); return { ok: true }; }
@@ -76,7 +76,7 @@ function updateEvent(req, id, b) {
   db.prepare(`UPDATE hub_events SET kind=@kind,name=@name,description=@description,starts_at=@starts_at,ends_at=@ends_at,recur=@recur,multiplier=@multiplier,sale_pct=@sale_pct,items=@items,games=@games,theme=@theme,banner=@banner,notify=@notify,updated_at=@t WHERE id=@id`).run({ ...e, t: now(), id });
   RO.act(req, 'event.edit', 'event:' + id, e.name); bust(); return { ok: true };
 }
-function deleteEvent(req, id) { const r = db.prepare('DELETE FROM hub_events WHERE id=?').run(id); if (!r.changes) return { ok: false, error: 'Event not found.' }; RO.act(req, 'event.delete', 'event:' + id); bust(); return { ok: true }; }
+function deleteEvent(req, id) { cfgCache = null; /* v7: public config shows changes at once */ const r = db.prepare('DELETE FROM hub_events WHERE id=?').run(id); if (!r.changes) return { ok: false, error: 'Event not found.' }; RO.act(req, 'event.delete', 'event:' + id); bust(); return { ok: true }; }
 let effCache = null;
 const bust = () => { effCache = null; };
 // what is on right now (used by the shop/points overlay and the public site config)
@@ -360,7 +360,7 @@ function analytics(days = 30) {
 // =====================================================================================================================
 const TONES = ['info', 'promo', 'warning', 'success'];
 function banner() { const b = getS('site_banner', null); if (!b || !b.on) return null; const t = now(); if ((b.starts_at && t < b.starts_at) || (b.ends_at && t > b.ends_at)) return null; return { text: b.text, link: b.link, link_label: b.link_label, tone: b.tone, id: b.id, dismissible: b.dismissible !== false }; }
-function setBanner(req, b) {
+function setBanner(req, b) { cfgCache = null; /* v7: public config shows changes at once */
   const v = { on: !!b.on, text: str(b.text, 200), link: /^\/[^\s"'<>]{0,200}$|^https:\/\/[^\s"'<>]{4,200}$/.test(b.link || '') ? b.link : '', link_label: str(b.link_label, 30), tone: TONES.includes(b.tone) ? b.tone : 'info',
     starts_at: b.starts_at ? Math.floor(+b.starts_at) : null, ends_at: b.ends_at ? Math.floor(+b.ends_at) : null, dismissible: b.dismissible !== false, id: now().toString(36) };
   if (v.on && !v.text) return { ok: false, error: 'Write the banner text.' };

@@ -208,12 +208,12 @@ function item(req, id, itemId, on) {
     const col = { banner: 'eq_banner', frame: 'eq_frame', title: 'eq_title', color: 'eq_color', effect: 'eq_effect', badge: 'eq_badge' }[it.type]; if (col) db.prepare(`UPDATE users SET ${col}='' WHERE id=? AND ${col} IN (?,?)`).run(id, it.id, 'shop:' + it.id); }
   A_(req, id, on ? 'user.item_grant' : 'user.item_revoke', it.id); return { ok: true };
 }
-function ban(req, id, on, reason = '') {
+function ban(req, id, on, reason = '') { try { require('./results').clearCache(); } catch {}
   const u = db.prepare('SELECT id, username FROM users WHERE id=?').get(id); if (!u) return { ok: false, error: 'Player not found.' };
   db.prepare('UPDATE users SET banned=?, suspended_until=NULL, ban_reason=? WHERE id=?').run(on ? 1 : 0, on ? String(reason).slice(0, 200) : '', id);
   A_(req, id, on ? 'user.ban' : 'user.unban', reason); return { ok: true };
 }
-function suspend(req, id, hours, reason = '') {
+function suspend(req, id, hours, reason = '') { try { require('./results').clearCache(); } catch {}
   hours = Number(hours); if (!Number.isFinite(hours) || hours <= 0 || hours > 24 * 365) return { ok: false, error: 'Suspend for 1 hour to 365 days.' };
   if (!String(reason || '').trim()) return { ok: false, error: 'A reason is required.' };
   const until = now() + hours * 3600e3;
@@ -221,7 +221,7 @@ function suspend(req, id, hours, reason = '') {
   A_(req, id, 'user.suspend', `${hours} h: ${reason}`); return { ok: true, until };
 }
 function unsuspendExpired() { return db.prepare('UPDATE users SET banned=0, suspended_until=NULL WHERE suspended_until IS NOT NULL AND suspended_until < ?').run(now()).changes; }
-function shadow(req, id, on) { const r = db.prepare('UPDATE users SET shadow_banned=? WHERE id=?').run(on ? 1 : 0, id); if (!r.changes) return { ok: false, error: 'Player not found.' }; A_(req, id, on ? 'user.shadow_ban' : 'user.shadow_unban'); return { ok: true }; }
+function shadow(req, id, on) { const r = db.prepare('UPDATE users SET shadow_banned=? WHERE id=?').run(on ? 1 : 0, id); if (!r.changes) return { ok: false, error: 'Player not found.' }; try { require('./results').clearCache(); } catch {} /* standings change at once */ A_(req, id, on ? 'user.shadow_ban' : 'user.shadow_unban'); return { ok: true }; }
 function clearFlags(req, id, action = 'clear') {
   const AC = require('./anticheat'); const open = db.prepare("SELECT run_id FROM run_flags WHERE user_id=? AND status IN ('open','note')").all(id);
   for (const f of open) AC.review(f.run_id, action === 'confirm' ? 'confirm' : 'clear', RO.who(req).username, 'bulk from player profile');

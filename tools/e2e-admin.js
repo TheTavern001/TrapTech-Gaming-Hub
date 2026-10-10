@@ -1,4 +1,11 @@
 // v7 items 22-23 end-to-end test: giveaway builder (custom giveaway with an uploaded image, 2 games, 3 prizes, 37 minutes,
+// v7 notes (Oct 10 2026), expectations changed only where a feature was intentionally replaced:
+//  - seeded runs are tagged with the giveaway's event_id (v7: only runs started in an official event count)
+//  - ties: the shorter total server-timed play wins (skill-only tie-breaks) instead of first-to-score
+//  - the chance games (Plinko, Spin to Win, Blazed Roulette) are retired: 13 profiles, every live game giveaway-compatible
+//  - player sign-in is /api/auth/signin; the admin profile payload is { account }; analytics returns dau/signups/totals
+// Real bugs this suite caught and v7 fixed: multi-run tie-break duration, over-cap runs not using an attempt,
+// stale public site config after events/banner changes, stale standings after a shadow-ban.
 // run to natural completion with tiebreakers + a random-draw prize; a recurring series), Game Rules Profiles (edit, reset,
 // exact-game-hunt.json importer dry-run + apply, builder pre-fill) and Reese's competition formats (7-day campaign 1-30,
 // 72 h endless survival+distance, 5-day tower defense highest round, 24 h marathon, 48 h with a 30-min run cap, 60-s best of 3,
@@ -153,7 +160,7 @@ function player() {
     r = await O('/api/admin/v7/sweep', { body: {} }); let G = (await O('/api/admin/v7/gw/' + FG)).body;
     ok(G.giveaway.finalized_at && G.results, 'ended at its scheduled time and finalized (immutable standings)', G.giveaway);
     const W = (G.results && G.results.winners) || [];
-    ok(W.length === 3 && W[0].username === uname('ava') && W[1].username === uname('ben') && [uname('cam'), uname('dee'), uname('eli')].includes(W[2].username), 'winners: 1st ava + 2nd ben by rank (tiebreaker), 3rd prize by verifiable random draw among the rest', W.map(w => [w.place, w.username, w.method]));
+    ok(W.length === 3 && W[0].username === uname('ben') && W[1].username === uname('ava') && [uname('cam'), uname('dee'), uname('eli')].includes(W[2].username), 'winners: 1st ben + 2nd ava by rank (v7 skill tie-break: shorter total server-timed play; replaces first-to-score), 3rd prize by verifiable random draw among the rest', W.map(w => [w.place, w.username, w.method]));
     r = await player()(`/api/giveaways/${FG}/verify`); ok(r.status !== 200 || (r.body.hash_ok !== false && r.body.seed_ok !== false), 'verify bundle: entrants hash + draw seed check out', r.body && { h: r.body.hash_ok, s: r.body.seed_ok });
     r = await O(`/api/admin/v7/gw/${FG}/claims/${U.ava}`, { body: { action: 'contacted' } }); ok(r.body.ok, 'claims: winner marked contacted');
     r = await O(`/api/admin/v7/gw/${FG}/claims/${U.ava}`, { body: { action: 'claimed' } }); ok(r.body.ok && r.body.winners.find(w => w.user_id === U.ava).claimed_at, 'claims: winner marked claimed', r.body);
@@ -252,7 +259,7 @@ function player() {
     r = await O('/api/admin/v7/log?q=staff'); ok(r.body.ok && r.body.log.rows ? r.body.log.rows.length > 0 : (r.body.log || []).length > 0, 'staff actions in the action log');
 
     console.log('# player actions');
-    const fid = U.fay; let pr = (await O('/api/admin/v7/users/' + fid)).body; ok(pr.ok && pr.user && pr.user.username === uname('fay'), 'player profile');
+    const fid = U.fay; let pr = (await O('/api/admin/v7/users/' + fid)).body; ok(pr.ok && pr.account && pr.account.username === uname('fay'), 'player profile');
     r = await O('/api/admin/v7/users?q=' + uname('fay')); ok(r.body.rows.some(x => x.id === fid), 'search players');
     r = await O('/api/admin/v7/users/' + fid, { method: 'PUT', body: { potato: 'fay_potato', region: 'MI' } }); ok(r.body.ok && r.body.changed.length === 2, 'edit potato + state', r.body);
     r = await O(`/api/admin/v7/users/${fid}/points`, { body: { amount: 250, reason: 'e2e goodwill' } }); ok(r.body.ok, 'grant points');
@@ -269,7 +276,7 @@ function player() {
     r = await O(`/api/admin/v7/users/${fid}/shadow`, { body: { on: false } }); st = await top(mar.id); ok(st.some(x => x[0] === 'fay'), 'lifting the shadow-ban restores them');
     r = await O(`/api/admin/v7/users/${fid}/suspend`, { body: { hours: 24 } }); ok(!r.body.ok, 'suspension needs a reason');
     r = await O(`/api/admin/v7/users/${fid}/suspend`, { body: { hours: 24, reason: 'cool-off' } }); ok(r.body.ok, 'suspend 24 h');
-    let PL = player(); r = await PL('/api/auth/login', { body: { username: uname('fay'), password: PW } }); ok(!r.body.ok, 'suspended player can not sign in', r.body);
+    let PL = player(); r = await PL('/api/auth/signin', { body: { username: uname('fay'), password: PW } }); ok(!r.body.ok, 'suspended player can not sign in', r.body);
     r = await O(`/api/admin/v7/users/${fid}/suspend`, { body: { lift: true } }); ok(r.body.ok, 'lift suspension');
     r = await O(`/api/admin/v7/users/${fid}/clear-flags`, { body: { action: 'clear' } }); ok(r.body.ok, 'clear anti-cheat flags');
     r = await O(`/api/admin/v7/users/${fid}/reset`, { body: {} }); ok(r.body.ok && /^[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(r.body.code) && r.body.path.startsWith('/reset-password?token=') && r.body.potato_message.includes(r.body.code), 'reset link + code + Potato message', r.body);
@@ -277,7 +284,7 @@ function player() {
     r = await PL('/api/auth/reset', { body: { username: uname('fay'), code: 'AAAA-AAAA', password: 'brand-new-pass-1' } }); ok(!r.body.ok, 'wrong reset code rejected');
     r = await PL('/api/auth/reset', { body: { username: uname('fay'), code: rcode, password: 'brand-new-pass-1' } }); ok(r.body.ok, 'player redeems the reset code', r.body);
     r = await PL('/api/auth/reset', { body: { token: rtok, password: 'brand-new-pass-2' } }); ok(!r.body.ok, 'the link stops working once the code was used (one reset per issue)');
-    r = await PL('/api/auth/login', { body: { username: uname('fay'), password: 'brand-new-pass-1' } }); ok(r.body.ok, 'player signs in with the new password', r.body);
+    r = await PL('/api/auth/signin', { body: { username: uname('fay'), password: 'brand-new-pass-1' } }); ok(r.body.ok, 'player signs in with the new password', r.body);
     r = await fetch(BASE + '/reset-password'); ok(r.status === 200, 'reset page served');
     r = await PL('/api/report', { body: { kind: 'user', username: uname('eli'), reason: 'cheating', details: 'e2e' } }); ok(r.body.ok, 'player reports another player');
     r = await O('/api/admin/v7/mod/reports'); const rep = r.body.reports.find(x => x.target_username === uname('eli') || x.target === uname('eli') || JSON.stringify(x).includes(uname('eli')));
@@ -306,16 +313,16 @@ function player() {
     r = await O('/api/admin/v7/badges', { body: { name: `E2E Champ ${tag}`.slice(0, 40), icon: 'trophy', color: '#22d3ee', description: 'e2e' } }); ok(r.body.ok && r.body.id.startsWith('c-'), 'create a custom badge', r.body); const cb = r.body.id;
     r = await O('/api/admin/v7/badges/award', { body: { username: uname('ava'), badge: cb, note: 'e2e' } }); ok(r.body.ok, 'award the custom badge by username');
     r = await O('/api/admin/v7/badges/' + cb, { method: 'PUT', body: { name: 'E2E Champ edited', icon: 'star' } }); ok(r.body.ok, 'edit the badge');
-    r = await O('/api/admin/v7/analytics?days=30'); ok(r.body.ok && r.body.series && Object.keys(r.body).length > 3, 'analytics (30 days)', Object.keys(r.body));
+    r = await O('/api/admin/v7/analytics?days=30'); ok(r.body.ok && r.body.dau && r.body.signups && r.body.totals, 'analytics (30 days)', Object.keys(r.body));
     r = await O('/api/admin/v7/banner', { body: { on: true, text: 'E2E banner', tone: 'info', link: '/giveaways', link_label: 'Play' } }); ok(r.body.ok, 'site banner on');
     r = await player()('/api/site-config'); ok(r.body.banner && r.body.banner.text === 'E2E banner', 'banner in public site config');
     await O('/api/admin/v7/banner', { body: { on: false } });
     r = await O('/api/admin/v7/broadcast', { body: { title: 'E2E broadcast', body: 'hello', link: '/giveaways' } }); ok(r.body.ok, 'broadcast notification', r.body);
     r = await O('/api/admin/v7/settings', { method: 'PUT', body: { maintenance: { on: true, message: 'E2E maintenance' }, age_gate: { title: 'Hold up', text: 'Adults 21+ only.' }, legal: { terms: '<p>E2E terms</p><script>x</script>' } } }); ok(r.body.ok, 'settings: maintenance + age gate + legal override');
     r = await player()('/api/site-config'); ok(r.body.maintenance && r.body.maintenance.on && r.body.age_gate.title === 'Hold up' && r.body.legal.terms === '<p>E2E terms</p>', 'public config: maintenance, age gate text, sanitized legal override', r.body);
-    PL = player(); r = await PL('/api/auth/login', { body: { username: uname('ava'), password: PW } }); ok(r.status === 503 && r.body.maintenance, 'maintenance blocks player writes', r.status);
+    PL = player(); r = await PL('/api/auth/signin', { body: { username: uname('ava'), password: PW } }); ok(r.status === 503 && r.body.maintenance, 'maintenance blocks player writes', r.status);
     r = await O('/api/admin/v7/settings', { method: 'PUT', body: { maintenance: { on: false }, legal: { terms: '' } } }); ok(r.body.ok, 'maintenance off, legal override removed');
-    r = await PL('/api/auth/login', { body: { username: uname('ava'), password: PW } }); ok(r.body.ok, 'players can write again');
+    r = await PL('/api/auth/signin', { body: { username: uname('ava'), password: PW } }); ok(r.body.ok, 'players can write again');
 
     if (!NO_SHOTS) {
       console.log('# screenshots (phone 390x844 + desktop 1366x900)');
