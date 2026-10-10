@@ -379,3 +379,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Bug fixed: balloon speed was in cells/s but divided by cell size, so balloons crawled (about 0.05 cells/s). It is now about 2 cells/s, scaling up with layers.
 - td.js got optional hooks (drawMap, drawTower, drawShot, drawBar, onPop); the default rendering is unchanged.
 - Tests: e2e PASS (60 fps). Bug pass PASS. Scripted run: wave 3, 111 pops, 0 lives lost. Side-by-side: docs/audit/pop-defense-vs-ref.jpg. Rating: visual 7/10, feel 7/10.
+
+## Hill Hauler - DONE (2026-10-10 08:30 ET)
+- Physics rebuilt on Matter.js: chamfered chassis, 2 friction wheels on damped spring suspension (2 constraints each), wheel motor via angular-velocity drive, pitch control (strong in the air, slight on the ground), a fixed 120 Hz step with render interpolation, and streamed static terrain segments (created ahead, removed behind).
+- Art: a code-drawn buggy (gradient body, outline, roll cage, helmeted driver, leaf decal, headlight), tread tyres with alloy rims and visible suspension arms, dirt with stone flecks under a 2-tone grass lip, 3 parallax hill layers, a sun glow, clouds, distance posts, "HIGH COUNTRY dispensary 21+" billboards, a red jerrycan pickup, spinning Kenney coins, tyre dust and a dial fuel gauge.
+- Feel: with the gas held down a bot reaches about 490 m before it over-revs into a back flip, so throttle control is the skill, as in the reference.
+- Tests: e2e PASS (60 fps). Bug pass PASS (memory +0.1 MB). Side-by-side: docs/audit/hill-hauler-vs-ref.jpg. Rating: visual 7/10, feel 7/10.
