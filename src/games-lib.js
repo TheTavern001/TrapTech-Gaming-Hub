@@ -52,6 +52,27 @@ const LIST = [
   T('strain-crush', 'Strain Crush', 'Strain match-3 (Candy Crush style)', 11, 'C', 'short-session', 400, true, '10 per gem x cascade chain (3 min)', '3 days'),
   T('bud-bar', 'Bud Bar', 'Dispensary tapper (Tapper style)', 11, 'C', 'endless', 80, true, 'Serve 50, empties 25', '3 days'),
   T('green-dash', 'Green Dash', 'Delivery runner', 11, 'C', 'endless', 60, true, 'Distance + deliveries 100', '3 days'),
+  // Batch 3 - Endless Runners + Driving + Reflex remainder
+  T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
+  T('hill-glider', 'Hill Glider', 'Tiny Wings', 0, 'A', 'endless', 60, true, 'Distance m + perfect slides 25', '3 days'),
+  T('dune-glide', 'Dune Glide', 'Alto\'s Adventure', 0, 'A', 'endless', 80, true, 'Distance + flips 100 x n + coins 5', '3 days'),
+  T('moto-lanes', 'Moto Lanes', 'Traffic Rider', 1, 'A', 'endless', 60, true, 'Distance + near misses 10 + coins', '3 days'),
+  T('egg-roll', 'Egg Roll', 'Eggy Car', 1, 'A', 'endless', 40, true, 'Distance m + coins 5', '3 days'),
+  T('monster-crush', 'Monster Crush', 'Monster truck crusher', 1, 'A', 'endless', 120, true, 'Distance + crushed cars 50 + flips', '3 days'),
+  T('park-getaway', 'Park Getaway', 'Pako Forever', 1, 'A', 'endless', 300, true, 'Time 2/s, cash bags 100 x heat, cops wrecked 50-100 x heat', '3 days'),
+  T('highway-heist', 'Highway Heist', 'Pako Highway', 1, 'A', 'endless', 80, true, 'Distance + cops taken down 150', '3 days'),
+  T('no-brakes', 'No Brakes', 'Faily Brakes', 1, 'A', 'endless', 80, true, 'Distance + cars passed 10', '3 days'),
+  T('cab-rush', 'Cab Rush', 'Crazy Taxi', 1, 'A', 'short-session', 40, true, 'Fares 50 + speed bonus; time extends per fare', '3 days'),
+  T('dirt-dash', 'Dirt Dash', 'Excitebike', 1, 'A', 'endless', 40, true, 'Distance m + clean landings 30', '3 days'),
+  T('road-brawl', 'Road Brawl', 'Road Rash', 1, 'A', 'endless', 120, true, 'Distance + takedowns 60-100', '3 days'),
+  T('derby-smash', 'Derby Smash', 'Demolition derby', 1, 'A', 'endless', 200, true, 'Impact damage dealt + wrecks 150', '3 days'),
+  T('dunk-flick', 'Dunk Flick', 'Dunk Shot', 7, 'A', 'endless', 25, true, '1 per basket, swish streak +n', '3 days'),
+  T('hoop-flap', 'Hoop Flap', 'Flappy Dunk', 7, 'A', 'endless', 40, true, '1 per hoop, swish 2 x streak', '3 days'),
+  T('bat-boy', 'Bat Boy', 'Baseball Boy', 7, 'A', 'endless', 80, true, 'Hit distance/4, home run 100', '3 days'),
+  T('pen-throw', 'Pen Throw', 'Pineapple Pen', 7, 'A', 'endless', 10, true, 'Hit 1, perfect center 3', '3 days'),
+  T('duck-shot', 'Duck Shot', 'Duck Hunt', 7, 'A', 'endless', 400, true, 'Bird 100 + 20 x round, gold +400', '3 days'),
+  T('paper-toss', 'Paper Toss', 'Paper Toss', 7, 'A', 'endless', 8, true, '1-5 per basket by wind strength', '1-3 days'),
+  T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'short-session', 100, true, 'Rings 10-100, 9 balls', '1-3 days'),
 ];
 const games = LIST.map(x => {
   const s = SOURCES[x.src];

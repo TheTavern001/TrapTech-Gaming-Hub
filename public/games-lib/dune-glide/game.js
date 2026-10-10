@@ -1,0 +1,5 @@
+// Dune Glide - original sandboarding over dunes with backflips (Hub build, shared hillcar.js) // @uses hillcar.js
+HillCar({ id: 'gl-dune-glide', title: 'DUNE GLIDE', auto: 330, wheelR: 6, base: 46, wheels: false, headH: 40, crashText: 'Wiped out', help: 'Tap / Space to jump, HOLD in the air to backflip\nLand flat - flips and air time score big',
+  theme: { sky1: '#4c1d95', sky2: '#f472b6', hill: '#fbbf24', dirt: '#b45309', far: '#7c3aed', sun: '#fde68a' },
+  terrain: (x) => 320 + Math.sin(x * 0.003) * 90 + Math.sin(x * 0.0071 + 2) * 45 + Math.sin(x * 0.019) * 12,
+  body: (c) => { c.fillStyle = '#ef4444'; Kit.rr(c, -30, -8, 60, 6, 3); c.fill(); c.strokeStyle = '#1e1b4b'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(-8, -8); c.lineTo(-4, -26); c.lineTo(8, -8); c.moveTo(-4, -26); c.lineTo(0, -40); c.moveTo(0, -36); c.lineTo(-14, -30); c.moveTo(0, -36); c.lineTo(14, -32); c.stroke(); Kit.circ(c, 2, -46, 6, '#1e1b4b'); c.fillStyle = '#fde047'; c.fillRect(-6, -52, 14, 3); } });

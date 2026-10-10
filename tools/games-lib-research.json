@@ -281,5 +281,138 @@
    "Paperboy clones (Atari)",
    "GAME-CANDIDATES #8 Dodging Fish (MIT, dodge-only)"
   ]
+ },
+ "tunnel-hop": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "Run 3 (Player 03, proprietary Flash/HTML5)",
+   "js13k tunnel entries reviewed: none with gravity-wall mechanic + clean license"
+  ]
+ },
+ "hill-glider": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "Tiny Wings (proprietary iOS)",
+   "No open-source HTML5 Tiny Wings clone with license found on GitHub/itch"
+  ]
+ },
+ "dune-glide": {
+  "picked": "BUILT (shared Kit; original code/art), hillcar.js",
+  "rejected": [
+   "Alto's Adventure (proprietary)",
+   "Godot sandboarding demos: Godot web export far over 1.5MB"
+  ]
+ },
+ "moto-lanes": {
+  "picked": "BUILT (shared Kit; original code/art), runner3d.js",
+  "rejected": [
+   "jakesgordon/javascript-racer (MIT code but music licensed only for that project; Outrun-style not traffic weaving)",
+   "Traffic Rider (proprietary)"
+  ]
+ },
+ "egg-roll": {
+  "picked": "BUILT (shared Kit; original code/art), hillcar.js",
+  "rejected": [
+   "Eggy Car (proprietary)",
+   "No licensed clone found"
+  ]
+ },
+ "monster-crush": {
+  "picked": "BUILT (shared Kit; original code/art), hillcar.js",
+  "rejected": [
+   "Monster-truck Phaser examples (no clear license / demo only)"
+  ]
+ },
+ "park-getaway": {
+  "picked": "BUILT (shared Kit; original code/art), topcar.js",
+  "rejected": [
+   "Pako Forever (Tree Men Games, proprietary)",
+   "No open-source clone found"
+  ]
+ },
+ "highway-heist": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "Pako Highway (proprietary)"
+  ]
+ },
+ "no-brakes": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "Faily Brakes (Spunge Games, proprietary)"
+  ]
+ },
+ "cab-rush": {
+  "picked": "BUILT (shared Kit; original code/art), topcar.js",
+  "rejected": [
+   "Crazy Taxi (Sega trademark)",
+   "GitHub taxi demos: no license or incomplete"
+  ]
+ },
+ "dirt-dash": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "Excitebike (Nintendo assets)",
+   "No js13k/itch open-licensed lane motocross found"
+  ]
+ },
+ "road-brawl": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "nicolasbize/roadkill (MIT/CC, very good, but Godot web export is tens of MB, over 1.5MB cap) - best alternative if cap is lifted",
+   "limitmhw/Road-Rash (no license file)",
+   "gemsjohn/road-rash-starter-pack (MIT, three.js starter only, not a game)"
+  ]
+ },
+ "derby-smash": {
+  "picked": "BUILT (shared Kit; original code/art), topcar.js",
+  "rejected": [
+   "Demolition-derby Three.js demos (heavy, no licence)"
+  ]
+ },
+ "dunk-flick": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "Dunk Shot (Ketchapp, proprietary)"
+  ]
+ },
+ "hoop-flap": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "Flappy Dunk (Ketchapp, proprietary)",
+   "Flappy clones are MIT but bird art; built hoop variant instead"
+  ]
+ },
+ "bat-boy": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "Baseball Boy (Voodoo, proprietary)"
+  ]
+ },
+ "pen-throw": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "PPAP pen game (unlicensed fan games)"
+  ]
+ },
+ "duck-shot": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "MattSurabian/DuckHunt-JS (MIT code, 624 stars, most faithful) - REJECTED: ships Nintendo sprites/sounds, trademark",
+   "ErickWendel/DuckHunt-JS fork (same assets)"
+  ]
+ },
+ "paper-toss": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "timdream/ie9toss (demo, no clear license)",
+   "cckwes/papertoss (QtQuick/Python, not web)"
+  ]
+ },
+ "skee-roll": {
+  "picked": "BUILT (shared Kit; original code/art)",
+  "rejected": [
+   "No open-source HTML5 skee-ball with license found"
+  ]
  }
 }
