@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" role="img" aria-labelledby="title desc">
+<title id="title">Neon Circuit</title><desc id="desc">Original neon arcade racer cover art with a glowing hover racer on a futuristic track.</desc>
+<defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#111735"/><stop offset="1" stop-color="#030510"/></linearGradient><linearGradient id="car" x2="0" y2="1"><stop stop-color="#f8ffff"/><stop offset=".45" stop-color="#38f5ff"/><stop offset="1" stop-color="#7427e8"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="600" height="360" fill="url(#bg)"/>
+<g stroke="#4a52b8" stroke-opacity=".4" fill="none"><path d="M0 275L300 100 600 275M0 310L300 130 600 310M0 345L300 160 600 345"/><path d="M100 360L270 95M220 360L290 95M380 360L310 95M500 360L330 95"/></g>
+<path d="M60 360L250 110H350L540 360" fill="#121a3a" stroke="#33f5ff" stroke-width="3" filter="url(#glow)"/>
+<path d="M300 120L300 360" stroke="#b6ff42" stroke-width="3" stroke-dasharray="18 16"/>
+<g transform="translate(300 210)" filter="url(#glow)"><ellipse cy="62" rx="62" ry="14" fill="#32f5ff" opacity=".3"/><path d="M0 -65L32 -15L42 36L0 23L-42 36L-32 -15Z" fill="url(#car)" stroke="#efffff" stroke-width="3"/><path d="M0 -48L15 -10L0 0L-15 -10Z" fill="#121b45"/><path d="M-28 30L-13 43L-5 68L-22 57ZM28 30L13 43L5 68L22 57Z" fill="#ff38d7"/></g>
+<text x="28" y="48" font-family="Arial,sans-serif" font-size="16" font-weight="700" letter-spacing="5" fill="#b6ff42">THE GAMING HUB ORIGINAL</text><text x="28" y="82" font-family="Arial,sans-serif" font-size="31" font-weight="900" fill="#f4ffff">NEON CIRCUIT</text><text x="30" y="112" font-family="Arial,sans-serif" font-size="13" letter-spacing="3" fill="#4ff7ff">RACE THE RIFT. CHASE THE LIGHT.</text>
+</svg>
