@@ -922,10 +922,10 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
     <div class="back-row" style="justify-content:space-between"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button>${r.is_me ? `<button class="iconbtn" id="gear" aria-label="Settings">${icon('settings')}</button>` : ''}</div>
     <div class="prof-banner bn-${esc(cos.banner)}${cos.effect ? ' fx ' + esc(cos.effect) : ''}" id="pbanner">
       <div class="prof-head">${framed(p.username, p.demo, cos, 'lg')}
-        <div><div class="name${cos.color ? ' nc-' + esc(cos.color) : ''}"><span class="nt">${esc(p.username)}</span>${demoTag(p.demo)}${badgeIcon(cos.badge)}</div>
+        <div><div class="name${cos.color ? ' nc-' + esc(cos.color) : ''}"><span class="nt">${esc(p.username)}</span>${demoTag(p.demo)}${badgeIcon(cos.badge)}${p.founder ? '<span class="pill founder-pill" title="Verified Hub founder">★ FOUNDER</span>' : ''} </div>
         <div class="ptitle big">${esc(cos.title)}</div>
         ${S.me && S.me.username === p.username ? `<a class="btn sm ghost" href="/avatar" id="edit-avatar">${icon('pencil')} Edit avatar</a>` : ''}<div id="px-show"></div>
-        <div class="small pmeta">Level ${p.level.level} <span style="color:var(--cyan)">•</span> Member Since ${new Date(p.member_since).getFullYear()}</div>
+        <div class="small pmeta">Hub ID ${esc(p.user_id || '—')} <span style="color:var(--cyan)">•</span> Level ${p.level.level} <span style="color:var(--cyan)">•</span> Member Since ${new Date(p.member_since).getFullYear()}</div>
         <div class="xpbar" title="${fmt(p.level.into)} / ${fmt(p.level.need)} XP to level ${p.level.level + 1}" aria-label="Level progress"><i style="width:${Math.round(p.level.into / p.level.need * 100)}%"></i></div>
         <div class="pchips">${p.global_rank ? `<span class="pill">${icon('trophy')} Global #${p.global_rank}</span>` : ''}${p.streak.current ? `<span class="pill fire">${icon('flame')} ${p.streak.current}-day streak</span>` : ''}<span class="pill">${icon('calendar-range')} S${p.season.number} tier ${p.season.tier}</span></div></div></div>
     </div>
