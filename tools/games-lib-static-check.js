@@ -12,6 +12,8 @@ const root = path.join(__dirname, '..');
 const pub = path.join(root, 'public', 'games-lib');
 const catalogPath = path.join(pub, 'catalog.json');
 const docPath = path.join(root, 'docs', 'GAMES-LIB.md');
+const hubAppPath = path.join(root, 'public', 'js', 'app.js');
+const libraryPagePath = path.join(pub, 'index.html');
 const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
 const errors = [];
 const warnings = [];
@@ -51,6 +53,15 @@ for (const g of games) {
 for (const slug of catalogBySlug.keys()) if (!sourceBySlug.has(slug)) errors.push('Unregistered catalog slug: ' + slug);
 
 const doc = fs.existsSync(docPath) ? fs.readFileSync(docPath, 'utf8') : '';
+const hubApp = fs.existsSync(hubAppPath) ? fs.readFileSync(hubAppPath, 'utf8') : '';
+const libraryPage = fs.existsSync(libraryPagePath) ? fs.readFileSync(libraryPagePath, 'utf8') : '';
+if (!hubApp.includes('href="/games-lib/index.html"')) errors.push('Main Hub /games page is missing the Games Library entry point.');
+if (!hubApp.includes("fetch('/api/games-lib'")) errors.push('Main Hub does not read the live Games Library count.');
+if (hubApp.includes('150+ more games')) errors.push('Main Hub contains a stale Games Library count.');
+for (const slug of ['neon-circuit', 'rift-survival']) {
+  if (!libraryPage.includes(slug)) errors.push('Library page is missing new-game spotlight for ' + slug);
+}
+if (!libraryPage.includes('id="category"') || !libraryPage.includes('id="eligibility"')) errors.push('Library page is missing category/status filters.');
 const docRows = (doc.match(/^\|\s*\d+\s*\|/gm) || []).length;
 if (docRows !== games.length) errors.push('Documentation row count mismatch: ' + docRows + ' vs ' + games.length);
 
