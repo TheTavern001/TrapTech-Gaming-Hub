@@ -70,10 +70,14 @@
     try { const response = await fetch('catalog.json', {cache:'no-store'}); if (response.ok) r = await response.json(); } catch (_) {}
   }
   if (!r || !Array.isArray(r.games)) { list.innerHTML = '<p class="muted">The game catalog could not be loaded. Refresh the page or return to the Hub.</p>'; return; }
-  const games = r.games.filter(g => g && g.url && g.title);
-  const cats = Array.isArray(r.categories) ? r.categories : [...new Set(games.map(g => g.category).filter(Boolean))].sort();
+  const library = r.games.filter(g => g && g.url && g.title);
+  let core = [];
+  try { const response = await fetch('/api/games', {cache:'no-store'}); if (response.ok) { const d = await response.json(); core = (d.games || []).filter(g => g && g.id && g.title).map(g => ({ ...g, slug: g.id, url: '/play/' + encodeURIComponent(g.id), tier: 'V1', competition: 'Hub score tracking', giveaway: false, just_for_fun: false, source_group: 'core' })); } } catch (_) {}
+  const ids = new Set();
+  const games = [...library, ...core].filter(g => { if (ids.has(g.id || g.slug)) return false; ids.add(g.id || g.slug); return true; });
+  const cats = [...new Set([...(Array.isArray(r.categories) ? r.categories : []), ...games.map(g => g.category).filter(Boolean)])].sort();
   document.getElementById('total').textContent = games.length;
-  document.getElementById('giveaway-total').textContent = games.filter(g => g.giveaway).length;
+  document.getElementById('giveaway-total').textContent = games.filter(g => g.giveaway && g.source_group !== 'core').length;
   const cat = document.getElementById('category');
   for (const c of cats) { const o = document.createElement('option'); o.value = c; o.textContent = c; cat.appendChild(o); }
   const newSlugs = new Set(['neon-circuit','rift-survival']);
@@ -82,11 +86,11 @@
     const desc = g.slug === 'neon-circuit' ? 'Arcade racing · collect energy, dodge traffic, chase your best run.' : 'Arena survival · evade rift creatures and collect shards between waves.';
     return '<a class="new-card" href="'+esc(g.url)+'"><img src="'+esc(g.art)+'" alt="" loading="eager"><div class="b"><span class="new-tag">New original</span><div class="t">'+esc(g.title)+'</div><div class="desc">'+esc(desc)+'</div></div></a>';
   }).join('') || '<p class="muted">New game entries will appear here when the catalog is updated.</p>';
-  const card = g => '<a class="card" href="'+esc(g.url)+'"><img loading="lazy" src="'+esc(g.art || '')+'" alt="" onerror="this.style.display=\'none\'"><div class="b"><div class="t">'+esc(g.title)+'</div><div class="m">'+(newSlugs.has(g.slug) ? '<span class="pill g">New</span>' : '')+(g.giveaway ? '<span class="pill g">Giveaway-enabled</span>' : '<span class="pill f">Just for fun</span>')+'<span class="pill">'+esc(g.tier || '—')+'</span><div>'+esc(g.category || '')+' · '+esc(g.competition || 'browser game')+'</div></div></div></a>';
+  const card = g => '<a class="card" href="'+esc(g.url)+'"><img loading="lazy" src="'+esc(g.art || '')+'" alt="" onerror="this.style.display=\'none\'"><div class="b"><div class="t">'+esc(g.title)+'</div><div class="m">'+(newSlugs.has(g.slug) ? '<span class="pill g">New original</span>' : '')+(g.source_group === 'core' ? '<span class="pill g">Hub tracked</span>' : (g.giveaway ? '<span class="pill g">Catalog event flag</span>' : '<span class="pill f">Casual catalog</span>'))+'<span class="pill">'+esc(g.tier || '—')+'</span><div>'+esc(g.category || '')+' · '+esc(g.competition || 'browser game')+'</div></div></div></a>';
   function render() {
     const q = document.getElementById('q').value.trim().toLowerCase();
     const selectedCat = cat.value, eligibility = document.getElementById('eligibility').value;
-    const filtered = games.filter(g => (!selectedCat || g.category === selectedCat) && (eligibility === 'all' || (eligibility === 'giveaway' ? !!g.giveaway : !g.giveaway)) && (String(g.title)+' '+String(g.category || '')+' '+String(g.competition || '')).toLowerCase().includes(q));
+    const filtered = games.filter(g => (!selectedCat || g.category === selectedCat) && (eligibility === 'all' || (eligibility === 'giveaway' ? !!g.giveaway && g.source_group !== 'core' : !g.giveaway && g.source_group !== 'core')) && (String(g.title)+' '+String(g.category || '')+' '+String(g.competition || '')).toLowerCase().includes(q));
     document.getElementById('result-count').textContent = 'Showing '+filtered.length+' of '+games.length+' games';
     let html = '';
     for (const c of cats) { const group = filtered.filter(g => g.category === c); if (group.length) html += '<h2>'+esc(c)+' <span class="muted">('+group.length+')</span></h2><div class="grid">'+group.map(card).join('')+'</div>'; }
