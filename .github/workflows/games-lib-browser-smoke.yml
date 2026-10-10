@@ -57,6 +57,10 @@ jobs:
         run: node tools/e2e-hub-library.js
       - name: Test new originals on desktop and iPhone viewport
         run: node tools/e2e-games-lib.js neon-circuit,rift-survival
+      - name: Regression test known performance-risk games
+        env:
+          PLAY_MS: 4500
+        run: node tools/e2e-games-lib.js dino-dash,rail-rush,lane-racer,moto-lanes
       - name: Print server logs on failure
         if: failure()
         run: cat /tmp/hub-ci.log
