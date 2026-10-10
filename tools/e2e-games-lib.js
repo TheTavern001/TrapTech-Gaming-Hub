@@ -46,7 +46,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       const runtimeReady = await page.evaluate(() => !!(window.__GL && window.__GL.g && typeof window.__GL.state === 'string'));
       if (!runtimeReady) throw new Error('Game runtime contract missing: window.__GL.g/state; check index script paths and engine adapter.');
       const box = await page.evaluate(() => { const c = document.querySelector('canvas') || document.getElementById('gl'); const r = c.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
-      await page.keyboard.press('Space'); await page.mouse.click(box.x + box.w / 2, box.y + box.h / 2); await page.waitForTimeout(900);
+      await page.keyboard.press('Space'); await page.mouse.click(box.x + box.w / 2, box.y + box.h / 2); await page.waitForFunction(() => window.__GL && ['play', 'over'].includes(window.__GL.state), null, { timeout: 12000 }).catch(() => {});
       R.desktop.started = await page.evaluate(() => window.__GL && window.__GL.state);
       let shot = false; const end = Date.now() + PLAY_MS;
       while (Date.now() < end) {
