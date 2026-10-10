@@ -448,7 +448,7 @@ function gameCard(g, tall = false) {
 route(/^\/games$/, (m, url) => {
   let cat = url.searchParams.get('cat') || 'All'; let q = '';
   const cats = ['All', 'Arcade', 'Racing', 'Puzzle', 'Strategy', 'Physics', 'Just for fun'];
-  shell('/games', `<h1>Games <span class="pill green" style="vertical-align:middle">${S.games.length} playable</span></h1>
+  shell('/games', `<h1>Games <span class="pill green" style="vertical-align:middle">${S.games.length} playable</span></h1><a class="btn sm" style="margin:-6px 0 12px" href="/games-lib/index.html">Games Library: 150+ more games</a><!-- [games-lib hook] -->
     <div class="field ic">${icon('search')}<input class="input" id="q" placeholder="Search games..." autocomplete="off"></div>
     <div class="chips" id="chips">${cats.map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('')}</div>
     <div class="grid2 games-grid" id="grid"></div>

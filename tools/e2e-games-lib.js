@@ -42,7 +42,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
         const r = Math.random();
         if (r < 0.45) { const k = KEYS[Math.floor(Math.random() * KEYS.length)]; await page.keyboard.down(k); await page.waitForTimeout(60 + Math.random() * 160); await page.keyboard.up(k); }
         else { const x = box.x + box.w * (0.15 + Math.random() * 0.7), y = box.y + box.h * (0.3 + Math.random() * 0.6); await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 80, { steps: 3 }); await page.waitForTimeout(40 + Math.random() * 200); await page.mouse.up(); }
-        if (!shot && Date.now() > end - PLAY_MS + 2200) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') await page.locator('canvas').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
+        if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') await page.locator('canvas').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
       }
       R.desktop.fps = await page.evaluate(() => window.__GL.fps);
       if (!shot) await page.locator('canvas').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 });
@@ -62,7 +62,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       await mp.goto(BASE + g.url, { waitUntil: 'load' }); await mp.waitForTimeout(400);
       const vp = mp.viewportSize(); await mp.touchscreen.tap(vp.width / 2, vp.height / 2); await mp.waitForTimeout(900);
       R.mobile.started = await mp.evaluate(() => window.__GL && window.__GL.state);
-      const mend = Date.now() + 3000; while (Date.now() < mend) { await mp.touchscreen.tap(vp.width * (0.1 + Math.random() * 0.8), vp.height * (0.35 + Math.random() * 0.6)); await mp.waitForTimeout(80 + Math.random() * 150); }
+      const mend = Date.now() + 3000; while (Date.now() < mend) { await mp.touchscreen.tap(vp.width * (0.2 + Math.random() * 0.7), vp.height * (0.35 + Math.random() * 0.55)); await mp.waitForTimeout(80 + Math.random() * 150); }
       R.mobile.fps = await mp.evaluate(() => window.__GL.fps); R.mobile.inputs = await mp.evaluate(() => window.__GL.g.inputs);
       await mp.screenshot({ path: path.join(SHOTS, g.slug + '-iphone.png') });
       await mctx.close();

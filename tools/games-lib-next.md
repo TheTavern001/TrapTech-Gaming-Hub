@@ -1,0 +1,2 @@
+- Batch 2 (A tier + Cannabis): Jetpack Joyride, Canabalt, Helix Jump, Super Hexagon, Color Switch, ZigZag, Traffic Racer, Drift Boss, Missile Command, Centipede, Bubble Shooter, Minesweeper, Stack, Knife Hit, Whac-A-Mole, + Cannabis: grow sim, trimming speed, strain match-3, dispensary tapper, delivery runner.
+- Then batches 3-8 cover the remaining references per category in docs/REESE-MASTER-CATALOG.md, Cannabis woven in, and the Just-for-fun extras (Hedgewars / Quake shareware / DiabloWeb / open-source zombie FPS: licence check, external link or skip).
