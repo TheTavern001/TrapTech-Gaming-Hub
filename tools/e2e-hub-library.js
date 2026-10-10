@@ -42,7 +42,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     });
     await page.goto(BASE + '/games-lib/neon-circuit/index.html?event=TT-ABCDE', { waitUntil: 'load' });
     await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 10000 });
-    await page.locator('canvas').click({ position: { x: 180, y: 220 } });
+    await page.evaluate(() => { const canvas = document.querySelector('canvas'); const r = canvas.getBoundingClientRect(); const init = { bubbles: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, pointerId: 1, pointerType: 'mouse', isPrimary: true }; canvas.dispatchEvent(new PointerEvent('pointerdown', init)); canvas.dispatchEvent(new PointerEvent('pointerup', init)); });
     await page.waitForFunction(() => window.__GL.state === 'play', null, { timeout: 10000 });
     await page.waitForFunction(() => window.__GL.g && window.Hub && window.Hub.id === 'gl-neon-circuit' && window.Hub.err, null, { timeout: 5000 }).catch(() => {});
     assert.equal(forwardedEvent, 'TT-ABCDE', 'library adapter should forward the event reference for server-side validation');
