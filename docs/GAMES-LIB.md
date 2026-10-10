@@ -288,3 +288,18 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 | Paper Toss | - | - | - | - | 2D | not audited yet |  |
 | Skee Roll | - | - | - | - | 2D | not audited yet |  |
 | Castle Crush | 7 | 7 | 60/60 | - | 2D | passes | Matter.js physics (fixed step, 2 substeps), textured wood/stone/glass, gradient sky + sun bloom, 3-layer parallax hills, drifting clouds, shot trail, impact dust + shake. Still procedural shapes, no sprite art; trebuchet arm is not animated by physics. |
+
+## Update 2026-10-10 (03:00 ET)
+- **Heroes**: Rail Rush, Ruin Runner and Moto Lanes now use the Quaternius UBC at full detail (14k tris, 1024 px base/normal/roughness maps) with soft PBR skin/cloth (`pbrChar` in runner3x.js), smooth normals, and true proportions (the big-head/hand/foot scaling is removed). The chaser stays on the lighter 512 px build (it acts as the distant LOD). Lane Racer has no visible driver.
+- **Moto Lanes**: procedural tuck plus lean on the spine/head bones on top of the riding loop. Side-by-side saved: docs/audit/moto-lanes-vs-ref.jpg. Honest status: **below the reference tier** (sparse traffic in the shot, first-person reference). Visual 6/10, feel 7/10. Rework needed: denser traffic and roadside, optional cockpit cam, IK hands on the bars.
+- **Ruin Runner**: jungle 'Verdant Ruins' theme in runner3x (carved stone blocks, mossy walls, columns, ziggurats, Quaternius jungle plants). e2e PASS (103 calls / 124k tris). Side-by-side saved: docs/audit/ruin-runner-vs-ref.jpg. **Below the reference tier**: no corner turns or cliff drops yet, and the lighting is too flat/bright. Visual 6/10, feel 6/10. Rework needed.
+- **Bud Merge** (vendored, ref 2048, Cannabis category): gabrielecirulli/2048 MIT engine, Hub bridge (seeded spawns, endless, merge events validated server-side, no board resume), green/gold leaf theme. e2e PASS. Visual 7/10, feel 8/10.
+- **Bug pass tool**: `tools/games-lib-bugpass.js` runs 3 seeded runs, pause freeze, tab hide (auto-pause), rotate/resize, 4x CPU throttle, a 30 s memory check and keyboard + touch input.
+
+| game | seeded | pause | tab | rotate | low-FPS | memory 30 s | result |
+|---|---|---|---|---|---|---|---|
+| rail-rush | ok | ok | auto-pause | ok | ok | +1.9 MB | PASS |
+| lane-racer | ok | ok | auto-pause | ok | ok | +0.1 MB | PASS |
+| moto-lanes | ok | ok | auto-pause | ok | ok | +0.2 MB | PASS |
+| ruin-runner | ok | ok | auto-pause | ok | ok | +1.9 MB | PASS |
+| bud-merge | ok | ok | n/a (turn-based) | ok | ok | +0.0 MB | PASS |
