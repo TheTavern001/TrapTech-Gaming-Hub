@@ -10,7 +10,7 @@ const dayNum = (ms) => { const [y, m, d] = dayFmt.format(new Date(ms)).split('-'
 const offFmt = new Intl.DateTimeFormat('en-US', { timeZone: cfg.TZ, timeZoneName: 'longOffset' });
 function tzOffsetMs(ms) { const p = offFmt.formatToParts(new Date(ms)).find(x => x.type === 'timeZoneName').value; const m = p.match(/GMT([+-])(\d\d):?(\d\d)?/); return m ? (m[1] === '-' ? -1 : 1) * (+m[2] * 3600e3 + (+m[3] || 0) * 60e3) : 0; }
 // ms timestamp of local midnight that starts hub-day `d`
-function dayStart(d) { const utc = d * 864e5; return utc - tzOffsetMs(utc + 12 * 3600e3); }
+function dayStart(d) { const utc = d * 864e5; const guess = utc - tzOffsetMs(utc + 12 * 3600e3); return utc - tzOffsetMs(guess); } // v7: second pass uses the offset AT midnight (DST days start at the right instant)
 
 // ---------- XP + levels ----------
 const ACH_XP = { bronze: 25, silver: 50, gold: 100, epic: 200, legendary: 400 };
