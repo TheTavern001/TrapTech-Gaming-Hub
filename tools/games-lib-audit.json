@@ -1,0 +1,26 @@
+{
+ "castle-crush": {
+  "fpsMin": 60,
+  "fpsAvg": 60,
+  "at": "2026-10-10T04:51:17.087Z"
+ },
+ "sky-flap": {
+  "fpsMin": 60,
+  "fpsAvg": 60,
+  "at": "2026-10-10T04:49:45.476Z"
+ },
+ "block-drop": {
+  "fpsMin": 60,
+  "fpsAvg": 60,
+  "at": "2026-10-10T04:49:51.785Z"
+ },
+ "rail-rush": {
+  "fpsMin": 20,
+  "fpsAvg": 28,
+  "gpu": {
+   "calls": 108,
+   "tris": 62010
+  },
+  "at": "2026-10-10T04:57:07.208Z"
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "castle-crush": {
+  "visual": 7,
+  "feel": 7,
+  "notes": "Matter.js physics (fixed step, 2 substeps), textured wood/stone/glass, gradient sky + sun bloom, 3-layer parallax hills, drifting clouds, shot trail, impact dust + shake. Still procedural shapes, no sprite art; trebuchet arm is not animated by physics."
+ },
+ "rail-rush": {
+  "visual": 7,
+  "feel": 6,
+  "notes": "three.js rebuild: Kenney CC0 animated runner (sprint/jump/crouch/die), 3-car subway trains, rails, city blocks, lamps; ACES tone map, fog, single 1024 PCF shadow map, DPR cap 1.5, baked scenery (108 calls / 62k tris). Speed lines + coin bursts. Feel 6: no hoverboard/power-ups or chaser yet, lane change lacks a lean/anim; needs real-device FPS check (box has no GPU: SwiftShader 20-28 FPS)."
+ }
+}
