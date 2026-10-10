@@ -628,3 +628,10 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: watch, then repeat. Each round adds one step and plays faster (0.62 s down to 0.24 s per step). A fifth centre pad joins at round 8, and from round 14 the four outer pads shuffle each round (with a spin animation) so you can't rely on position memory. Score is 10-20 per pad by answer speed + 25 x round. One wrong pad ends the run (the correct pad is recorded for the replay).
 - Art: neon ring of annular pads with radial gradients and glow when lit, a centre hub showing round and status, a spark ring on completion, lounge 21+ tag.
 - Tests: perfect-memory bot reached round 18 in 2 min (shuffle verified). e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
+
+## Knockout Ring (Combat: Punch-Out!!) - DONE (2026-10-10 08:06 ET)
+- Source hunt: GitHub "punch out javascript" (fan remakes using Nintendo sprites, rejected), "boxing game html5" (no licence; Phaser side-view), itch.io "boxing" jams (NC or Unity). Decision: build our own.
+- Gameplay: behind-the-back view. Opponents telegraph every attack (yellow eye flash + wind-up): left/right hooks (dodge the other way), uppercut (dodge either way), double-fist smash (block). Dodging opens him up for counters (x2 damage, fills the 3-star meter), and a full meter allows a Star Uppercut (30 x2). Punching into his guard is blocked; punching during a wind-up interrupts it. Your stamina is your life (KO +40 stamina). The 4-fighter roster loops with more HP and shorter tells, so it's endless.
+- Controls: swipe to dodge, hold the bottom area to block, tap the upper left/right to punch, double tap for the Star punch. Keys A/D, S, J/K, U.
+- Art: arena with crowd bokeh and flash dots, spotlights, 3-colour ropes and posts, blue canvas with leaf print, shaded muscular opponents (abs, brows, mouth states, dizzy stars), translucent player from behind with green gloves, red damage flash, hit sparks.
+- Tests: tell-reading bot got 7 KOs in 60 s at full stamina (a perfect-reaction bot; humans get 0.44-0.75 s tells, shrinking each lap). e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
