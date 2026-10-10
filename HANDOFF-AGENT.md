@@ -45,6 +45,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Orb Coil DONE (Zuma-style).
 - Gem Rush (Bejeweled-style) DONE (06:05)
 - Slab Stack (Stack-style) DONE (06:11)
+- Neon Flipper (Pinball) DONE (06:32)
 - Knife Toss (Knife Hit) UPGRADED (06:08)
 - Bubble Pop UPGRADED (Bubble Shooter art pass).
 - Next (Reese order): A-tier list one at a time (Bejeweled, Knife Hit, Stack, Pinball, Tron, Asteroids, Galaga, Missile Command, Tapper, Frogger) + remaining Cannabis; international search folded into each hunt. Then: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.

@@ -511,3 +511,13 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: slabs slide in alternately along X and Z. Tap to drop; the overhang is sliced off and tumbles away. A perfect drop (within 0.12) snaps, shows a ring and chains a combo; from 6 in a row the slab grows back. Speed ramps. Missing the stack ends the run. Score is 1 per slab plus up to +10 for perfect combos.
 - Art: rounded PBR slabs with soft shadows, hue that shifts slab by slab, a matching gradient sky, an eased rising camera, a dark plinth with "HIGH RISE 21+ LOUNGE" panels and a large centred score.
 - Tests: e2e PASS (needs GPU; 7 draw calls, 1.2k tris, DPR 1.5). Bug pass PASS (29 fps throttled, +0.1 MB). Rating: visual 7.5/10, feel 7.5/10.
+
+## Thumbnail check (2026-10-10 06:32 ET)
+- Contact-sheet review of all 72 thumbnails. 11 showed a title or game-over screen (color-hop, drift-king, hex-stack, hoop-flap, no-brakes, pen-throw, roof-runner, slab-stack, zig-path, dino-dash) or were missing (dune-glide); all re-shot as gameplay. New tools/games-lib-thumb.js only keeps frames taken while the state is 'play' (checked before and after the capture). e2e no longer saves a fallback frame after a run ends.
+
+## Neon Flipper (Pinball) - DONE (2026-10-10 06:32 ET)
+- Source hunt (GitHub "pinball javascript/html5", Gitee "弹珠台 H5", itch.io, js13k, OpenGames): Michael Birken's Pinball / Space Cadet ports are reverse-engineered Microsoft code (rejected, not licensed). js13k pinball entries are tiny vector tables below the bar. Matter.js pinball demos (MIT) tunnel at real ball speeds. Decision: build our own physics.
+- Physics: custom circle-vs-capsule solver at a fixed 1/600 s step (10 substeps per frame), moving-flipper surface velocity for real flips and cradles, speed clamp, stuck-ball auto-nudge, plunger-lane return.
+- Table: 3 pop bumpers, 2 slingshots, a 3-target drop bank (5000 x mult), 3 rollover lanes (all lit = multiplier up to x6; flipper buttons rotate the lit lanes), ball save at launch, extra ball at 40k and rising. Endless with 3 balls.
+- Art: neon-tube walls on a purple grid playfield, chrome bumpers with leaf caps and hit rings, glowing slings, gold targets, glossy flippers, chrome ball with trail, plunger with charge, "HAZE ARCADE 21+" centre art. Two-thumb touch (left/right halves, multi-touch), Z/M or arrow keys.
+- Tests: e2e PASS (60 fps). Bug pass PASS (49 fps throttled). Rating: visual 7.5/10, feel 7/10. Note: the table is simple next to a full real-world table (no ramps yet); a ramp and spinner are possible later upgrades.
