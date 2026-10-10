@@ -5,8 +5,8 @@
   "notes": "Matter.js physics (fixed step, 2 substeps), textured wood/stone/glass, gradient sky + sun bloom, 3-layer parallax hills, drifting clouds, shot trail, impact dust + shake. Still procedural shapes, no sprite art; trebuchet arm is not animated by physics."
  },
  "rail-rush": {
-  "visual": 6,
+  "visual": 6.5,
   "feel": 7,
-  "notes": "v2 art pass: toon+rim shading, two themes (desert/old town), dense facades, wires, signs, glossy instanced coins+sparkle, reference-style HUD. Gap vs reference: chibi blocky hero (Kenney), small trains, flat track bed. NOT counted yet."
+  "notes": "v3: smooth CC0 rigged hero/chaser with real sprint/roll/death clips, bevelled liveried trains, ballast+sleepers, saloon/cliff/clock tower/bridge set pieces. Budget 135 calls/138k tris. Remaining gap: set pieces rarely in frame, trains read far, sky flat. NOT counted yet."
  }
 }

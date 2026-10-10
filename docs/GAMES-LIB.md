@@ -239,7 +239,7 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 | Brick Blitz | - | - | - | - | 2D | not audited yet |  |
 | Rock Buster | - | - | - | - | 2D | not audited yet |  |
 | Star Swarm | - | - | - | - | 2D | not audited yet |  |
-| Rail Rush | 6 | 7 | 20/28 | 2.3 | 126 / 139k / 1.5 | REWORK | v2 art pass: toon+rim shading, two themes (desert/old town), dense facades, wires, signs, glossy instanced coins+sparkle, reference-style HUD. Gap vs reference: chibi blocky hero (Kenney), small trains, flat track bed. NOT counted yet. |
+| Rail Rush | 6.5 | 7 | 20/28 | 2.34 | 135 / 138k / 1.5 | REWORK | v3: smooth CC0 rigged hero/chaser with real sprint/roll/death clips, bevelled liveried trains, ballast+sleepers, saloon/cliff/clock tower/bridge set pieces. Budget 135 calls/138k tris. Remaining gap: set pieces rarely in frame, trains read far, sky flat. NOT counted yet. |
 | Ruin Runner | - | - | - | - | 2D | not audited yet |  |
 | Hill Hauler | - | - | - | - | 2D | not audited yet |  |
 | Most Wanted Run | - | - | - | - | 2D | not audited yet |  |

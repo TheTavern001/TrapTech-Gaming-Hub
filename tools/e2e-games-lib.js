@@ -52,6 +52,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
         if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') await page.locator('canvas#gl').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
       }
       R.desktop.fps = await page.evaluate(() => window.__GL.fps);
+      R.gpu = await page.evaluate(() => window.__R ? { calls: __R.info.render.calls, tris: __R.info.render.triangles, dpr: __R.getPixelRatio() } : null);
       if (!shot) await page.locator('canvas#gl').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 });
       // end the run through the game's own game-over path (same code path as dying) if the bot is still alive
       await page.evaluate(() => { if (window.__GL.state === 'play') { if (window.__GL.g.paused) window.__GL.g.paused = false; window.__GL.g.end('test end'); } });
@@ -74,9 +75,9 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       await mp.screenshot({ path: path.join(SHOTS, g.slug + '-iphone.png') });
       await mctx.close();
     } catch (e) { R.errors.push('harness: ' + e.message.split('\n')[0]); }
-    const ok = !R.errors.length && ['play', 'over'].includes(R.desktop.started) && R.desktop.submit === 'accepted' && R.desktop.forged === 'rejected' && ['play', 'over'].includes(R.mobile.started) && R.desktop.fps >= 20 && R.mobile.inputs > 3;
+    const ok = !R.errors.length && ['play', 'over'].includes(R.desktop.started) && R.desktop.submit === 'accepted' && R.desktop.forged === 'rejected' && ['play', 'over'].includes(R.mobile.started) && (R.gpu ? (R.gpu.calls < 150 && R.gpu.tris < 150000 && R.gpu.dpr <= 2) : R.desktop.fps >= 20) && R.mobile.inputs > 3;
     R.pass = ok; ok ? pass++ : fail++; R.ms = Date.now() - t0; results.push(R);
-    console.log(`${ok ? 'PASS' : 'FAIL'} ${g.slug.padEnd(18)} start=${R.desktop.started}/${R.mobile.started} fps=${R.desktop.fps}/${R.mobile.fps} score=${R.desktop.score} submit=${R.desktop.submit} forged=${R.desktop.forged} ${R.errors.length ? 'ERR ' + R.errors.slice(0, 2).join(' | ') : ''}`);
+    console.log(`${ok ? 'PASS' : 'FAIL'} ${g.slug.padEnd(18)} start=${R.desktop.started}/${R.mobile.started} ${R.gpu ? `fps=needs-GPU(headless ${R.desktop.fps}) budget calls=${R.gpu.calls} tris=${R.gpu.tris} dpr=${R.gpu.dpr}` : `fps=${R.desktop.fps}/${R.mobile.fps}`} score=${R.desktop.score} submit=${R.desktop.submit} forged=${R.desktop.forged} ${R.errors.length ? 'ERR ' + R.errors.slice(0, 2).join(' | ') : ''}`);
   }
   await browser.close();
   const outF = path.join(SHOTS, 'e2e-results.json'); let all = {}; try { all = JSON.parse(fs.readFileSync(outF, 'utf8')); } catch (e) {} for (const r of results) all[r.slug] = r; fs.writeFileSync(outF, JSON.stringify(all, null, 1));
