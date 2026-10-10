@@ -564,3 +564,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay (21+): each order (random strain ticket) runs GRIND (stop the needle in the zone), FILL (hold to pour, release on the line), three ROLL tucks and SEAL. Accuracy 0-100 per step; 90+ = PERFECT and builds a streak multiplier up to x5; under 25 is a botch and costs a leaf (3 leaves). Endless: speed ramps and the zone narrows per order. Order bonus = 2 x average accuracy.
 - Art: wooden rolling tray with a felt insert and "HIGH TIDE ROLLING CO. 21+" emboss, order ticket, spinning chrome grinder, textured paper that rolls into a cone with crutch and seal stripe, bud particles, smoke puffs, big PERFECT/GOOD/MEH/BOTCHED pops.
 - Tests: e2e PASS (60 fps). Bug pass PASS (49 fps throttled). Rating: visual 7/10, feel 7/10.
+
+## Smoke Rings (Cannabis: ring-blowing skill) - DONE (2026-10-10 07:00 ET)
+- Source hunt (GitHub/itch.io "smoke ring game", "vape trick game" html5, js13k, Gitee): only commercial mobile apps and unlicensed toys. Aim + power-shot mechanic modelled on basketball/paper-toss shooters. Decision: build our own.
+- Gameplay (21+): drag to aim, hold to build breath, release to puff a ring that rises, grows and slows, pushed by a changing lounge draft. Thread it through moving brass hoops; a centre pass is a BULLSEYE (double). Combo up to x6. Clearing all hoops starts a harder set (more, smaller, faster hoops, stronger draft) and forgives one miss. 3 misses end the session.
+- Art: purple lounge with bokeh lights, neon "HAZE LOUNGE - RING CLUB 21+" sign, couch silhouette, layered translucent smoke rings with soft wisps, brass hoops on chains that glow on a pass, lips that purse with breath, a breath bar and aim guide.
+- Tests: e2e PASS (60 fps). Bug pass PASS (49 fps throttled). A trajectory-solving bot reached set 5 (16,400) with no misses in 50 s. Rating: visual 7/10, feel 7/10.
