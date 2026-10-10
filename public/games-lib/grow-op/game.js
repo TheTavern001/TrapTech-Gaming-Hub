@@ -2,19 +2,19 @@
 // Six plants: keep water and nutrients in the green band, set the light cycle, swat pests, harvest at peak ripeness.
 Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to select it, then WATER / FEED / SWAT\nHarvest when the trichome meter is gold - 3 minutes', bg: '#052e16',
   buttons: [{ id: 'W', label: 'WATER' }, { id: 'F', label: 'FEED' }, { id: 'H', label: 'HARVEST' }],
-  init(g) { g.time = 180; g.sel = 0; g.plants = []; for (let i = 0; i < 6; i++) g.plants.push(newPlant(g, i)); g.pests = []; },
+  init(g) { g.time = 0; g.deaths = 0; g.sel = 0; g.plants = []; for (let i = 0; i < 6; i++) g.plants.push(newPlant(g, i)); g.pests = []; },
   update(g, dt) {
-    g.time -= dt; if (g.time <= 0) { g.time = 0; return g.end('Season over'); }
+    g.time += dt;
     const P = g.ptr; if (P.pressed && P.y < 330) { for (const p of g.plants) if (Math.abs(P.x - p.x) < 55) g.sel = p.i; for (const s of g.pests) if (Math.hypot(P.x - s.x, P.y - s.y) < 26) { s.dead = true; g.add(5, 'b'); g.sfx('pop'); g.burst(s.x, s.y, '#a3e635', 10); } }
     for (let i = 0; i < 6; i++) if (g.kd(String(i + 1))) g.sel = i; const p0 = g.plants[g.sel];
     if (g.btnP.W || g.kd('w')) { p0.water = Math.min(1.2, p0.water + 0.25); g.sfx('whoosh'); g.burst(p0.x, 200, '#38bdf8', 10, 120); }
     if (g.btnP.F || g.kd('f')) { p0.food = Math.min(1.2, p0.food + 0.22); g.sfx('click'); g.burst(p0.x, 260, '#fbbf24', 8, 100); }
     if (g.btnP.H || g.kd('h') || g.kd(' ')) harvest(g, p0);
     for (const p of g.plants) { p.water -= dt * 0.045; p.food -= dt * 0.03; const okW = p.water > 0.35 && p.water < 0.95, okF = p.food > 0.3 && p.food < 0.95; p.health = Kit.clamp(p.health + ((okW && okF) ? 0.04 : -0.08) * dt - (p.pests || 0) * 0.03 * dt, 0, 1);
-      p.grow += dt * (0.05 + 0.08 * p.health) * (okW ? 1 : 0.3); if (p.health <= 0) { g.float(p.x, 150, 'DIED', '#ef4444', 18); g.sfx('bad'); Object.assign(p, newPlant(g, p.i)); } }
-    if (g.rnd() < dt * (0.15 + (180 - g.time) / 500)) { const p = g.pick(g.plants); g.pests.push({ x: p.x + g.R(-30, 30), y: g.R(120, 300), p: p.i, t: 0 }); }
+      p.grow += dt * (0.05 + 0.08 * p.health) * (okW ? 1 : 0.3); if (p.health <= 0) { g.float(p.x, 150, 'DIED', '#ef4444', 18); g.sfx('bad'); g.deaths++; if (g.deaths >= 3) return g.end('3 plants died'); Object.assign(p, newPlant(g, p.i)); } }
+    if (g.rnd() < dt * (0.15 + g.t / 500)) { const p = g.pick(g.plants); g.pests.push({ x: p.x + g.R(-30, 30), y: g.R(120, 300), p: p.i, t: 0 }); }
     for (const s of g.pests) { s.t += dt; s.x += Math.sin(s.t * 7) * 30 * dt; } for (const p of g.plants) p.pests = g.pests.filter(s => !s.dead && s.p === p.i).length; g.pests = g.pests.filter(s => !s.dead);
-    g.hud = Math.floor(g.time / 60) + ':' + String(Math.floor(g.time % 60)).padStart(2, '0');
+    g.hud = 'LOST ' + g.deaths + '/3  ' + Math.floor(g.time / 60) + ':' + String(Math.floor(g.time % 60)).padStart(2, '0');
   },
   draw(g, c) {
     c.fillStyle = '#1f2937'; c.fillRect(0, 0, g.W, g.H); for (let i = 0; i < 6; i++) { c.fillStyle = `rgba(251,191,36,${0.07 + 0.03 * Math.sin(g.t * 2 + i)})`; c.beginPath(); c.moveTo(70 + i * 130, 40); c.lineTo(20 + i * 130, 330); c.lineTo(120 + i * 130, 330); c.fill(); c.fillStyle = '#e5e7eb'; c.fillRect(50 + i * 130, 34, 40, 8); }

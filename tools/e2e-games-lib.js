@@ -11,6 +11,13 @@ const PUB = path.join(__dirname, '..', 'public', 'games-lib');
 const SHOTS = path.join(__dirname, '..', 'screenshots', 'v7', 'games-lib');
 const only = (process.argv[2] || process.env.SLUGS || '').split(',').filter(Boolean);
 const list = games.filter(g => !only.length || only.includes(g.slug));
+// Eligibility gate (Reese, Oct 10 2026): 100% of listed games giveaway-eligible, endless mode, L2+ anti-cheat,
+// skill-only tie-break metrics (src/games-lib-playoff.js). Any failure fails the whole run.
+{ const PO = require('../src/games-lib-playoff'); const { EXTERNAL } = require('../src/games-lib'); const bad = [];
+  for (const g of games) { const m = PO.metricsFor(g.id); if (!g.giveaway || g.just_for_fun || !g.endless_mode || !(g.acLevel >= 2) || !m || m.length < 1 || m.some(x => !x.id || !['asc', 'desc'].includes(x.dir))) bad.push(g.slug); }
+  if (EXTERNAL.length) bad.push('external links present');
+  const pct = Math.round((games.length - bad.length) / games.length * 1000) / 10; console.log(`eligibility: ${games.length - bad.length}/${games.length} (${pct}%) giveaway-eligible with skill tie-breaks`);
+  if (bad.length) { console.log('FAIL eligibility gate:', bad.join(', ')); process.exitCode = 1; } }
 const PLAY_MS = +(process.env.PLAY_MS || 6000);
 let ip = 0; const nextIp = () => { ip++; return `10.77.${Math.floor(ip / 250) % 250}.${ip % 250 + 1}`; };
 async function signup(xff) {

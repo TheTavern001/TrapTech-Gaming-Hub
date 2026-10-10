@@ -37,7 +37,7 @@
       ptr: { x: W / 2, y: Hh / 2, down: false, pressed: false, released: false, sx: 0, sy: 0 }, stick: { x: 0, y: 0, on: false, cx: 0, cy: 0 }, btn: {}, def, sub: null };
     g.R = (a, b) => a + g.rnd() * (b - a); g.RI = (a, b) => Math.floor(g.R(a, b + 1)); g.pick = (arr) => arr[Math.floor(g.rnd() * arr.length)];
     g.add = (v, k) => { v = Math.round(v); if (!v || g.state !== 'play') return; g.score += v; window.Hub && Hub.event(k || 'p', v); };
-    g.mark = (k, v) => { window.Hub && Hub.event(k, v); };
+    g.mark = (k, v) => { window.Hub && Hub.event('#' + k, v); }; // '#' = progress marker, not points (ignored by score sums)
     g.burst = (x, y, col, n, sp, life, sz) => { n = n || 12; for (let i = 0; i < n && g.parts.length < 600; i++) { const a = Math.random() * TAU, s = (sp || 160) * (0.3 + Math.random()); g.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, l: (life || 0.6) * (0.5 + Math.random() * 0.7), m: 0, c: Array.isArray(col) ? col[i % col.length] : col, s: (sz || 3) * (0.6 + Math.random() * 0.8), gr: def.partGrav || 0 }); } };
     g.float = (x, y, s, col, size) => g.texts.push({ x, y, s: String(s), c: col || '#fff', l: 0.9, size: size || 18 });
     g.shake = (m, t) => { g.shakeM = Math.max(g.shakeM, m); g.shakeT = Math.max(g.shakeT, t || 0.25); };

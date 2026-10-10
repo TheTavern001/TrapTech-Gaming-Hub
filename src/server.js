@@ -206,12 +206,14 @@ app.post('/api/run/start', requireUser, (req, res) => {
   if (!rateLimit(`start-u:${req.user.id}`, 20, 60e3) || !rateLimit(`start-ip:${ipHash(req)}`, 40, 60e3)) return bad(res, 429, 'Too many runs started, wait a moment.');
   const rid = crypto.randomBytes(16).toString('hex');
   const t = now();
-  const seed = AC.newSeed();
+  const PO = req.body.playoff ? require('./games-lib-playoff').checkStart(req.user, gameId, req.body.playoff) : null; if (PO && !PO.ok) return bad(res, PO.status, PO.error); // [games-lib hook] playoff run = shared seed, one start
+  const seed = PO ? PO.seed : AC.newSeed();
   // v7 official events: an event-run token is only issued after the server validates the event (src/events.js)
   const evRef = req.body.event || req.body.event_code || req.body.giveaway_id;
   let ev = null;
   if (evRef != null && evRef !== '') { const c = EV.checkStart(req, req.user, gameId, evRef, t); if (!c.ok) return bad(res, c.status, c.error, { event_rejected: true }); ev = c.g; }
   db.prepare('INSERT INTO run_tokens (rid,user_id,game_id,started_at,ip_hash,seed,event_id,sess_hash) VALUES (?,?,?,?,?,?,?,?)').run(rid, req.user.id, gameId, t, ipHash(req), seed, ev ? ev.id : null, ev ? EV.sessHash(req) : '');
+  if (PO) PO.bind(rid); // [games-lib hook]
   res.json({ ok: true, token: sign(cfg.RUN_SECRET, ev ? { rid, u: req.user.id, g: gameId, t, e: ev.id } : { rid, u: req.user.id, g: gameId, t }), started_at: t, seed,
     event: ev ? { id: ev.id, code: ev.event_code, label: EV.label(ev), expires_at: t + EV.EVENT_TOKEN_TTL_MS } : null });
 });
@@ -269,6 +271,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held,event_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
     .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req), row.seed || '', verdict.verify || '', verdict.held || 0, row.event_id || null);
   AC.record(info.lastInsertRowid, req.user.id, row.game_id, score, verdict, t);
+  require('./games-lib-playoff').record(info.lastInsertRowid, req.user.id, row.game_id, score, row.started_at, t, req.body.ev, row.rid); // [games-lib hook] server-derived skill tie-break metrics
   for (const g of newEntries) logActivity('entry', `${req.user.username} entered "${g.title}"`, req.user.id, g.id);
   const isBest = prevBest === null || prevBest === undefined || score > prevBest;
   if (isBest && !verdict.held && score >= (game.tiers ? game.tiers[0] : 100)) logActivity('highscore', `New high score (${game.title}): ${req.user.username} - ${score.toLocaleString('en-US')}${unit}`, req.user.id, info.lastInsertRowid);
@@ -775,6 +778,7 @@ A.post('/demo/wipe', (req, res) => res.json({ ok: true, ...demo.wipe() }));
 ADMSEC.mount(app, express, A); // secret-path admin (old /admin + /api/admin are plain 404s)
 
 require('./games-lib').mount(app); // [games-lib hook] GET /api/games-lib
+require('./games-lib-playoff').mount(app, { requireUser, requireAdmin }); // [games-lib hook] skill tie-breaks + sudden-death playoffs
 app.use('/api', (req, res) => bad(res, 404, 'Not found'));
 
 // ---------- static ----------

@@ -8,13 +8,19 @@ HOOKS = {
   ("GAME_MAP: Object.fromEntries(GAMES.map(g => [g.id, g])),", "GAME_MAP: Object.fromEntries([...GAMES, ...LIB_GAMES].map(g => [g.id, g])), LIB_GAMES, // [games-lib hook]"),
   ("giveawayEligible: (id) => !!(GAMES.find(g => g.id === id) || {}).giveaway,", "giveawayEligible: (id) => !!([...GAMES, ...LIB_GAMES].find(g => g.id === id) || {}).giveaway, // [games-lib hook]"),
   ("gameInfo: (id) => GAMES.find(g => g.id === id) || RETIRED.find(g => g.id === id) || null,", "gameInfo: (id) => GAMES.find(g => g.id === id) || RETIRED.find(g => g.id === id) || LIB_GAMES.find(g => g.id === id) || null, // [games-lib hook]")],
- 'src/server.js': [("app.use('/api', (req, res) => bad(res, 404, 'Not found'));", "require('./games-lib').mount(app); // [games-lib hook] GET /api/games-lib\napp.use('/api', (req, res) => bad(res, 404, 'Not found'));")],
+ 'src/server.js': [("app.use('/api', (req, res) => bad(res, 404, 'Not found'));", "require('./games-lib').mount(app); // [games-lib hook] GET /api/games-lib\napp.use('/api', (req, res) => bad(res, 404, 'Not found'));"),
+  ("require('./games-lib').mount(app); // [games-lib hook] GET /api/games-lib\napp.use('/api',", "require('./games-lib').mount(app); // [games-lib hook] GET /api/games-lib\nrequire('./games-lib-playoff').mount(app, { requireUser, requireAdmin }); // [games-lib hook] skill tie-breaks + sudden-death playoffs\napp.use('/api',"),
+  ("  const seed = AC.newSeed();\n  // v7 official events", "  const PO = req.body.playoff ? require('./games-lib-playoff').checkStart(req.user, gameId, req.body.playoff) : null; if (PO && !PO.ok) return bad(res, PO.status, PO.error); // [games-lib hook] playoff run = shared seed, one start\n  const seed = PO ? PO.seed : AC.newSeed();\n  // v7 official events"),
+  ("  res.json({ ok: true, token: sign(cfg.RUN_SECRET, ev ?", "  if (PO) PO.bind(rid); // [games-lib hook]\n  res.json({ ok: true, token: sign(cfg.RUN_SECRET, ev ?"),
+  ("  AC.record(info.lastInsertRowid, req.user.id, row.game_id, score, verdict, t);\n", "  AC.record(info.lastInsertRowid, req.user.id, row.game_id, score, verdict, t);\n  require('./games-lib-playoff').record(info.lastInsertRowid, req.user.id, row.game_id, score, row.started_at, t, req.body.ev, row.rid); // [games-lib hook] server-derived skill tie-break metrics\n")],
  'src/results.js': [("[...cfg.GAMES, ...cfg.RETIRED].map(x =>", "[...cfg.GAMES, ...cfg.RETIRED, ...(cfg.LIB_GAMES || [])].map(x => /* [games-lib hook] */")],
  'public/js/app.js': [("${S.games.length} playable</span></h1>", "${S.games.length} playable</span></h1><a class=\"btn sm\" style=\"margin:-6px 0 12px\" href=\"/games-lib/index.html\">Games Library: 150+ more games</a><!-- [games-lib hook] -->")],
 }
 def apply(s, f):
   for old, new in HOOKS[f]:
     if new in s: continue
+    mk = [l for l in new.split('\n') if '[games-lib hook]' in l or 'games-lib hook' in l]
+    if mk and all(m.strip() in s for m in mk if m.strip() not in old): continue
     if s.count(old) != 1: sys.exit(f'hook anchor not found once in {f}: {old[:60]}')
     s = s.replace(old, new, 1)
   return s

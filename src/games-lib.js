@@ -27,9 +27,9 @@ const LIST = [
   T('ruin-runner', 'Ruin Runner', 'Temple Run 2', 0, 'A+', 'endless', 60, true, 'Distance + gems 10', '3 days'),
   T('hill-hauler', 'Hill Hauler', 'Hill Climb Racing', 1, 'A+', 'endless', 40, true, 'Distance in m + coins 5', '3 days'),
   T('wanted-run', 'Most Wanted Run', 'Smashy Road: Wanted 2', 1, 'A+', 'endless', 60, true, 'Survival time x heat + wrecked cops 50', '3 days'),
-  T('sling-siege', 'Sling Siege', 'Angry Birds 2', 2, 'A+', 'campaign', 400, true, 'Blocks 10-50, targets 500, shots left 1000', '7 days'),
-  T('lawn-guard', 'Lawn Guard', 'Plants vs. Zombies', 3, 'A+', 'strategy', 60, true, 'Zombies 10-50, wave bonus 100 x wave', '7 days'),
-  T('pop-defense', 'Pop Defense', 'Bloons TD 6', 3, 'A+', 'strategy', 120, true, 'Layer pops 1, wave bonus 25 x wave', '7 days'),
+  T('sling-siege', 'Sling Siege', 'Angry Birds 2', 2, 'A+', 'endless-levels', 400, true, 'Blocks 10-50, targets 500, shots left 1000', '7 days'),
+  T('lawn-guard', 'Lawn Guard', 'Plants vs. Zombies', 3, 'A+', 'endless-waves', 60, true, 'Zombies 10-50, wave bonus 100 x wave', '7 days'),
+  T('pop-defense', 'Pop Defense', 'Bloons TD 6', 3, 'A+', 'endless-waves', 120, true, 'Layer pops 1, wave bonus 25 x wave', '7 days'),
   T('cube-horde', 'Cube Horde', 'Zombie Cubes', 4, 'A+', 'endless', 120, true, 'Kills 10-50 x combo, wave bonus', '3 days'),
   T('grid-wars', 'Grid Wars', 'Geometry Wars', 4, 'A+', 'endless', 400, true, 'Enemies 25-150 x multiplier', '3 days'),
   // ---- batch 2: A tier + Cannabis ----
@@ -44,12 +44,12 @@ const LIST = [
   T('missile-guard', 'Missile Guard', 'Missile Command', 5, 'A', 'endless', 150, true, 'Warheads 25, wave bonus cities x100 + ammo x5', '3 days'),
   T('bug-blaster', 'Bug Blaster', 'Centipede', 5, 'A', 'endless', 200, true, 'Head 100, body 10, spider 300-900, mushroom 1', '3 days'),
   T('bubble-pop', 'Bubble Pop', 'Bubble Shooter', 6, 'A', 'endless', 200, true, '10 per match bubble, 20 x drops (x up to 4), clear 1000', '3-7 days'),
-  T('mine-sweep', 'Mine Sweep', 'Minesweeper', 6, 'A', 'campaign', 120, true, '1 per cell + board clear speed bonus', '7 days'),
+  T('mine-sweep', 'Mine Sweep', 'Minesweeper', 6, 'A', 'endless-levels', 120, true, '1 per cell + board clear speed bonus', '7 days'),
   T('knife-toss', 'Knife Toss', 'Knife Hit', 7, 'A', 'endless', 80, true, 'Knife 10, apple 50, stage 100 x stage', '3 days'),
-  T('mole-whack', 'Mole Whack', 'Whac-A-Mole', 7, 'A', 'short-session', 120, true, 'Critter 10, gold 50, combo x5 (60s)', '1-3 days'),
-  T('grow-op', 'Grow Op', 'Cannabis grow sim (Weed Firm / Hempire style)', 11, 'C', 'short-session', 60, true, 'Harvest 40-150 by ripeness x health, pests 5 (3 min)', '3 days'),
-  T('trim-rush', 'Trim Rush', 'Cannabis trimming speed game', 11, 'C', 'short-session', 120, true, 'Leaf 10-30 combo, clean trim bonus; bud slice -3s (60s)', '1-3 days'),
-  T('strain-crush', 'Strain Crush', 'Strain match-3 (Candy Crush style)', 11, 'C', 'short-session', 400, true, '10 per gem x cascade chain (3 min)', '3 days'),
+  T('mole-whack', 'Mole Whack', 'Whac-A-Mole', 7, 'A', 'endless', 120, true, 'Critter 10, gold 50, combo x5; hits refill the clock (+0.6s / gold +2s), drain speeds up', '1-3 days'),
+  T('grow-op', 'Grow Op', 'Cannabis grow sim (Weed Firm / Hempire style)', 11, 'C', 'endless', 60, true, 'Harvest 40-150 by ripeness x health, pests 5; ends when 3 plants die', '3 days'),
+  T('trim-rush', 'Trim Rush', 'Cannabis trimming speed game', 11, 'C', 'endless', 120, true, 'Leaf 10-30 combo, clean trim bonus; trims refill the clock, bud slice -3s', '1-3 days'),
+  T('strain-crush', 'Strain Crush', 'Strain match-3 (Candy Crush style)', 11, 'C', 'endless', 400, true, '10 per gem x cascade chain; matches refill the clock', '3 days'),
   T('bud-bar', 'Bud Bar', 'Dispensary tapper (Tapper style)', 11, 'C', 'endless', 80, true, 'Serve 50, empties 25', '3 days'),
   T('green-dash', 'Green Dash', 'Delivery runner', 11, 'C', 'endless', 60, true, 'Distance + deliveries 100', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
@@ -62,7 +62,7 @@ const LIST = [
   T('park-getaway', 'Park Getaway', 'Pako Forever', 1, 'A', 'endless', 300, true, 'Time 2/s, cash bags 100 x heat, cops wrecked 50-100 x heat', '3 days'),
   T('highway-heist', 'Highway Heist', 'Pako Highway', 1, 'A', 'endless', 80, true, 'Distance + cops taken down 150', '3 days'),
   T('no-brakes', 'No Brakes', 'Faily Brakes', 1, 'A', 'endless', 80, true, 'Distance + cars passed 10', '3 days'),
-  T('cab-rush', 'Cab Rush', 'Crazy Taxi', 1, 'A', 'short-session', 40, true, 'Fares 50 + speed bonus; time extends per fare', '3 days'),
+  T('cab-rush', 'Cab Rush', 'Crazy Taxi', 1, 'A', 'endless', 40, true, 'Fares 50 + speed bonus; time extends per fare', '3 days'),
   T('dirt-dash', 'Dirt Dash', 'Excitebike', 1, 'A', 'endless', 40, true, 'Distance m + clean landings 30', '3 days'),
   T('road-brawl', 'Road Brawl', 'Road Rash', 1, 'A', 'endless', 120, true, 'Distance + takedowns 60-100', '3 days'),
   T('derby-smash', 'Derby Smash', 'Demolition derby', 1, 'A', 'endless', 200, true, 'Impact damage dealt + wrecks 150', '3 days'),
@@ -72,23 +72,23 @@ const LIST = [
   T('pen-throw', 'Pen Throw', 'Pineapple Pen', 7, 'A', 'endless', 10, true, 'Hit 1, perfect center 3', '3 days'),
   T('duck-shot', 'Duck Shot', 'Duck Hunt', 7, 'A', 'endless', 400, true, 'Bird 100 + 20 x round, gold +400', '3 days'),
   T('paper-toss', 'Paper Toss', 'Paper Toss', 7, 'A', 'endless', 8, true, '1-5 per basket by wind strength', '1-3 days'),
-  T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'short-session', 100, true, 'Rings 10-100, 9 balls', '1-3 days'),
+  T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'endless', 100, true, 'Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame', '1-3 days'),
   // Batch 4 - Physics & Destruction + Reflex remainder
-  T('castle-crush', 'Castle Crush', 'Crush the Castle', 2, 'A', 'campaign', 400, true, 'Blocks 5-25, kings 300, castle bonus 500 x stones left + 200 x level', '7 days'),
+  T('castle-crush', 'Castle Crush', 'Crush the Castle', 2, 'A', 'endless-levels', 400, true, 'Blocks 5-25, kings 300, castle bonus 500 x stones left + 200 x level', '7 days'),
 ];
 const games = LIST.map(x => {
   const s = SOURCES[x.src];
   return {
     id: 'gl-' + x.slug, slug: x.slug, title: x.title, ref_internal: x.ref, category: CATS[x.cat], lib: true, playable: true, unit: 'pts',
-    url: `/games-lib/${x.slug}/index.html`, art: `/games-lib/${x.slug}/thumb.jpg`, tier: x.tier, competition: x.comp, endless: x.comp === 'endless',
-    giveaway: x.give, just_for_fun: !x.give, scoring: x.scoring, event_length: x.evlen, acLevel: 2, ac_level: 'L2 session checks',
+    url: `/games-lib/${x.slug}/index.html`, art: `/games-lib/${x.slug}/thumb.jpg`, tier: x.tier, competition: x.comp, endless: /^endless/.test(x.comp),
+    giveaway: true, just_for_fun: false, endless_mode: /^endless/.test(x.comp), scoring: x.scoring, event_length: x.evlen, acLevel: 2, ac_level: 'L2 session checks',
     // rate ceiling: normal = perSec*t + grace (flagged above), hard reject at 2x (src/anticheat.js + cfg.capOf)
     ac: { perSec: x.rate, ramp: 0, grace: Math.max(50, x.rate * 20), max: 1e12, coinsPerSec: 1 },
     tiers: [x.rate * 20, x.rate * 90, x.rate * 240].map(Math.round),
-    source: s.source, licence: s.licence, build: s.kind, attempts: 'unlimited', leaderboard: 'best run', winner_rule: 'highest single-run score; ties to the earliest run',
+    source: s.source, licence: s.licence, build: s.kind, attempts: 'unlimited', leaderboard: 'best run', winner_rule: 'highest single-run score in endless mode (uncapped); exactly one winner', tiebreak: ['first to reach the winning score (best-run timestamp)', 'fewer attempts in the window', 'earlier final submission timestamp', 'lower run id (unique)'],
   };
 });
-const EXTERNAL = []; // "Just for fun" external links (not vendored), see docs/GAMES-LIB.md
+const EXTERNAL = []; // dropped per Reese (Oct 10 2026): 100% of listed games must be giveaway-eligible, no external 'just for fun' links
 function mount(app) {
   app.get('/api/games-lib', (req, res) => res.json({ ok: true, categories: CATS, games: games.map(({ ref_internal, ...g }) => g), external: EXTERNAL }));
 }
