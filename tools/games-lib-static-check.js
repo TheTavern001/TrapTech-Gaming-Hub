@@ -75,6 +75,12 @@ if (!adminGiveaways.includes("['gl-neon-circuit', 'gl-rift-survival']")) errors.
 const playoffPath = path.join(root, 'src', 'games-lib-playoff.js');
 const playoffSource = fs.existsSync(playoffPath) ? fs.readFileSync(playoffPath, 'utf8') : '';
 if (!playoffSource.includes("'neon-circuit': ['e'") || !playoffSource.includes("'rift-survival': ['s'")) errors.push('New original games are missing game-specific skill tie-break metrics.');
+const acLevelsPath = path.join(root, 'src', 'ac-levels.js');
+const acLevels = fs.existsSync(acLevelsPath) ? fs.readFileSync(acLevelsPath, 'utf8') : '';
+if (!acLevels.includes("'gl-neon-circuit': rule(") || !acLevels.includes("'gl-rift-survival': rule(")) errors.push('New originals are missing L3 score-event validation rules.');
+if (!acLevels.includes("k[0] !== '#'")) errors.push('L3 validator does not ignore non-scoring # progress markers.');
+const libRegistry = fs.readFileSync(path.join(root, 'src', 'games-lib.js'), 'utf8');
+if (!libRegistry.includes("['neon-circuit', 'rift-survival'].includes(x.slug) ? 3 : 2")) errors.push('New originals are not configured for L3 anti-cheat.');
 const docRows = (doc.match(/^\|\s*\d+\s*\|/gm) || []).length;
 if (docRows !== games.length) errors.push('Documentation row count mismatch: ' + docRows + ' vs ' + games.length);
 
