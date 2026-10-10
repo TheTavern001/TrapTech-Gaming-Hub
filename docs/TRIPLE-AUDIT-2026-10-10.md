@@ -21,6 +21,8 @@ Scope: branch `games-lib-integrity-audit` at the time of this review. This is a 
 
 - The E2E harness previously waited for `window.__GL` but then proceeded to query the canvas and FPS without an explicit runtime-contract failure. Legacy/non-Kit games could therefore fail later with a misleading null-property error.
 - Added a clear runtime-contract guard requiring `window.__GL.g` and a string state before gameplay checks.
+- Expanded the static audit to compare key registry/catalog fields, detect unregistered catalog entries, validate local script references, and warn when artwork files are absent. Fixed the artwork-path resolution in the audit itself.
+- Reconciled Rift Survival's catalog scoring text with the registry and game implementation.
 - FPS output now records a structured performance sample (`fps`, `jsMs`, runtime state, and elapsed sample time), and reports a missing/non-finite FPS value explicitly.
 - These are diagnostics improvements only. The Playwright suite has **not** been run here; the patch is not evidence that all games pass.
 - The existing engine's FPS value is a rolling approximately one-second frame count, not a full-run percentile. For quality certification, capture repeated runs and report median plus low-percentile FPS, dropped-frame share, and JS frame time on both desktop and a representative Android device.
