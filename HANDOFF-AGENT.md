@@ -27,7 +27,8 @@ Remaining:
 - Sky Flap DONE (rebuilt with Kenney Tappy Plane CC0; Clumsy Bird rejected for copied art).
 - Block Drop DONE (glossy tile renderer, clear/drop/lock FX).
 - Maze Muncher DONE (neon tube maze, original hero + haze-wisp enemies).
-- Next (Reese order): shared realistic car set (Blender, 4-6 bodies, <5k tris, PBR) + Moto Lanes finish, then Alien Rows, Cloud Hopper, Road Hopper, the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Shared car set DONE (assets3d/rc-*.glb from tools/blender/hub-cars.py, used by racer3x). Moto Lanes: cars swapped, tests PASS, visual 6.5 (still needs near traffic, overpasses, yellow lines).
+- Next (Reese order): finish Moto Lanes to 7, then Alien Rows, Cloud Hopper, Road Hopper, the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).

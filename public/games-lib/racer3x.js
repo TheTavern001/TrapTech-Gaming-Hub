@@ -7,16 +7,23 @@ import { loadBrand, adTexture } from './brand.js';
 import { loadModels, fit, toonify, toonMat, bake, stage, canvasTex, outfit, pbrChar } from './runner3x.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 const LW = 3.0, NL = 4, ROW = 60;
-const CARS = ['cv-sedan', 'cv-hatchback', 'cv-estate', 'cv-pickup', 'cv-truck', 'cv-transporter'];
+// Shared Hub car set (original Blender build, /workspace/carsrc/cars.py): stylised-realistic bodies, ~2.2k tris each, PBR paint/glass/chrome/tyres
+const CARS = ['rc-sedan', 'rc-hatch', 'rc-suv', 'rc-van', 'rc-pickup', 'rc-boxtruck'];
+const CLEN = { 'rc-sedan': 1.85, 'rc-hatch': 1.8, 'rc-suv': 1.95, 'rc-van': 2.0, 'rc-pickup': 2.0, 'rc-boxtruck': 2.3 }; // body width in world units (lane-fit)
+const ALIAS = { 'cv-hatchback': 'rc-hatch', 'cv-sedan': 'rc-sedan', 'cv-estate': 'rc-suv', 'cv-pickup': 'rc-pickup', 'cv-truck': 'rc-boxtruck', 'cv-transporter': 'rc-van' };
+const RCM = {};
 const NAT = ['qn-CommonTree_1', 'qn-CommonTree_3', 'qn-Pine_2', 'qn-Bush_Common_Flowers', 'qn-Rock_Medium_1', 'qn-Grass_Common_Tall', 'qn-Flower_3_Group'];
 const GLASS = new THREE.MeshStandardMaterial({ color: '#1d2f4a', metalness: 0.6, roughness: 0.08 });
 const PAINT = ['#e8413c', '#2f7fe0', '#ffc531', '#f5f5f5', '#3fbf6a', '#ff8a2a', '#7a5cff', '#26c6c6'];
 export default async function Racer(cfg) {
   const K = window.Kit; const S = stage(cfg); const { scene, cam, sun, hemi } = S; window.__SCENE = scene; const M = await loadModels([...CARS, ...NAT, ...(cfg.bike ? ['g3-motorcycle', 'rider'] : [])]);
   // tint body paint: Divinux cars use a material per part; recolour the largest-area painted material
-  function carProto(name, paint) { let o = M[name].scene.clone(true); o.traverse(m => { if (m.isMesh) { m.castShadow = true; } }); toonify(o, '#ffffff');
-    if (paint) { const pm = toonMat({ color: paint }); o.traverse(m => { if (m.isMesh && /^paint/.test(m.material.name)) m.material = pm; }); } o.traverse(m => { if (m.isMesh && /^glass/.test(m.material.name)) m.material = GLASS; }); const ob = bake(o, true); ob.traverse(m => { if (m.isMesh) m.castShadow = m.material !== GLASS; }); o = ob;
-    const f = fit(o, 'x', name === 'cv-truck' || name === 'cv-transporter' ? 2.6 : 2.3); const b = new THREE.Box3().setFromObject(f); const s = new THREE.Vector3(); b.getSize(s); f.rotation.y = s.z < s.x ? -Math.PI / 2 : 0; const b2 = new THREE.Box3().setFromObject(f); b2.getSize(s); return { o: f, len: s.z, w: s.x }; }
+  function carProto(name, paint) { name = ALIAS[name] || name; let o = M[name].scene.clone(true);
+    if (!RCM.glass) { const e = S.env; RCM.glass = new THREE.MeshPhysicalMaterial({ color: '#0d1620', metalness: 0.1, roughness: 0.04, envMap: e, envMapIntensity: 1.6, clearcoat: 1 }); RCM.chrome = new THREE.MeshStandardMaterial({ color: '#e9edf2', metalness: 1, roughness: 0.14, envMap: e }); RCM.rim = new THREE.MeshStandardMaterial({ color: '#b9bec6', metalness: 1, roughness: 0.3, envMap: e }); RCM.tire = new THREE.MeshStandardMaterial({ color: '#141416', roughness: 0.9 }); RCM.trim = new THREE.MeshStandardMaterial({ color: '#16171a', roughness: 0.55, metalness: 0.2 }); RCM.light_f = new THREE.MeshStandardMaterial({ color: '#fff6dc', emissive: '#fff1c8', emissiveIntensity: 1.4, roughness: 0.1 }); RCM.light_r = new THREE.MeshStandardMaterial({ color: '#5a0505', emissive: '#d0101a', emissiveIntensity: 0.7, roughness: 0.2 }); RCM.box = new THREE.MeshStandardMaterial({ color: '#eceae4', roughness: 0.5, envMap: e, envMapIntensity: 0.6 }); }
+    const key = 'paint' + paint; if (!RCM[key]) RCM[key] = new THREE.MeshPhysicalMaterial({ color: paint || '#c0392b', metalness: 0.45, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.06, envMap: S.env, envMapIntensity: 1.2 });
+    o.traverse(m => { if (!m.isMesh) return; const n = (m.material.name || '').replace(/\.\d+$/, ''); m.material = n === 'paint' ? RCM[key] : (RCM[n] || RCM.trim); });
+    const ob = bake(o, true); o = ob; o.traverse(m => { if (m.isMesh) m.castShadow = true; });
+    const f = fit(o, 'z', CLEN[name] || 2.1); const b = new THREE.Box3().setFromObject(f); const s = new THREE.Vector3(); b.getSize(s); f.rotation.y = Math.PI / 2; /* rc-* bodies are +X-forward; game forward is -Z */ const b2 = new THREE.Box3().setFromObject(f); b2.getSize(s); return { o: f, len: s.z, w: s.x }; }
   const _env = S.env; GLASS.envMap = _env; window.__MATS = () => { const n = new Set(); for (const c of CARS) M[c].scene.traverse(m => m.isMesh && n.add(c + ':' + m.material.name)); return [...n]; };
   const protos = []; for (const n of CARS.slice(0, 6)) for (let k = 0; k < 3; k++) protos.push({ n, ...carProto(n, PAINT[(protos.length * 3) % PAINT.length]) });
   const tBlobM = new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.32, depthWrite: false }); for (const p of protos) { p.o.traverse(m => { if (m.isMesh) m.castShadow = false; }); const bb = new THREE.Mesh(new THREE.PlaneGeometry(p.w || 2, (p.len || 4) * 1.05), tBlobM); bb.rotation.x = -Math.PI / 2; bb.position.y = 0.03; p.blob = bb; }
