@@ -23,6 +23,7 @@ jobs:
           node --check src/games-lib.js
           node --check src/admin-giveaways.js
           node --check src/games-lib-playoff.js
+          node --check src/ac-levels.js
           node --input-type=module --check < public/js/app.js
           node --check public/games-lib/adapter.js
           node --check public/games-lib/neon-circuit/game.js
