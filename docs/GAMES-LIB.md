@@ -423,3 +423,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
   - Night lighting with a lantern radius around the hero. Reference-style XP bar, timer and kill count, and a pixel level-up card UI.
 - Shared engine: arena.js gained the optional `drawChoose` and `hud:false` hooks.
 - Tests: e2e PASS (60 fps). Bug pass PASS. Cube Horde and Grid Wars re-ran PASS. Rating: visual 7/10, feel 7.5/10.
+
+## Throttle Rider (Traffic Rider-style) - DONE (2026-10-10 05:45 ET)
+- Source hunt: there is no permissive open-source first-person moto highway game. The candidates found (Unity "traffic rider clone" repos on GitHub and Gitee) are engine-locked or have no licence. Decision: reuse racer3x.js in bike mode with the first-person camera.
+- New in racer3x.js: a code-built cockpit attached to the camera (chrome handlebar, grips, leather gloves, green sleeves, round mirrors, a dash with a cannabis-leaf gauge face, painted tank and filler cap). It leans with steering, vibrates with speed, compresses horizontally to fit the screen aspect, and hides the third-person bike. Moto Lanes and Lane Racer are unchanged and re-ran PASS.
+- Tests: e2e PASS (calls 114, tris 107k, DPR 1.5). Bug pass PASS. One earlier bug-pass run showed a 2/3 seeded-start flake under heavy CPU load; a re-run passed. Rating: visual 7/10, feel 7/10.
+- Harness: e2e test usernames are now deterministic and filter-safe ('tester' + digits), at the core worker's request.
