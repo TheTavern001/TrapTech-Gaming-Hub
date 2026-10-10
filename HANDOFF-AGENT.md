@@ -2,9 +2,16 @@
 
 Owner: Reese Norris (America/New_York). GitHub: TheTavern001. Casual, wants every request tracked DONE / NOT DONE with proof (screenshots).
 
+## START HERE (new bot, any account)
+1. Ask Reese to connect GitHub (account TheTavern001) so you can clone. Then run: `git clone -b v7-wip https://github.com/TheTavern001/gaming-hub-2.git && cd gaming-hub-2 && npm ci`.
+2. Read this file, then `PROGRESS-V7.md` and `docs/GAMES-LIB.md`. Do NOT restart or rebuild anything that is listed DONE. Keep going from "Next" below.
+3. Run the hub locally (`node server.js`, or `scripts/restart-server.sh`) and run `tools/run-all.sh` to confirm it's green before you change anything.
+4. Commit after each finished game and push to `v7-wip`. Push to `main` only when Reese approves launch.
+5. Unfinished at handoff: **Glass Run** (Smash Hit-style survival). It was half-built and is not in this branch, so build it fresh as the next game.
+
 ## Where things are
 - Code: `/workspace/jetpack-hub` on the shared box (Node/Express + better-sqlite3). Local: `http://localhost:8787`, restart with `scripts/restart-server.sh`.
-- Repo: private `TheTavern001/gaming-hub-2`, branch `main`. Last pushed: `b2a1978` (v6). **Everything after is local, unpushed.** Ask Reese before pushing (push auto-deploys).
+- Repo: private `TheTavern001/gaming-hub-2`. `main` = live v6 (`b2a1978`); pushing main auto-deploys, so ask Reese first. **All v7 work is on branch `v7-wip`** (pushed Oct 10, 11:15 AM ET).
 - Live (v6, 12 games): https://glassy-drifter-9532.de.deplexo.com — Deplexo Free (128 MB RAM, 0.25 CPU, no card), Frankfurt, account "The Tavern" (norrisreese4@gmail.com via GitHub login). Dockerfile build, volume `/data`, DB `/data/hub.db`.
 - Live env vars: `ADMIN_PASSWORD`, `SECRET`, `PORT=8787`, `DATA_DIR=/data` (values are in Deplexo's env settings; Reese knows them). New for v7: `ADMIN_PATH`, TOTP enrolment, `ADMIN_RESET_TOKEN`, `PUBLIC_URL`, `BTC_ADDRESS=32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB`. See `.env.example`, `docs/ADMIN-AUTH.md`.
 - `scripts/build-assets.js` is untracked — leave it.
@@ -15,7 +22,7 @@ Phases 1–7 DONE (games stabilized + anti-cheat L1–L4 `docs/ANTI-CHEAT.md`; o
 Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; final crowned-TT logo; skill-only tie-break fix 855e530). All core suites green: e2e-api 374/0, anticheat 12/0, events 29/0, tiebreak 18/0, sponsor-brands 63/0, payments 32/0, avatars 13/0, timers 27/0, economy 49/0, admin 150/0, admin-sec 66/0, admin-tour 28/0, i18n 39/0, browser 202/0, mobile 176/0 (1,278 checks, 0 failures). Run them with `tools/run-all.sh`. Public favicon/app icon stays the Gaming Hub mark.
 
 ### B. Games library — `docs/GAMES-LIB.md`, code in `public/games-lib/`, `src/games-lib*.js`, tests `tools/e2e-games-lib.js`, audit `tools/games-lib-audit.js`, assets `public/games-lib/assets3d/ASSETS.md`, hunt log `docs/GAMES-LIB-ASSET-HUNT.md`
-- 62 games registered, 100% giveaway-eligible (endless, uncapped, server-validated skill tie-breaks + sudden-death playoffs in `src/games-lib-playoff.js`).
+- 98 games registered (53 more to reach 150+), 100% giveaway-eligible (endless, uncapped, server-validated skill tie-breaks + sudden-death playoffs in `src/games-lib-playoff.js`).
 - Rule (Reese): ONE game at a time. A game is done only when it rates 7+, its side-by-side `docs/audit/<slug>-vs-ref.jpg` reads as the same tier, and the bug pass is clean (`node tools/games-lib-bugpass.js <slug>`: seeded runs, pause, tab, rotate, 4x CPU throttle, memory). Commit after each.
 - Status: Rail Rush DONE (3D, realistic PBR hero). Ruin Runner DONE 7/7 (turns, ravines, Poly Haven PBR). Lane Racer PASS tests. Bud Merge (vendored MIT 2048) PASS. Moto Lanes ON HOLD (Reese choosing realistic cars); passes tests + bug pass, visuals below tier (6/10): the reference is realistic and we only have the cartoon CC0 car pack.
 - Hex Stack DONE (vendored Hextris, GPL-3.0, stripped ads/analytics/score beacon; e2e + bug pass PASS).
