@@ -106,7 +106,7 @@ function topbar(path) {
     <button class="iconbtn more-btn" data-act="menu" aria-label="More options">${icon('ellipsis-vertical')}</button>
   </header>`;
 }
-const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/sponsor', 'Sponsor a Host'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
+const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/store', 'Hub Store'], ['/sponsor', 'Sponsor a Host'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
 // v7: shown on game pages, leaderboards and the footer (the server decides what is official, never this file)
 const OFFICIAL_NOTICE = 'Only giveaways shown in the Official Giveaways section of The Gaming Hub are authorized Gaming Hub competitions. Public game scores do not count as entry into an official giveaway.';
 const officialNotice = (cls = '') => `<div class="card pad official-notice ${cls}" role="note"><b>${icon('shield-check')} OFFICIAL GIVEAWAY NOTICE</b><p class="small muted" style="margin:4px 0 0">${OFFICIAL_NOTICE} <a href="/giveaways">Official Giveaways</a></p></div>`;

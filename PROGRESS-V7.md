@@ -6,7 +6,7 @@
 | 1b docs/ANTI-CHEAT.md + tests | DONE | tools/e2e-anticheat.js 12/12 |
 | 2 Official events vs free play | DONE | commits 3fd3f3d + phase-2 UI commit; tools/e2e-events.js 29/29, e2e-api 386/0 (fresh DB); skill-only tie-breaks + playoffs: tools/e2e-tiebreak.js 17/17; chance games retired (13 games, all giveaway-eligible) |
 | 3 Booking flow verify | DONE | client details (prize, brand color, length, games, competition, dates, notes) + summary without prices; admin quote from price sheet; accept -> one-click official event (+QR on the vendor's quote page, admin button); e2e-sponsor-brands 63/63 (SEED=1 fresh DB) |
-| 4 Monetisation (BITCOIN primary per Reese: single BTC_ADDRESS, unique sat-offset amount per order, 30-60 min expiry, mempool.space match + txid paste, admin manual verify; no keys; BTC_ADDRESS=32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB set in .env (validate base58check; list in HANDOFF)) | NOT DONE | |
+| 4 Monetisation (Bitcoin to one BTC_ADDRESS, cosmetic only) | DONE | src/monetize.js + src/btc.js + src/pass-quests.js; /store, /store/order/:ref (QR, exact amount, copy, txid paste), /prestige wall; admin Store & orders (verify/grant/refund, prices, checkout switch) + Official events page (share kit, playoffs); tools/e2e-payments.js 32/32 with a mocked explorer; docs/PASS-QUESTS.md |
 | 5 Avatars | NOT DONE | |
 | 6 Shop + timers | NOT DONE | |
 | 7 Trap Tech logo / About / landing | NOT DONE | |

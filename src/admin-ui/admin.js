@@ -30,7 +30,7 @@ const NAV_G = [
   ['Giveaways', [['giveaways', 'gift', 'Giveaways', 'giveaways.view', 'drafts'], ['game-rules', 'list-checks', 'Game rules', 'giveaways.view'], ['games', 'gamepad-2', 'Games', 'giveaways.view'], ['tournaments', 'swords', 'Tournaments', 'giveaways.edit'], ['leaderboards', 'trophy', 'Leaderboards', 'giveaways.view']]],
   ['Players', [['players', 'users', 'Players', 'users.view'], ['moderation', 'scan-eye', 'Moderation', 'moderation.queue', 'mod'], ['reports', 'file-text', 'Exports', 'giveaways.view']]],
   ['Live ops', [['events', 'party-popper', 'Specials & events', 'events.manage'], ['seasons', 'calendar-range', 'Seasons', 'seasons.manage'], ['shop', 'shopping-bag', 'Shop', 'shop.manage'], ['badges', 'badge-check', 'Badges', 'badges.award'], ['announcements', 'megaphone', 'Announcements', 'announcements.post']]],
-  ['Business', [['sponsor', 'briefcase', 'Sponsor requests', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
+  ['Business', [['sponsor', 'briefcase', 'Sponsor requests', 'billing.view'], ['events', 'badge-check', 'Official events', 'giveaways.manage'], ['store', 'wallet', 'Store & orders', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
   ['Admin', [['team', 'shield-half', 'Team & roles', 'dashboard.view'], ['log', 'history', 'Action log', 'actionlog.view'], ['security', 'shield-check', 'Security', 'dashboard.view'], ['settings', 'settings', 'Settings', 'settings.manage'], ['system', 'server-cog', 'System', 'settings.manage']]],
 ];
 let V7 = null, V7ME = null, V7AT = 0;
@@ -90,6 +90,8 @@ async function render() {
     if (s === 'bookings') return nav(AP + '/sponsor');
     if (s === 'sponsor' && id === 'prices') return sponsorPrices();
     if (s === 'sponsor') return sponsorAdmin(id);
+    if (s === 'store') return storeAdmin();
+    if (s === 'events') return eventsAdmin(id);
     if (s === 'channels') return channels(id);
     if (s === 'badges') return badges();
     if (s === 'fairplay') return fairplay(new URLSearchParams(location.search).get('status') || 'open');
@@ -632,4 +634,54 @@ async function sponsorPrices() {
     const [a, b] = await Promise.all([api('/api/admin/sponsor/prices', { method: 'PUT', body: { prices } }), api('/api/admin/sponsor/settings', { method: 'PUT', body: { potato_handle: $('#ph').value.trim(), faq } })]);
     $('#pm').innerHTML = a.ok && b.ok ? '<div class="ok-msg">Saved. New drafts use these prices.</div>' : `<div class="err">${esc(a.error || b.error)}</div>`; if (a.ok && b.ok) toast('Prices saved');
   };
+}
+
+// ---------------- v7: official events (code, vendor, booking/payment status, share kit, skill tie-breaks + playoffs) ----------------
+async function eventsAdmin(id) {
+  const list = (await api('/api/admin/giveaways')).giveaways || [];
+  const ev = id ? list.find(g => String(g.id) === String(id)) : null;
+  let detail = '';
+  if (ev) {
+    const [sh, ties] = await Promise.all([api(`/api/admin/events/${ev.id}/share`), api(`/api/admin/events/${ev.id}/ties`)]);
+    detail = `<div class="card pad"><h2>${esc(ev.title)} <span class="pill">${esc(sh.code || '')}</span></h2>
+      <p class="small">Vendor: <b>${esc(sh.vendor || ev.host || '')}</b> - booking <b>${esc(sh.booking_status || '-')}</b>, payment <b>${esc(sh.payment_status || '-')}</b></p>
+      <p><a class="btn sm ghost" href="${esc(sh.url || '')}" target="_blank">${icon('external-link')} ${esc(sh.url || '')}</a> <button class="btn sm ghost" id="ev-regen">${icon('refresh-cw')} New code</button></p>
+      <div style="max-width:200px;background:#fff;border-radius:10px;padding:6px">${sh.qr_svg || ''}</div>
+      <h3 style="margin-top:14px">Skill tie-breaks</h3><p class="small muted">Ties are decided only by skill: the shorter server-timed run, then the game's skill metric, then a sudden-death playoff.</p>
+      ${ties.playoff_needed ? `<div class="err">Exact tie on a winning place: ${ties.playoff_needed.map(t => esc(t.username)).join(', ')}. <button class="btn sm" id="po-start">Start sudden-death playoff</button></div>` : `<p class="small">${ties.finalized ? 'No exact tie on a winning place.' : `Live exact ties: ${(ties.live_exact_ties || []).length}`}</p>`}
+      ${(ties.playoffs || []).map(p => `<div class="card pad" style="margin-top:8px"><b>Playoff #${p.id}</b> round ${p.round} - ${esc(p.status)} - closes ${dt(p.closes_at)}<div class="small">${p.entries.map(e => `user ${e.user_id}: ${e.score ?? 'no run yet'}`).join(' | ')}</div>
+        ${p.status === 'open' ? `<button class="btn sm" data-po-res="${p.id}">Resolve now</button>` : ''} ${p.status !== 'open' ? `<button class="btn sm" data-po-apply="${p.id}">Apply to final standings</button>` : ''}</div>`).join('')}
+      <p class="small"><a href="/games-lib/admin-playoffs.html" target="_blank">Games Library playoff console</a></p></div>`;
+  }
+  frame('events', 'Official events', `<div class="cols" style="grid-template-columns:1fr 1.3fr;margin-top:0"><div class="card wrap-x"><table class="tbl"><thead><tr><th>Event</th><th>Status</th></tr></thead><tbody>
+    ${list.map(g => `<tr class="${String(g.id) === String(id) ? 'on' : ''}"><td><a href="${AP}/events/${g.id}">${esc(g.title)}</a></td><td>${esc(g.status || '')}</td></tr>`).join('')}</tbody></table></div><div>${detail || '<div class="card pad muted">Pick an event.</div>'}</div></div>`);
+  const on = (sel, f) => { const el = $(sel); if (el) el.onclick = f; };
+  on('#ev-regen', async () => { if (!confirm('Issue a new event code? The old link and QR stop working.')) return; await api(`/api/admin/events/${ev.id}/regen-code`, { method: 'POST', body: {} }); eventsAdmin(id); });
+  on('#po-start', async () => { const x = await api(`/api/admin/events/${ev.id}/playoff`, { method: 'POST', body: { window_min: 60 } }); toast(x.ok ? 'Playoff started; tied players were notified' : x.error); eventsAdmin(id); });
+  document.querySelectorAll('[data-po-res]').forEach(b => b.onclick = async () => { const x = await api(`/api/admin/events/${ev.id}/playoff/${b.dataset.poRes}/resolve`, { method: 'POST', body: {} }); toast(x.ok ? 'Playoff ' + x.playoff.status : x.error); eventsAdmin(id); });
+  document.querySelectorAll('[data-po-apply]').forEach(b => b.onclick = async () => { const x = await api(`/api/admin/events/${ev.id}/playoff/${b.dataset.poApply}/apply`, { method: 'POST', body: {} }); toast(x.ok ? 'Standings updated' : x.error); eventsAdmin(id); });
+}
+// ---------------- v7 Phase 4: store, orders (Bitcoin), manual verify / grant / refund ----------------
+async function storeAdmin() {
+  const [r, o] = await Promise.all([api('/api/admin/store'), api('/api/admin/store/orders')]); const co = r.checkout; const btc = co.providers.bitcoin;
+  frame('store', 'Store & orders', `<div class="card pad"><h2>${icon('wallet')} Checkout</h2>
+      <p>Bitcoin address: ${btc.configured ? `<code>${esc(btc.address)}</code> <span class="pill green">${esc(btc.type)} checksum OK</span>` : `<span class="pill red">not set</span> <span class="small">${esc(btc.why || '')} - set BTC_ADDRESS on the host</span>`}</p>
+      <label class="check"><input type="checkbox" id="co-on" ${co.admin_switch ? 'checked' : ''}> Checkout switched on</label> <span class="small muted">${co.enabled ? 'Players can buy now.' : esc(co.reason || '')}</span>
+      <p class="small muted">${esc(r.non_advantage)}</p></div>
+    <div class="card wrap-x" style="margin-top:12px"><table class="tbl"><thead><tr><th>Product</th><th>Kind</th><th class="num">Price (USD)</th><th class="num">Crowns+bonus / supply</th><th>Active</th><th></th></tr></thead><tbody>
+      ${r.products.map(p => `<tr data-p="${esc(p.id)}"><td><input class="input sm" data-k="name" value="${esc(p.name)}"></td><td>${esc(p.kind)}</td><td class="num"><input class="input sm num" type="number" step="0.01" data-k="usd" value="${(p.usd_cents / 100).toFixed(2)}"></td>
+        <td class="num">${p.kind === 'pack' ? `<input class="input sm num" type="number" data-k="crowns" value="${p.crowns}"> + <input class="input sm num" type="number" data-k="bonus" value="${p.bonus}">` : p.kind === 'prestige' ? `<input class="input sm num" type="number" data-k="supply" value="${p.supply}">` : ''}</td>
+        <td><input type="checkbox" data-k="active" ${p.active ? 'checked' : ''}></td><td><button class="btn sm" data-save="${esc(p.id)}">Save</button></td></tr>`).join('')}</tbody></table></div>
+    <div class="card pad" style="margin-top:12px"><h2>Manual grant</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="input sm" id="mg-user" placeholder="username"><select class="input sm" id="mg-prod">${r.products.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select><input class="input sm" id="mg-crowns" type="number" placeholder="or Crowns (+/-)"><button class="btn sm" id="mg-go">Grant</button></div></div>
+    <div class="card wrap-x" style="margin-top:12px"><table class="tbl"><thead><tr><th>Order</th><th>Player</th><th>Product</th><th class="num">USD</th><th class="num">Sats / received</th><th>Status</th><th>Tx</th><th></th></tr></thead><tbody>
+      ${(o.orders || []).map(x => `<tr><td>${esc(x.ref)}<div class="tiny muted">${dt(x.created_at)}</div></td><td>${esc(x.username || '')}</td><td>${esc(x.product.name)}</td><td class="num">${usd(x.usd_cents)}</td><td class="num">${x.sats || '-'} / ${x.received_sats ?? '-'}</td>
+        <td>${esc(x.status)}${x.flags.length ? ` <span class="pill">${esc(x.flags.join(', '))}</span>` : ''}${x.confs ? ` <span class="tiny">${x.confs}/${x.need_confs}</span>` : ''}</td><td class="tiny">${x.txid ? `<a href="https://mempool.space/tx/${esc(x.txid)}" target="_blank" rel="noopener">${esc(x.txid.slice(0, 10))}...</a>` : ''}</td>
+        <td>${x.granted_at || x.refunded_at ? '' : `<button class="btn sm ghost" data-ver="${esc(x.ref)}">Verify</button><button class="btn sm" data-grant="${esc(x.ref)}">Grant</button>`}${x.refunded_at ? '' : `<button class="btn sm danger" data-ref="${esc(x.ref)}">Refund</button>`}</td></tr>`).join('') || '<tr><td colspan="8" class="muted">No orders yet.</td></tr>'}</tbody></table></div>`);
+  $('#co-on').onchange = async (e) => { await api('/api/admin/store/checkout', { method: 'PUT', body: { enabled: e.target.checked } }); storeAdmin(); };
+  document.querySelectorAll('[data-save]').forEach(b => b.onclick = async () => { const tr = b.closest('tr'); const v = (k) => { const el = tr.querySelector(`[data-k=${k}]`); return el ? (el.type === 'checkbox' ? el.checked : el.value) : undefined; };
+    const x = await api('/api/admin/store/products/' + b.dataset.save, { method: 'PUT', body: { name: v('name'), usd_cents: Math.round(+v('usd') * 100), crowns: v('crowns'), bonus: v('bonus'), supply: v('supply'), active: v('active') } }); toast(x.ok ? 'Saved' : x.error); });
+  $('#mg-go').onclick = async () => { const c = +$('#mg-crowns').value; const x = await api('/api/admin/store/grant', { method: 'POST', body: c ? { username: $('#mg-user').value, crowns: c } : { username: $('#mg-user').value, product_id: $('#mg-prod').value } }); toast(x.ok ? 'Granted' : x.error); storeAdmin(); };
+  document.querySelectorAll('[data-ver]').forEach(b => b.onclick = async () => { const txid = prompt('Optional: transaction id to match (leave empty to search by exact amount)') || undefined; const x = await api(`/api/admin/store/orders/${b.dataset.ver}/verify`, { method: 'POST', body: { txid } }); toast(x.ok ? 'Status: ' + x.order.status : x.error); storeAdmin(); });
+  document.querySelectorAll('[data-grant]').forEach(b => b.onclick = async () => { if (!confirm('Grant this order without an on-chain match?')) return; const x = await api(`/api/admin/store/orders/${b.dataset.grant}/grant`, { method: 'POST', body: {} }); toast(x.ok ? 'Granted' : x.error); storeAdmin(); });
+  document.querySelectorAll('[data-ref]').forEach(b => b.onclick = async () => { const note = prompt('Refund note (send the BTC back yourself from your wallet):'); if (note === null) return; const x = await api(`/api/admin/store/orders/${b.dataset.ref}/refund`, { method: 'POST', body: { note } }); toast(x.ok ? 'Refunded' : x.error); storeAdmin(); });
 }

@@ -116,7 +116,7 @@ function routes(app, A, H) {
   A.get('/events/:id/share', (req, res) => {
     const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });
     const url = PU.originOf(req) + '/event/' + g.event_code;
-    res.json({ ok: true, code: g.event_code, url, label: label(g), qr_svg: qrSvg(url), status: status(g) });
+    res.json({ ok: true, code: g.event_code, url, label: label(g), qr_svg: qrSvg(url), status: status(g), vendor: g.vendor || g.host, booking_status: g.booking_status || null, payment_status: g.payment_status || null, booking_id: g.booking_id || null });
   });
   A.put('/events/:id/meta', (req, res) => {
     const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });

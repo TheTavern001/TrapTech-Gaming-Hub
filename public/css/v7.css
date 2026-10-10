@@ -147,3 +147,25 @@
 .sf-note.official-notice { border: 0; margin: 6px 0; }
 .event-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; font-size: .72rem; margin: 0 0 8px; opacity: .92; }
 .event-page h1 { margin-top: 2px; }
+
+/* v7 Phase 4: Hub Store + Prestige */
+.store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.st-pack, .px-card { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.st-pack > b { font-size: 1.4rem; }
+.st-price { font-weight: 800; font-size: 1.05rem; }
+.na-note { border-left: 3px solid var(--green); margin-bottom: 12px; }
+.pq-list { padding-left: 20px; max-height: 320px; overflow: auto; } .pq-list li.done b { color: var(--green); }
+.ord-qr { max-width: 240px; background: #fff; border-radius: 12px; padding: 8px; margin: 10px 0; }
+.copyrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .copyrow code { word-break: break-all; font-size: .9rem; }
+.ord-st { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; } .st-granted { color: var(--green); } .st-underpaid, .st-expired { color: var(--gold); }
+.px-wall { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 10px; } .px-owners { padding-left: 18px; margin: 6px 0 0; }
+.px-art { position: relative; width: var(--s); height: var(--s); border-radius: 18px; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 40%, #3b2a05, #0b0b12 70%); }
+.px-art svg { width: 50%; height: 50%; color: #facc15; filter: drop-shadow(0 0 10px rgba(250, 204, 21, .6)); position: relative; z-index: 1; }
+.px-glow { position: absolute; inset: 0; background: conic-gradient(from 0deg, transparent, rgba(250, 204, 21, .35), transparent 40%); animation: px-spin 6s linear infinite; }
+.px-art i { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px #fff; animation: px-tw 2.4s ease-in-out infinite; }
+.px-art i:nth-of-type(1) { top: 20%; left: 25%; } .px-art i:nth-of-type(2) { top: 65%; left: 72%; animation-delay: .8s; } .px-art i:nth-of-type(3) { top: 30%; left: 78%; animation-delay: 1.6s; }
+.px-cash { background: radial-gradient(circle at 50% 40%, #0f3d1e, #07130b 70%); } .px-cash svg { color: #4ade80; filter: drop-shadow(0 0 10px rgba(74, 222, 128, .6)); }
+.px-gold .px-glow { background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .45) 50%, transparent 70%); animation: px-sweep 3s ease-in-out infinite; }
+@keyframes px-spin { to { transform: rotate(360deg); } } @keyframes px-tw { 50% { opacity: .2; transform: scale(.5); } } @keyframes px-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .px-glow, .px-art i { animation: none; } }
+.store-grid > .card { margin: 0; }
