@@ -551,3 +551,10 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Tests: e2e PASS (60 fps). Bug pass PASS (51 fps throttled). Rating: visual 7/10, feel 7/10.
 - Backlog note (polish pass): Neon Flipper ramps + spinner (requested 2026-10-10).
 - Bud Bar fix (06:49 ET): customers now walk on the floor in front of the counters (scaled up so their heads show above the counter top), as in the reference. Re-tested: e2e + bug pass PASS. Rating: visual 7.5/10, feel 7/10.
+
+## Toad Cross (Frogger) - DONE (2026-10-10 06:53 ET)
+- Source hunt (GitHub "frogger javascript/html5" (many are bootcamp projects with unlicensed or ripped sprites), MDN-style tutorials, js13k, itch.io, Gitee "青蛙过河 H5"): nothing permissive above prototype level. Road Hopper already covers Crossy Road, so this is the classic Frogger layout. Decision: build our own.
+- Gameplay: 5 road lanes (sedans, racers, a "GREEN FREIGHT" truck), 5 river lanes (bark logs, turtle groups that dive from level 2), a flowered median with a "POND STOP DISPENSARY 21+" kiosk, five lily-pad homes in a hedge with a bonus bug. 30 s timer per life, 3 lives. Endless: filling all homes starts a faster level with more divers.
+- Controls: tap = hop forward, swipe any direction, arrows/WASD. Hops are eased with a squash-and-stretch toad.
+- Art: code-drawn top-down vehicles with windows, lights and shadows; logs with bark and end rings; turtles with paddling legs; drifting water ripples; asphalt with lane dashes; paved start.
+- Tests: e2e PASS (60 fps). Bug pass PASS (41 fps throttled). A path-finding bot filled 4 homes in 60 s. Rating: visual 7.5/10, feel 7.5/10.
