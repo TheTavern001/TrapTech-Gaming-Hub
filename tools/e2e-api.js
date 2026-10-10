@@ -185,7 +185,7 @@ function client() {
   for (const g of GAMES) { r = await anon(`/api/leaderboard?game=${g.id}&limit=500`); ok(r.body.rows.some(x => x.username === uc && x.score === PLAUS[g.id]), `${g.id} leaderboard has C`); }
   const ids = new Set(allUnlocked.map(a => a.id));
   ok(ids.has('first-run') && ids.has('variety-3') && ids.has('variety-all'), 'runs unlock first-run, variety-3 and variety-all (played every game)', [...ids]);
-  ok(ids.has('brick-breaker-bronze') === false, 'no bronze for brick-breaker at 500 (< 1150 threshold)');
+  ok(ids.has('drift-rush-bronze') === false, 'no bronze for drift-rush at 300 (< 1300 threshold)');
   ok(ids.has('memory-match-bronze') === false, 'thresholds respected server-side');
 
   await sleep(61e3); /* 18 submits just now = submit_burst note; let it age out */ r = await C('/api/score', { body: { token: toks.tt2, score: 600, coins: 0, duration_ms: 2300 } }); ok(r.body.ok && r.body.giveaways.some(g => g.id === gmulti), 'terp-tapper event run for the multi-game event', r.body);
@@ -222,7 +222,7 @@ function client() {
   ok(AL.length >= 100 && AL.length <= 140, `achievement catalog size ${AL.length}`);
   ok(AL.find(a => a.id === 'first-run').unlocked && AL.every(a => typeof a.rarity_pct === 'number' && a.rarity), 'achievements list has unlocked state + rarity');
   ok(AL.filter(a => a.hidden && !a.unlocked).every(a => a.name === 'Secret achievement'), 'secret achievements stay hidden until unlocked');
-  const pg = AL.find(a => a.id === 'brick-breaker-bronze'); ok(pg && pg.progress === 500 && pg.target === 1150, 'progress is reported (brick-breaker 500/1150)', pg);
+  const pg = AL.find(a => a.id === 'drift-rush-bronze'); ok(pg && pg.progress === 300 && pg.target === 1300, 'progress is reported (drift-rush 300/1300)', pg || null);
   r = await C('/api/cosmetics'); const CZ = r.body; const ownedB = CZ.banners.filter(b => b.owned && !b.default); const lockedB = CZ.banners.find(b => !b.owned);
   ok(CZ.totals.banners >= 30 && CZ.totals.frames >= 15 && CZ.totals.titles >= 30, `cosmetic catalog: ${CZ.totals.banners} banners, ${CZ.totals.frames} frames, ${CZ.totals.titles} titles`);
   ok(ownedB.length >= 1, 'C owns at least one unlocked banner', CZ.banners.filter(b => b.owned).map(b => b.id));
