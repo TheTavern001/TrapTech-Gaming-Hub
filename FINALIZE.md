@@ -1,6 +1,6 @@
 # FINALIZE: putting v7 live (for Reese)
 
-1. **Back up first.** In admin go to *System > Backups* and download the latest backup, or copy `/data/hub.db`. v7 migrates the DB on boot (v6 -> v7 adds tables and columns and never drops data; checked with a v6 DB that includes TheBudTender001).
+1. **Back up first.** In admin go to *Settings > Data & backups* and download the latest backup, or copy `/data/hub.db`. v7 migrates the DB on boot (v6 -> v7 adds tables and columns and never drops data; checked with a v6 DB that includes TheBudTender001).
 2. **Push and deploy** this branch to Deplexo with the same Dockerfile (nothing has been pushed from here).
 3. **Set the env vars** on Deplexo (see the table in HANDOFF.md). New in v7:
    - `BTC_ADDRESS=32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB`
