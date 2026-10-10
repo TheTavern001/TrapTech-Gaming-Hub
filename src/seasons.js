@@ -18,7 +18,7 @@ const NAMES = ['Neon Genesis', 'Purple Haze', 'Chrome Summer', 'Afterglow', 'Sta
 const PALS = ['neon', 'haze', 'chrome', 'sunset', 'kush', 'galaxy', 'ocean', 'ice', 'gold', 'frost', 'terp', 'arcade', 'mint', 'lava', 'toxic', 'ember', 'royal', 'summer', 'rose', 'dab'];
 const THEMES = ['gaming', 'culture', 'money', 'culture', 'culture', 'gaming', 'gaming', 'gaming', 'money', 'money', 'culture', 'gaming', 'culture', 'gaming', 'culture', 'gaming', 'money', 'culture', 'gaming', 'money'];
 const ROMAN = ['', '', ' II', ' III', ' IV', ' V', ' VI', ' VII', ' VIII', ' IX', ' X'];
-const nameOf = (n) => NAMES[(n - 1) % NAMES.length] + (ROMAN[Math.ceil(n / NAMES.length)] ?? ' ' + Math.ceil(n / NAMES.length));
+const nameOf = (n) => n === 1 ? 'V1 Launch Season' : NAMES[(n - 1) % NAMES.length] + (ROMAN[Math.ceil(n / NAMES.length)] ?? ' ' + Math.ceil(n / NAMES.length));
 
 // ---------- level curve + track ----------
 const stepXp = (L) => 200 + 10 * L; // XP from level L-1 to L
