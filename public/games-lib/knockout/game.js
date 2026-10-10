@@ -36,7 +36,7 @@
     const gl = (x, y, r) => { const gg = c.createRadialGradient(x - r * 0.3, y - r * 0.3, 2, x, y, r); gg.addColorStop(0, '#bbf7d0'); gg.addColorStop(0.4, '#16a34a'); gg.addColorStop(1, '#064e1a'); c.fillStyle = gg; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); };
     const pl = p.punch === 'L' ? p.pk : 0, pr = p.punch === 'R' ? p.pk : 0, up = p.punch === 'S' ? p.pk : 0, bl = p.block ? 1 : 0;
     gl(-70 + pl * 40 + bl * 40, -30 - pl * 150 - bl * 60 - up * 90, 32 - pl * 8); gl(70 - pr * 40 - bl * 40 + up * -40, -30 - pr * 150 - bl * 60 - up * 230, 32 - pr * 8 + up * 4); c.restore(); }
-  function newFight(g) { const F = FIGHTERS[g.fi % FIGHTERS.length], lap = Math.floor(g.fi / FIGHTERS.length); g.o = { f: F, hp: F.hp * (1 + lap * 0.3), max: F.hp * (1 + lap * 0.3), st: 'idle', t: 1.4, mv: null, k: 0, dx: 0, dy: 0, hitT: 0, flash: 0, tell: F.tell * Math.pow(0.88, lap) }; g.intro = 1.6; }
+  function newFight(g) { const F = FIGHTERS[g.fi % FIGHTERS.length], lap = Math.floor(g.fi / FIGHTERS.length); g.o = { f: F, hp: F.hp * 1.5 * (1 + lap * 0.3), max: F.hp * 1.5 * (1 + lap * 0.3), st: 'idle', t: 1.4, mv: null, k: 0, dx: 0, dy: 0, hitT: 0, flash: 0, tell: Math.max(0.28, F.tell * 0.8 * Math.pow(0.9, lap)) }; g.intro = 1.6; }
   Kit.run({ id: 'gl-knockout', title: 'KNOCKOUT RING', help: 'Dodge: swipe / A D / arrows.  Block: hold the bottom / S / down.  Punch: tap upper-left/right (J K)\nCounter while he is open after a miss. STAR full: U or double tap for an uppercut', bg: '#07050c',
     init(g) { g.fi = 0; g.p = { hp: 100, dx: 0, dodge: 0, dir: 0, block: false, punch: null, pk: 0, pt: 0, star: 0 }; g.kos = 0; g.counters = 0; g.lastTap = -1; newFight(g); g.hud = ''; },
     update(g, dt) { const p = g.p, o = g.o, P = g.ptr; if (g.intro > 0) { g.intro -= dt; return; }
@@ -57,15 +57,15 @@
       if (p.punch) { p.pt += dt; p.pk = Math.sin(Math.min(1, p.pt / 0.22) * Math.PI); if (p.pt > 0.22) p.punch = null; }
       // opponent AI
       o.hitT -= dt; o.flash -= dt; o.t -= dt; o.dx = Math.sin(g.t * 1.6) * 14; o.dy = Math.sin(g.t * 3.2) * 4;
-      if (o.hp <= 0 && o.st !== 'down') { o.st = 'down'; o.t = 2.2; g.kos++; g.mark('k', g.kos); g.add(1000 * g.kos + Math.round(p.hp) * 10, 'ko'); g.float(200, 330, 'K.O.!', '#fde047', 54); g.sfx('power'); g.shake(14); p.hp = Math.min(100, p.hp + 40); }
+      if (o.hp <= 0 && o.st !== 'down') { o.st = 'down'; o.t = 2.2; g.kos++; g.mark('k', g.kos); g.add(1000 * g.kos + Math.round(p.hp) * 10, 'ko'); g.float(200, 330, 'K.O.!', '#fde047', 54); g.sfx('power'); g.shake(14); p.hp = Math.min(100, p.hp + 25); }
       if (o.st === 'down') { o.dy = Math.min(140, (2.2 - o.t) * 200); if (o.t <= 0) { g.fi++; newFight(g); } return; }
-      if (o.t <= 0) { if (o.st === 'idle' || o.st === 'block' || o.st === 'open' || o.st === 'stun') { o.st = 'tell'; o.mv = g.pick(o.f.moves); o.t = o.tell * g.R(0.85, 1.25); o.k = 0; if (o.mv === 'F' && g.rnd() < 0.5) o.t *= 0.6; }
-        else if (o.st === 'tell') { o.st = 'atk'; o.t = 0.16; }
-        else if (o.st === 'atk') { const recent = p.dT != null && g.t - p.dT < 0.55; const dodged = (o.mv === 'L' && p.dir === 1 && recent) || (o.mv === 'R' && p.dir === -1 && recent) || (o.mv === 'U' && recent) || (o.mv === 'F' && p.block);
+      if (o.t <= 0) { if (o.st === 'idle' || o.st === 'block' || o.st === 'open' || o.st === 'stun') { o.st = 'tell'; o.mv = g.pick(o.f.moves); o.t = o.tell * g.R(0.7, 1.25); o.k = 0; if (o.mv === 'F' && g.rnd() < 0.5) o.t *= 0.6; }
+        else if (o.st === 'tell') { if (g.fi >= 1 && g.rnd() < 0.15) { o.st = 'idle'; o.t = 0.3; g.float(200, 150, 'FEINT', '#c4b5fd', 14); } else { o.st = 'atk'; o.t = 0.16; } }
+        else if (o.st === 'atk') { const recent = p.dT != null && g.t - p.dT < 0.28; const dodged = (o.mv === 'L' && p.dir === 1 && recent) || (o.mv === 'R' && p.dir === -1 && recent) || (o.mv === 'U' && recent) || (o.mv === 'F' && p.block);
           const blocked = p.block && o.mv !== 'F' && o.mv !== 'U';
-          if (dodged) { g.add(50, 'dodge'); g.float(200, 470, 'DODGED', '#22d3ee', 16); o.st = 'open'; o.t = 0.9; g.sfx('coin'); }
+          if (dodged) { g.add(50, 'dodge'); g.float(200, 470, 'DODGED', '#22d3ee', 16); g.sfx('coin'); if (g.fi % 4 >= 2 && !o.combo && g.rnd() < 0.4) { o.combo = true; o.st = 'tell'; o.mv = g.pick(o.f.moves.filter(m => m !== 'F')); o.t = o.tell * 0.55; o.k = 0; } else { o.combo = false; o.st = 'open'; o.t = 0.8; } }
           else if (blocked) { p.hp -= 3; o.st = 'idle'; o.t = 0.5; g.sfx('click'); g.float(200, 470, 'BLOCK', '#fff', 14); }
-          else { const dmg = o.mv === 'U' ? 22 : o.mv === 'F' ? 18 : 14; p.hp -= dmg; g.sfx('bad'); g.shake(10); g.flash = 0.25; o.st = 'idle'; o.t = 0.7; if (p.hp <= 0) return g.end('Knocked out'); } }
+          else if (false) {} else { const dmg = o.mv === 'U' ? 22 : o.mv === 'F' ? 18 : 14; p.hp -= dmg; g.sfx('bad'); g.shake(10); g.flash = 0.25; o.st = 'idle'; o.t = 0.7; if (p.hp <= 0) return g.end('Knocked out'); } }
         else { o.st = 'idle'; o.t = g.R(0.5, 1.1); } }
       if (o.st === 'tell') o.k = Math.min(1, o.k + dt / o.tell);
       g.flash = Math.max(0, (g.flash || 0) - dt); },

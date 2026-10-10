@@ -647,3 +647,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: solo rack-attack. Slingshot drag to aim and set power; shows a ghost-ball aim line, an object-ball direction line, the cue stick and a power bar. Sub-stepped elastic ball-ball collisions, cushion restitution 0.82, rolling friction, 6 pockets with jaw zones. Potting several balls in one turn multiplies (100 x n). A turn with no pot (except the break) or a scratch costs a chalk (3); clearing a rack gives +1 chalk and re-racks with more balls (6 up to 15), so it's endless.
 - Art: lamp-lit back room, walnut rails with diamond sights, felt with leaf watermark, head string and D, brass pocket rims, pre-rendered glossy solids/stripes with numbers, tapered maple cue with blue tip.
 - Tests: ghost-ball bot cleared rack 1 and potted 9 in 14 shots. e2e PASS. Bug pass PASS. Rating: visual 7.5/10, feel 7.5/10.
+- **Fairness pass (2026-10-10 08:59 ET, Reese: 250 ms human reaction bot):** the first human-like bot (250-310 ms reaction) still got 11 KOs in 2 min untouched, so it was too easy. Changes:
+  - The dodge must land within 0.28 s of the hit (it was 0.55 s).
+  - Tells start at 80% and shrink 10% per roster loop (floor 0.28 s), with 0.7-1.25x variance.
+  - 15% feints from fight 2; 40% follow-up combos on fighters 3-4.
+  - Opponent HP x1.5; KO heals 25 (was 40).
+  - Final bot (reaction floor 250-310 ms, anticipates the hit with ±120 ms timing error, counters after 250 ms), 3 runs of 3 min: 10 KOs / hp 69, 9 KOs / hp 42, KO'd in fight 8 at 154 s. Hard but fair, and it still escalates. e2e + bug pass PASS.
