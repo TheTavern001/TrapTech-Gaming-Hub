@@ -13,6 +13,12 @@ const COS = require('./cosmetics');
 const PK = require('./packages');
 const { gameBoard, globalBoard, ranked, giveawayEntrants, giveawayStatus, activeGiveawaysFor, giveawayGameIds } = boards;
 
+// Resolve first-party games and Games Library titles through the same signed-run pipeline.
+// Official event eligibility remains controlled by the event builder and server-side event checks.
+const libraryGames = () => require('./games-lib').games;
+const resolveGame = (id) => cfg.GAME_MAP[id] || libraryGames().find(g => g.id === id) || null;
+const HUB_VERSION = 'V1';
+
 const app = express();
 app.set('trust proxy', true);
 const PU = require('./public-url'); app.use(PU.redirect()); // v7: PUBLIC_URL + optional CANONICAL_REDIRECT (src/public-url.js)
@@ -28,7 +34,8 @@ app.use((req, res, next) => (req.path === '/api/score' ? jsonScore : jsonSmall)(
 app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mode
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
-app.get('/healthz', (req, res) => { try { db.prepare('SELECT 1').get(); res.json({ ok: true }); } catch (e) { res.status(500).json({ ok: false }); } });
+app.get('/healthz', (req, res) => { try { db.prepare('SELECT 1').get(); res.json({ ok: true, product: 'The Gaming Hub', version: HUB_VERSION }); } catch (e) { res.status(500).json({ ok: false, version: HUB_VERSION }); } });
+app.get('/api/build', (req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ ok: true, product: 'The Gaming Hub by Trap Tech Solutions', version: HUB_VERSION, games_library: libraryGames().length, core_games: cfg.GAMES.length, scoring: 'shared signed-run API', deployment_commit: process.env.DEPLOY_COMMIT || null }); });
 
 // ---------- helpers ----------
 const now = () => Date.now();
@@ -184,7 +191,7 @@ app.get('/api/leaderboard', (req, res) => {
     if (!g) return bad(res, 404, 'Giveaway not found');
     rows = giveawayEntrants(R.ready(g));
   } else if (game === 'global') rows = ranked(globalBoard(periodStart(period)));
-  else if (cfg.GAME_MAP[game]) rows = ranked(gameBoard(game, periodStart(period)));
+  else if (resolveGame(game)) rows = ranked(gameBoard(game, periodStart(period)));
   else return bad(res, 404, 'Unknown game');
   const me = currentUser(req);
   if (req.query.friends === '1' || req.query.friends === 'true') {
@@ -201,7 +208,7 @@ const publicRow = (r) => ({ rank: r.rank, username: r.username, score: r.score, 
 // ---------- runs / anti-cheat ----------
 app.post('/api/run/start', requireUser, (req, res) => {
   const gameId = String(req.body.game_id || 'jetpack-dash');
-  const game = cfg.GAME_MAP[gameId];
+  const game = resolveGame(gameId);
   if (!game || !game.playable) return bad(res, 400, 'That game is not playable yet.');
   if (!rateLimit(`start-u:${req.user.id}`, 20, 60e3) || !rateLimit(`start-ip:${ipHash(req)}`, 40, 60e3)) return bad(res, 429, 'Too many runs started, wait a moment.');
   const rid = crypto.randomBytes(16).toString('hex');
@@ -235,7 +242,7 @@ app.post('/api/score', requireUser, (req, res) => {
   if ((tok.e || null) !== (row.event_id || null)) return reject(400, 'Event run token does not match this run.');
   const evOrig = row.event_id || null;
   { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec && ec.demote) row.event_id = null; else if (ec) return reject(ec.status, ec.error); }
-  const game = cfg.GAME_MAP[row.game_id]; const ac = game.ac; const unit = game.unit === 'm' ? 'm' : ' ' + game.unit;
+  const game = resolveGame(row.game_id); if (!game || !game.playable) return reject(400, 'This game is no longer available for scoring.'); const ac = game.ac; const unit = game.unit === 'm' ? 'm' : ' ' + game.unit;
   const score = Number(req.body.score); const coins = Number(req.body.coins || 0);
   if (!Number.isInteger(score) || score < 0 || score > cfg.MAX_SCORE) return reject(400, 'Invalid score value.');
   if (!Number.isInteger(coins) || coins < 0 || coins > 1_000_000) return reject(400, 'Invalid coin value.');
