@@ -116,7 +116,7 @@ const LIST = [
   // Batch 4 - Physics & Destruction + Reflex remainder
   T('castle-crush', 'Castle Crush', 'Crush the Castle', 2, 'A', 'endless-levels', 400, true, 'Blocks 5-25, kings 300, castle bonus 500 x stones left + 200 x level', '7 days'),
   T('neon-circuit', 'Neon Circuit', 'Original neon arcade racer', 1, 'A', 'endless', 120, true, 'Energy cells 25 + near-miss 5; score is awarded during play', '3 days'),
-  T('rift-survival', 'Rift Survival', 'Original arena survival game', 4, 'A', 'endless', 180, true, 'Eliminations 10+wave bonus; shards 25; survival time 2/sec', '3 days'),
+  T('rift-survival', 'Rift Survival', 'Original arena survival game', 4, 'A', 'endless', 180, true, 'Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop', '3 days'),
 ];
 const games = LIST.map(x => {
   const s = SOURCES[x.src];
