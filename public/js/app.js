@@ -264,7 +264,7 @@ function ageGate() {
     ls.setItem('gh_age_ok', String(Date.now())); ss.setItem('gh_dob', r.iso); render();
   });
 }
-const gameById = (id) => S.games.find(g => g.id === id);
+const gameById = (id) => S.games.find(g => g.id === id) || S.libraryGames.find(g => g.id === id);
 
 // ---------------- splash & auth ----------------
 route(/^\/welcome$/, () => splash());
@@ -485,6 +485,7 @@ route(/^\/games$/, (m, url) => {
 });
 route(/^\/games\/([\w-]+)$/, async (m) => {
   const g = gameById(m[1]); if (!g) return shell('/games', `<div class="empty">Game not found. <a href="/games">All games</a></div>`);
+  if (g.lib) { location.href = g.url; return; }
   const fav = () => JSON.parse(ls.getItem('gh_favs') || '[]');
   const [lb, gw, sp] = await Promise.all([api(`/api/leaderboard?game=${g.id}&limit=5`), api('/api/giveaways?status=active'), api(`/api/games/${g.id}/sponsor`)]);
   const esp = sp.ok && sp.sponsor && sp.sponsor.link ? sp.sponsor : null; // sponsor placement: outbound link on the game page
