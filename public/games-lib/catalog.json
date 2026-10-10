@@ -4539,7 +4539,7 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Energy cells 25 + near-miss 5; score is awarded during play",
+      "scoring": "Energy cells 30–125 by combo; near-miss 5",
       "event_length": "3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
