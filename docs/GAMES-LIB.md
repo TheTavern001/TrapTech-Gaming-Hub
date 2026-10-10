@@ -391,3 +391,10 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Player muscle car (leans with steering), cop cruisers with alternating red/blue emissive light bars, and armoured trucks at heat 4+. The angled chase camera leads in the travel direction. Screen-edge arrows (red/blue) point to off-screen cops; bursts and tyre smoke are projected into screen space.
 - Oct 10 fix: rocks, trees and houses are kept off the roads and kerbs (44 px margin plus object radius); generation attempts were raised to keep the density.
 - Tests: e2e PASS (calls 26, tris 84k, DPR 1.5). Bug pass PASS (memory +0.8 MB). No free-use reference screenshot exists (no Wikipedia page), so only docs/audit/wanted-run-ours.jpg was produced. Rating: visual 7/10, feel 7/10.
+
+## Cube Horde - DONE (2026-10-10 09:40 ET)
+- 3D voxel presentation over the unchanged arena.js rules (arena.js gained optional render, toScreen and onKill hooks; Grid Wars still renders as before and passes e2e).
+- Instanced voxel shamblers: 6 bevelled parts plus glowing eyes, per-type skin, shirt and trouser colours, sized by type, with walk and arm cycles and a white hit flash. Up to 160 at roughly 36 draw calls.
+- Voxel soldier hero with rifle, muzzle flash and point light. Instanced tracer bullets and green spit orbs. Instanced voxel debris bursts (bounce, spin, fade). Spinning glowing power crates.
+- Arena: a baked checker grass and dirt texture, a bevelled stone wall ring, voxel trees, a "GREEN ZONE 21+" billboard, soft shadows, a high chase camera and a vignette.
+- Tests: e2e PASS (calls 36, tris 60k, DPR 1.5). Bug pass PASS (memory +0.1 MB). No free-use reference image exists (closed-source mobile game), so only docs/audit/cube-horde-ours.jpg was produced. Rating: visual 7/10, feel 7/10.
