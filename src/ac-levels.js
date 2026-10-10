@@ -40,13 +40,29 @@ function decode(ev) {
 }
 
 const isPts = { // which kinds carry points (the rest are progression marks)
-  default: (k) => !['w', 'r', 't', 'x', 'B', 'L', 'X'].includes(k),
+  default: (k) => k[0] !== '#' && !['w', 'r', 't', 'x', 'B', 'L', 'X'].includes(k),
   plinko: (k) => k[0] === 's', 'drift-rush': () => false, 'blazed-roulette': (k) => k === 'win',
 };
 const VS_TYPES = [50, 80, 150];
 const rule = (fn) => fn;
 // Each rule walks the events in order with the game's own state machine; return a reason string to reject, or null.
 const RULES = {
+  'gl-neon-circuit': rule((E) => {
+    for (const e of E) {
+      if (e.k === 'e') { if (e.v < 30 || e.v > 125 || e.v % 5 !== 0) return `energy cell worth ${e.v} is not possible`; }
+      else if (e.k === 'n') { if (e.v !== 5) return `near miss worth ${e.v} is not possible`; }
+      else return `unknown event ${e.k}`;
+    }
+    return null;
+  }),
+  'gl-rift-survival': rule((E) => {
+    for (const e of E) {
+      if (e.k === 's') { if (e.v !== 25) return `rift shard worth ${e.v} is not possible`; }
+      else if (e.k === 'b') { if (e.v < 20 || e.v % 10 !== 0) return `wave bonus ${e.v} is not possible`; }
+      else return `unknown event ${e.k}`;
+    }
+    return null;
+  }),
   'void-swarm': rule((E) => {
     let w = 0, kills = 0, boss = 0, clr = 0;
     for (const e of E) {
