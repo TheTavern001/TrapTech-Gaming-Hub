@@ -1,0 +1,10 @@
+{
+  "_note": "Billboard/sign ad slots for 3D games. Event admins can replace entries with sponsor ads: {\"text\",\"sub\",\"bg\",\"fg\",\"img\"} (img = URL of a 1024x512 image you have rights to). 21+ audiences only.",
+  "ads": [
+    { "text": "GREEN LEAF CO.", "sub": "Craft dispensary - 21+", "bg": "#0f3d2a", "fg": "#f2c94c" },
+    { "text": "GOLDEN HOUR", "sub": "Sun-grown flower - 21+", "bg": "#2b1d0e", "fg": "#ffd36a" },
+    { "text": "HIGH DESERT FARMS", "sub": "Small-batch growers", "bg": "#1d4d3a", "fg": "#ffffff" },
+    { "text": "YOUR BRAND HERE", "sub": "Event sponsor slot", "bg": "#123524", "fg": "#9be38b" }
+  ],
+  "signs": ["DISPENSARY", "GREEN CROSS", "THE GROW ROOM", "LEAF & LANTERN", "KUSH CORNER", "HAZE HOUSE"]
+}

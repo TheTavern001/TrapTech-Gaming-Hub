@@ -10,6 +10,7 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { loadBrand, leaf } from './brand.js';
 
 const LANE = 2.4, GRAV = 42, JUMP = 14.5, ROW = 80, U = 2.4;
 export async function loadModels(names, base) {
@@ -50,7 +51,7 @@ export function canvasTex(w, h, draw, rep) { const c = document.createElement('c
 function cobbles(base, stone, grout, rep) { return canvasTex(256, 256, (x, w, h) => { x.fillStyle = grout; x.fillRect(0, 0, w, h); const r = 16; for (let row = 0; row < 8; row++) for (let col = 0; col < 9; col++) { const cx = col * 32 + (row % 2) * 16 + (Math.random() - 0.5) * 4, cy = row * 32 + 16; const g = x.createRadialGradient(cx - 5, cy - 6, 2, cx, cy, r); g.addColorStop(0, stone); g.addColorStop(1, base); x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy, r - 2 + Math.random() * 2, r - 4 + Math.random() * 2, Math.random(), 0, 7); x.fill(); } }, rep); }
 function stripes(a, b) { return canvasTex(128, 32, (x) => { x.fillStyle = a; x.fillRect(0, 0, 128, 32); x.fillStyle = b; for (let i = -2; i < 8; i++) { x.beginPath(); x.moveTo(i * 24, 32); x.lineTo(i * 24 + 12, 32); x.lineTo(i * 24 + 28, 0); x.lineTo(i * 24 + 16, 0); x.fill(); } const g = x.createLinearGradient(0, 0, 0, 32); g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,.2)'); x.fillStyle = g; x.fillRect(0, 0, 128, 32); }); }
 function planks(base) { return canvasTex(128, 128, (x) => { for (let i = 0; i < 4; i++) { const g = x.createLinearGradient(0, i * 32, 0, i * 32 + 32); g.addColorStop(0, base); g.addColorStop(1, '#7a4a22'); x.fillStyle = g; x.fillRect(0, i * 32 + 1, 128, 30); x.fillStyle = 'rgba(60,30,10,.35)'; x.fillRect(0, i * 32 + 30, 128, 2); x.fillRect((i * 37) % 100 + 10, i * 32 + 10, 3, 3); } }); }
-function signTex(text, bg, fg) { return canvasTex(512, 128, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, bg[0]); g.addColorStop(1, bg[1]); x.fillStyle = g; x.fillRect(0, 0, w, h); x.strokeStyle = fg; x.lineWidth = 8; x.strokeRect(10, 10, w - 20, h - 20); x.font = '900 64px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = 'rgba(0,0,0,.35)'; x.fillText(text, w / 2 + 3, h / 2 + 5); x.fillStyle = fg; x.fillText(text, w / 2, h / 2 + 2); }); }
+function signTex(text, bg, fg) { return canvasTex(512, 128, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, bg[0]); g.addColorStop(1, bg[1]); x.fillStyle = g; x.fillRect(0, 0, w, h); x.strokeStyle = fg; x.lineWidth = 8; x.strokeRect(10, 10, w - 20, h - 20); x.font = '900 64px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = 'rgba(0,0,0,.35)'; x.fillText(text, w / 2 + 3, h / 2 + 5); x.fillStyle = fg; x.fillText(text, w / 2, h / 2 + 2); if (/DISPENS|GREEN|GROW|LEAF|KUSH|HAZE/.test(text)) { leaf(x, 48, 64, 34, '#7ee07a'); leaf(x, w - 48, 64, 34, '#7ee07a'); } }); }
 
 export function stage(o) {
   const cv = document.createElement('canvas'); cv.id = 'gl3d'; document.body.insertBefore(cv, document.body.firstChild);
@@ -68,9 +69,9 @@ export function stage(o) {
 // ---- world themes (original names/signs; no references to any commercial game) ----
 const THEMES = {
   desert: { name: 'Dustwater Junction', sky: ['#a99be0', '#ffcf9e'], fog: '#f4b896', fogNear: 40, fogFar: 125, hemi: ['#ffe6cc', '#c0644a', 1.7], sun: ['#fff1d8', 2.7], ground: ['#b9694a', '#d98d68', '#8e4a33'], side: '#e9a77c',
-    trains: [['tr-train-diesel-b', '#ffb347'], ['tr-train-carriage-container-blue', '#5fd3c6'], ['tr-train-carriage-tank-large', '#ff7a59']], signs: ['GENERAL STORE', 'HOTEL', 'GOLD & GRAIN', 'BARBER', 'POST', 'CANTINA'] },
+    trains: [['tr-train-diesel-b', '#ffb347'], ['tr-train-carriage-container-blue', '#5fd3c6'], ['tr-train-carriage-tank-large', '#ff7a59']], signs: ['GENERAL STORE', 'DISPENSARY', 'GOLD & GRAIN', 'HAZE HOUSE', 'POST', 'GREEN CROSS'] },
   old: { name: 'Lindenhof Old Town', sky: ['#58a9f2', '#e6f4ff'], fog: '#cfe7f8', fogNear: 40, fogFar: 125, hemi: ['#eef7ff', '#8f7c6a', 1.6], sun: ['#fff6e6', 2.5], ground: ['#8f8073', '#b8a899', '#6c6057'], side: '#a49384',
-    trains: [['tr-train-tram-classic', '#ffcc33'], ['tr-train-electric-city-b', '#ff8a5c']], signs: ['BAKERY', 'CAFE', 'BOOKS', 'FLOWERS', 'CHEESE', 'MUSEUM'] } };
+    trains: [['tr-train-tram-classic', '#ffcc33'], ['tr-train-electric-city-b', '#ff8a5c']], signs: ['BAKERY', 'GROW ROOM', 'BOOKS', 'LEAF & LANTERN', 'CAFE', 'KUSH CORNER'] } };
 const ORDER = ['desert', 'old'];
 const MODELS = ['hero', 'chaser2', 'rail', 'pu-magnet', 'pu-jump', 'pu-double', 'tr-train-diesel-b', 'tr-train-carriage-container-blue', 'tr-train-carriage-tank-large', 'tr-train-tram-classic', 'tr-train-electric-city-b',
   'ot-wall', 'ot-wall-window-shutters', 'ot-wall-door', 'ot-wall-window-stone', 'ot-wall-wood', 'ot-wall-wood-window-glass', 'ot-wall-wood-window-small', 'ot-roof-high-gable', 'ot-roof-flat', 'ot-balcony-wall', 'ot-lantern', 'ot-stall-red', 'ot-stall-green', 'ot-banner-green', 'ot-cart', 'ot-chimney', 'ot-tree-high',
