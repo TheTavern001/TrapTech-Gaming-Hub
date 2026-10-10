@@ -659,3 +659,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: match free pairs (nothing on top; left or right edge open). The clock drains, and each match refills +2.5 s (cap 90). Matches within 3 s chain a combo (up to x6). Layouts grow (3-4 layers, up to 8x8 base) and are generated solvable by reverse placement (no gaps in rows, every placed tile free at its turn). A dead-end reshuffles for -5 s, so it's endless.
 - Art: original faces (dots with rings, cannabis-leaf suit, red numerals, 7 honours: sun/moon/star/bolt/drop/flame/gem) on ivory tiles with green backs and depth edges; free tiles are bright, blocked ones dimmed; gold glow on selection; shake on a blocked tap; leaf watermark felt.
 - Tests: bot with 250-550 ms per tap cleared 3 layouts in 60 s. e2e PASS. Bug pass PASS. Rating: visual 7.5/10, feel 7/10.
+
+### Arrow Hero (Survival, ref: Archero) — 2026-10-10
+- Built original (MIT, code-drawn). Candidates reviewed: GitHub "archero clone" JS repos (mostly unlicensed or Unity-only), itch.io HTML5 Archero-likes (no source/licence), js13k roguelite shooters (too sparse). Rejected all; built on Kit.
+- Drag to move, stand still to auto-fire; 10 skill picks on level-up; boss every 5 rooms; endless rooms. Tie-break: higher room, then fewer hits taken.
+- Tuning: obstacles block movement but not arrows; room 1 softened (HP 120, slower slimes/mage bolts, fewer foes). Bot reaches room 2-3.
+- Visual 7 / feel 7. e2e PASS (desktop+iPhone, 60 FPS, forged score rejected). Bug pass PASS (seeds, pause, tab, rotate, low-FPS 59, memory +0.1 MB/45 s, keys+touch).
