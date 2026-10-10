@@ -7,7 +7,7 @@
 | 2 Official events vs free play | DONE | commits 3fd3f3d + phase-2 UI commit; tools/e2e-events.js 29/29, e2e-api 386/0 (fresh DB); skill-only tie-breaks + playoffs: tools/e2e-tiebreak.js 17/17; chance games retired (13 games, all giveaway-eligible) |
 | 3 Booking flow verify | DONE | client details (prize, brand color, length, games, competition, dates, notes) + summary without prices; admin quote from price sheet; accept -> one-click official event (+QR on the vendor's quote page, admin button); e2e-sponsor-brands 63/63 (SEED=1 fresh DB) |
 | 4 Monetisation (Bitcoin to one BTC_ADDRESS, cosmetic only) | DONE | src/monetize.js + src/btc.js + src/pass-quests.js; /store, /store/order/:ref (QR, exact amount, copy, txid paste), /prestige wall; admin Store & orders (verify/grant/refund, prices, checkout switch) + Official events page (share kit, playoffs); tools/e2e-payments.js 32/32 with a mocked explorer; docs/PASS-QUESTS.md |
-| 5 Avatars | NOT DONE | |
+| 5 Avatars | DONE | src/avatars.js (server SVG /avatar/<name>.svg, 12 kinds / 70+ parts: free, Crowns, achievement-earned, Prestige-only held items/crown/backgrounds), editor /avatar (live preview, buy with Crowns), shown on every board/profile/winner list, Prestige showcase on profiles; tools/e2e-avatars.js 13/13 |
 | 6 Shop + timers | NOT DONE | |
 | 7 Trap Tech logo / About / landing | NOT DONE | |
 | 8 Admin completeness | NOT DONE | |

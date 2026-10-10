@@ -772,6 +772,7 @@ require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
 require('./events').routes(app, A, H); // v7 official events (event codes, event-run tokens, event boards, vendor QR)
 require('./monetize').routes(app, A, H); // v7 cosmetic-only store: Hub Crowns, Season Pass, Prestige; Bitcoin checkout (BTC_ADDRESS)
+require('./avatars').routes(app, H); // v7 Phase 5 player avatars (GET /avatar/<name>.svg, editor API)
 require('./games-v7')(app); // v7: retired-game archive (Stack 2048 -> Stack)
 
 const demo = require('./demo');

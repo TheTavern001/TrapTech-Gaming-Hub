@@ -3,6 +3,7 @@
 // install(ctx) is called once from app.js with its helpers.
 import * as ECON from './economy.js';
 import * as STORE from './hub-store.js';
+import * as AVED from './avatar-editor.js';
 let C = null; // { route, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead }
 const money = (c) => '$' + (Math.round(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const day = (t) => new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -190,5 +191,6 @@ export function install(ctx) {
   route(/^\/channels$/, () => go('/settings#v7-brand', true));
   route(/^\/c\/[\w-]+$/, () => go('/giveaways', true));
   ECON.install(ctx); // shop + seasons pages (public/js/economy.js)
+  AVED.install(ctx); // v7 Phase 5 avatar editor (public/js/avatar-editor.js)
   STORE.install(ctx); // v7 Phase 4 Hub Store (public/js/hub-store.js)
 }

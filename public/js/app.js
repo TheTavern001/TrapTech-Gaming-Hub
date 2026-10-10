@@ -28,12 +28,15 @@ function ago(ms) {
 }
 function toast(msg, ms = 2600) { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), ms); }
 const DEMO_AV = { BlazedKing: '/assets/avatars/hooded.webp', TerpQueen: '/assets/avatars/act-1.webp', HighVibes: '/assets/avatars/act-2.webp', SmokeSignals: '/assets/avatars/act-3.webp' };
+const AV_BUST = {}; // bumped after the player edits their own avatar
+function bumpAvatar(name) { AV_BUST[name] = Date.now(); }
 function avatar(name, demo, cls = '') {
   const img = demo && DEMO_AV[name];
   if (img) return `<span class="av ${cls}" style="background-image:url(${img})"></span>`;
   let h = 0; for (const c of String(name)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   const a = h % 360, b = (a + 60) % 360;
-  return `<span class="av ${cls}" style="background:linear-gradient(135deg,hsl(${a} 80% 55%),hsl(${b} 80% 40%))">${esc(String(name).slice(0, 2).toUpperCase())}</span>`;
+  // v7 Phase 5: every player has a custom avatar (server-rendered SVG; initials stay underneath while it loads)
+  return `<span class="av ${cls}" style="background:linear-gradient(135deg,hsl(${a} 80% 55%),hsl(${b} 80% 40%))">${esc(String(name).slice(0, 2).toUpperCase())}${name ? `<img class="av-img" src="/avatar/${encodeURIComponent(name)}.svg${AV_BUST[name] ? '?v=' + AV_BUST[name] : ''}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span>`;
 }
 // v7: Trap Tech Solutions brand art (cut from Reese's own logos by tools/build-brand-v7.py). WebP srcset + PNG fallback.
 const TT_ART = { mono: [[40, 80, 192], 146 / 192, 192], horizontal: [[180, 360, 920], 920 / 248, 920], lockup: [[300, 600], 600 / 410, 600], chrome: [[280, 560], 560 / 121, 560], badge: [[128, 256], 1, 256] };
@@ -910,6 +913,7 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
       <div class="prof-head">${framed(p.username, p.demo, cos, 'lg')}
         <div><div class="name${cos.color ? ' nc-' + esc(cos.color) : ''}"><span class="nt">${esc(p.username)}</span>${demoTag(p.demo)}${badgeIcon(cos.badge)}</div>
         <div class="ptitle big">${esc(cos.title)}</div>
+        ${S.me && S.me.username === p.username ? `<a class="btn sm ghost" href="/avatar" id="edit-avatar">${icon('pencil')} Edit avatar</a>` : ''}<div id="px-show"></div>
         <div class="small pmeta">Level ${p.level.level} <span style="color:var(--cyan)">•</span> Member Since ${new Date(p.member_since).getFullYear()}</div>
         <div class="xpbar" title="${fmt(p.level.into)} / ${fmt(p.level.need)} XP to level ${p.level.level + 1}" aria-label="Level progress"><i style="width:${Math.round(p.level.into / p.level.need * 100)}%"></i></div>
         <div class="pchips">${p.global_rank ? `<span class="pill">${icon('trophy')} Global #${p.global_rank}</span>` : ''}${p.streak.current ? `<span class="pill fire">${icon('flame')} ${p.streak.current}-day streak</span>` : ''}<span class="pill">${icon('calendar-range')} S${p.season.number} tier ${p.season.tier}</span></div></div></div>
@@ -939,6 +943,7 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
   </div>`);
   achToast(r.unlocked);
   setTitle(`${p.username}'s profile`);
+  api('/api/users/' + encodeURIComponent(p.username) + '/prestige').then(x => { const el = document.getElementById('px-show'); if (el && x.ok && x.items.length) el.innerHTML = `<div class="px-showcase">${x.items.map(it => `<a href="/prestige" class="pill gold" title="${esc(it.name)}">${icon('gem')} ${esc(it.name)} #${it.serial}/${it.supply}</a>`).join('')}</div>`; });
   api(`/api/users/${encodeURIComponent(p.username)}/special-badges`).then(sb => { const el = document.getElementById('special-badges'); if (!el || !sb.ok || !sb.granted.length) return;
     el.innerHTML = `<div class="special-row" aria-label="Special badges">${sb.granted.map(b => `<span class="special-b" title="${esc(b.desc)}">${badgeArt('adm:' + b.id, 'sm')}<b>${esc(b.name)}</b></span>`).join('')}</div>`; });
   document.getElementById('share-prof').onclick = () => shareLink({ kind: 'profile', ref: p.username, url: `/u/${encodeURIComponent(p.username)}`, title: `${p.username} on The Gaming Hub`, text: `Level ${p.level.level} on The Gaming Hub - come play!` });
@@ -1403,6 +1408,7 @@ route(/^\/settings$/, () => {
   const standalone = matchMedia('(display-mode: standalone)').matches;
   const rm = ls.getItem('gh_reduce_motion') === '1';
   shell('/settings', `<div class="narrow">${pageHead('Settings')}
+    ${S.me ? `<a class="card pad" href="/avatar" id="set-avatar" style="display:flex;gap:12px;align-items:center;margin-bottom:12px">${avatar(S.me.username, false, 'lg')}<div><b>Your avatar</b><div class="small muted">Change your look: hair, outfit, hats, held items and more.</div></div></a>` : ''}
     ${S.me ? `<div class="card pad"><h2 style="margin-bottom:10px">Account</h2><div class="mini-row" style="margin:0 0 10px">${framed(S.me.username, false, S.me.cos)}${pname(S.me.username, false, S.me.cos)}</div>
       <form id="pwf2"><div id="pwmsg2"></div><div class="field"><input class="input" type="password" id="cur2" placeholder="Current password" autocomplete="current-password" aria-label="Current password"></div>
       <div class="field"><input class="input" type="password" id="np2" placeholder="New password (min 8)" autocomplete="new-password" aria-label="New password"></div>
@@ -1433,7 +1439,7 @@ if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigat
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
 // v7 pages (Sponsor a Host, brands, shop & seasons) - public/js/v7.js
-V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS });
+V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS, avatar, bumpAvatar });
 // ---------------- boot ----------------
 (async function boot() {
   const [me, games] = await Promise.all([api('/api/me'), api('/api/games')]);
