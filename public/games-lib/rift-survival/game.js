@@ -7,7 +7,7 @@ Kit.run({
   bg: '#080b18',
   stick: true,
   init(g) {
-    g.player = { x: g.W / 2, y: g.H * .58, hp: 3, invuln: 0, speed: 185 };
+    g.player = { x: g.W / 2, y: g.H * .58, r: 13, hp: 3, invuln: 0, speed: 185 };
     g.enemies = [];
     g.shards = [];
     g.spawn = .6;
