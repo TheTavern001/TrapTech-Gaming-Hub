@@ -40,7 +40,7 @@ function liveStandings(g) {
   const X = module.exports.scoring; // v7 builder score rules (src/admin-scoring.js); legacy giveaways keep this query
   const rows = X && X.custom(g) ? X.standings(g, games, capSql(), E()) : db.prepare(`
     WITH w AS (SELECT r.id, r.user_id, r.game_id, r.score, r.created_at FROM runs r
-               WHERE r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql()} OR r.verify = 'cleared')),
+               WHERE r.event_id = @gid AND r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql()} OR r.verify = 'cleared')),
     att AS (SELECT user_id, COUNT(*) AS attempts FROM w GROUP BY user_id),
     q AS (SELECT * FROM w WHERE score >= @min),
     -- best run per player per game: highest score, then the first run that reached it
@@ -71,7 +71,7 @@ function excludedRuns(g) {
   const games = gamesOf(g.id); if (!games.length) return [];
   const ph = games.map(() => '?').join(',');
   return db.prepare(`SELECT r.id, r.user_id, u.username, r.game_id, r.score, r.started_at, r.created_at, r.duration_ms, r.ip_hash FROM runs r JOIN users u ON u.id = r.user_id
-    WHERE r.game_id IN (${ph}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? AND (r.held <> 0 OR (r.score > ${capSql()} AND r.verify <> 'cleared')) ORDER BY r.score DESC LIMIT 200`)
+    WHERE r.event_id = ${+g.id} AND r.game_id IN (${ph}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? AND (r.held <> 0 OR (r.score > ${capSql()} AND r.verify <> 'cleared')) ORDER BY r.score DESC LIMIT 200`)
     .all(...games, g.start_at, g.start_at, g.end_at).map(r => ({ ...r, cap: capFor(r) }));
 }
 

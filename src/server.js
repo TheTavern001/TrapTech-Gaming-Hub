@@ -107,6 +107,7 @@ function startSession(req, res, user) {
 const requireUser = (req, res, next) => { const u = currentUser(req); if (!u) return bad(res, 401, 'Please sign in first.'); req.user = u; next(); };
 // v7: admin lives at a secret path with password + authenticator (TOTP), lockouts, CSRF and an audit log (src/admin-sec.js)
 const ADMSEC = require('./admin-sec');
+const EV = require('./events'); // v7 official events vs free play
 const requireAdmin = ADMSEC.requireAdmin;
 
 const USERNAME_RE = /^[A-Za-z0-9_.-]{3,20}$/;
@@ -206,8 +207,13 @@ app.post('/api/run/start', requireUser, (req, res) => {
   const rid = crypto.randomBytes(16).toString('hex');
   const t = now();
   const seed = AC.newSeed();
-  db.prepare('INSERT INTO run_tokens (rid,user_id,game_id,started_at,ip_hash,seed) VALUES (?,?,?,?,?,?)').run(rid, req.user.id, gameId, t, ipHash(req), seed);
-  res.json({ ok: true, token: sign(cfg.RUN_SECRET, { rid, u: req.user.id, g: gameId, t }), started_at: t, seed });
+  // v7 official events: an event-run token is only issued after the server validates the event (src/events.js)
+  const evRef = req.body.event || req.body.event_code || req.body.giveaway_id;
+  let ev = null;
+  if (evRef != null && evRef !== '') { const c = EV.checkStart(req, req.user, gameId, evRef, t); if (!c.ok) return bad(res, c.status, c.error, { event_rejected: true }); ev = c.g; }
+  db.prepare('INSERT INTO run_tokens (rid,user_id,game_id,started_at,ip_hash,seed,event_id,sess_hash) VALUES (?,?,?,?,?,?,?,?)').run(rid, req.user.id, gameId, t, ipHash(req), seed, ev ? ev.id : null, ev ? EV.sessHash(req) : '');
+  res.json({ ok: true, token: sign(cfg.RUN_SECRET, ev ? { rid, u: req.user.id, g: gameId, t, e: ev.id } : { rid, u: req.user.id, g: gameId, t }), started_at: t, seed,
+    event: ev ? { id: ev.id, code: ev.event_code, label: EV.label(ev), expires_at: t + EV.EVENT_TOKEN_TTL_MS } : null });
 });
 
 app.post('/api/score', requireUser, (req, res) => {
@@ -224,6 +230,8 @@ app.post('/api/score', requireUser, (req, res) => {
   };
   if (row.used_at) return bad(res, 409, 'This run was already submitted.', { rejected: true });
   if (t - row.started_at > cfg.RUN_TOKEN_TTL_MS) return reject(400, 'Run token expired.');
+  if ((tok.e || null) !== (row.event_id || null)) return reject(400, 'Event run token does not match this run.');
+  { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec) return reject(ec.status, ec.error); }
   const game = cfg.GAME_MAP[row.game_id]; const ac = game.ac; const unit = game.unit === 'm' ? 'm' : ' ' + game.unit;
   const score = Number(req.body.score); const coins = Number(req.body.coins || 0);
   if (!Number.isInteger(score) || score < 0 || score > cfg.MAX_SCORE) return reject(400, 'Invalid score value.');
@@ -246,7 +254,7 @@ app.post('/api/score', requireUser, (req, res) => {
 
   const prevBest = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=?').get(req.user.id, row.game_id).b;
   const levelBefore = H.levelOf(req.user.id);
-  const gwsAll = activeGiveawaysFor(row.game_id, t).filter(g => row.started_at >= g.start_at);
+  const gwsAll = row.event_id ? activeGiveawaysFor(row.game_id, Math.min(t, (db.prepare('SELECT end_at FROM giveaways WHERE id=?').get(row.event_id) || { end_at: t + 1 }).end_at - 1)).filter(g => g.id === row.event_id && row.started_at >= g.start_at) : []; // v7: free-play runs never enter giveaways
   const joinedQ = db.prepare('SELECT 1 FROM giveaway_entries WHERE giveaway_id=? AND user_id=? AND left_at IS NULL');
   const gws = gwsAll.filter(g => !g.require_join || joinedQ.get(g.id, req.user.id));
   // v5 anti-camping: giveaways this game feeds that the player has not entered yet (runs only count after "Enter giveaway")
@@ -255,11 +263,11 @@ app.post('/api/score', requireUser, (req, res) => {
   for (const g of gws) {
     if (score < (g.min_score || 0)) continue;
     const games = giveawayGameIds(g.id); const ph = games.map(() => '?').join(',');
-    const had = db.prepare(`SELECT 1 FROM runs WHERE user_id=? AND game_id IN (${ph}) AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
+    const had = db.prepare(`SELECT 1 FROM runs WHERE event_id=${+g.id} AND user_id=? AND game_id IN (${ph}) AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
     if (!had) newEntries.push(g);
   }
-  const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
-    .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req), row.seed || '', verdict.verify || '', verdict.held || 0);
+  const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held,event_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req), row.seed || '', verdict.verify || '', verdict.held || 0, row.event_id || null);
   AC.record(info.lastInsertRowid, req.user.id, row.game_id, score, verdict, t);
   for (const g of newEntries) logActivity('entry', `${req.user.username} entered "${g.title}"`, req.user.id, g.id);
   const isBest = prevBest === null || prevBest === undefined || score > prevBest;
@@ -276,7 +284,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const gid = req.body.giveaway_id || req.body.contest;
   if (gid) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(gid);
-    giveawayStatusOut = !g ? 'not_found' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
+    giveawayStatusOut = !g ? 'not_found' : String(row.event_id || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at + 120e3 ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
       : !giveawayGameIds(g.id).includes(row.game_id) ? 'game_not_linked' : score < (g.min_score || 0) ? 'below_min_score' : 'counted');
   }
   // achievements are evaluated here, on the server, from the stored runs
@@ -757,6 +765,7 @@ require('./sponsor')(app, A, H); // v7 Sponsor a Host: feature picker, admin pri
 require('./brands').routes(app, A, H); // v7 brand affiliation (invite links, one brand per player)
 require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
+require('./events').routes(app, A, H); // v7 official events (event codes, event-run tokens, event boards, vendor QR)
 require('./games-v7')(app); // v7: retired-game archive (Stack 2048 -> Stack)
 
 const demo = require('./demo');

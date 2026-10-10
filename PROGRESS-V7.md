@@ -2,9 +2,9 @@
 
 | Phase | Status | Proof |
 |---|---|---|
-| 1a Stabilize uncommitted games work | IN PROGRESS | npm ci; e2e-api updated for 16 games (plinko is just-for-fun; L2 per-IP limit pacing; Stack L4 replay log) |
-| 1b docs/ANTI-CHEAT.md + tests | NOT DONE | |
-| 2 Official events vs free play | NOT DONE | |
+| 1a Stabilize uncommitted games work | DONE | commits bab9683, 6c0b348; e2e-api 383/0 (fresh DB), e2e-mobile 206/0, e2e-browser games section: all 16 games start, play via bots and save; game-run: 0 JS errors, L3/L4 ok |
+| 1b docs/ANTI-CHEAT.md + tests | DONE | tools/e2e-anticheat.js 12/12 |
+| 2 Official events vs free play | IN PROGRESS | server: src/events.js + run/score hooks; tools/e2e-events.js 29/29 (fresh DB) |
 | 3 Booking flow verify | NOT DONE | |
 | 4 Monetisation (BITCOIN primary per Reese: single BTC_ADDRESS, unique sat-offset amount per order, 30-60 min expiry, mempool.space match + txid paste, admin manual verify; no keys; BTC_ADDRESS=32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB set in .env (validate base58check; list in HANDOFF)) | NOT DONE | |
 | 5 Avatars | NOT DONE | |

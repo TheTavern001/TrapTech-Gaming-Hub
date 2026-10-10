@@ -163,7 +163,7 @@ module.exports = function v4(app, A, h) {
     const games = R.gamesOf(g.id); const { rows } = standingsOf(g);
     const rankOf = new Map(rows.map(r => [r.user_id, r])); const bestIds = new Set(rows.map(r => r.best_run_id));
     const dq = new Map(db.prepare('SELECT user_id, reason FROM giveaway_dq WHERE giveaway_id=?').all(g.id).map(d => [d.user_id, d.reason]));
-    const runs = games.length ? db.prepare(`SELECT r.*, u.username FROM runs r JOIN users u ON u.id = r.user_id WHERE r.game_id IN (${games.map(() => '?').join(',')}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? ORDER BY u.username COLLATE NOCASE, r.created_at`)
+    const runs = games.length ? db.prepare(`SELECT r.*, u.username FROM runs r JOIN users u ON u.id = r.user_id WHERE r.event_id = ${+g.id} AND r.game_id IN (${games.map(() => '?').join(',')}) AND r.started_at >= ? AND r.created_at >= ? AND r.created_at <= ? ORDER BY u.username COLLATE NOCASE, r.created_at`)
       .all(...games, g.start_at, g.start_at, g.end_at) : [];
     const out = runs.map(r => { const cap = R.capFor(r); const st = rankOf.get(r.user_id); return { giveaway_id: g.id, username: r.username, user_id: r.user_id,
       standing: st ? st.rank : '', best_total: st ? st.score : '', attempts: st ? st.attempts : '', run_id: r.id, game_id: r.game_id, score: r.score, coins: r.coins,
