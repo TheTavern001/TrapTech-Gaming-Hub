@@ -42,6 +42,7 @@ const LIST = [
   T('throttle-rider', 'Throttle Rider', 'Traffic Rider', 1, 'A', 'endless', 60, true, 'Distance + near-miss chains (first-person)', '3 days'),
   T('wreck-ride', 'Wreck Ride', 'Happy Wheels', 2, 'A', 'endless', 60, true, 'Distance m + flips 150 + big air 20 + crates 25', '3 days'),
   T('rig-rally', 'Rig Rally', 'Bad Piggies', 2, 'A', 'endless', 60, true, 'Distance m + coins 5 + stars 50 (build your own rig)', '3 days'),
+  T('goo-tower', 'Goo Tower', 'World of Goo', 2, 'A', 'endless', 20, true, 'Peak tower height in m (wind grows)', '3 days'),
   T('roof-runner', 'Roof Runner', 'Canabalt', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('helix-drop', 'Helix Drop', 'Helix Jump', 7, 'A', 'endless', 40, true, 'Floors passed with combo, fireball smashes', '3 days'),
   T('hex-spin', 'Hex Spin', 'Super Hexagon', 7, 'A', 'endless', 12, true, 'Survival time in 0.1s', '3 days'),

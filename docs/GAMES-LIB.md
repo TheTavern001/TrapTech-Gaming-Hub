@@ -447,3 +447,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Scoring: distance, coins and high stars. The run ends if the rig falls apart (a weld stretches), stalls for 3.5 s, or falls.
 - Art: flat cartoon style with a green pilot in a helmet, painted crates, spinning fan blades, glossy balloons, parallax hills and "HIGH ROAD 21+" distance signs.
 - Tests: e2e PASS (60 fps). Bug pass PASS. Items behind the camera are now pruned to stop memory growth. Rating: visual 7/10, feel 7/10.
+
+## Goo Tower (World of Goo-style) - DONE (2026-10-10 06:30 ET)
+- Source hunt: there is no open-source World of Goo. "goo" tower demos on GitHub and CodePen have no licence or are NC. A Japanese Qiita spring-lattice sample has no licence. Decision: build on Matter.js.
+- Gameplay: drag a goo ball near the tower; a dashed preview shows which links it would make, turning green when it can attach. On release it links to the 2 nearest balls with springy strands. Over-stretched strands snap; strands redden as they stretch. The wind gets stronger with height. The run ends when the tower topples below 55% of its peak. Score is peak height. Space/Enter auto-places (accessibility and the test bot).
+- Art: dark goo balls with blinking eyes that look around, gloss highlights and a dusk gradient sky. The camera follows the tower up, and spare goo stays reachable at the bottom of the screen. Height rulers, a BEST marker, a "GOO CO. 21+" hut and wind streaks.
+- Tests: e2e PASS (60 fps). Bug pass PASS. Removed balls are now cleaned up. Rating: visual 7/10, feel 7.5/10.
