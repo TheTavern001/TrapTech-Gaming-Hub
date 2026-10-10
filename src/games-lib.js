@@ -81,6 +81,7 @@ const LIST = [
   T('spot-kick', 'Spot Kick', 'Soccer Penalty Challenge', 9, 'B', 'endless', 400, true, 'Goal 100-200 by corner x2 ring x streak up to 4', '3 days'),
   T('glow-echo', 'Glow Echo', 'Simon', 6, 'B', 'endless', 160, true, 'Pad 10-20 by answer speed, round 25 x round', '3 days'),
   T('knockout', 'Knockout Ring', 'Punch-Out!!', 8, 'B', 'endless', 900, true, 'Hits 60-600 (counter x2), dodge 50, KO 1000 x KOs + stamina', '3 days'),
+  T('putt-party', 'Putt Party', 'Golf Challenge (mini golf)', 9, 'B', 'endless', 400, true, 'Hole 300 + 200 per stroke under par, ace +1000', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
   T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('hill-glider', 'Hill Glider', 'Tiny Wings', 0, 'A', 'endless', 60, true, 'Distance m + perfect slides 25', '3 days'),
