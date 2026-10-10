@@ -110,7 +110,7 @@
 | 96 | Paper Toss | Paper Toss | Reflex & Skill | A | endless | built | 1-5 per basket by wind strength | 8 | Not freshly verified |
 | 97 | Skee Roll | Skee-Ball | Reflex & Skill | A | endless | built | Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame | 100 | Not freshly verified |
 | 98 | Castle Crush | Crush the Castle | Physics & Destruction | A | endless-levels | built | Blocks 5-25, kings 300, castle bonus 500 x stones left + 200 x level | 400 | Not freshly verified |
-| 99 | Neon Circuit | Original neon arcade racer | Driving | A | endless | built | Energy cells 25 + near-miss 5; score is awarded during play | 120 | Not freshly verified |
+| 99 | Neon Circuit | Original neon arcade racer | Driving | A | endless | built | Energy cells 30–125 by combo; near-miss 5 | 120 | Not freshly verified |
 | 100 | Rift Survival | Original arena survival game | Survival & Horde | A | endless | built | Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop | 180 | Not freshly verified |
 
 ## Mandatory acceptance gate
