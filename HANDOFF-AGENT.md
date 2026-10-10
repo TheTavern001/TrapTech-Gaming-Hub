@@ -31,7 +31,8 @@ Remaining:
 - Alien Rows DONE (Kenney Space Shooter CC0 art).
 - Cloud Hopper DONE (Kenney Jumper Pack CC0 art).
 - Road Hopper DONE (voxel three.js rebuild).
-- Next (Reese order): Sling Siege, Lawn Guard, Pop Defense, Hill Hauler, Most Wanted Run, Cube Horde, Grid Wars, Jetpack-style; then the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Sling Siege DONE (Matter.js + Kenney Physics Assets CC0).
+- Next (Reese order): Lawn Guard, Pop Defense, Hill Hauler, Most Wanted Run, Cube Horde, Grid Wars, Jetpack-style; then the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).

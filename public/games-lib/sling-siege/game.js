@@ -1,50 +1,55 @@
-// Sling Siege - original slingshot tower-toppling campaign (Hub build). Blocks have HP; knocked blocks fly as debris,
-// unsupported blocks fall, debris and falling blocks crush targets. Endless sequence of generated forts.
-(function () {
-  const GY = 400, SX = 130, SY = 320;
-  const MAT = { w: { c: '#b45309', hp: 2, v: 20 }, s: { c: '#64748b', hp: 4, v: 50 }, i: { c: '#7dd3fc', hp: 1, v: 10 } };
-  function fort(g) { g.blocks = []; g.tg = []; const lvl = g.lv; const towers = Math.min(4, 1 + Math.floor(lvl / 2)); let x = 470;
-    for (let t = 0; t < towers; t++) { const fl = Math.min(5, 2 + Math.floor(g.rnd() * (1 + lvl / 2))); let y = GY; const w = 70;
-      for (let f = 0; f < fl; f++) { const m = g.pick(lvl < 2 ? ['w', 'i'] : ['w', 'w', 's', 'i']); g.blocks.push({ x: x, y: y - 50, w: 12, h: 50, m, hp: MAT[m].hp }); g.blocks.push({ x: x + w - 12, y: y - 50, w: 12, h: 50, m, hp: MAT[m].hp }); g.tg.push({ x: x + w / 2, y: y - 14, r: 13, alive: true }); g.blocks.push({ x: x - 6, y: y - 62, w: w + 12, h: 12, m: g.pick(['w', 's', 'i']), hp: 2 }); y -= 62; }
-      x += w + g.R(20, 50); if (x > 740) break; }
-    for (const b of g.blocks) { b.vy = 0; b.hp = MAT[b.m].hp; } g.shots = 3 + Math.min(2, Math.floor(lvl / 3)); g.bird = null; g.debris = []; g.settle = 0; }
-  Kit.run({ id: 'gl-sling-siege', title: 'SLING SIEGE', orient: 'l', help: 'Drag back from the sling and release to launch\nTopple the forts, pop every green bot', bg: '#0c4a6e', partGrav: 400,
-    init(g) { g.lv = 1; fort(g); g.aim = null; g.mark('t', 1); },
-    update(g, dt) {
-      const P = g.ptr;
-      if (!g.bird && g.shots > 0) { if (P.pressed && Math.hypot(P.x - SX, P.y - SY) < 90) g.aim = { x: P.x, y: P.y }; if (g.aim && P.down) { const dx = P.x - SX, dy = P.y - SY, d = Math.min(90, Math.hypot(dx, dy)), a = Math.atan2(dy, dx); g.aim = { x: SX + Math.cos(a) * d, y: SY + Math.sin(a) * d }; }
-        if (g.kd(' ')) g.aim = { x: SX - 70, y: SY + 40 }; // keyboard fallback: default shot, then adjust with arrows
-        if (g.aim && (g.keys.ArrowUp || g.keys.ArrowDown || g.keys.ArrowLeft || g.keys.ArrowRight)) { g.aim.y += ((g.keys.ArrowDown ? 1 : 0) - (g.keys.ArrowUp ? 1 : 0)) * 90 * dt; g.aim.x += ((g.keys.ArrowRight ? 1 : 0) - (g.keys.ArrowLeft ? 1 : 0)) * 90 * dt; }
-        if (g.aim && (P.released || g.kd('Enter') || (g.keys[' '] === false && g.kAim))) launch(g); g.kAim = g.aim && g.keys[' ']; }
-      const b = g.bird; if (b) { b.vy += 500 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.t += dt; if (g.frames % 2) g.parts.push({ x: b.x, y: b.y, vx: 0, vy: 0, l: 0.6, m: 0, c: 'rgba(255,255,255,.5)', s: 3, gr: 0 });
-        if (b.y > GY - 12) { b.y = GY - 12; b.vy *= -0.4; b.vx *= 0.7; }
-        for (const k of g.blocks) { if (k.dead) continue; if (Kit.cr(b.x, b.y, 12, k)) { const sp = Math.hypot(b.vx, b.vy); const dmg = sp / 180; k.hp -= dmg; g.sfx('thud'); g.shake(3); if (k.hp <= 0) breakBlock(g, k, b.vx * 0.6, b.vy * 0.6); else { k.kx = (k.kx || 0) + b.vx * 0.15; } b.vx *= 0.55; b.vy *= 0.55; if (Math.abs(b.x - k.x - k.w / 2) > k.w / 2) b.vx *= -0.5; } }
-        for (const t of g.tg) if (t.alive && Math.hypot(t.x - b.x, t.y - b.y) < t.r + 12) popT(g, t);
-        if (b.t > 8 || b.x > g.W + 40 || b.x < -40 || (Math.hypot(b.vx, b.vy) < 15 && b.y >= GY - 13)) { g.bird = null; g.settle = 1.2; } }
-      // falling blocks (unsupported)
-      for (const k of g.blocks) { if (k.dead) continue; const sup = k.y + k.h >= GY - 0.5 || g.blocks.some(o => o !== k && !o.dead && o.y >= k.y + k.h - 2 && o.y <= k.y + k.h + 2 && o.x < k.x + k.w - 2 && o.x + o.w > k.x + 2);
-        if (k.kx) { k.x += k.kx * dt; k.kx *= Math.pow(0.01, dt); if (Math.abs(k.kx) < 5) k.kx = 0; }
-        if (!sup) { k.vy += 900 * dt; k.y += k.vy * dt; for (const t of g.tg) if (t.alive && Kit.cr(t.x, t.y, t.r, k) && k.vy > 120) popT(g, t); for (const o of g.blocks) if (o !== k && !o.dead && Kit.hit(k, o) && o.y > k.y) { k.y = o.y - k.h; if (k.vy > 380) { o.hp -= 1; k.hp -= 1; g.sfx('thud'); if (o.hp <= 0) breakBlock(g, o, g.R(-80, 80), 0); if (k.hp <= 0) breakBlock(g, k, g.R(-80, 80), -100); } k.vy = 0; } if (k.y + k.h > GY) { k.y = GY - k.h; if (k.vy > 380) { k.hp -= 1; g.sfx('thud'); if (k.hp <= 0) breakBlock(g, k, g.R(-60, 60), -80); } k.vy = 0; } } else k.vy = 0; }
-      for (const d of g.debris) { d.vy += 700 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.a += d.va * dt; d.l -= dt; if (d.y > GY - 6) { d.y = GY - 6; d.vy *= -0.3; d.vx *= 0.6; } for (const t of g.tg) if (t.alive && Math.hypot(d.x - t.x, d.y - t.y) < t.r + 8 && Math.hypot(d.vx, d.vy) > 140) popT(g, t); }
-      g.debris = g.debris.filter(d => d.l > 0);
-      if (!g.bird && g.settle > 0) { g.settle -= dt; if (g.settle <= 0) { if (g.tg.every(t => !t.alive)) { const bonus = 1000 * g.shots; g.add(bonus + 500, 'c'); g.float(g.W / 2, 150, 'FORT DOWN! +' + (bonus + 500), '#34d399', 28); g.sfx('line'); g.lv++; g.mark('t', g.lv); fort(g); } else if (g.shots <= 0) return g.end('Out of shots'); } }
-      g.hud = 'FORT ' + g.lv + '   SHOTS ' + g.shots + (g.bird ? '' : '');
-    },
-    draw(g, c) {
-      const sky = c.createLinearGradient(0, 0, 0, GY); sky.addColorStop(0, '#1e3a8a'); sky.addColorStop(1, '#7dd3fc'); c.fillStyle = sky; c.fillRect(0, 0, g.W, GY);
-      c.fillStyle = 'rgba(255,255,255,.25)'; for (let i = 0; i < 5; i++) { c.beginPath(); c.ellipse((i * 190 + g.t * 8) % 900 - 50, 60 + i * 20, 55, 15, 0, 0, 7); c.fill(); }
-      c.fillStyle = '#4d7c0f'; c.fillRect(0, GY, g.W, g.H - GY); c.fillStyle = '#65a30d'; c.fillRect(0, GY, g.W, 6);
-      for (const k of g.blocks) { if (k.dead) continue; c.fillStyle = MAT[k.m].c; c.fillRect(k.x, k.y, k.w, k.h); c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.5; c.strokeRect(k.x, k.y, k.w, k.h); if (k.hp < MAT[k.m].hp) { c.strokeStyle = 'rgba(0,0,0,.5)'; c.beginPath(); c.moveTo(k.x + 2, k.y + 2); c.lineTo(k.x + k.w - 2, k.y + k.h - 2); c.stroke(); } }
-      for (const d of g.debris) { c.save(); c.translate(d.x, d.y); c.rotate(d.a); c.fillStyle = d.c; c.fillRect(-d.s / 2, -d.s / 4, d.s, d.s / 2); c.restore(); }
-      for (const t of g.tg) if (t.alive) { Kit.circ(c, t.x, t.y, t.r, '#22c55e'); Kit.circ(c, t.x, t.y, t.r - 3, '#4ade80'); Kit.circ(c, t.x - 4, t.y - 3, 3, '#fff'); Kit.circ(c, t.x + 4, t.y - 3, 3, '#fff'); Kit.circ(c, t.x - 4, t.y - 3, 1.4, '#111'); Kit.circ(c, t.x + 4, t.y - 3, 1.4, '#111'); }
-      c.fillStyle = '#78350f'; c.fillRect(SX - 6, SY, 12, GY - SY); c.fillRect(SX - 18, SY - 26, 8, 30); c.fillRect(SX + 10, SY - 26, 8, 30);
-      const a = g.aim; c.strokeStyle = '#451a03'; c.lineWidth = 4; if (a && !g.bird) { c.beginPath(); c.moveTo(SX - 14, SY - 22); c.lineTo(a.x, a.y); c.lineTo(SX + 14, SY - 22); c.stroke(); Kit.circ(c, a.x, a.y, 12, '#ef4444');
-        const vx = (SX - a.x) * 7.5, vy = (SY - a.y) * 7.5; c.fillStyle = 'rgba(255,255,255,.7)'; for (let i = 1; i < 16; i++) { const t = i * 0.07; c.fillRect(a.x + vx * t - 2, a.y + vy * t + 250 * t * t - 2, 4, 4); } }
-      else if (!g.bird && g.shots > 0) Kit.circ(c, SX, SY - 18, 12, '#ef4444');
-      if (g.bird) { Kit.circ(c, g.bird.x, g.bird.y, 12, '#ef4444'); Kit.circ(c, g.bird.x + 4, g.bird.y - 3, 3, '#fff'); c.fillStyle = '#fbbf24'; c.beginPath(); c.moveTo(g.bird.x + 10, g.bird.y); c.lineTo(g.bird.x + 18, g.bird.y + 3); c.lineTo(g.bird.x + 10, g.bird.y + 6); c.fill(); }
-      for (let i = 0; i < g.shots - (g.bird ? 0 : 1); i++) Kit.circ(c, 40 + i * 22, GY - 10, 8, '#ef4444');
+// Sling Siege - original slingshot fort-toppling game (Hub build). Matter.js physics (MIT) via phys.js.
+// Art: Kenney Physics Assets (CC0, see LICENSE-Kenney-CC0.txt). Endless sequence of generated forts.
+// Scoring (unchanged contract): blocks 10-50 by material, targets 500, each unused shot 1000 when a fort falls.
+(function () { const P = Phys, M = P.M, GY = 400, SX = 140, SY = 318;
+  const IMG = {}; let nL = 0; const NAMES = []; for (const m of ['wood', 'stone', 'glass']) for (const k of ['plank', 'pillar', 'square', 'plank_d', 'pillar_d', 'square_d']) NAMES.push(m + '_' + k);
+  NAMES.push('alienGreen_round', 'alienBlue_round', 'alienPink_round', 'debrisWood_1', 'debrisStone_1', 'debrisGlass_1', 'starGold', 'bg', 'grass', 'dirt', 'bush'); for (const n of NAMES) { const im = new Image(); im.onload = () => nL++; im.src = 'img/' + n + '.webp'; IMG[n] = im; }
+  const BV = { wood: 20, stone: 50, glass: 10 }; const HP = { wood: 32, stone: 70, glass: 9 }; const DEN = { wood: 0.0016, stone: 0.0034, glass: 0.0012 };
+  function blk(g, x, y, w, h, m, shape) { const b = P.box(g, x, y, w, h, { hp: HP[m], v: BV[m], d: DEN[m] }, { kind: m, friction: 0.7 }); b.gl.w = w; b.gl.h = h; b.gl.shape = shape; b.gl.m = m; return b; }
+  function alien(g, x, y, i) { const b = P.ball(g, x, y, 15, { hp: 11, v: 500, d: 0.0014 }, { kind: 'target' }); b.gl.spr = ['alienGreen_round', 'alienBlue_round', 'alienPink_round'][i % 3]; return b; }
+  function fort(g) { if (g.eng) M.Composite.clear(g.world, false); else P.init(g, { minImpact: 2.4, onHit: (a, b, rv) => { if (rv > 5) { g.shake(Math.min(8, rv * 0.5)); if (rv > 8) g.sfx('hit'); } } });
+    g.onBreak = (b) => { const d = b.gl; const s = { wood: 'debrisWood_1', stone: 'debrisStone_1', glass: 'debrisGlass_1' }[d.m]; for (let i = 0; i < 5; i++) g.deb.push({ x: b.position.x, y: b.position.y, vx: g.R(-120, 120), vy: g.R(-220, -60), r: g.R(0, 6), vr: g.R(-8, 8), l: 1.2, s: s || 'debrisStone_1' }); if (d.kind === 'target') { g.float(b.position.x, b.position.y - 24, '+500', '#ffe14a', 22); g.sfx('power'); g.stars.push({ x: b.position.x, y: b.position.y, l: 1 }); } };
+    g.lv++; g.mark('l', g.lv); P.ground(g, 400, GY + 40, 1600, 80, 'rgba(0,0,0,0)'); g.deb = g.deb || []; g.stars = g.stars || [];
+    const towers = Math.min(3, 1 + Math.floor(g.lv / 2)); let x = 470; const mats = g.lv < 2 ? ['wood', 'glass'] : ['wood', 'wood', 'stone', 'glass']; let ai = 0; g.tg = [];
+    for (let t = 0; t < towers && x < 760; t++) { const w = g.R(80, 110); const fl = Math.min(4, 1 + g.RI(1, 1 + Math.floor(g.lv / 2))); let y = GY;
+      for (let f = 0; f < fl; f++) { const m = g.pick(mats), ph = g.R(58, 78); blk(g, x + 8, y - ph / 2, 15, ph, m, 'pillar'); blk(g, x + w - 8, y - ph / 2, 15, ph, m, 'pillar'); if (g.rnd() < 0.7 || f === 0) g.tg.push(alien(g, x + w / 2, y - 16, ai++)); y -= ph; blk(g, x + w / 2, y - 7, w + 12, 14, g.pick(mats), 'plank'); y -= 14; }
+      if (g.rnd() < 0.5) { blk(g, x + w / 2, y - 15, 30, 30, g.pick(mats), 'square'); } x += w + g.R(30, 70); }
+    for (let i = 0; i < 120; i++) M.Engine.update(g.eng, 1000 / 60); g.breaks = 0; for (const b of P.bodies(g)) if (b.gl && b.gl.hp != null) { b.gl.dead = false; b.gl.hp = b.gl.max = b.gl.kind === 'target' ? 11 : HP[b.gl.m]; }
+    g.shots = g.tg.length + 2; g.ready = true; g.proj = null; }
+  Kit.run({ id: 'gl-sling-siege', title: 'SLING SIEGE', orient: 'l', bg: '#bfe6f5', help: 'Drag back from the slingshot and let go\nTopple the forts and pop every lurker - spare shots are bonus',
+    init(g) { g.lv = 0; g.deb = []; g.stars = []; g.trail = []; fort(g); },
+    update(g, dt) { P.step(g, dt); const v = P.reap(g, p => p); if (v) { g.add(v, 'b'); g.sfx('thud'); }
+      for (const d of g.deb) { d.vy += 600 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.r += d.vr * dt; d.l -= dt; } g.deb = g.deb.filter(d => d.l > 0); for (const s of g.stars) s.l -= dt * 0.8; g.stars = g.stars.filter(s => s.l > 0);
+      if (g.proj && g.proj.speed > 2) g.trail.push({ x: g.proj.position.x, y: g.proj.position.y, l: 1 }); for (const t of g.trail) t.l -= dt * 0.7; g.trail = g.trail.filter(t => t.l > 0);
+      const Q = g.ptr; if (g.ready && Q.pressed && Math.hypot(Q.x - SX, Q.y - SY) < 90) g.drag = true;
+      if (g.drag && Q.down) { let dx = Q.x - SX, dy = Q.y - SY; const L = Math.hypot(dx, dy), mx = 95; if (L > mx) { dx *= mx / L; dy *= mx / L; } g.aim = { dx, dy }; }
+      let fire = null; if (g.drag && Q.released) { g.drag = false; if (g.aim && Math.hypot(g.aim.dx, g.aim.dy) > 15) fire = g.aim; g.aim = null; } if (g.ready && g.kd(' ')) fire = { dx: -80, dy: 45 };
+      if (fire && g.shots > 0) { const k = 0.23; const b = P.ball(g, SX + fire.dx, SY + fire.dy, 14, { d: 0.006, hp: null, v: 0 }, { kind: 'shot', restitution: 0.25 }); M.Body.setVelocity(b, { x: -fire.dx * k, y: -fire.dy * k }); g.proj = b; g.shots--; g.ready = false; g.wait = 5; g.sfx('whoosh'); g.trail = []; g.snap = 0.25; }
+      g.snap = Math.max(0, (g.snap || 0) - dt);
+      if (!g.ready) { g.wait -= dt; const moving = P.bodies(g).some(b => !b.isStatic && b.speed > 0.5 && b.gl); if (g.wait <= 0 || (g.wait < 3.6 && !moving)) { g.ready = true; for (const b of P.bodies(g)) if (b.gl && b.gl.kind === 'shot') P.remove(g, b); g.proj = null; } }
+      for (const b of P.bodies(g)) if (!b.isStatic && b.gl && !b.gl.dead && (b.position.y > 520 || b.position.x < -60 || b.position.x > 880)) { if (b.gl.kind === 'target') { b.gl.dead = true; g.breaks++; g.onBreak(b); } else P.remove(g, b); }
+      if (g.ready) { const alive = g.tg.filter(t => !t.gl.dead).length; if (!alive) { const bonus = 1000 * g.shots; if (bonus) g.add(bonus, 's'); g.float(400, 140, 'FORT DOWN!' + (bonus ? ' +' + bonus : ''), '#ffe14a', 28); g.sfx('line'); fort(g); } else if (g.shots <= 0) return g.end('Out of shots'); }
+      g.hud = 'FORT ' + g.lv + '   SHOTS ' + g.shots + '   LURKERS ' + g.tg.filter(t => !t.gl.dead).length; },
+    draw(g, c) { if (nL < NAMES.length) { c.fillStyle = '#bfe6f5'; c.fillRect(0, 0, g.W, g.H); return; }
+      c.drawImage(IMG.bg, 0, -170, 800, 800); for (const bx of [40, 300, 420, 760]) c.drawImage(IMG.bush, bx, GY - 26, 32, 32); for (let x = 0; x < 800; x += 35) { c.drawImage(IMG.grass, x, GY - 4, 35, 35); c.drawImage(IMG.dirt, x, GY + 30, 35, 35); }
+      // slingshot back fork + band
+      const ax = g.aim ? SX + g.aim.dx : SX, ay = g.aim ? SY + g.aim.dy : SY; const wood = c.createLinearGradient(SX - 20, 0, SX + 20, 0); wood.addColorStop(0, '#8a4b1c'); wood.addColorStop(1, '#5b2e0e');
+      c.strokeStyle = wood; c.lineCap = 'round'; c.lineWidth = 11; c.beginPath(); c.moveTo(SX, GY + 2); c.lineTo(SX, SY + 30); c.lineTo(SX + 14, SY - 6); c.stroke();
+      if (g.ready || g.aim) { c.strokeStyle = '#3b1d0a'; c.lineWidth = 5; c.beginPath(); c.moveTo(SX + 14, SY - 4); c.lineTo(ax, ay); c.stroke(); }
+      // bodies with sprites
+      for (const b of P.bodies(g)) { const d = b.gl; if (!d || b.isStatic) continue; c.save(); c.translate(b.position.x, b.position.y); c.rotate(b.angle); if (d.flash > 0) c.filter = 'brightness(1.8)';
+        if (d.kind === 'target') { const r = b.circleRadius; c.drawImage(IMG[d.spr], -r * 1.15, -r * 1.15, r * 2.3, r * 2.3); }
+        else if (d.kind === 'shot') { const r = b.circleRadius; const gr = c.createRadialGradient(-4, -5, 2, 0, 0, r); gr.addColorStop(0, '#9be36a'); gr.addColorStop(1, '#2f7d34'); c.fillStyle = gr; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-4, -3, 3.4, 0, 7); c.arc(5, -3, 3.4, 0, 7); c.fill(); c.fillStyle = '#123'; c.beginPath(); c.arc(-3, -2.5, 1.6, 0, 7); c.arc(6, -2.5, 1.6, 0, 7); c.fill(); c.fillStyle = '#3e9e4c'; c.beginPath(); c.ellipse(0, -r - 2, 3, 6, 0.3, 0, 7); c.fill(); }
+        else if (d.m) { const dmg = d.max && d.hp < d.max * 0.55 ? '_d' : ''; const im = IMG[d.m + '_' + d.shape + dmg]; c.drawImage(im, -d.w / 2 - 1, -d.h / 2 - 1, d.w + 2, d.h + 2); }
+        c.restore(); }
+      // projectile resting in the pouch
+      if (g.ready && g.shots > 0) { c.save(); c.translate(ax, ay); const r = 14, gr = c.createRadialGradient(-4, -5, 2, 0, 0, r); gr.addColorStop(0, '#9be36a'); gr.addColorStop(1, '#2f7d34'); c.fillStyle = gr; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-4, -3, 3.4, 0, 7); c.arc(5, -3, 3.4, 0, 7); c.fill(); c.fillStyle = '#123'; c.beginPath(); c.arc(-3, -2.5, 1.6, 0, 7); c.arc(6, -2.5, 1.6, 0, 7); c.fill(); c.restore(); }
+      if (g.ready || g.aim) { c.strokeStyle = '#4a2410'; c.lineWidth = 5; c.beginPath(); c.moveTo(ax, ay); c.lineTo(SX - 12, SY - 4); c.stroke(); }
+      c.strokeStyle = wood; c.lineWidth = 11; c.beginPath(); c.moveTo(SX, SY + 30); c.lineTo(SX - 12, SY - 6); c.stroke();
+      for (const t of g.trail) { c.globalAlpha = t.l * 0.8; c.fillStyle = '#fff'; c.beginPath(); c.arc(t.x, t.y, 3 + 2 * t.l, 0, 7); c.fill(); } c.globalAlpha = 1;
+      if (g.aim) { const k = 0.23; let x = ax, y = ay, vx = -g.aim.dx * k, vy = -g.aim.dy * k; c.fillStyle = 'rgba(255,255,255,.9)'; for (let i = 0; i < 70; i++) { vy += 0.278 * 0.5; x += vx * 0.5 * 1.0; y += vy * 0.5; vy += 0.278 * 0.5; if (i % 5 === 0) { c.beginPath(); c.arc(x, y, 3 - i * 0.03, 0, 7); c.fill(); } } }
+      for (const d of g.deb) { c.save(); c.globalAlpha = Math.min(1, d.l * 2); c.translate(d.x, d.y); c.rotate(d.r); c.drawImage(IMG[d.s], -10, -10, 20, 20); c.restore(); }
+      for (const s of g.stars) { c.save(); c.globalAlpha = s.l; c.translate(s.x, s.y - (1 - s.l) * 50); c.rotate((1 - s.l) * 4); c.drawImage(IMG.starGold, -16, -16, 32, 32); c.restore(); }
+      for (let i = 0; i < g.shots - (g.ready ? 1 : 0) && i < 8; i++) { const x = SX - 40 - i * 24, y = GY - 11; c.fillStyle = '#2f7d34'; c.beginPath(); c.arc(x, y, 10, 0, 7); c.fill(); c.fillStyle = '#9be36a'; c.beginPath(); c.arc(x - 3, y - 3, 4, 0, 7); c.fill(); }
     } });
-  function launch(g) { const a = g.aim; if (Math.hypot(a.x - SX, a.y - SY) < 15) { g.aim = null; return; } g.bird = { x: a.x, y: a.y, vx: (SX - a.x) * 7.5, vy: (SY - a.y) * 7.5, t: 0 }; g.aim = null; g.shots--; g.sfx('whoosh'); }
-  function breakBlock(g, k, vx, vy) { k.dead = true; g.add(MAT[k.m].v, 'k'); g.float(k.x + k.w / 2, k.y, '+' + MAT[k.m].v, '#fff', 13); g.sfx(k.m === 'i' ? 'pop' : 'hit'); for (let i = 0; i < 4; i++) g.debris.push({ x: k.x + k.w / 2, y: k.y + k.h / 2, vx: vx + g.R(-120, 120), vy: vy + g.R(-200, 0), a: 0, va: g.R(-8, 8), l: 2, s: Math.max(k.w, k.h) / 2, c: MAT[k.m].c }); }
-  function popT(g, t) { t.alive = false; g.add(500, 'b'); g.float(t.x, t.y - 20, '+500', '#34d399', 20); g.burst(t.x, t.y, ['#22c55e', '#4ade80', '#fff'], 26, 220); g.sfx('pop'); g.shake(4); }
 })();
