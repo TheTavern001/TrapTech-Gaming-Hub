@@ -481,3 +481,11 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
   - The run ends when the coil reaches the pit, with a red danger glow as it gets close.
 - Art: sandstone temple tiles with moss, a carved groove, glossy rolling orbs, a jade toad idol shooter, a dotted aim guide, a golden pit and a "TEMPLE OF TERPS 21+" plaque.
 - Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7.5/10, feel 7/10.
+
+## Bubble Pop (Bubble Shooter) - UPGRADED (2026-10-10 07:20 ET)
+- Source hunt: I checked the MIT JS bubble shooters on GitHub (Rembound's tutorial code and similar) and Gitee 泡泡龙 H5 projects. They are flat-colour circles or unlicensed, and the existing Hub rules are already complete. Decision: art and feel pass on the existing game.
+- Bubbles: glossy pre-rendered sprites per colour with an embossed shape icon per colour (heart, drop, leaf, star, moon, diamond) for colour-blind players, and a gentle idle bob.
+- Effects and UI: pop rings and spinning falling bubbles. Dotted aim trajectory with wall-bounce prediction that stops at the first bubble it would hit. Purple launcher with a gold ring and a NEXT bubble dock. The danger line pulses red as the rows get close.
+- Background: dusk gradient with bokeh, a glass play panel and a "BUBBLE LOUNGE 21+" tag.
+- Performance: bubble sprite caching took the 4x-throttled bug-pass FPS from 22 to 38.
+- Tests: e2e PASS. Bug pass PASS. Rating: visual 7.5/10, feel 7/10.
