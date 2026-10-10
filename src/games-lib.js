@@ -23,7 +23,7 @@ const LIST = [
   T('brick-blitz', 'Brick Blitz', 'Breakout', 10, 'A+', 'endless', 260, true, 'Bricks 10-50 x combo, wall bonus', '3 days'),
   T('rock-buster', 'Rock Buster', 'Asteroids', 5, 'A+', 'endless', 180, true, 'Rocks 20/50/100, UFO 300', '3 days'),
   T('star-swarm', 'Star Swarm', 'Galaga', 5, 'A+', 'endless', 200, true, 'Bugs 50-160 (diving x2), stage bonus', '3 days'),
-  T('rail-rush', 'Rail Rush', 'Subway Surfers', 0, 'A+', 'endless', 60, true, 'Distance + coins 10', '3 days'),
+  T('rail-rush', 'Rail Rush', 'Subway Surfers', 0, 'A+', 'endless', 900, true, 'Distance x multiplier (1-5 from coins, x2 power-up) + coins 10 x multiplier, power-ups 25', '3 days'),
   T('ruin-runner', 'Ruin Runner', 'Temple Run 2', 0, 'A+', 'endless', 60, true, 'Distance + gems 10', '3 days'),
   T('hill-hauler', 'Hill Hauler', 'Hill Climb Racing', 1, 'A+', 'endless', 40, true, 'Distance in m + coins 5', '3 days'),
   T('wanted-run', 'Most Wanted Run', 'Smashy Road: Wanted 2', 1, 'A+', 'endless', 60, true, 'Survival time x heat + wrecked cops 50', '3 days'),

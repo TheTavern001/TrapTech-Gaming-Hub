@@ -49,7 +49,7 @@
     g.tap = () => g.ptr.pressed || g._kp;
     g.ax = () => (g.keys.ArrowRight || g.keys.d || g.keys.D ? 1 : 0) - (g.keys.ArrowLeft || g.keys.a || g.keys.A ? 1 : 0) + g.stick.x;
     g.ay = () => (g.keys.ArrowDown || g.keys.s || g.keys.S ? 1 : 0) - (g.keys.ArrowUp || g.keys.w || g.keys.W ? 1 : 0) + g.stick.y;
-    window.__GL = { g, get state() { return g.state; }, get score() { return g.score; }, get fps() { return g.fps; }, lastSubmit: null, errors: [] };
+    window.__GL = { g, get state() { return g.state; }, get score() { return g.score; }, get fps() { return g.fps; }, get jsMs() { return Math.round((g.jsMs || 0) * 100) / 100; }, lastSubmit: null, errors: [] };
     // buttons: def.buttons = [{id:'A', key:' ', label:'JUMP'}]
     const btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
     const toL = (e) => [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
@@ -72,7 +72,7 @@
     g.rnd = mulberry(); def.init(g);
     let last = performance.now(), acc = 0, fpsT = 0, fpsN = 0;
     function frame(now) {
-      requestAnimationFrame(frame); let dt = Math.min(0.05, (now - last) / 1000); last = now; fpsT += dt; fpsN++; if (fpsT >= 1) { g.fps = Math.round(fpsN / fpsT); fpsT = 0; fpsN = 0; }
+      requestAnimationFrame(frame); const js0 = performance.now(); let dt = Math.min(0.05, (now - last) / 1000); last = now; fpsT += dt; fpsN++; if (fpsT >= 1) { g.fps = Math.round(fpsN / fpsT); fpsT = 0; fpsN = 0; }
       if (g.state === 'title' || (g.state === 'over' && g.overT > 0.8)) { if (g.tap()) begin(); }
       if (g.state === 'over') g.overT += dt;
       if (g.state === 'play' && !g.paused) { g.t += dt; def.update(g, dt); }
@@ -90,13 +90,13 @@
       for (const t of g.texts) { c.globalAlpha = Math.min(1, t.l * 2); c.font = `bold ${t.size}px system-ui,sans-serif`; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(t.s, t.x, t.y); c.fillStyle = t.c; c.fillText(t.s, t.x, t.y); }
       c.globalAlpha = 1; c.restore();
       if (g.flashT > 0) { c.globalAlpha = Math.min(0.5, g.flashT * 4); c.fillStyle = g.flashC; c.fillRect(0, 0, W, Hh); c.globalAlpha = 1; }
-      drawHud(); g.frames++;
+      drawHud(); g.frames++; g.jsMs = (g.jsMs || 0) * 0.9 + (performance.now() - js0) * 0.1; // JS frame time (update + draw + WebGL submit), EMA
       g.ptr.pressed = false; g.ptr.released = false; g._kp = false; g.kp = {}; g.btnP = {};
     }
     function txt(s, x, y, size, col, al) { c.font = `bold ${size}px system-ui,sans-serif`; c.textAlign = al || 'center'; c.textBaseline = 'middle'; c.lineWidth = 4; c.strokeStyle = 'rgba(5,7,20,.75)'; c.strokeText(s, x, y); c.fillStyle = col || '#eef0ff'; c.fillText(s, x, y); }
     g.txt = txt;
     function drawHud() {
-      if (g.state === 'play' || g.state === 'over') { txt(Math.floor(g.score).toLocaleString('en-US'), 12, 22, 22, '#fff', 'left'); txt('BEST ' + Math.floor(g.best).toLocaleString('en-US'), W - 12, 22, 13, '#9aa3d0', 'right'); if (g.hud) txt(g.hud, W / 2, 22, 14, '#22d3ee'); }
+      if (def.hudDraw && (g.state === 'play' || g.state === 'over')) def.hudDraw(g, c); else if (g.state === 'play' || g.state === 'over') { txt(Math.floor(g.score).toLocaleString('en-US'), 12, 22, 22, '#fff', 'left'); txt('BEST ' + Math.floor(g.best).toLocaleString('en-US'), W - 12, 22, 13, '#9aa3d0', 'right'); if (g.hud) txt(g.hud, W / 2, 22, 14, '#22d3ee'); }
       if (g.state === 'play') { for (const b of btns) { c.globalAlpha = g.btn[b.id] ? 0.55 : 0.28; K.circ(c, b.x, b.y, b.r, '#6366f1'); c.globalAlpha = 0.9; txt(b.label || b.id, b.x, b.y, 12, '#fff'); c.globalAlpha = 1; }
         if (g.stick.on) { c.globalAlpha = 0.25; K.circ(c, g.stick.cx, g.stick.cy, 50, '#22d3ee'); c.globalAlpha = 0.6; K.circ(c, g.stick.cx + g.stick.x * 50, g.stick.cy + g.stick.y * 50, 22, '#a855f7'); c.globalAlpha = 1; }
         if (g.paused) { c.fillStyle = 'rgba(5,7,20,.6)'; c.fillRect(0, 0, W, Hh); txt('PAUSED', W / 2, Hh / 2, 34); txt('tap or press P', W / 2, Hh / 2 + 36, 14, '#9aa3d0'); if (g.ptr.pressed) g.paused = false; } }
