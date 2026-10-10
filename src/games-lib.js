@@ -74,6 +74,7 @@ const LIST = [
   T('bud-sort', 'Bud Sort', 'Cannabis conveyor sorting reflex game', 11, 'C', 'endless', 260, true, 'Jar 10-20 by timing x combo up to 8', '3 days'),
   T('pest-patrol', 'Pest Patrol', 'Grow-room bug squash (Ant Smasher style)', 11, 'C', 'endless', 220, true, 'Mite 10, caterpillar 20, beetle 40 x combo up to 5, wave 100 x wave; ladybug squash costs a plant', '3 days'),
   T('cup-toss', 'Cup Toss', 'Swipe-throw cup pong (Cup Pong style)', 11, 'C', 'endless', 900, true, 'Cup 100 (+50 bounce, +30 rattle) x streak up to 5, rack 500 x rack', '3 days'),
+  T('beat-tiles', 'Beat Tiles', 'Piano Tiles', 6, 'B', 'endless', 20, true, 'Tile 1-3 by timing, long-tile hold 1 per 40 px + 3', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
   T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('hill-glider', 'Hill Glider', 'Tiny Wings', 0, 'A', 'endless', 60, true, 'Distance m + perfect slides 25', '3 days'),
