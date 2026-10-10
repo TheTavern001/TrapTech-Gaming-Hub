@@ -39,7 +39,7 @@ const LIST = [
   T('hex-spin', 'Hex Spin', 'Super Hexagon', 7, 'A', 'endless', 12, true, 'Survival time in 0.1s', '3 days'),
   T('color-hop', 'Color Hop', 'Color Switch', 7, 'A', 'endless', 3, true, 'Stars collected', '3 days'),
   T('zig-path', 'Zig Path', 'ZigZag', 7, 'A', 'endless', 12, true, 'Turns + gems 5', '3 days'),
-  T('lane-racer', 'Lane Racer', 'Traffic Racer', 1, 'A', 'endless', 40, true, 'Distance + near misses 20', '3 days'),
+  T('lane-racer', 'Lane Racer', 'Traffic Racer', 1, 'A', 'endless', 160, true, 'Distance + near misses 20 x combo (max x5)', '3 days'),
   T('drift-king', 'Drift King', 'Drift Boss', 1, 'A', 'endless', 25, true, 'Distance', '3 days'),
   T('missile-guard', 'Missile Guard', 'Missile Command', 5, 'A', 'endless', 150, true, 'Warheads 25, wave bonus cities x100 + ammo x5', '3 days'),
   T('bug-blaster', 'Bug Blaster', 'Centipede', 5, 'A', 'endless', 200, true, 'Head 100, body 10, spider 300-900, mushroom 1', '3 days'),

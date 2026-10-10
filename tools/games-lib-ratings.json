@@ -8,5 +8,10 @@
   "visual": 7,
   "feel": 7.5,
   "notes": "v4 PASS: smooth CC0 rigged hero/chaser (Quaternius UBC+UAL, outfits in-shader), code-built liveried trains, curved wood/steel ramps, ballast track, saloon/cliff/clock tower/bridge every row, painted layered backdrop, vertex-colour bake (61-103 calls, 107-128k tris). Bot avg 48s over 4 runs."
+ },
+ "lane-racer": {
+  "visual": 6.5,
+  "feel": 6,
+  "notes": "v2 3D WIP: smooth CC0 cartoon cars, chase cam, painted backdrop, billboards; 47-75 calls / 58-92k tris. Gaps vs reference: sparse roadside, no 2-way/variety biomes, bot survives ~15s (traffic too dense early). NOT counted."
  }
 }
