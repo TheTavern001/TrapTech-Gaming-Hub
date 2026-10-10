@@ -13,7 +13,7 @@ Kit.run({ id: 'gl-bud-bar', title: 'BUD BAR', help: 'Tap a counter (or Up/Down +
   },
   draw(g, c) { c.drawImage(room(g.W, g.H), 0, 0); const LY = (i) => 200 + i * 110;
     for (let i = 0; i < 4; i++) { const y = LY(i); if (i === g.lane) { const gl = c.createLinearGradient(0, y - 60, 0, y + 20); gl.addColorStop(0, 'rgba(125,255,106,0)'); gl.addColorStop(1, 'rgba(125,255,106,.16)'); c.fillStyle = gl; c.fillRect(0, y - 60, g.W, 80); } }
-    for (const k of g.cust) person(c, k.x, LY(k.lane), k, g.t, false);
+    for (const k of g.cust) { c.save(); c.translate(k.x, LY(k.lane) + 66); c.scale(1.3, 1.3); person(c, 0, 0, k, g.t, false); c.restore(); } // customers walk on the floor in front of the counter
     for (const b of g.bags) jar(c, b.x, LY(b.lane) - 2, false, g.t);
     for (const e of g.empties) jar(c, e.x, LY(e.lane) - 2, true, g.t);
     const y = LY(g.lane); person(c, 352, y, { c: '#16a34a', hat: 2, hair: '#3b2414', skin: '#e8b48a', seed: 7 }, g.t, true);
@@ -31,7 +31,7 @@ let ROOM = null; function room(W, H) { if (ROOM) return ROOM; const cv = documen
     // counter
     const top = c.createLinearGradient(0, y - 4, 0, y + 14); top.addColorStop(0, '#d79a52'); top.addColorStop(1, '#8a5222'); c.fillStyle = top; c.fillRect(14, y - 4, 330, 16); c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(14, y - 4, 330, 2);
     const front = c.createLinearGradient(0, y + 12, 0, y + 62); front.addColorStop(0, '#5a3418'); front.addColorStop(1, '#2a160a'); c.fillStyle = front; c.fillRect(14, y + 12, 330, 50); c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; for (let x = 40; x < 344; x += 50) { c.strokeRect(x - 20, y + 18, 40, 38); }
-    c.fillStyle = '#c08a40'; c.fillRect(14, y + 58, 330, 3); }
+    c.fillStyle = '#c08a40'; c.fillRect(14, y + 58, 330, 3); const fl = c.createLinearGradient(0, y + 61, 0, y + 72); fl.addColorStop(0, '#3a2414'); fl.addColorStop(1, '#1e120a'); c.fillStyle = fl; c.fillRect(0, y + 61, W, 11); c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(14, y + 61, 330, 3); }
   return (ROOM = cv); }
 function person(c, x, y, k, t, bt) { const sd = k.seed ?? (k.seed = Math.floor(Math.random() * 1e6)); const pick = (a, o) => a[(sd >> o) % a.length]; const skin = k.skin || pick(['#f2c7a5', '#d9a07a', '#a8714a', '#7a4a2a', '#f8d8bc'], 1); const hair = k.hair || pick(['#2a1a10', '#6b3e1a', '#e8c070', '#1a1a1a', '#b04a2a', '#9aa3ad'], 3); const hat = k.hat ?? sd % 4; const wobble = bt ? 0 : Math.sin(t * 9 + sd) * 2, step = bt ? 0 : Math.sin(t * 9 + sd);
   c.save(); c.translate(x, y - 6); c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(0, 4, 13, 3, 0, 0, 7); c.fill();

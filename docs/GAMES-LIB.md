@@ -546,6 +546,7 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 
 ## Bud Bar (Tapper) - UPGRADED (2026-10-10 06:46 ET)
 - Source hunt (GitHub "tapper html5/javascript", js13k, itch.io, Gitee): no permissive Tapper remake above prototype level was found. Our 4-counter serve/empties rules are complete. Decision: art pass.
+- Customers walk on the floor in front of the counters (scaled up so heads show above the counter top), as in the reference; fixed $(date +%H:%M).
 - Art: wood-panelled lounge with a neon "BUD BAR - DISPENSARY - LOUNGE - 21+" sign, side doors, polished counters with panelled fronts and brass trim, chrome dispensers with leaf badges, a budtender in a green cap and apron, varied customers (skin, hair, beards, cap/top hat/cowboy hat, walk bob), glass product jars with a bud inside and glint, empty jars sliding back, lane glow, smash and serve particles.
 - Tests: e2e PASS (60 fps). Bug pass PASS (51 fps throttled). Rating: visual 7/10, feel 7/10.
 - Backlog note (polish pass): Neon Flipper ramps + spinner (requested 2026-10-10).
