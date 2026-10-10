@@ -14,3 +14,5 @@
 | 9 Finish / HANDOFF | NOT DONE | |
 
 Notes: never push; scripts/build-assets.js stays untracked. Restart server before e2e-api (rate-limit buckets are in memory).
+
+- 7 follow-up (logo check): the crown TT shield + chrome TRAP TECH / green SOLUTIONS wordmark from brand-src/traptech-v7/flyer-current.jpg is now the only Trap Tech mark in use (tt-mono, tt-horizontal, tt-chrome). The older round badge (tt-badge) and graffiti lockup (tt-lockup) were still in the splash 'Built by', footer, About and the default channel/giveaway logo; all replaced, plus a migration in src/brands.js moves stored tt-badge logos to tt-mono-192.png.

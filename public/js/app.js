@@ -176,7 +176,7 @@ function openMenu() {
            : `<a href="/signin">${icon('log-in')}Sign in</a><a href="/signup">${icon('user-plus')}Create account</a><a href="/settings">${icon('settings')}Settings</a>`}
     <a href="/about">${icon('building-2')}About Trap Tech</a>
     <div class="dr-legal"><a href="/terms">Terms</a> • <a href="/privacy">Privacy</a> • <a href="/rules">Rules</a> • <a href="/responsible-play">Responsible play</a></div>
-    <a class="dr-tt" href="/about"><span>Built by</span>${TT('horizontal', 44)}</a>
+    <a class="dr-tt" href="/about"><span>Built by</span>${TT('horizontal', 56)}</a>
   </div><div style="flex:1" data-close></div>`;
   d.addEventListener('click', (e) => { if (e.target.closest('a, button') || e.target.hasAttribute('data-close')) setTimeout(() => d.remove(), 0); });
   d.addEventListener('keydown', (e) => { if (e.key === 'Escape') d.remove(); });
@@ -250,7 +250,7 @@ function ageGate() {
       ${dobFields('gate')}<div class="hint" id="gate-hint">You must be 21 or older. We don't store this unless you create an account.</div><div id="gmsg"></div>
       <button class="btn block" type="submit">Enter</button>
       <p class="tiny muted" style="margin:12px 0 0">By entering you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>. Free to play. No purchase necessary.</p></form>`}
-    <a class="gate-tt" href="/about"><span>Built by</span>${TT('lockup', 86)}</a>
+    <a class="gate-tt" href="/about"><span>Built by</span>${TT('horizontal', 40)}</a>
   </div>`;
   const f = $app.querySelector('#gate'); if (!f) return;
   $app.querySelector('#gate-m').focus();
@@ -280,7 +280,7 @@ function splash() {
       <p class="small muted" style="margin:16px 0 4px">Already have an account?</p>
       <a href="/signin" class="orb" style="font-weight:700;font-size:.85rem;background:var(--grad-v);-webkit-background-clip:text;background-clip:text;color:transparent">SIGN IN</a>
       <p style="margin:10px 0 0"><a href="/" data-guest class="small muted">Just browsing? Continue as Guest</a></p>
-      <a class="tt-sig" href="/about"><span>Built by</span>${TT('lockup', 92)}</a>
+      <a class="tt-sig" href="/about"><span>Built by</span>${TT('horizontal', 56)}</a>
     </div></div>`;
   setTitle('Welcome');
   ls.setItem('gh_seen_splash', '1');
@@ -425,7 +425,7 @@ route(/^\/(home)?$/, async () => {
     </div>
     <div class="section-h"><h2>Sponsor a Host</h2><a href="/sponsor">Learn more</a></div>
     <a class="banner" href="/sponsor" style="display:block;color:var(--text)"><h2>Get Your Brand in the Game</h2><div class="small" style="color:#d9dcff">Pick the features you want and get a free quote. Trap Tech Solutions builds your branded giveaway, from a simple prize drop to a full takeover.</div></a>
-    <div class="footer-note">${TT('badge', 64)}Powering the next generation of online gaming</div>`);
+    <div class="footer-note">${TT('mono', 64)}Powering the next generation of online gaming</div>`);
   tickCountdowns(); wireDaily();
   if (S.me && q && q.ok && !q.streak.checked_today) doCheckin();
 });
@@ -1362,7 +1362,7 @@ route(/^\/responsible-play$/, () => legal('/responsible-play', 'Responsible Play
 
 // ---------------- About Trap Tech Solutions ----------------
 route(/^\/about$/, () => shell('/about', `<div class="narrow">
-  <div class="about-hero card"><div class="about-tt">${TT('mono', 150, 'ab-mono')}${TT('lockup', 150, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
+  <div class="about-hero card"><div class="about-tt">${TT('mono', 150, 'ab-mono')}${TT('chrome', 70, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
     <p class="muted">Trap Tech Solutions is the studio behind The Gaming Hub. We design, build and run every part of it: the games, leaderboards, tournaments, giveaways, achievements and the admin tools brands use.</p>
     <div class="btn-row center-row"><a class="btn" href="/sponsor">${icon('briefcase')} Sponsor a Host</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
   <div class="about-grid">${[['gamepad-2', 'Original games', '13 original HTML5 skill games, made to play great on phones, with skill-based scoring and server-side anti-cheat.'], ['gift', 'Brand giveaways', 'Sponsors pick exactly the features they want, from a simple prize drop to a full branded takeover, and get a custom quote.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Free to play, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
@@ -1421,7 +1421,7 @@ route(/^\/settings$/, () => {
       ${!standalone ? '<p class="tiny muted" style="margin:0 0 8px">On iPhone: tap Share, then "Add to Home Screen".</p>' : ''}
       <div class="set-row"><div><b>${icon('accessibility')} Reduce motion</b><div class="small muted">Turns off decorative animations.</div></div><label class="toggle"><input type="checkbox" id="rm" ${rm ? 'checked' : ''}><span></span></label></div>
     </div>
-    <div class="card pad about-mini">${TT('badge', 56)}<div><b>The Gaming Hub v7</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
+    <div class="card pad about-mini">${TT('mono', 56)}<div><b>The Gaming Hub v7</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
     <div class="card legal-links">${[['/terms', 'file-text', 'Terms of Service'], ['/privacy', 'shield', 'Privacy Policy'], ['/rules', 'scale', 'Official Giveaway Rules'], ['/responsible-play', 'heart-pulse', 'Responsible play']].map(([h, ic, l]) => `<a class="act-row" href="${h}">${icon(ic)}<span class="g">${l}</span>${icon('chevron-right')}</a>`).join('')}</div>
   </div>`);
   document.getElementById('rm').onchange = (e) => { ls.setItem('gh_reduce_motion', e.target.checked ? '1' : '0'); document.documentElement.classList.toggle('reduce-motion', e.target.checked); };
