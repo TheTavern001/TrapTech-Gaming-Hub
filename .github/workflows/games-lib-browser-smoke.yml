@@ -49,6 +49,8 @@ jobs:
           done
           cat /tmp/hub-ci.log
           exit 1
+      - name: Test main Hub and Games Library navigation on mobile viewport
+        run: node tools/e2e-hub-library.js
       - name: Test new originals on desktop and iPhone viewport
         run: node tools/e2e-games-lib.js neon-circuit,rift-survival
       - name: Print server logs on failure
