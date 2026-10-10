@@ -20,6 +20,8 @@ const list = games.filter(g => !only.length || only.includes(g.slug));
   if (bad.length) { console.log('FAIL eligibility gate:', bad.join(', ')); process.exitCode = 1; } }
 const PLAY_MS = +(process.env.PLAY_MS || 6000);
 let ip = 0; const nextIp = () => { ip++; return `10.77.${Math.floor(ip / 250) % 250}.${ip % 250 + 1}`; };
+// thumbnails are curated (docs/audit shots): only write one when the game has none yet, or when THUMBS=1 is set
+const WRITE_THUMB = (slug) => process.env.THUMBS === '1' || !require('fs').existsSync(require('path').join(PUB, slug, 'thumb.jpg'));
 let SEQ = 0; const RUN_ID = (Date.now() % 1e7) * 10 + (process.pid % 10);
 async function signup(xff) {
   const u = 'tester' + String(RUN_ID) + String(++SEQ).padStart(3, '0'); // digits only: filter-safe, unique per run
@@ -50,10 +52,10 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
         const r = Math.random();
         if (r < 0.45) { const k = KEYS[Math.floor(Math.random() * KEYS.length)]; await page.keyboard.down(k); await page.waitForTimeout(60 + Math.random() * 160); await page.keyboard.up(k); }
         else { const x = box.x + box.w * (0.15 + Math.random() * 0.7), y = box.y + box.h * (0.3 + Math.random() * 0.6); await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 80, { steps: 3 }); await page.waitForTimeout(40 + Math.random() * 200); await page.mouse.up(); }
-        if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') await page.locator('#gl, canvas').first().screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
+        if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') if (WRITE_THUMB(g.slug)) await page.locator('#gl, canvas').first().screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
       }
       R.desktop.fps = await page.evaluate(() => window.__GL.fps);
-      if (!shot) await page.locator('#gl, canvas').first().screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 });
+      if (!shot && WRITE_THUMB(g.slug)) await page.locator('#gl, canvas').first().screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 });
       // end the run through the game's own game-over path (same code path as dying) if the bot is still alive
       await page.evaluate(() => { if (window.__GL.state === 'play') { if (window.__GL.g.paused) window.__GL.g.paused = false; window.__GL.g.end('test end'); } });
       await page.waitForFunction(() => window.__GL.lastSubmit, null, { timeout: 8000 }).catch(() => {});
