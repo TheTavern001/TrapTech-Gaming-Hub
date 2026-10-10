@@ -35,7 +35,7 @@ window.Arena = function (cfg) {
       for (const m of g.gems) { const d = Math.hypot(m.x - p.x, m.y - p.y); if (d < g.mag) { m.x += (p.x - m.x) * dt * 8; m.y += (p.y - m.y) * dt * 8; } if (d < 16) { m.got = true; if (m.pu) { g.sfx('power'); if (m.pu === 'r') g.rate *= 0.9; if (m.pu === 's') g.shots = Math.min(5, g.shots + 1); if (m.pu === 'b') { for (const e of g.en) e.hp = 0; g.flash('#fff', 0.2); g.shake(10); } } else { g.xp += m.v; g.sfx('click'); if (g.xp >= g.need) { g.xp -= g.need; g.lvl++; g.need = Math.round(g.need * 1.35 + 3); const ids = [...UP.keys()]; for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(g.rnd() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; } g.choose = ids.slice(0, 3); g.mark('L', g.lvl); } } } }
       g.gems = g.gems.filter(m => !m.got);
       if ((g.kd('b') || g.btnP.B) && g.bombs > 0) { g.bombs--; for (const e of g.en) e.hp = 0; g.flash('#fff', 0.25); g.shake(12); g.sfx('boom'); }
-      g.hud = (cfg.waveTime ? Math.floor(g.t) + 's' : 'WAVE ' + g.wave) + (cfg.mult ? '  x' + g.mult : '') + (cfg.xp ? '  LV ' + g.lvl : '') + '  ' + '\u2665'.repeat(Math.max(0, g.hp));
+      if (cfg.hud === false) g.hud = ''; else g.hud = (cfg.waveTime ? Math.floor(g.t) + 's' : 'WAVE ' + g.wave) + (cfg.mult ? '  x' + g.mult : '') + (cfg.xp ? '  LV ' + g.lvl : '') + '  ' + '\u2665'.repeat(Math.max(0, g.hp));
     },
     draw(g, c) {
       if (cfg.render) { c.clearRect(0, 0, g.W, g.H); cfg.render(g, c); } else {
@@ -49,8 +49,8 @@ window.Arena = function (cfg) {
       const p = g.p; if (g.orbs) for (let i = 0; i < g.orbs; i++) { const a = g.t * 4 + i / g.orbs * 6.28; Kit.glow(c, '#a855f7', 10); Kit.circ(c, p.x + Math.cos(a) * 56, p.y + Math.sin(a) * 56, 7, '#a855f7'); Kit.noGlow(c); }
       if (!(p.inv > 0 && Math.sin(g.t * 30) > 0)) { if (cfg.drawPlayer) cfg.drawPlayer(c, p, g); else { c.save(); c.translate(p.x, p.y); c.rotate(p.aim || 0); Kit.glow(c, T.player || '#fff', 14); c.strokeStyle = T.player || '#fff'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(13, 0); c.lineTo(-9, -10); c.lineTo(-4, 0); c.lineTo(-9, 10); c.closePath(); c.stroke(); Kit.noGlow(c); c.restore(); } }
       c.restore(); }
-      if (cfg.xp) { c.fillStyle = '#1d2a66'; c.fillRect(0, 40, g.W, 5); c.fillStyle = '#34d399'; c.fillRect(0, 40, g.W * g.xp / g.need, 5); }
-      if (g.choose) { c.fillStyle = 'rgba(5,7,20,.8)'; c.fillRect(0, 0, g.W, g.H); g.txt('LEVEL UP - pick one', g.W / 2, g.H / 2 - 120, 22, '#fbbf24'); g.choose.forEach((k, i) => { const y = g.H / 2 - 90 + i * 64; c.fillStyle = '#1d2a66'; Kit.rr(c, g.W / 2 - 150, y, 300, 54, 10); c.fill(); g.txt((i + 1) + '. ' + UP[k][0], g.W / 2, y + 27, 17, '#fff'); }); }
+      if (cfg.xp && !cfg.render) { c.fillStyle = '#1d2a66'; c.fillRect(0, 40, g.W, 5); c.fillStyle = '#34d399'; c.fillRect(0, 40, g.W * g.xp / g.need, 5); }
+      if (g.choose && cfg.drawChoose) cfg.drawChoose(g, c, g.choose.map(k => UP[k][0])); else if (g.choose) { c.fillStyle = 'rgba(5,7,20,.8)'; c.fillRect(0, 0, g.W, g.H); g.txt('LEVEL UP - pick one', g.W / 2, g.H / 2 - 120, 22, '#fbbf24'); g.choose.forEach((k, i) => { const y = g.H / 2 - 90 + i * 64; c.fillStyle = '#1d2a66'; Kit.rr(c, g.W / 2 - 150, y, 300, 54, 10); c.fill(); g.txt((i + 1) + '. ' + UP[k][0], g.W / 2, y + 27, 17, '#fff'); }); }
     } });
   function mk(g, k, x, y) { const S = cfg.types[k]; const hm = 1 + Math.max(0, g.wave - 1) * (cfg.hpScale || 0.06); return { k, x, y, hp: Math.ceil(S.hp * hm), t: 0, a: g.R(0, 6.28) }; }
   function spawn(g, k) { let x, y; do { const side = g.RI(0, 3); x = side === 0 ? g.R(0, WW) : side === 1 ? g.R(0, WW) : side === 2 ? -10 : WW + 10; y = side === 0 ? -10 : side === 1 ? WH + 10 : g.R(0, WH); } while (Math.hypot(x - g.p.x, y - g.p.y) < 220); g.en.push(mk(g, k, x, y)); }

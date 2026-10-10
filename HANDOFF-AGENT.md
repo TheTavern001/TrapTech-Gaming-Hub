@@ -35,7 +35,8 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Cube Horde DONE (voxel 3D, instanced horde).
 - Grid Wars DONE (spring grid + bloom + sparks).
 - Jet Blaster DONE (lab parallax art rebuild).
-- Next (Reese order): A+ list done. Next, in order: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Moon Swarm DONE (Vampire Survivors-style, new; Kenney pixel CC0).
+- Next (Reese order): A-tier list one at a time (Traffic Rider, Happy Wheels, Bad Piggies, World of Goo, Kingdom Rush, Infinitode, Zuma, Bubble Shooter, Bejeweled, Knife Hit, Stack, Pinball, Tron, Asteroids, Galaga, Missile Command, Tapper, Frogger) + remaining Cannabis; international search folded into each hunt. Then: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).

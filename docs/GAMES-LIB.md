@@ -408,3 +408,18 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Hazards: triple-pass additive electric zappers with steel emitter orbs, gradient missiles with fins, flame and a smoke trail, and blinking warning triangles. The coin sprite spins.
 - Hero: an outlined, shaded jetpacker with a running cycle on the floor, an arm pose in flight, a glowing exhaust cone and particles. The HUD uses the hudDraw hook. Rules are unchanged.
 - Tests: e2e PASS (60 fps). Bug pass PASS. Side-by-side at docs/audit/jet-blaster-vs-ref.jpg. Rating: visual 7.5/10, feel 7/10.
+
+## Moon Swarm (Vampire Survivors-style) - DONE (2026-10-10 05:30 ET)
+- Source hunt (GitHub, itch.io, Gitee/Chinese-language READMEs, js13k):
+  - ricardo-foundry/canvas-vampire-survivors (MIT, vanilla JS, bilingual EN/zh): rejected because its art is placeholder circles, below the 7+ bar.
+  - fernforge-arcade/abyss-survivors: rejected because it has no licence file.
+  - giovanneluna/poke-survivors (MIT, Brazilian): rejected because it uses Pokemon IP and Phaser/Vite.
+  - sephirxth/SurvivorDemo: rejected because it is a Unity WebGL build.
+  - Decision: build it on arena.js (xp mode, timed spawns) with Kenney CC0 pixel art, matching the reference's pixel style.
+- Art and features:
+  - Pre-rendered 2400 px meadow: grass tiles, flowers, trees, mushrooms, tombstones, dirt patches and a "MOON GROVE - ADULTS 21+" sign.
+  - Seven Kenney monster types (bat, rat, slime, ghost, spider, cyclops boss every 10 waves, fireball-throwing demon), depth-sorted with hop and float animation, hit flash and drop shadows.
+  - Wizard hero with an HP bar, spinning dagger projectiles, orbiting axes, glowing XP crystals in three tiers, damage numbers and boss shockwaves.
+  - Night lighting with a lantern radius around the hero. Reference-style XP bar, timer and kill count, and a pixel level-up card UI.
+- Shared engine: arena.js gained the optional `drawChoose` and `hud:false` hooks.
+- Tests: e2e PASS (60 fps). Bug pass PASS. Cube Horde and Grid Wars re-ran PASS. Rating: visual 7/10, feel 7.5/10.
