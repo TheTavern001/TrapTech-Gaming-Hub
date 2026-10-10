@@ -12,6 +12,8 @@ const JOBS = { mono: { h: [40, 80, 192, 512] }, horizontal: { w: [180, 360, 920]
     for (const n of j.h || j.w) { const w = j.h ? Math.round(n * ar) : n, h = j.h ? n : Math.round(n / ar); const png = path.join(B, `tt-${k}-${n}.png`); await shoot(`tt-${k}.svg`, w, h, png);
       execFileSync('python3', ['-c', `from PIL import Image; im=Image.open('${png}'); im.save('${png.replace('.png', '.webp')}', 'WEBP', quality=92, method=6)`]); }
     console.log(k, 'aspect', ar.toFixed(4)); }
-  for (const n of [32, 192, 512]) await shoot('tt-favicon.svg', n, n, path.join(B, `tt-favicon-${n}.png`));
+  for (const n of [32, 48, 180, 192, 512]) await shoot('tt-favicon.svg', n, n, path.join(B, `tt-favicon-${n}.png`)); // 180 = apple-touch-icon
+  for (const n of [192, 512]) await shoot('tt-maskable.svg', n, n, path.join(B, `tt-maskable-${n}.png`)); // PWA maskable
+  await shoot('tt-badge.svg', 1024, 1024, path.join(B, 'tt-badge-1024.png')); await shoot('tt-mono.svg', 878, 1000, path.join(B, 'tt-mono-1000.png')); // print / social
   await b.close();
 })();

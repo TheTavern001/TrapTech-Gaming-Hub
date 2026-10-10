@@ -60,8 +60,8 @@ function frame(section, title, inner, actions = '') {
     <aside class="side" aria-label="Admin navigation"><div class="brand"><img src="/assets/brand/hub-logo.svg" alt="The Gaming Hub"><b>Trap Tech Admin</b></div>
       <button class="mnav-btn" type="button" data-mnav aria-expanded="false">${icon('menu')}<span>Menu</span></button>${navHTML(section)}
       <span class="sp" style="flex:1"></span><a href="/" target="_blank">${icon('external-link')}View site</a><a href="#" data-logout>${icon('log-out')}Log out</a>
-      <div class="side-tt"><span>Powered by</span><picture><img src="/assets/brand/tt-horizontal.svg" alt="Trap Tech Solutions" width="142" height="40" decoding="async"></picture></div></aside>
-    <main class="amain"><div class="tt-bar"><picture><img src="/assets/brand/tt-mono.svg" alt="" width="20" height="24" decoding="async"></picture> Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v7</span></div><div class="ahead"><h1>${title}</h1>${actions}${whoHTML()}</div>${inner}</main></div>`;
+      <div class="side-tt"><span>Powered by</span><picture><img src="/assets/brand/tt-horizontal.svg" alt="Trap Tech Solutions" width="147" height="40" decoding="async"></picture></div></aside>
+    <main class="amain"><div class="tt-bar"><picture><img src="/assets/brand/tt-mono.svg" alt="" width="21" height="24" decoding="async"></picture> Powered by Trap Tech Solutions <span class="muted">• The Gaming Hub v7</span></div><div class="ahead"><h1>${title}</h1>${actions}${whoHTML()}</div>${inner}</main></div>`;
 }
 document.addEventListener('click', async (e) => {
   const mb = e.target.closest('[data-mnav]'); if (mb) { const sd = mb.closest('.side'); sd.classList.toggle('open'); mb.setAttribute('aria-expanded', sd.classList.contains('open')); return; }

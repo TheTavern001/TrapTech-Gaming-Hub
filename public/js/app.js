@@ -39,9 +39,9 @@ function avatar(name, demo, cls = '') {
   // v7 Phase 5: every player has a custom avatar (server-rendered SVG; initials stay underneath while it loads)
   return `<span class="av ${cls}" style="background:linear-gradient(135deg,hsl(${a} 80% 55%),hsl(${b} 80% 40%))">${esc(String(name).slice(0, 2).toUpperCase())}${name ? `<img class="av-img" src="/avatar/${encodeURIComponent(name)}.svg${AV_BUST[name] ? '?v=' + AV_BUST[name] : ''}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span>`;
 }
-// v7 (Oct 10): the clean Trap Tech mark from v3 (geometric double-T, TRAP TECH / spaced cyan SOLUTIONS) with a line-art
-// crown, rebuilt as vector SVG by tools/build-brand-tt.py. PNG/WebP copies (same file names) exist for OG images and old links.
-const TT_AR = { mono: 100 / 120, horizontal: 3.5574, lockup: 1.4842, chrome: 3.9036, badge: 1 };
+// v7 FINAL Trap Tech logo (Reese, Oct 10): white angular double-T + gold crown (brand-src/traptech-v7/logo-final.jpg),
+// rebuilt as vector SVG by tools/build-brand-tt.py. PNG/WebP copies (same file names) exist for OG images and old links.
+const TT_AR = { mono: 100 / 114, horizontal: 3.678, lockup: 1.3068, chrome: 3.9036, badge: 1 };
 function TT(k, h, cls = '', alt = 'Trap Tech Solutions') {
   const w = Math.round(h * (TT_AR[k] || 1));
   return `<picture class="ttp ttp-${k} ${cls}"><img src="/assets/brand/tt-${k}.svg" alt="${esc(alt)}" width="${w}" height="${h}" decoding="async"></picture>`;
