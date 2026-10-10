@@ -180,3 +180,10 @@
 .av-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 14px; border: 1px solid var(--line); background: var(--card2); color: var(--text); cursor: pointer; }
 .av-opt img { border-radius: 14px; } .av-opt.on { border-color: var(--cyan); box-shadow: 0 0 0 2px var(--cyan) inset; } .av-opt.locked img { filter: grayscale(.7) brightness(.7); } .av-opt .lock { color: var(--gold); display: inline-flex; gap: 3px; align-items: center; }
 .av-big { width: 120px; height: 120px; border-radius: 28px; }
+/* v7 phase 7: landing feature strip */
+.splash-feats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:520px;margin:22px auto 0;text-align:left}
+.splash-feats .sf{display:grid;grid-template-columns:22px 1fr;column-gap:8px;padding:10px 12px;border:1px solid var(--line,#2a2f6a);border-radius:12px;background:rgba(20,22,60,.55)}
+.splash-feats .sf svg{grid-row:span 2;color:var(--cyan,#2dd4f5);width:20px;height:20px}
+.splash-feats b{font-size:.85rem}.splash-feats span{font-size:.75rem;opacity:.75}
+@media(min-width:760px){.splash-feats{grid-template-columns:repeat(4,minmax(0,1fr));max-width:860px}}
+.splash .logo-stack{display:block;margin-left:auto;margin-right:auto}
