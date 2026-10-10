@@ -499,3 +499,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: 8x8 swipe or tap-swap, cascades multiply. Four in a row leaves a Flame gem (3x3 blast), five leaves a Star gem (clears row and column), and blasts chain. Endless blitz: matches refill the clock and the drain speeds up.
 - Art: 7 faceted jewels (hex, octagon, diamond, triangle, pentagon, round, heptagon) pre-rendered with lit facets, a table and a specular highlight; twinkles; gold-framed velvet board; time bar that turns red; flame and star effects; "GEM ROOM 21+" tag.
 - Tests: e2e PASS (60 fps). Bug pass PASS (35 fps throttled, +0.0 MB over 30 s). Rating: visual 7.5/10, feel 7/10.
+
+## Knife Toss (Knife Hit) - UPGRADED (2026-10-10 06:08 ET)
+- Source hunt (GitHub "knife hit html5/phaser", Gitee "飞刀 H5", itch.io, js13k): the popular Phaser clones are unlicensed or use ripped Ketchapp art. The MIT ones are rectangles-and-circles demos. Our rules (stages, boss every 5th, apples, variable spin) already match. Decision: art and feel pass on the existing game.
+- Art: pre-rendered log with bark rim, growth rings and cracks; boss targets (cheese wheel, orange, iron shield, lime); steel knives with gradient blade, gold guard and wrapped handle; glossy apples with a leaf; stage diamonds with a red boss diamond; remaining-knife icons; "BLADE & BUD 21+" tag.
+- Feel: the target kicks back on each hit, wood chips fly, the log shatters into 6 spinning wedges on clear, a clashing knife bounces off and spins away (with haptic buzz on phones), and apples burst into juice.
+- Tests: e2e PASS (60 fps). Bug pass PASS (54 fps throttled). Rating: visual 7.5/10, feel 7.5/10.
