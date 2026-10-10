@@ -570,3 +570,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay (21+): drag to aim, hold to build breath, release to puff a ring that rises, grows and slows, pushed by a changing lounge draft. Thread it through moving brass hoops; a centre pass is a BULLSEYE (double). Combo up to x6. Clearing all hoops starts a harder set (more, smaller, faster hoops, stronger draft) and forgives one miss. 3 misses end the session.
 - Art: purple lounge with bokeh lights, neon "HAZE LOUNGE - RING CLUB 21+" sign, couch silhouette, layered translucent smoke rings with soft wisps, brass hoops on chains that glow on a pass, lips that purse with breath, a breath bar and aim guide.
 - Tests: e2e PASS (60 fps). Bug pass PASS (49 fps throttled). A trajectory-solving bot reached set 5 (16,400) with no misses in 50 s. Rating: visual 7/10, feel 7/10.
+
+## Bud Sort (Cannabis: conveyor sorting reflex) - DONE (2026-10-10 07:03 ET)
+- Source hunt (GitHub "sorting game html5", "conveyor sort" js13k, itch.io "sort it" jams, Gitee "分拣 小游戏"): jam prototypes without licences or flat squares. Mechanic modelled on Sort It / Color Switch-style swipe sorters. Decision: build our own.
+- Gameplay (21+): jars ride a belt into a gate; swipe the front jar toward the bin of its strain colour (SATIVA / INDICA / HYBRID / CBD), or tap the bin / Q E A D keys; stems and seeds get swiped down to REJECT. Later sorts score more (10-20 by how close to the gate), combo multiplier up to x8. Wrong bin, gate jam or a slipped stem costs a leaf (3). Endless: belt speeds up, spawns quicken, strains unlock from 2 to 4.
+- Art: packing-line floor, moving belt slats, chrome gate hub that reddens as a jar nears, glossy colour bins with arrows, glass jars with bud clusters and coloured lids, arcing toss animations, "GREENLINE PACKING CO. 21+".
+- Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7/10, feel 7.5/10.

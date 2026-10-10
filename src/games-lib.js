@@ -71,6 +71,7 @@ const LIST = [
   T('green-dash', 'Green Dash', 'Delivery runner', 11, 'C', 'endless', 60, true, 'Distance + deliveries 100', '3 days'),
   T('roll-up', 'Roll Up', 'Cannabis rolling precision game (Perfect Slices / timing style)', 11, 'C', 'endless', 900, true, 'Step accuracy 0-100 x streak multiplier (up to x5), order bonus 2 x average accuracy', '3 days'),
   T('smoke-rings', 'Smoke Rings', 'Cannabis lounge ring-blowing skill game (aim + power shot)', 11, 'C', 'endless', 1500, true, 'Hoop 100 (bullseye 200) x combo up to 6, set clear 500 x set', '3 days'),
+  T('bud-sort', 'Bud Sort', 'Cannabis conveyor sorting reflex game', 11, 'C', 'endless', 260, true, 'Jar 10-20 by timing x combo up to 8', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
   T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('hill-glider', 'Hill Glider', 'Tiny Wings', 0, 'A', 'endless', 60, true, 'Distance m + perfect slides 25', '3 days'),
