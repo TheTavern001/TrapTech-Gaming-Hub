@@ -63,6 +63,8 @@ for (const slug of ['neon-circuit', 'rift-survival']) {
 }
 if (!libraryPage.includes('id="category"') || !libraryPage.includes('id="eligibility"')) errors.push('Library page is missing category/status filters.');
 if (!doc.includes('wave transition bonus 10 × wave')) errors.push('Games Library documentation has stale Rift Survival scoring text.');
+const riftSource = fs.existsSync(path.join(pub, 'rift-survival', 'game.js')) ? fs.readFileSync(path.join(pub, 'rift-survival', 'game.js'), 'utf8') : '';
+if (!/g\.player\s*=\s*\{[^}]*\br\s*:\s*\d+/s.test(riftSource)) errors.push('Rift Survival player collision radius is missing; enemy damage may never trigger.');
 const docRows = (doc.match(/^\|\s*\d+\s*\|/gm) || []).length;
 if (docRows !== games.length) errors.push('Documentation row count mismatch: ' + docRows + ' vs ' + games.length);
 
