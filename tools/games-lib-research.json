@@ -1,23 +1,285 @@
 {
  "_method": "For each reference we searched GitHub (topics html5-game / javascript-game / phaser, awesome-html5-games, awesome-js-games), itch.io (HTML5 + MIT/CC0), js13kGames entries, Libre Arcade, OpenGames, H5 Arcade, OpenGameArt/Kenney (CC0 art), Phaser examples, GDevelop/Construct examples and Godot web exports, plus the 120 pre-verified rows in docs/GAME-CANDIDATES.md. A candidate is only vendored when BOTH its code licence and every bundled asset (sprites, sounds, fonts) are cleanly licensed and it can be stripped of trademarks. Most faithful clones of commercial games ship ripped sprites/sounds from the original (code MIT, assets not), which disqualifies them; in those cases we BUILD an original version.",
- "dino-dash": { "picked": "wayou/t-rex-runner (BSD-3-Clause, Chromium Authors; sprites + sounds are part of the BSD Chromium source) = EXACT source", "rejected": ["arnellebalane/trex-runner (BSD, same code, older and less maintained)", "chirag64/t-rex-runner-bot and themed forks (Kumamon/KuGou) - third-party character art of unclear licence"] },
- "sky-flap": { "picked": "BUILT", "rejected": ["r3nanp/flappy-bird (MIT code, but sprite sheet + sounds are ripped from the commercial game)", "luizfelipedasilva678/flappy-bird (MIT, same ripped assets)", "jordyvanraalte/Flappy-bird (GPL-3.0, uses samuelcust/flappy-bird-assets = ripped originals)", "ellisonleao/clumsy-bird (MIT, melonJS; art is a near-copy of the original bird/pipes)", "GAME-CANDIDATES #14 AEROFLAP (MIT, 3D Babylon, not the 2D gate feel)"] },
- "maze-muncher": { "picked": "BUILT", "rejected": ["mumuy/pacman (MIT code, but the README forbids reuse without attribution of passer-by.com and the maze is the arcade maze)", "bward2/pacman-js (MIT code; sprites + sounds ripped from the arcade game)", "8tentaculos/jsPacman (MIT code; Ms. Pac-Man sprites/sounds and trademark)", "newagebegins/pacman (MIT; arcade sprites)", "platzhersh/pacman-canvas (CC0 code; arcade sounds)"] },
- "block-drop": { "picked": "BUILT", "rejected": ["jakesgordon/javascript-tetris (MIT, plain and no hold/ghost; Tetris Company trade dress concerns on rotation names)", "chvin/react-tetris (Apache-2.0, React build, Brick Game skin + sounds from a commercial handheld)", "Hextris (GPL-3.0, hexagonal variant - kept as a candidate for a different slot)"] },
- "alien-rows": { "picked": "BUILT", "rejected": ["GAME-CANDIDATES #40 Robo Galactic Shooter (MIT, not marching rows)", "various space-invaders clones on GitHub (sprites traced from the Taito arcade)"] },
- "star-swarm": { "picked": "BUILT", "rejected": ["GAME-CANDIDATES #3 Radius Raid (MIT, radial shooter, not formation/dive)", "Galaga canvas clones on GitHub (Namco sprites)"] },
- "rock-buster": { "picked": "BUILT", "rejected": ["dmcinnes/HTML5-Asteroids (MIT, faithful but 2010 code, no touch, no audio)", "phoboslab Asteroids demos (no licence file)"] },
- "neon-snake": { "picked": "BUILT", "rejected": ["patorjk/JavaScript-Snake (MIT, good but DOM grid and its own branding; built version gives us touch swipe + event log)"] },
- "brick-blitz": { "picked": "BUILT", "rejected": ["MDN Breakout tutorial (CC0-ish tutorial, too bare)", "GAME-CANDIDATES brick rows (tutorial quality)"] },
- "cloud-hopper": { "picked": "BUILT", "rejected": ["doodle-jump clones on GitHub (doodle sprite sheet ripped from Lima Sky)", "GAME-CANDIDATES #5 Stolen Sword (MIT, different mechanic)"] },
- "road-hopper": { "picked": "BUILT", "rejected": ["crossy-road three.js clones (MIT code, Hipster Whale chicken models)", "Frogger clones (Konami sprites)"] },
- "rail-rush": { "picked": "BUILT (shared runner3d.js)", "rejected": ["Subway Surfers web ports/unblocked mirrors (pirated - forbidden)", "three.js lane runner tutorials (incomplete)", "GAME-CANDIDATES #1 Demon Runner (MIT, side-scroller not 3-lane)"] },
- "ruin-runner": { "picked": "BUILT (shared runner3d.js)", "rejected": ["Temple Run web mirrors (pirated)", "Unity WebGL 'temple runner' tutorials (assets from the Unity store, not redistributable)"] },
- "hill-hauler": { "picked": "BUILT", "rejected": ["GAME-CANDIDATES #6 Bike/Stunt Cycle (GPL-3.0, good but motorbike only and js13k-tight controls)", "Box2D hill-climb demos (no licence)", "Hill Climb Racing mirrors (pirated)"] },
- "wanted-run": { "picked": "BUILT", "rejected": ["Smashy Road clones (voxel models ripped)", "GAME-CANDIDATES #34 Hue Jumper (GPL-3.0, racer not chase)"] },
- "sling-siege": { "picked": "BUILT", "rejected": ["Matter.js/p5 'angry birds' demos (MIT code but Rovio bird/pig sprites)", "Phaser Angry Birds tutorials (Rovio assets)"] },
- "lawn-guard": { "picked": "BUILT", "rejected": ["PvZ HTML5 clones on GitHub (PopCap sprites/audio ripped)", "GAME-CANDIDATES #32 Fort@dmin (MIT, different mechanic)"] },
- "pop-defense": { "picked": "BUILT (shared td.js)", "rejected": ["Bloons flash archives (Ninja Kiwi, commercial)", "path-TD tutorials (no art, no economy)"] },
- "cube-horde": { "picked": "BUILT (shared arena.js)", "rejected": ["Zombie Cubes (commercial)", "GAME-CANDIDATES #7 UNDERRUN (MIT, excellent but not a cube-zombie wave game; candidate for another slot)"] },
- "grid-wars": { "picked": "BUILT (shared arena.js)", "rejected": ["GAME-CANDIDATES #7 UNDERRUN (MIT, closer to a dungeon twin-stick)", "Geometry Wars clones (Bizarre Creations trade dress)"] }
+ "dino-dash": {
+  "picked": "wayou/t-rex-runner (BSD-3-Clause, Chromium Authors; sprites + sounds are part of the BSD Chromium source) = EXACT source",
+  "rejected": [
+   "arnellebalane/trex-runner (BSD, same code, older and less maintained)",
+   "chirag64/t-rex-runner-bot and themed forks (Kumamon/KuGou) - third-party character art of unclear licence"
+  ]
+ },
+ "sky-flap": {
+  "picked": "BUILT",
+  "rejected": [
+   "r3nanp/flappy-bird (MIT code, but sprite sheet + sounds are ripped from the commercial game)",
+   "luizfelipedasilva678/flappy-bird (MIT, same ripped assets)",
+   "jordyvanraalte/Flappy-bird (GPL-3.0, uses samuelcust/flappy-bird-assets = ripped originals)",
+   "ellisonleao/clumsy-bird (MIT, melonJS; art is a near-copy of the original bird/pipes)",
+   "GAME-CANDIDATES #14 AEROFLAP (MIT, 3D Babylon, not the 2D gate feel)"
+  ]
+ },
+ "maze-muncher": {
+  "picked": "BUILT",
+  "rejected": [
+   "mumuy/pacman (MIT code, but the README forbids reuse without attribution of passer-by.com and the maze is the arcade maze)",
+   "bward2/pacman-js (MIT code; sprites + sounds ripped from the arcade game)",
+   "8tentaculos/jsPacman (MIT code; Ms. Pac-Man sprites/sounds and trademark)",
+   "newagebegins/pacman (MIT; arcade sprites)",
+   "platzhersh/pacman-canvas (CC0 code; arcade sounds)"
+  ]
+ },
+ "block-drop": {
+  "picked": "BUILT",
+  "rejected": [
+   "jakesgordon/javascript-tetris (MIT, plain and no hold/ghost; Tetris Company trade dress concerns on rotation names)",
+   "chvin/react-tetris (Apache-2.0, React build, Brick Game skin + sounds from a commercial handheld)",
+   "Hextris (GPL-3.0, hexagonal variant - kept as a candidate for a different slot)"
+  ]
+ },
+ "alien-rows": {
+  "picked": "BUILT",
+  "rejected": [
+   "GAME-CANDIDATES #40 Robo Galactic Shooter (MIT, not marching rows)",
+   "various space-invaders clones on GitHub (sprites traced from the Taito arcade)"
+  ]
+ },
+ "star-swarm": {
+  "picked": "BUILT",
+  "rejected": [
+   "GAME-CANDIDATES #3 Radius Raid (MIT, radial shooter, not formation/dive)",
+   "Galaga canvas clones on GitHub (Namco sprites)"
+  ]
+ },
+ "rock-buster": {
+  "picked": "BUILT",
+  "rejected": [
+   "dmcinnes/HTML5-Asteroids (MIT, faithful but 2010 code, no touch, no audio)",
+   "phoboslab Asteroids demos (no licence file)"
+  ]
+ },
+ "neon-snake": {
+  "picked": "BUILT",
+  "rejected": [
+   "patorjk/JavaScript-Snake (MIT, good but DOM grid and its own branding; built version gives us touch swipe + event log)"
+  ]
+ },
+ "brick-blitz": {
+  "picked": "BUILT",
+  "rejected": [
+   "MDN Breakout tutorial (CC0-ish tutorial, too bare)",
+   "GAME-CANDIDATES brick rows (tutorial quality)"
+  ]
+ },
+ "cloud-hopper": {
+  "picked": "BUILT",
+  "rejected": [
+   "doodle-jump clones on GitHub (doodle sprite sheet ripped from Lima Sky)",
+   "GAME-CANDIDATES #5 Stolen Sword (MIT, different mechanic)"
+  ]
+ },
+ "road-hopper": {
+  "picked": "BUILT",
+  "rejected": [
+   "crossy-road three.js clones (MIT code, Hipster Whale chicken models)",
+   "Frogger clones (Konami sprites)"
+  ]
+ },
+ "rail-rush": {
+  "picked": "BUILT (shared runner3d.js)",
+  "rejected": [
+   "Subway Surfers web ports/unblocked mirrors (pirated - forbidden)",
+   "three.js lane runner tutorials (incomplete)",
+   "GAME-CANDIDATES #1 Demon Runner (MIT, side-scroller not 3-lane)"
+  ]
+ },
+ "ruin-runner": {
+  "picked": "BUILT (shared runner3d.js)",
+  "rejected": [
+   "Temple Run web mirrors (pirated)",
+   "Unity WebGL 'temple runner' tutorials (assets from the Unity store, not redistributable)"
+  ]
+ },
+ "hill-hauler": {
+  "picked": "BUILT",
+  "rejected": [
+   "GAME-CANDIDATES #6 Bike/Stunt Cycle (GPL-3.0, good but motorbike only and js13k-tight controls)",
+   "Box2D hill-climb demos (no licence)",
+   "Hill Climb Racing mirrors (pirated)"
+  ]
+ },
+ "wanted-run": {
+  "picked": "BUILT",
+  "rejected": [
+   "Smashy Road clones (voxel models ripped)",
+   "GAME-CANDIDATES #34 Hue Jumper (GPL-3.0, racer not chase)"
+  ]
+ },
+ "sling-siege": {
+  "picked": "BUILT",
+  "rejected": [
+   "Matter.js/p5 'angry birds' demos (MIT code but Rovio bird/pig sprites)",
+   "Phaser Angry Birds tutorials (Rovio assets)"
+  ]
+ },
+ "lawn-guard": {
+  "picked": "BUILT",
+  "rejected": [
+   "PvZ HTML5 clones on GitHub (PopCap sprites/audio ripped)",
+   "GAME-CANDIDATES #32 Fort@dmin (MIT, different mechanic)"
+  ]
+ },
+ "pop-defense": {
+  "picked": "BUILT (shared td.js)",
+  "rejected": [
+   "Bloons flash archives (Ninja Kiwi, commercial)",
+   "path-TD tutorials (no art, no economy)"
+  ]
+ },
+ "cube-horde": {
+  "picked": "BUILT (shared arena.js)",
+  "rejected": [
+   "Zombie Cubes (commercial)",
+   "GAME-CANDIDATES #7 UNDERRUN (MIT, excellent but not a cube-zombie wave game; candidate for another slot)"
+  ]
+ },
+ "grid-wars": {
+  "picked": "BUILT (shared arena.js)",
+  "rejected": [
+   "GAME-CANDIDATES #7 UNDERRUN (MIT, closer to a dungeon twin-stick)",
+   "Geometry Wars clones (Bizarre Creations trade dress)"
+  ]
+ },
+ "jet-blaster": {
+  "picked": "BUILT",
+  "rejected": [
+   "Jetpack Joyride (Halfbrick, commercial)",
+   "itch.io 'jetpack' HTML5 jams (no licence stated / CC-BY-NC art)",
+   "GitHub jetpack-joyride clones (ripped Barry sprites)"
+  ]
+ },
+ "roof-runner": {
+  "picked": "BUILT",
+  "rejected": [
+   "Canabalt (Semi Secret; the 2010 source release is not open-licensed for redistribution)",
+   "GAME-CANDIDATES #22 BitTrip (MIT, tiny runner without rooftop gaps)",
+   "GAME-CANDIDATES #23 Black Cat Run (MIT, different feel)"
+  ]
+ },
+ "helix-drop": {
+  "picked": "BUILT",
+  "rejected": [
+   "three.js helix-jump clones (MIT code but no licence on models/sounds)",
+   "Voodoo Helix Jump (commercial)"
+  ]
+ },
+ "hex-spin": {
+  "picked": "BUILT",
+  "rejected": [
+   "Hextris (GPL-3.0, actually a hex-Tetris, not a closing-walls game)",
+   "Open Hexagon (AFL-3.0 desktop C++, no web build)",
+   "super-hexagon JS clones (Terry Cavanagh music ripped)"
+  ]
+ },
+ "color-hop": {
+  "picked": "BUILT",
+  "rejected": [
+   "color-switch Phaser clones (Fortafy assets)",
+   "GAME-CANDIDATES #14 AEROFLAP (MIT, flapper)"
+  ]
+ },
+ "zig-path": {
+  "picked": "BUILT",
+  "rejected": [
+   "zigzag Unity tutorials (Unity store assets, no web licence)",
+   "three.js ZigZag clones (no licence file)"
+  ]
+ },
+ "lane-racer": {
+  "picked": "BUILT",
+  "rejected": [
+   "Traffic Racer (commercial)",
+   "GAME-CANDIDATES #34 Hue Jumper (GPL-3.0, 3D survival racer - candidate for a later racing slot)",
+   "js racer by jakesgordon (MIT, OutRun-style; art from a commercial sprite sheet)"
+  ]
+ },
+ "drift-king": {
+  "picked": "BUILT",
+  "rejected": [
+   "Drift Boss (MarketJS, commercial)",
+   "GAME-CANDIDATES #15 Snowboard Sprint (MIT, different mechanic)"
+  ]
+ },
+ "missile-guard": {
+  "picked": "BUILT",
+  "rejected": [
+   "missile-command JS clones (MIT code, Atari trade dress)",
+   "js13k 'Defend' entries (no touch)"
+  ]
+ },
+ "bug-blaster": {
+  "picked": "BUILT",
+  "rejected": [
+   "centipede JS clones (Atari sprites)",
+   "GAME-CANDIDATES #44 Bullethell (MIT, different mechanic)"
+  ]
+ },
+ "bubble-pop": {
+  "picked": "BUILT",
+  "rejected": [
+   "rembound/Bubble-Shooter-HTML5 (GPL-3.0 code; plain art; no hex row descent) - viable but our build adds touch aim + descending rows",
+   "Puzzle Bobble clones (Taito sprites)"
+  ]
+ },
+ "mine-sweep": {
+  "picked": "BUILT",
+  "rejected": [
+   "minesweeper JS clones (many MIT; Windows-like skin; we needed timed multi-board scoring)"
+  ]
+ },
+ "knife-toss": {
+  "picked": "BUILT",
+  "rejected": [
+   "knife-hit Phaser tutorials (Emanuele Feronato, free tutorial code without explicit licence)",
+   "Ketchapp Knife Hit (commercial)"
+  ]
+ },
+ "mole-whack": {
+  "picked": "BUILT",
+  "rejected": [
+   "whack-a-mole DOM tutorials (MIT but mole images from stock sites)"
+  ]
+ },
+ "grow-op": {
+  "picked": "BUILT (Cannabis category)",
+  "rejected": [
+   "Weed Firm / Hempire / Bud Farm (commercial mobile)",
+   "itch.io 'weed tycoon' jams (no licence)"
+  ]
+ },
+ "trim-rush": {
+  "picked": "BUILT (Cannabis category)",
+  "rejected": [
+   "no open-source trimming game found; Fruit-Ninja-style slicer clones (Halfbrick assets) used only as mechanic inspiration"
+  ]
+ },
+ "strain-crush": {
+  "picked": "BUILT (Cannabis category)",
+  "rejected": [
+   "GAME-CANDIDATES #35 Jewels Back (MIT, timed match-3 but tiny js13k art and no cascades multiplier)",
+   "Candy Crush clones (King assets)"
+  ]
+ },
+ "bud-bar": {
+  "picked": "BUILT (Cannabis category)",
+  "rejected": [
+   "Tapper (Bally Midway, commercial)",
+   "tapper JS clones (ripped sprites)"
+  ]
+ },
+ "green-dash": {
+  "picked": "BUILT (Cannabis category)",
+  "rejected": [
+   "Paperboy clones (Atari)",
+   "GAME-CANDIDATES #8 Dodging Fish (MIT, dodge-only)"
+  ]
+ }
 }

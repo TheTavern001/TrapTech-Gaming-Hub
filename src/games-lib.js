@@ -32,6 +32,26 @@ const LIST = [
   T('pop-defense', 'Pop Defense', 'Bloons TD 6', 3, 'A+', 'strategy', 120, true, 'Layer pops 1, wave bonus 25 x wave', '7 days'),
   T('cube-horde', 'Cube Horde', 'Zombie Cubes', 4, 'A+', 'endless', 120, true, 'Kills 10-50 x combo, wave bonus', '3 days'),
   T('grid-wars', 'Grid Wars', 'Geometry Wars', 4, 'A+', 'endless', 400, true, 'Enemies 25-150 x multiplier', '3 days'),
+  // ---- batch 2: A tier + Cannabis ----
+  T('jet-blaster', 'Jet Blaster', 'Jetpack Joyride', 0, 'A', 'endless', 40, true, 'Distance m + coins 5', '3 days'),
+  T('roof-runner', 'Roof Runner', 'Canabalt', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
+  T('helix-drop', 'Helix Drop', 'Helix Jump', 7, 'A', 'endless', 40, true, 'Floors passed with combo, fireball smashes', '3 days'),
+  T('hex-spin', 'Hex Spin', 'Super Hexagon', 7, 'A', 'endless', 12, true, 'Survival time in 0.1s', '3 days'),
+  T('color-hop', 'Color Hop', 'Color Switch', 7, 'A', 'endless', 3, true, 'Stars collected', '3 days'),
+  T('zig-path', 'Zig Path', 'ZigZag', 7, 'A', 'endless', 12, true, 'Turns + gems 5', '3 days'),
+  T('lane-racer', 'Lane Racer', 'Traffic Racer', 1, 'A', 'endless', 40, true, 'Distance + near misses 20', '3 days'),
+  T('drift-king', 'Drift King', 'Drift Boss', 1, 'A', 'endless', 25, true, 'Distance', '3 days'),
+  T('missile-guard', 'Missile Guard', 'Missile Command', 5, 'A', 'endless', 150, true, 'Warheads 25, wave bonus cities x100 + ammo x5', '3 days'),
+  T('bug-blaster', 'Bug Blaster', 'Centipede', 5, 'A', 'endless', 200, true, 'Head 100, body 10, spider 300-900, mushroom 1', '3 days'),
+  T('bubble-pop', 'Bubble Pop', 'Bubble Shooter', 6, 'A', 'endless', 200, true, '10 per match bubble, 20 x drops (x up to 4), clear 1000', '3-7 days'),
+  T('mine-sweep', 'Mine Sweep', 'Minesweeper', 6, 'A', 'campaign', 120, true, '1 per cell + board clear speed bonus', '7 days'),
+  T('knife-toss', 'Knife Toss', 'Knife Hit', 7, 'A', 'endless', 80, true, 'Knife 10, apple 50, stage 100 x stage', '3 days'),
+  T('mole-whack', 'Mole Whack', 'Whac-A-Mole', 7, 'A', 'short-session', 120, true, 'Critter 10, gold 50, combo x5 (60s)', '1-3 days'),
+  T('grow-op', 'Grow Op', 'Cannabis grow sim (Weed Firm / Hempire style)', 11, 'C', 'short-session', 60, true, 'Harvest 40-150 by ripeness x health, pests 5 (3 min)', '3 days'),
+  T('trim-rush', 'Trim Rush', 'Cannabis trimming speed game', 11, 'C', 'short-session', 120, true, 'Leaf 10-30 combo, clean trim bonus; bud slice -3s (60s)', '1-3 days'),
+  T('strain-crush', 'Strain Crush', 'Strain match-3 (Candy Crush style)', 11, 'C', 'short-session', 400, true, '10 per gem x cascade chain (3 min)', '3 days'),
+  T('bud-bar', 'Bud Bar', 'Dispensary tapper (Tapper style)', 11, 'C', 'endless', 80, true, 'Serve 50, empties 25', '3 days'),
+  T('green-dash', 'Green Dash', 'Delivery runner', 11, 'C', 'endless', 60, true, 'Distance + deliveries 100', '3 days'),
 ];
 const games = LIST.map(x => {
   const s = SOURCES[x.src];
