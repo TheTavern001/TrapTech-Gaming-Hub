@@ -11,6 +11,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [x] Load the library registry into the main Hub's route state so official giveaway links can resolve library game IDs.
 - [x] Route `/play/<library-game-id>?event=...` launches into the corresponding library game while preserving query parameters.
 - [x] Forward `event`, `event_code`, `giveaway_id`, and legacy `giveaway` query parameters through the library adapter to server-side run validation.
+- [x] Include only Neon Circuit and Rift Survival in the admin giveaway builder's library-game options, rather than enabling all 100 unverified library entries.
 - [ ] Browser-test the full official event flow end to end for a library game; source wiring alone is not proof of a working event.
 - [ ] Visually inspect the main Hub at phone and desktop widths after deployment.
 - [ ] Verify auth, navigation, leaderboard, profile, bookings, giveaways, admin, and mobile layout remain intact after the release.
@@ -19,7 +20,8 @@ This checklist deliberately covers the main Hub application as well as the Games
 
 - [ ] Regression-test the booking request flow and admin booking status transitions.
 - [ ] Verify that only authorized, valid Hub event/giveaway records can create official competition entries and score submissions; test missing, invalid, expired, and mismatched event references.
-- [ ] Confirm the admin giveaway builder exposes only games that have passed runtime, scoring-integrity, and license gates. The full library currently requires individual verification before being used for prizes.
+- [x] Restrict the admin giveaway builder's new library-game options to the two original titles, Neon Circuit and Rift Survival; other library entries remain excluded from this new-game addition.
+- [ ] Verify the builder's rendered game picker and publish flow for both originals in a real browser. The new originals still require browser test results before production giveaway use.
 - [ ] Verify vendor/host permissions: vendors must not be able to create or activate an official giveaway or playoff without the required operator/admin authorization and booking approval.
 - [ ] Verify a normal shareable game URL permits casual play but does not by itself create an official giveaway, prize, paid booking, or official entrant list.
 - [ ] Verify leaderboards and winner selection consume server-validated score/run records, not a client-side displayed score.
