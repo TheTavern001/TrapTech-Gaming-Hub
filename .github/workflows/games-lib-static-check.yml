@@ -21,6 +21,8 @@ jobs:
       - name: Check syntax of changed Kit games and audit tools
         run: |
           node --check src/games-lib.js
+          node --input-type=module --check < public/js/app.js
+          node --check public/games-lib/adapter.js
           node --check public/games-lib/neon-circuit/game.js
           node --check public/games-lib/rift-survival/game.js
           node --check tools/games-lib-integrity-audit.js
