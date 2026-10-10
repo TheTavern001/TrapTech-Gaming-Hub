@@ -576,3 +576,10 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay (21+): jars ride a belt into a gate; swipe the front jar toward the bin of its strain colour (SATIVA / INDICA / HYBRID / CBD), or tap the bin / Q E A D keys; stems and seeds get swiped down to REJECT. Later sorts score more (10-20 by how close to the gate), combo multiplier up to x8. Wrong bin, gate jam or a slipped stem costs a leaf (3). Endless: belt speeds up, spawns quicken, strains unlock from 2 to 4.
 - Art: packing-line floor, moving belt slats, chrome gate hub that reddens as a jar nears, glossy colour bins with arrows, glass jars with bud clusters and coloured lids, arcing toss animations, "GREENLINE PACKING CO. 21+".
 - Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
+
+## Pest Patrol (Cannabis: Ant Smasher-style tap squash) - DONE (2026-10-10 07:08 ET)
+- Source hunt: GitHub "ant smasher html5" / "bug squash" (unlicensed clones, or ones using the original sprites), js13k "bugs", itch.io "tap the bugs": none clean and polished enough. Decision: build our own.
+- Gameplay (21+): mites, caterpillars and armoured beetles (2 taps) crawl in wiggly paths toward 3 potted plants under grow lights. Tap to squash them; a combo multiplier goes up to x5. Ladybugs wander around eating mites, and squashing one costs a plant leaf. Each bite costs a leaf, and the run ends when all plants are gone. Endless waves get denser and faster, with a wave bonus.
+- Art: soil floor with pebbles, magenta/blue LED grow-light bar and glow, baked cannabis plants with serrated 7-leaflet fan leaves that yellow as they're damaged, animated legs on every bug, splats, particle bursts.
+- Perf: plants are pre-baked per HP (throttled fps 34 -> 42).
+- Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
