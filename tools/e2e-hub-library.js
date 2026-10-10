@@ -1,0 +1,42 @@
+// Hub + Games Library navigation regression. Requires a running test Hub and Google Chrome.
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright-core');
+const BASE = process.env.BASE || 'http://127.0.0.1:8787';
+(async () => {
+  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await context.addInitScript(() => {
+    try { localStorage.setItem('gh_age_ok', String(Date.now())); sessionStorage.setItem('gh_age_ok', '1'); } catch {}
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  page.on('console', m => { if (m.type() === 'error' && !/favicon|status of 4\\d\\d/.test(m.text())) errors.push(m.text()); });
+  try {
+    await page.goto(BASE + '/games', { waitUntil: 'networkidle' });
+    await page.locator('a[href="/games-lib/index.html"]').waitFor({ timeout: 15000 });
+    await page.waitForFunction(() => {
+      const el = document.getElementById('lib-count');
+      return el && /\\d+ library games/.test(el.textContent || '');
+    }, null, { timeout: 15000 });
+    const count = await page.locator('#lib-count').textContent();
+    assert.match(count, /100 library games/, 'main Hub live library count should be 100');
+    await page.locator('a[href="/games-lib/index.html"]').click();
+    await page.locator('#lib-title').waitFor({ timeout: 10000 });
+    await page.waitForFunction(() => document.getElementById('total')?.textContent === '100');
+    assert.equal(await page.locator('#new-grid .new-card').count(), 2, 'both new originals should be spotlighted');
+    await page.locator('#q').fill('Neon Circuit');
+    assert.equal(await page.locator('#list .card').count(), 1, 'search should filter to Neon Circuit');
+    assert.match(await page.locator('#list').innerText(), /Neon Circuit/);
+    await page.locator('#q').fill('');
+    await page.locator('#eligibility').selectOption('giveaway');
+    assert.ok(Number((await page.locator('#result-count').innerText()).match(/Showing (\\d+)/)?.[1]) > 0, 'giveaway filter should render results');
+    await page.locator('#eligibility').selectOption('all');
+    await page.locator('.new-card[href="/games-lib/neon-circuit/index.html"]').click();
+    await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 15000 });
+    assert.deepEqual(errors, [], 'no browser console/page errors during Hub -> library -> game navigation');
+    console.log(JSON.stringify({ ok: true, libraryCount: count, spotlightCards: 2, search: 'passed', statusFilter: 'passed', launch: 'Neon Circuit runtime initialized', consoleErrors: errors }, null, 2));
+  } finally {
+    await browser.close();
+  }
+})().catch(e => { console.error(e); process.exit(1); });
