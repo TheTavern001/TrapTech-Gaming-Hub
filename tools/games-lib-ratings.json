@@ -11,7 +11,7 @@
  },
  "lane-racer": {
   "visual": 6.5,
-  "feel": 6,
-  "notes": "v2 3D WIP: smooth CC0 cartoon cars, chase cam, painted backdrop, billboards; 47-75 calls / 58-92k tris. Gaps vs reference: sparse roadside, no 2-way/variety biomes, bot survives ~15s (traffic too dense early). NOT counted."
+  "feel": 6.5,
+  "notes": "v3: higher chase cam, denser simplified roadside, easier early traffic, car meshes simplified; 58-81 calls / 79-112k tris; e2e PASS. Gaps: traffic reads small/far, empty mid-ground vs reference, bot survives ~20-28s. NOT counted."
  }
 }
