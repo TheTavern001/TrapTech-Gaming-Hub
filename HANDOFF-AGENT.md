@@ -12,11 +12,7 @@ Owner: Reese Norris (America/New_York). GitHub: TheTavern001. Casual, wants ever
 ## Two workstreams (both commit locally, never push)
 ### A. Core hub v7 — progress log `PROGRESS-V7.md`
 Phases 1–7 DONE (games stabilized + anti-cheat L1–L4 `docs/ANTI-CHEAT.md`; official events vs free play with private event codes `/event/TT-XXXX`, signed single-use run tokens, event-only leaderboards, official-giveaway notice; skill-only tie-breaks + seeded sudden-death playoffs; booking flow with NO client-visible prices, admin quote → one-click event + QR; cosmetic-only store: Hub Crowns, Season Pass, 48-quest free-next-pass chain (~top 5%), 3 numbered Prestige items, Bitcoin checkout to one address with unique sat offsets + mempool.space matching; avatars `/avatar`; shop/timers verified incl. DST `tools/e2e-timers.js`; About/landing).
-Remaining:
-- Phase 8 admin completeness (manage everything: bookings, events, games flags, shop, seasons/pass, currency, prestige, avatars, badges, quests, players, announcements, roles—owner-only appoints, settings).
-- i18n: 20+ languages, auto-detect, RTL; rules English-authoritative.
-- LOGO (final, Reese decided): white angular double-T with gold crown on navy — `/home/box/agent-data/agents/2ae0f2cf-a7ad-48c4-8255-9801bf7c3d9b/attachments/b291265eac2d3d7149b6100f9a620e9e0d21d10b593d71c451c2e928808ac27e.jpg`. Rebuild as SVG, use everywhere, keep site theme/colors unchanged.
-- Phase 9: v6→v7 migration test, memory <~100 MB, all suites green, screenshots `screenshots/v7/final/`, `HANDOFF.md`, `FINALIZE.md`.
+Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; final crowned-TT logo; skill-only tie-break fix 855e530). All core suites green: e2e-api 374/0, anticheat 12/0, events 29/0, tiebreak 18/0, sponsor-brands 63/0, payments 32/0, avatars 13/0, timers 27/0, economy 49/0, admin 150/0, admin-sec 66/0, admin-tour 28/0, i18n 39/0, browser 202/0, mobile 176/0 (1,278 checks, 0 failures). Run them with `tools/run-all.sh`. Public favicon/app icon stays the Gaming Hub mark.
 
 ### B. Games library — `docs/GAMES-LIB.md`, code in `public/games-lib/`, `src/games-lib*.js`, tests `tools/e2e-games-lib.js`, audit `tools/games-lib-audit.js`, assets `public/games-lib/assets3d/ASSETS.md`, hunt log `docs/GAMES-LIB-ASSET-HUNT.md`
 - 62 games registered, 100% giveaway-eligible (endless, uncapped, server-validated skill tie-breaks + sudden-death playoffs in `src/games-lib-playoff.js`).

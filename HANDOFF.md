@@ -46,7 +46,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 | API | `tools/fresh-api.sh tools/e2e-api.js` (fresh isolated DB) and the same for `e2e-anticheat`, `e2e-events`, `e2e-tiebreak`, `e2e-avatars`; payments needs its mock explorer: `BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 tools/fresh-api.sh tools/e2e-payments.js`; `SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js` |
 | Unit | `node tools/e2e-timers.js`, `node tools/e2e-economy.js` |
 | Admin | `cd tools && node e2e-admin.js && node e2e-admin-sec.js && node e2e-admin-tour.js` |
-| Browser | `cd tools && node e2e-browser.js && node e2e-mobile.js` (screenshots in `docs/screens-v7/`) |
+| Browser | `SEED=1 tools/fresh-api.sh tools/e2e-browser.js && (cd tools && node e2e-mobile.js)` (screenshots in `docs/screens-v7/`) |
 | i18n | `cd tools && node e2e-i18n.js` |
 | Games Library | `cd tools && BASE=http://localhost:8787 node e2e-games-lib.js` (owned by the games-library workstream) |
 | Migration / memory | `node tools/v6-migrate-check.js <db>`, `tools/mem-check.sh <db>` |
@@ -54,7 +54,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 The latest results are in PROGRESS-V7.md (phase 9).
 
 ## Known limits / follow-ups
-- **Two older suites are not green:** `tools/e2e-admin.js` (138 pass / 12 fail) and `tools/e2e-browser.js` (165 pass / 10 fail, then it stops at the old admin giveaway-linking screen). Both still assume v4-v6 admin screens and rules (for example the one-click linking UI, the old badge form, first-to-score tie-breaks) that the v7 admin overhaul replaced. The v7 admin is covered by `e2e-admin-tour.js` and `e2e-admin-sec.js`, and the player side by `e2e-mobile.js` (176/0). One e2e-admin check (a 500/500 tie in a builder giveaway) still came out in submission order, so the v7 builder's standings path needs a look to confirm it uses the duration tie-break.
+- **All core suites green** (Oct 10, `tools/run-all.sh`): e2e-api 374/0, anticheat 12/0, events 29/0, tiebreak 18/0, sponsor-brands 63/0, payments 32/0, avatars 13/0, timers 27/0, economy 49/0, admin 150/0, admin-sec 66/0, admin-tour 28/0, i18n 39/0, browser 202/0, mobile 176/0 (1,278 checks, 0 failures). `e2e-admin` uses `E2E_FAST=1`, `e2e-browser` runs on a fresh seeded DB (`SEED=1 tools/fresh-api.sh`).
 - The checkout sweep polls mempool.space about once a minute while orders are open. If mempool.space is down, orders wait. Nothing is lost, and the admin can verify by hand.
 - The BTC/USD price comes from a free API at checkout. If it's unreachable, checkout shows "try again" and never guesses a price.
 - Idle RSS is ~75 MB and the measured peak is 87 MB, against the ~100 MB budget on the 128 MB plan.
