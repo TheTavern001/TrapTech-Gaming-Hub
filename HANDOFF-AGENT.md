@@ -49,6 +49,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Light Cycle (Tron) DONE (06:36)
 - Knife Toss (Knife Hit) UPGRADED (06:08)
 - Bubble Pop UPGRADED (Bubble Shooter art pass).
+- Rock Buster (Asteroids) UPGRADED (06:39); Kenney CC0 art
 - Next (Reese order): A-tier list one at a time (Bejeweled, Knife Hit, Stack, Pinball, Tron, Asteroids, Galaga, Missile Command, Tapper, Frogger) + remaining Cannabis; international search folded into each hunt. Then: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)

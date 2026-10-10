@@ -527,3 +527,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: fixed-tick grid sim with interpolated bikes. Rival AI flood-fills for open space and cuts in front of the player (per-bike aggression). Swipe, tap left/right to turn, or arrow keys. Endless rounds: clear the arena, the next round adds a rival (up to 5) and speeds up. Score: 100 x round per rival derezzed, 500 x round per round cleared, near-miss grind bonus, survival.
 - Art: dark blueprint grid with major lines, glowing arena border, 3-layer additive neon trails, glossy bikes with coloured light strips, derez bursts and rings, grind sparks, countdown, "GRID LOUNGE 21+" floor art.
 - Tests: e2e PASS (60 fps). Bug pass PASS (47 fps throttled). A flood-fill bot reached round 3 (2,509 points in 51 s). Rating: visual 7/10, feel 7.5/10.
+
+## Rock Buster (Asteroids) - UPGRADED (2026-10-10 06:39 ET)
+- Source hunt (GitHub "asteroids html5" MIT ports, Gitee "小行星 H5", js13k, itch.io): the open-source ports are line-vector remakes at the level we already had. Our rules (split rocks, UFO, sectors, wrap) are complete. Decision: art and feel pass with CC0 art.
+- Art: Kenney Space Shooter Remastered (CC0) meteors (4 big, 2 medium, 2 small variants), ship, red UFO, laser bolts, thruster flame and shield bubble; a code-painted nebula with a "PLANET KUSH 21+" ringed planet, parallax star layer.
+- Feel: rock hit flash, spinning rock shards, a shockwave ring per break, a flickering thruster flame, a shield bubble during invulnerability, ship-icon lives and a glowing score HUD.
+- Tests: e2e PASS (60 fps). Bug pass PASS (50 fps throttled). Folder size 104 KB. Rating: visual 7.5/10, feel 7/10.
