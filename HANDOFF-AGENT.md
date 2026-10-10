@@ -58,6 +58,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Pin Strike (Bowling) DONE (07:47)
 - Bullseye (Archery) DONE (07:50)
 - Spot Kick (Penalty) DONE (07:57)
+- Glow Echo (Simon) DONE (08:01)
 - Bullseye fix: game-over clash + perf (07:54)
 - Cup Toss harder: power meter + aim wobble, bot 68% (07:26)
 - Bud Bar (Tapper) UPGRADED (06:46); polish backlog: Neon Flipper ramps + spinner

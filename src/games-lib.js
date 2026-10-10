@@ -79,6 +79,7 @@ const LIST = [
   T('pin-strike', 'Pin Strike', 'Bowling', 9, 'B', 'endless', 40, true, 'Pins + real strike/spare bonuses over endless frames', '3 days'),
   T('bullseye', 'Bullseye', 'Archery King (Endless Archery)', 8, 'B', 'endless', 60, true, 'Arrow ring x10 (+5 X), end bonus 20 x end', '3 days'),
   T('spot-kick', 'Spot Kick', 'Soccer Penalty Challenge', 9, 'B', 'endless', 400, true, 'Goal 100-200 by corner x2 ring x streak up to 4', '3 days'),
+  T('glow-echo', 'Glow Echo', 'Simon', 6, 'B', 'endless', 160, true, 'Pad 10-20 by answer speed, round 25 x round', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
   T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('hill-glider', 'Hill Glider', 'Tiny Wings', 0, 'A', 'endless', 60, true, 'Distance m + perfect slides 25', '3 days'),

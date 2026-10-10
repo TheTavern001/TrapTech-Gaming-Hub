@@ -622,3 +622,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: swipe to shoot. Direction aims, swipe speed lifts the ball, and a bent swipe curls it in flight. The keeper reads the shot with an error band, dives after a reaction delay, and reaches with body + arms. Error and reaction shrink and reach grows as your goal count rises. Corners score more (100-200), shots through the glowing ring score x2, and the streak multiplier goes up to x4. Wide, post and saved all count as misses; 3 end the run.
 - Art: night stadium with crowd-dot stands and floodlight glows, cannabis-league ad boards, striped pitch with perspective box lines and spot, netted goal with depth, an animated keeper (dive tilt, arms, gloves), shaded ball with green panels, result pop-ups.
 - Tests: random corner-swiping bot scored about 30-40%. e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7/10.
+
+## Glow Echo (Puzzle & Brain: Simon) - DONE (2026-10-10 08:01 ET)
+- Source hunt: GitHub "simon game javascript" (hundreds of freeCodeCamp DOM clones, mostly unlicensed; a few MIT ones are flat CSS circles using the trademark name and sampled sounds), js13k (none). Decision: build our own canvas version with synthesized tones.
+- Gameplay: watch, then repeat. Each round adds one step and plays faster (0.62 s down to 0.24 s per step). A fifth centre pad joins at round 8, and from round 14 the four outer pads shuffle each round (with a spin animation) so you can't rely on position memory. Score is 10-20 per pad by answer speed + 25 x round. One wrong pad ends the run (the correct pad is recorded for the replay).
+- Art: neon ring of annular pads with radial gradients and glow when lit, a centre hub showing round and status, a spark ring on completion, lounge 21+ tag.
+- Tests: perfect-memory bot reached round 18 in 2 min (shuffle verified). e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
