@@ -653,3 +653,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
   - 15% feints from fight 2; 40% follow-up combos on fighters 3-4.
   - Opponent HP x1.5; KO heals 25 (was 40).
   - Final bot (reaction floor 250-310 ms, anticipates the hit with ±120 ms timing error, counters after 250 ms), 3 runs of 3 min: 10 KOs / hp 69, 9 KOs / hp 42, KO'd in fight 8 at 154 s. Hard but fair, and it still escalates. e2e + bug pass PASS.
+
+## Tile Twin (Puzzle & Brain: Mahjong Solitaire) - DONE (2026-10-10 09:05 ET)
+- Source hunt: GitHub "mahjong solitaire javascript" (several MIT/GPL ones but they use the classic Unicode/Cangjie tile fonts or third-party tile PNGs with unclear licences; one MIT React version is DOM-heavy with no timing mode), Gitee "麻将连连看" (no licence), itch.io (Unity). Decision: build our own with code-drawn tiles.
+- Gameplay: match free pairs (nothing on top; left or right edge open). The clock drains, and each match refills +2.5 s (cap 90). Matches within 3 s chain a combo (up to x6). Layouts grow (3-4 layers, up to 8x8 base) and are generated solvable by reverse placement (no gaps in rows, every placed tile free at its turn). A dead-end reshuffles for -5 s, so it's endless.
+- Art: original faces (dots with rings, cannabis-leaf suit, red numerals, 7 honours: sun/moon/star/bolt/drop/flame/gem) on ivory tiles with green backs and depth edges; free tiles are bright, blocked ones dimmed; gold glow on selection; shake on a blocked tap; leaf watermark felt.
+- Tests: bot with 250-550 ms per tap cleared 3 layouts in 60 s. e2e PASS. Bug pass PASS. Rating: visual 7.5/10, feel 7/10.
