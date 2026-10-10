@@ -88,6 +88,7 @@ const LIST = [
   T('rally-court', 'Rally Court', 'Tennis Rally', 9, 'B', 'endless', 600, true, 'Return 10 x rally (cap 10) x2 sweet spot, point 200 + 25 x rally', '3 days'),
   T('ice-snipe', 'Ice Snipe', 'Hockey Shootout', 9, 'B', 'endless', 600, true, 'Goal 100-250 by corner x streak up to 4', '3 days'),
   T('reel-deal', 'Reel Deal', 'Fishing Challenge', 9, 'B', 'endless', 600, true, 'Fish = kg x 100 x (1 + rarity x 2)', '3 days'),
+  T('hoop-streak', 'Hoop Streak', 'Basketball Shot Challenge', 9, 'B', 'endless', 400, true, 'Make 100/150 (2/3 pt) x1.5 swish x2 fire', '3 days'),
   T('tile-twin', 'Tile Twin', 'Mahjong Solitaire', 6, 'B', 'endless', 150, true, 'Pair 20 x combo up to 6 + 5 x layout, clear 500 x layout', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
   T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),

@@ -689,3 +689,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Hold-release cast sets depth (deeper = rarer, heavier species), tap the bite within 0.45-0.8 s, then hold-to-reel tension fight with surges; 3 lost fish end the run. Tie-break: heaviest fish, then catch count.
 - Bot (200-350 ms lag, fixed threshold): 2-4 fish per run, 60-98 s.
 - Visual 7 / feel 7. e2e PASS; bug pass PASS (throttled fps 48, no leak).
+
+### Hoop Streak (ref: Basketball Shot Challenge) - 2026-10-10
+- Built original (MIT, code-drawn). Candidates: GitHub JS basketball (Matter demos, unlicensed or flat), itch.io HTML5 hoops (no source licence), js13k (none suitable). Rejected; built on Kit with 240 Hz ball physics, rim/backboard bounces.
+- Swipe from the ball; arc from swipe angle and speed. Makes add time (swish more), moving spot, sliding hoop after 6 makes, fire x2 after 3 in a row. Endless until clock 0. Tie-break: makes, then swishes.
+- Bot (solved arc + human noise): noise 1 -> 33 makes/107 s, noise 1.6 -> 9 makes/54 s.
+- Visual 7 / feel 7. e2e PASS; bug pass PASS (throttled fps 52, no leak).
