@@ -538,3 +538,8 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Source hunt (GitHub "galaga javascript", Gitee "小蜜蜂 H5", js13k, itch.io): the faithful clones ship ripped Namco sprites (rejected); MIT remakes are vector or flat circles. Our formation/dive/entry rules were already right. Decision: art pass with our own pixel sprites.
 - Art: original 13x11 pixel-art designs (hornet, moth and a two-hit queen that changes colour when damaged), 2-frame wing flaps, drop-shadowed pixels; our own fighter; enemies face their flight path on entry and spin on dives; twinkling multicolour scrolling starfield; pixel ring explosions; arcade HUD (1UP, HIGH SCORE, reserve ships, stage flags); "HIVE ARCADE 21+" footer.
 - Tests: e2e PASS (60 fps). Bug pass PASS (60 fps throttled). Rating: visual 7.5/10, feel 7/10.
+
+## Missile Guard (Missile Command) - UPGRADED (2026-10-10 06:44 ET)
+- Source hunt (GitHub "missile command javascript", js13k, itch.io, Gitee "导弹指挥官"): the open-source remakes are flat-line canvas ports at our level or older (some unlicensed). Our rules (3 silos, split warheads, wave bonus) are complete. Decision: art pass.
+- Art: night sky gradient with a glowing moon, two parallax ridge lines, lit skyline cities (procedural towers with warm and green windows), armoured dome silos with a visible missile rack per round, glowing warheads with fading smoke trails, pulsing interceptor target reticles, additive layered fireballs with shock rings, burning ruins with rising smoke, "SKYSHIELD DISPENSARY DISTRICT 21+" footer.
+- Tests: e2e PASS (60 fps). Bug pass PASS (41 fps throttled). Rating: visual 7.5/10, feel 7/10.
