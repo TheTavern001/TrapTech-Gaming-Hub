@@ -28,7 +28,9 @@ Kit.run({
     p.y = Kit.clamp(p.y + g.ay() * p.speed * dt, 28, g.H - 28);
     g.spawn -= dt;
     if (g.spawn <= 0) {
+      // Keep entity count bounded on long runs and slower mobile devices.
       g.spawn = Math.max(.28, .92 - g.wave * .045);
+      if (g.enemies.length >= 70) { g.spawn = .18; } else {
       const a = g.R(0, Math.PI * 2);
       const edge = Math.floor(g.R(0, 4));
       let x = edge === 0 ? -16 : edge === 1 ? g.W + 16 : g.R(0, g.W);
@@ -36,6 +38,7 @@ Kit.run({
       if (edge === 0 || edge === 1) y = g.R(0, g.H);
       if (edge === 2 || edge === 3) x = g.R(0, g.W);
       g.enemies.push({ x, y, r: g.R(8, 13), hp: 1, phase: g.R(0, 6.28), speed: g.R(36, 54) + g.wave * 2.5, hue: Math.floor(g.R(0, 3)) });
+      }
     }
     for (let i = g.enemies.length - 1; i >= 0; i--) {
       const e = g.enemies[i];
@@ -52,10 +55,11 @@ Kit.run({
     g.shardClock -= dt;
     if (g.shardClock <= 0) {
       g.shardClock = 2.8;
-      g.shards.push({ x: g.R(30, g.W - 30), y: g.R(50, g.H - 50), r: 9, phase: 0 });
+      if (g.shards.length < 8) g.shards.push({ x: g.R(30, g.W - 30), y: g.R(50, g.H - 50), r: 9, phase: 0, life: 10 });
     }
     for (let i = g.shards.length - 1; i >= 0; i--) {
-      const s = g.shards[i]; s.phase += dt * 3;
+      const s = g.shards[i]; s.phase += dt * 3; s.life -= dt;
+      if (s.life <= 0) { g.shards.splice(i, 1); continue; }
       if (Math.hypot(p.x - s.x, p.y - s.y) < 22) {
         g.shards.splice(i, 1); g.add(25, 's'); g.sfx('coin'); g.burst(s.x, s.y, '#6fffe9', 14, 150, .55);
       }
