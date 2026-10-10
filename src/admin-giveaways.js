@@ -90,7 +90,7 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
 const IMG_RE = /^(\/assets\/[\w\-./]+|\/media\/[a-z0-9-]+\.png|https:\/\/[^\s"'<>]{4,300})$/;
 const slugify = (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const games = () => cfgApp.GAMES;
+const games = () => [...cfgApp.GAMES, ...(cfgApp.LIB_GAMES || []).filter(g => ['gl-neon-circuit', 'gl-rift-survival'].includes(g.id))];
 const eligible = (id) => typeof cfgApp.giveawayEligible === 'function' ? cfgApp.giveawayEligible(id) : (cfgApp.GAME_MAP[id] && !['plinko', 'spin-to-win'].includes(id));
 const fmtN = (n) => Number(n || 0).toLocaleString('en-US');
 const money = (n) => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
