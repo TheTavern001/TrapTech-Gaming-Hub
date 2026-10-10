@@ -360,6 +360,7 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 ## Road Hopper - DONE (2026-10-10 06:45 ET)
 - Candidates: crossy-road three.js clones on GitHub (most copy the reference's chicken and mascots, or have no licence; rejected). Rebuilt the renderer as a voxel 3D world (three.js, code-built, original art) on top of the existing rules.
 - 3D: bevelled voxel rows (striped grass, roads with dashes, water with bobbing logs, rails with sleepers and a flashing warning lamp), voxel trees, cars and trucks (5 paints, windows, lit headlights), a 4-car train, spinning coins, and an original cream-cube hero with a leaf sprout (hop arc, squash and stretch, facing turn, blob shadow). The angled chase camera follows on X with damping. Static rows and vehicle prototypes are baked to cut draw calls, and geometry is disposed when rows are recycled.
+- Premium voxel pass (Oct 10): 2-segment bevels on props, baked vertex AO gradient (darker toward contact), PCF soft shadows (radius 3, tight frustum).
 - Tests: e2e PASS (calls 104, tris 44k, DPR 1.5). Bug pass PASS (memory +1.8 MB over 30 s after the dispose fix; it was +14 MB). Side-by-side: docs/audit/road-hopper-vs-ref.jpg (the only free-use reference image is the app icon). Rating: visual 7/10, feel 7/10.
 
 ## Sling Siege - DONE (2026-10-10 07:05 ET)
