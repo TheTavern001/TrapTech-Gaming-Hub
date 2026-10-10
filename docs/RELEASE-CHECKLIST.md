@@ -8,6 +8,10 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [x] Keep the main `/games` route and add a working entry point to `/games-lib/index.html`.
 - [x] Replace the stale hard-coded “150+ more games” label with a count fetched from `/api/games-lib`.
 - [x] Add a new-game spotlight, category/status filters, search, and result counts on the dedicated library page.
+- [x] Load the library registry into the main Hub's route state so official giveaway links can resolve library game IDs.
+- [x] Route `/play/<library-game-id>?event=...` launches into the corresponding library game while preserving query parameters.
+- [x] Forward `event`, `event_code`, `giveaway_id`, and legacy `giveaway` query parameters through the library adapter to server-side run validation.
+- [ ] Browser-test the full official event flow end to end for a library game; source wiring alone is not proof of a working event.
 - [ ] Visually inspect the main Hub at phone and desktop widths after deployment.
 - [ ] Verify auth, navigation, leaderboard, profile, bookings, giveaways, admin, and mobile layout remain intact after the release.
 
@@ -15,6 +19,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 
 - [ ] Regression-test the booking request flow and admin booking status transitions.
 - [ ] Verify that only authorized, valid Hub event/giveaway records can create official competition entries and score submissions; test missing, invalid, expired, and mismatched event references.
+- [ ] Confirm the admin giveaway builder exposes only games that have passed runtime, scoring-integrity, and license gates. The full library currently requires individual verification before being used for prizes.
 - [ ] Verify vendor/host permissions: vendors must not be able to create or activate an official giveaway or playoff without the required operator/admin authorization and booking approval.
 - [ ] Verify a normal shareable game URL permits casual play but does not by itself create an official giveaway, prize, paid booking, or official entrant list.
 - [ ] Verify leaderboards and winner selection consume server-validated score/run records, not a client-side displayed score.
