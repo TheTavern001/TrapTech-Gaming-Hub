@@ -36,7 +36,7 @@ export function outfit(root, o) { let big = null; root.traverse(m => { if (m.isS
         float t = (vBP.y - y0) / hh; float ax = abs(vBP.x) / xw; float lum = dot(diffuseColor.rgb, vec3(.3,.59,.11)); float sh = 0.75 + lum * 0.55; vec3 col = diffuseColor.rgb; bool skin = true;
         if (t < 0.018) { col = cSole; skin = false; } else if (t < 0.055) { col = cShoe * sh; skin = false; }
         else if (t < 0.50) { col = cPants * sh; skin = false; if (abs(t - 0.49) < 0.008) col *= 0.6; }
-        else if (t < 0.815 && ax < sleeve) { col = mix(cTop, cTop2, step(0.70, t) * step(ax, 0.2) + step(t, 0.53)) * sh; skin = false; if (ax > 0.62) col *= 0.82; }
+        else if (t < (sleeve > 1.0 ? 0.845 : 0.815) && ax < sleeve) { col = mix(cTop, cTop2, step(0.70, t) * step(ax, 0.2) + step(t, 0.53)) * sh; skin = false; if (ax > 0.62) col *= 0.82; }
         diffuseColor.rgb = col;`); };
     m.material = mat; }); if (o.hair) root.traverse(m => { if (m.isMesh && /Hair|Brow/i.test(m.material.name)) { m.material = m.material.clone(); m.material.color.set(o.hair); } }); return root; }
 export function toonify(obj, tint) { const tc = new THREE.Color(tint || '#ffffff'); obj.traverse(o => { if (!o.isMesh) return; const src = o.material; const key = src.uuid + '|' + tc.getHexString(); if (!MC.has(key)) MC.set(key, toonMat({ map: src.map || null, color: (src.color ? src.color.clone() : new THREE.Color(1, 1, 1)).multiply(tc), vertexColors: !!src.vertexColors, alphaTest: src.alphaTest || (src.alphaMap || src.transparent ? 0.5 : 0), side: src.side, emissive: src.emissive && src.emissive.getHex() ? src.emissive.clone() : new THREE.Color(0), emissiveMap: src.emissiveMap || null })); o.material = MC.get(key); o.material.name = src.name; }); return obj; }
