@@ -385,3 +385,8 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Art: a code-drawn buggy (gradient body, outline, roll cage, helmeted driver, leaf decal, headlight), tread tyres with alloy rims and visible suspension arms, dirt with stone flecks under a 2-tone grass lip, 3 parallax hill layers, a sun glow, clouds, distance posts, "HIGH COUNTRY dispensary 21+" billboards, a red jerrycan pickup, spinning Kenney coins, tyre dust and a dial fuel gauge.
 - Feel: with the gas held down a bot reaches about 490 m before it over-revs into a back flip, so throttle control is the skill, as in the reference.
 - Tests: e2e PASS (60 fps). Bug pass PASS (memory +0.1 MB). Side-by-side: docs/audit/hill-hauler-vs-ref.jpg. Rating: visual 7/10, feel 7/10.
+
+## Most Wanted Run - DONE (2026-10-10 09:05 ET)
+- The 2D top-down renderer was replaced with a 3D voxel city in three.js under the same chase rules. Infinite tiled ground texture (grass with flecks, asphalt cross-roads, kerbs, dashed yellow centre lines). Instanced bevelled voxel trees, rocks and 3 house colours, one variant with a glowing "DISPENSARY 21+" sign. That keeps 420 objects at about 26 draw calls.
+- Player muscle car (leans with steering), cop cruisers with alternating red/blue emissive light bars, and armoured trucks at heat 4+. The angled chase camera leads in the travel direction. Screen-edge arrows (red/blue) point to off-screen cops; bursts and tyre smoke are projected into screen space.
+- Tests: e2e PASS (calls 26, tris 84k, DPR 1.5). Bug pass PASS (memory +0.8 MB). No free-use reference screenshot exists (no Wikipedia page), so only docs/audit/wanted-run-ours.jpg was produced. Rating: visual 7/10, feel 7/10.

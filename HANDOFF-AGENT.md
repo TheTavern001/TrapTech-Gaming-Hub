@@ -31,7 +31,8 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Lawn Guard DONE (original vector cartoon art).
 - Pop Defense DONE (Kenney TD CC0 + code balloons; speed bug fixed).
 - Hill Hauler DONE (Matter.js car, code-drawn art).
-- Next (Reese order): Most Wanted Run, Cube Horde, Grid Wars, Jetpack-style; then the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Most Wanted Run DONE (voxel three.js, instanced city).
+- Next (Reese order): Cube Horde, Grid Wars, Jetpack-style; then the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).
