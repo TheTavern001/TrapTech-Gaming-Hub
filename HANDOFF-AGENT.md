@@ -54,6 +54,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Pest Patrol (Cannabis tap-squash) DONE (07:08)
 - Cup Toss (Cannabis lounge cup pong) DONE (07:14)
 - Beat Tiles (Piano Tiles) DONE (07:29)
+- Moon Lander (Lunar Lander) DONE (07:35)
 - Cup Toss harder: power meter + aim wobble, bot 68% (07:26)
 - Bud Bar (Tapper) UPGRADED (06:46); polish backlog: Neon Flipper ramps + spinner
 - Missile Guard (Missile Command) UPGRADED (06:44)
