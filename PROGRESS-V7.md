@@ -10,7 +10,7 @@
 | 5 Avatars | DONE | src/avatars.js (server SVG /avatar/<name>.svg, 12 kinds / 70+ parts: free, Crowns, achievement-earned, Prestige-only held items/crown/backgrounds), editor /avatar (live preview, buy with Crowns), shown on every board/profile/winner list, Prestige showcase on profiles; tools/e2e-avatars.js 13/13 |
 | 6 Shop + timers | DONE | rotating shop (daily/weekly/event sections, 79 items) verified; fixed progress.dayStart on DST days (Nov 1 reset fired at 01:00 ET); client countdowns use server clock offset; tools/e2e-timers.js 27/27 (DST fall-back/spring-forward, year end, 45-min BTC quote), e2e-economy 49/49 |
 | 7 Trap Tech logo / About / landing | DONE | Trap Tech logo in header, splash, footer and About (verified screenshots); About copy updated (13 skill games, v7, free to play); landing feature strip (games, giveaways, seasons, avatars); all absolute links via src/public-url.js originOf (no hard-coded hosts: grep clean) |
-| 8 Admin completeness | NOT DONE | |
+| 8 Admin completeness | DONE | fixed route clash (Official events used the 'events' key and shadowed Specials & events; now /official) and a non-existent permission that hid it; sponsor quote -> Manage event link; playoff console linked from the event page; tools/e2e-admin-tour.js 28/28 (all 24 sections render, no JS errors, unique routes) |
 | 9 Finish / HANDOFF | NOT DONE | |
 
 Notes: never push; scripts/build-assets.js stays untracked. Restart server before e2e-api (rate-limit buckets are in memory).

@@ -30,7 +30,7 @@ const NAV_G = [
   ['Giveaways', [['giveaways', 'gift', 'Giveaways', 'giveaways.view', 'drafts'], ['game-rules', 'list-checks', 'Game rules', 'giveaways.view'], ['games', 'gamepad-2', 'Games', 'giveaways.view'], ['tournaments', 'swords', 'Tournaments', 'giveaways.edit'], ['leaderboards', 'trophy', 'Leaderboards', 'giveaways.view']]],
   ['Players', [['players', 'users', 'Players', 'users.view'], ['moderation', 'scan-eye', 'Moderation', 'moderation.queue', 'mod'], ['reports', 'file-text', 'Exports', 'giveaways.view']]],
   ['Live ops', [['events', 'party-popper', 'Specials & events', 'events.manage'], ['seasons', 'calendar-range', 'Seasons', 'seasons.manage'], ['shop', 'shopping-bag', 'Shop', 'shop.manage'], ['badges', 'badge-check', 'Badges', 'badges.award'], ['announcements', 'megaphone', 'Announcements', 'announcements.post']]],
-  ['Business', [['sponsor', 'briefcase', 'Sponsor requests', 'billing.view'], ['events', 'badge-check', 'Official events', 'giveaways.manage'], ['store', 'wallet', 'Store & orders', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
+  ['Business', [['sponsor', 'briefcase', 'Sponsor requests', 'billing.view'], ['official', 'badge-check', 'Official events', 'giveaways.view'], ['store', 'wallet', 'Store & orders', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
   ['Admin', [['team', 'shield-half', 'Team & roles', 'dashboard.view'], ['log', 'history', 'Action log', 'actionlog.view'], ['security', 'shield-check', 'Security', 'dashboard.view'], ['settings', 'settings', 'Settings', 'settings.manage'], ['system', 'server-cog', 'System', 'settings.manage']]],
 ];
 let V7 = null, V7ME = null, V7AT = 0;
@@ -91,7 +91,7 @@ async function render() {
     if (s === 'sponsor' && id === 'prices') return sponsorPrices();
     if (s === 'sponsor') return sponsorAdmin(id);
     if (s === 'store') return storeAdmin();
-    if (s === 'events') return eventsAdmin(id);
+    if (s === 'official') return eventsAdmin(id);
     if (s === 'channels') return channels(id);
     if (s === 'badges') return badges();
     if (s === 'fairplay') return fairplay(new URLSearchParams(location.search).get('status') || 'open');
@@ -579,7 +579,7 @@ async function sponsorAdmin(id) {
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         ${locked ? '' : `<button class="btn ghost" id="q-save">${icon('check')} Save draft</button><button class="btn" id="q-send">${icon('mail')} ${Q.status === 'sent' ? 'Re-send' : 'Send to sponsor'}</button>`}
         ${Q.status === 'accepted' ? `<button class="btn" id="q-paid">${icon('banknote')} Mark paid</button>` : ''}
-        ${['accepted', 'paid'].includes(Q.status) ? (q.event_id ? `<a class="btn ghost" href="/event/${esc(q.event_code || '')}" target="_blank">${icon('badge-check')} Event ${esc(q.event_code || '')}</a>` : `<button class="btn" id="q-event">${icon('badge-check')} Create official event</button>`) : ''}
+        ${['accepted', 'paid'].includes(Q.status) ? (q.event_id ? `<a class="btn ghost" href="${AP}/official/${q.event_id}">${icon('settings')} Manage event</a> <a class="btn ghost" href="/event/${esc(q.event_code || '')}" target="_blank">${icon('badge-check')} Event ${esc(q.event_code || '')}</a>` : `<button class="btn" id="q-event">${icon('badge-check')} Create official event</button>`) : ''}
         ${['draft', 'sent'].includes(Q.status) ? `<button class="btn danger sm" id="q-dec">Mark declined</button>` : ''}
         <button class="btn ghost sm" id="q-link" title="${esc(statusUrl)}">${icon('copy')} Copy sponsor status link</button>
         <button class="btn danger sm" id="q-del">${icon('trash-2')}</button></div>
@@ -653,8 +653,8 @@ async function eventsAdmin(id) {
         ${p.status === 'open' ? `<button class="btn sm" data-po-res="${p.id}">Resolve now</button>` : ''} ${p.status !== 'open' ? `<button class="btn sm" data-po-apply="${p.id}">Apply to final standings</button>` : ''}</div>`).join('')}
       <p class="small"><a href="/games-lib/admin-playoffs.html" target="_blank">Games Library playoff console</a></p></div>`;
   }
-  frame('events', 'Official events', `<div class="cols" style="grid-template-columns:1fr 1.3fr;margin-top:0"><div class="card wrap-x"><table class="tbl"><thead><tr><th>Event</th><th>Status</th></tr></thead><tbody>
-    ${list.map(g => `<tr class="${String(g.id) === String(id) ? 'on' : ''}"><td><a href="${AP}/events/${g.id}">${esc(g.title)}</a></td><td>${esc(g.status || '')}</td></tr>`).join('')}</tbody></table></div><div>${detail || '<div class="card pad muted">Pick an event.</div>'}</div></div>`);
+  frame('official', 'Official events', `<div class="cols" style="grid-template-columns:1fr 1.3fr;margin-top:0"><div class="card wrap-x"><table class="tbl"><thead><tr><th>Event</th><th>Status</th></tr></thead><tbody>
+    ${list.map(g => `<tr class="${String(g.id) === String(id) ? 'on' : ''}"><td><a href="${AP}/official/${g.id}">${esc(g.title)}</a></td><td>${esc(g.status || '')}</td></tr>`).join('')}</tbody></table></div><div>${detail || '<div class="card pad muted">Pick an event.</div>'}</div></div>`);
   const on = (sel, f) => { const el = $(sel); if (el) el.onclick = f; };
   on('#ev-regen', async () => { if (!confirm('Issue a new event code? The old link and QR stop working.')) return; await api(`/api/admin/events/${ev.id}/regen-code`, { method: 'POST', body: {} }); eventsAdmin(id); });
   on('#po-start', async () => { const x = await api(`/api/admin/events/${ev.id}/playoff`, { method: 'POST', body: { window_min: 60 } }); toast(x.ok ? 'Playoff started; tied players were notified' : x.error); eventsAdmin(id); });
