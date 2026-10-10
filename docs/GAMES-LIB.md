@@ -5,6 +5,7 @@
 - Source registry entries: **100**
 - Public catalog entries: **100**
 - New original games on this branch: Neon Circuit and Rift Survival.
+- Neon Circuit and Rift Survival use L3 score-event validation with game-specific event-value rules; other library entries remain at L2 until individually reviewed.
 - All games still require fresh browser tests, real mobile performance checks, visual review, scoring-integrity validation, and asset-license review before being described as verified.
 
 ## Registry
