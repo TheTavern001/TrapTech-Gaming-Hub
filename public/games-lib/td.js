@@ -33,18 +33,19 @@ window.TD = function (cfg) {
       g.hud = 'WAVE ' + g.wave + '   $' + g.cash + '   \u2665 ' + g.lives;
     },
     draw(g, c) {
+      if (cfg.drawMap) cfg.drawMap(c, g, CS, OY); else {
       c.fillStyle = T.ground || '#14532d'; c.fillRect(0, OY, COLS * CS, ROWS * CS);
       c.strokeStyle = 'rgba(255,255,255,.04)'; for (let x = 0; x <= COLS; x++) { c.beginPath(); c.moveTo(x * CS, OY); c.lineTo(x * CS, OY + ROWS * CS); c.stroke(); }
       c.fillStyle = T.road || '#a16207'; for (const p of g.path) c.fillRect(p[0] * CS + 2, OY + p[1] * CS + 2, CS - 4, CS - 4);
       for (const k of g.occ) { const [cc, r, t] = k.split(','); if (t === 'rock') { c.fillStyle = '#57534e'; Kit.rr(c, cc * CS + 6, OY + r * CS + 8, CS - 12, CS - 14, 8); c.fill(); } }
-      const pe = g.path[g.path.length - 1]; c.fillStyle = T.base || '#6366f1'; c.fillRect(pe[0] * CS + 4, OY + pe[1] * CS + 4, CS - 8, CS - 8);
-      for (const t of g.tw) { const S = cfg.towers[t.k]; c.fillStyle = '#1f2937'; Kit.rr(c, t.x - 16, t.y - 16, 32, 32, 6); c.fill(); Kit.glow(c, S.c, 8); Kit.circ(c, t.x, t.y, 10 + t.lv, S.c); Kit.noGlow(c); c.strokeStyle = S.c; c.lineWidth = 5; c.beginPath(); c.moveTo(t.x, t.y); c.lineTo(t.x + Math.cos(t.a || 0) * 18, t.y + Math.sin(t.a || 0) * 18); c.stroke(); for (let i = 0; i < t.lv; i++) Kit.circ(c, t.x - 12 + i * 6, t.y + 14, 2, '#fbbf24');
+      const pe = g.path[g.path.length - 1]; c.fillStyle = T.base || '#6366f1'; c.fillRect(pe[0] * CS + 4, OY + pe[1] * CS + 4, CS - 8, CS - 8); }
+      for (const t of g.tw) { const S = cfg.towers[t.k]; if (cfg.drawTower) { cfg.drawTower(c, t, S, g); continue; } c.fillStyle = '#1f2937'; Kit.rr(c, t.x - 16, t.y - 16, 32, 32, 6); c.fill(); Kit.glow(c, S.c, 8); Kit.circ(c, t.x, t.y, 10 + t.lv, S.c); Kit.noGlow(c); c.strokeStyle = S.c; c.lineWidth = 5; c.beginPath(); c.moveTo(t.x, t.y); c.lineTo(t.x + Math.cos(t.a || 0) * 18, t.y + Math.sin(t.a || 0) * 18); c.stroke(); for (let i = 0; i < t.lv; i++) Kit.circ(c, t.x - 12 + i * 6, t.y + 14, 2, '#fbbf24');
         if (t.beam && (t.beam.l -= 1 / 60) > 0) { c.strokeStyle = S.c; c.lineWidth = 3; c.beginPath(); c.moveTo(t.x, t.y); c.lineTo(t.beam.x, t.beam.y); c.stroke(); } if (t.ring && (t.ring -= 1 / 60) > 0) { c.strokeStyle = S.c; c.globalAlpha = t.ring * 3; c.lineWidth = 2; c.beginPath(); c.arc(t.x, t.y, S.range * CS * (1 - t.ring * 2), 0, 7); c.stroke(); c.globalAlpha = 1; } }
       for (const e of g.en) { if (cfg.drawEnemy) cfg.drawEnemy(c, e, g); else { Kit.glow(c, e.c, 6); Kit.circ(c, e.x, e.y, e.r || 10, e.c); Kit.noGlow(c); } if (e.max > 1 && e.hp < e.max && !e.layers) { c.fillStyle = '#111'; c.fillRect(e.x - 12, e.y - 18, 24, 4); c.fillStyle = '#34d399'; c.fillRect(e.x - 12, e.y - 18, 24 * e.hp / e.max, 4); } }
-      for (const s of g.sh) Kit.circ(c, s.x, s.y, 3.5, s.S.c);
-      c.fillStyle = 'rgba(5,7,20,.8)'; c.fillRect(0, g.H - 50, g.W, 50);
+      for (const s of g.sh) if (cfg.drawShot) cfg.drawShot(c, s, g); else Kit.circ(c, s.x, s.y, 3.5, s.S.c);
+      if (cfg.drawBar) cfg.drawBar(c, g); else { c.fillStyle = 'rgba(5,7,20,.8)'; c.fillRect(0, g.H - 50, g.W, 50);
       cfg.towers.forEach((S, i) => { const x = 10 + i * 118; c.fillStyle = g.sel === i ? '#6366f1' : '#1d2a66'; Kit.rr(c, x, g.H - 46, 112, 42, 8); c.fill(); Kit.circ(c, x + 18, g.H - 25, 9, S.c); g.txt(S.n, x + 66, g.H - 34, 11, '#fff'); g.txt('$' + S.cost, x + 66, g.H - 16, 12, g.cash >= S.cost ? '#fbbf24' : '#ef4444'); });
-      if (g.wt < 100 && g.wt > 0 && g.state === 'play') { c.fillStyle = '#16a34a'; Kit.rr(c, g.W - 108, g.H - 46, 100, 42, 8); c.fill(); g.txt('NEXT ' + Math.ceil(g.wt) + 's \u25B6', g.W - 58, g.H - 25, 12, '#fff'); }
+      if (g.wt < 100 && g.wt > 0 && g.state === 'play') { c.fillStyle = '#16a34a'; Kit.rr(c, g.W - 108, g.H - 46, 100, 42, 8); c.fill(); g.txt('NEXT ' + Math.ceil(g.wt) + 's \u25B6', g.W - 58, g.H - 25, 12, '#fff'); } }
     } });
   function expand(pts) { const out = []; for (let i = 0; i < pts.length - 1; i++) { let [x, y] = pts[i]; const [bx, by] = pts[i + 1]; while (x !== bx || y !== by) { out.push([x, y]); x += Math.sign(bx - x); y += Math.sign(by - y); } } out.push(pts[pts.length - 1]); return out; }
   function free(g, c, r) { const k = c + ',' + r; return !g.block.has(k) && !g.tw.some(t => t.c === c && t.r === r) && !g.occ.has(k + ',rock'); }
@@ -58,6 +59,6 @@ window.TD = function (cfg) {
     if (cfg.maze) { const old = g.path; route(g); for (const e of g.en) if (!e.fly) { // re-map progress to nearest cell on the new path
       const cc = Math.round((e.x - CS / 2) / CS), rr = Math.round((e.y - OY - CS / 2) / CS); let bi = 0, bd = 1e9; g.path.forEach((p, i) => { const d = Math.abs(p[0] - cc) + Math.abs(p[1] - rr); if (d < bd) { bd = d; bi = i; } }); e.d = bi; } } }
   function hurt(g, e, dmg, S) { if (e.hp <= 0) return; const d = Math.max(dmg * 0.25, dmg - (e.armor || 0)); 
-    if (e.layers) { const before = Math.ceil(e.hp / e.lhp); e.hp -= d; const after = Math.max(0, Math.ceil(e.hp / e.lhp)); const popped = before - after; if (popped > 0) { g.add(popped, 'o'); g.cash += popped; e.layers = after; e.c = cfg.layerColor(after); g.sfx('pop'); g.burst(e.x, e.y, '#fff', 4, 80, 0.3); } if (e.hp <= 0) e.dead = true; return; }
+    if (e.layers) { const before = Math.ceil(e.hp / e.lhp); e.hp -= d; const after = Math.max(0, Math.ceil(e.hp / e.lhp)); const popped = before - after; if (popped > 0) { g.add(popped, 'o'); g.cash += popped; e.layers = after; e.c = cfg.layerColor(after); g.sfx('pop'); g.burst(e.x, e.y, '#fff', 4, 80, 0.3); if (cfg.onPop) cfg.onPop(g, e); } if (e.hp <= 0) e.dead = true; return; }
     e.hp -= d; if (e.hp <= 0) { e.dead = true; g.add(e.v, 'k'); g.cash += e.cash || Math.ceil(e.v / 2); g.burst(e.x, e.y, e.c, 12, 140); g.sfx('pop'); g.float(e.x, e.y - 10, '+' + e.v, '#fff', 12); } }
 };
