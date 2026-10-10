@@ -13,6 +13,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 - **Avatars:** server-rendered SVG avatars built from 12 part kinds and 70+ parts (free, Crowns, earned through achievements, Prestige-only). The editor is at `/avatar`. Avatars appear on every board, profile and winner list.
 - **Shop rotation and timers:** daily, weekly and event sections with ET midnight resets. The DST bug is fixed: the Nov 1 reset used to fire at 01:00 ET.
 - **Brand:** the clean v3 Trap Tech mark (geometric double-T, TRAP TECH, spaced cyan SOLUTIONS) now has a minimal line-art crown on top. It is rebuilt as vector SVG (`tools/build-brand-tt.py`, PNG/WebP copies from `tools/build-brand-tt.js`) and used everywhere: header, About, footer, splash, admin and OG images. The flyer art stays in `brand-src/` only. The About page and landing page are refreshed.
+- **Languages:** English plus 21 machine-translated languages, with a picker, browser auto-detection and RTL for Arabic and Hebrew. Only the shared interface strings are translated so far (~65: navigation, splash, footer, common buttons, store/avatar labels, game HUD words via `window.HubI18n.t`). Page-specific body copy is still English. Add strings to `tools/i18n/strings.tsv` and run `python3 tools/i18n/build.py`. Legal pages stay English-authoritative, with a translated summary and a note.
 - **Admin:** Store & orders, Official events (share kit, tie report, playoffs), "Create official event" on quotes. Every section is checked by `tools/e2e-admin-tour.js`.
 
 ## Bitcoin checkout: how it works and setup
@@ -46,6 +47,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 | Unit | `node tools/e2e-timers.js`, `node tools/e2e-economy.js` |
 | Admin | `cd tools && node e2e-admin.js && node e2e-admin-sec.js && node e2e-admin-tour.js` |
 | Browser | `cd tools && node e2e-browser.js && node e2e-mobile.js` (screenshots in `docs/screens-v7/`) |
+| i18n | `cd tools && node e2e-i18n.js` |
 | Games Library | `cd tools && BASE=http://localhost:8787 node e2e-games-lib.js` (owned by the games-library workstream) |
 | Migration / memory | `node tools/v6-migrate-check.js <db>`, `tools/mem-check.sh <db>` |
 
