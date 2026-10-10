@@ -683,3 +683,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Auto skate-in; drag to deke (goalie shadows with 0.3 s lag), swipe to shoot (aim + lift). Poke-check if you wait too long. 3 misses; streak x4. Tie-break: goals, then corner accuracy.
 - Bot (random deke + noisy shot): 1-5 goals per run; skill-graded.
 - Visual 7 / feel 7. e2e PASS; bug pass PASS (throttled fps 56, no leak).
+
+### Reel Deal (ref: Fishing Challenge) - 2026-10-10
+- Built original (MIT, code-drawn). Candidates: GitHub JS fishing (flat 2D demos, mostly unlicensed), itch.io HTML5 fishing (no source licence), js13k fishing entries (tiny). Rejected; built on Kit.
+- Hold-release cast sets depth (deeper = rarer, heavier species), tap the bite within 0.45-0.8 s, then hold-to-reel tension fight with surges; 3 lost fish end the run. Tie-break: heaviest fish, then catch count.
+- Bot (200-350 ms lag, fixed threshold): 2-4 fish per run, 60-98 s.
+- Visual 7 / feel 7. e2e PASS; bug pass PASS (throttled fps 48, no leak).

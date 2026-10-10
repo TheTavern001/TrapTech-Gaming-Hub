@@ -1,0 +1,65 @@
+// Reel Deal - original fishing challenge (Hub build, Sports). Hold to charge a cast and release; the lure sinks to a depth by power.
+// When a fish bites (bobber dips), tap fast to hook it. Then hold to reel: tension rises while reeling and when the fish surges;
+// keep the needle inside the green zone. Too high snaps the line, too low lets the fish throw the hook. Bigger fish live deeper.
+// 3 lost fish/snapped lines end the run.
+(function () {
+  const WY = 230, SP = [['Perch', '#eab308', '#65a30d', 0.4, 1, 0], ['Bass', '#4d7c0f', '#bef264', 1.5, 1.4, 0.15], ['Trout', '#a3a3a3', '#f472b6', 2.2, 1.7, 0.3], ['Pike', '#3f6212', '#fef08a', 4.5, 2.2, 0.5], ['Catfish', '#57534e', '#d6d3d1', 7, 2.6, 0.65], ['Golden Koi', '#f59e0b', '#fff7ed', 9, 3.2, 0.82]];
+  function fishOf(g, depth) { const opts = SP.filter(s => s[5] <= depth + 0.05); const s = opts[Math.min(opts.length - 1, Math.floor(Math.pow(g.R(0, 1), 0.7) * opts.length))]; return { sp: s, w: +(s[3] * g.R(0.7, 1.5)).toFixed(2) }; }
+  function newCast(g) { g.ph = 'aim'; g.pow = 0; g.lure = null; g.fish = null; g.ten = 0.45; g.dist = 0; }
+  Kit.run({ id: 'gl-reel-deal', title: 'REEL DEAL', help: 'Hold to charge the cast, release to throw (deeper = bigger fish)\nWhen the bobber dips, TAP fast to hook\nHold to reel; keep tension in the green. 3 lost fish end the run', bg: '#082032',
+    init(g) { g.lost = 0; g.caught = 0; g.big = 0; g.fx = []; g.msg = ''; g.msgT = 0; g.hud = ''; g.bub = []; for (let i = 0; i < 18; i++) g.bub.push({ x: g.R(0, 400), y: g.R(WY, g.H), r: g.R(1, 3) }); g.amb = []; for (let i = 0; i < 6; i++) g.amb.push({ x: g.R(0, 400), y: g.R(WY + 60, g.H - 40), v: g.R(15, 40) * (i % 2 ? 1 : -1), s: SP[i % 4] }); newCast(g); },
+    update(g, dt) { g.msgT -= dt; for (const b of g.bub) { b.y -= 20 * dt; if (b.y < WY) { b.y = g.H; b.x = g.R(0, 400); } } for (const a of g.amb) { a.x += a.v * dt; if (a.x < -40) a.x = 440; if (a.x > 440) a.x = -40; }
+      for (const f of g.fx) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; f.l -= dt; } g.fx = g.fx.filter(f => f.l > 0);
+      const hold = g.ptr.down || g.kd(' '), tap = g.ptr.pressed || g.kp[' '];
+      if (g.ph === 'aim') { if (hold) { g.ph = 'charge'; g.pt = 0; } return; }
+      if (g.ph === 'charge') { g.pt += dt; g.pow = 0.5 - 0.5 * Math.cos(g.pt * 3.2); if (!hold) { const d = g.pow; g.lure = { x: 120, y: 150, tx: 140 + d * 230, depth: d, t: 0 }; g.ph = 'fly'; g.sfx('whoosh'); } return; }
+      const L = g.lure;
+      if (g.ph === 'fly') { L.t += dt * 1.6; const k = Math.min(1, L.t); L.x = 120 + (L.tx - 120) * k; L.y = 150 + (WY - 150) * k - Math.sin(k * Math.PI) * 90; if (k >= 1) { g.ph = 'sink'; L.y = WY; g.sfx('tick'); for (let i = 0; i < 10; i++) g.fx.push({ x: L.x, y: WY, vx: g.R(-60, 60), vy: g.R(-120, -30), l: 0.5 }); } return; }
+      if (g.ph === 'sink') { const ty = WY + 40 + L.depth * (g.H - WY - 110); L.y += Math.min(160 * dt, ty - L.y); if (L.y >= ty - 1) { g.ph = 'wait'; g.wait = g.R(1, 2.8); g.fish = fishOf(g, L.depth); g.fish.x = L.x + (g.R(0, 1) < 0.5 ? -200 : 200); g.fish.y = L.y; } return; }
+      if (g.ph === 'wait') { const F = g.fish; F.x += (L.x - F.x) * Math.min(1, dt * 0.9); g.wait -= dt; if (tap) { g.msg = 'TOO EARLY'; g.msgT = 1; F.x += 200; g.wait = g.R(1.2, 2.5); g.sfx('bad'); } if (g.wait <= 0) { g.ph = 'bite'; g.bite = Math.max(0.45, 0.8 - g.caught * 0.02); g.sfx('hit'); } return; }
+      if (g.ph === 'bite') { g.bite -= dt; if (tap) { g.ph = 'fight'; g.y0 = L.y; g.x0 = L.x; g.ten = 0.45; g.dist = 1; g.surge = 0; g.st = 0; g.shake(4); g.sfx('coin'); g.mark('hook', g.caught); } else if (g.bite <= 0) return lose(g, 'MISSED THE BITE'); return; }
+      if (g.ph === 'fight') { const F = g.fish, str = F.sp[4], wk = F.w / 3; g.st -= dt; if (g.st <= 0) { g.surge = g.surge > 0 ? 0 : g.R(0.5, 1) * str; g.st = g.surge ? g.R(0.5, 1.2) : g.R(0.8, 1.8); }
+        g.ten += ((hold ? 0.55 + 0.1 * wk : -0.5) + g.surge * 0.38 - 0.12) * dt; if (hold) g.dist -= dt * (0.34 / (1 + wk * 0.2)) * (g.surge ? 0.35 : 1); else g.dist += dt * 0.03 * (g.surge ? 2 : 0.4);
+        g.dist = Math.min(1.2, g.dist); F.x = g.x0 + Math.sin(g.t * 3) * 30 * (1 + g.surge); F.y = WY + 20 + (g.y0 - WY - 20) * Math.max(0, Math.min(1, g.dist));
+        const lo = 0.18, hi = 0.82; if (g.ten >= 1) return lose(g, 'LINE SNAPPED!'); if (g.ten <= 0) return lose(g, 'THREW THE HOOK');
+        if (g.ten > hi || g.ten < lo) { g.zone = (g.zone || 0) + dt; } else g.zone = 0; if (g.zone > 1.4) return lose(g, g.ten > hi ? 'LINE SNAPPED!' : 'THREW THE HOOK');
+        if (g.dist <= 0) { g.caught++; const pts = Math.round(F.w * 100 * (1 + F.sp[5] * 2)); g.add(pts, 'fish'); g.big = Math.max(g.big, F.w); g.mark('big', Math.round(g.big * 100)); g.msg = F.sp[0].toUpperCase() + ' ' + F.w.toFixed(2) + ' KG  +' + pts; g.msgT = 1.6; g.sfx('power'); g.shake(5);
+          for (let i = 0; i < 22; i++) g.fx.push({ x: L.x, y: WY, vx: g.R(-120, 120), vy: g.R(-220, -60), l: 0.8 }); g.ph = 'show'; g.show = 1.4; }
+        L.y = F.y - 3 * (0.6 + F.w * 0.12); L.x = F.x + (Math.cos(g.t * 3) > 0 ? 1 : -1) * 20 * (0.6 + F.w * 0.12); return; }
+      if (g.ph === 'show') { g.show -= dt; if (g.show <= 0) newCast(g); } },
+    draw(g, c) { if (!g.bgc) { const cv = document.createElement('canvas'); cv.width = g.W; cv.height = g.H; const k = cv.getContext('2d');
+        let gr = k.createLinearGradient(0, 0, 0, WY); gr.addColorStop(0, '#f97316'); gr.addColorStop(0.5, '#fb7185'); gr.addColorStop(1, '#fcd34d'); k.fillStyle = gr; k.fillRect(0, 0, 400, WY);
+        k.fillStyle = 'rgba(255,240,200,.9)'; k.beginPath(); k.arc(300, WY - 10, 40, 0, 7); k.fill();
+        k.fillStyle = '#7c2d12'; k.globalAlpha = 0.5; k.beginPath(); k.moveTo(0, WY); for (let x = 0; x <= 400; x += 20) k.lineTo(x, WY - 40 - Math.sin(x * 0.02) * 22 - Math.sin(x * 0.07) * 8); k.lineTo(400, WY); k.fill(); k.globalAlpha = 1;
+        k.fillStyle = '#14532d'; for (let i = 0; i < 9; i++) { const x = 230 + i * 22; k.beginPath(); k.moveTo(x, WY); k.lineTo(x + 10, WY - 60 - (i % 3) * 14); k.lineTo(x + 20, WY); k.fill(); }
+        gr = k.createLinearGradient(0, WY, 0, g.H); gr.addColorStop(0, '#0e7490'); gr.addColorStop(0.4, '#0c4a6e'); gr.addColorStop(1, '#020617'); k.fillStyle = gr; k.fillRect(0, WY, 400, g.H - WY);
+        for (let i = 0; i < 7; i++) { k.fillStyle = 'rgba(186,230,253,.05)'; k.beginPath(); k.moveTo(40 + i * 60, WY); k.lineTo(80 + i * 60, WY); k.lineTo(20 + i * 70, g.H); k.lineTo(-30 + i * 70, g.H); k.fill(); }
+        k.fillStyle = '#1c1917'; k.beginPath(); k.moveTo(0, g.H); for (let x = 0; x <= 400; x += 16) k.lineTo(x, g.H - 40 - Math.sin(x * 0.05) * 12); k.lineTo(400, g.H); k.fill();
+        k.strokeStyle = '#166534'; k.lineWidth = 3; for (let i = 0; i < 20; i++) { const x = i * 21 + 6; k.beginPath(); k.moveTo(x, g.H - 40); k.quadraticCurveTo(x + 10, g.H - 90, x - 4, g.H - 120 - (i % 4) * 20); k.stroke(); }
+        k.fillStyle = '#78350f'; k.fillRect(0, WY - 60, 135, 14); for (const x of [10, 60, 110]) k.fillRect(x, WY - 50, 9, 90); k.fillStyle = '#92400e'; for (let x = 0; x < 135; x += 15) k.fillRect(x, WY - 60, 13, 4);
+        k.fillStyle = '#3f2a14'; k.fillRect(150, WY - 34, 2, 34); k.fillStyle = '#14532d'; k.fillRect(118, WY - 52, 110, 22); k.fillStyle = '#fde047'; k.font = 'bold 9px sans-serif'; k.fillText('\u2618 GREEN LEAF BAIT 21+', 124, WY - 37); g.bgc = cv; }
+      c.drawImage(g.bgc, 0, 0);
+      c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.5; c.beginPath(); for (let x = 0; x <= 400; x += 8) c.lineTo(x, WY + Math.sin(x * 0.06 + g.t * 2) * 1.5); c.stroke();
+      for (const b of g.bub) { c.strokeStyle = 'rgba(186,230,253,.35)'; c.beginPath(); c.arc(b.x, b.y, b.r, 0, 7); c.stroke(); }
+      for (const a of g.amb) { fish(c, a.x, a.y, a.s, 0.55, a.v > 0 ? 1 : -1, g.t, 0.35); }
+      // angler
+      c.fillStyle = '#1e3a8a'; c.fillRect(72, WY - 104, 22, 44); c.fillStyle = '#d6a77a'; c.beginPath(); c.arc(83, WY - 114, 10, 0, 7); c.fill(); c.fillStyle = '#166534'; c.beginPath(); c.ellipse(83, WY - 120, 15, 5, 0, 0, 7); c.fill(); c.fillRect(76, WY - 130, 14, 10);
+      const bend = g.ph === 'fight' ? 0.25 + g.ten * 0.6 : g.ph === 'charge' ? -0.6 * g.pow : 0; const rx = 92, ry = WY - 92, tipx = rx + Math.cos(-0.9 + bend) * 70, tipy = ry + Math.sin(-0.9 + bend) * 70;
+      c.strokeStyle = '#292524'; c.lineWidth = 3; c.beginPath(); c.moveTo(rx, ry); c.quadraticCurveTo(rx + 40, ry - 40 + bend * 30, tipx, tipy); c.stroke();
+      const L = g.lure; if (L) { c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1; c.beginPath(); c.moveTo(tipx, tipy); const sag = g.ph === 'fight' ? 0 : 30; c.quadraticCurveTo((tipx + L.x) / 2, Math.max(tipy, WY) + sag, L.x, L.y); c.stroke();
+        if (g.ph !== 'fly') { const by = WY + (g.ph === 'bite' ? 6 + Math.sin(g.t * 30) * 3 : Math.sin(g.t * 3) * 1.5); c.fillStyle = '#ef4444'; c.beginPath(); c.arc(L.x, by - 3, 5, Math.PI, 0); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(L.x, by - 3, 5, 0, Math.PI); c.fill(); }
+        c.fillStyle = '#facc15'; c.beginPath(); c.arc(L.x, L.y, 3, 0, 7); c.fill(); }
+      if (g.fish && g.ph !== 'show') fish(c, g.fish.x, g.fish.y, g.fish.sp, 0.6 + g.fish.w * 0.12, g.ph === 'fight' ? (Math.cos(g.t * 3) > 0 ? 1 : -1) : (g.fish.x < L.x ? 1 : -1), g.t, 1);
+      if (g.ph === 'bite') { c.fillStyle = '#fde047'; c.font = 'bold 30px sans-serif'; c.textAlign = 'center'; c.strokeStyle = '#000'; c.lineWidth = 5; c.strokeText('TAP!', L.x, WY - 20); c.fillText('TAP!', L.x, WY - 20); }
+      if (g.ph === 'charge' || g.ph === 'aim') { c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(140, g.H - 34, 230, 14); const gr = c.createLinearGradient(140, 0, 370, 0); gr.addColorStop(0, '#22c55e'); gr.addColorStop(1, '#a855f7'); c.fillStyle = gr; c.fillRect(140, g.H - 34, 230 * g.pow, 14); c.fillStyle = '#fff'; c.font = 'bold 11px sans-serif'; c.textAlign = 'center'; c.fillText(g.ph === 'aim' ? 'HOLD TO CHARGE CAST' : 'DEPTH ' + Math.round(g.pow * 100) + '%', 255, g.H - 40); }
+      if (g.ph === 'fight') { const x = 370, y0 = 280, h = 300; c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(x - 10, y0, 20, h); c.fillStyle = 'rgba(34,197,94,.7)'; c.fillRect(x - 10, y0 + h * 0.18, 20, h * 0.64); c.fillStyle = 'rgba(239,68,68,.75)'; c.fillRect(x - 10, y0, 20, h * 0.18); c.fillStyle = 'rgba(234,179,8,.75)'; c.fillRect(x - 10, y0 + h * 0.82, 20, h * 0.18);
+        const ny = y0 + h * (1 - Math.max(0, Math.min(1, g.ten))); c.fillStyle = '#fff'; c.fillRect(x - 15, ny - 2, 30, 4); c.font = 'bold 10px sans-serif'; c.textAlign = 'center'; c.fillText('TENSION', x, y0 - 6); c.fillText(g.surge ? 'SURGE!' : 'HOLD TO REEL', 200, g.H - 24); }
+      for (const f of g.fx) { c.fillStyle = 'rgba(224,242,254,' + Math.min(1, f.l * 2) + ')'; c.beginPath(); c.arc(f.x, f.y, 2.5, 0, 7); c.fill(); }
+      if (g.msgT > 0) { c.globalAlpha = Math.min(1, g.msgT * 2); c.fillStyle = g.msg.includes('KG') ? '#fde047' : '#fca5a5'; c.font = 'bold 22px sans-serif'; c.textAlign = 'center'; c.strokeStyle = '#000'; c.lineWidth = 4; c.strokeText(g.msg, 200, 120); c.fillText(g.msg, 200, 120); c.globalAlpha = 1; } },
+    hudDraw(g, c) { c.textAlign = 'left'; c.font = 'bold 22px sans-serif'; c.fillStyle = '#fff'; c.fillText(Math.floor(g.score).toLocaleString('en-US'), 14, 32); c.font = 'bold 11px sans-serif'; c.fillStyle = '#fef08a'; c.fillText('CAUGHT ' + g.caught + '  \u00b7  BIGGEST ' + g.big.toFixed(2) + ' KG', 14, 48);
+      for (let i = 0; i < 3; i++) { c.fillStyle = i < g.lost ? '#ef4444' : 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(g.W - 18 - i * 18, 26, 6, 0, 7); c.fill(); } } });
+  function fish(c, x, y, sp, s, dir, t, a) { c.save(); c.globalAlpha = a; c.translate(x, y); c.scale(dir * s, s); const w = Math.sin(t * 8) * 0.25; const gr = c.createLinearGradient(0, -14, 0, 14); gr.addColorStop(0, sp[1]); gr.addColorStop(1, sp[2]); c.fillStyle = gr;
+    c.beginPath(); c.moveTo(26, 0); c.quadraticCurveTo(10, -16, -14, -6); c.lineTo(-30, -12 + w * 10); c.lineTo(-26, 0); c.lineTo(-30, 12 + w * 10); c.lineTo(-14, 6); c.quadraticCurveTo(10, 16, 26, 0); c.fill();
+    c.fillStyle = sp[1]; c.beginPath(); c.moveTo(4, -11); c.lineTo(-8, -18); c.lineTo(-10, -8); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(16, -3, 3, 0, 7); c.fill(); c.fillStyle = '#000'; c.beginPath(); c.arc(17, -3, 1.6, 0, 7); c.fill(); c.restore(); }
+  function lose(g, why) { g.lost++; g.msg = why; g.msgT = 1.4; g.sfx('bad'); g.shake(5); if (g.lost >= 3) return g.end('3 lost fish'); g.ph = 'show'; g.show = 1.2; g.fish = null; }
+})();
