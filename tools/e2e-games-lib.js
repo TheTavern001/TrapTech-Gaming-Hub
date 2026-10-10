@@ -39,7 +39,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       await ctx.addCookies(await signup(xff)); const page = await ctx.newPage();
       page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*(401|404|422)/.test(m.text())) R.errors.push('desktop: ' + m.text()); });
       page.on('pageerror', e => R.errors.push('desktop pageerror: ' + e.message));
-      await page.goto(BASE + g.url, { waitUntil: 'load' }); await page.waitForTimeout(500);
+      await page.goto(BASE + g.url, { waitUntil: 'load' }); await page.waitForTimeout(500); await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 15000 }).catch(() => {});
       const box = await page.evaluate(() => { const c = document.querySelector('canvas'); const r = c.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
       await page.keyboard.press('Space'); await page.mouse.click(box.x + box.w / 2, box.y + box.h / 2); await page.waitForTimeout(900);
       R.desktop.started = await page.evaluate(() => window.__GL && window.__GL.state);
@@ -52,7 +52,6 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
         if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') await page.locator('canvas#gl').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
       }
       R.desktop.fps = await page.evaluate(() => window.__GL.fps);
-      R.gpu = await page.evaluate(() => window.__R ? { calls: __R.info.render.calls, tris: __R.info.render.triangles, dpr: __R.getPixelRatio() } : null);
       if (!shot) await page.locator('canvas#gl').screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 });
       // end the run through the game's own game-over path (same code path as dying) if the bot is still alive
       await page.evaluate(() => { if (window.__GL.state === 'play') { if (window.__GL.g.paused) window.__GL.g.paused = false; window.__GL.g.end('test end'); } });
@@ -67,11 +66,11 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       const xff2 = nextIp(); const mctx = await browser.newContext({ ...devices['iPhone 13'], extraHTTPHeaders: { 'X-Forwarded-For': xff2 } }); await mctx.addCookies(await signup(xff2)); const mp = await mctx.newPage();
       mp.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*(401|404|422)/.test(m.text())) R.errors.push('mobile: ' + m.text()); });
       mp.on('pageerror', e => R.errors.push('mobile pageerror: ' + e.message));
-      await mp.goto(BASE + g.url, { waitUntil: 'load' }); await mp.waitForTimeout(400);
+      await mp.goto(BASE + g.url, { waitUntil: 'load' }); await mp.waitForTimeout(400); await mp.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 15000 }).catch(() => {});
       const vp = mp.viewportSize(); await mp.touchscreen.tap(vp.width / 2, vp.height / 2); await mp.waitForTimeout(900);
       R.mobile.started = await mp.evaluate(() => window.__GL && window.__GL.state);
       const mend = Date.now() + 3000; while (Date.now() < mend) { await mp.touchscreen.tap(vp.width * (0.2 + Math.random() * 0.7), vp.height * (0.35 + Math.random() * 0.55)); await mp.waitForTimeout(80 + Math.random() * 150); }
-      R.mobile.fps = await mp.evaluate(() => window.__GL.fps); R.mobile.inputs = await mp.evaluate(() => window.__GL.g.inputs);
+      R.mobile.fps = await mp.evaluate(() => window.__GL.fps); R.mobile.inputs = await mp.evaluate(() => window.__GL.g.inputs); R.gpu = await mp.evaluate(() => window.__R ? { calls: __R.info.render.calls, tris: __R.info.render.triangles, dpr: __R.getPixelRatio() } : null);
       await mp.screenshot({ path: path.join(SHOTS, g.slug + '-iphone.png') });
       await mctx.close();
     } catch (e) { R.errors.push('harness: ' + e.message.split('\n')[0]); }

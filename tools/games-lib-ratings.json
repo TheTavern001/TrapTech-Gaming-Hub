@@ -5,8 +5,8 @@
   "notes": "Matter.js physics (fixed step, 2 substeps), textured wood/stone/glass, gradient sky + sun bloom, 3-layer parallax hills, drifting clouds, shot trail, impact dust + shake. Still procedural shapes, no sprite art; trebuchet arm is not animated by physics."
  },
  "rail-rush": {
-  "visual": 6.5,
-  "feel": 7,
-  "notes": "v3: smooth CC0 rigged hero/chaser with real sprint/roll/death clips, bevelled liveried trains, ballast+sleepers, saloon/cliff/clock tower/bridge set pieces. Budget 135 calls/138k tris. Remaining gap: set pieces rarely in frame, trains read far, sky flat. NOT counted yet."
+  "visual": 7,
+  "feel": 7.5,
+  "notes": "v4 PASS: smooth CC0 rigged hero/chaser (Quaternius UBC+UAL, outfits in-shader), code-built liveried trains, curved wood/steel ramps, ballast track, saloon/cliff/clock tower/bridge every row, painted layered backdrop, vertex-colour bake (61-103 calls, 107-128k tris). Bot avg 48s over 4 runs."
  }
 }
