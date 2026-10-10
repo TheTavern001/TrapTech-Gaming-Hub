@@ -34,6 +34,18 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     await page.locator('#eligibility').selectOption('all');
     await page.locator('.new-card[href="/games-lib/neon-circuit/index.html"]').click();
     await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 15000 });
+    let forwardedEvent = null;
+    await page.route('**/api/run/start', async route => {
+      const body = route.request().postDataJSON();
+      forwardedEvent = body && body.event;
+      await route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'synthetic invalid-event check' }) });
+    });
+    await page.goto(BASE + '/games-lib/neon-circuit/index.html?event=TT-ABCDE', { waitUntil: 'load' });
+    await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 10000 });
+    await page.locator('canvas').click({ position: { x: 180, y: 220 } });
+    await page.waitForFunction(() => window.__GL.state === 'play', null, { timeout: 10000 });
+    await page.waitForFunction(() => window.__GL.g && window.Hub && window.Hub.id === 'gl-neon-circuit' && window.Hub.err, null, { timeout: 5000 }).catch(() => {});
+    assert.equal(forwardedEvent, 'TT-ABCDE', 'library adapter should forward the event reference for server-side validation');
     assert.deepEqual(errors, [], 'no browser console/page errors during Hub -> library -> game navigation');
     console.log(JSON.stringify({ ok: true, libraryCount: count, spotlightCards: 2, search: 'passed', statusFilter: 'passed', launch: 'Neon Circuit runtime initialized', consoleErrors: errors }, null, 2));
   } finally {
