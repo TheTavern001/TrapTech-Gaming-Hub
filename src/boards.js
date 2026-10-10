@@ -18,7 +18,7 @@ function gameBoard(gameId, since = 0, until = Infinity, opts = {}) {
 function globalBoard(since = 0) {
   return db.prepare(`
     SELECT ${U}, SUM(b.best) AS score, SUM(b.n) AS runs, MAX(b.last_at) AS last_at
-    FROM (SELECT user_id, game_id, MAX(score) AS best, COUNT(*) AS n, MAX(created_at) AS last_at FROM runs WHERE created_at >= ? AND held = 0 AND game_id IN (${cfg.GAMES.map(g => `'${g.id}'`).join(',')}) GROUP BY user_id, game_id) b
+    FROM (SELECT user_id, game_id, MAX(score) AS best, COUNT(*) AS n, MAX(created_at) AS last_at FROM runs WHERE created_at >= ? AND held = 0 GROUP BY user_id, game_id) b
     JOIN users u ON u.id = b.user_id WHERE u.banned = 0 AND u.shadow_banned = 0
     GROUP BY u.id ORDER BY score DESC, last_at ASC`).all(since);
 }
