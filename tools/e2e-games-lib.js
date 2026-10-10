@@ -43,6 +43,8 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*(401|404|422)/.test(m.text())) R.errors.push('desktop: ' + m.text()); });
       page.on('pageerror', e => R.errors.push('desktop pageerror: ' + e.message));
       await page.goto(BASE + g.url, { waitUntil: 'load' }); await page.waitForTimeout(500); await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 15000 }).catch(() => {});
+      const runtimeReady = await page.evaluate(() => !!(window.__GL && window.__GL.g && typeof window.__GL.state === 'string'));
+      if (!runtimeReady) throw new Error('Game runtime contract missing: window.__GL.g/state; check index script paths and engine adapter.');
       const box = await page.evaluate(() => { const c = document.querySelector('canvas') || document.getElementById('gl'); const r = c.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
       await page.keyboard.press('Space'); await page.mouse.click(box.x + box.w / 2, box.y + box.h / 2); await page.waitForTimeout(900);
       R.desktop.started = await page.evaluate(() => window.__GL && window.__GL.state);
@@ -54,7 +56,9 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
         else { const x = box.x + box.w * (0.15 + Math.random() * 0.7), y = box.y + box.h * (0.3 + Math.random() * 0.6); await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 80, { steps: 3 }); await page.waitForTimeout(40 + Math.random() * 200); await page.mouse.up(); }
         if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') if (WRITE_THUMB(g.slug)) await page.locator('#gl, canvas').first().screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
       }
-      R.desktop.fps = await page.evaluate(() => window.__GL.fps);
+      R.desktop.performance = await page.evaluate(() => { const gl = window.__GL; return { fps: Number.isFinite(gl.fps) ? gl.fps : null, jsMs: Number.isFinite(gl.jsMs) ? gl.jsMs : null, stateAtSample: gl.state, measuredAfterMs: Math.round(performance.now()) }; });
+      R.desktop.fps = R.desktop.performance.fps;
+      if (R.desktop.fps === null) R.errors.push('desktop: FPS metric unavailable; no finite frame-rate sample');
       // no fallback thumbnail: a frame taken after the run ended would be a game-over screen (use tools/games-lib-thumb.js)
       // end the run through the game's own game-over path (same code path as dying) if the bot is still alive
       await page.evaluate(() => { if (window.__GL.state === 'play') { if (window.__GL.g.paused) window.__GL.g.paused = false; window.__GL.g.end('test end'); } });
