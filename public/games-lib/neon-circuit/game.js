@@ -8,7 +8,7 @@ Kit.run({
     g.speed = 0.38; g.distance = 0; g.energy = 0; g.combo = 0;
     g.traffic = []; g.pulses = []; g.spawn = 0; g.lanes = [-1, 0, 1];
     g.stars = Array.from({length: 90}, () => ({x:g.R(0,g.W),y:g.R(0,g.H),z:g.R(.2,1)}));
-    g.shake = 0; g.lastLane = 1; g.nearMiss = 0;
+    g.lastLane = 1; g.nearMiss = 0;
   },
   update(g, dt) {
     const p = g.player; g.distance += dt * g.speed * 100;
@@ -30,14 +30,13 @@ Kit.run({
         o.passed = true;
         if (o.lane === p.lane) {
           if (o.kind === 'energy') { g.energy++; g.combo++; const pts=25+Math.min(100,g.combo*5); g.add(pts,'e'); g.sfx('coin'); g.burst(px,py,'#b6ff42',18); }
-          else { g.shake=.35; g.sfx('bad'); return g.end('CIRCUIT CRASH'); }
+          else { g.shake(8, .35); g.sfx('bad'); return g.end('CIRCUIT CRASH'); }
         } else if (Math.abs(o.lane-p.lane)===1 && o.kind==='car') { g.nearMiss++; g.combo++; g.add(5,'n'); }
         else g.combo=0;
       }
     }
     g.traffic = g.traffic.filter(o=>o.z<1.15);
     for (const s of g.stars) { s.y += dt*(15+s.z*60)*g.speed; if(s.y>g.H){s.y=0;s.x=g.R(0,g.W);} }
-    g.shake=Math.max(0,g.shake-dt*2);
     g.hud = 'DIST ' + Math.floor(g.distance) + ' m   ENERGY ' + g.energy + '   COMBO x' + Math.min(10,1+Math.floor(g.combo/3));
   },
   draw(g,c) {
