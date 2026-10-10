@@ -33,8 +33,10 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [x] Registry, catalog, and documentation reconcile at 100 entries.
 - [x] No external game redirects are configured in the library registry.
 - [x] Add original Neon Circuit and Rift Survival implementations and SVG cover art.
+- [x] Apply L3 score-event validation to both new originals, including per-game point-value rules and progress-marker exclusion.
+- [x] Add game-specific skill tie-break metrics for energy cells and rift shards.
 - [x] Add static CI checks for JavaScript syntax and registry/catalog/docs/local-asset consistency.
-- [ ] Browser-test both new games: title/start, controls, scoring, game-over, retry, score submission, mobile touch, and console errors.
+- [ ] Browser-test both new games: title/start, controls, scoring, game-over, retry, score submission, mobile touch, and console errors. A new GitHub Actions browser workflow now performs this smoke test, but it has not yet completed successfully.
 - [ ] Run existing E2E checks for the full library and verify forged-score rejection.
 - [ ] Verify game licenses and assets independently; do not equate a catalog flag with legal or competition approval.
 - [ ] Profile Desert Dash, Rail Rush, Lane Racer, and Moto Lanes on the intended phone; capture reproducible frame-time data.
