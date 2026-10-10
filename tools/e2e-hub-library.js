@@ -11,13 +11,13 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('console', m => { if (m.type() === 'error' && !/favicon|status of 4\\d\\d/.test(m.text())) errors.push(m.text()); });
+  page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*4\d\d/.test(m.text())) errors.push(m.text()); });
   try {
     await page.goto(BASE + '/games', { waitUntil: 'networkidle' });
     await page.locator('a[href="/games-lib/index.html"]').waitFor({ timeout: 15000 });
     await page.waitForFunction(() => {
       const el = document.getElementById('lib-count');
-      return el && /\\d+ library games/.test(el.textContent || '');
+      return el && /\d+ library games/.test(el.textContent || '');
     }, null, { timeout: 15000 });
     const count = await page.locator('#lib-count').textContent();
     assert.match(count, /100 library games/, 'main Hub live library count should be 100');
@@ -30,7 +30,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     assert.match(await page.locator('#list').innerText(), /Neon Circuit/);
     await page.locator('#q').fill('');
     await page.locator('#eligibility').selectOption('giveaway');
-    assert.ok(Number((await page.locator('#result-count').innerText()).match(/Showing (\\d+)/)?.[1]) > 0, 'giveaway filter should render results');
+    assert.ok(Number((await page.locator('#result-count').innerText()).match(/Showing (\d+)/)?.[1]) > 0, 'giveaway filter should render results');
     await page.locator('#eligibility').selectOption('all');
     await page.locator('.new-card[href="/games-lib/neon-circuit/index.html"]').click();
     await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 15000 });
