@@ -23,7 +23,7 @@ export default async function Racer(cfg) {
   let playerC, rmix = null; const player = new THREE.Group(); const lean = new THREE.Group(); player.add(lean); scene.add(player);
   if (cfg.bike) { const bk = toonify(M['g3-motorcycle'].scene.clone(true), '#ffffff'); const b0 = new THREE.Box3().setFromObject(bk), sz = new THREE.Vector3(); b0.getSize(sz); const f = fit(bk, sz.x > sz.z ? 'x' : 'z', 2.2); if (sz.x > sz.z) f.rotation.y = Math.PI / 2; lean.add(f);
     const rd = SkeletonUtils.clone(M.rider.scene); toonify(rd, '#ffffff'); outfit(rd, { top: '#1f6f45', top2: '#f2c94c', pants: '#22262e', shoes: '#111', sole: '#f2c94c', hair: '#2a1a10', sleeve: 0.86 }); rd.scale.setScalar(1.0); rd.rotation.y = Math.PI; rd.position.set(0, 0.35, 0.15); lean.add(rd); rd.traverse(o => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = false; } });
-    rmix = new THREE.AnimationMixer(rd); const dc = M.rider.animations.find(a => a.name === 'Driving_Loop'); if (dc) rmix.clipAction(dc).play(); playerC = { o: f, len: 2.2, w: 0.8 }; }
+    rmix = new THREE.AnimationMixer(rd); const dc = M.rider.animations.find(a => a.name === 'Driving_Loop'); if (dc) rmix.clipAction(dc).play(); const RB = {}; rd.traverse(o => { if (o.isBone) RB[o.name] = o; }); window.__RB = RB; var riderPose = (st) => { const sp = RB.spine_02, sp3 = RB.spine_03, hd = RB.Head; if (sp) { sp.rotation.x += 0.28; sp.rotation.z += st * 0.25; } if (sp3) { sp3.rotation.x += 0.18; sp3.rotation.z += st * 0.15; } if (hd) { hd.rotation.x -= 0.35; hd.rotation.z -= st * 0.3; } }; playerC = { o: f, len: 2.2, w: 0.8 }; }
   else { playerC = carProto(cfg.player || 'cv-hatchback', cfg.paint || '#e8413c'); lean.add(playerC.o); }
   const PW = cfg.bike ? 0.9 : 1.7, PL = cfg.bike ? 2.4 : 3.8;
   const blob = new THREE.Mesh(new THREE.PlaneGeometry(cfg.bike ? 1.0 : 2.4, cfg.bike ? 2.6 : 4.6), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.3, depthWrite: false })); blob.rotation.x = -Math.PI / 2; blob.position.y = 0.02; player.add(blob);
@@ -73,7 +73,7 @@ export default async function Racer(cfg) {
       for (let i = traffic.length - 1; i >= 0; i--) if (traffic[i].z - g.z > 20) { scene.remove(traffic[i].o); traffic.splice(i, 1); }
     },
     draw(g, c) { c.clearRect(0, 0, g.W, g.H);
-      player.position.set(pl.x, 0, 0); player.rotation.y = -pl.vx * 0.025; lean.rotation.z = -pl.vx * (cfg.bike ? 0.035 : -0.012); if (rmix) rmix.update(1 / 60); for (const t of traffic) t.o.position.z = t.z - g.z;
+      player.position.set(pl.x, 0, 0); player.rotation.y = -pl.vx * 0.025; lean.rotation.z = -pl.vx * (cfg.bike ? 0.035 : -0.012); if (rmix) { rmix.update(1 / 60); riderPose(Math.max(-1, Math.min(1, pl.vx * 0.08))); } for (const t of traffic) t.o.position.z = t.z - g.z;
       roadT.offset.y = (-g.z / 12) % 1; aD.offset.y = aN.offset.y = (-g.z / 4) % 1; for (const r of rows) r.position.z = ((((r.userData.z0 - g.z) % (4 * ROW)) + 4 * ROW) % (4 * ROW)) - 3 * ROW + 20 + ROW;
       g.camX = K.lerp(g.camX, pl.x * 0.8, 0.1); const sh = g.shakeT > 0 ? g.shakeM * 0.02 : 0; cam.fov = 62 + (g.sp - 22) * 0.35; cam.updateProjectionMatrix();
       if (cfg.bike) { cam.position.set(g.camX + (Math.random() - 0.5) * sh, 3.2, 5.6); cam.lookAt(g.camX, 1.0, -12); } else { cam.position.set(g.camX + (Math.random() - 0.5) * sh, 6.4, 8.2); cam.lookAt(g.camX, 0, -13); } bd.position.set(cam.position.x, 26, -150);
