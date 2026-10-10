@@ -701,3 +701,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Auto-roll street line; tap ollie (hold higher), swipe tricks in air (kickflip/heelflip/shove-it/grab) must finish before landing; grind rails/ledges (front-face snap within 30 px); combos bank on clean landing. 3 bails. Tie-break: best combo length, then distance.
 - Fairness fix: obstacles now spaced from the previous obstacle's END (rails no longer drop you onto a cone). Bot (precise to noisy): 63 s/13.5k, 36 s/4.8k, 14 s/1.5k.
 - Visual 7 / feel 7. e2e PASS; bug pass PASS (4x throttled fps 38 after layer caching, no leak).
+
+### Night Shift (ref: 20 Minutes Till Dawn) - 2026-10-10
+- Built original (MIT, code-drawn) on shared arena.js. Candidates: GitHub survivors-likes (Phaser, mostly unlicensed or ripped art), itch.io HTML5 (no source licence), js13k survivors (tiny, no darkness system). Rejected.
+- Pitch-dark field: flashlight cone toward the auto-aim target plus lantern radius; monsters show as glowing eyes until lit. XP gems, level-up picks, waves every 3.5 s, elder boss every 20 waves; endless. Tie-break: survival time, then kills.
+- Bot (kiting): 71-89 s, 102-279 kills.
+- Visual 7 / feel 7. e2e PASS; bug pass PASS (4x throttled fps 32, no leak).

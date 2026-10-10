@@ -36,6 +36,7 @@ const LIST = [
   T('pop-defense', 'Pop Defense', 'Bloons TD 6', 3, 'A+', 'endless-waves', 120, true, 'Layer pops 1, wave bonus 25 x wave', '7 days'),
   T('cube-horde', 'Cube Horde', 'Zombie Cubes', 4, 'A+', 'endless', 120, true, 'Kills 10-50 x combo, wave bonus', '3 days'),
   T('arrow-hero', 'Arrow Hero', 'Archero', 4, 'A', 'endless', 400, true, 'Kill 25, boss 1000, room clear 100 x room', '3 days'),
+  T('night-shift', 'Night Shift', '20 Minutes Till Dawn', 4, 'A', 'endless', 400, true, 'Kills 10-500 by monster + wave bonus', '3 days'),
   T('grid-wars', 'Grid Wars', 'Geometry Wars', 4, 'A+', 'endless', 400, true, 'Enemies 25-150 x multiplier', '3 days'),
   // ---- batch 2: A tier + Cannabis ----
   T('jet-blaster', 'Jet Blaster', 'Jetpack Joyride', 0, 'A', 'endless', 40, true, 'Distance m + coins 5', '3 days'),
