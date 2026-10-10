@@ -115,6 +115,7 @@ const LIST = [
   T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'endless', 100, true, 'Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame', '1-3 days'),
   // Batch 4 - Physics & Destruction + Reflex remainder
   T('castle-crush', 'Castle Crush', 'Crush the Castle', 2, 'A', 'endless-levels', 400, true, 'Blocks 5-25, kings 300, castle bonus 500 x stones left + 200 x level', '7 days'),
+  T('neon-circuit', 'Neon Circuit', 'Original neon arcade racer', 1, 'A', 'endless', 120, true, 'Energy cells 25 + near-miss 5; score is awarded during play', '3 days'),
 ];
 const games = LIST.map(x => {
   const s = SOURCES[x.src];
