@@ -1,7 +1,7 @@
 // The Gaming Hub service worker (built by Trap Tech Solutions).
 // Network-first for everything (always fresh when online); cached app shell + assets as the offline fallback.
 // API calls, share images and anything sent with Cache-Control: no-store are never cached.
-const CACHE = 'gh-shell-v6-art';
+const CACHE = 'gh-shell-v7';
 const SHELL = ['/', '/css/app.css', '/cosmetics.css', '/js/app.js', '/js/icons.js', '/manifest.webmanifest',
   '/js/store.js', '/assets/brand/hub-logo.svg', '/assets/brand/hub-stacked.svg', '/assets/brand/tt-mono-80.webp', '/assets/brand/tt-horizontal-180.webp', '/assets/brand/tt-horizontal-360.webp', '/assets/brand/favicon.svg', '/css/v7.css', '/js/v7.js',
   '/assets/icons/icon-192.png', '/fonts/orbitron-latin-800-normal.woff2', '/fonts/exo-2-latin-600-normal.woff2'];
