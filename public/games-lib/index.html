@@ -1,17 +1,103 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Games Library - The Gaming Hub</title><meta name="theme-color" content="#050714"><link rel="stylesheet" href="lib.css"></head>
-<body><div class="wrap"><a href="/games">&#8592; Back to the Hub</a><h1>Games Library <span id="n" class="pill g"></span></h1>
-<p class="muted">Free browser games with leaderboards. Sign in on the Hub to save scores. <b>Giveaway</b> games are skill-based; <b>Just for fun</b> games never count for giveaways.</p>
-<input class="q" id="q" placeholder="Search games..." autocomplete="off"><div id="list"></div><p class="muted" style="margin-top:30px">Credits and licences: every game folder has a CREDITS.md (and the original LICENSE for open-source games).</p></div>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050714">
+<meta name="description" content="Explore The Gaming Hub's browser-playable game library, original arcade games, leaderboards and skill-based competition.">
+<title>Games Library - The Gaming Hub by Trap Tech Solutions</title>
+<link rel="stylesheet" href="lib.css">
+<style>
+.lib-hero{position:relative;overflow:hidden;margin:18px 0 22px;padding:clamp(18px,4vw,30px);border:1px solid #343d82;border-radius:20px;background:radial-gradient(ellipse at 85% 15%,rgba(34,211,238,.18),transparent 42%),radial-gradient(ellipse at 10% 110%,rgba(139,92,246,.22),transparent 50%),linear-gradient(135deg,#10183c,#080b1d 70%);box-shadow:0 16px 48px #0005}
+.lib-kicker{color:var(--cyan);font-size:.72rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.lib-hero h1{font-size:clamp(1.5rem,4vw,2.35rem);line-height:1.15;margin:8px 0}
+.lib-hero p{max-width:680px;line-height:1.55;margin:8px 0 0}
+.lib-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+.lib-btn{display:inline-flex;align-items:center;justify-content:center;padding:9px 13px;border-radius:10px;border:1px solid #4854a0;background:#171f4b;color:var(--text);text-decoration:none;font-weight:700}
+.lib-btn.primary{background:var(--grad);border:0;color:#fff}
+.lib-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.lib-stat{padding:7px 10px;border:1px solid #ffffff1c;background:#ffffff08;border-radius:10px;color:var(--muted);font-size:.78rem}.lib-stat b{color:var(--text)}
+.lib-controls{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:14px 0}
+@media(min-width:640px){.lib-controls{grid-template-columns:minmax(0,1fr) 210px 170px}}
+.lib-controls input.q{margin:0}.lib-controls select{min-width:0;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0a1030;color:var(--text);font:inherit}
+.new-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin:12px 0 22px}
+.new-card{position:relative;display:grid;grid-template-columns:104px minmax(0,1fr);min-height:100px;overflow:hidden;border:1px solid #35427f;border-radius:14px;background:linear-gradient(120deg,#121a3e,#0b1028);color:var(--text);text-decoration:none}
+.new-card img{width:104px;height:100%;min-height:100px;object-fit:cover;background:#090d22}
+.new-card .b{padding:12px;align-self:center}.new-card .t{font-weight:800;font-size:1rem}.new-card .desc{color:var(--muted);font-size:.78rem;margin-top:5px;line-height:1.35}
+.new-tag{display:inline-block;margin-bottom:6px;font-size:.62rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#b6ff42}
+.library-results{color:var(--muted);font-size:.82rem;margin:8px 0 16px}
+.card:focus-visible,.new-card:focus-visible,.lib-btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.card img{transition:transform .22s ease}.card:hover img{transform:scale(1.035)}
+@media(prefers-reduced-motion:reduce){.card,.card img{transition:none}.card:hover,.card:hover img{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="/games">&#8592; Back to The Gaming Hub</a>
+<section class="lib-hero" aria-labelledby="lib-title">
+<div class="lib-kicker">Trap Tech Solutions · Browser Game Arcade</div>
+<h1 id="lib-title">The Games Library</h1>
+<p>Find your next game, chase a high score, and compete through the Hub. Original titles and existing library games are listed together; only verified score submissions should count toward official competitions.</p>
+<div class="lib-actions"><a class="lib-btn primary" href="#new-games">Play the new originals</a><a class="lib-btn" href="/leaderboard">View leaderboards</a><a class="lib-btn" href="/giveaways">Giveaways</a></div>
+<div class="lib-stats"><span class="lib-stat"><b id="total">—</b> listed games</span><span class="lib-stat"><b id="giveaway-total">—</b> giveaway-enabled in catalog</span><span class="lib-stat">Free to play · 21+</span></div>
+</section>
+<section id="new-games" aria-labelledby="new-title">
+<h2 id="new-title">New this update</h2>
+<div id="new-grid" class="new-grid">
+<a class="new-card" href="/games-lib/neon-circuit/index.html"><img src="/games-lib/neon-circuit/thumb.svg" alt="" loading="eager"><div class="b"><span class="new-tag">New original</span><div class="t">Neon Circuit</div><div class="desc">Arcade racing · collect energy, dodge traffic, chase your best run.</div></div></a>
+<a class="new-card" href="/games-lib/rift-survival/index.html"><img src="/games-lib/rift-survival/thumb.svg" alt="" loading="eager"><div class="b"><span class="new-tag">New original</span><div class="t">Rift Survival</div><div class="desc">Arena survival · evade rift creatures and collect shards between waves.</div></div></a>
+</div>
+</section>
+<section aria-label="Search and filter games">
+<h2>Explore all games</h2>
+<p class="muted">Choose a game to play in the Hub. Sign in to save leaderboard scores. A catalog giveaway flag is not a guarantee that a title has passed runtime, anti-cheat, or licensing review.</p>
+<div class="lib-controls">
+<input class="q" id="q" placeholder="Search titles or categories…" autocomplete="off" aria-label="Search games">
+<select id="category" aria-label="Filter by category"><option value="">All categories</option></select>
+<select id="eligibility" aria-label="Filter by catalog status"><option value="all">All catalog statuses</option><option value="giveaway">Giveaway-enabled</option><option value="fun">Just for fun</option></select>
+</div>
+<div id="result-count" class="library-results" aria-live="polite"></div>
+<div id="list" aria-live="polite"></div>
+</section>
+<p class="muted" style="margin-top:30px">Credits and licenses are maintained per game. Code, art, fonts and audio must each be cleared for the intended use; attribution alone does not grant permission.</p>
+</div>
 <script>
 (async () => {
-  const r = await fetch('/api/games-lib').then(r => r.json()).catch(() => null) || await fetch('catalog.json').then(r => r.json());
-  document.getElementById('n').textContent = r.games.length + ' playable';
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const card = g => `<a class="card" href="${g.url}"><img loading="lazy" src="${g.art}" alt=""><div class="b"><div class="t">${esc(g.title)}</div><div class="m">${g.giveaway ? '<span class="pill g">Giveaway</span>' : '<span class="pill f">Just for fun</span>'}<span class="pill">${g.tier}</span>${esc(g.competition)}</div></div></a>`;
-  function render(q) { q = (q || '').toLowerCase(); let h = '';
-    for (const c of r.categories) { const L = r.games.filter(g => g.category === c && (g.title + ' ' + c).toLowerCase().includes(q)); if (L.length) h += `<h2>${esc(c)} (${L.length})</h2><div class="grid">${L.map(card).join('')}</div>`; }
-    const X = (r.external || []).filter(x => x.title.toLowerCase().includes(q)); if (X.length) h += `<h2>Just for fun - external links</h2><p class="muted">These open on their own websites (not hosted here, no scores).</p><div class="grid">${X.map(x => `<a class="card" href="${x.url}" target="_blank" rel="noopener"><div class="b"><div class="t">${esc(x.title)} &#8599;</div><div class="m"><span class="pill f">External link</span>${esc(x.note)}</div></div></a>`).join('')}</div>`;
-    document.getElementById('list').innerHTML = h || '<p class="muted">No games match.</p>'; }
-  render(); document.getElementById('q').oninput = e => render(e.target.value);
+  const list = document.getElementById('list');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let r = null;
+  try { const response = await fetch('/api/games-lib', {cache:'no-store'}); if (response.ok) r = await response.json(); } catch (_) {}
+  if (!r || !Array.isArray(r.games)) {
+    try { const response = await fetch('catalog.json', {cache:'no-store'}); if (response.ok) r = await response.json(); } catch (_) {}
+  }
+  if (!r || !Array.isArray(r.games)) { list.innerHTML = '<p class="muted">The game catalog could not be loaded. Refresh the page or return to the Hub.</p>'; return; }
+  const games = r.games.filter(g => g && g.url && g.title);
+  const cats = Array.isArray(r.categories) ? r.categories : [...new Set(games.map(g => g.category).filter(Boolean))].sort();
+  document.getElementById('total').textContent = games.length;
+  document.getElementById('giveaway-total').textContent = games.filter(g => g.giveaway).length;
+  const cat = document.getElementById('category');
+  for (const c of cats) { const o = document.createElement('option'); o.value = c; o.textContent = c; cat.appendChild(o); }
+  const newSlugs = new Set(['neon-circuit','rift-survival']);
+  const newGrid = document.getElementById('new-grid');
+  newGrid.innerHTML = games.filter(g => newSlugs.has(g.slug)).map(g => {
+    const desc = g.slug === 'neon-circuit' ? 'Arcade racing · collect energy, dodge traffic, chase your best run.' : 'Arena survival · evade rift creatures and collect shards between waves.';
+    return '<a class="new-card" href="'+esc(g.url)+'"><img src="'+esc(g.art)+'" alt="" loading="eager"><div class="b"><span class="new-tag">New original</span><div class="t">'+esc(g.title)+'</div><div class="desc">'+esc(desc)+'</div></div></a>';
+  }).join('') || '<p class="muted">New game entries will appear here when the catalog is updated.</p>';
+  const card = g => '<a class="card" href="'+esc(g.url)+'"><img loading="lazy" src="'+esc(g.art || '')+'" alt="" onerror="this.style.display=\'none\'"><div class="b"><div class="t">'+esc(g.title)+'</div><div class="m">'+(newSlugs.has(g.slug) ? '<span class="pill g">New</span>' : '')+(g.giveaway ? '<span class="pill g">Giveaway-enabled</span>' : '<span class="pill f">Just for fun</span>')+'<span class="pill">'+esc(g.tier || '—')+'</span><div>'+esc(g.category || '')+' · '+esc(g.competition || 'browser game')+'</div></div></div></a>';
+  function render() {
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const selectedCat = cat.value, eligibility = document.getElementById('eligibility').value;
+    const filtered = games.filter(g => (!selectedCat || g.category === selectedCat) && (eligibility === 'all' || (eligibility === 'giveaway' ? !!g.giveaway : !g.giveaway)) && (String(g.title)+' '+String(g.category || '')+' '+String(g.competition || '')).toLowerCase().includes(q));
+    document.getElementById('result-count').textContent = 'Showing '+filtered.length+' of '+games.length+' games';
+    let html = '';
+    for (const c of cats) { const group = filtered.filter(g => g.category === c); if (group.length) html += '<h2>'+esc(c)+' <span class="muted">('+group.length+')</span></h2><div class="grid">'+group.map(card).join('')+'</div>'; }
+    if (!filtered.length) html = '<p class="muted">No games match these filters. Try another search or category.</p>';
+    list.innerHTML = html;
+  }
+  document.getElementById('q').addEventListener('input', render);
+  cat.addEventListener('change', render);
+  document.getElementById('eligibility').addEventListener('change', render);
+  render();
 })();
-</script></body></html>
+</script>
+</body>
+</html>
