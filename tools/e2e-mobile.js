@@ -20,7 +20,7 @@ const PROFILES = [
   { id: 'ios-inapp-wkwebview', dev: { ...I14, userAgent: IOS_INAPP } },
   { id: 'locked-webview', dev: { ...P7, userAgent: AND_WV }, locked: true },
 ];
-const GAMES = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
+const GAMES = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'stack', 'void-swarm', 'grow-guard', 'sling-smash', 'haze-defense'];
 let STEP = 'start'; const T0 = Date.now();
 setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: hung at', STEP); process.exit(2); } }, 1000).unref();
 (async () => {

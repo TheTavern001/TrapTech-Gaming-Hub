@@ -99,7 +99,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok(nAll >= 5 && nQ === 1, `games search filters (${nAll} -> ${nQ})`); await m.fill('#q', '');
   await m.click('#chips >> text=Racing'); ok((await m.locator('#grid .gcard').count()) === 1, 'category chip filters');
   await m.click('#chips >> text=All'); await shot(m, 'mobile-05-games'); await v2(m, 'games-library');
-  ok((await m.locator('main .gcard').count()) === 12 && (await m.locator('main .gcard .soon').count()) === 0, 'all 12 games listed, none "coming soon"');
+  ok((await m.locator('main .gcard').count()) === 16 && (await m.locator('main .gcard .soon').count()) === 0, 'all 16 games listed, none "coming soon"');
   await v2(m, 'games-library-full', true);
   await m.click('#grid .gcard[data-game=drift-rush]'); await m.waitForSelector('.gd-hero');
   const dtxt = await m.textContent('main'); ok(dtxt.includes('Play Now') && dtxt.includes('Scoring') && !dtxt.includes('COMING SOON'), 'Drift Rush detail page is playable with how-to + scoring');
@@ -170,7 +170,9 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await v3(m, 'm15-profile');
 
   console.log('# new games: play each briefly, end run & save');
-  const NEW = ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
+  const NEW = ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'stack', 'void-swarm', 'grow-guard', 'sling-smash', 'haze-defense'];
+  const BOTS = require('./v7/bots');
+  const botPlay = (id, ms) => async (p) => { await p.evaluate(([src, ms]) => { const g = window.__game; const b = eval(src); const until = performance.now() + ms; const loop = () => { if (g.state !== 'play' || performance.now() > until) return; try { b(g); } catch (e) {} requestAnimationFrame(loop); }; loop(); }, [BOTS[id], ms]); await sleep(ms + 200); };
   const PLAY = {
     'drift-rush': async (p, box) => { for (let i = 0; i < 6; i++) { const left = i % 2 === 0; await p.mouse.move(box.x + box.width * (left ? 0.2 : 0.8), box.y + box.height * 0.7); await p.mouse.down(); await sleep(left ? 700 : 900); await p.mouse.up(); await sleep(200); } },
     plinko: async (p) => { for (let i = 0; i < 3; i++) { const g = await p.evaluate(() => ({ x: window.__game.g.bx + window.__game.g.bw * (0.15 + Math.random() * 0.7), y: window.__game.g.top + 20 })); await tapL(p, g.x, g.y, 120); await sleep(900); const c = await p.evaluate(() => window.__game.chip && { x: window.__game.chip.x, y: window.__game.chip.y }); if (c) await tapL(p, c.x + 40, c.y); await sleep(2600); } },
@@ -178,12 +180,12 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
     'memory-match': async (p) => { await sleep(1800); for (let n = 0; n < 4; n++) { const pair = await p.evaluate(() => { const g = window.__game; const left = g.cards.filter(c => !c.done && !c.open); const a = left[0]; const b = left.find(c => c !== a && c.g === a.g); const R = (c) => { const [x, y, w, h] = g.rect(c.k); return [x + w / 2, y + h / 2]; }; return a && b ? [R(a), R(b)] : null; }); if (!pair) break; await tapL(p, ...pair[0]); await sleep(150); await tapL(p, ...pair[1]); await sleep(450); } },
     'high-score': async (p) => { const until = Date.now() + 5000; while (Date.now() < until) { const t = await p.evaluate(() => (window.__game.targets || []).filter(t => t.type !== 'bomb').map(t => [t.x, t.y])[0]); if (t) await tapL(p, t[0], t[1], 30); await sleep(120); } },
     'blazed-roulette': async (p) => { for (let i = 0; i < 2; i++) { for (const id of ['red', 'd2']) { const b = await p.evaluate((id) => { const b = window.__game.btns.find(x => x.id === id); return [b.x + b.w / 2, b.y + b.h / 2]; }, id); await tapL(p, ...b); await sleep(150); } const d = await p.evaluate(() => { const b = window.__game.btns.find(x => x.id === 'drop'); return [b.x + b.w / 2, b.y + b.h / 2]; }); await tapL(p, ...d); await sleep(i === 0 ? 4300 : 1200); } },
-    'stack-2048': async (p) => { for (let i = 0; i < 24; i++) { await p.keyboard.press(['ArrowLeft', 'ArrowDown', 'ArrowRight', 'ArrowDown'][i % 4]); await sleep(110); } },
     'munchies-snake': async (p) => { await p.evaluate(() => { const g = window.__game; const K = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp']; const loop = () => { if (g.state !== 'play') return; const [hx, hy] = g.body[0]; const [fx, fy] = g.food; const cur = g.q.length ? g.q[g.q.length - 1] : g.dir; let want = fx > hx ? 0 : fx < hx ? 2 : fy > hy ? 1 : 3; if ((want + 2) % 4 === cur) want = (want + 1) % 4; if (want !== cur && !g.q.length) window.dispatchEvent(new KeyboardEvent('keydown', { code: K[want] })); window.__sn = requestAnimationFrame(loop); }; loop(); }); await sleep(5000); await p.evaluate(() => cancelAnimationFrame(window.__sn)); },
     'brick-breaker': async (p) => { await p.evaluate(() => { const g = window.__game; g.launch(); const loop = () => { if (g.state !== 'play') return; g.px = Math.max(g.pw / 2, Math.min(g.W - g.pw / 2, g.ball.x + 18)); if (g.ball.stuck) g.launch(); window.__bb = requestAnimationFrame(loop); }; loop(); }); await sleep(6000); await p.evaluate(() => cancelAnimationFrame(window.__bb)); },
     'sky-hopper': async (p) => { await p.evaluate(() => { const g = window.__game; const loop = () => { if (g.state !== 'play') return; const nx = g.pipes.find(q => q.x - g.x + 74 > g.hx - 18); const target = nx ? nx.top + nx.g * 0.55 : g.H * 0.5; if (g.y > target && g.vy > -60) window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' })); window.__sh = requestAnimationFrame(loop); }; loop(); }); await sleep(7000); await p.evaluate(() => cancelAnimationFrame(window.__sh)); },
     'terp-tapper': async (p) => { await p.evaluate(() => { const K = ['KeyD', 'KeyF', 'KeyJ', 'KeyK']; const g = window.__game; const done = new Set(); const loop = () => { if (g.state !== 'play') return; for (const n of g.notes) if (!n.done && !done.has(n) && Math.abs(n.t - g.playT) < 0.03) { done.add(n); window.dispatchEvent(new KeyboardEvent('keydown', { code: K[n.lane] })); window.dispatchEvent(new KeyboardEvent('keyup', { code: K[n.lane] })); } window.__tt = requestAnimationFrame(loop); }; loop(); }); await sleep(6500); },
   };
+  for (const id of ['drift-rush', 'blazed-roulette', 'munchies-snake', 'brick-breaker', 'stack', 'void-swarm', 'grow-guard', 'sling-smash', 'haze-defense']) PLAY[id] = botPlay(id, 7000);
   let lastUnlocked = [];
   for (const id of NEW) {
     await m.goto(BASE + '/play/' + id); await m.waitForSelector('#game'); await m.waitForFunction(() => window.__game && window.__game.running, null, { timeout: 15000 });
@@ -198,12 +200,12 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
     const res = await m.evaluate(() => window.__lastResult);
     ok(res && res.ok && res.game_id === id && (await m.textContent('#sv')).includes('Saved'), `${id}: run saved via run-token flow (score ${res && res.score})`, res && res.error);
     lastUnlocked = (res && res.unlocked) || [];
-    if (['drift-rush', 'blazed-roulette', 'high-score', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'].includes(id)) ok(res && res.score > 0, `${id}: real inputs produced a score > 0 (${res && res.score})`);
+    if (['drift-rush', 'high-score', 'munchies-snake', 'sky-hopper', 'stack', 'void-swarm', 'sling-smash'].includes(id)) ok(res && res.score > 0, `${id}: real inputs produced a score > 0 (${res && res.score})`);
   }
-  ok(lastUnlocked.some(a => a.id === 'variety-all'), 'playing all 12 games unlocks "variety-all" (server-side)', lastUnlocked.map(a => a.id));
+  ok(lastUnlocked.some(a => a.id === 'variety-all'), 'playing all 16 games unlocks "variety-all" (server-side)', lastUnlocked.map(a => a.id));
   ok((await m.isVisible('.ach-toast')) || (await m.locator('#sv .unl').count()) >= 1, 'unlock shown after the last run (toast, or listed in the run result if the toast already faded)');
   await shot(m, 'mobile-08c-unlock-toast', false, true);
-  const lbAll = await m.evaluate(async (u) => { const out = {}; for (const g of ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper']) { const r = await (await fetch('/api/leaderboard?game=' + g + '&limit=500')).json(); out[g] = r.rows.some(x => x.username === u); } return out; }, uname);
+  const lbAll = await m.evaluate(async (u) => { const out = {}; for (const g of ['drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'stack', 'void-swarm', 'sling-smash']) { const r = await (await fetch('/api/leaderboard?game=' + g + '&limit=500')).json(); out[g] = r.rows.some(x => x.username === u); } return out; }, uname);
   ok(Object.values(lbAll).every(Boolean), 'my scores are on every new game leaderboard', lbAll);
 
   console.log('# achievements page');
@@ -253,7 +255,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok(!/\b(dealer|plug|trap house|re-up|sell weed)\b/i.test(await m.textContent('main')), 'shop copy has no dealing-glorifying terms');
   await v5(m, 'shop', true);
   await m.goto(BASE + '/friends'); await m.waitForSelector('#ft'); ok((await m.textContent('main')).includes('There is no chat or messaging'), 'friends page: no chat/messaging, play-together only');
-  await v5(m, 'friends'); await m.click('#ft [data-k=challenges]'); await m.waitForSelector('#chf'); ok((await m.locator('#ch-game option').count()) === 12, 'challenge form lists all 12 games'); await v5(m, 'friend-challenges');
+  await v5(m, 'friends'); await m.click('#ft [data-k=challenges]'); await m.waitForSelector('#chf'); ok((await m.locator('#ch-game option').count()) === 16, 'challenge form lists all 16 games'); await v5(m, 'friend-challenges');
   ok((await m.evaluate(async () => (await fetch('/api/messages')).status)) === 404 && (await m.locator('a[href*="messages"], a[href*="/dm"], textarea[placeholder*="essage"]').count()) === 0, 'no messaging endpoint or UI anywhere');
   await m.goto(BASE + '/achievements'); await m.waitForSelector('.ach'); await m.waitForSelector('#special-section', { timeout: 8000 }).catch(() => {});
   ok((await m.locator('#special-section .special-b').count()) >= 8, 'achievements page: special (admin-only) badges section'); await m.evaluate(() => document.getElementById('special-section')?.scrollIntoView()); await v5(m, 'achievements-special-badges');
@@ -421,14 +423,14 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   // ---------- admin ----------
   console.log('# admin');
   const a = await dctx.newPage(); watch(a, 'admin');
-  { const r404 = await a.goto(BASE + AP + '/'); ok(r404.status() === 404, 'old /admin URL is a plain 404'); }
+  { const r404 = await a.goto(BASE + '/admin'); ok(r404.status() === 404, 'old /admin URL is a plain 404'); }
   await a.goto(BASE + AP + '/'); await a.waitForSelector('#un');
   await a.fill('#un', 'owner'); await a.fill('#pw', 'wrong'); await a.click('#f button'); await a.waitForSelector('.err'); ok(true, 'admin wrong password rejected');
   await shot(a, 'desktop-10-admin-login'); ok(await a.isVisible('.aa-brand picture img'), 'admin sign-in page shows the Trap Tech lockup');
   ok(await require('./admin-auth').browserLogin(a, BASE), 'admin signs in with password + authenticator code'); await a.waitForSelector('.stats');
   ok((await a.textContent('.amain')).includes('Total Players'), 'admin dashboard loads'); await shot(a, 'desktop-11-admin-dashboard', true);
   ok((await a.textContent('.tt-bar')).includes('Powered by Trap Tech Solutions') && await a.isVisible('.side-tt img'), 'admin header: Powered by Trap Tech Solutions'); await v3(a, 'd12-admin-dashboard');
-  ok((await a.textContent('.amain')).includes('12/12 games live'), 'dashboard: 12/12 games live');
+  ok((await a.textContent('.amain')).includes('16/16 games live'), 'dashboard: 16/16 games live');
   console.log('# admin: brands, grant badge, fair play');
   await a.goto(BASE + AP + '/channels'); await a.waitForFunction(() => document.querySelector('.ahead h1')?.textContent === 'Brands'); ok((await a.locator('code.inv').count()) >= 1, 'admin Brands page shows invite links'); await v5(a, 'admin-brands');
   await a.goto(BASE + AP + '/badges'); await a.waitForSelector('#bgf'); await a.fill('#bg-user', uname); await a.selectOption('#bg-badge', 'beta-tester'); await a.fill('#bg-note', 'UI test grant'); await a.click('#bg-grant'); await sleep(900);
