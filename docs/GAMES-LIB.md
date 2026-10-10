@@ -439,3 +439,11 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
   - Flip, big-air and crate-smash scoring. A stall timeout prevents soft-locks.
 - Art: Happy Wheels-like flat vector style with outlines, parallax hills and clouds, and a "KUSH CYCLES - RIDE SAFE 21+" billboard. No gore.
 - Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
+
+## Rig Rally (Bad Piggies-style) - DONE (2026-10-10 06:15 ET)
+- Source hunt: GitHub, itch.io and Gitee have no permissive HTML5 contraption builder. The ones found are Unity/Godot or have no licence. Decision: build on Matter.js.
+- Build phase: a 5x3 grid where tapping a slot cycles through empty, crate, wheel, motor, balloon and fan. A default rig is pre-filled and the game auto-starts after 12 s. The last design is remembered between runs.
+- Ride phase: crates weld together through two joints; wheels and motors mount on axles; balloons hang on tethers and lift; fans push. Hold right for the motors and left for the fans.
+- Scoring: distance, coins and high stars. The run ends if the rig falls apart (a weld stretches), stalls for 3.5 s, or falls.
+- Art: flat cartoon style with a green pilot in a helmet, painted crates, spinning fan blades, glossy balloons, parallax hills and "HIGH ROAD 21+" distance signs.
+- Tests: e2e PASS (60 fps). Bug pass PASS. Items behind the camera are now pruned to stop memory growth. Rating: visual 7/10, feel 7/10.
