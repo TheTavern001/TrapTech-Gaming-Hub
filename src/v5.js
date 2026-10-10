@@ -97,7 +97,7 @@ module.exports = function v5(app, A, h) {
     if (b && b.score > c.target_score) {
       db.prepare("UPDATE challenges SET status='completed', result_run_id=?, result_score=?, winner_id=? WHERE id=? AND status='accepted'").run(b.id, b.score, c.to_user, c.id);
       const to = db.prepare('SELECT username FROM users WHERE id=?').get(c.to_user).username;
-      N.notify(c.from_user, 'challenge', `${to} beat your challenge`, `${cfg.GAME_MAP[c.game_id].title}: ${b.score.toLocaleString('en-US')} vs your ${c.target_score.toLocaleString('en-US')}. Challenge them back!`, '/friends?tab=challenges', 'swords');
+      N.notify(c.from_user, 'challenge', `${to} beat your challenge`, `${(cfg.gameInfo(c.game_id) || { title: c.game_id }).title}: ${b.score.toLocaleString('en-US')} vs your ${c.target_score.toLocaleString('en-US')}. Challenge them back!`, '/friends?tab=challenges', 'swords');
       return { ...c, status: 'completed', result_score: b.score, result_run_id: b.id, winner_id: c.to_user };
     }
     if (t > c.expires_at) {
@@ -109,7 +109,7 @@ module.exports = function v5(app, A, h) {
   h.settleChallenges = (uid) => { for (const c of db.prepare("SELECT * FROM challenges WHERE (to_user=? OR from_user=?) AND status IN ('pending','accepted')").all(uid, uid)) settle(c); };
   const chPublic = (c, me) => {
     const u = (id) => db.prepare('SELECT username, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect FROM users WHERE id=?').get(id) || { username: '?' };
-    const g = cfg.GAME_MAP[c.game_id];
+    const g = cfg.gameInfo(c.game_id) || { title: c.game_id, unit: 'pts' };
     return { id: c.id, game_id: c.game_id, game_title: g ? g.title : c.game_id, unit: g ? g.unit : '', target_score: c.target_score, status: c.status,
       from: u(c.from_user).username, to: u(c.to_user).username, incoming: c.to_user === me.id, created_at: c.created_at, expires_at: c.expires_at,
       result_score: c.result_score, won: c.winner_id ? c.winner_id === me.id : null };
@@ -137,7 +137,7 @@ module.exports = function v5(app, A, h) {
     const s = settle(c); if (s.status !== 'pending') return bad(res, 409, `This challenge is ${s.status}.`);
     const t = now(); const acc = req.params.act === 'accept';
     db.prepare('UPDATE challenges SET status=?, responded_at=?, expires_at=? WHERE id=?').run(acc ? 'accepted' : 'declined', t, acc ? t + CH_PLAY : c.expires_at, c.id);
-    N.notify(c.from_user, 'challenge', `${req.user.username} ${acc ? 'accepted' : 'declined'} your challenge`, acc ? `They have 48 hours to beat ${c.target_score.toLocaleString('en-US')} in ${cfg.GAME_MAP[c.game_id].title}.` : 'Maybe next time.', '/friends?tab=challenges', 'swords');
+    N.notify(c.from_user, 'challenge', `${req.user.username} ${acc ? 'accepted' : 'declined'} your challenge`, acc ? `They have 48 hours to beat ${c.target_score.toLocaleString('en-US')} in ${(cfg.gameInfo(c.game_id) || { title: c.game_id }).title}.` : 'Maybe next time.', '/friends?tab=challenges', 'swords');
     res.json({ ok: true, status: acc ? 'accepted' : 'declined', game_id: c.game_id });
   });
 

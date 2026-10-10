@@ -77,7 +77,7 @@ module.exports = function v4(app, A, h) {
       .all(...games, ...userIds, g.start_at, g.start_at, g.end_at);
   }
   const runInfo = (r, best) => { const cap = R.capFor(r); const el = r.created_at - r.started_at; return { id: r.id, game_id: r.game_id, score: r.score, duration_ms: r.duration_ms, elapsed_ms: el,
-    rate: el > 0 ? +(r.score / (el / 1000)).toFixed(2) : null, per_sec_cap: cfg.GAME_MAP[r.game_id].ac.perSec, cap, pct_cap: cap > 0 ? Math.round(r.score / cap * 100) : null, over_cap: r.score > cap,
+    rate: el > 0 ? +(r.score / (el / 1000)).toFixed(2) : null, per_sec_cap: (cfg.gameInfo(r.game_id) || { ac: {} }).ac.perSec, cap, pct_cap: cap > 0 ? Math.round(r.score / cap * 100) : null, over_cap: r.score > cap,
     ip: r.ip_hash ? r.ip_hash.slice(0, 8) : '', device: r.ua_hash ? r.ua_hash.slice(0, 6) : '', created_at: r.created_at, best: r.id === best }; };
   function review(g, n) {
     const { rows, res } = standingsOf(g);

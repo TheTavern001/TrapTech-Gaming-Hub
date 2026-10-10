@@ -93,6 +93,7 @@ function list() {
 }
 function save(id, body, actor = '', source = 'admin') {
   id = String(id || ''); if (!/^(ref:)?[a-z0-9][a-z0-9-]{0,60}$/.test(id)) return { ok: false, error: 'Bad game id.' };
+  if (!id.startsWith('ref:') && !cfg.GAME_MAP[id]) return { ok: false, error: 'Unknown hub game. Catalog games without a hub version use a ref:<name> id (the importer creates them).' };
   const cur = get(id) || {}; const p = clean({ ...cur, ...body }, id);
   if (!p.game && !p.hub_version) return { ok: false, error: 'Give the profile a game name.' };
   if (p.competition_type === 'campaign' && p.level_to < p.level_from) return { ok: false, error: 'The level set must end after it starts.' };

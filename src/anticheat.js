@@ -10,6 +10,7 @@
 const crypto = require('crypto');
 const db = require('./db');
 const cfg = require('./config');
+const L = require('./ac-levels'); // v7 tiered levels L1-L4 (see docs/ANTI-CHEAT.md)
 
 const newSeed = () => crypto.randomBytes(8).toString('hex');
 // mulberry32 - identical in public/js/games/engine.js
@@ -23,18 +24,22 @@ function mmLevel(level, r) {
   const pool = shuffle([...Array(MM_GLYPHS).keys()], r).slice(0, n); const ids = []; for (const i of pool) ids.push(i, i); return shuffle(ids, r);
 }
 // log: [[gameTimeMs, cardIndex], ...] where gameTimeMs = seconds of the in-game clock consumed (excludes memorize + clear pauses)
+// v7 endless rules (mirror of public/js/games/memory-match.js): every board has its own clock of
+// pairs x max(1.3, 4.2 x 0.95^board) seconds on the in-game clock; clear bonus = 10/s left + 50 x board number.
+const boardTime = (level, pairs) => +(pairs * Math.max(1.3, 4.2 * Math.pow(0.95, level))).toFixed(2);
 function replayMemory(seed, log) {
-  const r = rng(seed); let level = 0; let cards = mmLevel(0, r); let done = new Set(); let sel = []; let score = 0, combo = 0, time = 45, used = 0, clears = 0;
+  const r = rng(seed); let level = 0; let cards = mmLevel(0, r); let done = new Set(); let sel = []; let score = 0, combo = 0, used = 0, clears = 0;
+  let start = 0, limit = boardTime(0, cards.length / 2);
   for (const ev of log) {
     if (!Array.isArray(ev) || ev.length < 2) return { ok: false, why: 'bad event' };
     const [tm, k] = ev; if (!(tm >= used - 1)) return { ok: false, why: 'time went backwards' }; used = Math.max(used, tm);
-    if (used / 1000 > time + 0.75) return { ok: false, why: 'tap after the clock ran out' };
+    if (used / 1000 > start + limit + 0.75) return { ok: false, why: 'tap after the board clock ran out' };
     if (!Number.isInteger(k) || k < 0 || k >= cards.length || done.has(k) || sel.includes(k)) return { ok: false, why: 'invalid card' };
     sel.push(k);
     if (sel.length === 2) {
       const [a, b] = sel; sel = [];
       if (cards[a] === cards[b]) { done.add(a); done.add(b); combo = Math.min(5, combo + 1); score += 100 * combo;
-        if (done.size === cards.length) { score += Math.round(Math.max(0, time - used / 1000)) * 10; clears++; time += 12 + level * 2; level++; cards = mmLevel(level, r); done = new Set(); }
+        if (done.size === cards.length) { score += Math.round(Math.max(0, start + limit - used / 1000)) * 10 + 50 * (level + 1); clears++; level++; cards = mmLevel(level, r); done = new Set(); start = used / 1000; limit = boardTime(level, cards.length / 2); }
       } else combo = 0;
     }
   }
@@ -43,11 +48,25 @@ function replayMemory(seed, log) {
 
 const median = (a) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 // tel = { n: inputs, mean, sd, min } (inter-input intervals in ms, collected by the game engine)
-function assess({ userId, game, score, elapsedS, durationMs, tel, seed, log }) {
+function assess({ userId, game, score, elapsedS, durationMs, tel, seed, log, ev, recent = 0 }) {
   const ac = game.ac; const flags = []; let verify = '';
-  const cap = Math.min(ac.max, Math.floor(ac.perSec * elapsedS + ac.grace));
-  const hard = Math.min(ac.max, Math.floor(2 * ac.perSec * elapsedS + ac.grace * 2));
-  if (score > hard) return { reject: true, cap: hard };
+  // v7: rate limits, not fixed caps (endless games): ceiling = perSec*t + ramp*t^2/2 + grace, hard reject above 2x that
+  const cap = cfg.capOf(ac, elapsedS);
+  const hard = cfg.hardCapOf(ac, elapsedS);
+  if (score > hard) return { reject: true, cap: hard }; // L1: obvious maximum for the run length
+  const level = game.acLevel || 2;
+  // L4: Stack is re-simulated on the server from the drop-time log (exact; any mismatch is a forged run)
+  if (game.id === 'stack' && score > 0) {
+    if (!Array.isArray(log) || !log.length) flags.push({ sev: 2, code: 'no_log', text: 'No drop log was sent with this Stack run (modified client?)' });
+    else { const rp = L.replayStack(log, score, elapsedS); if (rp.ok) verify = 'replay-ok'; else if (!rp.retry) return { reject: true, why: `Replay rejected this run: ${rp.why}.` }; }
+  }
+  // L3: event log consistency (sum = score, legal values for the wave/row/multiplier, counts and timing)
+  if (level >= 3) {
+    const r = L.checkEvents(game.id, ev, score, elapsedS);
+    if (r.missing) { if (score >= (game.tiers ? game.tiers[0] : 100)) flags.push({ sev: 2, code: 'no_events', text: 'No event log was sent with this run (old app version or modified client)' }); else if (score > 0) flags.push({ sev: 1, code: 'no_events', text: 'No event log (low score, kept)' }); }
+    else if (!r.ok) return { reject: true, why: `Event log rejected: ${r.why}.` };
+    else if (!verify) verify = 'events-ok';
+  }
   if (score > cap) flags.push({ sev: 2, code: 'over_rate', text: `Score ${score} is above the normal per-second ceiling (${cap}) for ${elapsedS.toFixed(1)}s of play` });
   // exact replay
   if (game.id === 'memory-match' && seed && Array.isArray(log) && log.length) {
@@ -64,6 +83,8 @@ function assess({ userId, game, score, elapsedS, durationMs, tel, seed, log }) {
     if (n >= 40 && mean > 0 && sd / mean < 0.03) flags.push({ sev: 2, code: 'robotic_timing', text: `Input rhythm too perfect for a human (${n} inputs, spread ${(sd / mean * 100).toFixed(1)}%)` });
     else if (n >= 40 && mn > 0 && mn < 20) flags.push({ sev: 1, code: 'fast_inputs', text: `Inputs as close as ${mn}ms apart` });
   } else if (needsInput) flags.push({ sev: 1, code: 'no_telemetry', text: 'No input telemetry (old app version or modified client)' });
+  // L2: suspicious submit frequency (many finished runs per minute = scripted client)
+  if (recent >= 12) flags.push({ sev: 1, code: 'submit_burst', text: `${recent + 1} runs submitted within one minute` });
   if (durationMs > elapsedS * 1000 + 5000) flags.push({ sev: 1, code: 'clock_skew', text: 'Client clock ran faster than the server clock' });
   // history-aware: a big jump is only a NOTE (legit players improve), never a hold
   const prev = db.prepare('SELECT score FROM runs WHERE user_id=? AND game_id=? AND held=0 ORDER BY id DESC LIMIT 50').all(userId, game.id).map(r => r.score);

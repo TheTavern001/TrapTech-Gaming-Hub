@@ -99,7 +99,7 @@ const ord = (n) => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 
 // Rich text: a small allow-list sanitizer (no attributes except safe a[href] and plain class names).
 const ALLOWED = new Set(['b', 'strong', 'i', 'em', 'u', 's', 'p', 'br', 'ul', 'ol', 'li', 'a', 'h2', 'h3', 'h4', 'blockquote', 'span', 'div', 'code']);
 function sanitizeHtml(html, max = 20000) {
-  html = String(html || '').slice(0, max * 2);
+  html = String(html || '').slice(0, max * 2).replace(/<(script|style|iframe|object|embed|template|noscript)\b[\s\S]*?(<\/\1\s*>|$)/gi, ''); // drop these with their contents
   let out = ''; let i = 0; const re = /<\/?([a-zA-Z0-9]+)([^<>]*)>|<!--[\s\S]*?-->/g; let m; const open = [];
   const text = (t) => t.replace(/&(?!(#\d{1,6}|#x[0-9a-f]{1,6}|[a-z]{2,8});)/gi, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   while ((m = re.exec(html))) {

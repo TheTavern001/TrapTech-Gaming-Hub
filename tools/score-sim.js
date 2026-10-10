@@ -33,13 +33,14 @@ const MAXT = 3 * 3600; // safety stop for a single simulated run (3 h)
 
 // ---------- run models: (s) => { score, t } ----------
 const M = {
-  // meters; speed 11 m/s -> 24 at ~108 s, then +0.03/s to 28. Obstacles ~0.55/s rising; shields = 1 extra hit sometimes.
-  'jetpack-dash'(s) { let t = 0, d = 0, shield = 0; for (; t < MAXT; t += 1) { const v = Math.min(28, t < 108 ? 11 + 0.12 * t : 24 + 0.03 * (t - 108)); d += v; if (chance(0.03)) shield = 1;
+  // meters; speed 11 m/s -> 24 at ~108 s, then +0.02/s to 28. Obstacles ~0.55/s rising; shields = 1 extra hit sometimes.
+  'jetpack-dash'(s) { let t = 0, d = 0, shield = 0; for (; t < MAXT; t += 1) { const v = Math.min(28, t < 108 ? 11 + 0.12 * t : 24 + 0.02 * (t - 108)); d += v; if (chance(0.03)) shield = 1;
     const ev = 0.55 + 0.004 * Math.min(t, 300); const q = (0.012 + 0.11 * (1 - s) ** 2) * (1 + t / 260) * (v / 18); if (chance(ev * q)) { if (shield) shield = 0; else break; } } return { score: Math.floor(d), t }; },
-  // v7 Drift Rush: 3 hearts, invulnerable 1.5 s after a hit, checkpoint every 1,500 m repairs one. Speed 16 -> 50 m/s gently.
-  'drift-rush'(s) { let t = 0, m = 0, pts = 0, hp = 3, inv = 0, cp = 1500; for (; t < MAXT; t += 0.5) { const v = Math.min(52, 16 + 0.22 * t - 0.0004 * Math.min(t, 250) ** 2 + 0.03 * Math.max(0, t - 250)); m += v * 0.5;
-    pts += v * 0.4 * (1 + 2.6 * s) * (0.12 + 0.4 * s) * 0.5; inv -= 0.5; const ev = (0.30 + 0.0016 * Math.min(t, 400)) * 0.5; const q = (0.025 + 0.42 * (1 - s) ** 2) * (v / 30) ** 1.4;
-    if (inv <= 0 && chance(ev * q)) { hp--; inv = 1.5; pts *= 0.97; if (!hp) break; } if (m >= cp) { cp += 1500; hp = Math.min(3, hp + 1); } } return { score: Math.floor(m + pts), t }; },
+  // v7 Drift Rush (calibrated on tools/v7/drift-playtest.js: average player ~62 s / ~1,300, good ~140 s / ~3,750): 3 hearts,
+  // 1.5 s invulnerability, checkpoint every 1,500 m heals one; speed 16 + 0.18 t to 50 at 190 s, then +0.02/s to 56.
+  'drift-rush'(s) { let t = 0, m = 0, pts = 0, hp = 3, inv = 0, cp = 1500; for (; t < MAXT; t += 0.5) { const v = t < 190 ? 16 + 0.18 * t : Math.min(56, 50 + 0.02 * (t - 190)); m += v * 0.5 * (0.62 + 0.12 * s);
+    pts += (2 + 6 * s) * 0.5; inv -= 0.5; const ev = (0.30 + 0.0016 * Math.min(t, 400)) * 0.5; const q = (0.05 + 0.5 * (1 - s) ** 2) * (v / 30) ** 1.4;
+    if (inv <= 0 && chance(ev * q)) { hp--; inv = 1.5; if (!hp) break; } if (m >= cp) { cp += 1500; hp = Math.min(3, hp + 1); } } return { score: Math.floor(m + pts), t }; },
   // 10 chips; 200 slots refund 2 chips, 100 refunds 1; level every 5 drops: 0-slots appear, big slots drift, golden pegs faster.
   plinko(s) { let chips = 10, score = 0, t = 0, n = 0; while (chips > 0 && t < MAXT) { chips--; n++; t += 3.4 + 1.4 * (1 - s); const lvl = Math.floor(n / 5); const shrink = Math.pow(0.975, lvl);
     const p200 = (0.07 + 0.25 * s) * shrink, p100 = (0.06 + 0.07 * s) * shrink, p0 = Math.min(0.32, 0.025 * lvl) * (1 - 0.35 * s); const u = R(); let v;
@@ -69,21 +70,26 @@ const M = {
   'terp-tapper'(s) { let lives = 5, score = 0, t = 0, combo = 0; for (; t < MAXT && lives > 0; t += 0.5) { const bpm = t < 120 ? 96 + 0.6 * t : Math.min(220, 168 + 0.15 * (t - 120)); const notes = bpm / 60 * 0.5 * (0.95 + Math.min(0.5, t / 600));
     for (let k = Math.floor(notes + R()); k > 0; k--) { const q = 0.004 + 0.16 * (1 - s) ** 2 * (bpm / 130) ** 3; if (chance(q)) { lives--; combo = 0; if (!lives) break; continue; } combo++; if (combo % 100 === 0) lives = Math.min(5, lives + 1);
       const u = R(); const base = u < 0.25 + 0.6 * s ? 100 : u < 0.6 + 0.35 * s ? 60 : 30; score += base * Math.min(4, 1 + Math.floor(combo / 10)); } } return { score, t }; },
-  // Neon Munchies: snack = 10 x combo (<=5, quick bites), golden brownie 100; speed ramps, barriers appear with length.
-  'munchies-snake'(s) { let score = 0, t = 0, len = 4, combo = 0, n = 0; while (t < MAXT) { const step = Math.max(0.06, 0.16 - n * 0.0022); const tiles = 6 + 7 * R() + len * 0.05; const dt = tiles * step * (1.25 - 0.35 * s); t += dt;
-    const q = 0.008 + 0.075 * (1 - s) ** 2 + (0.15 - step) * 0.25 * (1 - 0.7 * s) + len * 0.0005 * (1 - 0.8 * s); if (chance(q)) break; n++; len++; combo = dt < 3 ? Math.min(5, combo + 1) : 1; score += 10 * combo; if (n % 7 === 0 && chance(0.35 + 0.45 * s)) score += 100; } return { score, t }; },
-  // 3 balls (+1 every 3 levels); level bonus +25%/level up to x5; chain up to x4; clear bonus 250 x min(level, 20).
-  'brick-breaker'(s) { let balls = 3, score = 0, t = 0, lvl = 1; while (t < MAXT && balls > 0) { const T = (30 + 25 * (1 - s)) * (1 + 0.05 * Math.min(lvl, 12)); const lam = (0.006 + 0.05 * (1 - s) ** 2) * (1 + 0.12 * lvl);
-    let lost = 0; for (let x = 0; x < T; x += 1) if (chance(lam)) { lost++; if (lost >= balls) break; } balls -= lost; if (balls <= 0) { score += Math.floor(0.4 * 60 * 11 * Math.min(5, 1 + 0.25 * (lvl - 1)) * (1.4 + 1.4 * s)); t += T * 0.5; break; }
-    score += Math.floor(60 * 11 * Math.min(5, 1 + 0.25 * (lvl - 1)) * (1.4 + 1.4 * s)) + 250 * Math.min(lvl, 20); t += T; lvl++; if ((lvl - 1) % 3 === 0) balls = Math.min(5, balls + 1); } return { score, t }; },
+  // v7 Neon Munchies (slither-style arena, AI rivals): pellets 10, snacks 50, golden brownie 250, rival burst orbs 20 each.
+  // Intake grows with length; rivals get bigger and more numerous over time, so the death hazard climbs.
+  'munchies-snake'(s) { let score = 0, t = 0; for (; t < MAXT; t += 1) { score += (3 + 7 * s) * (1 + Math.min(1.5, t / 150)) * (0.7 + 0.6 * R());
+    if (chance(0.006 + 0.03 * s)) score += 20 * (6 + Math.floor(R() * 14)); if (chance(0.004 + 0.01 * s)) score += 250;
+    if (chance((0.003 + 0.045 * (1 - s) ** 2) * (1 + t / 240))) break; } return { score: Math.floor(score), t }; },
+  // v7 endless Brick Breaker: the wall creeps down (a new row every 8 s -> 2.6 s), ~7 bricks a row, 10/20/50 pts x row mult
+  // (1 + 0.2 per 10 rows, max x5) x chain (max x4). The run ends when the wall reaches the danger line or the last ball is lost.
+  'brick-breaker'(s) { let t = 0, rows = 0, backlog = 0, balls = 3, score = 0, acc = 0; const capB = (0.9 + 2.4 * s) * Math.exp(gauss() * 0.12);
+    for (; t < MAXT; t += 1) { const rt = Math.max(2.6, 8 - 0.04 * rows); acc += 1 / rt; while (acc >= 1) { acc--; rows++; backlog += 7; if (rows % 30 === 0) balls = Math.min(5, balls + 1); }
+      const br = Math.min(backlog, capB * (1 + Math.min(0.5, rows / 200)) * (0.8 + 0.4 * R())); backlog -= br; const mult = Math.min(5, 1 + 0.2 * Math.floor(rows / 10)); score += br * 14 * mult * (1 + 1.2 * s);
+      if (backlog > 7 * 9) break; if (chance((0.004 + 0.05 * (1 - s) ** 2) * (1 + t / 200))) { balls--; if (!balls) break; } } return { score: Math.floor(score), t }; },
   // towers passed; one hit ends; gap 215 -> 150, speed 185 -> 300 px/s, then sliding gaps.
   'sky-hopper'(s) { let n = 0, t = 0; while (t < MAXT) { const spd = Math.min(360, 185 + 3 * n + (n > 40 ? 0.6 * (n - 40) : 0)); t += 300 / spd; const tight = 1 + Math.max(0, (215 - Math.max(150, 215 - 2.2 * n)) / 65) * 0.8 + (n > 30 ? Math.min(1, (n - 30) / 60) : 0);
     if (chance((0.006 + 0.22 * (1 - s) ** 2.2) * tight)) break; n++; } return { score: n, t }; },
   // Stack: slab error ~ |N(0, sigma)| of slab width; sigma grows with speed; perfect (< 3%) streaks grow the slab back.
   stack(s) { let w = 1, n = 0, score = 0, t = 0, streak = 0; while (t < MAXT) { const speed = Math.min(2.6, 1 + n * 0.012); t += 0.55 + 0.6 * (1 - s) / speed; const sig = (0.012 + 0.11 * (1 - s) ** 1.6) * speed;
     const e = Math.abs(gauss() * sig); if (e >= w) break; n++; if (e < 0.03) { streak++; score += 10 + 10 * Math.min(10, streak); if (streak >= 3) w = Math.min(1, w + 0.06); } else { streak = 0; w -= e; score += 10; } } return { score, t }; },
-  // Grow Guard: wave w (~28 s) sends 6 + 3w pests, tougher types later (avg pts 10 + 2.5w, cap 45); leaks once past the player's capacity.
-  'grow-guard'(s) { let plants = 3, score = 0, t = 0, w = 0; const cap = 3 + 22 * s ** 1.2 + gauss() * 1.5; while (t < MAXT && plants > 0) { w++; const pests = 6 + 3 * w; const pts = Math.min(45, 10 + 2.5 * w); t += 26 + 0.6 * w;
+  // Grow Guard: wave w (~35 s) sends 4 + 2w pests (w <= 3) then 6 + 3w, tougher types later (avg pts 10 + 2.5w, cap 45);
+  // pests leak once past the player's capacity; 3 plants, the once-per-row ladybug swarm saves a few leaks.
+  'grow-guard'(s) { let plants = 3, score = 0, t = 0, w = 0; const cap = 2 + 20 * s ** 1.2 + gauss() * 1.5; while (t < MAXT && plants > 0) { w++; const pests = w <= 3 ? 4 + 2 * w : 6 + 3 * w; const pts = Math.min(45, 10 + 2.5 * w); t += 33 + 0.8 * w;
     const leakP = clamp((w - cap) / 6, 0, 1) * 0.25 + 0.004 * (1 - s); let leaks = 0; for (let k = 0; k < pests; k++) if (chance(leakP)) leaks++; score += Math.round((pests - leaks) * pts); plants -= Math.min(plants, Math.ceil(leaks / 4)); if (plants > 0) score += 100 * w; } return { score, t }; },
   // Sling Smash: 5 balls; par 3 per tower; clear = +1 ball + unused under par; bots 2 + tower/3 (500 each), blocks ~ 8 + 1.5 tower.
   'sling-smash'(s) { let balls = 5, score = 0, t = 0, k = 0; while (t < MAXT) { k++; const bots = 2 + Math.floor(k / 3), blocks = 8 + 1.5 * k; let left = bots, used = 0;
@@ -92,9 +98,16 @@ const M = {
   // Haze Defense: 20 lives; wave layers 20 + 8w + 0.6w^2, score = layers x tier (1 + floor(w/10)) + 50w; leaks past capacity.
   'haze-defense'(s) { let lives = 20, score = 0, t = 0, w = 0; const cap = 4 + 30 * s ** 1.2 + gauss() * 2; while (t < MAXT && lives > 0) { w++; const layers = 20 + 8 * w + 0.6 * w * w; const tier = 1 + Math.floor(w / 10); t += 22 + 0.5 * w;
     const leak = clamp((w - cap) / 5, 0, 1) * (0.35 + 0.2 * R()); const leaked = Math.round(layers * leak * 0.12); score += Math.round(layers * (1 - leak) * tier); lives -= Math.min(lives, leaked); if (lives > 0) score += 50 * w; } return { score, t }; },
+  // Void Swarm: wave w (~8.5 s) = rows x cols drones (rows 3 -> 5, cols 6 -> 8), 50/80/150 pts, x2 while diving, x(1 + 0.05(w-1)) max 4,
+  // +100 w per clear, mothership every 5th wave (2000 x w/5). 3 lives (capsules: shield / +1 life up to 4); hits per wave rise with w.
+  'void-swarm'(s) { let lives = 3, score = 0, t = 0, w = 0; const lam0 = (0.03 + 1.2 * (1 - s) ** 2) * 0.85; while (t < MAXT && lives > 0) { w++; const rows = Math.min(5, 3 + Math.floor(w / 3)), cols = Math.min(8, 6 + Math.floor(w / 4));
+    const n = rows * cols; const top = cols, mid = cols * (1 + Math.floor(rows / 3)) - cols; const base = (top * 150 + mid * 80 + (n - top - mid) * 50) / n; const mult = Math.min(4, 1 + 0.05 * (w - 1));
+    let hits = 0; const lam = lam0 * (0.6 + 0.1 * w); let p = Math.exp(-lam), u = R(), c = p; while (u > c) { hits++; p *= lam / hits; c += p; } if (chance(0.04 * s)) lives = Math.min(4, lives + 1);
+    const frac = hits >= lives ? 0.4 * R() : 1; lives -= hits; score += Math.round(n * frac * base * (1 + 0.15 + 0.25 * s) * mult); t += 8.5 * frac + 1.5;
+    if (lives > 0) { score += 100 * w; if (w % 5 === 0) score += Math.round(2000 * Math.max(1, w / 5)); } } return { score, t }; },
 };
 // games whose scoring rules did not change in v7 (recorded runs are comparable)
-const SAME_RULES = new Set(['jetpack-dash', 'high-score', 'terp-tapper', 'sky-hopper']);
+const SAME_RULES = new Set([]); // v7 changed the rules/ramps of every game (endless), so recorded runs are not comparable
 const pct = (a, q) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(q * (s.length - 1) + 0.5))]; };
 const med = (a) => pct(a, 0.5);
 const round = (v) => v >= 1000 ? Math.round(v / 50) * 50 : v >= 100 ? Math.round(v / 10) * 10 : Math.round(v);

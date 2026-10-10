@@ -30,6 +30,15 @@ const PER_GAME = {
     rw: [R('banner', 'wedges'), R('frame', 'croupier'), R('title', 'high-roller'), R('banner', 'felt'), R('title', 'hot-table')] },
   'terp-tapper': { names: ['Finding the Beat', 'Beat Breaker', 'Rhythm Royalty'], reg: 'Groove Regular', streak: 'Encore', icon: 'music',
     rw: [R('banner', 'rhythm-bars'), R('frame', 'equalizer'), R('title', 'rhythm-royalty'), R('banner', 'bass-drop'), R('title', 'encore')] },
+  // v7 endless games
+  stack: { names: ['First Floors', 'High Rise', 'Skyscraper'], reg: 'Site Foreman', streak: 'Perfect Drop', icon: 'layers',
+    rw: [R('banner', 'glass-tower'), R('frame', 'slab'), R('title', 'sky-builder'), R('banner', 'glass-tower'), R('title', 'perfect-drop')] },
+  'grow-guard': { names: ['Pest Patrol', 'Garden Keeper', 'Head Grower'], reg: 'Night Shift Grower', streak: 'Clean Room', icon: 'leaf',
+    rw: [R('banner', 'grow-room'), R('frame', 'ladybug'), R('title', 'head-grower'), R('banner', 'grow-room'), R('title', 'pest-patrol')] },
+  'sling-smash': { names: ['First Topple', 'Demolition Crew', 'Tower Toppler'], reg: 'Wrecking Regular', streak: 'Bot Buster', icon: 'crosshair',
+    rw: [R('banner', 'sling-arc'), R('frame', 'steel-ball'), R('title', 'tower-toppler'), R('banner', 'sling-arc'), R('title', 'bot-buster')] },
+  'haze-defense': { names: ['Clear Air', 'Orb Popper', 'Haze Buster'], reg: 'Track Warden', streak: 'Smoke Screen', icon: 'shield',
+    rw: [R('banner', 'haze-track'), R('frame', 'prism-laser'), R('title', 'haze-buster'), R('banner', 'haze-track'), R('title', 'orb-popper')] },
 };
 for (const g of cfg.GAMES) {
   const P = PER_GAME[g.id]; if (!P) continue;

@@ -7,18 +7,21 @@ const GLYPHS = ['star', 'heart', 'diamond', 'bolt', 'moon', 'crown', 'hex', 'rin
 const GCOL = ['#fde047', '#f472b6', '#22d3ee', '#facc15', '#c4b5fd', '#fbbf24', '#34d399', '#60a5fa', '#fb7185', '#a3e635', '#38bdf8', '#e879f9', '#fb923c', '#5eead4', '#f0abfc'];
 // photo face per glyph index (index order must not change: it is part of the replay-verified deal)
 const PHOTOS = ['lime', 'orange', 'lemon', 'grapefruit', 'coin', 'leaf', 'target', 'darts', 'roulette', 'chips', 'boombox', 'controller', 'dice', 'headphones', 'vinyl'];
+// v7 endless: board clock = pairs x max(1.3, 4.2 x 0.95^board) seconds
+export const boardTime = (level, pairs) => +(pairs * Math.max(1.3, 4.2 * Math.pow(0.95, level))).toFixed(2);
 export class MemoryMatch extends Game {
   async load() { this.amb = new Ambient('lounge', 17); const m = { table: 'mm-table.webp', back: '/assets/v6/mm-back.webp' }; PHOTOS.forEach((n, i) => { m['f' + i] = `mm-${n}.webp`; }); this.art = await loadArt(m); }
   get title() { return 'MEMORY MATCH'; }
-  get hint() { return 'Memorize the cards, then tap two at a time to find pairs. Chain matches for up to x5 combo. Clear boards for extra time.'; }
+  get hint() { return 'Memorize the cards, then tap two at a time to find the pairs. Chain matches for up to a x5 combo. Each board has its own clock, and every new board is bigger or faster. The run ends when a board clock runs out.'; }
   get startOnTapOnly() { return true; }
-  reset() { this.used = 0; this.score = 0; this.coins = 0; this.level = 0; this.time = 45; this.combo = 0; this.bestCombo = 0; this.pairs = 0; this.newLevel(); }
+  reset() { this.used = 0; this.score = 0; this.coins = 0; this.level = 0; this.time = 0; this.combo = 0; this.bestCombo = 0; this.pairs = 0; this.newLevel(); }
   newLevel() {
     let [c, r] = LEVELS[Math.min(this.level, LEVELS.length - 1)]; this.cols = c; this.rows = r;
     // v5: dealt from the server seed (same algorithm as src/anticheat.js) so the run can be replayed + verified
     const n = c * r / 2; const ids = []; const pool = shuffle(GLYPHS.map((_, i) => i), this.r).slice(0, n);
     for (const i of pool) ids.push(i, i); shuffle(ids, this.r);
     this.cards = ids.map((g, k) => ({ g, k, open: false, done: false, flip: 0, shake: 0 }));
+    this.time = boardTime(this.level, n); // v7: each board has its own clock (mirrored by src/anticheat.js replayMemory)
     this.sel = []; this.lock = 0; this.peek = this.level === 0 ? 1.6 : 1.2; this.clearT = 0; this.layout();
   }
   layout() {
@@ -44,7 +47,7 @@ export class MemoryMatch extends Game {
       const [a, b] = this.sel;
       if (a.g === b.g) {
         a.done = b.done = true; this.combo = Math.min(5, this.combo + 1); this.bestCombo = Math.max(this.bestCombo, this.combo); this.pairs++;
-        const pts = 100 * this.combo; this.score += pts; const [rx, ry, rw] = this.rect(b.k);
+        const pts = this.award(100 * this.combo, 'p'); const [rx, ry, rw] = this.rect(b.k);
         this.pop(rx + rw / 2, ry, `+${pts}${this.combo > 1 ? ` x${this.combo}` : ''}`, this.combo >= 3 ? '#fde047' : '#34d399', 24);
         this.burst(rx + rw / 2, ry + this.cellH / 2, [GCOL[a.g], '#fff'], 14, 200, 0.5, 4); this.sfx.chord([660, 990], 0.15, { type: 'triangle', vol: 0.25 });
         this.sel = [];
@@ -53,10 +56,10 @@ export class MemoryMatch extends Game {
     }
   }
   cleared() {
-    const bonus = Math.round(this.time) * 10; this.score += bonus; this.coins++;
+    const bonus = Math.round(Math.max(0, this.time)) * 10 + 50 * (this.level + 1); this.award(bonus, 'c'); this.coins++;
     this.pop(this.W / 2, this.H / 2, `BOARD CLEAR +${fmt(bonus)}`, '#fde047', 30); this.sfx.win();
     this.burst(this.W / 2, this.H / 2, ['#fde047', '#22d3ee', '#f472b6', '#a855f7'], 50, 460, 1, 5);
-    this.time += 12 + this.level * 2; this.clearT = 1.1;
+    this.clearT = 1.1;
   }
   update(dt) {
     if (this.peek > 0) { this.peek -= dt; return; }

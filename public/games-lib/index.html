@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Games Library - The Gaming Hub</title><meta name="theme-color" content="#050714"><link rel="stylesheet" href="lib.css"></head>
+<body><div class="wrap"><a href="/games">&#8592; Back to the Hub</a><h1>Games Library <span id="n" class="pill g"></span></h1>
+<p class="muted">Free browser games with leaderboards. Sign in on the Hub to save scores. <b>Giveaway</b> games are skill-based; <b>Just for fun</b> games never count for giveaways.</p>
+<input class="q" id="q" placeholder="Search games..." autocomplete="off"><div id="list"></div><p class="muted" style="margin-top:30px">Credits and licences: every game folder has a CREDITS.md (and the original LICENSE for open-source games).</p></div>
+<script>
+(async () => {
+  const r = await fetch('/api/games-lib').then(r => r.json()).catch(() => null) || await fetch('catalog.json').then(r => r.json());
+  document.getElementById('n').textContent = r.games.length + ' playable';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const card = g => `<a class="card" href="${g.url}"><img loading="lazy" src="${g.art}" alt=""><div class="b"><div class="t">${esc(g.title)}</div><div class="m">${g.giveaway ? '<span class="pill g">Giveaway</span>' : '<span class="pill f">Just for fun</span>'}<span class="pill">${g.tier}</span>${esc(g.competition)}</div></div></a>`;
+  function render(q) { q = (q || '').toLowerCase(); let h = '';
+    for (const c of r.categories) { const L = r.games.filter(g => g.category === c && (g.title + ' ' + c).toLowerCase().includes(q)); if (L.length) h += `<h2>${esc(c)} (${L.length})</h2><div class="grid">${L.map(card).join('')}</div>`; }
+    const X = (r.external || []).filter(x => x.title.toLowerCase().includes(q)); if (X.length) h += `<h2>Just for fun - external links</h2><p class="muted">These open on their own websites (not hosted here, no scores).</p><div class="grid">${X.map(x => `<a class="card" href="${x.url}" target="_blank" rel="noopener"><div class="b"><div class="t">${esc(x.title)} &#8599;</div><div class="m"><span class="pill f">External link</span>${esc(x.note)}</div></div></a>`).join('')}</div>`;
+    document.getElementById('list').innerHTML = h || '<p class="muted">No games match.</p>'; }
+  render(); document.getElementById('q').oninput = e => render(e.target.value);
+})();
+</script></body></html>

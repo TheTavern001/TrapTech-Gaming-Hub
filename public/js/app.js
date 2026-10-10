@@ -1,6 +1,7 @@
 import { icon } from './icons.js';
 import { ls, ss, copyText } from './store.js';
 import * as V7 from './v7.js';
+import * as GV7 from './gw-v7.js'; // v7 admin overhaul: builder giveaway extras + admin site settings
 
 // ---------------- core ----------------
 const $app = document.getElementById('app');
@@ -8,6 +9,8 @@ const S = { me: null, games: [], serverOffset: 0, guest: ls.getItem('gh_guest') 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (n) => Number(n || 0).toLocaleString('en-US');
 const nowS = () => Date.now() + S.serverOffset;
+// v7: the public address (PUBLIC_URL, injected by the server as <meta name="public-url">) for share / referral links
+const ORIGIN = (document.querySelector('meta[name="public-url"]') || {}).content || location.origin;
 // In-app browsers can block cookies. After sign-in we check whether the cookie stuck; if not, the session token
 // is kept in memory (and in storage when available) and sent as an X-Session header instead.
 let TOKEN = ls.getItem('gh_tok') || null;
@@ -444,18 +447,23 @@ function gameCard(g, tall = false) {
 // ---------------- games ----------------
 route(/^\/games$/, (m, url) => {
   let cat = url.searchParams.get('cat') || 'All'; let q = '';
-  const cats = ['All', 'Arcade', 'Racing', 'Casual', 'Casino', 'Puzzle'];
+  const cats = ['All', 'Arcade', 'Racing', 'Puzzle', 'Strategy', 'Physics', 'Just for fun'];
   shell('/games', `<h1>Games <span class="pill green" style="vertical-align:middle">${S.games.length} playable</span></h1>
     <div class="field ic">${icon('search')}<input class="input" id="q" placeholder="Search games..." autocomplete="off"></div>
     <div class="chips" id="chips">${cats.map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('')}</div>
     <div class="grid2 games-grid" id="grid"></div>
     <div class="section-h"><h2>Featured Games</h2><a href="/achievements">${icon('medal')} Achievements</a></div>
-    <div class="grid2 games-grid">${S.games.filter(g => g.featured).map(g => gameCard(g)).join('')}</div>
+    <div class="grid2 games-grid">${S.games.filter(g => g.featured && g.giveaway !== false).map(g => gameCard(g)).join('')}</div>
     <p class="small dim center" style="margin-top:14px">All games are free to play. Casino-style games use points only: no real money, no purchases.</p>`);
   const draw = () => {
-    const list = S.games.filter(g => !g.featured && (cat === 'All' || g.category === cat) && g.title.toLowerCase().includes(q));
-    const feat = (cat !== 'All' || q) ? S.games.filter(g => g.featured && (cat === 'All' || g.category === cat) && g.title.toLowerCase().includes(q)) : [];
-    document.getElementById('grid').innerHTML = [...list, ...feat].map(g => gameCard(g)).join('') || `<div class="empty" style="grid-column:1/-1">No games match.</div>`;
+    const match = (g) => (cat === 'All' || g.category === cat || (cat === 'Just for fun' && g.giveaway === false)) && g.title.toLowerCase().includes(q);
+    const list = S.games.filter(g => !g.featured && g.giveaway !== false && match(g));
+    const feat = (cat !== 'All' || q) ? S.games.filter(g => g.featured && g.giveaway !== false && match(g)) : [];
+    // v7: chance games live in their own "Just for fun" section (they never count for giveaways)
+    const fun = S.games.filter(g => g.giveaway === false && match(g));
+    document.getElementById('grid').innerHTML = ([...list, ...feat].map(g => gameCard(g)).join('')
+      + (fun.length ? `<div class="section-h fun-h" style="grid-column:1/-1"><h2>${icon('dices')} Just for fun</h2><span class="small muted">Chance games: points only, not eligible for giveaways</span></div>` + fun.map(g => gameCard(g)).join('') : ''))
+      || `<div class="empty" style="grid-column:1/-1">No games match.</div>`;
   };
   draw();
   document.getElementById('q').addEventListener('input', (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
@@ -549,7 +557,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
     const sv = ov.querySelector('#sv');
     if (!S.me) { sv.innerHTML = `<div class="err" style="margin:0">Guest run - not saved. <a href="/signup?next=/play/${g.id}">Create an account</a> or <a href="/signin?next=/play/${g.id}">sign in</a> to save scores and enter giveaways.</div>`; return; }
     if (!token) { sv.innerHTML = `<div class="err" style="margin:0">Score not saved: ${esc(tokenErr || 'no run token')}</div>`; return; }
-    const r = await api('/api/score', { method: 'POST', body: { token, score: res.score, coins: res.coins, duration_ms: res.duration_ms, tel: res.tel, log: res.log, giveaway_id: giveawayId || undefined } });
+    const r = await api('/api/score', { method: 'POST', body: { token, score: res.score, coins: res.coins, duration_ms: res.duration_ms, tel: res.tel, log: res.log, ev: res.ev, giveaway_id: giveawayId || undefined } });
     token = null; window.__lastResult = r;
     if (!r.ok) { sv.innerHTML = `<div class="err" style="margin:0">Score not saved: ${esc(r.error)}</div>`; return; }
     const gw = (r.giveaways || []).map(x => `<div class="small" style="margin-top:4px">${icon('gift')} ${x.qualified ? `Counted for <b>${esc(x.title)}</b> - rank #${x.rank} of ${x.entrants}` : `<b>${esc(x.title)}</b> needs ${fmt(x.min_score)}+ to qualify`}</div>`).join('');
@@ -687,6 +695,7 @@ route(/^\/giveaways\/(\d+)$/, async (m) => {
     <p class="tiny muted center" style="margin-top:12px">NO PURCHASE NECESSARY. 21+. Void where prohibited. Operated by Trap Tech Solutions. See <a href="/giveaways/${g.id}/rules">Official Rules</a>.</p>
   </div>`, { title: g.title });
   document.getElementById('share-gw').onclick = () => shareLink({ kind: 'giveaway', ref: String(g.id), url: `/giveaways/${g.id}`, title: g.title, text: `Play free to win: ${g.prize || g.title} (hosted by ${g.host})`, withRef: true });
+  GV7.detail(g, r); // v7 builder extras (banner, description, prizes, competition format, notices)
   tickCountdowns();
   if (g.status !== 'past') eligCard(g);
 });
@@ -706,6 +715,7 @@ async function eligCard(g) {
     ${e.entries ? `<div class="elig-entries">${icon('ticket')} Draw entries: <b>${e.entries.count}</b> of ${e.entries.max}${e.entries.count < e.entries.max ? ` • ${e.entries.next_at - e.entries.runs} more run${e.entries.next_at - e.entries.runs === 1 ? '' : 's'} for ${e.entries.count + 1}` : ''}</div>` : ''}
     <div class="btn-row">${e.can_join ? `<button class="btn" id="join-gw">${icon('ticket')} Enter giveaway</button>` : ''}${e.joined && g.status !== 'past' ? `<button class="btn ghost sm" id="leave-gw">${icon('log-out')} Leave (free a slot)</button>` : ''}</div>
     ${rules}`;
+  GV7.elig(el, e, g, () => eligCard(g)); // v7: US-state picker for region-limited giveaways
   const j = document.getElementById('join-gw'); if (j) j.onclick = async () => { j.disabled = true; const r = await api(`/api/giveaways/${g.id}/join`, { method: 'POST' }); if (r.ok) toast("You're entered! Play a linked game to rank."); else toast(r.error); eligCard(g); };
   const l = document.getElementById('leave-gw'); if (l) l.onclick = async () => { const r = await api(`/api/giveaways/${g.id}/leave`, { method: 'POST' }); toast(r.ok ? 'You left this giveaway. Your slot is free.' : r.error); eligCard(g); };
   const pf = document.getElementById('potato-form'); if (pf) pf.onsubmit = async (ev) => { ev.preventDefault(); const r = await api('/api/me/potato', { method: 'PUT', body: { potato: document.getElementById('potato-in').value } }); toast(r.ok ? 'Potato username saved' : r.error); if (r.ok) eligCard(g); };
@@ -1078,7 +1088,7 @@ async function doCheckin() {
   const sb = document.querySelector('.streak-big'); if (sb) { sb.classList.add('on', 'pop'); sb.querySelector('b').textContent = r.streak.current; }
 }
 async function shareLink({ kind, ref, url, title, text, withRef }) {
-  let full = location.origin + url;
+  let full = ORIGIN + url;
   if (S.me) { const r = await api('/api/share', { method: 'POST', body: { kind, ref } }); if (r.ok) { achToast(r.unlocked); if (withRef && r.ref_code) full += (full.includes('?') ? '&' : '?') + 'ref=' + r.ref_code; } }
   try { if (navigator.share) { await navigator.share({ title, text, url: full }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   if (await copyText(full)) toast('Link copied - share it anywhere!');
@@ -1212,7 +1222,7 @@ route(/^\/search$/, (m, url) => {
 // ---------------- invite friends (referrals) ----------------
 route(/^\/invite$/, async () => {
   if (!S.me) return needSignIn('/invite', 'your invite code');
-  const r = await api('/api/referral'); const link = location.origin + r.link;
+  const r = await api('/api/referral'); const link = ORIGIN + r.link;
   shell('/invite', `<div class="narrow">${pageHead('Invite Friends', 'Bring your crew - earn exclusive cosmetics.')}
     <div class="card pad invite-card glow-purple">
       <div class="tiny muted orb">YOUR INVITE CODE</div><div class="ref-code" id="refcode">${esc(r.code)}</div>
@@ -1278,6 +1288,7 @@ route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 3, 2026'
   <h2>Contact</h2><p>${OP} - via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
 function rulesHTML(g) {
+  if (GV7.rules(g)) return GV7.rules(g); // v7 builder giveaways carry their own Official Rules
   const name = g ? `"${esc(g.title)}"` : '[GIVEAWAY NAME]';
   const sponsor = g ? esc(g.host) : '[SPONSOR BRAND]';
   const when = (ms) => new Date(ms).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'long', timeStyle: 'short' }) + ' ET';

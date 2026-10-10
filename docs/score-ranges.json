@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-04T05:28:02.070Z",
+ "generated_at": "2026-10-04T06:26:44.958Z",
  "method": "event-level Monte Carlo per game (tools/score-sim.js), skill ~ Beta(2,3.2)",
  "players": 3000,
  "runs_per_player": 8,
@@ -12,104 +12,100 @@
  "games": {
   "jetpack-dash": {
    "casual": {
-    "median": 430,
+    "median": 440,
     "p75": 890
    },
    "good": {
-    "median_pb": 3350,
+    "median_pb": 3400,
     "p90_pb": 4700
    },
    "top1": {
-    "pb": 5350
+    "pb": 5300
    },
    "runs": {
     "p10": 67,
     "p50": 580,
     "p90": 2050,
-    "p99": 4000
+    "p99": 3950
    },
    "run_seconds": {
     "p10": 5,
     "p50": 42,
-    "p90": 114,
-    "p99": 190
+    "p90": 113,
+    "p99": 191
    },
    "rate": {
-    "max_seen_per_sec": 23.39,
+    "max_seen_per_sec": 23.03,
     "at": {
-     "score": 7016,
-     "seconds": 300
+     "score": 7023,
+     "seconds": 305
     },
     "ceiling_per_sec": 30,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 8100
+    "expert_best": 7950
    },
    "suggested_tiers": [
-    430,
-    3350,
+    440,
+    3400,
     5050
    ],
    "title": "Jetpack Dash",
    "unit": "m",
    "current_tiers": [
-    500,
-    1500,
-    3000
-   ],
-   "recorded": {
-    "n": 1,
-    "note": "fewer than 30 real runs, not used"
-   }
+    440,
+    3300,
+    4950
+   ]
   },
   "drift-rush": {
    "casual": {
-    "median": 1300,
-    "p75": 2050
+    "median": 780,
+    "p75": 1100
    },
    "good": {
-    "median_pb": 11000,
-    "p90_pb": 18400
+    "median_pb": 4400,
+    "p90_pb": 6400
    },
    "top1": {
-    "pb": 24700
+    "pb": 7600
    },
    "runs": {
-    "p10": 680,
-    "p50": 1700,
-    "p90": 6000,
-    "p99": 16950
+    "p10": 410,
+    "p50": 980,
+    "p90": 2700,
+    "p99": 5450
    },
    "run_seconds": {
-    "p10": 31,
-    "p50": 63,
-    "p90": 149,
-    "p99": 303
+    "p10": 27,
+    "p50": 55,
+    "p90": 114,
+    "p99": 183
    },
    "rate": {
-    "max_seen_per_sec": 69.03,
+    "max_seen_per_sec": 37.92,
     "at": {
-     "score": 39518,
-     "seconds": 573
+     "score": 13027,
+     "seconds": 344
     },
     "ceiling_per_sec": 240,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 71100
+    "expert_best": 14400
    },
    "suggested_tiers": [
-    1300,
-    11000,
-    22800
+    780,
+    4400,
+    7150
    ],
    "title": "Drift Rush",
    "unit": "pts",
    "current_tiers": [
     1300,
-    11000,
-    22800
+    3750,
+    6000
    ]
   },
   "plinko": {
@@ -118,66 +114,66 @@
     "p75": 1250
    },
    "good": {
-    "median_pb": 4200,
-    "p90_pb": 6050
+    "median_pb": 4100,
+    "p90_pb": 5950
    },
    "top1": {
-    "pb": 6950
+    "pb": 6900
    },
    "runs": {
     "p10": 370,
-    "p50": 990,
-    "p90": 2500,
-    "p99": 4800
+    "p50": 1000,
+    "p90": 2550,
+    "p99": 4850
    },
    "run_seconds": {
     "p10": 48,
     "p50": 67,
-    "p90": 104,
-    "p99": 157
+    "p90": 105,
+    "p99": 158
    },
    "rate": {
-    "max_seen_per_sec": 48.82,
+    "max_seen_per_sec": 47.91,
     "at": {
-     "score": 8230,
-     "seconds": 169
+     "score": 7860,
+     "seconds": 164
     },
     "ceiling_per_sec": 700,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 12750
+    "expert_best": 12000
    },
    "suggested_tiers": [
     830,
-    4200,
+    4100,
     6450
    ],
    "title": "Plinko",
    "unit": "pts",
    "current_tiers": [
-    830,
-    4200,
-    6450
+    800,
+    4000,
+    6150
    ]
   },
   "spin-to-win": {
    "casual": {
     "median": 4100,
-    "p75": 5750
+    "p75": 5800
    },
    "good": {
-    "median_pb": 14250,
-    "p90_pb": 18700
+    "median_pb": 14050,
+    "p90_pb": 18150
    },
    "top1": {
-    "pb": 20400
+    "pb": 19750
    },
    "runs": {
     "p10": 1850,
-    "p50": 4900,
+    "p50": 4950,
     "p90": 10100,
-    "p99": 16100
+    "p99": 16050
    },
    "run_seconds": {
     "p10": 74,
@@ -186,47 +182,47 @@
     "p99": 327
    },
    "rate": {
-    "max_seen_per_sec": 122.28,
+    "max_seen_per_sec": 120.13,
     "at": {
-     "score": 4500,
-     "seconds": 37
+     "score": 14920,
+     "seconds": 124
     },
     "ceiling_per_sec": 700,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 35000
+    "expert_best": 28700
    },
    "suggested_tiers": [
     4100,
-    14250,
-    19550
+    14050,
+    19150
    ],
    "title": "Spin to Win",
    "unit": "pts",
    "current_tiers": [
     4100,
-    14250,
-    19550
+    13950,
+    19850
    ]
   },
   "memory-match": {
    "casual": {
-    "median": 2600,
+    "median": 2650,
     "p75": 4600
    },
    "good": {
-    "median_pb": 63300,
-    "p90_pb": 92800
+    "median_pb": 62150,
+    "p90_pb": 93050
    },
    "top1": {
-    "pb": 122200
+    "pb": 119350
    },
    "runs": {
     "p10": 400,
     "p50": 4850,
-    "p90": 39500,
-    "p99": 97150
+    "p90": 39300,
+    "p99": 96850
    },
    "run_seconds": {
     "p10": 29,
@@ -235,28 +231,28 @@
     "p99": 511
    },
    "rate": {
-    "max_seen_per_sec": 337.99,
+    "max_seen_per_sec": 331.59,
     "at": {
-     "score": 218654,
-     "seconds": 647
+     "score": 160268,
+     "seconds": 483
     },
     "ceiling_per_sec": 1100,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 270000
+    "expert_best": 235350
    },
    "suggested_tiers": [
-    2600,
-    63300,
-    113450
+    2650,
+    62150,
+    110800
    ],
    "title": "Memory Match",
    "unit": "pts",
    "current_tiers": [
     2600,
-    63300,
-    113450
+    62900,
+    118300
    ]
   },
   "high-score": {
@@ -275,10 +271,10 @@
     "p10": 220,
     "p50": 1300,
     "p90": 6050,
-    "p99": 13750
+    "p99": 13800
    },
    "run_seconds": {
-    "p10": 13,
+    "p10": 12,
     "p50": 32,
     "p90": 68,
     "p99": 107
@@ -293,103 +289,99 @@
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 34750
+    "expert_best": 36400
    },
    "suggested_tiers": [
     780,
     11300,
-    18300
+    18200
    ],
    "title": "High Score",
    "unit": "pts",
    "current_tiers": [
-    1500,
-    4000,
-    8000
-   ],
-   "recorded": {
-    "n": 1,
-    "note": "fewer than 30 real runs, not used"
-   }
+    810,
+    11100,
+    18450
+   ]
   },
   "blazed-roulette": {
    "casual": {
-    "median": 3400,
+    "median": 3350,
     "p75": 7750
    },
    "good": {
-    "median_pb": 56650,
-    "p90_pb": 307900
+    "median_pb": 49750,
+    "p90_pb": 278400
    },
    "top1": {
-    "pb": 1025800
+    "pb": 1045750
    },
    "runs": {
-    "p10": 940,
+    "p10": 930,
     "p50": 3750,
-    "p90": 23750,
-    "p99": 182900
+    "p90": 24000,
+    "p99": 194100
    },
    "run_seconds": {
-    "p10": 162,
-    "p50": 308,
-    "p90": 735,
-    "p99": 1616
+    "p10": 161,
+    "p50": 307,
+    "p90": 728,
+    "p99": 1670
    },
    "rate": {
-    "max_seen_per_sec": 3540.49,
+    "max_seen_per_sec": 3689.26,
     "at": {
-     "score": 38244253,
-     "seconds": 10802
+     "score": 39847543,
+     "seconds": 10801
     },
     "ceiling_per_sec": 300,
     "ramp": 40,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 1550550
+    "expert_best": 4073900
    },
    "suggested_tiers": [
-    3400,
-    56650,
-    724750
+    3350,
+    49750,
+    765100
    ],
    "title": "Blazed Roulette",
    "unit": "chips",
    "current_tiers": [
     3400,
-    56650,
-    724750
+    40400,
+    642650
    ]
   },
   "terp-tapper": {
    "casual": {
-    "median": 10250,
+    "median": 10300,
     "p75": 15350
    },
    "good": {
-    "median_pb": 92250,
-    "p90_pb": 197150
+    "median_pb": 94000,
+    "p90_pb": 194300
    },
    "top1": {
-    "pb": 460200
+    "pb": 503250
    },
    "runs": {
-    "p10": 4400,
-    "p50": 14750,
-    "p90": 52100,
-    "p99": 197950
+    "p10": 4450,
+    "p50": 14950,
+    "p90": 53100,
+    "p99": 210000
    },
    "run_seconds": {
     "p10": 31,
     "p50": 55,
-    "p90": 104,
-    "p99": 232
+    "p90": 105,
+    "p99": 235
    },
    "rate": {
-    "max_seen_per_sec": 1834.52,
+    "max_seen_per_sec": 1812.86,
     "at": {
-     "score": 15355880,
-     "seconds": 8371
+     "score": 8880300,
+     "seconds": 4899
     },
     "ceiling_per_sec": 4000,
     "ramp": 0,
@@ -398,118 +390,114 @@
     "expert_best": 19963250
    },
    "suggested_tiers": [
-    10250,
-    92250,
-    316650
+    10300,
+    94000,
+    334550
    ],
    "title": "Terp Tapper",
    "unit": "pts",
    "current_tiers": [
-    3000,
-    9000,
-    20000
-   ],
-   "recorded": {
-    "n": 0,
-    "note": "fewer than 30 real runs, not used"
-   }
+    10150,
+    92100,
+    276200
+   ]
   },
   "munchies-snake": {
    "casual": {
-    "median": 600,
-    "p75": 1200
+    "median": 220,
+    "p75": 550
    },
    "good": {
-    "median_pb": 4350,
-    "p90_pb": 6750
+    "median_pb": 5550,
+    "p90_pb": 9650
    },
    "top1": {
-    "pb": 8000
+    "pb": 12500
    },
    "runs": {
-    "p10": 30,
-    "p50": 800,
-    "p90": 2700,
-    "p99": 5500
+    "p10": 27,
+    "p50": 370,
+    "p90": 2200,
+    "p99": 7450
    },
    "run_seconds": {
-    "p10": 5,
-    "p50": 27,
-    "p90": 61,
-    "p99": 95
+    "p10": 4,
+    "p50": 31,
+    "p90": 122,
+    "p99": 287
    },
    "rate": {
-    "max_seen_per_sec": 69.45,
+    "max_seen_per_sec": 109.33,
     "at": {
-     "score": 7100,
-     "seconds": 102
+     "score": 1312,
+     "seconds": 12
     },
-    "ceiling_per_sec": 150,
+    "ceiling_per_sec": 400,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 14950
+    "expert_best": 25300
    },
    "suggested_tiers": [
-    600,
-    4350,
-    7400
+    220,
+    5550,
+    11600
    ],
    "title": "Neon Munchies",
    "unit": "pts",
    "current_tiers": [
-    600,
-    4350,
-    7400
+    230,
+    5500,
+    11300
    ]
   },
   "brick-breaker": {
    "casual": {
-    "median": 2000,
-    "p75": 3850
+    "median": 1150,
+    "p75": 1850
    },
    "good": {
-    "median_pb": 47850,
-    "p90_pb": 88500
+    "median_pb": 14850,
+    "p90_pb": 35450
    },
    "top1": {
-    "pb": 126400
+    "pb": 68700
    },
    "runs": {
-    "p10": 440,
-    "p50": 2300,
-    "p90": 16450,
-    "p99": 62750
+    "p10": 490,
+    "p50": 1650,
+    "p90": 5950,
+    "p99": 25700
    },
    "run_seconds": {
-    "p10": 26,
-    "p50": 82,
-    "p90": 260,
-    "p99": 572
+    "p10": 36,
+    "p50": 93,
+    "p90": 217,
+    "p99": 511
    },
    "rate": {
-    "max_seen_per_sec": 196.85,
+    "max_seen_per_sec": 211.1,
     "at": {
-     "score": 202447,
-     "seconds": 1028
+     "score": 268521,
+     "seconds": 1272
     },
     "ceiling_per_sec": 1200,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 292100
+    "expert_best": 349050
    },
    "suggested_tiers": [
-    2000,
-    47850,
-    113300
+    1150,
+    14850,
+    51650
    ],
    "title": "Brick Breaker",
    "unit": "pts",
    "current_tiers": [
-    2000,
-    47850,
-    113300
+    1150,
+    14450,
+    63850
    ]
   },
   "sky-hopper": {
@@ -518,7 +506,7 @@
     "p75": 10
    },
    "good": {
-    "median_pb": 60,
+    "median_pb": 59,
     "p90_pb": 110
    },
    "top1": {
@@ -528,42 +516,87 @@
     "p10": 1,
     "p50": 7,
     "p90": 29,
-    "p99": 79
+    "p99": 82
    },
    "run_seconds": {
     "p10": 3,
     "p50": 12,
     "p90": 40,
-    "p99": 85
+    "p99": 87
    },
    "rate": {
-    "max_seen_per_sec": 1.1,
+    "max_seen_per_sec": 1.12,
     "at": {
-     "score": 243,
-     "seconds": 221
+     "score": 313,
+     "seconds": 280
     },
     "ceiling_per_sec": 1.6,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 440
+    "expert_best": 520
    },
    "suggested_tiers": [
     5,
-    60,
-    120
+    59,
+    130
    ],
    "title": "Sky Hopper",
    "unit": "pts",
    "current_tiers": [
-    10,
-    30,
-    60
+    5,
+    58,
+    130
+   ]
+  },
+  "void-swarm": {
+   "casual": {
+    "median": 17650,
+    "p75": 27450
+   },
+   "good": {
+    "median_pb": 238750,
+    "p90_pb": 441250
+   },
+   "top1": {
+    "pb": 704550
+   },
+   "runs": {
+    "p10": 5200,
+    "p50": 23100,
+    "p90": 105300,
+    "p99": 407800
+   },
+   "run_seconds": {
+    "p10": 24,
+    "p50": 64,
+    "p90": 163,
+    "p99": 373
+   },
+   "rate": {
+    "max_seen_per_sec": 1952.64,
+    "at": {
+     "score": 1609365,
+     "seconds": 824
+    },
+    "ceiling_per_sec": 700,
+    "ramp": 10,
+    "over_ceiling_runs": 0,
+    "expert_over_ceiling": 0,
+    "expert_best": 2812300
+   },
+   "suggested_tiers": [
+    17650,
+    238750,
+    632750
    ],
-   "recorded": {
-    "n": 0,
-    "note": "fewer than 30 real runs, not used"
-   }
+   "title": "Void Swarm",
+   "unit": "pts",
+   "current_tiers": [
+    17550,
+    217100,
+    759300
+   ]
   },
   "stack": {
    "casual": {
@@ -571,145 +604,145 @@
     "p75": 280
    },
    "good": {
-    "median_pb": 2200,
+    "median_pb": 2250,
     "p90_pb": 4200
    },
    "top1": {
-    "pb": 7650
+    "pb": 6650
    },
    "runs": {
     "p10": 130,
-    "p50": 280,
-    "p90": 1150,
-    "p99": 4950
+    "p50": 290,
+    "p90": 1200,
+    "p99": 4550
    },
    "run_seconds": {
     "p10": 12,
     "p50": 18,
-    "p90": 38,
-    "p99": 85
+    "p90": 39,
+    "p99": 81
    },
    "rate": {
-    "max_seen_per_sec": 106.14,
+    "max_seen_per_sec": 100.36,
     "at": {
-     "score": 8930,
+     "score": 8420,
      "seconds": 84
     },
     "ceiling_per_sec": 300,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 90200
+    "expert_best": 83550
    },
    "suggested_tiers": [
     210,
-    2200,
-    6300
+    2250,
+    5600
    ],
    "title": "Stack",
    "unit": "pts",
    "current_tiers": [
     210,
-    2200,
-    6300
+    2100,
+    5800
    ]
   },
   "grow-guard": {
    "casual": {
-    "median": 10250,
-    "p75": 15300
+    "median": 7950,
+    "p75": 10200
    },
    "good": {
-    "median_pb": 52800,
-    "p90_pb": 69050
+    "median_pb": 42650,
+    "p90_pb": 57450
    },
    "top1": {
-    "pb": 81300
+    "pb": 63400
    },
    "runs": {
-    "p10": 4750,
-    "p50": 15400,
-    "p90": 42400,
-    "p99": 63750
+    "p10": 4350,
+    "p50": 12350,
+    "p90": 33250,
+    "p99": 52600
    },
    "run_seconds": {
-    "p10": 199,
-    "p50": 359,
-    "p90": 608,
-    "p99": 764
+    "p10": 253,
+    "p50": 416,
+    "p90": 683,
+    "p99": 878
    },
    "rate": {
-    "max_seen_per_sec": 100.51,
+    "max_seen_per_sec": 71.44,
     "at": {
-     "score": 102021,
-     "seconds": 1015
+     "score": 81360,
+     "seconds": 1139
     },
     "ceiling_per_sec": 140,
     "ramp": 1.2,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 116300
+    "expert_best": 94900
    },
    "suggested_tiers": [
-    10250,
-    52800,
-    75450
+    7950,
+    42650,
+    63050
    ],
    "title": "Grow Guard",
    "unit": "pts",
    "current_tiers": [
-    10250,
-    52800,
-    75450
+    7900,
+    42500,
+    63050
    ]
   },
   "sling-smash": {
    "casual": {
     "median": 1750,
-    "p75": 4500
+    "p75": 4400
    },
    "good": {
-    "median_pb": 27800,
-    "p90_pb": 44800
+    "median_pb": 27400,
+    "p90_pb": 45700
    },
    "top1": {
-    "pb": 54850
+    "pb": 55850
    },
    "runs": {
     "p10": 720,
-    "p50": 2350,
-    "p90": 12850,
-    "p99": 34450
+    "p50": 2400,
+    "p90": 12900,
+    "p99": 36000
    },
    "run_seconds": {
     "p10": 35,
     "p50": 46,
     "p90": 78,
-    "p99": 114
+    "p99": 115
    },
    "rate": {
-    "max_seen_per_sec": 499.98,
+    "max_seen_per_sec": 558.81,
     "at": {
-     "score": 85120,
-     "seconds": 170
+     "score": 98560,
+     "seconds": 176
     },
     "ceiling_per_sec": 1500,
     "ramp": 0,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 101100
+    "expert_best": 107900
    },
    "suggested_tiers": [
     1750,
-    27800,
-    49300
+    27400,
+    51400
    ],
    "title": "Sling Smash",
    "unit": "pts",
    "current_tiers": [
     1750,
-    27800,
-    49300
+    27900,
+    48200
    ]
   },
   "haze-defense": {
@@ -718,47 +751,47 @@
     "p75": 9500
    },
    "good": {
-    "median_pb": 42750,
-    "p90_pb": 52550
+    "median_pb": 42800,
+    "p90_pb": 57200
    },
    "top1": {
-    "pb": 68250
+    "pb": 68650
    },
    "runs": {
-    "p10": 3800,
-    "p50": 10800,
-    "p90": 29400,
-    "p99": 52450
+    "p10": 3850,
+    "p50": 10850,
+    "p90": 29600,
+    "p99": 57150
    },
    "run_seconds": {
     "p10": 275,
     "p50": 451,
     "p90": 713,
-    "p99": 930
+    "p99": 968
    },
    "rate": {
-    "max_seen_per_sec": 80.28,
+    "max_seen_per_sec": 83.58,
     "at": {
-     "score": 100189,
-     "seconds": 1248
+     "score": 107818,
+     "seconds": 1290
     },
     "ceiling_per_sec": 160,
     "ramp": 1.4,
     "over_ceiling_runs": 0,
     "expert_over_ceiling": 0,
-    "expert_best": 116700
+    "expert_best": 108600
    },
    "suggested_tiers": [
     6950,
-    42750,
-    62800
+    42800,
+    67800
    ],
    "title": "Haze Defense",
    "unit": "pts",
    "current_tiers": [
-    6950,
-    42750,
-    62800
+    8000,
+    42800,
+    62950
    ]
   }
  }

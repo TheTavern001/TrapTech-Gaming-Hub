@@ -31,77 +31,119 @@ if (process.env.NODE_ENV === 'production' && process.env.ADMIN_PASSWORD.length <
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
 
 // Game catalog. Every game is playable and scored through the same signed run-token flow.
-// ac = per-game anti-cheat plausibility caps, checked against SERVER-measured run time:
-//   score <= perSec * elapsedSeconds + grace   and   score <= max (absolute cap for runs with a fixed number of drops/spins)
-//   coins <= coinsPerSec * elapsedSeconds + 10
+// v7: every game is ENDLESS (a run lasts until the player fails) and no score has a hard cap. Anti-cheat therefore uses
+// per-second RATE limits against SERVER-measured run time instead of fixed caps (src/anticheat.js, src/results.js):
+//   normal ceiling  score <= perSec * t + ramp * t^2 / 2 + grace      (t = server-measured seconds)
+//   hard reject     score >  2 x that ceiling                         (physically impossible)
+//   ramp > 0 only for games whose honest scoring rate rises over a run (bigger waves / table limits).
+//   max = MAX_SCORE (a sanity bound far above any real run, not a game cap). coins <= 2 * coinsPerSec * t + 20.
+// Rates and tiers are derived from tools/score-sim.js (docs/score-ranges.json).
 // tiers = Bronze / Silver / Gold score thresholds used by the achievement system.
+const MAX_SCORE = 1_000_000_000_000; // sanity bound only (1e12); endless runs have no game cap
 const GAMES = [
   { id: 'jetpack-dash', title: 'Jetpack Dash', category: 'Arcade', tags: ['Arcade', 'High Score', '1-Player'], playable: true, unit: 'm', module: 'jetpack.js', cls: 'JetpackDash',
     art: '/assets/cards/v5/jetpack-dash.webp', artTall: '/assets/cards/v5/jetpack-dash-tall.webp',
     desc: 'Fly as far as you can, dodge zappers, saws and rockets, collect coins and beat your high score!',
     howto: 'Hold the screen, mouse button or Space to fire your jetpack; let go to drop. Dodge zappers, buzz saws and rockets (watch for the ! warning). Grab shields to survive one hit.',
     scoring: 'Score = meters flown in one run.',
-    ac: { perSec: 30, grace: 25, max: 10_000_000, coinsPerSec: 12 }, tiers: [500, 1500, 3000] },
-  { id: 'drift-rush', title: 'Drift Rush', category: 'Racing', tags: ['Racing', 'Time Trial'], playable: true, unit: 'pts', module: 'games/drift-rush.js', cls: 'DriftRush',
+    ac: { perSec: 30, ramp: 0, grace: 25, max: MAX_SCORE, coinsPerSec: 12 }, tiers: [440, 3400, 5050] },
+  { id: 'drift-rush', title: 'Drift Rush', category: 'Racing', tags: ['Racing', 'Endless'], playable: true, unit: 'pts', module: 'games/drift-rush.js', cls: 'DriftRush',
     art: '/assets/cards/v5/drift-rush.webp', artTall: '/assets/cards/v5/drift-rush-tall.webp',
-    desc: 'Slide through neon corners and chase the perfect drift line before the clock runs out.',
-    howto: 'Hold the left or right side of the screen (or arrow keys / A-D) to steer. Slide hard to start a drift and build a combo; bank it by straightening out. Leaving the road or hitting a cone loses the drift you were holding. Cross checkpoints for extra time; grab nitro orbs for a burst of speed.',
-    scoring: 'Score = meters driven + banked drift points. The run ends when the timer hits zero.',
-    ac: { perSec: 240, grace: 200, max: 10_000_000, coinsPerSec: 4 }, tiers: [2500, 6000, 11000] },
+    desc: 'Slide through neon corners, chain drifts and keep the car alive as the road gets faster.',
+    howto: 'Hold the left or right side of the screen (or arrow keys / A-D) to steer; Steering Assist (on by default for touch) gently keeps you on the road. Slide through curves to build a drift combo and straighten out to bank it. Hitting a cone or barrier costs one of 3 hearts (you get a moment of invulnerability after a hit) and drops the drift you were holding; running wide just slows you down. Every 1,500 m checkpoint repairs a heart. Warning arrows show what is coming. The road speeds up forever.',
+    scoring: 'Score = meters driven + banked drift points (drift x chain up to x4). The run ends when your last heart is gone.',
+    ac: { perSec: 240, ramp: 0, grace: 200, max: MAX_SCORE, coinsPerSec: 4 }, tiers: [1300, 3750, 6000] },
   { id: 'plinko', title: 'Plinko', category: 'Casual', tags: ['Casual', 'Skill Drop'], playable: true, unit: 'pts', module: 'games/plinko.js', cls: 'Plinko',
     art: '/assets/cards/v5/plinko.webp', artTall: '/assets/cards/v5/plinko-tall.webp',
-    desc: 'Aim your drop, nudge the chip through the pegs and steer it into the big slots.',
+    desc: 'Aim your drop, nudge the chip and hit the big slots to earn more chips. How long can you keep dropping?',
     howto: 'You get 10 free chips per run. Drag along the top to aim and release to drop. While a chip falls, tap left or right of it to nudge it (3 nudges per chip). Golden pegs multiply that chip\'s points (x2, then x4).',
-    scoring: 'Score = sum of slot points x golden-peg multiplier for your 10 chips. Points only, nothing to buy.',
-    ac: { perSec: 700, grace: 900, max: 8000, coinsPerSec: 2 }, tiers: [900, 2000, 3500] },
+    scoring: 'Score = slot points x golden-peg multiplier for every chip, with no limit on chips. Points only, nothing to buy.',
+    ac: { perSec: 700, ramp: 0, grace: 900, max: MAX_SCORE, coinsPerSec: 2 }, tiers: [830, 4100, 6450] },
   { id: 'spin-to-win', title: 'Spin to Win', category: 'Casino', tags: ['Casino', 'Timing'], playable: true, unit: 'pts', module: 'games/spin-to-win.js', cls: 'SpinToWin',
     art: '/assets/cards/v5/spin-to-win.webp', artTall: '/assets/cards/v5/spin-to-win-tall.webp',
-    desc: 'Charge the power meter and stop the wheel on the jackpot. Timing beats luck.',
-    howto: 'You get 5 free spins per run. Hold to charge the power meter and release to spin. The wheel always travels the same distance for the same power, so learn the timing and aim for the big segments. x2 doubles your next spin, BONUS gives an extra spin (max 8 spins), BUST scores 0.',
-    scoring: 'Score = total points from your spins. Points only, no real money.',
-    ac: { perSec: 700, grace: 2000, max: 16000, coinsPerSec: 1 }, tiers: [1200, 3000, 6000] },
+    desc: 'Charge the power meter and stop the wheel on the jackpot. Timing beats luck, and the wheel never stops.',
+    howto: 'Hold to charge the power meter and release to spin. The wheel always travels the same distance for the same power, so read the wheel and time your release. You have 3 lives: landing on BUST costs one. BONUS gives a life back (max 5) and x2 doubles your next spin. Every 5 spins the wheel reshuffles, the meter gets faster and another BUST wedge appears. Spin until your lives run out.',
+    scoring: 'Score = total points from all your spins. No spin limit. Points only, no real money.',
+    ac: { perSec: 700, ramp: 0, grace: 2000, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [4100, 14050, 19150] },
   { id: 'memory-match', title: 'Memory Match', category: 'Puzzle', tags: ['Puzzle', 'Memory'], playable: true, unit: 'pts', module: 'games/memory-match.js', cls: 'MemoryMatch',
-    art: '/assets/cards/v5/memory-match.webp', artTall: '/assets/cards/v5/memory-match-tall.webp', desc: 'Flip cards, find pairs, beat the clock. Chain matches for combo points.',
-    howto: 'Tap two cards to flip them. Matching pairs stay open. Chain matches without a miss to raise your combo (up to x5). Clear the board to move to a bigger level and earn extra time.',
-    scoring: 'Score = 100 x combo per pair + 10 per second left when you clear a level. The run ends when time runs out.',
-    ac: { perSec: 1100, grace: 500, max: 10_000_000, coinsPerSec: 2 }, tiers: [2000, 5000, 9000] },
+    art: '/assets/cards/v5/memory-match.webp', artTall: '/assets/cards/v5/memory-match-tall.webp', desc: 'Flip cards, find pairs, beat the board clock. Endless boards, each one with less time.',
+    howto: 'Memorize the cards, then tap two at a time to find pairs. Every board has its own clock, and each new board gives you a little less time per pair. Chain matches without a miss to raise your combo (up to x5). Clear the board before its clock runs out to deal the next one; if the clock hits zero the run ends. Boards never run out.',
+    scoring: 'Score = 100 x combo per pair + 10 per second left on the board clock + 50 x board number per clear. Replay-verified on the server.',
+    ac: { perSec: 1100, ramp: 0, grace: 500, max: MAX_SCORE, coinsPerSec: 2 }, tiers: [2650, 62150, 110800] },
   { id: 'high-score', title: 'High Score', category: 'Arcade', tags: ['Arcade', 'Reflex'], playable: true, unit: 'pts', module: 'games/high-score.js', cls: 'HighScore',
     art: '/assets/cards/v5/high-score.webp', artTall: '/assets/cards/v5/high-score-tall.webp', desc: 'A quick-fire neon reflex challenge built for leaderboard bragging rights.',
-    howto: 'Tap the glowing targets before they shrink away. Hit dead center for bonus points, gold targets are worth double, and never tap the red bombs. Missing a target or hitting a bomb costs a life (3 lives). Tapping empty space breaks your combo.',
+    howto: 'Tap the glowing targets before they shrink away. Hit dead center for bonus points, gold targets are worth double, and never tap the red bombs. Missing a target or hitting a bomb costs a life (3 lives, a heart every 100 hits). Targets keep getting smaller, faster and more numerous for as long as you last.',
     scoring: 'Score = (10 + up to 15 accuracy bonus) x combo multiplier (up to x5) per target.',
-    ac: { perSec: 900, grace: 300, max: 10_000_000, coinsPerSec: 4 }, tiers: [1500, 4000, 8000] },
+    ac: { perSec: 1100, ramp: 0, grace: 300, max: MAX_SCORE, coinsPerSec: 4 }, tiers: [780, 11300, 18200] },
   { id: 'blazed-roulette', title: 'Blazed Roulette', category: 'Casino', tags: ['Casino', 'Featured'], featured: true, playable: true, unit: 'chips', module: 'games/blazed-roulette.js', cls: 'BlazedRoulette',
-    art: '/assets/cards/v5/blazed-roulette.webp', artTall: '/assets/cards/v5/blazed-roulette-tall.webp', desc: 'Place your free chips, time the ball drop and grow your stack in 8 spins.',
-    howto: 'Every run starts with 1,000 free practice chips and 8 spins. Pick a chip size and tap bets (up to 100 per spin, 10 max on green 0). Then tap DROP when the glowing landing zone covers the pockets you want: the ball lands inside that zone.',
-    scoring: 'Score = chips left after 8 spins (or when you run out). Chips are points only and have no cash value.',
-    ac: { perSec: 120, grace: 1000, max: 3800, coinsPerSec: 1 }, tiers: [1300, 1800, 2500] },
+    art: '/assets/cards/v5/blazed-roulette.webp', artTall: '/assets/cards/v5/blazed-roulette-tall.webp', desc: 'Play roulette inside a lush grow room. Time the ball drop, beat the rising table minimum and keep your stack alive.',
+    howto: 'Every run starts with 1,000 free practice chips and no spin limit. Pick a chip size and tap bets, then tap DROP when the glowing landing zone covers the pockets you want: the ball lands inside that zone. The table minimum and maximum rise every spin and the landing zone slowly widens. The run ends when your chips can no longer cover the table minimum.',
+    scoring: 'Score = total chips won on winning spins (your winnings, not your stack). Chips are points only and have no cash value.',
+    ac: { perSec: 300, ramp: 40, grace: 1500, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [3350, 49750, 765100] },
   { id: 'terp-tapper', title: 'Terp Tapper', category: 'Arcade', tags: ['Arcade', 'Rhythm', 'Featured'], featured: true, playable: true, unit: 'pts', module: 'games/terp-tapper.js', cls: 'TerpTapper',
     art: '/assets/cards/v5/terp-tapper.webp', artTall: '/assets/cards/v5/terp-tapper-tall.webp', desc: 'Tap fast, combo harder, top the board. A four-lane neon rhythm tapper.',
-    howto: 'Orbs fall down four lanes. Tap the lane (or press D F J K / arrow keys) as each orb crosses the line. Perfect timing scores the most, and every 10-hit combo raises your multiplier (up to x4). Missing an orb costs one of your 5 lives, and the tempo keeps rising.',
+    howto: 'Orbs fall down four lanes. Tap the lane (or press D F J K / arrow keys) as each orb crosses the line. Perfect timing scores the most, and every 10-hit combo raises your multiplier (up to x4). Missing an orb costs one of your 5 lives (a 100-hit combo heals one). The tempo keeps rising and chords get denser for as long as you survive.',
     scoring: 'Score = 100 perfect / 60 great / 30 good x combo multiplier per orb.',
-    ac: { perSec: 3000, grace: 500, max: 10_000_000, coinsPerSec: 2 }, tiers: [3000, 9000, 20000] },
+    ac: { perSec: 4000, ramp: 0, grace: 500, max: MAX_SCORE, coinsPerSec: 2 }, tiers: [10300, 94000, 334550] },
   // v5 additions
-  { id: 'stack-2048', title: 'Stack 2048', category: 'Puzzle', tags: ['Puzzle', 'Strategy', 'New'], playable: true, unit: 'pts', module: 'games/stack-2048.js', cls: 'Stack2048',
-    art: '/assets/cards/v5/stack-2048.webp', artTall: '/assets/cards/v5/stack-2048-tall.webp', desc: 'Slide and merge chips on the felt. Double up all the way to 2048 and beyond.',
-    howto: 'Swipe (or use the arrow keys) to slide every chip on the board. Two chips with the same value merge into one worth double, and a new 2 or 4 appears after every move. The run ends when no move is possible.',
-    scoring: 'Score = the value of every merge you make (merging two 64s = +128). Points only.',
-    ac: { perSec: 150, grace: 400, max: 10_000_000, coinsPerSec: 1 }, tiers: [2500, 8000, 20000] },
-  { id: 'munchies-snake', title: 'Munchies Snake', category: 'Arcade', tags: ['Arcade', 'Classic', 'New'], playable: true, unit: 'pts', module: 'games/munchies-snake.js', cls: 'MunchiesSnake',
-    art: '/assets/cards/v5/munchies-snake.webp', artTall: '/assets/cards/v5/munchies-snake-tall.webp', desc: 'The classic snake with a citrus twist. Eat, grow, speed up, do not bite yourself.',
-    howto: 'Swipe, use the arrow keys, or tap beside the snake\'s head to turn. Eat citrus to grow; the snake speeds up as it gets longer. Gold coins appear every 5 bites and vanish after 5 seconds. Hitting a wall or your own tail ends the run.',
-    scoring: 'Score = 10 per bite (+5 for every 10 segments of length) + 50 per gold coin.',
-    ac: { perSec: 60, grace: 150, max: 10_000_000, coinsPerSec: 1 }, tiers: [200, 600, 1400] },
-  { id: 'brick-breaker', title: 'Brick Breaker', category: 'Arcade', tags: ['Arcade', 'Classic', 'New'], playable: true, unit: 'pts', module: 'games/brick-breaker.js', cls: 'BrickBreaker',
-    art: '/assets/cards/v5/brick-breaker.webp', artTall: '/assets/cards/v5/brick-breaker-tall.webp', desc: 'Paddle, ball, wall of bricks. Aim your bounces, chain hits and clear level after level.',
-    howto: 'Drag (or use the arrow keys) to move the paddle and tap to launch. Where the ball hits the paddle sets its angle. Clear every brick to reach the next, faster level. Gold bricks are worth 5x. You have 3 balls.',
-    scoring: 'Score = 10 per brick (50 for gold) x level x chain bonus (up to x4), plus a level-clear bonus.',
-    ac: { perSec: 600, grace: 600, max: 10_000_000, coinsPerSec: 2 }, tiers: [1500, 5000, 12000] },
+  { id: 'munchies-snake', title: 'Neon Munchies', category: 'Arcade', tags: ['Arcade', 'Endless', 'Multiplayer-style', 'New'], playable: true, unit: 'pts', module: 'games/munchies-snake.js', cls: 'MunchiesSnake',
+    art: '/assets/cards/v7/munchies-snake.webp', artTall: '/assets/cards/v7/munchies-snake-tall.webp', desc: 'An infinite neon snake arena. Eat, grow huge, and cut off the rival snakes to steal their glow.',
+    howto: 'Drag anywhere (or use the arrow keys) to steer: the snake follows your finger. Hold a second finger or Space to boost (boosting burns a little length). Eat glowing pellets and snacks to grow. If a rival snake\'s head hits your body it bursts into food for you, but if your head hits a rival or the arena wall, the run ends. There is no win state: rivals keep coming and keep getting bigger.',
+    scoring: 'Score = 10 per pellet, 50 per snack, 250 per golden brownie, 20 per orb dropped by a rival you cut off. No cap.',
+    ac: { perSec: 400, ramp: 0, grace: 1000, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [220, 5550, 11600] },
+  { id: 'brick-breaker', title: 'Brick Breaker', category: 'Arcade', tags: ['Arcade', 'Classic', 'Endless'], playable: true, unit: 'pts', module: 'games/brick-breaker.js', cls: 'BrickBreaker',
+    art: '/assets/cards/v7/brick-breaker.webp', artTall: '/assets/cards/v7/brick-breaker-tall.webp', desc: 'An endless wall of glass bricks keeps sliding down. Smash it back before it reaches your paddle.',
+    howto: 'Drag (or use the arrow keys) to move the paddle and tap to launch. Where the ball hits the paddle sets its angle. The wall never ends: a new procedural row slides in from the top every few seconds and the whole wall creeps down. Steel bricks take 2 hits, gold bricks are worth 5x, and capsules drop multiball, wide paddle and laser power-ups. If the wall reaches the red line, or you lose all your balls, the run ends.',
+    scoring: 'Score = 10 per brick (50 for gold, 20 for steel) x wave bonus (+20% every 10 rows, up to x5) x chain bonus (up to x4). No cap.',
+    ac: { perSec: 1200, ramp: 0, grace: 1500, max: MAX_SCORE, coinsPerSec: 2 }, tiers: [1150, 14850, 51650] },
   { id: 'sky-hopper', title: 'Sky Hopper', category: 'Arcade', tags: ['Arcade', 'One-Tap', 'New'], playable: true, unit: 'pts', module: 'games/sky-hopper.js', cls: 'SkyHopper',
     art: '/assets/cards/v5/sky-hopper.webp', artTall: '/assets/cards/v5/sky-hopper-tall.webp', desc: 'One-tap flyer over the night city. Thread the gaps between the towers.',
-    howto: 'Tap (or press Space) to boost up; stop tapping to fall. Fly through the gaps between the towers. The gaps get tighter and the speed rises as you go. One hit ends the run.',
+    howto: 'Tap (or press Space) to boost up; stop tapping to fall. Fly through the gaps between the towers. The gaps get tighter, the speed rises and later gaps start to slide up and down. One hit ends the run.',
     scoring: 'Score = towers passed. Coins in the gaps count toward your coin total.',
-    ac: { perSec: 1.6, grace: 5, max: 100_000, coinsPerSec: 1.5 }, tiers: [10, 30, 60] },
+    ac: { perSec: 1.6, ramp: 0, grace: 5, max: MAX_SCORE, coinsPerSec: 1.5 }, tiers: [5, 59, 130] },
+  // v7 additions (all endless)
+  { id: 'void-swarm', title: 'Void Swarm', category: 'Arcade', tags: ['Arcade', 'Shooter', 'Endless', 'New'], playable: true, unit: 'pts', module: 'games/void-swarm.js', cls: 'VoidSwarm',
+    art: '/assets/cards/v7/void-swarm.webp', artTall: '/assets/cards/v7/void-swarm-tall.webp', desc: 'Endless space shooter. Alien drone swarms fly in formation and dive at you. Blast them, grab power-ups, survive.',
+    howto: 'Drag anywhere to fly your fighter (it fires automatically). Drone swarms fly into formation, then peel off and dive at you. Shoot divers for double points. Capsules give a spread shot, rapid fire, a shield or an extra life. Every 5th wave a mothership arrives. You have 3 lives; the waves never end and get faster and meaner.',
+    scoring: 'Score = 50 / 80 / 150 per drone type (x2 while diving) x wave bonus (+10% per wave, up to x5) + 2,000 per mothership + 100 x wave for each wave cleared. No cap.',
+    ac: { perSec: 700, ramp: 10, grace: 3000, max: MAX_SCORE, coinsPerSec: 1.5 }, tiers: [17650, 238750, 632750] },
+  { id: 'stack', title: 'Stack', category: 'Arcade', tags: ['Arcade', 'One-Tap', 'Timing', 'New'], playable: true, unit: 'pts', module: 'games/stack.js', cls: 'Stack',
+    art: '/assets/cards/v7/stack.webp', artTall: '/assets/cards/v7/stack-tall.webp', desc: 'Drop sliding glass slabs onto the tower. Nail perfect drops and climb forever.',
+    howto: 'A slab slides across the top of the tower. Tap (or press Space) to drop it. Whatever hangs over the edge is sliced off, so the next slab is smaller. Land 3 perfect drops in a row and the slab grows back. The slabs speed up as the tower climbs. Miss the tower completely and the run ends.',
+    scoring: 'Score = 10 per slab + a perfect bonus of 10 x your perfect streak (up to +100). No cap: the tower never ends.',
+    ac: { perSec: 300, ramp: 0, grace: 200, max: MAX_SCORE, coinsPerSec: 1.5 }, tiers: [210, 2250, 5600] },
+  { id: 'grow-guard', title: 'Grow Guard', category: 'Strategy', tags: ['Strategy', 'Lane Defense', 'Endless', 'New'], playable: true, unit: 'pts', module: 'games/grow-guard.js', cls: 'GrowGuard',
+    art: '/assets/cards/v7/grow-guard.webp', artTall: '/assets/cards/v7/grow-guard-tall.webp', desc: 'Defend your grow room from endless waves of pests with bug-fighting gadgets.',
+    howto: 'Pests crawl in from the right along 5 rows. Collect falling light drops (tap them), then tap a gadget card and tap a tile to place it: Ladybug Launchers shoot, Sticky Traps block, Neem Misters slow a whole row, UV Zappers hit hard and Solar Panels make extra light. A pest that reaches the plants on the left costs a plant; lose all 3 plants and the run ends. Waves never stop and get bigger and tougher.',
+    scoring: 'Score = points per pest (aphid 10, mite 15, gnat 20, caterpillar 30, beetle 60) + 100 x wave number for every wave you clear.',
+    ac: { perSec: 140, ramp: 1.2, grace: 600, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [7950, 42650, 63050] },
+  { id: 'sling-smash', title: 'Sling Smash', category: 'Physics', tags: ['Physics', 'Slingshot', 'Endless', 'New'], playable: true, unit: 'pts', module: 'games/sling-smash.js', cls: 'SlingSmash',
+    art: '/assets/cards/v7/sling-smash.webp', artTall: '/assets/cards/v7/sling-smash-tall.webp', desc: 'Pull back the slingshot and topple towers of wood, glass and stone to knock out the Glitch Bots.',
+    howto: 'Drag back from the slingshot to aim (the dotted arc shows the first part of the flight) and let go to fire a steel ball. Knock out every Glitch Bot in the tower to clear it. Each cleared tower refunds a ball plus one for every ball you did not need. Towers get taller, stronger and windier forever. Run out of balls with bots still standing and the run ends.',
+    scoring: 'Score = 500 per Glitch Bot, 10 per wood / 20 per glass / 40 per stone block destroyed, + 1,000 per tower cleared x tower number bonus (up to x5) for unused balls.',
+    ac: { perSec: 1500, ramp: 0, grace: 3000, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [1750, 27400, 51400] },
+  { id: 'haze-defense', title: 'Haze Defense', category: 'Strategy', tags: ['Strategy', 'Tower Defense', 'Endless', 'New'], playable: true, unit: 'pts', module: 'games/haze-defense.js', cls: 'HazeDefense',
+    art: '/assets/cards/v7/haze-defense.webp', artTall: '/assets/cards/v7/haze-defense-tall.webp', desc: 'Build neon turrets along the track and pop the drifting smoke orbs before they slip through.',
+    howto: 'Smoke orbs drift along the glowing track. Tap a gadget at the bottom, then tap an empty pad beside the track to build it: Dart Coils shoot fast, Fan Blasters push and pop groups, Prism Lasers burn through layers and Frost Misters slow everything near them. Tap a built turret to upgrade it. Big orbs split into smaller ones when popped. Each orb that escapes costs lives; at 0 lives the run ends. Waves never stop.',
+    scoring: 'Score = 1 per layer popped (x wave tier) + 50 x wave number for every wave cleared. Cash is separate and only buys turrets.',
+    ac: { perSec: 160, ramp: 1.4, grace: 600, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [6950, 42800, 67800] },
 ];
+// v7: retired games. Not in the catalog, can't be started or linked, but old runs/challenges still resolve a title and
+// their final board is archived (src/games-v7.js -> leaderboard_archive, GET /api/games/archive/:id).
+const RETIRED = [
+  { id: 'stack-2048', title: 'Stack 2048 (retired)', retired: true, playable: false, replacedBy: 'stack', unit: 'pts', art: '/assets/cards/v7/stack.webp', ac: { perSec: 150, ramp: 0, grace: 400, max: 10_000_000, coinsPerSec: 1 }, tiers: [2500, 8000, 20000] },
+];
+// v7 (item 21): pure-chance games stay playable "just for fun" but can never be linked to (or count for) a giveaway.
+// Every giveaway-eligible game is skill-based, endless and uncapped.
+const JUST_FOR_FUN = new Set(['plinko', 'spin-to-win', 'blazed-roulette']);
+// v7 anti-cheat level per game (src/ac-levels.js, docs/ANTI-CHEAT.md). Every game gets L1 + L2; L3 = event log checked
+// against the game rules; L4 = the server re-simulates the run from the seed + input log and computes the real score.
+const AC_LEVEL = { 'jetpack-dash': 2, 'sky-hopper': 2, stack: 4, 'memory-match': 4 }; // everything else: 3
+for (const g of GAMES) if (!g.retired) g.acLevel = AC_LEVEL[g.id] || 3;
+for (const g of GAMES) g.giveaway = !JUST_FOR_FUN.has(g.id);
+
+// [games-lib hook] library games (src/games-lib.js) join run/score/leaderboard lookups only, not the core catalog list
+const LIB_GAMES = require('./games-lib').games;
 
 module.exports = {
   ROOT,
@@ -113,9 +155,17 @@ module.exports = {
   DATA_DIR,
   DB_PATH: process.env.DB_PATH || path.join(DATA_DIR, 'hub.db'),
   GAMES,
-  GAME_MAP: Object.fromEntries(GAMES.map(g => [g.id, g])),
+  GAME_MAP: Object.fromEntries([...GAMES, ...LIB_GAMES].map(g => [g.id, g])), LIB_GAMES, // [games-lib hook]
+  RETIRED, MAX_SCORE, JUST_FOR_FUN,
+  giveawayEligible: (id) => !!([...GAMES, ...LIB_GAMES].find(g => g.id === id) || {}).giveaway, // [games-lib hook]
+  // any game id ever used, including retired ones (titles/caps for historical runs)
+  gameInfo: (id) => GAMES.find(g => g.id === id) || RETIRED.find(g => g.id === id) || LIB_GAMES.find(g => g.id === id) || null, // [games-lib hook]
   // Day boundaries for "days played" streak achievements
   TZ: process.env.HUB_TZ || 'America/New_York',
-  RUN_TOKEN_TTL_MS: 2 * 60 * 60 * 1000,
+  // v7: endless runs can be long, so a run token stays valid for 12 h (was 2 h)
+  RUN_TOKEN_TTL_MS: 12 * 60 * 60 * 1000,
+  // v7: per-second rate ceiling for a run of t server-measured seconds (see the catalog comment above)
+  capOf: (ac, t) => Math.min(ac.max, Math.floor(ac.perSec * t + 0.5 * (ac.ramp || 0) * t * t + ac.grace)),
+  hardCapOf: (ac, t) => Math.min(ac.max, Math.floor(2 * (ac.perSec * t + 0.5 * (ac.ramp || 0) * t * t) + ac.grace * 2)),
   SESSION_TTL_MS: 30 * 24 * 60 * 60 * 1000,
 };

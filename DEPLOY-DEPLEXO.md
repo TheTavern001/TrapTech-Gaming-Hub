@@ -69,6 +69,7 @@ Past roughly 300k runs, lower `BACKUP_KEEP` (for example 3) or rely on the GitHu
 - Multi-stage on `node:20-bookworm-slim`.
 - **Build stage**:
   - `npm ci --omit=dev`, which installs the **prebuilt native binaries for the builder's architecture** (better-sqlite3, @resvg/resvg-js). A python3/make/g++ toolchain is there only as a fallback.
+  - v7 added one pure-JS dependency, `qrcode-generator` (it renders the admin authenticator QR code on the server, so the QR never goes through a third party). It is in `package.json`/`package-lock.json`, so `npm ci` installs it. There is nothing extra to do on Deplexo.
   - Runs `scripts/deplexo-prebuild.js`.
   - Smoke-tests that both native modules load.
 - **Runtime stage**:
@@ -104,6 +105,12 @@ Past roughly 300k runs, lower `BACKUP_KEEP` (for example 3) or rely on the GitHu
    | `NODE_ENV` | `production` (already set in the image; harmless to repeat) |
    | `NODE_OPTIONS` | leave empty. The memory flags are in the Dockerfile `CMD`. Only add extra flags here if needed. |
    | *(optional)* `BACKUP_GITHUB_TOKEN`, `BACKUP_GITHUB_REPO`, `BACKUP_GITHUB_BRANCH` | see section 5 |
+   | `ADMIN_PATH` | **required for the admin panel (v7)**: a long random slug, 16-128 characters of `A-Z a-z 0-9 _ -`, for example the output of `openssl rand -hex 16`. The admin lives only at `https://<site>/<ADMIN_PATH>/`, and `/admin` returns 404. If it is missing or too short, the admin panel is disabled. Keep it private. |
+   | `ADMIN_USERNAME` | *(optional)* the owner account's username, default `owner`. The owner signs in with `ADMIN_PASSWORD` the first time, then sets up an authenticator app (QR code) and gets 10 backup codes. |
+   | `TRUST_CF_IP` | `1` when the app is reached through Cloudflare (it reads the visitor IP from `CF-Connecting-IP` for rate limits and admin lockouts). This is already the default with `NODE_ENV=production`. Check after the first deploy: `curl -sI https://<app-url>/healthz` should show a `cf-ray:` header. **If it doesn't, set `TRUST_CF_IP=0`**, or visitors could fake their IP. |
+   | `PUBLIC_URL` | *(optional, v7)* the public address used for share, referral and Open Graph links and `<link rel=canonical>`, for example `https://traptechgaminghub.com`. Leave it empty to use whatever host the request came in on. See FINALIZE.md, Domain. |
+   | `CANONICAL_REDIRECT` | *(optional)* `1` redirects (301) page loads on any other hostname to `PUBLIC_URL`. Only use it when `PUBLIC_URL` is served by this app directly (a custom domain on the Deplexo app), **never** together with a registrar or Cloudflare redirect that points back to the Deplexo URL, because that would loop. |
+   | `ADMIN_RESET_TOKEN` | **unset normally.** Only for owner lockout recovery (FINALIZE.md, section 4). |
 
    Note: if this replaces an existing deployment whose players' sessions you want to keep, reuse its secrets. Either set the same `SECRET`, or set `SESSION_SECRET`, `RUN_SECRET` and `IP_SALT` individually with the old values.
 5. **Confirm the persistent mount**: in the app's storage/volume settings, make sure the persistent volume is mounted at **`/data`**. That is the default path and it must match `DATA_DIR`. Saving a mount or env change only takes effect after a restart or redeploy.
@@ -111,7 +118,7 @@ Past roughly 300k runs, lower `BACKUP_KEEP` (for example 3) or rely on the GitHu
 7. **Verify**:
    - `https://<app>.<deplexo-subdomain>/healthz` should return `{"ok":true}`.
    - Open the site, sign up a test player, play a run, check the leaderboard, open a share link (its preview image is `/og/run/<id>.png`).
-   - Sign in at `/admin`. Under Settings → **Database backups**, press **Back up now**, then **Download backup**.
+   - Sign in at `/<ADMIN_PATH>/` (v7: `/admin` is a 404 on purpose) as `owner` with `ADMIN_PASSWORD`, and scan the QR code with an authenticator app. Save the backup codes offline. Then, under Settings → **Database backups**, press **Back up now**, then **Download backup**.
 8. If the old Render database should come along: download its `hub.db`. Restoring it on Deplexo is the open item in section 5 (restore).
 
 ## 5. Backups
@@ -161,7 +168,7 @@ Tested against a mock of the GitHub API (`tools/deplexo/mock-github.js` + `tools
 ## 6. Caveats
 
 - **0.25 CPU**, not "1 shared CPU" (per the plans page): fine for normal use, slow for bursts of new share images.
-- **No custom domain on Free**; the app gets a Deplexo subdomain.
+- **No custom domain on Free**: the app gets a Deplexo subdomain. Re-checked 2026-10-04: the plans page lists "Subdomain on the platform" for Free, "Custom subdomains" for Starter ($5) and Pro ($10), and "Custom domains" only for Business. The [custom-domain guide](https://docs.deplexo.com/guides/domains/) (TXT + CNAME, apex needs CNAME flattening) doesn't name a plan. For TrapTechGamingHub.com and the free options, see FINALIZE.md, Domain.
 - **Runtime architecture and the health check Deplexo uses aren't documented.** The docs say a container goes live after "a health check" passes. `/healthz` and the Docker `HEALTHCHECK` are both in place.
 - **Ownership of the `/data` volume isn't documented.** The image runs as uid 1000 and `/data` is chowned in the image. If Deplexo mounts a root-owned volume, the app stops with a clear FATAL message, and Deplexo support would need to confirm what uid to run as.
 - The volume is **deleted with the app** and doesn't move between workers. Keep the GitHub backups on.

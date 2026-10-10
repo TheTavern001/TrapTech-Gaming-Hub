@@ -9,11 +9,11 @@ const SCALE = [261.6, 311.1, 349.2, 392.0, 466.2, 523.3, 622.3, 698.5];
 const WIN = { perfect: 0.06, great: 0.12, good: 0.18 };
 export class TerpTapper extends Game {
   get title() { return 'TERP TAPPER'; }
-  get hint() { return 'Tap a lane (or D F J K) as each orb crosses the line. Perfect timing + long combos = big points. 5 lives.'; }
+  get hint() { return 'Tap a lane (or D F J K) as each orb crosses the line. Perfect timing + long combos = big points. 5 lives, and every 100-note combo heals one. The tempo keeps climbing.'; }
   get startOnTapOnly() { return true; }
   layout() { this.laneW = Math.min(118, (this.W - 30) / 4); this.lx = (this.W - this.laneW * 4) / 2; this.hitY = this.H - 120; }
   reset() { this.score = 0; this.coins = 0; this.lives = 5; this.combo = 0; this.maxCombo = 0; this.notes = []; this.nextBeat = 2.0; this.beatN = 0; this.press = [0, 0, 0, 0]; this.judge = null; this.endT = 0; this.dead = false; this.lastLane = -1; }
-  bpm() { return Math.min(168, 96 + (this.playT || 0) * 0.6); }
+  bpm() { const t = this.playT || 0; return t <= 120 ? 96 + t * 0.6 : Math.min(220, 168 + (t - 120) * 0.15); } // v7 endless: keeps speeding up to 220 BPM
   speed() { return 470 + clamp((this.playT || 0) / 120, 0, 1) * 380; }
   mult() { return Math.min(4, 1 + Math.floor(this.combo / 10)); }
   lane() { let l; do { l = Math.floor(Math.random() * 4); } while (l === this.lastLane && Math.random() < 0.6); this.lastLane = l; return l; }
@@ -31,10 +31,10 @@ export class TerpTapper extends Game {
   hit(l) {
     this.press[l] = 0.15; const now = this.playT; let best = null, bd = 1;
     for (const n of this.notes) if (n.lane === l && !n.done) { const d = Math.abs(n.t - now); if (d < bd) { bd = d; best = n; } }
-    if (!best || bd > WIN.good) { if (this.combo >= 5) this.pop(this.lx + this.laneW * (l + 0.5), this.hitY - 40, 'COMBO BREAK', '#94a3b8', 16); this.combo = 0; this.sfx.tone(140, 0.05, { type: 'square', vol: 0.06 }); return; }
+    if (!best || bd > WIN.good) { if (this.combo >= 5) this.pop(this.lx + this.laneW * (l + 0.5), this.hitY - 40, 'COMBO BREAK', '#94a3b8', 16); if (this.combo) this.mark('x'); this.combo = 0; this.sfx.tone(140, 0.05, { type: 'square', vol: 0.06 }); return; }
     best.done = true; const q = bd <= WIN.perfect ? 'PERFECT' : bd <= WIN.great ? 'GREAT' : 'GOOD'; const base = q === 'PERFECT' ? 100 : q === 'GREAT' ? 60 : 30;
-    this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo); if (this.combo % 50 === 0) this.coins++;
-    const pts = base * this.mult(); this.score += pts;
+    this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo); if (this.combo % 50 === 0) this.coins++; if (this.combo % 100 === 0 && this.lives < 5) { this.lives++; this.pop(this.W / 2, this.hitY - 80, '+1 LIFE', '#a3e635', 24); }
+    const pts = this.award(base * this.mult(), 'n');
     this.judge = { q, life: 0.5, col: q === 'PERFECT' ? '#fde047' : q === 'GREAT' ? '#34d399' : '#22d3ee' };
     const x = this.lx + this.laneW * (l + 0.5); this.burst(x, this.hitY, [LANE_COL[l], '#fff'], q === 'PERFECT' ? 18 : 10, 260, 0.45, 4);
     this.sfx.tone(SCALE[(l * 2 + (this.beatN % 3)) % SCALE.length], 0.16, { type: 'triangle', vol: 0.32 });
@@ -45,7 +45,7 @@ export class TerpTapper extends Game {
     if (this.dead) { this.endT += dt; if (this.endT > 0.8) { this.sfx.lose(); this.finish(); } return; }
     const prevBeat = Math.floor((this.playT - dt) * this.bpm() / 60); if (Math.floor(this.playT * this.bpm() / 60) !== prevBeat && this.playT > 2) this.sfx.tone(70, 0.12, { type: 'sine', vol: 0.35, slide: 0.5 });
     this.schedule();
-    for (const n of this.notes) if (!n.done && this.playT - n.t > WIN.good) { n.done = true; n.miss = true; this.lives--; this.combo = 0; this.pop(this.lx + this.laneW * (n.lane + 0.5), this.hitY - 30, 'MISS', '#f87171', 20); this.sfx.tone(200, 0.12, { type: 'sawtooth', vol: 0.12, slide: 0.6 }); if (this.lives <= 0) { this.lives = 0; this.dead = true; break; } }
+    for (const n of this.notes) if (!n.done && this.playT - n.t > WIN.good) { n.done = true; n.miss = true; this.lives--; this.combo = 0; this.mark('x'); this.pop(this.lx + this.laneW * (n.lane + 0.5), this.hitY - 30, 'MISS', '#f87171', 20); this.sfx.tone(200, 0.12, { type: 'sawtooth', vol: 0.12, slide: 0.6 }); if (this.lives <= 0) { this.lives = 0; this.dead = true; break; } }
     this.notes = this.notes.filter(n => !n.done || this.playT - n.t < 0.4);
   }
   async load() { this.amb = new Ambient('club', 19); const m = { bg: 'tt-bg.webp' }; LANE_ART.forEach((f, i) => { m['n' + i] = f; }); this.art = await loadArt(m); }

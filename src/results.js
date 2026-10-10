@@ -22,8 +22,9 @@ const RANDOM_RULE = 'Random-draw giveaways use a verifiable commit-reveal draw. 
 const gamesOf = (gid) => db.prepare('SELECT game_id FROM giveaway_games WHERE giveaway_id=? ORDER BY rowid').all(gid).map(r => r.game_id);
 const winnerCount = (g) => g.winner_count > 0 ? g.winner_count : Math.max(1, String(g.prize_tiers || '').split('\n').map(x => x.trim()).filter(Boolean).filter(x => !/random/i.test(x) || g.win_method === 'random').length);
 // SQL expression: max plausible score for a run given server-measured time (same caps as POST /api/score)
-const capSql = () => `(CASE r.game_id ${cfg.GAMES.map(x => `WHEN '${x.id}' THEN MIN(${x.ac.max}, ${x.ac.perSec} * (r.created_at - r.started_at) / 1000.0 + ${x.ac.grace})`).join(' ')} ELSE 0 END)`;
-const capFor = (run) => { const a = cfg.GAME_MAP[run.game_id].ac; return Math.min(a.max, Math.floor(a.perSec * (run.created_at - run.started_at) / 1000 + a.grace)); };
+// v7: per-second rate ceiling with an optional ramp term (cfg.capOf); retired games keep their old caps for history
+const capSql = () => `(CASE r.game_id ${[...cfg.GAMES, ...cfg.RETIRED, ...(cfg.LIB_GAMES || [])].map(x => /* [games-lib hook] */ { const T = '((r.created_at - r.started_at) / 1000.0)'; return `WHEN '${x.id}' THEN MIN(${x.ac.max}, ${x.ac.perSec} * ${T} + ${0.5 * (x.ac.ramp || 0)} * ${T} * ${T} + ${x.ac.grace})`; }).join(' ')} ELSE 0 END)`;
+const capFor = (run) => { const g = cfg.gameInfo(run.game_id); return g ? cfg.capOf(g.ac, (run.created_at - run.started_at) / 1000) : 0; };
 
 const U = 'u.id AS user_id, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect, u.created_at AS joined_at';
 const cache = new Map();

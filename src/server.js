@@ -15,13 +15,16 @@ const { gameBoard, globalBoard, ranked, giveawayEntrants, giveawayStatus, active
 
 const app = express();
 app.set('trust proxy', true);
+const PU = require('./public-url'); app.use(PU.redirect()); // v7: PUBLIC_URL + optional CANONICAL_REDIRECT (src/public-url.js)
 app.disable('x-powered-by');
 // Static text assets are gzipped at build time (scripts/deplexo-prebuild.js -> $BUILD_DIR/gz) and served as-is;
 // on-the-fly gzip is only used for dynamic responses (JSON, HTML). Smaller zlib windows keep per-response memory low.
 app.use(require('./static-gz')(path.join(cfg.ROOT, 'public')));
 app.use(require('compression')({ threshold: 1024, memLevel: 7, windowBits: 14 }));
 const V7A = require('./admin-v7'); app.use(V7A.bigJson); // v7 admin: larger JSON bodies only for signed-in builder/settings/import routes
-app.use(express.json({ limit: '32kb' }));
+// v7: score submissions carry the L3 event log / L4 input log (up to ~60 KB); everything else stays at 32 KB
+const jsonSmall = express.json({ limit: '32kb' }), jsonScore = express.json({ limit: '96kb' });
+app.use((req, res, next) => (req.path === '/api/score' ? jsonScore : jsonSmall)(req, res, next));
 app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mode
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
@@ -208,7 +211,7 @@ app.post('/api/run/start', requireUser, (req, res) => {
 });
 
 app.post('/api/score', requireUser, (req, res) => {
-  if (!rateLimit(`score-ip:${ipHash(req)}`, 30, 60e3)) return bad(res, 429, 'Too many score submissions.');
+  if (!rateLimit(`score-ip:${ipHash(req)}`, 30, 60e3) || !rateLimit(`score-u:${req.user.id}`, 40, 60e3)) return bad(res, 429, 'Too many score submissions.'); // L2 submit frequency (hard)
   const tok = verify(cfg.RUN_SECRET, req.body.token);
   if (!tok) return bad(res, 400, 'Invalid run token.');
   if (tok.u !== req.user.id) return bad(res, 403, 'Run token belongs to another player.');
@@ -223,7 +226,7 @@ app.post('/api/score', requireUser, (req, res) => {
   if (t - row.started_at > cfg.RUN_TOKEN_TTL_MS) return reject(400, 'Run token expired.');
   const game = cfg.GAME_MAP[row.game_id]; const ac = game.ac; const unit = game.unit === 'm' ? 'm' : ' ' + game.unit;
   const score = Number(req.body.score); const coins = Number(req.body.coins || 0);
-  if (!Number.isInteger(score) || score < 0 || score > 10_000_000) return reject(400, 'Invalid score value.');
+  if (!Number.isInteger(score) || score < 0 || score > cfg.MAX_SCORE) return reject(400, 'Invalid score value.');
   if (!Number.isInteger(coins) || coins < 0 || coins > 1_000_000) return reject(400, 'Invalid coin value.');
   // per-game plausibility caps against SERVER-measured elapsed time (see config.js GAMES[].ac)
   const elapsedS = (t - row.started_at) / 1000;
@@ -231,7 +234,9 @@ app.post('/api/score', requireUser, (req, res) => {
   const durationMs = Math.max(0, Math.min(rawDur, t - row.started_at + 5000));
   // v5 anti-cheat (src/anticheat.js): only physically impossible runs are rejected; suspicious ones are kept + flagged
   const tel = req.body.tel && typeof req.body.tel === 'object' ? req.body.tel : null;
-  const verdict = AC.assess({ userId: req.user.id, game: { ...game, id: row.game_id }, score, elapsedS, durationMs: rawDur, tel, seed: row.seed, log: Array.isArray(req.body.log) ? req.body.log : null });
+  const verdict = AC.assess({ userId: req.user.id, game: { ...game, id: row.game_id }, score, elapsedS, durationMs: rawDur, tel, seed: row.seed, log: Array.isArray(req.body.log) ? req.body.log : null, ev: req.body.ev && typeof req.body.ev === 'object' ? req.body.ev : null,
+    recent: db.prepare('SELECT COUNT(*) c FROM runs WHERE user_id=? AND created_at>?').get(req.user.id, t - 60e3).c });
+  if (verdict.reject && verdict.why) return reject(422, verdict.why);
   if (verdict.reject) return reject(422, `Score rejected: ${score}${unit} in ${elapsedS.toFixed(1)}s is not possible in ${game.title} (max ${verdict.cap}${unit}).`);
   if (coins > 2 * ac.coinsPerSec * elapsedS + 20) return reject(422, 'Coin count rejected as implausible.');
 
@@ -336,14 +341,14 @@ function profileFor(user) {
   const coins = bests.reduce((s, b) => s + (b.coins || 0), 0);
   const wins = db.prepare('SELECT COUNT(*) AS c FROM winners WHERE user_id=?').get(user.id).c;
   const recent = db.prepare('SELECT game_id, score, coins, created_at FROM runs WHERE user_id=? ORDER BY created_at DESC LIMIT 10').all(user.id)
-    .map(r => ({ ...r, game_title: cfg.GAME_MAP[r.game_id]?.title || r.game_id, unit: cfg.GAME_MAP[r.game_id]?.unit || 'pts' }));
+    .map(r => ({ ...r, game_title: cfg.gameInfo(r.game_id)?.title || r.game_id, unit: cfg.gameInfo(r.game_id)?.unit || 'pts' }));
   const gb = globalBoard(0); const grank = gb.findIndex(r => r.user_id === user.id) + 1;
   const entries = db.prepare(`SELECT COUNT(DISTINCT g.id) AS c FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id JOIN runs r ON r.game_id=gg.game_id AND r.user_id=? AND r.started_at>=g.start_at AND r.created_at<=g.end_at AND r.created_at>=g.start_at AND r.score>=g.min_score`).get(user.id).c;
   const unl = ach.unlockedMap(user.id);
   const achievements = [...unl.entries()].sort((a, b) => b[1] - a[1]).map(([id, at]) => { const a = ach.BY_ID[id]; return a && { ...ach.publicAch(a, true), unlocked_at: at }; }).filter(Boolean);
   return { username: user.username, member_since: user.created_at, demo: !!user.is_demo, total_score: total, games_played: plays, coins,
     giveaways_won: wins, giveaways_entered: entries, global_rank: grank || null,
-    best_by_game: bests.map(b => ({ game_id: b.game_id, game_title: cfg.GAME_MAP[b.game_id]?.title || b.game_id, best: b.best, plays: b.n })),
+    best_by_game: bests.map(b => ({ game_id: b.game_id, game_title: cfg.gameInfo(b.game_id)?.title || b.game_id, best: b.best, plays: b.n })),
     cos: ach.publicCos(user), achievements, achievements_total: ach.ACHIEVEMENTS.length, recent };
 }
 app.get('/api/profile/:username', (req, res) => {
@@ -524,6 +529,7 @@ function readGiveaway(b) {
   if (g.end_at <= g.start_at) return [null, 'End time must be after start time.'];
   if (!gameIds.length) return [null, 'Pick at least one game.'];
   for (const id of gameIds) if (!cfg.GAME_MAP[id]) return [null, `Unknown linked game: ${id}`];
+  for (const id of gameIds) if (!cfg.giveawayEligible(id)) return [null, `${cfg.GAME_MAP[id].title} is a just-for-fun chance game, so it can't count for a giveaway.`];
   if (g.image && !IMG_RE.test(g.image)) return [null, 'Image must be a /assets/... path or an https:// URL.'];
   if (g.brand_logo && !IMG_RE.test(g.brand_logo)) return [null, 'Brand logo must be a /assets/... path or an https:// URL.'];
   return [g, null, gameIds];
@@ -575,6 +581,7 @@ A.put('/giveaways/:id', (req, res) => {
 A.post('/giveaways/:id/games', (req, res) => {
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
   const gameId = String(req.body.game_id || ''); if (!cfg.GAME_MAP[gameId]) return bad(res, 400, 'Unknown game.');
+  if (req.body.linked && !cfg.giveawayEligible(gameId)) return bad(res, 400, `${cfg.GAME_MAP[gameId].title} is a just-for-fun chance game, so it can't be linked to a giveaway.`);
   if (g.finalized_at) return bad(res, 409, 'Final results are locked, so linked games can\'t change.');
   const cur = giveawayGameIds(g.id);
   let next = req.body.linked ? [...new Set([...cur, gameId])] : cur.filter(x => x !== gameId);
@@ -750,6 +757,7 @@ require('./sponsor')(app, A, H); // v7 Sponsor a Host: feature picker, admin pri
 require('./brands').routes(app, A, H); // v7 brand affiliation (invite links, one brand per player)
 require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
+require('./games-v7')(app); // v7: retired-game archive (Stack 2048 -> Stack)
 
 const demo = require('./demo');
 try { demo.v5(); } catch (e) { console.error('demo v5 migration failed', e); }
@@ -757,6 +765,7 @@ A.post('/demo/seed', (req, res) => res.json({ ok: true, ...demo.seed() }));
 A.post('/demo/wipe', (req, res) => res.json({ ok: true, ...demo.wipe() }));
 ADMSEC.mount(app, express, A); // secret-path admin (old /admin + /api/admin are plain 404s)
 
+require('./games-lib').mount(app); // [games-lib hook] GET /api/games-lib
 app.use('/api', (req, res) => bad(res, 404, 'Not found'));
 
 // ---------- static ----------
@@ -790,8 +799,9 @@ app.get('*', (req, res) => {
   if (path.extname(req.path)) return res.status(404).send('Not found');
   res.setHeader('Cache-Control', 'no-cache');
   let html = fs.readFileSync(INDEX_FILE, 'utf8');
-  const origin = `${isHttps(req) ? 'https' : 'http'}://${req.get('host')}`;
+  const origin = PU.originOf(req); // v7: PUBLIC_URL when set
   const meta = (() => { try { return pageMeta(req.path.replace(/\/+$/, '') || '/', origin); } catch (e) { console.error(e); return null; } })();
+  if (PU.PUBLIC_URL) html = html.replace('</head>', `<meta name="public-url" content="${escA(PU.PUBLIC_URL)}"><link rel="canonical" href="${escA(PU.PUBLIC_URL + (req.path.replace(/\/+$/, '') || '/'))}"></head>`);
   if (meta) html = html.replace(/<!--META-->[\s\S]*?<!--\/META-->/, meta);
   else html = html.replace(/(content=")\/og\/default\.png"/g, `$1${origin}/og/default.png"`);
   res.type('html').send(html);
