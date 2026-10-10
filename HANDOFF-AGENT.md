@@ -34,6 +34,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Most Wanted Run DONE (voxel three.js, instanced city).
 - Cube Horde DONE (voxel 3D, instanced horde).
 - Grid Wars DONE (spring grid + bloom + sparks).
+- Jet Blaster DONE (lab parallax art rebuild).
 - Next (Reese order): Jetpack-style; then the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)

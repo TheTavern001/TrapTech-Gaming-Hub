@@ -402,3 +402,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 ## Grid Wars - DONE (2026-10-10 10:05 ET)
 - New presentation over the arena.js rules (render and onKill hooks). A mass-spring warping grid (31x26 nodes, clamped, fixed edges) reacts to the player's wake, bullets, enemy weight and big kill shockwaves. Additive bloom rendering: a soft wide pass plus a crisp core for the grid and enemies. Spark particles with motion streaks and friction that bounce off the arena walls. A pulsing magenta border, nebula and vignette. Neon vector enemies per type (rotating, pulsing, flash on hit), glowing tracer bullets, engine exhaust sparks, and a double-stroked claw ship.
 - Tests: e2e PASS (60 fps). Bug pass PASS (memory flat). The only free-use reference image is the franchise logo, so only docs/audit/grid-wars-ours.jpg was produced. Rating: visual 8/10, feel 7/10.
+
+## Jet Blaster - DONE (2026-10-10 10:30 ET)
+- Art rebuild in the reference tier: a parallax lab (a panelled far wall with grow-room windows under pink grow lights and potted plants, "GROW LAB B - STAFF 21+ ONLY" signs, control panels), mid-layer steel pipes, a hazard-striped ceiling and a sheen floor.
+- Hazards: triple-pass additive electric zappers with steel emitter orbs, gradient missiles with fins, flame and a smoke trail, and blinking warning triangles. The coin sprite spins.
+- Hero: an outlined, shaded jetpacker with a running cycle on the floor, an arm pose in flight, a glowing exhaust cone and particles. The HUD uses the hudDraw hook. Rules are unchanged.
+- Tests: e2e PASS (60 fps). Bug pass PASS. Side-by-side at docs/audit/jet-blaster-vs-ref.jpg. Rating: visual 7.5/10, feel 7/10.

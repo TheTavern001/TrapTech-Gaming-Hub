@@ -1,3 +1,3 @@
-# Jet Blaster
-
-Original game built for The Gaming Hub (Trap Tech Solutions). Code: MIT (see ../LICENSE-HUB.md). Art: vector shapes drawn in code. Sound: synthesized at runtime with WebAudio. No third-party assets.
+# Jet Blaster - credits
+- Code and art: original Hub code. The hero, lab, zappers and missiles are all code-drawn.
+- Coin sprite: Kenney "Physics Assets" (CC0), see LICENSE-Kenney-CC0.txt.
