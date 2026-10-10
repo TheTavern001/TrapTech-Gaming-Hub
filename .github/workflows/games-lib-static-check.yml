@@ -1,4 +1,8 @@
 name: Games Library static checks
+concurrency:
+  group: games-lib-static-${{ github.ref }}
+  cancel-in-progress: true
+
 
 on:
   pull_request:
