@@ -64,6 +64,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Cue Club (Pool) DONE (08:18)
 - Tile Twin (Mahjong) DONE (09:05)
 - Arrow Hero (Archero) DONE (09:15); library at 91 games
+- Kickflip City (Skateboard Trick Challenge) DONE (10:51); library at 97 games
 - Hoop Streak (Basketball Shot Challenge) DONE (10:26); library at 96 games
 - Reel Deal (Fishing Challenge) DONE (10:12); library at 95 games
 - Ice Snipe (Hockey Shootout) DONE (10:02); library at 94 games

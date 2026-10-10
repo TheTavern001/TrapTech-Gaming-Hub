@@ -695,3 +695,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Swipe from the ball; arc from swipe angle and speed. Makes add time (swish more), moving spot, sliding hoop after 6 makes, fire x2 after 3 in a row. Endless until clock 0. Tie-break: makes, then swishes.
 - Bot (solved arc + human noise): noise 1 -> 33 makes/107 s, noise 1.6 -> 9 makes/54 s.
 - Visual 7 / feel 7. e2e PASS; bug pass PASS (throttled fps 52, no leak).
+
+### Kickflip City (ref: Skateboard Trick Challenge) - 2026-10-10
+- Built original (MIT, code-drawn). Candidates: GitHub JS skate games (unlicensed / Phaser demos with ripped sprites), itch.io HTML5 skate (no source licence), js13k (none with trick system). Rejected; built on Kit.
+- Auto-roll street line; tap ollie (hold higher), swipe tricks in air (kickflip/heelflip/shove-it/grab) must finish before landing; grind rails/ledges (front-face snap within 30 px); combos bank on clean landing. 3 bails. Tie-break: best combo length, then distance.
+- Fairness fix: obstacles now spaced from the previous obstacle's END (rails no longer drop you onto a cone). Bot (precise to noisy): 63 s/13.5k, 36 s/4.8k, 14 s/1.5k.
+- Visual 7 / feel 7. e2e PASS; bug pass PASS (4x throttled fps 38 after layer caching, no leak).
