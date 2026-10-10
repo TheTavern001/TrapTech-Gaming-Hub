@@ -64,6 +64,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Cue Club (Pool) DONE (08:18)
 - Tile Twin (Mahjong) DONE (09:05)
 - Arrow Hero (Archero) DONE (09:15); library at 91 games
+- Long Ball (Home Run Derby) DONE (09:27); library at 92 games
 - Knockout Ring fairness pass (08:59)
 - Bullseye fix: game-over clash + perf (07:54)
 - Cup Toss harder: power meter + aim wobble, bot 68% (07:26)

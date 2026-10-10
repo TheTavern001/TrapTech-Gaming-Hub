@@ -665,3 +665,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Drag to move, stand still to auto-fire; 10 skill picks on level-up; boss every 5 rooms; endless rooms. Tie-break: higher room, then fewer hits taken.
 - Tuning: obstacles block movement but not arrows; room 1 softened (HP 120, slower slimes/mage bolts, fewer foes). Bot reaches room 2-3.
 - Visual 7 / feel 7. e2e PASS (desktop+iPhone, 60 FPS, forged score rejected). Bug pass PASS (seeds, pause, tab, rotate, low-FPS 59, memory +0.1 MB/45 s, keys+touch).
+
+### Long Ball (ref: Home Run Derby) - 2026-10-10
+- Built original (MIT, code-drawn). Candidates: GitHub 'home run derby' JS repos (unlicensed/Unity), itch.io HTML5 batting games (no source licence), js13k sports entries (none batting). Rejected; built on Kit.
+- Tap to swing; timing sets angle/exit speed, tap side must match ball crossing. Fastball/change-up/curve/slider, speed ramps. 10 outs ends run; streak multiplier up to x4. Tie-break: longest homer, then HR count.
+- Bot with human timing noise: sd 50 ms -> 12 HR/7.3k, sd 80 ms -> 4 HR/1.5k (skill-graded).
+- Visual 7 / feel 7. e2e PASS; bug pass PASS (fps 60 throttled, +0.0 MB/45 s).
