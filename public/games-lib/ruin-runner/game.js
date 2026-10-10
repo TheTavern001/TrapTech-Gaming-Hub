@@ -1,4 +1,5 @@
-// Ruin Runner - original jungle-ruins runner with corner turns (Hub build, shared runner3d.js) // @uses runner3d.js
-Runner3D({ id: 'gl-ruin-runner', title: 'RUIN RUNNER', turns: true, gaps: true, coinV: 10, speed: 420, hero: '#a16207', cap: '#365314',
-  help: 'Swipe / arrows at the arrows to turn corners\nLeft-right lanes, up jump gaps, down slide',
-  theme: { sky1: '#064e3b', sky2: '#65a30d', ground: '#14532d', lane: '#a8a29e', side: '#78716c', obs: '#57534e', coin: '#34d399', far: 'rgba(6,78,59,.7)' } });
+// Ruin Runner - original jungle-temple lane runner in three.js (Hub build). @three
+// Hero/chaser: Quaternius UBC + UAL (CC0). Nature: Quaternius Stylized Nature MegaKit (CC0). Ruins, blocks and set pieces built in code. Engine: ../runner3x.js
+import RailRunner from '../runner3x.js';
+RailRunner({ id: 'gl-ruin-runner', title: 'RUIN RUNNER', themes: ['jungle'], speed: 15, coinV: 10, sky: ['#5fb8a0', '#f3e7b0'],
+  help: 'Swipe or arrows: change lane\nUp: jump, down: slide - vault the fallen temple blocks' });
