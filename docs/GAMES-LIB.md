@@ -677,3 +677,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Move on baseline; auto-swing; contact offset aims (corner shots beat the rival), sweet spot = faster shot x2. Rival has 250 ms reaction, finite speed, 5-11% unforced errors; pace and angles ramp with rally/points. 3 lives. Tie-break: longest rally, then sweet-spot ratio.
 - Bot (250 ms reaction, aim noise): runs end at 90-116 s, 2-8 points won; skill-graded.
 - Visual 7 / feel 7. e2e PASS; bug pass PASS (throttled fps 56, no leak).
+
+### Ice Snipe (ref: Hockey Shootout) - 2026-10-10
+- Built original (MIT, code-drawn). Candidates: GitHub JS hockey (2D air-hockey style, unlicensed), itch.io HTML5 shootouts (no source licence), js13k sports (none hockey). Rejected; built on Kit.
+- Auto skate-in; drag to deke (goalie shadows with 0.3 s lag), swipe to shoot (aim + lift). Poke-check if you wait too long. 3 misses; streak x4. Tie-break: goals, then corner accuracy.
+- Bot (random deke + noisy shot): 1-5 goals per run; skill-graded.
+- Visual 7 / feel 7. e2e PASS; bug pass PASS (throttled fps 56, no leak).
