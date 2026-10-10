@@ -42,7 +42,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Goo Tower DONE (World of Goo-style).
 - Keep Guard DONE (Kingdom Rush-style).
 - Node Siege DONE (Infinitode-style maze TD).
-- Next (Reese order): A-tier list one at a time (Infinitode, Zuma, Bubble Shooter, Bejeweled, Knife Hit, Stack, Pinball, Tron, Asteroids, Galaga, Missile Command, Tapper, Frogger) + remaining Cannabis; international search folded into each hunt. Then: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Next (Reese order): A-tier list one at a time (Zuma, Bubble Shooter, Bejeweled, Knife Hit, Stack, Pinball, Tron, Asteroids, Galaga, Missile Command, Tapper, Frogger) + remaining Cannabis; international search folded into each hunt. Then: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).
