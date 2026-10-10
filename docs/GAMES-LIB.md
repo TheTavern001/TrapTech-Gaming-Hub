@@ -398,3 +398,7 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Voxel soldier hero with rifle, muzzle flash and point light. Instanced tracer bullets and green spit orbs. Instanced voxel debris bursts (bounce, spin, fade). Spinning glowing power crates.
 - Arena: a baked checker grass and dirt texture, a bevelled stone wall ring, voxel trees, a "GREEN ZONE 21+" billboard, soft shadows, a high chase camera and a vignette.
 - Tests: e2e PASS (calls 36, tris 60k, DPR 1.5). Bug pass PASS (memory +0.1 MB). No free-use reference image exists (closed-source mobile game), so only docs/audit/cube-horde-ours.jpg was produced. Rating: visual 7/10, feel 7/10.
+
+## Grid Wars - DONE (2026-10-10 10:05 ET)
+- New presentation over the arena.js rules (render and onKill hooks). A mass-spring warping grid (31x26 nodes, clamped, fixed edges) reacts to the player's wake, bullets, enemy weight and big kill shockwaves. Additive bloom rendering: a soft wide pass plus a crisp core for the grid and enemies. Spark particles with motion streaks and friction that bounce off the arena walls. A pulsing magenta border, nebula and vignette. Neon vector enemies per type (rotating, pulsing, flash on hit), glowing tracer bullets, engine exhaust sparks, and a double-stroked claw ship.
+- Tests: e2e PASS (60 fps). Bug pass PASS (memory flat). The only free-use reference image is the franchise logo, so only docs/audit/grid-wars-ours.jpg was produced. Rating: visual 8/10, feel 7/10.
