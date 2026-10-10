@@ -288,3 +288,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 | Paper Toss | - | - | - | - | 2D | not audited yet |  |
 | Skee Roll | - | - | - | - | 2D | not audited yet |  |
 | Castle Crush | 7 | 7 | 60/60 | - | 2D | passes | Matter.js physics (fixed step, 2 substeps), textured wood/stone/glass, gradient sky + sun bloom, 3-layer parallax hills, drifting clouds, shot trail, impact dust + shake. Still procedural shapes, no sprite art; trebuchet arm is not animated by physics. |
+
+## Update 2026-10-10 (02:40 ET)
+- Moto Lanes rebuilt in 3D on racer3x.js (`bike` mode): Grab3D CC0 motorbike, Quaternius rider with Driving_Loop, lean steering, low chase cam. e2e PASS (mobile budget 77 calls / 124k tris, DPR 1.5). Self-rating 7/10 visual, 7/10 feel (provisional; rider pose is car-driving clip, a dedicated bike-lean clip would lift it).
+- racer3x: rows split into 4x60 m chunks for culling, traffic uses blob shadows, sparser roadside trees. Lane Racer re-tested PASS (60 calls / 109k tris).
+- Rail Rush timing re-check (4 bot runs): 47 s (alive at cap), 19 s, 63 s (alive at cap), 60 s; average 47 s, meets the 45 s target.
+- International sources: the Gitee open search API returned nothing without auth, so Gitee, Cocos, BOOTH, Nicovideo and the KR/RU/BR communities are queued and not searched yet. Rule recorded: commercial use must be allowed, and vendored games get English in-game text.

@@ -1,4 +1,6 @@
-// Moto Lanes - original first-person motorbike traffic weaving (Hub build, shared runner3d.js) // @uses runner3d.js
-Runner3D({ id: 'gl-moto-lanes', title: 'MOTO LANES', cars: true, coinV: 10, speed: 520, hero: '#f97316', cap: '#111827',
-  help: 'Swipe / arrows left-right to change lanes\nSplit the traffic - speed keeps climbing',
-  theme: { sky1: '#0c4a6e', sky2: '#fb923c', ground: '#3f6212', lane: '#374151', side: '#9ca3af', obs: '#ef4444', coin: '#fbbf24', far: 'rgba(15,23,42,.5)' } });
+// Moto Lanes - original endless motorbike traffic weaving in three.js (Hub build). @three
+// Bike: "Motorcycle" by Grab3D (CC0). Rider: Quaternius Universal Base Characters + Universal Animation Library (CC0).
+// Cars: Divinux Cartoon Vehicles Pack 1 (CC0). Nature: Quaternius Stylized Nature MegaKit (CC0). Engine: ../racer3x.js
+import Racer from '../racer3x.js';
+Racer({ id: 'gl-moto-lanes', title: 'MOTO LANES', bike: true, speed: 24, vmax: 52,
+  help: 'Lean: arrows / hold left or right side\nSplit the traffic - chained near misses multiply' });
