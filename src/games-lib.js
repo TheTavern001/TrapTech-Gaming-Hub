@@ -40,6 +40,7 @@ const LIST = [
   T('jet-blaster', 'Jet Blaster', 'Jetpack Joyride', 0, 'A', 'endless', 40, true, 'Distance m + coins 5', '3 days'),
   T('moon-swarm', 'Moon Swarm', 'Vampire Survivors', 4, 'A', 'endless', 150, true, 'Kills 10-80 (enemy tier), uncapped survival', '3 days'),
   T('throttle-rider', 'Throttle Rider', 'Traffic Rider', 1, 'A', 'endless', 60, true, 'Distance + near-miss chains (first-person)', '3 days'),
+  T('wreck-ride', 'Wreck Ride', 'Happy Wheels', 2, 'A', 'endless', 60, true, 'Distance m + flips 150 + big air 20 + crates 25', '3 days'),
   T('roof-runner', 'Roof Runner', 'Canabalt', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('helix-drop', 'Helix Drop', 'Helix Jump', 7, 'A', 'endless', 40, true, 'Floors passed with combo, fireball smashes', '3 days'),
   T('hex-spin', 'Hex Spin', 'Super Hexagon', 7, 'A', 'endless', 12, true, 'Survival time in 0.1s', '3 days'),

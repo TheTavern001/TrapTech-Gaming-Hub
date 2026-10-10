@@ -429,3 +429,13 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - New in racer3x.js: a code-built cockpit attached to the camera (chrome handlebar, grips, leather gloves, green sleeves, round mirrors, a dash with a cannabis-leaf gauge face, painted tank and filler cap). It leans with steering, vibrates with speed, compresses horizontally to fit the screen aspect, and hides the third-person bike. Moto Lanes and Lane Racer are unchanged and re-ran PASS.
 - Tests: e2e PASS (calls 114, tris 107k, DPR 1.5). Bug pass PASS. One earlier bug-pass run showed a 2/3 seeded-start flake under heavy CPU load; a re-run passed. Rating: visual 7/10, feel 7/10.
 - Harness: e2e test usernames are now deterministic and filter-safe ('tester' + digits), at the core worker's request.
+
+## Wreck Ride (Happy Wheels-style) - DONE (2026-10-10 06:00 ET)
+- Source hunt: Happy Wheels clones on GitHub and itch.io are Flash/Unity or have no licence. The Box2D ragdoll demos are MIT but are not games. Russian- and Korean-language HTML5 ports found were unlicensed rips. Decision: build on Matter.js.
+- Physics and rules:
+  - Matter.js bike with sprung wheels and a 6-part jointed ragdoll held on by breakable grip joints.
+  - Hard impacts, a head touching the ground or spike strips detach the rider, who then flies as a ragdoll.
+  - Breakable wooden crate stacks, a wooden kicker ramp every 1300 px, and a downhill course that gets steeper.
+  - Flip, big-air and crate-smash scoring. A stall timeout prevents soft-locks.
+- Art: Happy Wheels-like flat vector style with outlines, parallax hills and clouds, and a "KUSH CYCLES - RIDE SAFE 21+" billboard. No gore.
+- Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7/10, feel 7.5/10.
