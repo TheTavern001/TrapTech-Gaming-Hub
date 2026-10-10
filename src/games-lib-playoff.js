@@ -21,7 +21,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS lib_run_metrics (run_id INTEGER PRIMARY KEY,
 // m1 (all games): 'faster' = shorter server-timed run (created_at - started_at) to post the same score.
 // m2: { count: key } = more events of that key (e.g. near misses, coins, takedowns), or { eff: true } = higher points
 // per scoring event (bigger combos / chains / multipliers for the same score).
-const M2 = { 'lane-racer': ['n', 'More near misses'], 'road-brawl': ['k', 'More takedowns'], 'highway-heist': ['k', 'More cops taken down'], 'rail-rush': ['c', 'More coins'],
+const M2 = { 'neon-circuit': ['e', 'More energy cells collected'], 'rift-survival': ['s', 'More rift shards collected'], 'lane-racer': ['n', 'More near misses'], 'road-brawl': ['k', 'More takedowns'], 'highway-heist': ['k', 'More cops taken down'], 'rail-rush': ['c', 'More coins'],
   'ruin-runner': ['c', 'More gems'], 'jet-blaster': ['c', 'More coins'], 'moto-lanes': ['o', 'More near misses'], 'no-brakes': ['p', 'More cars passed'], 'dirt-dash': ['j', 'More clean landings'],
   'hill-glider': ['p', 'More perfect slides'], 'dune-glide': ['f', 'More flips'], 'hill-hauler': ['c', 'More coins'], 'egg-roll': ['c', 'More coins'], 'monster-crush': ['k', 'More cars crushed'],
   'zig-path': ['g', 'More gems'], 'road-hopper': ['c', 'More coins'], 'block-drop': ['l', 'More line clears'], 'duck-shot': ['k', 'More birds hit'], 'castle-crush': ['w', 'More castles cleared'],
