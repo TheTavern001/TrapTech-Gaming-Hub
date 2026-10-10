@@ -461,3 +461,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Enemies: goblins, wolves, helmeted orcs and armoured trolls, with walk cycles, facing direction and HP bars.
 - Shots: arrows, mage orbs and lit cannonballs, with gold and leather drop effects. KR-style tower cards and a CALL WAVE button.
 - Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7/10, feel 7/10.
+
+## Node Siege (Infinitode-style) - DONE (2026-10-10 06:55 ET)
+- Source hunt: Infinitode is closed-source. The open-source maze TDs are Java/libGDX (not web) or unlicensed CodePens. One Gitee H5 TD has no licence. Decision: td.js maze mode.
+- Gameplay: towers block tiles and enemies re-route by BFS; the animated neon route line updates as you build. Five towers: Pulse, Splash, Sniper, Freeze pulse, Laser beam. Enemies: squares, fast triangles, armoured hexagons, flyers, and an octagon boss every 10 waves. HP scaling is super-linear for the endless mode.
+- Art: dark blueprint grid, additive neon glow, spark bursts, start and goal rings, monospace UI and a "NODE//GREEN 21+" tag.
+- Tests: e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7/10.

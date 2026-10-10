@@ -44,6 +44,7 @@ const LIST = [
   T('rig-rally', 'Rig Rally', 'Bad Piggies', 2, 'A', 'endless', 60, true, 'Distance m + coins 5 + stars 50 (build your own rig)', '3 days'),
   T('goo-tower', 'Goo Tower', 'World of Goo', 2, 'A', 'endless', 20, true, 'Peak tower height in m (wind grows)', '3 days'),
   T('keep-guard', 'Keep Guard', 'Kingdom Rush', 3, 'A', 'endless-waves', 120, true, 'Raiders 10-120, wave bonus 50 x wave', '7 days'),
+  T('node-siege', 'Node Siege', 'Infinitode 2', 3, 'A', 'endless-waves', 120, true, 'Enemies 10-300, wave bonus 40 x wave (maze building)', '7 days'),
   T('roof-runner', 'Roof Runner', 'Canabalt', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('helix-drop', 'Helix Drop', 'Helix Jump', 7, 'A', 'endless', 40, true, 'Floors passed with combo, fireball smashes', '3 days'),
   T('hex-spin', 'Hex Spin', 'Super Hexagon', 7, 'A', 'endless', 12, true, 'Survival time in 0.1s', '3 days'),

@@ -41,6 +41,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Rig Rally DONE (Bad Piggies-style builder).
 - Goo Tower DONE (World of Goo-style).
 - Keep Guard DONE (Kingdom Rush-style).
+- Node Siege DONE (Infinitode-style maze TD).
 - Next (Reese order): A-tier list one at a time (Infinitode, Zuma, Bubble Shooter, Bejeweled, Knife Hit, Stack, Pinball, Tron, Asteroids, Galaga, Missile Command, Tapper, Frogger) + remaining Cannabis; international search folded into each hunt. Then: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
