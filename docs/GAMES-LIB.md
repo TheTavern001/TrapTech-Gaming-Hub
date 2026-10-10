@@ -671,3 +671,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Tap to swing; timing sets angle/exit speed, tap side must match ball crossing. Fastball/change-up/curve/slider, speed ramps. 10 outs ends run; streak multiplier up to x4. Tie-break: longest homer, then HR count.
 - Bot with human timing noise: sd 50 ms -> 12 HR/7.3k, sd 80 ms -> 4 HR/1.5k (skill-graded).
 - Visual 7 / feel 7. e2e PASS; bug pass PASS (fps 60 throttled, +0.0 MB/45 s).
+
+### Rally Court (ref: Tennis Rally) - 2026-10-10
+- Built original (MIT, code-drawn). Candidates: GitHub JS tennis (pong-like 2D, unlicensed or flat art), itch.io HTML5 tennis (no source licence), js13k 'tennis' entries (tiny, flat). Rejected; built on Kit with a 3D ball model (height, bounce, net clearance) and perspective court.
+- Move on baseline; auto-swing; contact offset aims (corner shots beat the rival), sweet spot = faster shot x2. Rival has 250 ms reaction, finite speed, 5-11% unforced errors; pace and angles ramp with rally/points. 3 lives. Tie-break: longest rally, then sweet-spot ratio.
+- Bot (250 ms reaction, aim noise): runs end at 90-116 s, 2-8 points won; skill-graded.
+- Visual 7 / feel 7. e2e PASS; bug pass PASS (throttled fps 56, no leak).

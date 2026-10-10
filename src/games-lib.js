@@ -85,6 +85,7 @@ const LIST = [
   T('putt-party', 'Putt Party', 'Golf Challenge (mini golf)', 9, 'B', 'endless', 400, true, 'Hole 300 + 200 per stroke under par, ace +1000', '3 days'),
   T('cue-club', 'Cue Club', 'Pool / Billiards', 9, 'B', 'endless', 500, true, 'Pot 100 x pots-this-turn, rack 500 x racks', '3 days'),
   T('long-ball', 'Long Ball', 'Home Run Derby', 9, 'B', 'endless', 2000, true, 'Homer = distance ft x streak mult up to 4', '3 days'),
+  T('rally-court', 'Rally Court', 'Tennis Rally', 9, 'B', 'endless', 600, true, 'Return 10 x rally (cap 10) x2 sweet spot, point 200 + 25 x rally', '3 days'),
   T('tile-twin', 'Tile Twin', 'Mahjong Solitaire', 6, 'B', 'endless', 150, true, 'Pair 20 x combo up to 6 + 5 x layout, clear 500 x layout', '3 days'),
   // Batch 3 - Endless Runners + Driving + Reflex remainder
   T('tunnel-hop', 'Tunnel Hop', 'Run (Tunnel runner)', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
