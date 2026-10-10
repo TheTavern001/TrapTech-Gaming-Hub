@@ -21,7 +21,7 @@ const HUB_VERSION = 'V1';
 const publicPlayerId = (id) => `TH-${String(Number(id) || 0).padStart(6, '0')}`;
 // Set HUB_OWNER_USER_ID to the stable numeric users.id for the founder account in the production environment.
 // Never accept ownership/badge claims from request parameters or player-editable profile fields.
-const isFounder = (id) => /^\\d+$/.test(String(process.env.HUB_OWNER_USER_ID || '')) && Number(process.env.HUB_OWNER_USER_ID) === Number(id);
+const isFounder = (id) => /^\d+$/.test(String(process.env.HUB_OWNER_USER_ID || '')) && Number(process.env.HUB_OWNER_USER_ID) === Number(id);
 
 const app = express();
 app.set('trust proxy', true);
