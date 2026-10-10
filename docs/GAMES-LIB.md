@@ -467,3 +467,17 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: towers block tiles and enemies re-route by BFS; the animated neon route line updates as you build. Five towers: Pulse, Splash, Sniper, Freeze pulse, Laser beam. Enemies: squares, fast triangles, armoured hexagons, flyers, and an octagon boss every 10 waves. HP scaling is super-linear for the endless mode.
 - Art: dark blueprint grid, additive neon glow, spark bursts, start and goal rings, monospace UI and a "NODE//GREEN 21+" tag.
 - Tests: e2e PASS. Bug pass PASS. Rating: visual 7/10, feel 7/10.
+
+## Orb Coil (Zuma-style) - DONE (2026-10-10 07:05 ET)
+- Source hunt (GitHub "zuma javascript", Gitee "祖玛 H5", itch.io, OpenGameArt):
+  - The most-starred JS Zuma clones have no licence or use ripped PopCap art.
+  - One MIT canvas demo was a single-path prototype below the bar.
+  - The Cocos Creator 祖玛 projects are unlicensed.
+  - Decision: build our own.
+- Gameplay:
+  - The chain runs along an arc-length spiral path. A shot orb is inserted in front of or behind the orb it hits. Matching 3 or more removes them; the front of the chain holds and the back slides up smoothly.
+  - Gap-closing chain reactions add combo bonuses.
+  - A swap orb (Space or tap the idol). The colour count grows from 4 to 6 and the speed ramps up for the endless mode.
+  - The run ends when the coil reaches the pit, with a red danger glow as it gets close.
+- Art: sandstone temple tiles with moss, a carved groove, glossy rolling orbs, a jade toad idol shooter, a dotted aim guide, a golden pit and a "TEMPLE OF TERPS 21+" plaque.
+- Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7.5/10, feel 7/10.
