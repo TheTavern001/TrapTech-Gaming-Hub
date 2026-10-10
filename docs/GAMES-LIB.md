@@ -505,3 +505,9 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Art: pre-rendered log with bark rim, growth rings and cracks; boss targets (cheese wheel, orange, iron shield, lime); steel knives with gradient blade, gold guard and wrapped handle; glossy apples with a leaf; stage diamonds with a red boss diamond; remaining-knife icons; "BLADE & BUD 21+" tag.
 - Feel: the target kicks back on each hit, wood chips fly, the log shatters into 6 spinning wedges on clear, a clashing knife bounces off and spins away (with haptic buzz on phones), and apples burst into juice.
 - Tests: e2e PASS (60 fps). Bug pass PASS (54 fps throttled). Rating: visual 7.5/10, feel 7.5/10.
+
+## Slab Stack (Stack-style) - DONE (2026-10-10 06:11 ET)
+- Source hunt (GitHub "stack game three.js", CodePen MIT ports, Gitee "堆叠 H5", itch.io, js13k): the best-known three.js Stack clone is a CodePen demo without a clear licence for redistribution; the MIT GitHub ones are flat-shaded single-colour prototypes. Decision: build our own on the shared three.js stage.
+- Gameplay: slabs slide in alternately along X and Z. Tap to drop; the overhang is sliced off and tumbles away. A perfect drop (within 0.12) snaps, shows a ring and chains a combo; from 6 in a row the slab grows back. Speed ramps. Missing the stack ends the run. Score is 1 per slab plus up to +10 for perfect combos.
+- Art: rounded PBR slabs with soft shadows, hue that shifts slab by slab, a matching gradient sky, an eased rising camera, a dark plinth with "HIGH RISE 21+ LOUNGE" panels and a large centred score.
+- Tests: e2e PASS (needs GPU; 7 draw calls, 1.2k tris, DPR 1.5). Bug pass PASS (29 fps throttled, +0.1 MB). Rating: visual 7.5/10, feel 7.5/10.
