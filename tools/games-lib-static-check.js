@@ -62,6 +62,7 @@ for (const slug of ['neon-circuit', 'rift-survival']) {
   if (!libraryPage.includes(slug)) errors.push('Library page is missing new-game spotlight for ' + slug);
 }
 if (!libraryPage.includes('id="category"') || !libraryPage.includes('id="eligibility"')) errors.push('Library page is missing category/status filters.');
+if (!doc.includes('wave transition bonus 10 × wave')) errors.push('Games Library documentation has stale Rift Survival scoring text.');
 const docRows = (doc.match(/^\|\s*\d+\s*\|/gm) || []).length;
 if (docRows !== games.length) errors.push('Documentation row count mismatch: ' + docRows + ' vs ' + games.length);
 
