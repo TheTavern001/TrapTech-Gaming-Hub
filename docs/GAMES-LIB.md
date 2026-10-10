@@ -321,3 +321,8 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Stripped: upstream name/branding, ads, Google Analytics, social share, store badges, remote script loader, and an upstream beacon that sent every score to a third-party IP. Save-state resume is disabled (fresh signed runs only).
 - Added: hub-pre.js (seeded RNG for identical playoff boards), hub-bridge.js (signed run per game incl. restarts, each clear logged so events sum to the score, submit on game over, auto-pause on tab hide, any tap/Space/Enter starts from the title), green/gold 21+ theme.
 - Tests: e2e PASS (60 FPS). Bug pass PASS (seeded x3, pause, tab, rotate, 4x throttle, +0.1 MB / 30 s). Side-by-side: docs/audit/hex-stack-vs-ref.jpg (same game, same tier). Rating: visual 7/10, feel 8/10.
+
+## Sky Flap (was Neon Flapper) - DONE (2026-10-10 04:10 ET)
+- Candidates: Clumsy Bird (GPL-3.0, melonJS). REJECTED because its art is a near-copy of the reference's bird, pipes and logo, and its music has no stated source. Also considered: the flappy-bird HTML5 clones on GitHub (same art problem), and our old 2.7 KB neon build (programmer art, rated 4).
+- Built: an original rebuild on kit.js with Kenney Tappy Plane CC0 art (WebP, 112 KB): parallax sky, scrolling grass ground, rock spire gates with triangle collision, a 3-frame prop animation, eased tilt, exhaust puffs, shake and flash on a crash, sprite number HUD, and a distant "Green Summit 21+" banner plane.
+- Tests: e2e PASS (60 FPS). Bug pass PASS (seeded x3, pause, tab, rotate, 4x throttle 37 FPS, memory +0.0 MB). Bot: 3 runs survived the 60 s cap with 43 gates each. Side-by-side: docs/audit/sky-flap-vs-ref.jpg. Rating: visual 8/10, feel 8/10.

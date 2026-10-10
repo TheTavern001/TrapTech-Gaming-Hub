@@ -14,7 +14,7 @@ const SOURCES = {
 const T = (slug, title, ref, cat, tier, comp, rate, give, scoring, evlen, src) => ({ slug, title, ref, cat, tier, comp, rate, give, scoring, evlen, src: src || 'built' });
 const LIST = [
   // ---- batch 1: A+ ----
-  T('sky-flap', 'Neon Flapper', 'Flappy Bird', 0, 'A+', 'endless', 2, true, '1 point per gate passed', '3 days'),
+  T('sky-flap', 'Sky Flap', 'Flappy Bird', 0, 'A+', 'endless', 2, true, '1 point per gate passed', '3 days'),
   T('block-drop', 'Block Drop', 'Tetris', 6, 'A+', 'endless', 220, true, 'Lines 100/300/500/800 x level + soft drop', '3-7 days'),
   T('maze-muncher', 'Maze Muncher', 'Pac-Man', 10, 'A+', 'endless', 260, true, 'Dots 10, power 50, ghosts 200-1600, mazes repeat faster', '3-7 days'),
   T('alien-rows', 'Alien Rows', 'Space Invaders', 5, 'A+', 'endless', 140, true, 'Aliens 10-30, saucer 100-300, wave bonus', '3 days'),

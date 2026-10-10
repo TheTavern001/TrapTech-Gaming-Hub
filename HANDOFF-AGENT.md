@@ -24,7 +24,8 @@ Remaining:
 - Status: Rail Rush DONE (3D, realistic PBR hero). Ruin Runner DONE 7/7 (turns, ravines, Poly Haven PBR). Lane Racer PASS tests. Bud Merge (vendored MIT 2048) PASS. Moto Lanes ON HOLD (Reese choosing realistic cars); passes tests + bug pass, visuals below tier (6/10): the reference is realistic and we only have the cartoon CC0 car pack.
 - Hex Stack DONE (vendored Hextris, GPL-3.0, stripped ads/analytics/score beacon; e2e + bug pass PASS).
 - Tools: `tools/e2e-games-lib.js` (supports DOM games via `#gl`), `tools/games-lib-bugpass.js`, `tools/games-lib-audit.js`. Bots: /tmp/jt.js (Ruin Runner turns), /tmp/lrbot2.js (racers, in-page).
-- Next: Clumsy Bird (vendor), the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
+- Sky Flap DONE (rebuilt with Kenney Tappy Plane CC0; Clumsy Bird rejected for copied art).
+- Next: continue the A+ list one at a time (Block Drop, Maze Muncher, Alien Rows, Cloud Hopper, Road Hopper...), the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
 ## Firm boundaries (Reese accepted)
 - No ripped/commercial game assets, characters, logos, or pirated ports (declined: CoD zombies, GTA, Halo, Skate 3, PES, Simpsons H&R, Half-Life/CS, UT). Licences must allow commercial use (CC0/CC-BY/MIT etc.; no NC, editorial, engine-locked).

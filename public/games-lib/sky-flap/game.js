@@ -1,21 +1,44 @@
-// Neon Flapper - original one-tap flyer (Hub build)
-Kit.run({ id: 'gl-sky-flap', title: 'NEON FLAPPER', help: 'Tap / Space to flap\nSlip through the gates', bg: '#07092a',
-  init(g) { g.b = { x: 110, y: 330, vy: 0, a: 0 }; g.pipes = []; g.next = 1.2; g.gap = 170; g.sp = 150; g.gx = 0; },
-  attract(g, dt) { g.b.y = 330 + Math.sin(g.t * 3) * 20; g.gx += 60 * dt; },
-  update(g, dt) {
-    const b = g.b; if (g.tap()) { b.vy = -330; g.sfx('flap'); g.burst(b.x - 10, b.y + 6, '#a855f7', 6, 80, 0.4); }
-    b.vy += 980 * dt; b.y += b.vy * dt; b.a = Kit.clamp(b.vy / 600, -0.5, 1.2); g.gx += g.sp * dt;
-    g.sp = 150 + Math.min(110, g.score * 2.5); g.gap = Math.max(118, 170 - g.score * 1.5);
-    g.next -= dt; if (g.next <= 0) { g.next = 1.45 - Math.min(0.35, g.score * 0.01); const gy = g.R(130, g.H - 190); g.pipes.push({ x: g.W + 40, y: gy, gap: g.gap, done: false, m: g.score > 15 ? g.R(-1, 1) * 40 : 0, p: g.R(0, 6) }); }
-    for (const p of g.pipes) { p.x -= g.sp * dt; const yy = p.y + Math.sin(g.t * 2 + p.p) * p.m;
-      if (!p.done && p.x + 30 < b.x) { p.done = true; g.add(1, 'g'); g.sfx('coin'); g.float(b.x, b.y - 30, '+1', '#34d399'); }
-      if (b.x + 14 > p.x - 30 && b.x - 14 < p.x + 30 && (b.y - 12 < yy - p.gap / 2 || b.y + 12 > yy + p.gap / 2)) { g.burst(b.x, b.y, ['#fbbf24', '#ef4444', '#fff'], 30, 260); return g.end('Hit a gate'); } }
-    g.pipes = g.pipes.filter(p => p.x > -60);
-    if (b.y > g.H - 40 || b.y < -30) { g.burst(b.x, b.y, '#fbbf24', 30, 260); g.end('Crashed'); }
-  },
-  draw(g, c) {
-    Kit.stars(c, g.W, g.H, g.t, 0); c.fillStyle = '#120f3a'; for (let i = 0; i < 8; i++) { const x = ((i * 70 - g.gx * 0.3) % 560 + 560) % 560 - 60; c.fillRect(x, g.H - 130 - (i % 3) * 40, 50, 200); }
-    for (const p of g.pipes) { const yy = p.y + Math.sin(g.t * 2 + p.p) * p.m; Kit.glow(c, '#22d3ee', 14); c.fillStyle = '#0e7490'; c.fillRect(p.x - 30, -10, 60, yy - p.gap / 2 + 10); c.fillRect(p.x - 30, yy + p.gap / 2, 60, g.H); c.fillStyle = '#22d3ee'; c.fillRect(p.x - 34, yy - p.gap / 2 - 16, 68, 16); c.fillRect(p.x - 34, yy + p.gap / 2, 68, 16); Kit.noGlow(c); }
-    c.fillStyle = '#1d2a66'; c.fillRect(0, g.H - 40, g.W, 40); c.fillStyle = '#6366f1'; for (let x = -(g.gx % 30); x < g.W; x += 30) c.fillRect(x, g.H - 40, 15, 4);
-    const b = g.b; c.save(); c.translate(b.x, b.y); c.rotate(b.a); Kit.glow(c, '#fbbf24', 16); Kit.circ(c, 0, 0, 15, '#fbbf24'); Kit.noGlow(c); c.fillStyle = '#f59e0b'; c.beginPath(); c.ellipse(-4, 3 + Math.sin(g.t * 30) * 4, 9, 5, 0, 0, 7); c.fill(); Kit.circ(c, 6, -5, 5, '#fff'); Kit.circ(c, 8, -5, 2.4, '#111'); c.fillStyle = '#ef4444'; c.beginPath(); c.moveTo(12, 0); c.lineTo(22, 3); c.lineTo(12, 7); c.fill(); c.restore();
-  } });
+// Sky Flap - original one-tap flyer (Hub build). Art: Kenney "Tappy Plane" (CC0, see LICENSE-Kenney-CC0.txt), recoloured
+// palette + code-drawn haze/leaf banner. Endless: +1 per rock gate cleared; gap tightens and speed rises with score.
+(function () {
+  const IMG = {}; const names = ['background', 'groundGrass', 'rock', 'rockGrassDown', 'planeGreen1', 'planeGreen2', 'planeGreen3', 'puffLarge', 'puffSmall', 'textGetReady', 'tap'].concat([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => 'number' + i));
+  let loaded = 0; for (const n of names) { const im = new Image(); im.onload = () => loaded++; im.src = 'img/' + n + '.webp'; IMG[n] = im; }
+  const W = 400, H = 700, GROUND = 70, PX = 120, R = 21;
+  const puffs = []; let bgX = 0, gX = 0;
+  function drawNum(c, n, cx, y, h) { const s = String(n); const ims = [...s].map(d => IMG['number' + d]); const sc = h / 90; let tw = 0; for (const im of ims) tw += im.width * sc + 2; let x = cx - tw / 2; for (const im of ims) { c.drawImage(im, x, y, im.width * sc, im.height * sc); x += im.width * sc + 2; } }
+  // triangle spike collision (rock art is a tall spike); sample points on the plane's circle
+  function inTri(px, py, ax, ay, bx, by, cx, cy) { const d = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax); const u = ((bx - px) * (cy - py) - (by - py) * (cx - px)) / d, v = ((cx - px) * (ay - py) - (cy - py) * (ax - px)) / d; return u >= 0 && v >= 0 && u + v <= 1; }
+  function hitRock(b, r) { const tris = [[r.x - 44, H - GROUND, r.x + 44, H - GROUND, r.x + 6, r.gy + r.gap / 2], [r.x - 44, 0, r.x + 44, 0, r.x + 6, r.gy - r.gap / 2]];
+    for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; const px = b.x + Math.cos(a) * R * 0.85, py = b.y + Math.sin(a) * R * 0.75; for (const t of tris) if (inTri(px, py, ...t)) return true; } return false; }
+  Kit.run({ id: 'gl-sky-flap', title: 'SKY FLAP', help: 'Tap / Space to fly up\nThread the plane between the rock spires', bg: '#cfe9f7',
+    init(g) { g.b = { x: PX, y: 300, vy: 0, a: 0, f: 0 }; g.rocks = []; g.next = 1.4; g.sp = 170; puffs.length = 0; },
+    attract(g, dt) { g.b.y = 300 + Math.sin(g.t * 3) * 16; g.b.f += dt * 12; bgX += 20 * dt; gX += 170 * dt; },
+    update(g, dt) { const b = g.b; b.f += dt * (b.vy < 0 ? 22 : 12);
+      if (g.tap()) { b.vy = -340; g.sfx('flap'); for (let i = 0; i < 2; i++) puffs.push({ x: b.x - 34, y: b.y + 6 + i * 4, vx: -60 - Math.random() * 40, l: 0.6, s: 0.6 + Math.random() * 0.4 }); }
+      b.vy = Math.min(560, b.vy + 1100 * dt); b.y += b.vy * dt; const ta = Kit.clamp(b.vy / 620, -0.45, 1.25); b.a += (ta - b.a) * Math.min(1, dt * (ta > b.a ? 5 : 14));
+      g.sp = 170 + Math.min(110, g.score * 2.2); bgX += g.sp * 0.12 * dt; gX += g.sp * dt;
+      const gap = Math.max(150, 215 - g.score * 1.6);
+      g.next -= dt; if (g.next <= 0) { g.next = Math.max(1.05, 1.5 - g.score * 0.008); g.rocks.push({ x: W + 60, gy: g.R(190, H - GROUND - 170), gap, done: false }); }
+      for (const r of g.rocks) { r.x -= g.sp * dt; if (!r.done && r.x + 20 < b.x) { r.done = true; g.add(1, 'g'); g.sfx('coin'); g.burst(b.x, b.y - 20, ['#ffe08a', '#9be38b', '#fff'], 10, 120, 0.5); }
+        if (Math.abs(r.x - b.x) < 70 && hitRock(b, r)) { g.shake(10, 0.35); g.burst(b.x, b.y, ['#ffd23f', '#ff7a59', '#fff'], 34, 280); g.flash && g.flash('#fff', 0.15); return g.end('Clipped a spire'); } }
+      g.rocks = g.rocks.filter(r => r.x > -80);
+      for (const p of puffs) { p.x += p.vx * dt - g.sp * 0.2 * dt; p.y -= 10 * dt; p.l -= dt; } for (let i = puffs.length - 1; i >= 0; i--) if (puffs[i].l <= 0) puffs.splice(i, 1);
+      if (b.y > H - GROUND - 16) { g.shake(12, 0.4); g.burst(b.x, H - GROUND, ['#c99a5b', '#fff'], 30, 240); return g.end('Crashed'); } if (b.y < -40) b.y = -40;
+    },
+    draw(g, c) {
+      if (loaded < names.length) { c.fillStyle = '#cfe9f7'; c.fillRect(0, 0, W, H); return; }
+      // parallax sky (background art is 800x480; scale to fill height above the ground)
+      const bh = H - GROUND + 10, bw = 800 * bh / 480; for (let x = -(bgX % bw); x < W; x += bw) c.drawImage(IMG.background, x, 0, bw, bh);
+      // soft haze bands + a sponsor-style leaf banner far back (21+, original)
+      const hz = c.createLinearGradient(0, H * 0.45, 0, H); hz.addColorStop(0, 'rgba(255,255,255,0)'); hz.addColorStop(1, 'rgba(210,240,215,.35)'); c.fillStyle = hz; c.fillRect(0, 0, W, H);
+      { const bx = W + 260 - ((g.t * 28) % (W + 900)); if (bx > -240) { c.save(); c.globalAlpha = 0.55; c.strokeStyle = '#7d8a7f'; c.beginPath(); c.moveTo(bx, 128); c.lineTo(bx + 26, 132); c.stroke(); c.fillStyle = '#f6f1d8'; c.fillRect(bx + 26, 120, 170, 24); c.fillStyle = '#2f7d4a'; c.font = 'bold 13px system-ui'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText('\u2618 GREEN SUMMIT  21+', bx + 34, 132); c.drawImage(IMG.planeGreen1, bx - 30, 116, 34, 28); c.restore(); } }
+      for (const r of g.rocks) { const top = r.gy - r.gap / 2, bot = r.gy + r.gap / 2; const rw = 108;
+        c.drawImage(IMG.rock, r.x - rw / 2, bot, rw, H - GROUND - bot + 8); c.drawImage(IMG.rockGrassDown, r.x - rw / 2, -8, rw, top + 8); }
+      for (const p of puffs) { c.globalAlpha = Math.max(0, p.l / 0.6) * 0.8; const s = 30 * p.s * (1.6 - p.l); c.drawImage(IMG.puffLarge, p.x - s / 2, p.y - s / 2, s, s * 0.83); } c.globalAlpha = 1;
+      const gw = 808 * (GROUND + 6) / 71; for (let x = -(gX % gw); x < W; x += gw) c.drawImage(IMG.groundGrass, x, H - GROUND - 6, gw, GROUND + 6);
+      const b = g.b; const fr = IMG['planeGreen' + (1 + (Math.floor(b.f) % 3))]; c.save(); c.translate(b.x, b.y); c.rotate(b.a * 0.75); c.drawImage(fr, -44, -36, 88, 73); c.restore();
+      if (g.state === 'title') { const im = IMG.textGetReady; c.drawImage(im, W / 2 - im.width * 0.45, 150, im.width * 0.9, im.height * 0.9); c.drawImage(IMG.tap, W / 2 - 30, 380, 60, 60); }
+    },
+    hudDraw(g, c) { if (loaded < names.length) return; drawNum(c, Math.floor(g.score), W / 2, 40, 64); c.font = 'bold 13px system-ui'; c.textAlign = 'right'; c.fillStyle = 'rgba(30,60,40,.85)'; c.fillText('BEST ' + Math.floor(g.best), W - 12, 24); }
+  });
+})();
