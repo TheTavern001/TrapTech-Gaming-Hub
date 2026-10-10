@@ -453,3 +453,11 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Gameplay: drag a goo ball near the tower; a dashed preview shows which links it would make, turning green when it can attach. On release it links to the 2 nearest balls with springy strands. Over-stretched strands snap; strands redden as they stretch. The wind gets stronger with height. The run ends when the tower topples below 55% of its peak. Score is peak height. Space/Enter auto-places (accessibility and the test bot).
 - Art: dark goo balls with blinking eyes that look around, gloss highlights and a dusk gradient sky. The camera follows the tower up, and spare goo stays reachable at the bottom of the screen. Height rulers, a BEST marker, a "GOO CO. 21+" hut and wind streaks.
 - Tests: e2e PASS (60 fps). Bug pass PASS. Removed balls are now cleaned up. Rating: visual 7/10, feel 7.5/10.
+
+## Keep Guard (Kingdom Rush-style) - DONE (2026-10-10 06:45 ET)
+- Source hunt: Kingdom Rush clones on GitHub, itch.io and Gitee (Cocos Creator "塔防" projects) are Unity/Cocos with ripped Ironhide art or no licence. Rejected. Decision: build on td.js with new code-drawn fantasy art.
+- Map: painterly forest (grass texture, layered trees, rocks), a winding dirt road with pebbles, a river with a plank bridge, a stone keep gate with a banner and a "GREENKEEP HOLD 21+" sign.
+- Towers: Archers (red-roof stone tower), Mage (purple spire with a glowing crystal), Bombard (wheeled cannon) and Frost Rune (pulse that slows). Upgrade pips are shown.
+- Enemies: goblins, wolves, helmeted orcs and armoured trolls, with walk cycles, facing direction and HP bars.
+- Shots: arrows, mage orbs and lit cannonballs, with gold and leather drop effects. KR-style tower cards and a CALL WAVE button.
+- Tests: e2e PASS (60 fps). Bug pass PASS. Rating: visual 7/10, feel 7/10.
