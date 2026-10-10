@@ -107,11 +107,15 @@ function topbar(path) {
   </header>`;
 }
 const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/sponsor', 'Sponsor a Host'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
+// v7: shown on game pages, leaderboards and the footer (the server decides what is official, never this file)
+const OFFICIAL_NOTICE = 'Only giveaways shown in the Official Giveaways section of The Gaming Hub are authorized Gaming Hub competitions. Public game scores do not count as entry into an official giveaway.';
+const officialNotice = (cls = '') => `<div class="card pad official-notice ${cls}" role="note"><b>${icon('shield-check')} OFFICIAL GIVEAWAY NOTICE</b><p class="small muted" style="margin:4px 0 0">${OFFICIAL_NOTICE} <a href="/giveaways">Official Giveaways</a></p></div>`;
 function footer() {
   return `<footer class="site-foot" role="contentinfo">
     <div class="sf-in">
       <a class="sf-brand" href="/about" aria-label="About Trap Tech Solutions">${TT('horizontal', 54)}<span>Built by Trap Tech Solutions</span></a>
       <nav class="sf-links" aria-label="Footer">${FOOT_LINKS.map(([h, l]) => `<a href="${h}">${l}</a>`).join('')}</nav>
+      <p class="sf-note official-notice"><b>OFFICIAL GIVEAWAY NOTICE:</b> ${OFFICIAL_NOTICE}</p>
       <p class="sf-note">21+ only. No purchase necessary to enter or win. Points, XP and cosmetics have no cash value. © ${new Date().getFullYear()} Trap Tech Solutions. The Gaming Hub is powered by Trap Tech.</p>
     </div></footer>`;
 }
@@ -499,6 +503,7 @@ route(/^\/games\/([\w-]+)$/, async (m) => {
         <h2 style="font-size:.8rem;margin:12px 0 6px">Scoring</h2><p class="small muted" style="margin:0">${esc(g.scoring)}</p>
         <div class="tier-row">${g.tiers.map((t, i) => `<span class="tt t-${T[i].toLowerCase()}">${icon('medal')} ${T[i]} <b>${fmtScore(t, g.id)}</b></span>`).join('')}</div></div>
     </div></div>`);
+  { const mn = document.getElementById('main'); if (mn) mn.insertAdjacentHTML('beforeend', officialNotice('game-notice')); }
   const favBtn = document.getElementById('fav');
   const paint = () => { favBtn.style.color = fav().includes(g.id) ? '#f472b6' : ''; };
   paint(); favBtn.addEventListener('click', () => { const f = fav(); const i = f.indexOf(g.id); i >= 0 ? f.splice(i, 1) : f.push(g.id); ls.setItem('gh_favs', JSON.stringify(f)); paint(); toast(i >= 0 ? 'Removed from favorites' : 'Added to favorites'); });
@@ -531,7 +536,8 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   if (S.me) { const p = await api('/api/profile/' + encodeURIComponent(S.me.username)); const b = p.ok && p.profile.best_by_game.find(x => x.game_id === g.id); if (b) best = Math.max(best, b.best); }
   if (!document.getElementById('game')) return; // navigated away while loading
   let token = null; let tokenErr = null;
-  const getToken = async () => { token = null; tokenErr = null; if (!S.me) return; const r = await api('/api/run/start', { method: 'POST', body: { game_id: g.id } }); if (r.ok) { token = r.token; if (S.game && S.game.setSeed) S.game.setSeed(r.seed); } else tokenErr = r.error; };
+  const eventRef = url.searchParams.get('event') || giveawayId || undefined; // v7: official event run (server validates)
+  const getToken = async () => { token = null; tokenErr = null; if (!S.me) return; const r = await api('/api/run/start', { method: 'POST', body: { game_id: g.id, event: eventRef } }); if (r.ok) { token = r.token; if (S.game && S.game.setSeed) S.game.setSeed(r.seed); } else tokenErr = r.error; };
   const ov = document.getElementById('ov');
   const canvas = document.getElementById('game');
   const game = new Cls(canvas, { best, onEnd: (res) => finish(res), onState: (s) => { const pb = document.getElementById('pause'); if (pb) pb.innerHTML = icon(s === 'paused' ? 'play' : 'pause'); if (s === 'paused') showPause(); else if (s === 'play') ov.classList.add('hidden'); } });
@@ -598,6 +604,7 @@ route(/^\/leaderboard$/, async (m, url) => {
       <label class="check small" style="margin:0;white-space:nowrap">My Rank <input type="checkbox" id="mine"></label>
     </div>
     <div class="card" id="tbl"><div class="skeleton" style="margin:12px"></div></div>
+    ${officialNotice('lb-notice')}
     <p class="small dim center">${'Weekly = last 7 days, Monthly = last 30 days. Global score = sum of each player\'s best score per game. Banners, frames and titles are earned from achievements.'}</p></div>`);
   async function load() {
     const fr = !!(document.getElementById('friends') && document.getElementById('friends').checked);
@@ -650,9 +657,10 @@ route(/^\/giveaways$/, async (m, url) => {
   let tab = url.searchParams.get('tab') || 'active';
   let mine = url.searchParams.get('mine') === '1'; let myBrand = null;
   if (S.me) { const f = await api('/api/me/brand'); myBrand = f.ok ? f.brand : null; }
-  shell('/giveaways', `<div class="gw-head"><h1>Giveaways</h1><a class="btn sm ghost" href="/settings#v7-brand">${icon('store')} ${myBrand ? esc(myBrand.name) : 'Join a brand'}</a></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
+  shell('/giveaways', `<div class="gw-head"><h1>Official Giveaways</h1><a class="btn sm ghost" href="/settings#v7-brand">${icon('store')} ${myBrand ? esc(myBrand.name) : 'Join a brand'}</a></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
     ${S.me ? `<div class="chip-row"><button class="chip ${mine ? 'on' : ''}" id="f-follow" aria-pressed="${mine}">${icon('store')} I can enter</button><a class="chip" href="/me/entries">${icon('ticket')} My entries</a></div>` : ''}
     <div id="list" class="gw-list"><div class="skeleton"></div></div>
+    ${officialNotice()}
     <p class="small dim center">No purchase necessary. Join a giveaway and play a linked game while it is live. Each giveaway shows who can enter and its eligibility rules. <a href="/rules">Official Rules</a></p>`);
   async function load() {
     history.replaceState({}, '', `/giveaways?tab=${tab}${mine ? '&mine=1' : ''}`);
@@ -665,14 +673,31 @@ route(/^\/giveaways$/, async (m, url) => {
   const ff = document.getElementById('f-follow'); if (ff) ff.onclick = () => { mine = !mine; ff.classList.toggle('on', mine); ff.setAttribute('aria-pressed', String(mine)); load(); };
   load();
 });
+// v7 Official event page (private code link from the vendor share kit / QR). The server decides everything shown here.
+route(/^\/event\/(TT-[0-9A-Za-z]{5})$/i, async (m) => {
+  const r = await api('/api/event/' + encodeURIComponent(m[1].toUpperCase()));
+  if (!r.ok) return shell('/giveaways', `<div class="narrow">${emptyState('gift', 'Not an official event', 'This code is not an official Gaming Hub giveaway.', '<a class="btn sm" href="/giveaways">Official Giveaways</a>')}${officialNotice()}</div>`);
+  const e = r.event; const live = e.status === 'active';
+  const play = e.games.map(id => { const x = gameById(id); const href = `/play/${id}?event=${e.code}`; return x ? `<a class="gpick" href="${S.me ? href : `/signin?next=${encodeURIComponent(href)}`}"><img src="${esc(x.art)}" alt=""><b>${esc(x.title)}</b></a>` : ''; }).join('');
+  shell('/giveaways', `<div class="narrow event-page">
+    <div class="event-label" id="event-label">${icon('badge-check')} ${esc(r.board_label)}</div>
+    <h1>${esc(e.title)}</h1>
+    <div class="card pad"><p style="margin:0 0 6px"><b>Prize:</b> ${esc(e.prize || e.title)}</p><p class="small muted" style="margin:0">Hosted by ${esc(e.vendor)}. Status: <b>${esc(e.status)}</b>. ${new Date(e.start_at).toLocaleString()} to ${new Date(e.end_at).toLocaleString()}.</p>
+      ${live ? `<div class="small muted" style="margin:10px 0 6px">${S.me ? 'Pick a game. Only runs started here count for this event:' : 'Sign in to play for this event:'}</div><div class="gpicks">${play}</div>` : ''}</div>
+    <div class="card" style="margin-top:14px"><div class="panel-h"><h2>Event leaderboard</h2></div>${r.board.length ? `<table class="lb"><tbody>${r.board.map(x => `<tr><td>#${x.rank}</td><td>${esc(x.username)}</td><td class="num">${fmt(x.score)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No event runs yet.</div>'}</div>
+    <p class="small muted">This board only counts runs started from this event. Public game scores never count. <a href="/giveaways/${e.id}/rules">Official rules</a></p>
+    ${officialNotice()}
+  </div>`, { title: e.title });
+});
 route(/^\/giveaways\/(\d+)$/, async (m) => {
   const r = await api('/api/giveaways/' + m[1]);
   if (!r.ok) return shell('/giveaways', `<div class="empty">Giveaway not found. <a href="/giveaways">All giveaways</a></div>`);
   const g = r.giveaway; const multi = g.game_ids.length > 1;
   const sc = (n) => multi ? `${fmt(n)} pts` : fmtScore(n, g.game_id);
-  const playBtns = g.game_ids.map(id => { const x = gameById(id); const href = `/play/${id}?giveaway=${g.id}`; return x ? `<a class="gpick" href="${S.me ? href : `/signin?next=${encodeURIComponent(href)}`}"><img src="${x.art}" alt=""><span>${esc(x.title)}</span>${icon('play')}</a>` : ''; }).join('');
+  const playBtns = g.game_ids.map(id => { const x = gameById(id); const href = g.event_code ? `/play/${id}?event=${g.event_code}` : `/play/${id}?giveaway=${g.id}`; return x ? `<a class="gpick" href="${S.me ? href : `/signin?next=${encodeURIComponent(href)}`}"><img src="${x.art}" alt=""><span>${esc(x.title)}</span>${icon('play')}</a>` : ''; }).join('');
   shell('/giveaways', `<div class="narrow">
     <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>${esc(g.title)}${demoTag(g.demo)}</h1></div>
+    ${g.event_label ? `<div class="event-label small" id="event-label">${icon('badge-check')} ${esc(g.event_label)}</div>` : ''}
     <div class="card gw branded" style="${brandStyle(g)}">
       <div class="row"><div><div class="host">Hosted by ${g.channel ? `<span class="ch-link" id="gw-channel">${esc(g.channel.name)}</span>` : esc(g.host)}</div>${brandMark(g)}<div style="margin-top:10px"><span class="pill ${g.status === 'active' ? 'green' : g.status === 'upcoming' ? '' : 'red'}">${g.status.toUpperCase()}</span> ${tierPill(g)}</div></div>
       ${g.image ? `<div class="art" style="background-image:url('${esc(g.image)}')"></div>` : '<div></div>'}</div>

@@ -140,3 +140,10 @@
 .ec-list { margin: 6px 0 6px 18px; padding: 0; line-height: 1.65; font-size: .92rem; } .ec .card.pad { margin-bottom: 12px; } .ec .card.pad h2 { font-size: 1.02rem; display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
 @media (prefers-reduced-motion: reduce) { .ec-card.r-legendary::after { animation: none; } .ec-card { transition: none; } }
 .ec-sheet .sheet-in { background: linear-gradient(180deg, #121640, #0a0d26); }
+
+/* v7 Phase 2: official giveaway notice + event label (current theme variables only) */
+.official-notice { margin: 14px 0; border-left: 3px solid var(--brand); }
+.official-notice b { display: inline-flex; align-items: center; gap: 6px; letter-spacing: .04em; font-size: .78rem; }
+.sf-note.official-notice { border: 0; margin: 6px 0; }
+.event-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; font-size: .72rem; margin: 0 0 8px; opacity: .92; }
+.event-page h1 { margin-top: 2px; }

@@ -40,18 +40,22 @@ function client() {
   const t0 = Date.now();
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Test Giveaway', host: 'Test Host', prize: 'Bragging rights', image: '/assets/giveaways/ps5-bundle-art.webp', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', rules: 'test', active: true } });
   ok(r.body.ok, 'admin creates giveaway'); const gid = r.body.id;
-  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Short Giveaway', host: 'Test', start_at: t0 - 60e3, end_at: t0 + 6000, game_id: 'jetpack-dash', active: true } });
-  ok(r.body.ok, 'admin creates short giveaway (ends in 6s)'); const gshort = r.body.id;
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Short Giveaway', host: 'Test', start_at: t0 - 60e3, end_at: t0 + 9000, game_id: 'jetpack-dash', active: true } });
+  ok(r.body.ok, 'admin creates short giveaway (ends in 9s)'); const gshort = r.body.id;
   r = await ADM('/api/admin/giveaways', { body: { title: 'bad', start_at: t0, end_at: t0 - 1, game_id: 'jetpack-dash' } }); ok(r.status === 400, 'giveaway with end<start rejected');
   r = await ADM(`/api/admin/giveaways/${gid}`, { method: 'PUT', body: { title: 'E2E Test Giveaway (edited)', host: 'Test Host', prize: 'Bragging rights', image: '/assets/giveaways/ps5-bundle-art.webp', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', rules: 'edited rules', active: true } });
   ok(r.body.ok, 'admin edits giveaway');
   r = await anon('/api/giveaways?status=active'); ok(r.body.giveaways.some(g => g.id === gid && g.title.includes('edited')), 'public active giveaways list shows edited giveaway');
 
   console.log('# runs + anti-cheat');
-  r = await A('/api/run/start', { body: { game_id: 'jetpack-dash' } }); ok(r.body.ok && r.body.token, 'run/start issues token'); const tokA = r.body.token;
-  r = await B('/api/run/start', { body: { game_id: 'jetpack-dash' } }); const tokB = r.body.token;
-  r = await A('/api/run/start', { body: { game_id: 'jetpack-dash' } }); const tokShort = r.body.token;
+  r = await A('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); ok(r.body.ok && r.body.token, 'run/start issues token (official event run)'); const tokA = r.body.token;
+  r = await B('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); const tokB = r.body.token;
+  r = await A('/api/run/start', { body: { game_id: 'jetpack-dash', event: gshort } }); const tokShort = r.body.token;
+  r = await A('/api/run/start', { body: { game_id: 'jetpack-dash', event: gshort } }); const tokSA = r.body.token;
+  r = await B('/api/run/start', { body: { game_id: 'jetpack-dash', event: gshort } }); const tokSB = r.body.token;
   await sleep(3200);
+  r = await A('/api/score', { body: { token: tokSA, score: 80, coins: 0, duration_ms: 3000 } }); ok(r.body.ok && r.body.giveaways.some(g => g.id === gshort), 'A event run counted for the short event');
+  r = await B('/api/score', { body: { token: tokSB, score: 40, coins: 0, duration_ms: 3000 } }); ok(r.body.ok, 'B event run for the short event');
   r = await B('/api/score', { body: { token: tokA, score: 10, coins: 0 } }); ok(r.status === 403, "another player can't use A's token");
   r = await A('/api/score', { body: { token: tokA, score: 80, coins: 5, duration_ms: 3000, giveaway_id: gid } });
   ok(r.body.ok && r.body.rank >= 1, 'valid score accepted (80m in ~3s)', r.body);
@@ -62,11 +66,11 @@ function client() {
   r = await B('/api/score', { body: { token: tokB, score: 10, coins: 0 } }); ok(r.status === 409, 'rejected token cannot be reused');
   r = await B('/api/score', { body: { token: tokB.slice(0, -3) + 'abc', score: 10 } }); ok(r.status === 400, 'tampered token rejected');
   r = await B('/api/run/start', { body: { game_id: 'not-a-game' } }); ok(r.status === 400, 'unknown game cannot be started');
-  r = await B('/api/run/start', { body: { game_id: 'jetpack-dash' } }); const tokB2 = r.body.token; await sleep(2100);
+  r = await B('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); const tokB2 = r.body.token; await sleep(2100);
   r = await B('/api/score', { body: { token: tokB2, score: 40, coins: 2 } }); ok(r.body.ok, 'B valid score accepted');
-  console.log('  waiting for short giveaway to end...'); await sleep(Math.max(0, t0 + 6500 - Date.now()));
+  console.log('  waiting for short giveaway to end...'); await sleep(Math.max(0, t0 + 9500 - Date.now()));
   r = await A('/api/score', { body: { token: tokShort, score: 60, coins: 0, giveaway_id: gshort } });
-  ok(r.body.ok && r.body.giveaway_status === 'ended_not_counted', 'score after giveaway end is saved globally but NOT counted for the giveaway', r.body);
+  ok(r.body.ok && r.body.giveaway_status === 'ended_not_counted', 'event run submitted after the event ended is saved as free play but NOT counted for the giveaway', r.body);
   r = await ADM(`/api/admin/giveaways/${gshort}`); ok(!r.body.entrants.some(e => e.username === ua && e.score === 60), 'ended giveaway entrants exclude late run');
 
   console.log('# leaderboards');
@@ -130,6 +134,8 @@ function client() {
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Random Giveaway', host: 'Test', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true, win_method: 'random', winner_count: 2 } });
   const grand = r.body.id; r = await anon(`/api/giveaways/${grand}`); const commit = r.body.giveaway.draw_commit;
   ok(r.body.giveaway.win_method === 'random' && r.body.giveaway.winner_count === 2 && /^[0-9a-f]{64}$/.test(commit), 'random giveaway publishes its draw commitment up front');
+  { const [a1, b1] = await Promise.all([A('/api/run/start', { body: { game_id: 'jetpack-dash', event: grand } }), B('/api/run/start', { body: { game_id: 'jetpack-dash', event: grand } })]); await sleep(2200);
+    await A('/api/score', { body: { token: a1.body.token, score: 50, coins: 0, duration_ms: 2200 } }); await B('/api/score', { body: { token: b1.body.token, score: 30, coins: 0, duration_ms: 2200 } }); }
   r = await ADM(`/api/admin/giveaways/${grand}/finalize`, { method: 'POST' }); ok(r.body.ok && r.body.results.length === 2, 'admin "End now & lock results"');
   r = await anon(`/api/giveaways/${grand}/verify`); const vv = r.body;
   const ord = vv.entrant_lines.map(l => l.split('|')[1]).map(u => [crypto.createHmac('sha256', vv.seed).update(`${vv.entrants_hash}:${u}`).digest('hex'), u]).sort((a, b) => a[0] < b[0] ? -1 : 1).map(x => x[1]);
@@ -138,7 +144,7 @@ function client() {
   r = await anon('/api/giveaways/999999/standings'); ok(r.status === 404, 'standings 404 for unknown giveaway');
 
   console.log('# profile, booking, community');
-  r = await anon('/api/profile/' + ua); ok(r.body.ok && r.body.profile.games_played === 2 && r.body.profile.total_score === 80 && r.body.profile.giveaways_won >= 1, 'profile stats (2 runs, total 80, won>=1)', r.body.profile);
+  r = await anon('/api/profile/' + ua); ok(r.body.ok && r.body.profile.games_played >= 2 && r.body.profile.total_score === 80 && r.body.profile.giveaways_won >= 1, 'profile stats (2 runs, total 80, won>=1)', r.body.profile);
   r = await anon('/api/bookings', { body: { brand: 'E2E Brand', email: 'e2e@example.com', business_type: 'Apparel / streetwear brand', event_type: 'Giveaway', package: 'premium', start_date: '2026-11-01', end_date: '2026-11-14', details: 'test booking' } }); ok(r.body.ok, 'booking submitted'); const bid = r.body.id;
   r = await anon('/api/bookings', { body: { brand: '', contact: '' } }); ok(r.status === 400, 'booking without brand rejected');
   r = await ADM('/api/admin/bookings'); ok(r.body.bookings.some(b => b.id === bid && b.brand === 'E2E Brand'), 'booking visible to admin');
@@ -163,13 +169,14 @@ function client() {
   const PLAUS = { 'jetpack-dash': 50, 'drift-rush': 300, plinko: 600, 'spin-to-win': 800, 'memory-match': 400, 'high-score': 250, 'blazed-roulette': 1150, 'terp-tapper': 600, 'stack-2048': 300, 'munchies-snake': 100, 'brick-breaker': 500, 'sky-hopper': 5, 'void-swarm': 50, 'grow-guard': 0, 'sling-smash': 0, 'haze-defense': 0 /* 12+ submits/min = submit_burst note; 0 keeps them un-held */, stack: 30 };
   await sleep(61e3); // L2 per-IP submit limit (30/min): let earlier submissions age out
   const toks = {};
-  for (const g of GAMES) { r = await C('/api/run/start', { body: { game_id: g.id } }); ok(r.body.ok, `run/start ${g.id}`); toks[g.id] = r.body.token; }
+  for (const g of GAMES) { r = await C('/api/run/start', { body: { game_id: g.id, event: g.id === 'terp-tapper' ? gmin : g.id === 'memory-match' ? gmulti : undefined } }); ok(r.body.ok, `run/start ${g.id}`); toks[g.id] = r.body.token; }
   r = await C('/api/run/start', { body: { game_id: 'plinko' } }); const tokPl = r.body.token;
   r = await C('/api/run/start', { body: { game_id: 'blazed-roulette' } }); const tokRo = r.body.token;
   await sleep(2600);
   let allUnlocked = [];
   for (const g of GAMES) {
     r = await C('/api/score', { body: { token: toks[g.id], score: PLAUS[g.id], coins: 1, duration_ms: 2500, log: g.id === 'stack' ? [1450, 1500] : undefined, giveaway_id: g.id === 'terp-tapper' ? gmin : undefined } });
+    if (g.id === 'terp-tapper') { const x = await C('/api/run/start', { body: { game_id: 'terp-tapper', event: gmulti } }); toks.tt2 = x.body.token; }
     ok(r.body.ok && r.body.game_id === g.id && r.body.best === PLAUS[g.id], `${g.title}: plausible score ${PLAUS[g.id]} saved`, r.body);
     allUnlocked.push(...(r.body.unlocked || []));
     if (g.id === 'terp-tapper') ok(r.body.giveaway_status === 'below_min_score', 'run below the giveaway minimum score is not counted (below_min_score)', r.body.giveaway_status);
@@ -182,11 +189,13 @@ function client() {
   ok(ids.has('plinko-bronze') === false, 'no bronze for plinko at 600 (< 900 threshold)');
   ok(ids.has('blazed-roulette-bronze') === false && ids.has('memory-match-bronze') === false, 'thresholds respected server-side');
 
+  await sleep(61e3); /* 18 submits just now = submit_burst note; let it age out */ r = await C('/api/score', { body: { token: toks.tt2, score: 600, coins: 0, duration_ms: 2300 } }); ok(r.body.ok && r.body.giveaways.some(g => g.id === gmulti), 'terp-tapper event run for the multi-game event', r.body);
   console.log('# v2: multi-game giveaway + one-click linking');
   r = await anon(`/api/leaderboard?giveaway=${gmulti}`); let rowC = r.body.rows.find(x => x.username === uc);
   ok(rowC && rowC.score === 1000, 'multi-game giveaway score = sum of best per linked game (600 + 400)', rowC);
   r = await anon(`/api/leaderboard?giveaway=${gmin}`); ok(!r.body.rows.some(x => x.username === uc), 'min-score giveaway excludes C (600 < 1000)');
   r = await ADM(`/api/admin/giveaways/${gmulti}/games`, { body: { game_id: 'high-score', linked: true } }); ok(r.body.ok && r.body.game_ids.includes('high-score'), 'one-click link high-score to giveaway');
+  { const x = await C('/api/run/start', { body: { game_id: 'high-score', event: gmulti } }); await sleep(2300); await C('/api/score', { body: { token: x.body.token, score: 250, coins: 0, duration_ms: 2300 } }); }
   r = await anon(`/api/leaderboard?giveaway=${gmulti}`); rowC = r.body.rows.find(x => x.username === uc); ok(rowC && rowC.score === 1250, 'linked game immediately counts (1000 + 250)', rowC);
   r = await ADM('/api/admin/games'); let hs = r.body.games.find(g => g.id === 'high-score'); ok(hs.giveaways.some(x => x.id === gmulti && x.linked), 'admin games list shows giveaway linked on High Score card');
   ok(r.body.games.find(g => g.id === 'drift-rush').giveaways.some(x => x.id === gmulti && !x.linked), 'admin games list offers unlinked live giveaway as a toggle');
@@ -346,7 +355,7 @@ function client() {
 
   // ======================= v5 =======================
   const DBP = require(path.join(__dirname, '..', 'src', 'config.js')).DB_PATH; const sdb = new (require('better-sqlite3'))(DBP);
-  const play = async (cl, game, score, wait = 1200, extra = {}) => { let x; for (let k = 0; k < 6; k++) { x = await cl('/api/run/start', { body: { game_id: game } }); if (x.status !== 429) break; await sleep(12000); } if (!x.body.ok) return x; const tk = x.body.token; const seed = x.body.seed; if (wait) await sleep(wait); const body = { token: tk, score, coins: 0, duration_ms: wait, tel: { n: 12, mean: 310, sd: 95, min: 120 }, ...extra }; for (let k = 0; k < 6; k++) { x = await cl('/api/score', { body }); if (x.status !== 429 || x.body.rejected) break; await sleep(12000); } x.seed = seed; return x; };
+  const play = async (cl, game, score, wait = 1200, extra = {}) => { let x; const event = extra.event; extra = { ...extra }; delete extra.event; for (let k = 0; k < 6; k++) { x = await cl('/api/run/start', { body: { game_id: game, event } }); if (x.status !== 429) break; await sleep(12000); } if (!x.body.ok) return x; const tk = x.body.token; const seed = x.body.seed; if (wait) await sleep(wait); const body = { token: tk, score, coins: 0, duration_ms: wait, tel: { n: 12, mean: 310, sd: 95, min: 120 }, ...extra }; for (let k = 0; k < 6; k++) { x = await cl('/api/score', { body }); if (x.status !== 429 || x.body.rejected) break; await sleep(12000); } x.seed = seed; return x; };
   console.log('# v7: brands (one per player) + paid link placements');
   r = await anon('/api/brands'); ok(r.body.ok && Array.isArray(r.body.brands) && r.body.cooldown_days === 30, 'public brand list');
   for (const p of ['/api/channels', '/api/channels/terp-tavern', '/api/me/channels']) { r = await anon(p); ok(r.status === 404, `${p} removed`); }
@@ -369,13 +378,13 @@ function client() {
   r = await A(`/api/giveaways/${gE}/eligibility`); ok(r.body.checks.some(c => c.id === 'cooldown' && !c.ok && /won recently/.test(c.hint)), 'recent winner is on win cooldown');
   for (let i = 0; i < 3; i++) await play(C, 'high-score', 5, 300);
   r = await C(`/api/giveaways/${gE}/eligibility`); ok(r.body.eligible && r.body.can_join && r.body.message.includes('Enter giveaway'), 'eligible player: "You\'re eligible - tap Enter giveaway"', r.body);
-  r = await play(C, 'high-score', 20, 300); ok(r.body.ok && !(r.body.giveaways || []).some(g => g.id === gE), 'runs before joining do not count for a join-required giveaway');
+  r = await play(C, 'high-score', 20, 300, { event: gE }); ok(r.status === 403 && /Enter this event/.test(r.body.error), 'event runs are refused before joining a join-required giveaway', r.body);
   r = await C(`/api/giveaways/${gE}/join`, { body: {} }); ok(r.body.ok && r.body.status.joined, 'eligible player joins');
   r = await anon(`/api/giveaways/${gE}`); ok(r.body.giveaway.joined_count === 1 && r.body.giveaway.link && r.body.giveaway.link.url === `/go/g/${gE}?p=giveaway` && r.body.giveaway.channel.slug === 'e2e-brand' && r.body.giveaway.brand.slug === 'e2e-brand' && r.body.giveaway.open_to_all === false, 'giveaway shows entrants, brand (members only) and the paid sponsor link');
   let rr2 = await fetch(BASE + `/go/g/${gE}?p=giveaway`, { redirect: 'manual' }); ok(rr2.status === 302 && rr2.headers.get('location') === 'https://example.com/gw', '/go redirect sends to the sponsor URL');
   rr2 = await fetch(BASE + `/go/g/${gE}?p=announcement`, { redirect: 'manual' }); ok(rr2.status === 302 && rr2.headers.get('location') === '/', '/go refuses placements the sponsor did not pay for');
   r = await anon('/api/games/high-score/sponsor'); ok(r.body.sponsor && r.body.sponsor.giveaway_id === gE, 'game-page link placement shows the sponsor on the game page');
-  r = await play(C, 'high-score', 25, 300); ok((r.body.giveaways || []).some(g => g.id === gE && g.rank === 1), 'after joining, runs count');
+  r = await play(C, 'high-score', 25, 300, { event: gE }); ok((r.body.giveaways || []).some(g => g.id === gE && g.rank === 1), 'after joining, runs count');
   const gMs = []; for (let i = 0; i < 3; i++) { r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Slot ' + i, host: 'T', start_at: t5 - 60e3, end_at: t5 + 3600e3, game_id: 'terp-tapper', active: true, require_join: true, elig_max_active: 3 } }); gMs.push(r.body.id); }
   r = await C(`/api/giveaways/${gMs[0]}/join`, { body: {} }); ok(r.body.ok, 'join 2nd live giveaway');
   r = await C(`/api/giveaways/${gMs[1]}/join`, { body: {} }); ok(r.body.ok, 'join 3rd live giveaway');
@@ -393,8 +402,8 @@ function client() {
   const t6 = Date.now();
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Cooldown', host: 'T', start_at: t6 - 1000, end_at: t6 + 3600e3, game_id: 'brick-breaker', active: true, winner_count: 1, elig_win_cooldown_days: 30 } }); const gCD = r.body.id;
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Weighted', host: 'T', start_at: t6 - 1000, end_at: t6 + 3600e3, game_id: 'terp-tapper', active: true, win_method: 'random', winner_count: 1, weight_mode: 'activity' } }); const gW = r.body.id;
-  await play(A, 'brick-breaker', 200, 1500); await play(D, 'brick-breaker', 100, 1500);
-  for (let i = 0; i < 5; i++) await play(D, 'terp-tapper', 10 + i, 300); await play(C, 'terp-tapper', 50, 300);
+  await play(A, 'brick-breaker', 200, 1500, { event: gCD }); await play(D, 'brick-breaker', 100, 1500, { event: gCD });
+  for (let i = 0; i < 5; i++) await play(D, 'terp-tapper', 10 + i, 300, { event: gW }); await play(C, 'terp-tapper', 50, 300, { event: gW });
   r = await ADM(`/api/admin/giveaways/${gCD}/finalize`, { method: 'POST' }); r = await ADM(`/api/admin/giveaways/${gW}/finalize`, { method: 'POST' }); ok(r.body.ok, 'admin ends both test giveaways and locks results');
   r = await anon(`/api/giveaways/${gCD}`); ok(r.body.giveaway.winners.length === 1 && r.body.giveaway.winners[0].username === ud, 'recent winner auto-skipped at lock; next place promoted', r.body.giveaway.winners);
   r = await ADM(`/api/admin/giveaways/${gCD}/audit`); ok(r.body.audit.some(a => a.action === 'ineligible_skipped' && a.username === ua), 'audit logs "ineligible_skipped" with the reason');

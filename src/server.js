@@ -233,7 +233,8 @@ app.post('/api/score', requireUser, (req, res) => {
   if (row.used_at) return bad(res, 409, 'This run was already submitted.', { rejected: true });
   if (t - row.started_at > cfg.RUN_TOKEN_TTL_MS) return reject(400, 'Run token expired.');
   if ((tok.e || null) !== (row.event_id || null)) return reject(400, 'Event run token does not match this run.');
-  { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec) return reject(ec.status, ec.error); }
+  const evOrig = row.event_id || null;
+  { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec && ec.demote) row.event_id = null; else if (ec) return reject(ec.status, ec.error); }
   const game = cfg.GAME_MAP[row.game_id]; const ac = game.ac; const unit = game.unit === 'm' ? 'm' : ' ' + game.unit;
   const score = Number(req.body.score); const coins = Number(req.body.coins || 0);
   if (!Number.isInteger(score) || score < 0 || score > cfg.MAX_SCORE) return reject(400, 'Invalid score value.');
@@ -256,7 +257,7 @@ app.post('/api/score', requireUser, (req, res) => {
 
   const prevBest = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=?').get(req.user.id, row.game_id).b;
   const levelBefore = H.levelOf(req.user.id);
-  const gwsAll = row.event_id ? activeGiveawaysFor(row.game_id, Math.min(t, (db.prepare('SELECT end_at FROM giveaways WHERE id=?').get(row.event_id) || { end_at: t + 1 }).end_at - 1)).filter(g => g.id === row.event_id && row.started_at >= g.start_at) : []; // v7: free-play runs never enter giveaways
+  const gwsAll = row.event_id ? activeGiveawaysFor(row.game_id, t).filter(g => g.id === row.event_id && row.started_at >= g.start_at) : []; // v7: free-play runs never enter giveaways
   const joinedQ = db.prepare('SELECT 1 FROM giveaway_entries WHERE giveaway_id=? AND user_id=? AND left_at IS NULL');
   const gws = gwsAll.filter(g => !g.require_join || joinedQ.get(g.id, req.user.id));
   // v5 anti-camping: giveaways this game feeds that the player has not entered yet (runs only count after "Enter giveaway")
@@ -287,7 +288,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const gid = req.body.giveaway_id || req.body.contest;
   if (gid) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(gid);
-    giveawayStatusOut = !g ? 'not_found' : String(row.event_id || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at + 120e3 ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
+    giveawayStatusOut = !g ? 'not_found' : String(evOrig || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
       : !giveawayGameIds(g.id).includes(row.game_id) ? 'game_not_linked' : score < (g.min_score || 0) ? 'below_min_score' : 'counted');
   }
   // achievements are evaluated here, on the server, from the stored runs
@@ -316,7 +317,8 @@ function giveawayPublic(g, withWinners = true) {
     prize_tiers: String(g.prize_tiers || '').split('\n').map(x => x.trim()).filter(Boolean),
     status: giveawayStatus(g), entrants: entrants.length, demo: !!g.is_demo, top: entrants.slice(0, 3).map(publicRow),
     win_method: g.win_method || 'score', winner_count: R.winnerCount(g), finalized_at: g.finalized_at || null, draw_commit: g.draw_commit || null,
-    entrants_hash: g.entrants_hash || null, tiebreak_rules: R.TIEBREAK_RULES };
+    entrants_hash: g.entrants_hash || null, tiebreak_rules: R.TIEBREAK_RULES,
+    event_code: g.event_code || null, event_label: g.event_code ? EV.label(g) : null, official: true };
   if (H.v5Giveaway) Object.assign(out, H.v5Giveaway(g));
   if (H.v7Giveaway) H.v7Giveaway(g, out); // v7 builder: subtitle, description, banner, prizes, hidden board, official rules
   if (withWinners) {

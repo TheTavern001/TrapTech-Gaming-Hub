@@ -61,7 +61,6 @@ function status(g, t = Date.now()) {
 const label = (g) => `${(g.vendor || g.host || 'BRAND').toUpperCase()} x GAMING HUB, Official Giveaway #${g.event_code}`;
 const sessHash = (req) => { const raw = (String(req.headers.cookie || '').match(/(?:^|;\s*)gh_sess=([^;]+)/) || [])[1] || String(req.headers['x-session'] || ''); return crypto.createHash('sha256').update('sess:' + raw).digest('hex').slice(0, 24); };
 const EVENT_TOKEN_TTL_MS = 30 * 60e3; // short-lived
-const GRACE_MS = 120e3;
 
 // start: returns { ok, g } or { status, error }
 function checkStart(req, user, gameId, ref, t = Date.now()) {
@@ -75,7 +74,7 @@ function checkStart(req, user, gameId, ref, t = Date.now()) {
   if (!gamesOf(g.id).includes(gameId)) return { status: 400, error: 'That game is not part of this event.' };
   const E = require('./eligibility');
   if (g.require_join) { if (!db.prepare('SELECT 1 FROM giveaway_entries WHERE giveaway_id=? AND user_id=? AND left_at IS NULL').get(g.id, user.id)) return { status: 403, error: 'Enter this event first.' }; }
-  else { try { const c = E.check(user, g, t); if (c && c.eligible === false) return { status: 403, error: 'You are not eligible for this event.', checks: c.checks }; } catch (e) { /* eligibility is advisory when it fails to compute */ } }
+  // other eligibility rules (win cooldown, activity, brand) are applied at the results lock, where ineligible players are skipped and audited
   return { ok: true, g };
 }
 // submit: row = run_tokens row. Returns null when fine, else { status, error }
@@ -86,7 +85,8 @@ function checkSubmit(req, user, row, tok, t = Date.now()) {
   if (t - row.started_at > EVENT_TOKEN_TTL_MS) return { status: 400, error: 'Event run token expired.' };
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(row.event_id);
   if (!g) return { status: 404, error: 'That is not an official Gaming Hub event.' };
-  if (t >= g.end_at && !(row.started_at < g.end_at && t - g.end_at <= GRACE_MS)) return { status: 403, error: 'This event has ended.' };
+  // ended (or a run that outlived its event): the run is kept as a free-play run, never as an event entry
+  if (t >= g.end_at) return { status: 403, error: 'This event has ended.', demote: true };
   const st = status({ ...g, finalized_at: null }, Math.min(t, g.end_at - 1));
   if (st !== 'active') return { status: 403, error: 'This event is not active.' };
   if (!gamesOf(g.id).includes(row.game_id)) return { status: 400, error: 'That game is not part of this event.' };
