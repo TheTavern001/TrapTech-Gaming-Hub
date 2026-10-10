@@ -12,6 +12,7 @@ Kit.run({
     g.shards = [];
     g.spawn = .6;
     g.wave = 1;
+    g.lastWave = 1;
     g.kills = 0;
     g.elapsed = 0;
     g.shardClock = 0;
@@ -21,6 +22,7 @@ Kit.run({
     const p = g.player;
     g.elapsed += dt;
     g.wave = 1 + Math.floor(g.elapsed / 18);
+    if (g.wave !== g.lastWave) { g.lastWave = g.wave; g.add(g.wave * 10, 'w'); g.mark('wave', g.wave); g.sfx('power'); }
     p.invuln = Math.max(0, p.invuln - dt);
     p.x = Kit.clamp(p.x + g.ax() * p.speed * dt, 20, g.W - 20);
     p.y = Kit.clamp(p.y + g.ay() * p.speed * dt, 28, g.H - 28);
@@ -60,8 +62,6 @@ Kit.run({
     }
     // Enemies that drift far off-screen are removed to bound memory and per-frame work.
     g.enemies = g.enemies.filter(e => e.x > -60 && e.x < g.W + 60 && e.y > -60 && e.y < g.H + 60);
-    // Score only awarded for kills would require a weapon mechanic; here survival is the core skill loop.
-    g.mark('w', g.wave);
     g.hud = 'WAVE ' + g.wave + '   HP ' + '♥'.repeat(Math.max(0, p.hp)) + '   SHARDS ' + Math.floor(g.score / 25);
   },
   draw(g, c) {
