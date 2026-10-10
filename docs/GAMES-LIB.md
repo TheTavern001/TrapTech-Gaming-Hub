@@ -489,3 +489,13 @@ For each reference we searched GitHub (topics html5-game / javascript-game / pha
 - Background: dusk gradient with bokeh, a glass play panel and a "BUBBLE LOUNGE 21+" tag.
 - Performance: bubble sprite caching took the 4x-throttled bug-pass FPS from 22 to 38.
 - Tests: e2e PASS. Bug pass PASS. Rating: visual 7.5/10, feel 7/10.
+
+## Housekeeping (2026-10-10 06:05 ET)
+- 59 thumbnails rewritten by earlier e2e runs were checked: several were game-over or title frames (zig-path, hex-stack, dune-glide), so all were restored. tools/e2e-games-lib.js now only writes thumb.jpg when a game has none (THUMBS=1 forces it).
+- docs/SCORE-RANGES.md and score-ranges.json: tools/score-sim.js regenerates them identically (only the timestamp differs), and no game exceeds its rate ceiling (over:0/0 for all). Committed.
+
+## Gem Rush (Bejeweled-style) - DONE (2026-10-10 06:05 ET)
+- Source hunt (GitHub "bejeweled javascript", Gitee "宝石迷阵 H5", itch.io, js13k, OpenGameArt): the popular JS clones are unlicensed or use ripped PopCap gems; the MIT ones are flat-circle tutorials. Our Strain Crush engine already had solid swap/cascade rules. Decision: build our own on that core.
+- Gameplay: 8x8 swipe or tap-swap, cascades multiply. Four in a row leaves a Flame gem (3x3 blast), five leaves a Star gem (clears row and column), and blasts chain. Endless blitz: matches refill the clock and the drain speeds up.
+- Art: 7 faceted jewels (hex, octagon, diamond, triangle, pentagon, round, heptagon) pre-rendered with lit facets, a table and a specular highlight; twinkles; gold-framed velvet board; time bar that turns red; flame and star effects; "GEM ROOM 21+" tag.
+- Tests: e2e PASS (60 fps). Bug pass PASS (35 fps throttled, +0.0 MB over 30 s). Rating: visual 7.5/10, feel 7/10.

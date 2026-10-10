@@ -43,6 +43,7 @@ Phases 1-9 DONE (incl. 8b i18n: 21 languages, body text of player pages, RTL; fi
 - Keep Guard DONE (Kingdom Rush-style).
 - Node Siege DONE (Infinitode-style maze TD).
 - Orb Coil DONE (Zuma-style).
+- Gem Rush (Bejeweled-style) DONE (06:05)
 - Bubble Pop UPGRADED (Bubble Shooter art pass).
 - Next (Reese order): A-tier list one at a time (Bejeweled, Knife Hit, Stack, Pinball, Tron, Asteroids, Galaga, Missile Command, Tapper, Frogger) + remaining Cannabis; international search folded into each hunt. Then: the international source search, batches 4-8 toward 150+ (catalog `docs/REESE-MASTER-CATALOG.md`); then the bug pass and same-tier audit across all older games.
 
