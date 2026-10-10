@@ -414,5 +414,14 @@
   "rejected": [
    "No open-source HTML5 skee-ball with license found"
   ]
+ },
+ "castle-crush": {
+  "picked": "BUILT on vendored Matter.js 0.20 (MIT) + shared phys.js",
+  "rejected": [
+   "richterdennis/CastleCrush (MIT, but a 2-star 2017 student project with a Node server; less polished)",
+   "HinaTech Castle Catapult (Matter.js, full source published as a tutorial, but no open-source licence stated)",
+   "Loose Cannon Physics (Piron Games, proprietary Cocos2D)",
+   "SUPER World of Goo (MIT/CC-BY, noted for World of Goo slot, but PICO-8 web runtime is proprietary)"
+  ]
  }
 }

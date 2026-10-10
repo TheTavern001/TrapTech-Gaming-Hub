@@ -73,6 +73,8 @@ const LIST = [
   T('duck-shot', 'Duck Shot', 'Duck Hunt', 7, 'A', 'endless', 400, true, 'Bird 100 + 20 x round, gold +400', '3 days'),
   T('paper-toss', 'Paper Toss', 'Paper Toss', 7, 'A', 'endless', 8, true, '1-5 per basket by wind strength', '1-3 days'),
   T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'short-session', 100, true, 'Rings 10-100, 9 balls', '1-3 days'),
+  // Batch 4 - Physics & Destruction + Reflex remainder
+  T('castle-crush', 'Castle Crush', 'Crush the Castle', 2, 'A', 'campaign', 400, true, 'Blocks 5-25, kings 300, castle bonus 500 x stones left + 200 x level', '7 days'),
 ];
 const games = LIST.map(x => {
   const s = SOURCES[x.src];

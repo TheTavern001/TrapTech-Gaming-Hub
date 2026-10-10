@@ -8,7 +8,7 @@ let n = 0;
 for (const g of games) {
   const dir = path.join(ROOT, g.slug); if (!fs.existsSync(path.join(dir, 'game.js')) && g.build === 'built') { console.log('missing', g.slug); continue; }
   if (g.build === 'built') {
-    const uses = [...fs.readFileSync(path.join(dir, 'game.js'), 'utf8').matchAll(/@uses ([\w.-]+)/g)].map(m => `<script src="../${m[1]}"></script>`).join('');
+    const uses = [...fs.readFileSync(path.join(dir, 'game.js'), 'utf8').matchAll(/@uses ([\w./-]+)/g)].map(m => `<script src="../${m[1]}"></script>`).join('');
     fs.writeFileSync(path.join(dir, 'index.html'), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>${esc(g.title)} - The Gaming Hub</title><meta name="theme-color" content="#050714"><link rel="stylesheet" href="../lib.css"></head>
 <body class="glplay"><a class="glback" href="/games-lib/index.html" aria-label="Back to the library">&#8592;</a>
@@ -60,5 +60,8 @@ ${research}
 ## Next
 ${fs.existsSync(path.join(__dirname, 'games-lib-next.md')) ? fs.readFileSync(path.join(__dirname, 'games-lib-next.md'), 'utf8') : ''}
 `;
+{ const rd = (f) => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, f), 'utf8')); } catch (e) { return {}; } }; const R = rd('games-lib-ratings.json'), A = rd('games-lib-audit.json');
+  doc += '\n## Quality audit (AAA bar: visual + feel 1-10, phone FPS, under 7 = rework)\n\n| Game | Visual | Feel | Phone FPS (min/avg, 5 s) | Status | Notes |\n|---|---|---|---|---|---|\n';
+  for (const g of games) { const r = R[g.slug], a = A[g.slug]; const ok = r && r.visual >= 7 && r.feel >= 7 && a && a.fpsMin >= 50; doc += `| ${g.title} | ${r ? r.visual : '-'} | ${r ? r.feel : '-'} | ${a ? a.fpsMin + '/' + a.fpsAvg : '-'} | ${r ? (ok ? 'passes' : 'REWORK') : 'not audited yet'} | ${r ? r.notes : ''} |\n`; } }
 fs.writeFileSync(path.join(__dirname, '..', 'docs', 'GAMES-LIB.md'), doc);
 console.log('docs/GAMES-LIB.md written');
