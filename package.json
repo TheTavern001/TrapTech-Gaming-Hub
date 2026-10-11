@@ -8,6 +8,7 @@
     "demo:seed": "node src/demo.js seed",
     "demo:wipe": "node src/demo.js wipe",
     "test": "node tools/e2e-api.js",
+    "test:stripe": "node tools/e2e-stripe.js",
     "test:browser": "node tools/e2e-browser.js"
   },
   "keywords": [],
