@@ -16,9 +16,14 @@ try {
   assert.strictEqual(M.prod('season-pass').data.xp_boost_pct, 0, 'Season Pass must not grant an XP boost');
   assert.strictEqual(M.passState(null).xp_boost_pct, 0, 'public pass state must never advertise a paid XP boost');
   assert.match(M.NON_ADVANTAGE, /does not boost XP/, 'store disclosure must explicitly rule out a paid XP boost');
+  const ACH = require('../src/achievements');
+  assert(!ACH.ADMIN_BADGES.some(b => ['founder', 'traptech-team'].includes(b.id)), 'no player-facing Founder or creator/team badge exists');
+  const COS = require('../src/cosmetics');
+  assert.strictEqual(COS.FRAMES.find(f => f.id === 'staff-glow').name, 'Prism Signal', 'staff-looking frame must have neutral player-facing naming');
   console.log('PASS cosmetic Crown price anchors: 50 / 100 / 225 / 500');
   console.log('PASS Season Pass has no XP or progression boost');
   console.log('PASS public no-advantage disclosure');
+  console.log('PASS player cosmetics cannot claim Founder or Trap Tech team identity');
 } finally {
   try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
 }
