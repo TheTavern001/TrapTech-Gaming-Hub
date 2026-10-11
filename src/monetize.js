@@ -305,7 +305,7 @@ function routes(app, A, H) {
     } else if (event.type === 'charge.refunded') {
       const paymentId = typeof obj.payment_intent === 'string' ? obj.payment_intent : (obj.payment_intent && obj.payment_intent.id) || '';
       const order = paymentId ? db.prepare("SELECT * FROM store_orders WHERE provider='stripe' AND provider_payment_id=?").get(paymentId) : null;
-      if (order && (obj.refunded === true || Number(obj.amount_refunded) >= Number(obj.amount))) {
+      if (order && String(obj.currency || '').toLowerCase() === 'usd' && Number(obj.amount) === Number(order.usd_cents) && (obj.refunded === true || Number(obj.amount_refunded) >= Number(obj.amount))) {
         reverseEntitlements(order, 'Stripe webhook', 'full refund confirmed by Stripe');
       } else if (order) {
         db.prepare("UPDATE store_orders SET note='Partial Stripe refund received; review required' WHERE id=?").run(order.id);
