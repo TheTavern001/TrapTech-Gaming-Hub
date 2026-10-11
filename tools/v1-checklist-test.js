@@ -52,6 +52,8 @@ assert.match(avatarSource, /cfg\.outfit === 'scrubs'/, '3D avatar must include c
 assert.match(avatarSource, /cfg\.hat === 'hardhat'/, '3D avatar must include blue-collar headwear');
 assert.match(avatarSource, /cfg\.acc === 'leaf-chain'/, '3D avatar must include cannabis-culture accessories');
 assert.match(avatarSource, /cfg\.held === 'medical-bag'/, '3D avatar must include medical/work props');
+assert.match(avatarSource, /Theme-specific 3D set dressing/, 'background themes must render 3D scene props');
+assert.match(avatarSource, /cfg\.bg === 'night-club'/, 'night-club background must have a distinct 3D scene');
 assert.match(serverSource, /X-Content-Type-Options/, 'security headers must be set');
 assert.doesNotMatch(serverSource, /deployment_commit: process\.env\.DEPLOY_COMMIT/, 'public build endpoint must not expose deployment metadata');
 assert.match(paymentSource, /function stripeSignatureOk/, 'card fulfillment must verify Stripe webhook signatures');
