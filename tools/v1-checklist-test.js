@@ -72,4 +72,15 @@ const signed = R2._sign('PUT', 'media/example.png', Buffer.from('image'), 'image
 assert.match(signed.headers.Authorization, /^AWS4-HMAC-SHA256 Credential=TESTACCESSKEY12345678\//, 'R2 uploads must produce a signed authorization header');
 assert.match(signed.url, /\.r2\.cloudflarestorage\.com\/hub-test-media\/media\/example\.png$/, 'R2 uploads must target the configured bucket and object key');
 for (const [k, v] of Object.entries(savedR2)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+const savedStripeSecret = process.env.STRIPE_WEBHOOK_SECRET;
+process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_signature_secret';
+const Payments = require('../src/monetize');
+const hmac = require('node:crypto').createHmac;
+const ts = Math.floor(Date.now() / 1000);
+const raw = Buffer.from('{"type":"checkout.session.completed"}');
+const signature = hmac('sha256', process.env.STRIPE_WEBHOOK_SECRET).update(String(ts) + '.').update(raw).digest('hex');
+const signedRequest = { rawBody: raw, headers: { 'stripe-signature': 't=' + ts + ',v1=' + signature } };
+assert.equal(Payments._stripeSignatureOk(signedRequest), true, 'valid signed Stripe webhook must pass');
+assert.equal(Payments._stripeSignatureOk({ ...signedRequest, rawBody: Buffer.from('tampered') }), false, 'tampered Stripe webhook body must fail');
+if (savedStripeSecret === undefined) delete process.env.STRIPE_WEBHOOK_SECRET; else process.env.STRIPE_WEBHOOK_SECRET = savedStripeSecret;
 console.log('V1 checklist normalization and wiring checks passed.');
