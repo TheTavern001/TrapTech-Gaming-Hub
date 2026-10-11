@@ -46,6 +46,74 @@ function avBuildCharacter(viewer, gltf, cfg, T, SkeletonUtils, Runner) {
   model.scale.setScalar(2.12 / height);
   const fitBounds = new T.Box3().setFromObject(model);
   model.position.y -= fitBounds.min.y;
+  model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+
+  // 3D wearable layer: selected headwear, face accessories, jewelry and held items appear on the character itself.
+  const gear = new T.Group(); gear.name = 'AvatarCosmeticLayer'; model.add(gear);
+  const mat = (color, metalness=0.15, roughness=0.36, emissive=0) => new T.MeshStandardMaterial({color,metalness,roughness,envMapIntensity:1.1,emissive:color,emissiveIntensity:emissive});
+  const gold = mat('#f6bf4b',0.86,0.22,0.12), silver = mat('#dce7f8',0.82,0.24,0.04), black = mat('#101727',0.18,0.3), neon = mat('#4de5f7',0.56,0.2,0.5);
+  const place = (geometry, material, x, y, z, rx=0, ry=0, rz=0, sx=1, sy=1, sz=1) => { const m=new T.Mesh(geometry,material); m.position.set(x,y,z); m.rotation.set(rx,ry,rz); m.scale.set(sx,sy,sz); m.castShadow=true; m.receiveShadow=true; gear.add(m); return m; };
+  if (cfg.hat === 'crown') {
+    place(new T.CylinderGeometry(.22,.26,.14,10),gold,0,1.89,.015);
+    for(let i=0;i<7;i++){const a=i*Math.PI*2/7;place(new T.ConeGeometry(.045,.13,5),gold,Math.cos(a)*.2,1.99,.015+Math.sin(a)*.2,0,0,a);}
+    place(new T.TorusGeometry(.225,.018,8,32),silver,0,1.84,.015,Math.PI/2);
+  } else if (cfg.hat === 'halo') {
+    place(new T.TorusGeometry(.29,.025,10,64),gold,0,2.02,0,Math.PI/2);
+    place(new T.TorusGeometry(.31,.008,6,64),neon,0,2.02,0,Math.PI/2);
+  } else if (cfg.hat === 'beanie') {
+    place(new T.SphereGeometry(.255,24,16),mat('#35425f',.12,.52),0,1.84,0,0,0,0,1,.55,1);
+    place(new T.TorusGeometry(.22,.045,8,32),mat('#22d3ee',.28,.42),0,1.78,0,Math.PI/2);
+  } else if (cfg.hat === 'snapback' || cfg.hat === 'bucket') {
+    const fabric=mat(cfg.hat==='bucket'?'#8b5cf6':'#17223f',.08,.62);
+    place(new T.SphereGeometry(.25,24,14),fabric,0,1.83,0,0,0,0,1,.52,1);
+    place(new T.CylinderGeometry(.25,.26,.055,24),fabric,0,1.78,.015);
+    if(cfg.hat==='snapback')place(new T.BoxGeometry(.25,.035,.19),fabric,0,1.78,.18);
+    else place(new T.CylinderGeometry(.3,.27,.07,24),fabric,0,1.77,0);
+  }
+  if (cfg.acc === 'glasses' || cfg.acc === 'shades') {
+    const lens=cfg.acc==='shades'?mat('#080d1b',.42,.18):mat('#8deaff',.35,.18,.16);
+    place(new T.BoxGeometry(.17,.09,.045),lens,-.105,1.61,.235);
+    place(new T.BoxGeometry(.17,.09,.045),lens,.105,1.61,.235);
+    place(new T.BoxGeometry(.07,.025,.035),silver,0,1.625,.24);
+    place(new T.BoxGeometry(.045,.018,.025),black,-.22,1.63,.19);
+    place(new T.BoxGeometry(.045,.018,.025),black,.22,1.63,.19);
+  }
+  if (cfg.neck && cfg.neck !== 'none') {
+    const chainMat=cfg.neck==='silver-chain'?silver:gold;
+    place(new T.TorusGeometry(.205,.014,8,48),chainMat,0,1.22,.04,Math.PI/2);
+    if(cfg.neck==='diamond-pendant')place(new T.OctahedronGeometry(.065,0),neon,0,1.14,.22,0,0,Math.PI/4);
+  }
+  if (cfg.piercing==='ear-studs' || cfg.piercing==='double-piercing' || cfg.piercing==='nose-ring') {
+    if(cfg.piercing!=='nose-ring'){place(new T.SphereGeometry(.035,12,10),gold,-.25,1.48,.12);place(new T.SphereGeometry(.035,12,10),gold,.25,1.48,.12);}
+    if(cfg.piercing!=='ear-studs')place(new T.TorusGeometry(.035,.009,6,18),silver,0,1.49,.245,0,0,0);
+  }
+  if (cfg.acc==='grill') for(let i=0;i<5;i++)place(new T.BoxGeometry(.035,.035,.018),gold,-.07+i*.035,1.405,.24);
+  if (cfg.beard && cfg.beard!=='none') {
+    const beardMat=mat('#24202a',.02,.82);
+    if(cfg.beard==='mustache'){place(new T.SphereGeometry(.095,16,10),beardMat,-.065,1.405,.21,0,0,-.2,1,.42,.55);place(new T.SphereGeometry(.095,16,10),beardMat,.065,1.405,.21,0,0,.2,1,.42,.55);}
+    else {place(new T.SphereGeometry(.16,18,12),beardMat,0,1.34,.17,0,0,0,cfg.beard==='goatee'?.5:.82,.55,.52);}
+  }
+  if (cfg.hair==='mohawk' || cfg.hair==='spiky') {
+    const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0], hairMat=mat(hc,.03,.65);
+    const count=cfg.hair==='mohawk'?5:7;
+    for(let i=0;i<count;i++){const x=cfg.hair==='mohawk'?(i-2)*.075:(i-3)*.065;place(new T.ConeGeometry(.055,.19+(i%2)*.04,7),hairMat,x,1.91,.015,0,0,(i-3)*.12);}
+  } else if (cfg.hair==='bun') {
+    const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0];place(new T.SphereGeometry(.12,18,12),mat(hc,.02,.7),0,1.91,-.13);
+  } else if (cfg.hair==='long' || cfg.hair==='braids') {
+    const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0], hairMat=mat(hc,.02,.7);
+    place(new T.CapsuleGeometry(.065,.36,4,8),hairMat,-.24,1.52,-.01,.04,0,-.08);
+    place(new T.CapsuleGeometry(.065,.36,4,8),hairMat,.24,1.52,-.01,-.04,0,.08);
+  }
+  if (cfg.held==='controller') {
+    place(new T.BoxGeometry(.3,.095,.07),mat('#151d35',.3,.24),.4,.74,.18,0,0,-.12);
+    place(new T.SphereGeometry(.035,12,10),neon,.31,.76,.225);
+    place(new T.SphereGeometry(.025,12,10),gold,.47,.76,.225);
+  } else if (cfg.held==='cane') {
+    place(new T.CylinderGeometry(.022,.03,.68,10),gold,.43,.56,.13,0,0,-.1);
+    place(new T.TorusGeometry(.07,.022,8,18),gold,.43,.92,.13,Math.PI/2);
+  } else if (cfg.held==='cash') {
+    for(let i=0;i<4;i++)place(new T.BoxGeometry(.19,.035,.12),mat(i%2?'#15803d':'#22c55e',.12,.5),.42,.7+i*.014,.14+i*.009,0,0,(i-1.5)*.035);
+  }
   viewer.scene.add(model);
   if (viewer.model) { viewer.scene.remove(viewer.model); avDisposeModel(viewer.model); }
   viewer.model = model;
