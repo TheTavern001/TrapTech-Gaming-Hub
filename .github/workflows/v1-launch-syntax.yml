@@ -30,3 +30,5 @@ jobs:
       - name: Check browser ES modules
         run: |
           node --input-type=module --check < public/js/gw-v7.js
+          node --input-type=module --check < public/js/avatar-editor.js
+          node --input-type=module --check < public/js/avatar-3d.js
