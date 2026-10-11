@@ -505,8 +505,9 @@ route(/^\/games$/, () => {
   const catalogCard = g => '<a class="gcard wide catalog-game-card" href="' + esc(g.url) + '"><div class="art" style="background-image:linear-gradient(180deg,transparent 45%,rgba(4,7,20,.5)),url(&quot;' + esc(g.art || g.thumbnail || '') + '&quot;)"><span class="live">PLAY NOW</span></div><div class="meta"><div class="t">' + esc(g.title) + '</div><div class="c">🎮 ' + esc(g.category || 'Arcade') + '</div></div></a>';
   const drawLibrary = () => {
     const term = libQ.value.trim().toLowerCase(), selected = libCategory.value;
-    const filtered = library.filter(g => (!selected || g.category === selected) && (String(g.title) + ' ' + String(g.category || '') + ' ' + String(g.competition || '')).toLowerCase().includes(term));
-    libCount.textContent = 'Showing ' + filtered.length + ' of ' + library.length + ' games';
+    const currentGames = S.libraryGames.filter(g => g && g.title && g.url);
+    const filtered = currentGames.filter(g => (!selected || g.category === selected) && (String(g.title) + ' ' + String(g.category || '') + ' ' + String(g.competition || '')).toLowerCase().includes(term));
+    libCount.textContent = 'Showing ' + filtered.length + ' of ' + currentGames.length + ' games';
     libGrid.innerHTML = filtered.map(catalogCard).join('') || '<div class="empty" style="grid-column:1/-1">No games match. Try another search or category.</div>';
   };
   drawLibrary();
