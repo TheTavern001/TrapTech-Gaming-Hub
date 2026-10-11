@@ -22,22 +22,24 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - [ ] Run browser screenshots and smoke tests on mobile and desktop before launch.
 
 ## P0 — Giveaway entry checklist
-- [ ] Add an optional, admin-configurable checklist to an open giveaway (example: open/join a linked channel, read official rules, complete an eligible in-hub action).
-- [ ] Support multiple ordered steps, optional destination URL per step, required/optional status, and clear instructions.
-- [ ] Show checklist progress on the giveaway page and preserve progress during the entry flow.
-- [ ] Enforce required checklist completion on the server before entry/eligibility is accepted; never rely only on client-side checkboxes.
-- [ ] Clearly label external steps as self-attested unless a supported integration actually verifies them. A channel link alone cannot prove membership.
-- [ ] Keep members-only brand eligibility separate from open-giveaway checklist requirements.
-- [ ] Test edited/deleted steps, signed-out users, replayed requests, duplicate entries, mobile layout, and event end-time boundaries.
+- [x] Add an optional admin-configurable checklist with up to eight steps, optional HTTPS destination URLs, and required/optional status.
+- [x] Support multiple ordered steps, destination URLs, required/optional status, and clear instructions.
+- [x] Show player-facing checklist controls and persist each player's confirmations server-side.
+- [x] Include required checklist completion in server-side eligibility checks; the join endpoint uses that eligibility result.
+- [x] Label external steps as self-attested unless a supported integration actually verifies them. A channel link alone cannot prove membership.
+- [x] Keep members-only brand eligibility separate from checklist requirements.
+- [ ] End-to-end test edited/deleted steps, signed-out users, replayed requests, duplicate entries, mobile layout, and event end-time boundaries. Checklist normalization and syntax checks pass; full entry-flow coverage is still outstanding.
 
 ## P0 — Avatar system
-- Current implementation uses a layered SVG preview and selectable cosmetic parts; that is not a true real-time 3D avatar renderer.
-- [ ] Replace the 2D-only preview with a real 3D renderer and licensed/owned model assets (prefer optimized GLB/glTF, mobile-friendly texture sizes, lazy loading, and a static fallback).
-- [ ] Support body/face/hair/outfit/accessory customization, lighting/materials, idle pose, camera rotation, and a responsive editor.
+- The editor now has a real-time Three.js/WebGL preview built from procedural 3D geometry, with drag rotation, lighting, idle motion, and an SVG fallback. This is a functional 3D renderer, but the model is not AAA-quality and does not yet use a licensed/owned GLB/glTF character asset.
+- [x] Replace the 2D-only editor preview with a real 3D renderer and static SVG fallback. The Three.js module is loaded lazily from a pinned CDN, so the editor needs network access for 3D mode.
+- [x] Reflect existing face, skin, hair, outfit, accessory, hat, and held-item choices in the 3D preview; provide lighting/materials, idle motion, camera rotation, and a responsive editor.
+- [ ] Add true body-proportion controls and upgrade the procedural character to a production-quality, licensed/owned model asset.
 - [ ] Distinguish earned, achievement-unlocked, event-exclusive, and paid cosmetics in the catalog.
 - [ ] Keep purchases cosmetic-only and validate ownership/prices/grants server-side; never grant an item because the client says it is owned.
 - [ ] Provide clear rarity/unlock requirements, preview-before-buy, purchase confirmation, and equipped/owned states.
-- [ ] Render the selected avatar consistently in profiles, leaderboards, giveaway entries/winner cards, and community surfaces.
+- [x] Render the selected avatar in the editor and player profile with the existing SVG fallback.
+- [ ] Extend consistent 3D rendering to leaderboards, giveaway entries/winner cards, and community surfaces without excessive WebGL instances.
 - [ ] Optimize for lower-end Android devices and provide a non-WebGL fallback.
 
 ## P1 — Product terminology and brand affiliation
@@ -60,6 +62,12 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - [ ] Brand invitation, affiliation switching cooldown, and members-only gating.
 - [ ] Store balance, earned currency, paid checkout state, cosmetic purchase/equip.
 - [ ] Admin permissions, audit trail, backups, and restore rehearsal.
+
+## Current implementation evidence
+- Checklist schema/UI/server eligibility integration: commits `4af996c`, `50a456e`, `a281040`, `8f50d95`, `2e16069`, `e2bca05` and follow-up fixes.
+- 3D avatar editor/profile renderer: commits `4d771ec`, `0fd7b35`, `572f5c6`, `541f295`, `98c5548`, `24f559b`, `8078dc1`, `b651f89`.
+- Automated workflow `V1 launch syntax checks` passed on commit `db3674174d`; it includes server/browser syntax checks and checklist normalization regression checks.
+- Live Deplexo health, deployed SHA, real browser interactions, and full gameplay visual fidelity have not been verified in this audit.
 
 ## Release evidence
 For every release, record commit SHA, automated test results, live deployment status, smoke-test results, known limitations, and rollback point. Do not announce launch-ready until all P0 items pass.
