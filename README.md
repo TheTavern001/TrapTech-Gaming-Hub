@@ -287,3 +287,11 @@ python3 tools/compare.py                   # mockup vs built side-by-side images
 3. **As a bot game (optional)**: create a bot with Potato's bot creator, register a game with `/newgame`, send it with `sendGame` and answer the game callback with the hub URL (e.g. `https://<your-domain>/play/jetpack-dash`). Potato opens it in its built-in browser. (Potato has no Telegram-style mini-app SDK; the hub needs none.)
 4. If a phone's in-app browser blocks cookies/storage, the hub keeps you signed in for that visit via an in-memory session; open in Safari/Chrome (menu > "Open in browser") to stay signed in between visits.
 5. Test locally: `node tools/e2e-mobile.js` (Pixel 7, iPhone 14, Android WebView, iOS in-app, locked WebView).
+
+## Optional payments and media storage
+
+- Bitcoin checkout uses BTC_ADDRESS and never stores private wallet keys.
+- Hosted credit/debit checkout is implemented with Stripe Checkout and signed webhooks. It remains disabled until STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, and an HTTPS PUBLIC_URL are configured and test-mode payment/refund flows pass.
+- Optional Cloudflare R2 storage can move admin-uploaded media off the app disk. It requires a bucket-scoped R2 S3 API credential set; without it, the app keeps using DATA_DIR/media.
+- Setup steps and security caveats: docs/CLOUDFLARE-AND-PAYMENTS-SETUP.md.
+- Optional casual random-duel concept: docs/V1-1-CASUAL-DUELS-SPEC.md. This is a proposal, not a shipped feature.
