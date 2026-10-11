@@ -35,8 +35,11 @@ const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 
 const BYK = {}; for (const p of P) (BYK[p.kind] = BYK[p.kind] || {})[p.id] = p;
 const key = (p) => p.kind + ':' + p.id;
 function hashOf(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
-function defaultFor(name) { const h = hashOf(name); const pick = (k, n) => Object.keys(BYK[k]).filter(id => BYK[k][id].unlock === 'free')[(h >>> n) % Object.keys(BYK[k]).filter(id => BYK[k][id].unlock === 'free').length];
-  return { gender: 'other', bg: pick('bg', 1), skin: pick('skin', 4), face: pick('face', 7), hair: pick('hair', 9), hairc: pick('hairc', 13), eyes: pick('eyes', 16), mouth: pick('mouth', 19), beard: (h >>> 22) % 4 === 0 ? pick('beard', 23) : 'none', outfit: pick('outfit', 25), hat: 'none', acc: (h >>> 27) % 3 === 0 ? 'glasses' : 'none', held: 'none' }; }
+function defaultFor() {
+  const pick = (kind) => Object.keys(BYK[kind] || {}).find(id => BYK[kind][id].unlock === 'free') || Object.keys(BYK[kind] || {})[0];
+  return { gender: 'other', bg: pick('bg'), skin: pick('skin'), face: pick('face'), hair: pick('hair'), hairc: pick('hairc'),
+    eyes: pick('eyes'), mouth: pick('mouth'), beard: 'none', outfit: pick('outfit'), hat: 'none', acc: 'none', held: 'none' };
+}
 function clean(cfg, base) { const out = { ...base }; if (cfg && ['male', 'female', 'other'].includes(cfg.gender)) out.gender = cfg.gender; for (const k of KINDS) if (cfg && BYK[k][cfg[k]]) out[k] = cfg[k]; return out; }
 function configOf(user) { let c = {}; try { c = JSON.parse(user.avatar || '{}'); } catch {} return clean(c, defaultFor(user.username)); }
 // ownership
