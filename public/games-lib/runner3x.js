@@ -39,11 +39,14 @@ export function outfit(root, o) { let big = null; root.traverse(m => { if (m.isS
         else if (t < (sleeve > 1.0 ? 0.845 : 0.815) && ax < sleeve) { col = mix(cTop, cTop2, step(0.70, t) * step(ax, 0.2) + step(t, 0.53)) * sh; skin = false; if (ax > 0.62) col *= 0.82; }
         diffuseColor.rgb = col;`); };
     m.material = mat; }); if (o.hair) root.traverse(m => { if (m.isMesh && /Hair|Brow/i.test(m.material.name)) { m.material = m.material.clone(); m.material.color.set(o.hair); } }); return root; }
+const PBRM = new Map();
 export function pbrify(obj, tint) {
   const tc = new THREE.Color(tint || '#ffffff');
   obj.traverse(o => {
     if (!o.isMesh) return;
     const convert = (src) => {
+      const key = src.uuid + '|' + tc.getHexString();
+      if (PBRM.has(key)) return PBRM.get(key);
       const m = new THREE.MeshStandardMaterial({
         map: src.map || null, normalMap: src.normalMap || null, roughnessMap: src.roughnessMap || null,
         metalnessMap: src.metalnessMap || null, aoMap: src.aoMap || null, emissiveMap: src.emissiveMap || null,
@@ -56,6 +59,7 @@ export function pbrify(obj, tint) {
         side: src.side, vertexColors: !!src.vertexColors, envMapIntensity: 1.05
       });
       m.name = src.name || 'Hub PBR surface';
+      PBRM.set(key, m);
       return m;
     };
     o.material = Array.isArray(o.material) ? o.material.map(convert) : convert(o.material);
