@@ -12,6 +12,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Test checklist normalization
+        env:
+          ADMIN_PASSWORD: v1-check-password-123
+          SECRET: v1-check-secret-for-tests-only
+          DATA_DIR: /tmp/gaming-hub-v1-checklist-test
+        run: node tools/v1-checklist-test.js
       - name: Check server-side JavaScript
         run: |
           node --check src/db.js
