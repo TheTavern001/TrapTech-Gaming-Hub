@@ -296,6 +296,8 @@ Official Trap Tech Solutions account: https://tatokdym.org/TrapTechSolutions
 Official channel: https://tatokdym.org/TrapTech_Solutions
 Treat lookalike accounts as impersonators. Staff will never ask for passwords, login codes, or payments to verify an account.
 
+Cosmetic price research and fairness policy: docs/GAME-COSMETICS-PRICE-BENCHMARKS.md.
+
 ## Optional payments and media storage
 
 - Bitcoin checkout uses BTC_ADDRESS and never stores private wallet keys.
