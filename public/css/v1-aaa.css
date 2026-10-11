@@ -188,3 +188,25 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){
   .av-prev,.av-opt,.avatar-3d,.avatar-stage{animation:none!important;transition:none!important}
 }
+
+
+/* V1 gameplay presentation polish: a deliberate arcade shell around the actual game canvas. */
+.play-wrap{background:radial-gradient(ellipse at 50% -18%,rgba(72,230,255,.13),transparent 45%),radial-gradient(ellipse at 100% 100%,rgba(152,116,255,.12),transparent 38%),#03040c;isolation:isolate}
+.play-top{position:relative;z-index:30;min-height:58px;padding:8px clamp(10px,2vw,22px);gap:clamp(7px,1.2vw,14px);background:linear-gradient(180deg,rgba(9,13,32,.97),rgba(5,7,20,.88));border-bottom:1px solid rgba(72,230,255,.22);box-shadow:0 12px 30px rgba(0,0,0,.28);backdrop-filter:blur(18px)}
+.play-top .title{font-size:clamp(.72rem,1.4vw,.95rem);letter-spacing:.1em;text-shadow:0 0 18px rgba(72,230,255,.18)}
+.play-top .iconbtn{width:42px;height:42px;flex:none;border:1px solid rgba(148,163,255,.18);border-radius:12px;background:rgba(255,255,255,.035)}
+.play-top .who-chip{max-width:min(42vw,340px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 11px;border:1px solid rgba(148,163,255,.16);border-radius:999px;background:rgba(255,255,255,.025)}
+.play-wrap .play-stage{position:relative;isolation:isolate;flex:1;display:flex;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,rgba(32,44,92,.22),transparent 60%),#03040c}
+.play-wrap .play-stage:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.32;background-image:linear-gradient(rgba(148,163,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,255,.045) 1px,transparent 1px);background-size:36px 36px;mask-image:radial-gradient(ellipse at center,black,transparent 82%)}
+.play-wrap #game{position:relative;z-index:1;outline:none;touch-action:manipulation}
+.play-wrap .boot-ov{z-index:20;background:radial-gradient(ellipse at 50% 38%,rgba(72,230,255,.12),transparent 34%),radial-gradient(ellipse at 50% 50%,rgba(124,58,237,.32),rgba(5,7,20,.98) 72%)}
+.play-wrap .boot-art{width:clamp(108px,18vw,168px);height:clamp(108px,18vw,168px);border:1px solid rgba(72,230,255,.25);box-shadow:0 0 0 8px rgba(72,230,255,.025),0 0 48px rgba(124,58,237,.38)}
+.play-wrap .boot-t{text-align:center;font-size:clamp(1rem,2.3vw,1.45rem);letter-spacing:-.025em}
+.play-wrap .boot-bar{width:min(220px,60vw);height:5px;background:rgba(148,163,255,.18)}
+.play-wrap .overlay{z-index:25;background:rgba(3,4,12,.78);backdrop-filter:blur(12px)}
+.play-wrap .over-card{border:1px solid rgba(72,230,255,.22);border-radius:22px;background:linear-gradient(145deg,rgba(19,27,59,.98),rgba(8,12,29,.99));box-shadow:0 30px 90px rgba(0,0,0,.5),0 0 40px rgba(72,230,255,.06)}
+.sf-scam-note{border:1px solid rgba(247,201,105,.25);border-radius:12px;padding:12px;background:rgba(247,201,105,.035);overflow-wrap:anywhere}
+.sf-scam-note a{color:#a9eaff;text-decoration:underline;text-underline-offset:3px}
+.free-play-note{margin:10px 0 18px;border-color:rgba(72,230,255,.24);background:linear-gradient(120deg,rgba(72,230,255,.055),rgba(152,116,255,.05))}
+.free-play-note>p{margin:7px 0 0;max-width:820px;line-height:1.65}
+@media(max-width:600px){.play-top{gap:6px;padding-inline:8px}.play-top .who-chip{font-size:.67rem;max-width:34vw;padding:6px 8px}.play-top .title{letter-spacing:.04em}.play-top .iconbtn{width:38px;height:38px}}
