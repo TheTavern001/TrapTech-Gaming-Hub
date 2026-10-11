@@ -10,8 +10,8 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const A = client(); const ua = 'av_' + Math.random().toString(36).slice(2, 8); await A('/api/auth/signup', { body: { username: ua, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } });
   let r = await client()(`/avatar/${ua}.svg`); ok(r.status === 200 && r.ct.includes('image/svg+xml') && r.body.startsWith('<svg') && r.body.length < 8000, 'every player has a default avatar SVG (< 8 KB)', r.body.length);
   const def = r.body; r = await client()('/avatar/nobody_here.svg'); ok(r.status === 200, 'unknown names still get a generated avatar (no broken images)');
-  r = await A('/api/avatar'); ok(r.body.ok && r.body.kinds.length === 12 && r.body.parts.length > 70, 'editor lists 12 part kinds and 70+ parts', r.body.parts && r.body.parts.length);
-  const P = r.body.parts; const cfg = { ...r.body.avatar, hair: 'mohawk', hairc: 'c3', outfit: 'hoodie', hat: 'beanie', held: 'controller' };
+  r = await A('/api/avatar'); ok(r.body.ok && r.body.kinds.length === 17 && r.body.parts.length > 100, 'editor lists 17 part kinds and 100+ parts', r.body.parts && r.body.parts.length);
+  const P = r.body.parts; const cfg = { ...r.body.avatar, hair: 'mohawk', hairc: 'c3', brow: 'bold', eyes: 'wide', eyec: 'e2', mark: 'freckles', piercing: 'ear-studs', outfit: 'hoodie', neck: 'silver-chain', hat: 'beanie', held: 'controller' };
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: cfg } }); ok(r.body.ok && r.body.avatar.hair === 'mohawk', 'save free parts');
   r = await client()(`/avatar/${ua}.svg`); ok(r.body !== def, 'the public avatar changes after saving');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur' } } }); ok(r.status === 403, 'a Crowns part cannot be worn before it is bought');
