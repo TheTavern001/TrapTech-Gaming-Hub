@@ -997,7 +997,7 @@ body{background:radial-gradient(900px 500px at 80% -8%,rgba(124,58,237,.19),tran
 .btn:focus-visible,.iconbtn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
 input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):not([type=radio]),select,textarea{border-radius:12px}
 .bottomnav{border-top-color:var(--v1-border);box-shadow:0 -12px 34px rgba(0,0,0,.35)}.bottomnav a{transition:color .15s ease,background .15s ease}.bottomnav a.on{background:linear-gradient(180deg,rgba(139,92,246,.13),transparent 88%)}
-.pname .nt{font-weight:800}.founder-pill{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:3px 7px;border-radius:999px;border:1px solid rgba(251,191,36,.65);background:linear-gradient(110deg,rgba(120,53,15,.62),rgba(251,191,36,.16));color:#ffe7a3;font-size:.62rem;font-weight:900;letter-spacing:.09em;vertical-align:middle;box-shadow:0 0 14px rgba(251,191,36,.12)}
+.pname .nt{font-weight:800}
 @media(min-width:900px){.page{max-width:1180px;padding-left:24px;padding-right:24px}.page:not(.full){max-width:1180px}}
 @media(max-width:600px){.page{padding-left:14px;padding-right:14px}.card.pad{padding:14px}.section-h{margin-top:20px}.btn{letter-spacing:.035em}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
