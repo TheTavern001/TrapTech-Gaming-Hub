@@ -123,6 +123,8 @@ function setChecklist(user, g, stepId, checked) {
   const step = steps.find(x => x && x.id === stepId && x.label);
   if (!step) return { ok: false, error: 'Checklist step not found.' };
   if (boardsStatus(g) === 'past' || g.finalized_at || g.state === 'cancelled') return { ok: false, error: 'This giveaway is closed.' };
+  const currentEntry = entryOf(g.id, user.id);
+  if (!checked && step.required !== false && currentEntry && !currentEntry.left_at) return { ok: false, error: 'Required checklist confirmations are locked while you are entered. Leave the giveaway first to change them.' };
   if (checked) db.prepare('INSERT INTO giveaway_checklist_done (giveaway_id,user_id,step_id,checked_at) VALUES (?,?,?,?) ON CONFLICT(giveaway_id,user_id,step_id) DO UPDATE SET checked_at=excluded.checked_at').run(g.id, user.id, step.id, now());
   else db.prepare('DELETE FROM giveaway_checklist_done WHERE giveaway_id=? AND user_id=? AND step_id=?').run(g.id, user.id, step.id);
   return { ok: true, status: check(user, g) };
