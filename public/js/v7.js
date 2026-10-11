@@ -71,8 +71,8 @@ function sponsorPage(url) {
         <div class="card tt-build" style="margin-top:14px"><div class="ttb-head">${C.TT('horizontal', 50)}<span class="pill">${icon('code-xml')} Built in-house</span></div><p class="muted" style="margin:8px 0">Every sponsorship is set up by Trap Tech Solutions: giveaway, brand theme, branded games, verifiable winner draws, official rules with "no purchase necessary".</p><a class="btn sm ghost" href="/about">${icon('building-2')} About Trap Tech</a></div>` : ''}
         <p class="small dim center">Giveaway bookings must comply with all laws that apply to their business, products and advertising. See the <a href="/terms">Terms</a> and <a href="/rules">Official Rules</a>.</p></div>`, { title: 'Book a Giveaway' });
       const root = document.getElementById('main');
-      root.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { if (cb.checked) B.picked[cb.dataset.pick] = F[cb.dataset.pick].dflt || 1; else delete B.picked[cb.dataset.pick]; persist(); const y = scrollY; draw(); scrollTo(0, y); });
-      root.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { const f = F[b.dataset.q]; B.picked[f.id] = Math.max(f.min, Math.min(f.max, (B.picked[f.id] || f.dflt || 1) + +b.dataset.d)); persist(); const y = scrollY; draw(); scrollTo(0, y); });
+      root.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { readForm(); if (cb.checked) B.picked[cb.dataset.pick] = F[cb.dataset.pick].dflt || 1; else delete B.picked[cb.dataset.pick]; persist(); const y = scrollY; draw(); scrollTo(0, y); });
+      root.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { readForm(); const f = F[b.dataset.q]; B.picked[f.id] = Math.max(f.min, Math.min(f.max, (B.picked[f.id] || f.dflt || 1) + +b.dataset.d)); persist(); const y = scrollY; draw(); scrollTo(0, y); });
       const bt = document.getElementById('bt'); if (bt) bt.onchange = () => { readForm(); B.licensed = false; draw(); };
       const pv = document.getElementById('prev'); if (pv) pv.onclick = () => { if (B.step === 2) readForm(); B.step--; draw(); scrollTo(0, 0); };
       document.getElementById('next').onclick = async () => {
