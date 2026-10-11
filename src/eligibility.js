@@ -84,17 +84,28 @@ function check(user, g, t = now()) {
     checks.push({ id: 'slots', ok, label: `Max ${r.elig_max_active} live entries at once`, have: act.length, need: r.elig_max_active, entries: act,
       hint: ok ? `${act.length} of ${r.elig_max_active} entry slots used` : `You're in ${act.length} live giveaways (max ${r.elig_max_active}). Leave one to join this one.` });
   }
-  // V7 checklist steps are stored per giveaway and player; a checked box is an attestation, not third-party proof.
+  // V1 anti-trust checklist: required steps pass only on server-observed evidence. A client checkbox is never proof.
   try {
     const cfg = g.cfg ? JSON.parse(g.cfg) : null;
     const steps = cfg && cfg.v === 7 && cfg.entry && Array.isArray(cfg.entry.checklist) ? cfg.entry.checklist : [];
     const done = new Set(db.prepare('SELECT step_id FROM giveaway_checklist_done WHERE giveaway_id=? AND user_id=?').all(g.id, u.id).map(x => x.step_id));
     for (const step of steps) {
       if (!step || !step.id || !step.label) continue;
-      const checked = done.has(step.id);
-      checks.push({ id: 'checklist:' + step.id, checklist: true, checklist_step_id: step.id, ok: step.required === false || checked,
-        checked, required: step.required !== false, label: step.label, url: step.url || '',
-        hint: checked ? 'Confirmed complete' : step.required === false ? 'Optional step' : 'Complete this step, then confirm below' });
+      const required = step.required !== false;
+      const verify = step.verify === 'hub_run' ? 'hub_run' : 'external';
+      let verified = false;
+      if (verify === 'hub_run') {
+        const end = Number(g.end_at) || t;
+        verified = !!db.prepare('SELECT 1 FROM runs WHERE user_id=? AND is_demo=0 AND created_at>=? AND created_at<=? AND started_at>=? LIMIT 1')
+          .get(u.id, Number(g.start_at) || 0, Math.min(t, end), Number(g.start_at) || 0);
+      }
+      const checked = verify === 'hub_run' ? verified : done.has(step.id);
+      const ok = !required || (verify === 'hub_run' && verified);
+      const hint = !required ? 'Optional only; does not affect eligibility' :
+        verify === 'hub_run' ? (verified ? 'Automatically verified from a server-recorded game run' : 'Finish a valid in-hub game run during this giveaway; verification is automatic') :
+        'Not verified: external membership/actions cannot be confirmed until a trusted platform integration is connected';
+      checks.push({ id: 'checklist:' + step.id, checklist: true, checklist_step_id: step.id, ok, checked,
+        verified, verify, required, label: step.label, url: step.url || '', hint });
     }
   } catch (err) { /* malformed legacy configuration should not break giveaway pages */ }
   for (const fn of module.exports.extra) { try { checks.push(...fn(u, g, t)); } catch (e) { /* v7 builder checks never break the page */ } }
@@ -123,8 +134,10 @@ function setChecklist(user, g, stepId, checked) {
   const step = steps.find(x => x && x.id === stepId && x.label);
   if (!step) return { ok: false, error: 'Checklist step not found.' };
   if (boardsStatus(g) === 'past' || g.finalized_at || g.state === 'cancelled') return { ok: false, error: 'This giveaway is closed.' };
-  const currentEntry = entryOf(g.id, user.id);
-  if (!checked && step.required !== false && currentEntry && !currentEntry.left_at) return { ok: false, error: 'Required checklist confirmations are locked while you are entered. Leave the giveaway first to change them.' };
+  if (step.required !== false) {
+    if (step.verify !== 'hub_run') return { ok: false, error: 'Required external steps cannot be self-confirmed. Automatic verification is not connected for this platform.' };
+    return { ok: false, error: 'This requirement is checked automatically from server-recorded game activity; no player confirmation is accepted.' };
+  }
   if (checked) db.prepare('INSERT INTO giveaway_checklist_done (giveaway_id,user_id,step_id,checked_at) VALUES (?,?,?,?) ON CONFLICT(giveaway_id,user_id,step_id) DO UPDATE SET checked_at=excluded.checked_at').run(g.id, user.id, step.id, now());
   else db.prepare('DELETE FROM giveaway_checklist_done WHERE giveaway_id=? AND user_id=? AND step_id=?').run(g.id, user.id, step.id);
   return { ok: true, status: check(user, g) };
