@@ -408,6 +408,7 @@ route(/^\/(home)?$/, async () => {
     ${featuredGw.length ? `<div class="section-h"><h2>${icon('sparkles')} Featured Giveaways</h2><a href="/giveaways">View All</a></div><div class="feat-gw">${featuredGw.map(featCard).join('')}</div>` : ''}
     <div class="section-h"><h2>Featured Games</h2><a href="/games">View All</a></div>
     <div class="hscroll">${featured.map(g => gameCard(g, true)).join('')}</div>
+    <a class="catalog-launch-banner" href="/games"><span class="catalog-launch-icon">✦</span><span class="catalog-launch-copy"><b>Want more games?</b><small>Explore the expanded library, browse categories, and launch catalog titles from the Hub.</small></span><span class="catalog-launch-action">EXPLORE LIBRARY ↗</span></a>
     ${tours.length ? `<div class="section-h"><h2>${icon('swords')} Tournaments</h2><a href="/tournaments">View All</a></div><div class="t-strip">${tours.map(tCard).join('')}</div>` : ''}
     <div class="home-split">
       <div class="card">
