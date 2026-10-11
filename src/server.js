@@ -42,7 +42,8 @@ app.use(require('./static-gz')(path.join(cfg.ROOT, 'public')));
 app.use(require('compression')({ threshold: 1024, memLevel: 7, windowBits: 14 }));
 const V7A = require('./admin-v7'); app.use(V7A.bigJson); // v7 admin: larger JSON bodies only for signed-in builder/settings/import routes
 // v7: score submissions carry the L3 event log / L4 input log (up to ~60 KB); everything else stays at 32 KB
-const jsonSmall = express.json({ limit: '32kb' }), jsonScore = express.json({ limit: '96kb' });
+const captureStripeBody = (req, res, buf) => { if (String(req.originalUrl || '').split('?')[0] === '/api/store/webhook/stripe') req.rawBody = Buffer.from(buf); };
+const jsonSmall = express.json({ limit: '32kb', verify: captureStripeBody }), jsonScore = express.json({ limit: '96kb', verify: captureStripeBody });
 app.use((req, res, next) => (req.path === '/api/score' ? jsonScore : jsonSmall)(req, res, next));
 app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mode
 
