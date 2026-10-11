@@ -292,7 +292,7 @@ function routes(app, A, H) {
       if (obj.payment_status !== 'paid' || obj.mode !== 'payment') return res.json({ received: true });
       const ref = String((obj.metadata && obj.metadata.order_ref) || obj.client_reference_id || '');
       const order = db.prepare("SELECT * FROM store_orders WHERE ref=? AND provider='stripe'").get(ref);
-      if (!order || order.provider_ref !== obj.id) { console.warn('[payments] Signed Stripe event did not match a stored order.'); return res.json({ received: true }); }
+      if (!order || order.provider_ref !== obj.id || String(obj.metadata && obj.metadata.user_id || '') !== String(order.user_id) || Number(obj.amount_total) !== Number(order.usd_cents) || String(obj.currency || '').toLowerCase() !== 'usd') { console.warn('[payments] Signed Stripe event failed order, owner, amount, or currency matching.'); return res.json({ received: true }); }
       db.prepare("UPDATE store_orders SET status='paid', paid_at=COALESCE(paid_at,?), provider_payment_id=COALESCE(?,provider_payment_id) WHERE id=? AND granted_at IS NULL")
         .run(Date.now(), typeof obj.payment_intent === 'string' ? obj.payment_intent : null, order.id);
       const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(order.id);
