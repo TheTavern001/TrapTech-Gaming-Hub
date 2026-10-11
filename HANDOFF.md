@@ -9,7 +9,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 - **Official events vs free play:** an admin creates an official event with a private code, the vendor/prize and the booking/payment status. A run only counts for the event when it is started with a short-lived signed event-run token. Event boards are separate from the free-play boards. A run submitted after the event ends goes to free play, so the score is kept.
 - **Skill-only tie-breaks** for every game: (1) the shorter server-timed run to the same score, (2) the game's skill metric from the validated event log (`src/games-lib-playoff.js`), (3) a sudden-death seeded playoff that the admin runs from *Admin > Official events*. A place still tied exactly cannot be confirmed until the playoff is resolved. First-to-score, fewest attempts and submission time are no longer used anywhere.
 - **Booking flow:** the sponsor form takes the prize, brand colour, length, games, competition type, dates and notes. The admin builds a quote from the price sheet. An accepted quote becomes an official event in one click. The vendor's quote page then shows the event code and a QR code.
-- **Hub Store (cosmetic only), paid in Bitcoin:** Crown packs, the Season Pass and three limited, serial-numbered Prestige items. Nothing in the store affects scores or giveaways (`tools/e2e-payments.js` checks this). Players can also earn next season's pass for free with a 48-quest chain, tuned so about 5% of active players finish it (`docs/PASS-QUESTS.md`).
+- **Hub Store (cosmetic only), with Bitcoin plus a gated Stripe Checkout candidate:** Crown packs, the Season Pass and three limited, serial-numbered Prestige items. Nothing in the store affects scores or giveaways (`tools/e2e-payments.js` checks this). Stripe mode must pass its own integration tests; sponsor booking invoices are not yet charged through Stripe. Players can also earn next season's pass for free with a 48-quest chain (`docs/PASS-QUESTS.md`).
 - **Avatars:** server-rendered SVG avatars built from 12 part kinds and 70+ parts (free, Crowns, earned through achievements, Prestige-only). The editor is at `/avatar`. Avatars appear on every board, profile and winner list.
 - **Shop rotation and timers:** daily, weekly and event sections with ET midnight resets. The DST bug is fixed: the Nov 1 reset used to fire at 01:00 ET.
 - **Brand (final, Reese Oct 10):** the Trap Tech logo is a white angular double-T with a gold metallic crown (source: `brand-src/traptech-v7/logo-final.jpg`). It is rebuilt as vector SVG by `tools/build-brand-tt.py` (mark, horizontal and stacked lockups with TRAP TECH / gold SOLUTIONS in the site's Orbitron font, badge). `tools/build-brand-tt.js` exports PNG/WebP at several sizes, plus favicons (32/48/180/192/512) and maskable PWA icons (`tt-maskable-*.png`). It is used in the header, About, footer, splash, age gate, boot screen, admin (sidebar, sign-in, favicon), OG images and default brand logos. The earlier flyer crown-shield art and the v3 mark are kept only in `brand-src/` and git history. The public site's favicon and PWA icon are still The Gaming Hub's own controller mark (the hub is the product; Trap Tech is the maker). To switch them to the TT icons, point `public/index.html` and `manifest.webmanifest` at `tt-favicon.svg` / `tt-favicon-192.png` / `tt-maskable-512.png`.
@@ -21,12 +21,13 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 - Each order gets a unique exact amount: the USD price converted at checkout, plus a random offset of 1-999 sats that no other open order is using. The quote expires after 45 minutes.
 - The server checks `mempool.space` (`BTC_EXPLORER_URL` can override it). A payment matches an order when an incoming transaction pays exactly that amount, arrives after the order was created and has not already been claimed. The txid is stored so it can't be claimed twice. Buyers see a QR code (`bitcoin:ADDRESS?amount=X`) and copy buttons, and can paste their txid to speed up matching.
 - **Confirmations:** orders under $200 are granted at 1 confirmation, orders of $200 or more at 3, and Prestige items at 6. Underpayment, overpayment and expiry are flagged for the admin. In *Admin > Store & orders* the admin can verify, grant or refund an order, grant Crowns, edit prices and turn checkout on or off.
-- **Checkout stays disabled until `BTC_ADDRESS` is set.** The address is validated (base58check / bech32 checksum) at boot.
-- **Value to set on Deplexo:** `BTC_ADDRESS=32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB` (Reese's P2SH receiving address. It is public, not a secret.)
+- **Checkout defaults off on a fresh database.** An owner must explicitly enable it in Admin > Store & orders. Bitcoin also requires a valid `BTC_ADDRESS`; Stripe requires its provider-specific environment gate(s), an exact HTTPS `PUBLIC_URL`, and a matching signed webhook. Existing saved admin switches are retained across deploys, so Stripe's independent env gate is intentional defense in depth.
+- **Bitcoin receiving address:** Set `BTC_ADDRESS` only to a wallet the business owner has explicitly verified and controls. Never copy a sample or test address into production. Confirm the address carefully before enabling checkout.
 - **Test it live** with the cheapest Crown pack. Pay the exact amount shown, watch the order go from *seen* to *paid* to *granted*, and check that the order's txid matches your wallet.
 - Refunds are manual. Send the BTC back from your wallet, then mark the order *refunded* in admin. This takes back the granted item.
 - Tests use a mocked explorer only. No real transactions were made.
-- **Later:** the APIs are provider-agnostic (`store_orders.provider`), so Whop or Stripe can be added (`WHOP_WEBHOOK_SECRET` is reserved). If the site ever becomes a mobile app, Apple and Google have their own rules on crypto and in-app purchases for digital goods. Keep the store web-only, or use their billing, at that point.
+- **Stripe status / policy gate:** hosted Checkout and signed webhooks are present for cosmetic store products, with an isolated `tools/e2e-stripe.js` harness. Test-mode technical integration is not processor approval. Stripe's current restricted-business policy lists skill-game competitions with material prizes, sweepstakes/contests, and certain marijuana-related businesses; those overlap with the Hub's giveaway and intended brand model. Do not process live payments unless Stripe confirms in writing that it approves this exact business model. See [Stripe restricted businesses](https://stripe.com/legal/restricted-businesses) and [the Stripe FAQ](https://support.stripe.com/questions/prohibited-and-restricted-business-list-faqs). Live mode is additionally locked behind `STRIPE_LIVE_CHECKOUT_ENABLED=1`; Stripe itself remains off unless `STRIPE_CHECKOUT_ENABLED=1` and the separate admin checkout switch is enabled.
+- **Android payment policy:** before selling digital items inside a Play Store version, review the current Play billing rules. Web Stripe checkout should not be assumed valid for digital purchases inside an Android app.
 
 ## Environment variables (Deplexo)
 | Var | Required | Notes |
@@ -35,7 +36,12 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 | `SECRET` | yes | 32+ random chars (or `SESSION_SECRET` + `RUN_SECRET`) |
 | `ADMIN_PATH` | yes | the secret admin URL path (`/admin` is a 404) |
 | `PUBLIC_URL` | recommended | e.g. `https://your-domain`; used for every absolute link, QR codes and OG tags |
-| `BTC_ADDRESS` | for the store | `32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB` |
+| `BTC_ADDRESS` | optional | Only if owner deliberately enables Bitcoin checkout; never use an unverified address. |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | test-only first | Hosted card checkout API and signed webhook secret; never commit these values. |
+| `STRIPE_CHECKOUT_ENABLED` | default off | Set to `1` in a private test environment only after Stripe keys and webhook are configured. |
+| `STRIPE_LIVE_CHECKOUT_ENABLED` | default off | Must remain `0` until Stripe grants written approval for this exact business model and test-mode QA passes. |
+| `CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY`, `CLOUDFLARE_R2_BUCKET` | optional | Bucket-scoped R2 media storage credentials; use Object Read & Write on the single Hub media bucket, not a global Cloudflare token. |
+| `CLOUDFLARE_R2_PUBLIC_URL` | optional | Custom HTTPS media domain; omit it to serve media via the Hub `/media` route. |
 | `CANONICAL_REDIRECT` | optional | `1` sends other hostnames to `PUBLIC_URL` with a 301 |
 | `BACKUP_GITHUB_REPO` / `BACKUP_GITHUB_TOKEN` | optional | off-site backups (see DEPLOY-DEPLEXO.md §5) |
 | `ADMIN_RESET_TOKEN` | optional | one-time owner recovery |
@@ -43,6 +49,8 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 ## Tests
 | Suite | How |
 |---|---|
+| Stripe | `node tools/e2e-stripe.js` (isolated local database and mocked Stripe API/webhooks; no real charges) |
+| Cloudflare R2 | `node tools/e2e-cloudflare-r2.js` (mock S3-compatible endpoint/signing; no real Cloudflare account credentials) |
 | API | `tools/fresh-api.sh tools/e2e-api.js` (fresh isolated DB) and the same for `e2e-anticheat`, `e2e-events`, `e2e-tiebreak`, `e2e-avatars`; payments needs its mock explorer: `BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 tools/fresh-api.sh tools/e2e-payments.js`; `SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js` |
 | Unit | `node tools/e2e-timers.js`, `node tools/e2e-economy.js` |
 | Admin | `cd tools && node e2e-admin.js && node e2e-admin-sec.js && node e2e-admin-tour.js` |
@@ -51,7 +59,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 | Games Library | `cd tools && BASE=http://localhost:8787 node e2e-games-lib.js` (owned by the games-library workstream) |
 | Migration / memory | `node tools/v6-migrate-check.js <db>`, `tools/mem-check.sh <db>` |
 
-The latest results are in PROGRESS-V7.md (phase 9).
+The historical candidate results are in PROGRESS-V7.md (phase 9). They are not a test report for this integration branch; rerun the relevant suites and inspect current GitHub Actions results before any release.
 
 ## Known limits / follow-ups
 - **All core suites green** (Oct 10, `tools/run-all.sh`): e2e-api 374/0, anticheat 12/0, events 29/0, tiebreak 18/0, sponsor-brands 63/0, payments 32/0, avatars 13/0, timers 27/0, economy 49/0, admin 150/0, admin-sec 66/0, admin-tour 28/0, i18n 39/0, browser 202/0, mobile 176/0 (1,278 checks, 0 failures). `e2e-admin` uses `E2E_FAST=1`, `e2e-browser` runs on a fresh seeded DB (`SEED=1 tools/fresh-api.sh`).

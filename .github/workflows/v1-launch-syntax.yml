@@ -14,6 +14,21 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Test Stripe checkout and signed webhook integration (local mock; no real charges)
+        run: npm run test:stripe
+      - name: Test Cloudflare R2 signing and storage (mock endpoint; no real account)
+        run: npm run test:r2
+      - name: Test Bitcoin checkout against mocked block explorer (no real transactions)
+        env:
+          ADMIN_PASSWORD: v1-check-password-123
+          SECRET: v1-check-secret-for-tests-only
+          ADMIN_PATH: v1-ci-private-admin-path-23974
+          DATA_DIR: /tmp/gaming-hub-v1-payments
+          BTC_ADDRESS: 32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB
+          BTC_EXPLORER_URL: http://127.0.0.1:8796
+          BTC_PRICE_URL: http://127.0.0.1:8796/prices
+          PAY_NO_SWEEP: "1"
+        run: tools/fresh-api.sh tools/e2e-payments.js
       - name: Test checklist normalization
         env:
           ADMIN_PASSWORD: v1-check-password-123
@@ -28,6 +43,9 @@ jobs:
         run: node tools/e2e-cosmetic-economy.js
       - name: Check server-side JavaScript
         run: |
+          bash -n tools/run-all.sh
+          node --check tools/e2e-stripe.js
+          node --check tools/e2e-cloudflare-r2.js
           node --check src/db.js
           node --check src/server.js
           node --check src/monetize.js
@@ -45,3 +63,5 @@ jobs:
           node --input-type=module --check < public/js/avatar-editor.js
           node --input-type=module --check < public/js/avatar-3d.js
           node --input-type=module --check < public/js/hub-store.js
+      - name: Build Deplexo Docker image (no push or deployment)
+        run: docker build --tag gaming-hub-pr:${{ github.sha }} .

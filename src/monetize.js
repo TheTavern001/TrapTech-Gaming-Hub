@@ -65,17 +65,40 @@ const reserved = (id) => db.prepare("SELECT COUNT(*) c FROM store_orders WHERE p
 const setting = (k, d) => { const r = db.prepare('SELECT value FROM settings WHERE key=?').get(k); try { return r ? JSON.parse(r.value) : d; } catch { return d; } };
 const setSetting = (k, v) => db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at').run(k, JSON.stringify(v), Date.now());
 const ADDR = () => String(process.env.BTC_ADDRESS || '').trim();
+function stripeMode() {
+  const key = String(process.env.STRIPE_SECRET_KEY || '');
+  return key.startsWith('sk_test_') ? 'test' : key.startsWith('sk_live_') ? 'live' : 'unconfigured';
+}
+function stripePublicOriginOk() {
+  const raw = String(process.env.PUBLIC_URL || '').trim();
+  if (!raw) return false;
+  try {
+    const u = new URL(raw);
+    return u.protocol === 'https:' && !u.username && !u.password && !u.search && !u.hash &&
+      (u.pathname === '/' || u.pathname === '') && u.origin === raw.replace(/\/$/, '');
+  } catch { return false; }
+}
 function checkoutState() {
   const a = ADDR(); const v = a ? BTC.validateAddress(a) : { ok: false, why: 'BTC_ADDRESS is not set' };
-  const on = !!setting('checkout_enabled', true);
+  // New installations fail closed. Existing saved switches are respected, but Stripe also has its own explicit env gate.
+  const on = !!setting('checkout_enabled', false);
   const btc = { configured: !!a && v.ok, address: v.ok ? a : null, type: v.ok ? v.type : null, why: v.ok ? null : v.why };
-  const publicUrl = String(process.env.PUBLIC_URL || '').trim();
-  const stripe = { configured: /^sk_(?:test|live)_/.test(String(process.env.STRIPE_SECRET_KEY || '')) && /^whsec_/.test(String(process.env.STRIPE_WEBHOOK_SECRET || '')) && /^https:\/\//i.test(publicUrl),
-    mode: 'hosted Stripe Checkout for credit/debit cards' };
+  const mode = stripeMode();
+  const hasStripeCredentials = mode !== 'unconfigured' && /^whsec_/.test(String(process.env.STRIPE_WEBHOOK_SECRET || '')) && stripePublicOriginOk();
+  const stripeEnabled = process.env.STRIPE_CHECKOUT_ENABLED === '1';
+  const liveApproved = process.env.STRIPE_LIVE_CHECKOUT_ENABLED === '1';
+  const stripeReady = hasStripeCredentials && stripeEnabled && (mode === 'test' || (mode === 'live' && liveApproved));
+  const stripe = {
+    configured: stripeReady,
+    mode: mode === 'unconfigured' ? 'unconfigured' : mode,
+    why: !hasStripeCredentials ? 'Add valid Stripe keys, webhook signing secret, and an HTTPS PUBLIC_URL containing only the origin.' :
+      !stripeEnabled ? 'Stripe is disabled until STRIPE_CHECKOUT_ENABLED=1 is explicitly set.' :
+      mode === 'live' && !liveApproved ? 'Live Stripe is locked until STRIPE_LIVE_CHECKOUT_ENABLED=1 is explicitly set after Stripe approves this business model.' : null
+  };
   const enabled = on && (btc.configured || stripe.configured);
   return { enabled, admin_switch: on, methods: enabled ? [...(btc.configured ? ['bitcoin'] : []), ...(stripe.configured ? ['stripe'] : [])] : [],
     providers: { bitcoin: btc, stripe, whop: { configured: false, mode: 'not integrated' } },
-    reason: !on ? 'Checkout is switched off by the admin.' : !btc.configured && !stripe.configured ? 'Configure a valid BTC_ADDRESS or Stripe keys plus an HTTPS PUBLIC_URL to enable checkout.' : null };
+    reason: !on ? 'Checkout is switched off by the admin.' : !btc.configured && !stripe.configured ? (stripe.why || 'Configure a valid payment provider to enable checkout.') : null };
 }
 const ORDER_TTL_MS = 45 * 60e3, LATE_MS = 24 * 3600e3;
 const needConfs = (p, usd) => p.kind === 'prestige' ? Math.max(6, (p.data && p.data.confs) || 6) : usd >= 20000 ? 3 : 1;
@@ -131,10 +154,18 @@ async function createStripeOrder(user, productId, t = Date.now()) {
     form.set('expires_at', String(Math.floor(expires / 1000)));
     form.set('payment_method_types[0]', 'card');
     const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-      method: 'POST', headers: { Authorization: 'Bearer ' + process.env.STRIPE_SECRET_KEY, 'Content-Type': 'application/x-www-form-urlencoded', 'Idempotency-Key': 'hub-order-' + ref }, body: form
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + process.env.STRIPE_SECRET_KEY, 'Content-Type': 'application/x-www-form-urlencoded', 'Idempotency-Key': 'hub-order-' + ref },
+      body: form,
+      signal: AbortSignal.timeout(10000)
     });
     const session = await response.json().catch(() => ({}));
-    if (!response.ok || !session.id || !session.url) throw new Error('Stripe rejected checkout session');
+    let checkoutHost = '';
+    try { checkoutHost = new URL(String(session.url || '')).hostname; } catch {}
+    const expectsLive = stripeMode() === 'live';
+    if (!response.ok || !session.id || checkoutHost !== 'checkout.stripe.com' || typeof session.livemode !== 'boolean' || session.livemode !== expectsLive) {
+      throw new Error('Stripe rejected checkout session or returned an unexpected mode/URL');
+    }
     db.prepare('UPDATE store_orders SET provider_ref=?, checkout_url=?, expires_at=? WHERE id=?').run(session.id, session.url, Math.min(expires, Number(session.expires_at || Math.floor(expires / 1000)) * 1000), id);
     return { ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(id)) };
   } catch (err) {
@@ -191,28 +222,32 @@ async function sweep(t = Date.now()) { if (busy) return []; busy = true; try { r
 if (!process.env.PAY_NO_SWEEP) setInterval(() => { if (ADDR() && openOrders().length) sweep(); }, 60e3).unref();
 
 function reverseEntitlements(o, actor, note = '', t = Date.now()) {
-  const p = prod(o.product_id); if (!p) return { ok: false, error: 'Unknown product.' };
-  db.transaction(() => {
-    if (o.granted_at) {
-      if (p.kind === 'pack') addCrowns(o.user_id, -(p.crowns + p.bonus), 'refund', o.ref, t);
+  return db.transaction(() => {
+    // Read and mark within one transaction so webhook retries cannot apply entitlement reversals twice.
+    const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(o && o.id);
+    if (!fresh) return { ok: false, error: 'Unknown order.' };
+    if (fresh.refunded_at) return { ok: true, already: true };
+    const p = prod(fresh.product_id); if (!p) return { ok: false, error: 'Unknown product.' };
+    if (fresh.granted_at) {
+      if (p.kind === 'pack') addCrowns(fresh.user_id, -(p.crowns + p.bonus), 'refund', fresh.ref, t);
       if (p.kind === 'pass') {
-        const season = o.season || curSeason(t);
-        const claimed = new Set(db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(o.user_id, season).map(x => x.level));
+        const season = fresh.season || curSeason(t);
+        const claimed = new Set(db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(fresh.user_id, season).map(x => x.level));
         let earnedCrowns = 0;
         for (const reward of premiumTrack(season)) if (claimed.has(reward.level)) {
-          if (reward.item) db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(o.user_id, reward.item.id);
+          if (reward.item) db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(fresh.user_id, reward.item.id);
           earnedCrowns += reward.crowns || 0;
         }
-        if (earnedCrowns) addCrowns(o.user_id, -earnedCrowns, 'refund', o.ref, t);
-        db.prepare('DELETE FROM pass_claims WHERE user_id=? AND season=?').run(o.user_id, season);
-        db.prepare('DELETE FROM pass_owned WHERE user_id=? AND order_id=?').run(o.user_id, o.id);
+        if (earnedCrowns) addCrowns(fresh.user_id, -earnedCrowns, 'refund', fresh.ref, t);
+        db.prepare('DELETE FROM pass_claims WHERE user_id=? AND season=?').run(fresh.user_id, season);
+        db.prepare('DELETE FROM pass_owned WHERE user_id=? AND order_id=?').run(fresh.user_id, fresh.id);
       }
-      if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=? WHERE order_id=?').run(t, o.id);
+      if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=COALESCE(revoked_at, ?) WHERE order_id=?').run(t, fresh.id);
     }
-    db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=?")
-      .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, o.id);
+    db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=? AND refunded_at IS NULL")
+      .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, fresh.id);
+    return { ok: true };
   })();
-  return { ok: true };
 }
 function refund(orderRef, actor, note = '') {
   const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(orderRef);
@@ -290,7 +325,13 @@ function routes(app, A, H) {
   // Stripe sends signed, raw-body webhooks. Never grant based on a browser redirect or query parameter.
   app.post('/api/store/webhook/stripe', (req, res) => {
     if (!stripeSignatureOk(req)) return res.status(400).json({ ok: false, error: 'Invalid payment signature.' });
-    const event = req.body || {}; const obj = event.data && event.data.object || {};
+    const event = req.body || {};
+    // Prevent test-mode events from fulfilling live orders and vice versa, even when a webhook secret is misconfigured.
+    const mode = stripeMode();
+    if (mode === 'unconfigured' || typeof event.livemode !== 'boolean' || event.livemode !== (mode === 'live')) {
+      return res.status(400).json({ ok: false, error: 'Payment event mode does not match the configured Stripe key.' });
+    }
+    const obj = event.data && event.data.object || {};
     if (['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)) {
       if (obj.payment_status !== 'paid' || obj.mode !== 'payment') return res.json({ received: true });
       const ref = String((obj.metadata && obj.metadata.order_ref) || obj.client_reference_id || '');
@@ -374,4 +415,4 @@ function routes(app, A, H) {
     if (b.crowns) { addCrowns(u.id, Math.trunc(Number(b.crowns)), 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, crowns: crowns(u.id) }); }
     res.json(manualGrant(u.id, String(b.product_id || ''), (req.admin && req.admin.username) || 'admin', String(b.note || ''))); });
 }
-module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, _stripeSignatureOk: stripeSignatureOk };
+module.exports = { routes, checkoutState, createOrder, createStripeOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, _stripeSignatureOk: stripeSignatureOk };

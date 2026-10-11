@@ -4,21 +4,23 @@
 
 This document separates code that is prepared from external accounts that must be configured. Never paste secret keys into chat, issue trackers, screenshots, or public files.
 
+> **Important Stripe eligibility gate — do not switch on live payments yet.** Stripe's published restricted-business policy lists games of skill, including video-game tournaments, with a monetary or material prize; sweepstakes and contests; and certain marijuana-related businesses. Those categories overlap with the Hub's current giveaway/sponsor model and intended brand audience. Obtain written confirmation from Stripe that it approves this exact business model and the actual products being charged for before processing any live payments. A successful test-mode payment does not establish eligibility. See [Stripe's restricted-business list](https://stripe.com/legal/restricted-businesses) and [Stripe's FAQ](https://support.stripe.com/questions/prohibited-and-restricted-business-list-faqs).
+
 ## Card and debit payments
 
-The Hub now has a server-side Stripe Checkout integration. It creates orders from server-priced products, redirects customers to Stripe-hosted checkout, and grants the product only after a valid signed Stripe webhook confirms payment. Full refunds initiated in Stripe trigger entitlement reversal; partial refunds are flagged for review.
+The candidate contains server-side Stripe Checkout for the **cosmetic-only Hub Store**. It creates orders using server-owned catalogue prices, redirects buyers to Stripe-hosted checkout, and grants items only after a signed webhook confirms a paid session and validates the stored order, customer, currency and exact amount. Full refunds from Stripe reverse granted entitlements; partial refunds require manual review. This integration does **not** currently collect payment for sponsor giveaway bookings.
 
-1. In Stripe, start in test mode and copy the secret test API key. Store it as STRIPE_SECRET_KEY in the deployment environment.
-2. Set PUBLIC_URL to the exact HTTPS origin of the live Hub.
-3. Create a webhook endpoint at https://YOUR-DOMAIN/api/store/webhook/stripe.
-4. Subscribe to checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, checkout.session.expired, and charge.refunded.
-5. Copy the endpoint's signing secret into STRIPE_WEBHOOK_SECRET.
-6. Deploy, then verify a test purchase, a cancelled checkout, a failed payment, and a full refund in Stripe test mode before enabling live keys.
-7. Only after test mode passes should live Stripe keys and the live webhook signing secret be added to the production environment.
+1. Configure this on a private preview/test deployment, not production. In Stripe test mode, copy the secret test API key to `STRIPE_SECRET_KEY`.
+2. Set `PUBLIC_URL` to the exact HTTPS origin only, such as `https://hub.example.com` (no path, query string or fragment).
+3. Set `STRIPE_WEBHOOK_SECRET` to the signing secret for the endpoint `https://YOUR-DOMAIN/api/store/webhook/stripe`.
+4. Subscribe that endpoint to `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, and `charge.refunded`.
+5. Set `STRIPE_CHECKOUT_ENABLED=1` only in that test environment, then enable the separate Admin > Store & orders checkout switch. Both gates must be enabled.
+6. Run `node tools/e2e-stripe.js` and perform test-mode purchase, cancel, failed-payment and full-refund checks. Do not use real payment details in these tests.
+7. Do **not** add live credentials or switch on `STRIPE_LIVE_CHECKOUT_ENABLED=1` until Stripe has approved the business model in writing and all applicable legal, tax, consumer-terms, refund and digital-goods obligations have been reviewed.
 
-The app accepts card payments through Stripe Checkout. Stripe may present credit and debit cards according to the account's payment-method settings. Bitcoin remains a separate direct-to-wallet flow using BTC_ADDRESS; the Hub never receives wallet private keys. Other cryptocurrencies are not yet integrated.
+Live Stripe checkout requires all three controls: valid live API/webhook credentials and HTTPS origin, `STRIPE_CHECKOUT_ENABLED=1`, `STRIPE_LIVE_CHECKOUT_ENABLED=1`, plus the Hub's separate Admin > Store & orders switch. The extra environment switch is a safeguard, not proof of Stripe approval.
 
-Do not enable live checkout until the operator has completed the business, tax, consumer terms, refund, and digital-goods compliance requirements applicable to the business.
+Bitcoin remains a separate direct-to-wallet provider using `BTC_ADDRESS`; the Hub never receives wallet private keys. Other cryptocurrencies are not integrated. Stripe checkout is presently for cosmetic store items, not sponsor booking invoices.
 
 ## Cloudflare R2 media storage
 
@@ -30,11 +32,19 @@ The admin media uploader supports optional R2 storage. When all R2 credentials a
 4. Optional: connect a dedicated HTTPS custom domain to the bucket and set CLOUDFLARE_R2_PUBLIC_URL to its origin, for example https://media.example.com. If omitted, media is served through the Hub's /media route.
 5. Deploy and test an upload, reload the resulting image, restart the app, and confirm the image still loads. Keep a backup of existing DATA_DIR/media until this passes.
 
-R2 does not automatically move the site's source code, SQLite database, backups, or every static asset. It moves admin-uploaded media only. Database persistence and backups must remain configured separately.
+R2 does not automatically move the site's source code, SQLite database, backups, or every static asset. It moves admin-uploaded media only. Database persistence and backups must remain configured separately. Run `npm run test:r2` to exercise the signing and storage client against a mock endpoint before entering any real R2 credentials. The test does not upload to Cloudflare.
 
-## Cloudflare DNS and proxy
+## Cloudflare DNS, security and proxy
 
-Cloudflare DNS is separate from R2 storage. Connect the domain in the hosting provider first, then use the exact DNS target the hosting provider gives you. Do not guess an IP address or turn on proxying before confirming the host supports it. Set PUBLIC_URL to the final HTTPS origin. Set TRUST_PROXY_HOPS only to the actual trusted reverse-proxy hop count, and set TRUST_CF_IP=1 only when Cloudflare is the trusted front proxy and direct access to the origin is blocked. Otherwise, clients can spoof forwarding headers and defeat IP-based rate limits/anti-cheat signals.
+Cloudflare DNS, HTTP proxy/security and R2 storage are separate configuration tasks. None can be attached to the owner’s account from GitHub alone.
+
+1. Add/verify the domain in Deplexo first. Use the **exact** TXT verification and CNAME target that Deplexo displays; do not guess an origin IP or reuse another app's target. If Cloudflare is the DNS provider, add the records in the right zone. A custom domain still requires a domain the owner controls.
+2. Start with DNS-only if Deplexo tells you proxying is unsupported; otherwise use Cloudflare proxy only after verifying the hostname works through it. Configure SSL/TLS to Full (strict) when the origin certificate is valid, and always redirect HTTP to HTTPS. Never use Flexible SSL for an HTTPS origin.
+3. Enable Cloudflare's managed WAF rules suitable for the plan. Add carefully tested rate limits for login/signup and abusive API traffic only after checking false positives. Do not challenge or cache the Stripe webhook as if it were a browser; the Hub verifies its cryptographic signature server-side.
+4. Bypass edge caching for `/api/*`, the private admin path, user/order pages and webhook endpoints. Cache static images, CSS, JavaScript and other versioned static assets, not authenticated/session-bound responses.
+5. Set `PUBLIC_URL` to the final exact HTTPS origin. Set `TRUST_PROXY_HOPS` only to the actual trusted reverse-proxy hop count. Set `TRUST_CF_IP=1` only after Cloudflare is the trusted front proxy **and direct access to the origin is blocked**. Otherwise clients may spoof forwarding headers and defeat IP-based rate limits or anti-cheat signals.
+
+Cloudflare's official R2 setup supports scoped S3 API tokens with Object Read & Write permissions restricted to selected buckets. See the [R2 token guide](https://developers.cloudflare.com/r2/api/tokens/) and [S3-compatible API guide](https://developers.cloudflare.com/r2/get-started/s3/).
 
 ## Security and privacy notes
 

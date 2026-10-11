@@ -23,11 +23,16 @@ let ip = 0; const nextIp = () => { ip++; return `10.77.${Math.floor(ip / 250) % 
 // thumbnails are curated (docs/audit shots): only write one when the game has none yet, or when THUMBS=1 is set
 const WRITE_THUMB = (slug) => process.env.THUMBS === '1' || !require('fs').existsSync(require('path').join(PUB, slug, 'thumb.jpg'));
 let SEQ = 0; const RUN_ID = (Date.now() % 1e6) * 10 + (process.pid % 10);
+let sharedQACookies = null;
 async function signup(xff) {
+  // One isolated QA identity per test process avoids tripping the app's real signup rate limit
+  // when desktop + mobile coverage exercises several games against the same local test server.
+  if (sharedQACookies) return sharedQACookies;
   const u = 'tester' + String(RUN_ID) + String(++SEQ).padStart(3, '0'); // digits only: filter-safe, unique per run
   const r = await fetch(BASE + '/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': xff }, body: JSON.stringify({ username: u, password: 'qa-only-test-password-2026', agree: true, dob: '1990-05-05' }) });
   const ck = (r.headers.getSetCookie() || []).map(c => c.split(';')[0]); const j = await r.json(); if (!j.ok) throw new Error('signup failed ' + JSON.stringify(j));
-  return ck.map(c => { const i = c.indexOf('='); return { name: c.slice(0, i), value: c.slice(i + 1), url: BASE }; });
+  sharedQACookies = ck.map(c => { const i = c.indexOf('='); return { name: c.slice(0, i), value: c.slice(i + 1), url: BASE }; });
+  return sharedQACookies;
 }
 const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'ArrowLeft', 'ArrowRight'];
 (async () => {
