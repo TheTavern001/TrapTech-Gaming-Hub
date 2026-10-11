@@ -22,7 +22,8 @@ export async function mountAvatar3D(stage, cfg) {
     violet: ['#7c3aed', '#22d3ee'], night: ['#0f172a', '#4338ca'], kush: ['#14532d', '#84cc16'],
     sunset: ['#f97316', '#db2777'], ocean: ['#0369a1', '#22d3ee'], haze: ['#6b21a8', '#f0abfc'],
     mono: ['#27272a', '#71717a'], toxic: ['#166534', '#facc15'], 'gold-rays': ['#78350f', '#facc15'],
-    'cash-rain': ['#052e16', '#22c55e']
+    'cash-rain': ['#052e16', '#22c55e'], 'grow-room': ['#052e16','#15803d'], 'night-club': ['#1e1b4b','#db2777'],
+    hospital: ['#e0f2fe','#38bdf8'], workshop: ['#292524','#f59e0b'], farm: ['#14532d','#a3e635'], studio: ['#111827','#7c3aed'], 'city-lights': ['#020617','#475569']
   };
   const bg = backgrounds[cfg.bg] || backgrounds.violet;
   const css = 'linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')';
@@ -46,8 +47,9 @@ export async function mountAvatar3D(stage, cfg) {
   const hairPalette = ['#1b1b1f','#4a2f1d','#7b4a24','#c58b3c','#e8c46a','#d9d4cc','#c2410c','#7c3aed','#22d3ee','#16a34a'];
   const skin = skinPalette[Number(String(cfg.skin || 's2').slice(1))] || skinPalette[2];
   const hair = hairPalette[Number(String(cfg.hairc || 'c0').slice(1))] || hairPalette[0];
-  const outfitColors = { tee:'#3b82f6', hoodie:'#334155', jersey:'#dc2626', tracksuit:'#111827', 'chain-tee':'#f8fafc', fur:'#d6d3d1' };
+  const outfitColors = { tee:'#3b82f6', hoodie:'#334155', jersey:'#dc2626', tracksuit:'#111827', 'chain-tee':'#f8fafc', fur:'#d6d3d1', 'cannabis-hoodie':'#166534', dj:'#312e81', scrubs:'#0e7490', labcoat:'#f8fafc', mechanic:'#292524', hardhat:'#f59e0b', farmer:'#365314', suit:'#111827', tactical:'#374151', chef:'#f8fafc', firefighter:'#991b1b', varsity:'#7f1d1d', denim:'#1d4ed8', ranch:'#92400e', hype:'#db2777' };
   const shirt = outfitColors[cfg.outfit] || '#3b82f6';
+  const presentation = ['male','female','other'].includes(cfg.gender) ? cfg.gender : 'other';
   const metal = mat('#d6a94f', 0.22, 0.86);
   function mesh(geometry, material, x, y, z, sx, sy, sz, target = root) {
     const m = new THREE.Mesh(geometry, material); m.position.set(x,y,z); m.scale.set(sx,sy,sz);
@@ -60,13 +62,15 @@ export async function mountAvatar3D(stage, cfg) {
   floor.rotation.x = -Math.PI / 2;
   ball(-0.24,0.66,0,0.20,0.68,0.22,shirt); ball(0.24,0.66,0,0.20,0.68,0.22,shirt);
   ball(-0.24,0.16,0.02,0.19,0.14,0.25,'#111827'); ball(0.24,0.16,0.02,0.19,0.14,0.25,'#111827');
-  const torso = ball(0,1.45,0,0.62,0.75,0.34,shirt);
+  const torso = ball(0,1.45,0,presentation === 'male' ? 0.66 : presentation === 'female' ? 0.54 : 0.60,0.75,0.34,shirt);
+  ball(0,1.00,0,presentation === 'female' ? 0.43 : 0.36,0.30,0.29,shirt); // pelvis/waist silhouette
+  if (presentation === 'female') { ball(-0.19,1.62,0.28,0.22,0.20,0.10,shirt); ball(0.19,1.62,0.28,0.22,0.20,0.10,shirt); }
   ball(0,2.05,0,0.19,0.26,0.18,skin);
-  ball(-0.72,1.55,0,0.19,0.56,0.20,shirt).rotation.z = -0.14;
-  ball(0.72,1.55,0,0.19,0.56,0.20,shirt).rotation.z = 0.14;
+  ball(-0.72,1.55,0,presentation === 'male' ? 0.21 : 0.17,0.56,0.20,shirt).rotation.z = -0.14;
+  ball(0.72,1.55,0,presentation === 'male' ? 0.21 : 0.17,0.56,0.20,shirt).rotation.z = 0.14;
   ball(-0.75,0.98,0.02,0.15,0.16,0.16,skin); ball(0.75,0.98,0.02,0.15,0.16,0.16,skin);
   const head = new THREE.Group(); root.add(head); head.position.set(0,2.62,0);
-  const faceScale = cfg.face === 'square' ? [0.56,0.60,0.48] : cfg.face === 'round' ? [0.54,0.53,0.46] : [0.49,0.63,0.43];
+  const faceScale = cfg.face === 'square' || (presentation === 'male' && cfg.face !== 'round') ? [0.56,0.60,0.48] : cfg.face === 'round' ? [0.54,0.53,0.46] : presentation === 'female' ? [0.48,0.62,0.42] : [0.50,0.61,0.44];
   ball(0,0,0,...faceScale,skin,head);
   ball(-0.51,-0.02,0,0.10,0.16,0.12,skin,head); ball(0.51,-0.02,0,0.10,0.16,0.12,skin,head);
   ball(0,-0.08,0.425,0.075,0.12,0.08,skin,head);
@@ -125,6 +129,13 @@ export async function mountAvatar3D(stage, cfg) {
   }
   if (cfg.acc === 'grill') for(let i=0;i<5;i++) ball(-0.08+i*0.04,-0.25,0.435,0.019,0.035,0.018,'#fef08a',head,0.18,0.7);
   if (cfg.outfit === 'chain-tee') { const chain=mesh(new THREE.TorusGeometry(0.23,0.025,8,32),metal,0,1.86,0.28,1,0.65,1); chain.rotation.x=0.2; }
+  if (cfg.outfit === 'cannabis-hoodie') { ball(0,1.48,0.31,0.20,0.19,0.035,'#a3e635'); ball(0,1.48,0.35,0.10,0.12,0.018,'#14532d'); }
+  if (cfg.outfit === 'dj') { const stripe=mat('#f472b6',0.25,0.2); ball(0,1.46,0.32,0.035,0.52,0.025,'#f472b6'); }
+  if (cfg.outfit === 'scrubs' || cfg.outfit === 'labcoat' || cfg.outfit === 'chef') { ball(0.18,1.40,0.32,0.035,0.32,0.025,'#dbeafe'); ball(-0.18,1.40,0.32,0.035,0.32,0.025,'#dbeafe'); if(cfg.outfit==='labcoat') ball(0,1.32,0.35,0.08,0.09,0.025,'#0f766e'); }
+  if (cfg.outfit === 'mechanic' || cfg.outfit === 'hardhat' || cfg.outfit === 'farmer' || cfg.outfit === 'firefighter' || cfg.outfit === 'ranch') { const trim = cfg.outfit === 'firefighter' ? '#fbbf24' : '#facc15'; ball(0,1.46,0.34,0.50,0.045,0.025,trim); ball(0,1.16,0.34,0.40,0.035,0.025,trim); }
+  if (cfg.outfit === 'suit') { ball(0,1.53,0.32,0.10,0.40,0.035,'#f8fafc'); ball(0,1.30,0.37,0.045,0.20,0.02,'#dc2626'); }
+  if (cfg.outfit === 'tactical') { ball(-0.22,1.50,0.33,0.11,0.15,0.04,'#111827'); ball(0.22,1.50,0.33,0.11,0.15,0.04,'#111827'); }
+  if (cfg.outfit === 'varsity' || cfg.outfit === 'denim' || cfg.outfit === 'hype') { ball(0,1.48,0.34,0.035,0.52,0.025,cfg.outfit==='hype'?'#facc15':'#e5e7eb'); }
   if (cfg.outfit === 'fur') { ball(-0.42,1.55,0.02,0.22,0.70,0.38,'#e5e7eb'); ball(0.42,1.55,0.02,0.22,0.70,0.38,'#e5e7eb'); }
   if (cfg.held === 'controller') {
     ball(0.73,0.87,0.12,0.20,0.10,0.08,'#111827');
@@ -132,6 +143,14 @@ export async function mountAvatar3D(stage, cfg) {
   }
   if (cfg.held === 'cane') { const cane=mesh(new THREE.CylinderGeometry(0.035,0.035,0.95,12),metal,0.90,0.52,0.08,1,1,1); ball(0.90,1.02,0.08,0.11,0.11,0.10,'#facc15'); }
   if (cfg.held === 'cash') { for(let i=0;i<4;i++) { const bill=mesh(new THREE.BoxGeometry(0.17,0.10,0.018),mat('#16a34a',0.6,0),0.84+i*0.025,0.94+i*0.018,0.08+i*0.018,1,1,1); bill.rotation.z=0.2; } }
+  if (cfg.held === 'microphone') { ball(0.84,0.96,0.08,0.07,0.09,0.07,'#111827'); mesh(new THREE.CylinderGeometry(0.025,0.025,0.38,12),metal,0.84,0.72,0.08,1,1,1); }
+  if (cfg.held === 'wrench') { mesh(new THREE.CylinderGeometry(0.035,0.035,0.62,10),mat('#cbd5e1',0.24,0.85),0.86,0.76,0.08,1,1,1); ball(0.86,1.08,0.08,0.09,0.07,0.04,'#cbd5e1',root,0.24,0.85); }
+  if (cfg.held === 'sprout') { mesh(new THREE.CylinderGeometry(0.018,0.03,0.35,8),mat('#16a34a'),0.84,0.80,0.08,1,1,1); ball(0.78,0.95,0.08,0.09,0.05,0.03,'#4ade80'); ball(0.91,0.95,0.08,0.09,0.05,0.03,'#86efac'); }
+  if (cfg.held === 'stethoscope') { const st=mesh(new THREE.TorusGeometry(0.14,0.025,8,24),mat('#0f172a'),0.78,0.96,0.13,1,1,1); st.rotation.x=0.5; ball(0.91,0.83,0.16,0.06,0.06,0.04,metal); }
+  if (cfg.held === 'pitchfork') { mesh(new THREE.CylinderGeometry(0.022,0.022,0.78,8),mat('#92400e'),0.86,0.78,0.08,1,1,1); for(let i=0;i<3;i++) mesh(new THREE.CylinderGeometry(0.012,0.012,0.28,6),metal,0.80+i*0.06,1.18,0.08,1,1,1); }
+  if (cfg.held === 'syringe') { mesh(new THREE.CylinderGeometry(0.045,0.045,0.30,12),mat('#e0f2fe',0.2,0),0.86,0.80,0.08,1,1,1); mesh(new THREE.CylinderGeometry(0.01,0.01,0.18,6),metal,0.86,1.04,0.08,1,1,1); }
+  if (cfg.held === 'headphones') { const hp=mesh(new THREE.TorusGeometry(0.34,0.045,10,32,Math.PI),mat('#111827'),0,2.92,0,1,1,1,head); hp.rotation.z=Math.PI; ball(-0.38,0.08,0.02,0.09,0.13,0.08,'#f472b6',head); ball(0.38,0.08,0.02,0.09,0.13,0.08,'#f472b6',head); }
+  if (cfg.held === 'toolbox') { mesh(new THREE.BoxGeometry(0.38,0.25,0.22),mat('#dc2626'),0.82,0.88,0.10); mesh(new THREE.BoxGeometry(0.16,0.05,0.04),metal,0.82,1.04,0.22); }
 
   const pointer = { down:false, x:0, y:0, rot:0, tilt:0 };
   const down = (e) => { pointer.down=true; pointer.x=e.clientX; pointer.y=e.clientY; renderer.domElement.setPointerCapture?.(e.pointerId); };
