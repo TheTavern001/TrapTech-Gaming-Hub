@@ -803,7 +803,7 @@ app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', 
 const INDEX_FILE = path.join(PUB, 'index.html');
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const PAGE_TITLES = { '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/tournaments': 'Tournaments', '/season': 'Season Pass', '/quests': 'Daily Quests',
-  '/achievements': 'Achievements & Rewards', '/community': 'Community', '/sponsor': 'Sponsor a Host - Trap Tech Solutions', '/about': 'About Trap Tech Solutions',
+  '/achievements': 'Achievements & Rewards', '/community': 'Community', '/sponsor': 'Book a Giveaway - Trap Tech Solutions', '/about': 'About Trap Tech Solutions',
   '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/search': 'Search', '/notifications': 'Notifications', '/settings': 'Settings', '/invite': 'Invite Friends', '/channels': 'Brand Channels', '/friends': 'Friends & Challenges', '/shop': 'Points Shop' };
 function pageMeta(p, origin) {
   let m = null, mm;
