@@ -52,6 +52,8 @@ jobs:
           done
           cat /tmp/hub-ci.log
           exit 1
+      - name: Run API end-to-end regression suite
+        run: npm test
       - name: Test main Hub and Games Library navigation on mobile viewport
         run: node tools/e2e-hub-library.js
       - name: Smoke test major Hub screens on mobile and desktop
@@ -65,7 +67,7 @@ jobs:
         continue-on-error: true
         env:
           PLAY_MS: 2000
-        run: node tools/e2e-games-lib.js dino-dash,rail-rush,lane-racer,moto-lanes
+        run: timeout 180s node tools/e2e-games-lib.js dino-dash,rail-rush,lane-racer,moto-lanes
       - name: Upload browser regression evidence
         if: always()
         uses: actions/upload-artifact@v4
