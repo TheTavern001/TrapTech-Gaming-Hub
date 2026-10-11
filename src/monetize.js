@@ -33,6 +33,10 @@ CREATE TABLE IF NOT EXISTS pass_owned (user_id INTEGER NOT NULL, season INTEGER 
 CREATE TABLE IF NOT EXISTS pass_claims (user_id INTEGER NOT NULL, season INTEGER NOT NULL, level INTEGER NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (user_id, season, level));
 CREATE TABLE IF NOT EXISTS prestige_owned (item_id TEXT NOT NULL, serial INTEGER NOT NULL, user_id INTEGER, order_id INTEGER, created_at INTEGER NOT NULL, revoked_at INTEGER, PRIMARY KEY (item_id, serial));
 `);
+for (const [name, type] of [['provider_ref','TEXT'], ['checkout_url','TEXT'], ['provider_payment_id','TEXT']]) {
+  if (!db.prepare('PRAGMA table_info(store_orders)').all().some(c => c.name === name)) db.exec(`ALTER TABLE store_orders ADD COLUMN ${name} ${type}`);
+}
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS store_orders_provider_ref ON store_orders(provider, provider_ref) WHERE provider_ref IS NOT NULL');
 
 // ---------- catalog (prices are PUBLIC for player items; booking prices are not) ----------
 const PRESTIGE = {
@@ -61,10 +65,15 @@ const setSetting = (k, v) => db.prepare('INSERT INTO settings (key, value, updat
 const ADDR = () => String(process.env.BTC_ADDRESS || '').trim();
 function checkoutState() {
   const a = ADDR(); const v = a ? BTC.validateAddress(a) : { ok: false, why: 'BTC_ADDRESS is not set' };
-  const on = !!setting('checkout_enabled', true); // on by default: BTC_ADDRESS alone opens checkout; the admin can switch it off
+  const on = !!setting('checkout_enabled', true);
   const btc = { configured: !!a && v.ok, address: v.ok ? a : null, type: v.ok ? v.type : null, why: v.ok ? null : v.why };
-  return { enabled: btc.configured && on, admin_switch: on, providers: { bitcoin: btc, whop: { configured: !!process.env.WHOP_WEBHOOK_SECRET, mode: 'hosted checkout links + webhook (documented, off)' }, stripe: { configured: false, mode: 'documented alternative' } },
-    reason: !btc.configured ? 'Checkout is disabled until the owner sets BTC_ADDRESS.' : !on ? 'Checkout is switched off by the admin.' : null };
+  const publicUrl = String(process.env.PUBLIC_URL || '').trim();
+  const stripe = { configured: !!process.env.STRIPE_SECRET_KEY && !!process.env.STRIPE_WEBHOOK_SECRET && /^https:\/\//i.test(publicUrl),
+    mode: 'hosted Stripe Checkout for credit/debit cards' };
+  const enabled = on && (btc.configured || stripe.configured);
+  return { enabled, admin_switch: on, methods: enabled ? [...(btc.configured ? ['bitcoin'] : []), ...(stripe.configured ? ['stripe'] : [])] : [],
+    providers: { bitcoin: btc, stripe, whop: { configured: false, mode: 'not integrated' } },
+    reason: !on ? 'Checkout is switched off by the admin.' : !btc.configured && !stripe.configured ? 'Configure a valid BTC_ADDRESS or Stripe keys plus an HTTPS PUBLIC_URL to enable checkout.' : null };
 }
 const ORDER_TTL_MS = 45 * 60e3, LATE_MS = 24 * 3600e3;
 const needConfs = (p, usd) => p.kind === 'prestige' ? Math.max(6, (p.data && p.data.confs) || 6) : usd >= 20000 ? 3 : 1;
