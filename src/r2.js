@@ -26,8 +26,10 @@ function sign(method, key, body = Buffer.alloc(0), contentType = 'application/oc
   const day = date.slice(0, 8);
   const payloadHash = sha256(body);
   const headers = { 'content-type': contentType, host, 'x-amz-content-sha256': payloadHash, 'x-amz-date': date };
-  const signedHeaders = 'content-type;host;x-amz-content-sha256;x-amz-date';
-  const canonicalHeaders = 'content-type:' + contentType + '\nhost:' + host + '\nx-amz-content-sha256:' + payloadHash + '\nx-amz-date:' + date + '\n';
+  const cache = 'public, max-age=31536000, immutable';
+  if (method === 'PUT') headers['cache-control'] = cache;
+  const signedHeaders = method === 'PUT' ? 'cache-control;content-type;host;x-amz-content-sha256;x-amz-date' : 'content-type;host;x-amz-content-sha256;x-amz-date';
+  const canonicalHeaders = (method === 'PUT' ? 'cache-control:' + cache + '\n' : '') + 'content-type:' + contentType + '\nhost:' + host + '\nx-amz-content-sha256:' + payloadHash + '\nx-amz-date:' + date + '\n';
   const canonical = [method, uri, '', canonicalHeaders, signedHeaders, payloadHash].join('\n');
   const scope = day + '/auto/s3/aws4_request';
   const toSign = 'AWS4-HMAC-SHA256\n' + date + '\n' + scope + '\n' + sha256(canonical);
