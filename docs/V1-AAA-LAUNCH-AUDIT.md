@@ -34,7 +34,8 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - The editor now has a real-time Three.js/WebGL preview built from procedural 3D geometry, with drag rotation, lighting, idle motion, and an SVG fallback. This is a functional 3D renderer, but the model is not AAA-quality and does not yet use a licensed/owned GLB/glTF character asset.
 - [x] Replace the 2D-only editor preview with a real 3D renderer and static SVG fallback. The Three.js module is loaded lazily from a pinned CDN, so the editor needs network access for 3D mode.
 - [x] Reflect existing face, skin, hair, outfit, accessory, hat, and held-item choices in the 3D preview; provide lighting/materials, idle motion, camera rotation, and a responsive editor.
-- [ ] Add true body-proportion controls and upgrade the procedural character to a production-quality, licensed/owned model asset.
+- [x] Add selectable average/slim/athletic/stocky/curvy/tall/short build proportions to the procedural model.
+- [ ] Upgrade the procedural character to a production-quality, licensed/owned model asset.
 - [ ] Distinguish earned, achievement-unlocked, event-exclusive, and paid cosmetics in the catalog.
 - [ ] Keep purchases cosmetic-only and validate ownership/prices/grants server-side; never grant an item because the client says it is owned.
 - [ ] Provide clear rarity/unlock requirements, preview-before-buy, purchase confirmation, and equipped/owned states.
