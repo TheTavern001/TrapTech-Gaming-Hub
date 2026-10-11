@@ -200,3 +200,9 @@
 [dir=rtl] .sf-links,[dir=rtl] .bnav,[dir=rtl] .hd-nav{direction:rtl}
 [dir=rtl] .gcanvas,[dir=rtl] canvas{direction:ltr}
 [dir=rtl] [dir=ltr]{text-align:left}
+
+/* Interactive WebGL avatar stage (SVG fallback remains available) */
+.avatar-stage{width:min(100%,320px);height:320px;aspect-ratio:1/1;border-radius:24px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.18);box-shadow:0 18px 46px rgba(0,0,0,.28);isolation:isolate}
+.avatar-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.av-prev .avatar-stage+p{margin:0}
+@media(max-width:480px){.avatar-stage{width:100%;height:min(78vw,320px);min-height:240px;border-radius:20px}.av-prev{position:static}}
