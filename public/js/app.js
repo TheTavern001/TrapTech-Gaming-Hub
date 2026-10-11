@@ -465,65 +465,51 @@ function gameCard(g, tall = false) {
 }
 
 // ---------------- games ----------------
-route(/^\/games$/, (m, url) => {
-  let cat = url.searchParams.get('cat') || 'All'; let q = '';
-  const cats = ['All', 'Arcade', 'Racing', 'Puzzle', 'Strategy', 'Physics', 'Just for fun'];
-  const coreIdsAtRender = new Set(S.games.map(g => String(g.id)));
-  const catalogCountAtRender = S.libraryGames.filter(g => g && g.title && g.url && !coreIdsAtRender.has(String(g.id || g.slug))).length;
-  const listedCountAtRender = S.games.length + catalogCountAtRender;
-  shell('/games', `<h1>Games <span class="pill green" style="vertical-align:middle">${listedCountAtRender} games listed</span></h1><p class="small muted" style="margin:-6px 0 14px">Core Hub games support score-integrated competition. Catalog titles open from the expanded library; event eligibility and licensing require separate verification.</p><a class="btn sm" style="margin:-2px 0 12px" href="/games-lib/index.html">Explore the Games Library <span id="lib-count" class="pill" style="margin-left:6px">loading catalog…</span></a><!-- [games-lib hook] -->
-    <div class="field ic">${icon('search')}<input class="input" id="q" placeholder="Search games..." autocomplete="off"></div>
-    <div class="chips" id="chips">${cats.map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('')}</div>
-    <div class="grid2 games-grid" id="grid"></div>
-    <div class="section-h"><h2>Featured Games</h2><a href="/achievements">${icon('medal')} Achievements</a></div>
-    <div class="grid2 games-grid">${S.games.filter(g => g.featured && g.giveaway !== false).map(g => gameCard(g)).join('')}</div>
-    <section class="catalog-hub card pad" aria-labelledby="catalog-hub-title">
-      <div class="catalog-hub-head"><div><div class="home-eyebrow">THE FULL ARCADE</div><h2 id="catalog-hub-title">Explore the Games Library</h2><p class="small muted">Search the expanded catalog from the main Hub. Catalog flags do not certify event eligibility or licensing.</p></div><a class="btn sm" href="/games-lib/index.html">Open full library ↗</a></div>
-      <div class="catalog-hub-controls"><input class="input" id="lib-q" placeholder="Search all catalog games…" autocomplete="off" aria-label="Search the full games catalog"><select class="input" id="lib-category" aria-label="Filter catalog by category"><option value="">All categories</option></select></div>
-      <div class="catalog-hub-count small muted" id="lib-result-count" aria-live="polite">Loading catalog…</div>
-      <div class="grid2 games-grid catalog-hub-grid" id="lib-grid"></div>
+route(/^\/games$/, () => {
+  const library = S.libraryGames.filter(g => g && g.title && g.url);
+  const categories = [...new Set(library.map(g => g.category).filter(Boolean))].sort();
+  shell('/games', \`
+    <section class="unified-games-head">
+      <div class="home-eyebrow">THE FULL ARCADE</div>
+      <h1>Game Library <span class="pill green" style="vertical-align:middle" id="lib-count">\${library.length} games</span></h1>
+      <p class="small muted">One library. Every game. Browse the full collection, find your next favorite, and play.</p>
     </section>
-    <p class="small dim center" style="margin-top:14px">All games are free to play. Casino-style games use points only: no real money, no purchases.</p>`);
-  const draw = () => {
-    const match = (g) => (cat === 'All' || g.category === cat || (cat === 'Just for fun' && g.giveaway === false)) && g.title.toLowerCase().includes(q);
-    const list = S.games.filter(g => !g.featured && g.giveaway !== false && match(g));
-    const feat = (cat !== 'All' || q) ? S.games.filter(g => g.featured && g.giveaway !== false && match(g)) : [];
-    // v7: chance games live in their own "Just for fun" section (they never count for giveaways)
-    const fun = S.games.filter(g => g.giveaway === false && match(g));
-    document.getElementById('grid').innerHTML = ([...list, ...feat].map(g => gameCard(g)).join('')
-      + (fun.length ? `<div class="section-h fun-h" style="grid-column:1/-1"><h2>${icon('dices')} Just for fun</h2><span class="small muted">Chance games: points only, not eligible for giveaways</span></div>` + fun.map(g => gameCard(g)).join('') : ''))
-      || `<div class="empty" style="grid-column:1/-1">No games match.</div>`;
-  };
-  draw();
-  // Surface catalog entries directly in the main Hub; don't make the separate library page the only discovery path.
-  const coreIds = new Set(S.games.map(g => String(g.id)));
-  const library = S.libraryGames.filter(g => g && g.title && g.url && !coreIds.has(String(g.id || g.slug)));
-  const libCats = [...new Set(library.map(g => g.category).filter(Boolean))].sort();
+    <div class="catalog-hub-controls"><input class="input" id="lib-q" placeholder="Search all games…" autocomplete="off" aria-label="Search all games"><select class="input" id="lib-category" aria-label="Filter games by category"><option value="">All categories</option></select></div>
+    <div class="catalog-hub-count small muted" id="lib-result-count" aria-live="polite">Loading games…</div>
+    <div class="grid2 games-grid catalog-hub-grid unified-game-grid" id="lib-grid"></div>
+    <p class="small dim center" style="margin-top:18px">Official competitions are listed separately. A game being in the library does not automatically make it eligible for a giveaway.</p>\`);
   const libQ = document.getElementById('lib-q');
   const libCategory = document.getElementById('lib-category');
   const libGrid = document.getElementById('lib-grid');
   const libCount = document.getElementById('lib-result-count');
-  libCats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; libCategory.appendChild(o); });
-  const catalogCard = g => '<a class="gcard wide catalog-game-card" href="' + esc(g.url) + '"><div class="art" style="background-image:url(&quot;' + esc(g.art || g.thumbnail || '') + '&quot;)"><span class="live">OPEN GAME</span><span class="catalog-source">LIBRARY</span></div><div class="meta"><div class="t">' + esc(g.title) + '</div><div class="c">🎮 ' + esc(g.category || 'Arcade') + '<span class="catalog-status">' + (g.giveaway ? 'Catalog event flag' : 'Casual catalog') + '</span></div></div></a>';
+  categories.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; libCategory.appendChild(o); });
+  const catalogCard = g => '<a class="gcard wide catalog-game-card" href="' + esc(g.url) + '"><div class="art" style="background-image:linear-gradient(180deg,transparent 45%,rgba(4,7,20,.5)),url(&quot;' + esc(g.art || g.thumbnail || '') + '&quot;)"><span class="live">PLAY NOW</span></div><div class="meta"><div class="t">' + esc(g.title) + '</div><div class="c">🎮 ' + esc(g.category || 'Arcade') + '</div></div></a>';
   const drawLibrary = () => {
     const term = libQ.value.trim().toLowerCase(), selected = libCategory.value;
     const filtered = library.filter(g => (!selected || g.category === selected) && (String(g.title) + ' ' + String(g.category || '') + ' ' + String(g.competition || '')).toLowerCase().includes(term));
-    libCount.textContent = 'Showing ' + filtered.length + ' of ' + library.length + ' catalog games · ' + S.games.length + ' core Hub games listed above';
-    libGrid.innerHTML = filtered.map(catalogCard).join('') || '<div class="empty" style="grid-column:1/-1">No catalog games match. Try another search or category.</div>';
+    libCount.textContent = 'Showing ' + filtered.length + ' of ' + library.length + ' games';
+    libGrid.innerHTML = filtered.map(catalogCard).join('') || '<div class="empty" style="grid-column:1/-1">No games match. Try another search or category.</div>';
   };
   drawLibrary();
   libQ.addEventListener('input', drawLibrary);
   libCategory.addEventListener('change', drawLibrary);
-  // The catalog count reflects the loaded registry, never a hard-coded number.
-  const badge = document.getElementById('lib-count');
-  if (badge) badge.textContent = library.length + ' catalog games';
-  // Games Library catalog is served by the same registry as the dedicated library page.
   fetch('/api/games-lib', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(lib => {
+    if (!lib || !Array.isArray(lib.games)) return;
+    S.libraryGames = lib.games.filter(g => g && g.title && g.url);
+    const currentCategory = libCategory.value;
+    const cats = [...new Set(S.libraryGames.map(g => g.category).filter(Boolean))].sort();
+    libCategory.innerHTML = '<option value="">All categories</option>';
+    cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; libCategory.appendChild(o); });
+    libCategory.value = currentCategory;
     const badge = document.getElementById('lib-count');
-    if (badge && lib && Array.isArray(lib.games)) badge.textContent = lib.games.length + ' library games';
+    if (badge) badge.textContent = S.libraryGames.length + ' games';
+    // Redraw from the server registry so the hub and dedicated library use one source of truth.
+    const updated = S.libraryGames;
+    const term = libQ.value.trim().toLowerCase(), selected = libCategory.value;
+    const filtered = updated.filter(g => (!selected || g.category === selected) && (String(g.title) + ' ' + String(g.category || '') + ' ' + String(g.competition || '')).toLowerCase().includes(term));
+    libCount.textContent = 'Showing ' + filtered.length + ' of ' + updated.length + ' games';
+    libGrid.innerHTML = filtered.map(catalogCard).join('') || '<div class="empty" style="grid-column:1/-1">No games match. Try another search or category.</div>';
   }).catch(() => {});
-  document.getElementById('q').addEventListener('input', (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
-  document.getElementById('chips').addEventListener('click', (e) => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; document.querySelectorAll('#chips .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
 });
 route(/^\/games\/([\w-]+)$/, async (m) => {
   const g = gameById(m[1]); if (!g) return shell('/games', `<div class="empty">Game not found. <a href="/games">All games</a></div>`);
