@@ -393,6 +393,16 @@ route(/^\/(home)?$/, async () => {
   const featured = S.games.slice(0, 4);
   const tours = (tn.ok ? tn.tournaments : []).filter(t => t.status !== 'ended').slice(0, 3);
   shell('/', `
+    <section class="home-intro">
+      <div class="home-intro-copy">
+        <div class="home-eyebrow"><span class="home-live-dot"></span> THE GAMING HUB <span class="home-eyebrow-sep">/</span> BY TRAP TECH SOLUTIONS</div>
+        <h1>${S.me ? `Welcome back, ${esc(S.me.username)}.` : 'Ready. Set. Play.'}</h1>
+        <p>Jump into a quick run, climb the boards, and keep an eye on official competitions. Free to play. Built for mobile and desktop.</p>
+        <div class="home-intro-actions"><a class="btn" href="/games">${icon('gamepad-2')} Explore Games</a><a class="btn ghost" href="/giveaways">${icon('gift')} Official Giveaways</a></div>
+        <div class="home-points"><span>${icon('trophy')} Skill-based leaderboards</span><span>${icon('zap')} Daily quests &amp; XP</span><span>${icon('shield-check')} Official event listings</span></div>
+      </div>
+      <div class="home-intro-mark" aria-hidden="true"><div class="home-orbit home-orbit-a"></div><div class="home-orbit home-orbit-b"></div><div class="home-mark-core">${TT('mono', 90)}<span>PLAY<br>COMPETE<br>WIN</span></div><i class="home-spark home-spark-a"></i><i class="home-spark home-spark-b"></i><i class="home-spark home-spark-c"></i></div>
+    </section>
     ${takeover ? heroTakeover(takeover) : `<div class="hero"><img src="/assets/brand/hero-banner.webp" alt="The Gaming Hub - Play, Compete, Win, Connect" width="1336" height="400"></div>`}
     ${S.me && q && q.ok ? dailyPanel(q) : !S.me ? `<div class="card pad cta-card"><span class="es-ic">${icon('sparkles')}</span><div style="flex:1"><b>Play free. Win real prizes.</b><div class="small muted">Create a free account so your scores count for giveaways, tournaments and daily quests.</div></div><a class="btn sm" href="/signup">Sign up</a></div>` : ''}
     ${featuredGw.length ? `<div class="section-h"><h2>${icon('sparkles')} Featured Giveaways</h2><a href="/giveaways">View All</a></div><div class="feat-gw">${featuredGw.map(featCard).join('')}</div>` : ''}
@@ -426,7 +436,7 @@ route(/^\/(home)?$/, async () => {
     </div>
     <div class="section-h"><h2>Sponsor a Host</h2><a href="/sponsor">Learn more</a></div>
     <a class="banner" href="/sponsor" style="display:block;color:var(--text)"><h2>Get Your Brand in the Game</h2><div class="small" style="color:#d9dcff">Pick the features you want and get a free quote. Trap Tech Solutions builds your branded giveaway, from a simple prize drop to a full takeover.</div></a>
-    <div class="footer-note">${TT('mono', 64)}Powering the next generation of online gaming</div>`);
+    <div class="footer-note">${TT('mono', 64)}Powering the next generation of online gaming</div>`, { cls: 'home-redesign' });
   tickCountdowns(); wireDaily();
   if (S.me && q && q.ok && !q.streak.checked_today) doCheckin();
 });
