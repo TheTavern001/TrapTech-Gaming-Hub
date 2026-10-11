@@ -188,16 +188,36 @@ let busy = false;
 async function sweep(t = Date.now()) { if (busy) return []; busy = true; try { return await check(openOrders(t), t); } catch (e) { console.error('[pay] sweep', e.message); return []; } finally { busy = false; } }
 if (!process.env.PAY_NO_SWEEP) setInterval(() => { if (ADDR() && openOrders().length) sweep(); }, 60e3).unref();
 
-function refund(orderRef, actor, note = '') {
-  const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(orderRef); if (!o) return { ok: false, error: 'Unknown order.' }; if (o.refunded_at) return { ok: false, error: 'Already refunded.' };
-  if (o.provider === 'stripe') return { ok: false, error: 'For card orders, issue the refund in Stripe Dashboard first. Hub-side card refund and entitlement reconciliation are not yet automated.' };
-  const p = prod(o.product_id); const t = Date.now();
+function reverseEntitlements(o, actor, note = '', t = Date.now()) {
+  const p = prod(o.product_id); if (!p) return { ok: false, error: 'Unknown product.' };
   db.transaction(() => {
-    if (o.granted_at) { if (p.kind === 'pack') addCrowns(o.user_id, -(p.crowns + p.bonus), 'refund', o.ref, t);
-      if (p.kind === 'pass') db.prepare('DELETE FROM pass_owned WHERE user_id=? AND order_id=?').run(o.user_id, o.id);
-      if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=? WHERE order_id=?').run(t, o.id); }
-    db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=?").run(t, `refunded by ${actor}${note ? ': ' + note : ''} (send the BTC back manually from your wallet)`, o.id);
-  })(); return { ok: true };
+    if (o.granted_at) {
+      if (p.kind === 'pack') addCrowns(o.user_id, -(p.crowns + p.bonus), 'refund', o.ref, t);
+      if (p.kind === 'pass') {
+        const season = o.season || curSeason(t);
+        const claimed = new Set(db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(o.user_id, season).map(x => x.level));
+        let earnedCrowns = 0;
+        for (const reward of premiumTrack(season)) if (claimed.has(reward.level)) {
+          if (reward.item) db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(o.user_id, reward.item.id);
+          earnedCrowns += reward.crowns || 0;
+        }
+        if (earnedCrowns) addCrowns(o.user_id, -earnedCrowns, 'refund', o.ref, t);
+        db.prepare('DELETE FROM pass_claims WHERE user_id=? AND season=?').run(o.user_id, season);
+        db.prepare('DELETE FROM pass_owned WHERE user_id=? AND order_id=?').run(o.user_id, o.id);
+      }
+      if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=? WHERE order_id=?').run(t, o.id);
+    }
+    db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=?")
+      .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, o.id);
+  })();
+  return { ok: true };
+}
+function refund(orderRef, actor, note = '') {
+  const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(orderRef);
+  if (!o) return { ok: false, error: 'Unknown order.' };
+  if (o.refunded_at) return { ok: false, error: 'Already refunded.' };
+  if (o.provider === 'stripe') return { ok: false, error: 'Issue the refund in Stripe Dashboard; Hub entitlements are reversed automatically after Stripe confirms a full refund.' };
+  return reverseEntitlements(o, actor, (note ? note + '; ' : '') + 'send the BTC back manually from the configured wallet');
 }
 function manualGrant(userId, productId, actor, note = '') {
   const p = prod(productId); if (!p) return { ok: false, error: 'Unknown product.' }; const t = Date.now(); const ref = 'M' + crypto.randomBytes(6).toString('hex').toUpperCase();
