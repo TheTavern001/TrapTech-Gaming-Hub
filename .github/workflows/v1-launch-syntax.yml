@@ -23,6 +23,10 @@ jobs:
       - name: Check server-side JavaScript
         run: |
           node --check src/db.js
+          node --check src/server.js
+          node --check src/monetize.js
+          node --check src/admin-media.js
+          node --check src/r2.js
           node --check src/eligibility.js
           node --check src/v5.js
           node --check src/avatars.js
@@ -34,3 +38,4 @@ jobs:
           node --input-type=module --check < public/js/app.js
           node --input-type=module --check < public/js/avatar-editor.js
           node --input-type=module --check < public/js/avatar-3d.js
+          node --input-type=module --check < public/js/hub-store.js
