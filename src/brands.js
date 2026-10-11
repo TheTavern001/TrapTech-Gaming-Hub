@@ -94,6 +94,8 @@ function join(userId, code, via = 'code', t = Date.now()) {
   return { ok: true, switched: !!(cur && cur.brand_id), left_giveaways: left, ...status(userId, t) };
 }
 function leave(userId, t = Date.now()) {
+  const st = status(userId, t);
+  if (!st.can_switch) return { ok: false, error: `You can change your giveaway team in ${st.days_until_switch} day${st.days_until_switch === 1 ? '' : 's'}.`, ...st };
   const cur = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId); if (!cur || !cur.brand_id) return { ok: false, error: 'You are not in a brand.' };
   db.transaction(() => {
     db.prepare(`UPDATE giveaway_entries SET left_at=? WHERE user_id=? AND left_at IS NULL AND giveaway_id IN (SELECT id FROM giveaways WHERE channel_id=? AND open_to_all=0 AND finalized_at IS NULL AND end_at > ?)`).run(t, userId, cur.brand_id, t);
