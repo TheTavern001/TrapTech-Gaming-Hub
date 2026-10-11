@@ -22,7 +22,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
 (async () => {
   await new Promise(r => mock.listen(8796, '127.0.0.1', r));
   const BTC = require('../src/btc');
-  ok(BTC.validateAddress(ADDR).ok && BTC.validateAddress(ADDR).type === 'p2sh', "Reese's address passes the base58check checksum (P2SH mainnet)");
+  ok(BTC.validateAddress(ADDR).ok && BTC.validateAddress(ADDR).type === 'p2sh', "configured test receiving address passes the base58check checksum (P2SH mainnet)");
   ok(!BTC.validateAddress(ADDR.slice(0, -1) + 'C').ok && !BTC.validateAddress('bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdx').ok, 'a one-character typo fails the checksum (base58 and bech32)');
   const ADM = require('./admin-auth').adminClient(BASE); await ADM.login();
   const mk = async () => { const c = client(); c.u = 'pay_' + Math.random().toString(36).slice(2, 8); await c('/api/auth/signup', { body: { username: c.u, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); return c; };
