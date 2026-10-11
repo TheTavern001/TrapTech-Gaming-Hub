@@ -22,6 +22,7 @@ HAIRC.forEach((c, i) => add('hairc', 'c' + i, 'Color ' + (i + 1), i >= 7 ? { cro
 ['dot', 'happy', 'sleepy', 'wink', 'wide'].forEach(e => add('eyes', e, e)); add('eyes', 'star', 'star eyes', { ach: 15 });
 ['smile', 'grin', 'flat', 'open', 'smirk'].forEach(m => add('mouth', m, m));
 ['none', 'mustache', 'goatee', 'beard'].forEach(b => add('beard', b, b));
+for (const [id, label] of [['average','Average build'],['slim','Slim build'],['athletic','Athletic build'],['stocky','Stocky build'],['curvy','Curvy build'],['tall','Tall build'],['short','Short build']]) add('build', id, label, 'free');
 add('outfit', 'tee', 'tee'); add('outfit', 'hoodie', 'hoodie'); add('outfit', 'jersey', 'jersey'); add('outfit', 'tracksuit', 'tracksuit', { crowns: 300 }); add('outfit', 'chain-tee', 'tee + gold chain', { crowns: 600 }); add('outfit', 'fur', 'fur coat', { crowns: 900 });
 for (const [id, label] of [['cannabis-hoodie','Cannabis streetwear hoodie'],['dj','DJ performance fit'],['scrubs','Medical scrubs'],['labcoat','Lab coat'],['mechanic','Mechanic coveralls'],['hardhat','Blue-collar workwear'],['farmer','Farm workwear'],['suit','Executive suit'],['tactical','Tactical streetwear'],['chef','Chef jacket'],['firefighter','Firefighter turnout gear'],['varsity','Varsity jacket'],['denim','Denim jacket'],['ranch','Ranch workwear'],['hype','Hype streetwear']]) add('outfit', id, label, ['cannabis-hoodie','dj','labcoat','mechanic','farmer','suit','tactical','firefighter','hype'].includes(id) ? { crowns: 450 } : 'free');
 add('hat', 'none', 'none'); add('hat', 'beanie', 'beanie'); add('hat', 'snapback', 'snapback'); add('hat', 'bucket', 'bucket hat', { crowns: 250 }); add('hat', 'halo', 'halo', { ach: 30 }); add('hat', 'crown', 'solid gold crown', { prestige: 'prestige-crown' });
@@ -31,13 +32,13 @@ add('acc', 'bandana', 'Bandana'); add('acc', 'mask', 'Medical mask'); add('acc',
 add('held', 'none', 'none'); add('held', 'controller', 'controller'); add('held', 'cane', 'diamond cane', { prestige: 'prestige-cane' }); add('held', 'cash', 'cash stack', { prestige: 'prestige-throne' });
 add('held', 'microphone', 'DJ microphone'); add('held', 'wrench', 'Mechanic wrench'); add('held', 'sprout', 'Seedling'); add('held', 'stethoscope', 'Stethoscope'); add('held', 'pitchfork', 'Pitchfork'); add('held', 'syringe', 'Medical syringe'); add('held', 'headphones', 'DJ headphones'); add('held', 'toolbox', 'Toolbox');
 add('held', 'laptop', 'DJ laptop'); add('held', 'briefcase', 'Business briefcase'); add('held', 'medical-bag', 'Medical bag'); add('held', 'camera', 'Camera'); add('held', 'paintbrush', 'Paintbrush'); add('held', 'spray-can', 'Graffiti spray can'); add('held', 'cash-bag', 'Money bag', { crowns: 900 }); add('held', 'flower', 'Farm flower bundle');
-const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 'outfit', 'hat', 'acc', 'held'];
+const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 'build', 'outfit', 'hat', 'acc', 'held'];
 const BYK = {}; for (const p of P) (BYK[p.kind] = BYK[p.kind] || {})[p.id] = p;
 const key = (p) => p.kind + ':' + p.id;
 function defaultFor() {
   const pick = (kind) => Object.keys(BYK[kind] || {}).find(id => BYK[kind][id].unlock === 'free') || Object.keys(BYK[kind] || {})[0];
   return { gender: 'other', bg: pick('bg'), skin: pick('skin'), face: pick('face'), hair: pick('hair'), hairc: pick('hairc'),
-    eyes: pick('eyes'), mouth: pick('mouth'), beard: 'none', outfit: pick('outfit'), hat: 'none', acc: 'none', held: 'none' };
+    eyes: pick('eyes'), mouth: pick('mouth'), beard: 'none', build: pick('build'), outfit: pick('outfit'), hat: 'none', acc: 'none', held: 'none' };
 }
 function clean(cfg, base) { const out = { ...base }; if (cfg && ['male', 'female', 'other'].includes(cfg.gender)) out.gender = cfg.gender; for (const k of KINDS) if (cfg && BYK[k][cfg[k]]) out[k] = cfg[k]; return out; }
 function configOf(user) { let c = {}; try { c = JSON.parse(user.avatar || '{}'); } catch {} return clean(c, defaultFor(user.username)); }
