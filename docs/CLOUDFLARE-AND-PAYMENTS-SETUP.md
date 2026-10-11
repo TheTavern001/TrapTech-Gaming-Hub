@@ -1,5 +1,7 @@
 # Cloudflare and payment connection — V1
 
+**Beginner note:** You do not need to edit the source code for these integrations. The remaining work is account setup, adding the values privately in your hosting dashboard, and testing the connection. Never put private credentials into GitHub or public website files. If your host has no private environment-variable settings, stop and contact its support rather than placing credentials in code.
+
 This document separates code that is prepared from external accounts that must be configured. Never paste secret keys into chat, issue trackers, screenshots, or public files.
 
 ## Card and debit payments
