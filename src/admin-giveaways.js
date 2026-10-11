@@ -179,7 +179,7 @@ function normalize(c) {
       brand_only: !!e.brand_only, follow_sponsor: !!(e.follow_sponsor || e.elig_followers_only),
       quest_bonus: { on: !!(e.quest_bonus && e.quest_bonus.on), per: int(e.quest_bonus && e.quest_bonus.per, 1, 10, 1), max: int(e.quest_bonus && e.quest_bonus.max, 1, 20, 3) },
       referral_bonus: { on: !!((e.referral_bonus && e.referral_bonus.on) || f.referral_bonus), max: int(e.referral_bonus && e.referral_bonus.max, 1, 20, 3) },
-      checklist: (Array.isArray(e.checklist) ? e.checklist : []).slice(0, 8).map((x, i) => ({ id: str(x.id, 24) || \`step\${i+1}\`, label: str(x.label, 120), url: /^https:\/\/[^\s"'<>]{4,300}$/.test(str(x.url, 300)) ? str(x.url, 300) : '', required: x.required !== false, attestation: true })) },
+      checklist: (Array.isArray(e.checklist) ? e.checklist : []).slice(0, 8).map((x, i) => ({ id: str(x.id, 24) || ('step' + (i + 1)), label: str(x.label, 120), url: /^https:\/\/[^\s"'<>]{4,300}$/.test(str(x.url, 300)) ? str(x.url, 300) : '', required: x.required !== false, attestation: true })) },
     features: {}, rules: { official: sanitizeHtml(r.official, 60000), edited: !!r.edited, house: str(r.house, 2000) },
     runtime: c.runtime && typeof c.runtime === 'object' ? { tournament_id: parseInt(c.runtime.tournament_id, 10) || null, announced_winners_at: +c.runtime.announced_winners_at || null } : {},
   };
