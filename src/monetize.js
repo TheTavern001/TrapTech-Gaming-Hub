@@ -3,8 +3,8 @@
 // eligibility check or a tie-break: those code paths (src/server.js /api/score, src/events.js, src/results.js,
 // src/eligibility.js, src/anticheat.js) never read anything from this module. tools/e2e-payments.js proves it.
 //  (a) Hub Crowns: hub currency bought in packs with real money, spendable ONLY on cosmetics / avatar items.
-//  (b) Season Pass: premium track on top of the free track (premium cosmetics and bonus Crowns. The premium track uses the same free XP progression as everyone else;
-//      there is no paid XP boost and no paid gameplay advantage).
+//  (b) Season Pass: premium track on top of the free track, with premium cosmetics and bonus Crowns. The premium track uses the same free XP progression as everyone else;
+//      there is no paid XP boost and no paid gameplay advantage.
 //  (c) "Earn next season's pass free": a hard 48-quest chain (src/pass-quests.js, docs/PASS-QUESTS.md).
 //  (d) Prestige showcase items: three numbered, limited, very expensive cosmetics with an "owned by" wall.
 // PAYMENTS are provider-agnostic (PROVIDERS below). Default: BITCOIN to one fixed watch-only address (BTC_ADDRESS):
