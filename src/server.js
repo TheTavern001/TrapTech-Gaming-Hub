@@ -195,7 +195,15 @@ app.get('/api/me', (req, res) => {
 });
 
 // ---------- games & leaderboards ----------
-app.get('/api/games', (req, res) => res.json({ ok: true, games: cfg.GAMES }));
+app.get('/api/games', (req, res) => {
+  const games = cfg.GAMES.map(g => ({ ...g }));
+  const curated = games.filter(g => g.featured === true || g.home_featured === true);
+  const pool = curated.length ? curated : games;
+  const slot = pool.length ? Math.floor(now() / (7 * 864e5)) % pool.length : 0;
+  const ordered = pool.slice(slot).concat(pool.slice(0, slot));
+  const featured = new Set(ordered.slice(0, 4).map(g => g.id));
+  res.json({ ok: true, games: games.map(g => ({ ...g, home_featured: featured.has(g.id) })) });
+});
 
 function periodStart(period) {
   if (period === 'weekly') return now() - 7 * 864e5;
