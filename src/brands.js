@@ -85,7 +85,7 @@ function join(userId, code, via = 'code', t = Date.now()) {
   
   const left = [];
   db.transaction(() => {
-    if (cur && cur.brand_id) for (const g of db.prepare(`SELECT g.id, g.title FROM giveaway_entries e JOIN giveaways g ON g.id=e.giveaway_id WHERE e.user_id=? AND e.left_at IS NULL AND g.channel_id=? AND g.open_to_all=0 AND g.finalized_at IS NULL AND g.end_at > ?`).all(userId, cur.brand_id, t)) {
+    if (cur && cur.brand_id) for (const g of db.prepare(`SELECT g.id, g.title FROM giveaway_entries e JOIN giveaways g ON g.id=e.giveaway_id WHERE e.user_id=? AND e.left_at IS NULL AND g.channel_id=? AND g.open_to_all=0 AND g.finalized_at IS NULL AND g.end_at > ?`).all(userId, cur.brand_id, Date.now())) {
       db.prepare('UPDATE giveaway_entries SET left_at=? WHERE giveaway_id=? AND user_id=?').run(t, g.id, userId); left.push(g.title);
     }
     db.prepare('UPDATE users SET brand_id=?, brand_joined_at=? WHERE id=?').run(b.id, t, userId);
