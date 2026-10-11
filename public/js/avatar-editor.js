@@ -1,6 +1,6 @@
 // v7 avatar studio: collectible player-card presentation, rarity lighting, presets, and owned-part editor.
 let C = null;
-const KL = { bg: 'World', skin: 'Skin tone', face: 'Face shape', hair: 'Hair style', hairc: 'Hair color', eyes: 'Eyes', mouth: 'Expression', beard: 'Facial hair', outfit: 'Outfit', hat: 'Headwear', acc: 'Accessory', held: 'Held item' };
+const KL = { bg: 'World / aura', skin: 'Skin tone', face: 'Face shape', hair: 'Hair style', hairc: 'Hair color', brow: 'Eyebrows', eyes: 'Eye style', eyec: 'Eye color', mouth: 'Expression', mark: 'Face details', beard: 'Facial hair', piercing: 'Piercings', outfit: 'Outfit / armor', neck: 'Jewelry', hat: 'Headwear', acc: 'Accessories', held: 'Held item' };
 const lockText = (p) => p.owned ? 'Owned' : p.unlock.crowns ? `${p.unlock.crowns} Crowns` : p.unlock.ach ? `${p.unlock.ach} achievements` : p.unlock.prestige ? 'Prestige exclusive' : 'Locked';
 const PRESETS = [
   { id:'neon-runner', name:'Neon Runner', rarity:'RARE', cfg:{bg:'violet',face:'oval',hair:'spiky',hairc:'c7',outfit:'jersey',hat:'snapback',acc:'shades',held:'controller'} },
