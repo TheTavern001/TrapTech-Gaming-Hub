@@ -48,6 +48,9 @@ assert.match(eligibilitySource, /Required external steps cannot be self-confirme
 assert.match(avatarEditor, /data-gender/, 'avatar editor must expose male/female/other presentation');
 assert.match(avatarSource, /presentation === 'female'/, '3D avatar geometry must respond to presentation choice');
 assert.match(avatarSource, /cfg\.outfit === 'scrubs'/, '3D avatar must include career outfit details');
+assert.match(avatarSource, /cfg\.hat === 'hardhat'/, '3D avatar must include blue-collar headwear');
+assert.match(avatarSource, /cfg\.acc === 'leaf-chain'/, '3D avatar must include cannabis-culture accessories');
+assert.match(avatarSource, /cfg\.held === 'medical-bag'/, '3D avatar must include medical/work props');
 assert.match(serverSource, /X-Content-Type-Options/, 'security headers must be set');
 assert.doesNotMatch(serverSource, /deployment_commit: process\.env\.DEPLOY_COMMIT/, 'public build endpoint must not expose deployment metadata');
 assert.match(paymentSource, /function stripeSignatureOk/, 'card fulfillment must verify Stripe webhook signatures');
