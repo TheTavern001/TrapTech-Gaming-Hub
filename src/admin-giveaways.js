@@ -300,6 +300,7 @@ function officialRules(c, g = null) {
   if (e.elig_brand_month) elig.push('not have won a giveaway from the same sponsor in the previous 30 days');
   if (e.brand_only || !b.hub_wide) elig.push(`be affiliated with ${sponsor} on the Hub (brand-only giveaway)`);
   if (e.max_entrants) elig.push(`join before the giveaway reaches ${fmtN(e.max_entrants)} entrants`);
+  if (e.checklist.some(x => x.required !== false && x.label)) elig.push('complete the required entry checklist steps shown on the giveaway page; external actions are self-attested unless separately verified');
   const ruleTxt = SC.ruleText({ score_rule: c.games.score_rule, score_top_n: c.games.top_n });
   const cp = c.games.competition; const acl = [...new Set(c.games.ids.map(id => (PROF.get(id) || {}).anticheat_level || 'L2'))].sort();
   const compTxt = `Competition format: <b>${esc(PROF.COMP[cp.type].label)}</b> (${esc(PROF.metricLabel(cp.type, cp.metric))})${cp.type === 'campaign' ? `, levels ${cp.level_from} to ${cp.level_to}` : ''}. `
