@@ -17,7 +17,7 @@ module.exports = function v5b(app, A, h) {
   db.prepare("UPDATE users SET eq_title='squad-goals' WHERE eq_title='ambassador'").run();
   db.prepare("UPDATE users SET eq_banner='crew-beacon' WHERE eq_banner='recruiter'").run();
 
-  h.meV5 = (u) => ({ points: SH.balance(u.id), staff: !!db.prepare("SELECT 1 FROM badge_grants WHERE user_id=? AND badge_id IN ('staff','traptech-team')").get(u.id) });
+  h.meV5 = (u) => ({ points: SH.balance(u.id), staff: !!db.prepare("SELECT 1 FROM badge_grants WHERE user_id=? AND badge_id = 'staff'").get(u.id) });
   // ---------- Points + shop ----------
   // v7: daily / weekly featured / season shop / events / earned, from the economy engine (src/shop.js, docs/ECONOMY.md). Open to guests.
   app.get('/api/shop', (req, res) => {
