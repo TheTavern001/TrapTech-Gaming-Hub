@@ -145,12 +145,12 @@ runs.
   (it ends at 11:59:59 PM ET). There are 20 names; after those, a numeral is added ("Purple Haze II").
 - **Overrides.** Admin changes are stored in `season_overrides`. Extending or shortening a season shifts every season
   after it.
-- **XP.** Season XP is the normal hub XP (`progress.xpFor`) earned inside the season window, plus the head start.
-- **Track.** 60 free levels. There is no paid pass.
+- **XP.** Season XP is the normal hub XP (`progress.xpFor`) earned inside the season window, plus the head start. Paid pass ownership never multiplies XP or speeds up progression; both tracks use the same earned XP.
+- **Track.** 60 free levels are always available. A separate optional $9.99 Season Pass unlocks a premium cosmetic track with 20 additional cosmetic rewards and 600 bonus Hub Crowns.
   - **Level cost:** level L costs `200 + 10L` XP, so level 60 is 30,300 XP. That is about 6-8 weeks of regular play.
   - **Cosmetics:** 13 season-exclusive cosmetics, at levels 3, 6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 and 60
     (`SCHEDULE`). They are never sold and never return.
-  - **Points:** every other level pays `40 + 20 × floor(L/10)` Hub Points.
+  - **Points:** every other level pays `40 + 20 × floor(L/10)` Hub Points. Hub Points are earned free; Hub Crowns are a separate optional paid currency used only for cosmetics.
   - **Perks:**
 
     | Level | Perk |
