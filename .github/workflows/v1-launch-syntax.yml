@@ -18,6 +18,16 @@ jobs:
         run: npm run test:stripe
       - name: Test Cloudflare R2 signing and storage (mock endpoint; no real account)
         run: npm run test:r2
+      - name: Test Bitcoin checkout against mocked block explorer (no real transactions)
+        env:
+          ADMIN_PASSWORD: v1-check-password-123
+          SECRET: v1-check-secret-for-tests-only
+          DATA_DIR: /tmp/gaming-hub-v1-payments
+          BTC_ADDRESS: 32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB
+          BTC_EXPLORER_URL: http://127.0.0.1:8796
+          BTC_PRICE_URL: http://127.0.0.1:8796/prices
+          PAY_NO_SWEEP: "1"
+        run: tools/fresh-api.sh tools/e2e-payments.js
       - name: Test checklist normalization
         env:
           ADMIN_PASSWORD: v1-check-password-123
@@ -38,7 +48,6 @@ jobs:
           node --check src/db.js
           node --check src/server.js
           node --check src/monetize.js
-          node --check tools/e2e-stripe.js
           node --check src/admin-media.js
           node --check src/r2.js
           node --check src/eligibility.js
