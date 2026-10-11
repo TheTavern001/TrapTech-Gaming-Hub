@@ -47,6 +47,8 @@ assert.match(playerSource, /data-gw7-check/, 'player UI must expose interactive 
 assert.match(eligibilitySource, /verified = !!db\.prepare\('SELECT 1 FROM runs/, 'required hub-run steps must use server-recorded activity');
 assert.match(eligibilitySource, /Required external steps cannot be self-confirmed/, 'required external actions must reject player attestation');
 assert.match(avatarEditor, /data-gender/, 'avatar editor must expose male/female/other presentation');
+assert.match(avatarSource, /const builds = \{ average:/, '3D avatar must support customizable body builds');
+assert.match(avatarSource, /root\.scale\.set\(\.\.\.\(builds\[cfg\.build\]/, 'selected body build must affect the 3D model');
 assert.match(avatarSource, /presentation === 'female'/, '3D avatar geometry must respond to presentation choice');
 assert.match(avatarSource, /cfg\.outfit === 'scrubs'/, '3D avatar must include career outfit details');
 assert.match(avatarSource, /cfg\.hat === 'hardhat'/, '3D avatar must include blue-collar headwear');
