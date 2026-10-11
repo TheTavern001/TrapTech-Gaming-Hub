@@ -26,7 +26,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [ ] Giveaway team selection must clearly distinguish a Hub team affiliation from connecting the user's own external channel. Team switching is immediate; switching closes active entries in the previous team's members-only giveaways.
 - [ ] Avatar Studio must retain the approved collectible player-card direction and provide deep customization; current editor now has 17 categories, but the full visual/profile pass still needs visual verification.
 - [ ] **Game art and gameplay are not release-ready merely because the catalog count is 150.** User requires recognizable titles labeled as *Hub Version* when they are independent adaptations, meaningfully different gameplay (not reskinned copies), high-quality visuals, score/leaderboard integration, mobile controls and anti-cheat. The 50-title Arcade Pack currently uses nine shared mechanic families and must be individually redesigned/replaced before it can be treated as finished.
-- [ ] Keep production unchanged until the unique-game visual rebuild, full desktop/mobile review, score integrity, licensing and booking/official-event gates are complete.
+- [ ] Keep production unchanged until the unique-game visual rebuild, full desktop/mobile review, score integrity, licensing and booking/official-event gates are complete. Never label the current visual pass “AAA” without recorded screenshots and device review.
 
 ## Hub shell and navigation
 
