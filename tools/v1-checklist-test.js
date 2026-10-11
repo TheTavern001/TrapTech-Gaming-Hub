@@ -34,7 +34,7 @@ const avatarSource = read('public/js/avatar-3d.js');
 const avatarEditor = read('public/js/avatar-editor.js');
 const serverSource = read('src/server.js');
 assert.match(eligibilitySource, /function setChecklist\(/, 'server checklist persistence function must exist');
-assert.match(eligibilitySource, /Required checklist confirmations are locked while you are entered/, 'required confirmations must not be removable after entry');
+assert.match(eligibilitySource, /Required external steps cannot be self-confirmed/, 'required external actions must reject player attestation');
 assert.match(eligibilitySource, /const eligible = checks\.every\(c => c\.ok\)/, 'checklist checks must participate in eligibility');
 assert.match(routeSource, /\/api\/giveaways\/:id\/checklist/, 'authenticated checklist endpoint must exist');
 assert.match(builderSource, /checklist-add/, 'admin builder must expose checklist controls');
