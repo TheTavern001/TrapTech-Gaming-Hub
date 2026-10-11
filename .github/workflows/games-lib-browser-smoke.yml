@@ -56,6 +56,8 @@ jobs:
         run: npm test
       - name: Test giveaway booking, brand affiliation and 30-day cooldown
         run: node tools/e2e-sponsor-brands.js
+      - name: Test avatar inventory and unlock rules
+        run: node tools/e2e-avatars.js
       - name: Test Avatar Studio 3D character rendering in Chrome
         run: node tools/e2e-avatar-studio-browser.js
       - name: Test main Hub and Games Library navigation on mobile viewport
