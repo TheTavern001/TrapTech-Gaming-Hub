@@ -63,6 +63,7 @@ async function mountAvatarPreview(cfg) {
     if (avatarViewer.failed) { avatarViewer.canvas.style.display='none'; const img=document.getElementById('av-prev'); if(img) img.style.display='block'; }
     else { avatarViewer.canvas.style.display='block'; const img=document.getElementById('av-prev'); if(img) img.style.display='none'; }
     if (avatarViewer.model && avatarViewer.modules && avatarViewer.gltf) avBuildCharacter(avatarViewer, avatarViewer.gltf, avatarViewer.cfg, avatarViewer.modules.T, avatarViewer.modules.SkeletonUtils, avatarViewer.modules.Runner);
+    if (avatarViewer.startLoop) avatarViewer.startLoop();
     return;
   }
   const viewer = avatarViewer = { canvas, cfg:{...cfg}, model:null, mixer:null, raf:0, failed:false, modules:null, gltf:null };
@@ -105,8 +106,8 @@ async function mountAvatarPreview(cfg) {
     if (avatarViewer !== viewer) return;
     viewer.gltf=gltf; avBuildCharacter(viewer,gltf,viewer.cfg,T,SkeletonMod,Runner);
     const clock=new T.Clock();
-    const loop=()=>{ if(avatarViewer!==viewer)return; viewer.raf=requestAnimationFrame(loop); const dt=Math.min(0.04,clock.getDelta()); if(viewer.mixer)viewer.mixer.update(dt); if(viewer.model&&!viewer.mixer)viewer.model.rotation.y=Math.sin(performance.now()*0.00035)*0.16; viewer.ring.rotation.z+=dt*0.12; resize(); renderer.render(scene,camera); };
-    viewer.raf=requestAnimationFrame(loop);
+    const loop=()=>{ if(avatarViewer!==viewer)return; if(!viewer.canvas.isConnected){viewer.raf=0;return;} viewer.raf=requestAnimationFrame(loop); const dt=Math.min(0.04,clock.getDelta()); if(viewer.mixer)viewer.mixer.update(dt); if(viewer.model&&!viewer.mixer)viewer.model.rotation.y=Math.sin(performance.now()*0.00035)*0.16; viewer.ring.rotation.z+=dt*0.12; resize(); renderer.render(scene,camera); };
+    viewer.startLoop=()=>{ if(!viewer.raf) viewer.raf=requestAnimationFrame(loop); }; viewer.startLoop();
     const img=document.getElementById('av-prev'); if(img)img.style.display='none';
   } catch (err) {
     console.error('3D avatar preview unavailable',err);
