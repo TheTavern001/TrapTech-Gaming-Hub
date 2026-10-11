@@ -19,7 +19,7 @@ assert.equal(cfg.entry.checklist.length, 8, 'checklist must be capped at eight s
 assert.equal(cfg.entry.checklist[0].label, 'Join the official channel');
 assert.equal(cfg.entry.checklist[0].url, 'https://t.me/example');
 assert.equal(cfg.entry.checklist[0].required, true);
-assert.equal(cfg.entry.checklist[0].attestation, true, 'external action is explicitly self-attested');
+assert.equal(cfg.entry.checklist[0].verify, 'external', 'external action defaults to external verification');
 assert.equal(cfg.entry.checklist[1].url, '', 'unsafe destinations must be removed');
 assert.equal(cfg.entry.checklist[1].required, false);
 const derived = G.derive({ ...cfg, basics: { ...cfg.basics, channel_id: null, hub_wide: true }, entry: { ...cfg.entry, age21: false, require_join: false, regions_mode: 'all', max_entrants: 0 } });
