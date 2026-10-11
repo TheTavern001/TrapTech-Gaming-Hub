@@ -145,53 +145,55 @@ The audit script is structural only. It does not replace E2E testing, device pro
 
 These 50 original titles bring the unified catalog to 150 entries. They use nine shared gameplay mechanics with per-title themes; this is not a claim that every title has passed gameplay or competition-integrity review.
 
-101. **Pulse Painter** — Reflex & Skill; targets hit + streak bonus.
-102. **Orbit Slinger** — Arcade Shooters; targets hit + accuracy bonus.
-103. **Prism Pairs** — Puzzle & Brain; round clears + flawless sequence bonus.
-104. **Tempo Tapper** — Reflex & Skill; timing hits weighted by precision.
-105. **Comet Catcher** — Specialty; items caught + streak bonus.
-106. **Ripple Rider** — Endless Runners; hazards passed + pickups collected.
-107. **Stacksmith** — Physics & Destruction; stack height + perfect placements.
-108. **Vault Vortex** — Survival & Horde; motes collected + survival seconds.
-109. **Goal Glider** — Sports; timing hits weighted by precision.
-110. **Crystal Cascade** — Puzzle & Brain; targets shattered + rally combo.
-111. **Laser Lattice** — Arcade Shooters; hazards passed + pickups collected.
-112. **Pixel Pursuit** — Specialty; targets hit + streak bonus.
-113. **Nova Marksman** — Arcade Shooters; targets hit + accuracy bonus.
-114. **Echo Sequence** — Puzzle & Brain; round clears + flawless sequence bonus.
-115. **Metronome Mayhem** — Sports; timing hits weighted by precision.
-116. **Skyline Scoop** — Endless Runners; items caught + streak bonus.
-117. **Frostline Dash** — Endless Runners; hazards passed + pickups collected.
-118. **Column Climber** — Physics & Destruction; stack height + perfect placements.
-119. **Shard Survivor** — Survival & Horde; motes collected + survival seconds.
-120. **Rally Breaker** — Sports; targets shattered + rally combo.
-121. **Target Twister** — Reflex & Skill; targets hit + accuracy bonus.
-122. **Sugar Sprint** — Specialty; targets hit + streak bonus.
-123. **Cipher Cascade** — Puzzle & Brain; round clears + flawless sequence bonus.
-124. **Pulse Perfect** — Reflex & Skill; timing hits weighted by precision.
-125. **Lantern Leap** — Endless Runners; items caught + streak bonus.
-126. **Monsoon Matrix** — Survival & Horde; hazards passed + pickups collected.
-127. **Tower Tumbler** — Physics & Destruction; stack height + perfect placements.
-128. **Rift Drifter** — Survival & Horde; motes collected + survival seconds.
-129. **Goalkeeper Zero** — Sports; motes collected + survival seconds.
-130. **Brick Orbit** — Arcade Shooters; targets shattered + rally combo.
-131. **Signal Sniper** — Arcade Shooters; targets hit + accuracy bonus.
-132. **Bubble Burst Lab** — Puzzle & Brain; targets hit + streak bonus.
-133. **Glyph Garden** — Puzzle & Brain; round clears + flawless sequence bonus.
-134. **Clockwork Clutch** — Driving; timing hits weighted by precision.
-135. **Drift Catcher** — Driving; items caught + streak bonus.
-136. **Ember Evasion** — Survival & Horde; hazards passed + pickups collected.
-137. **Crane Crafter** — Physics & Destruction; stack height + perfect placements.
-138. **Mote Marauder** — Survival & Horde; motes collected + survival seconds.
-139. **Hoop Horizon** — Sports; timing hits weighted by precision.
-140. **Paddle Pulse** — Sports; targets shattered + rally combo.
-141. **Circuit Catcher** — Driving; items caught + streak bonus.
-142. **Meteor Mosaic** — Arcade Shooters; hazards passed + pickups collected.
-143. **Rune Ricochet** — Puzzle & Brain; targets hit + accuracy bonus.
-144. **Spectrum Sprint** — Reflex & Skill; targets hit + streak bonus.
-145. **Memory Meteor** — Puzzle & Brain; round clears + flawless sequence bonus.
-146. **Beat Foundry** — Specialty; timing hits weighted by precision.
-147. **Cloud Courier** — Endless Runners; items caught + streak bonus.
-148. **Tidal Thread** — Endless Runners; hazards passed + pickups collected.
-149. **Monolith Maker** — Physics & Destruction; stack height + perfect placements.
-150. **Ghostlight Gauntlet** — Survival & Horde; motes collected + survival seconds.
+| # | Hub name | Internal reference | Category | Tier | Mode | Build | Scoring model | Points/sec ceiling | Verification |
+|---:|---|---|---|---|---|---|---|---:|---|
+| 101 | Pulse Painter | Original Hub arcade game | Reflex & Skill | A | endless | built | targets hit + streak bonus | 120 | Not freshly verified |
+| 102 | Orbit Slinger | Original Hub arcade game | Arcade Shooters | A | endless | built | targets hit + accuracy bonus | 120 | Not freshly verified |
+| 103 | Prism Pairs | Original Hub arcade game | Puzzle & Brain | A | endless | built | round clears + flawless sequence bonus | 120 | Not freshly verified |
+| 104 | Tempo Tapper | Original Hub arcade game | Reflex & Skill | A | endless | built | timing hits weighted by precision | 120 | Not freshly verified |
+| 105 | Comet Catcher | Original Hub arcade game | Specialty | A | endless | built | items caught + streak bonus | 120 | Not freshly verified |
+| 106 | Ripple Rider | Original Hub arcade game | Endless Runners | A | endless | built | hazards passed + pickups collected | 120 | Not freshly verified |
+| 107 | Stacksmith | Original Hub arcade game | Physics & Destruction | A | endless | built | stack height + perfect placements | 120 | Not freshly verified |
+| 108 | Vault Vortex | Original Hub arcade game | Survival & Horde | A | endless | built | motes collected + survival seconds | 120 | Not freshly verified |
+| 109 | Goal Glider | Original Hub arcade game | Sports | A | endless | built | timing hits weighted by precision | 120 | Not freshly verified |
+| 110 | Crystal Cascade | Original Hub arcade game | Puzzle & Brain | A | endless | built | targets shattered + rally combo | 120 | Not freshly verified |
+| 111 | Laser Lattice | Original Hub arcade game | Arcade Shooters | A | endless | built | hazards passed + pickups collected | 120 | Not freshly verified |
+| 112 | Pixel Pursuit | Original Hub arcade game | Specialty | A | endless | built | targets hit + streak bonus | 120 | Not freshly verified |
+| 113 | Nova Marksman | Original Hub arcade game | Arcade Shooters | A | endless | built | targets hit + accuracy bonus | 120 | Not freshly verified |
+| 114 | Echo Sequence | Original Hub arcade game | Puzzle & Brain | A | endless | built | round clears + flawless sequence bonus | 120 | Not freshly verified |
+| 115 | Metronome Mayhem | Original Hub arcade game | Sports | A | endless | built | timing hits weighted by precision | 120 | Not freshly verified |
+| 116 | Skyline Scoop | Original Hub arcade game | Endless Runners | A | endless | built | items caught + streak bonus | 120 | Not freshly verified |
+| 117 | Frostline Dash | Original Hub arcade game | Endless Runners | A | endless | built | hazards passed + pickups collected | 120 | Not freshly verified |
+| 118 | Column Climber | Original Hub arcade game | Physics & Destruction | A | endless | built | stack height + perfect placements | 120 | Not freshly verified |
+| 119 | Shard Survivor | Original Hub arcade game | Survival & Horde | A | endless | built | motes collected + survival seconds | 120 | Not freshly verified |
+| 120 | Rally Breaker | Original Hub arcade game | Sports | A | endless | built | targets shattered + rally combo | 120 | Not freshly verified |
+| 121 | Target Twister | Original Hub arcade game | Reflex & Skill | A | endless | built | targets hit + accuracy bonus | 120 | Not freshly verified |
+| 122 | Sugar Sprint | Original Hub arcade game | Specialty | A | endless | built | targets hit + streak bonus | 120 | Not freshly verified |
+| 123 | Cipher Cascade | Original Hub arcade game | Puzzle & Brain | A | endless | built | round clears + flawless sequence bonus | 120 | Not freshly verified |
+| 124 | Pulse Perfect | Original Hub arcade game | Reflex & Skill | A | endless | built | timing hits weighted by precision | 120 | Not freshly verified |
+| 125 | Lantern Leap | Original Hub arcade game | Endless Runners | A | endless | built | items caught + streak bonus | 120 | Not freshly verified |
+| 126 | Monsoon Matrix | Original Hub arcade game | Survival & Horde | A | endless | built | hazards passed + pickups collected | 120 | Not freshly verified |
+| 127 | Tower Tumbler | Original Hub arcade game | Physics & Destruction | A | endless | built | stack height + perfect placements | 120 | Not freshly verified |
+| 128 | Rift Drifter | Original Hub arcade game | Survival & Horde | A | endless | built | motes collected + survival seconds | 120 | Not freshly verified |
+| 129 | Goalkeeper Zero | Original Hub arcade game | Sports | A | endless | built | motes collected + survival seconds | 120 | Not freshly verified |
+| 130 | Brick Orbit | Original Hub arcade game | Arcade Shooters | A | endless | built | targets shattered + rally combo | 120 | Not freshly verified |
+| 131 | Signal Sniper | Original Hub arcade game | Arcade Shooters | A | endless | built | targets hit + accuracy bonus | 120 | Not freshly verified |
+| 132 | Bubble Burst Lab | Original Hub arcade game | Puzzle & Brain | A | endless | built | targets hit + streak bonus | 120 | Not freshly verified |
+| 133 | Glyph Garden | Original Hub arcade game | Puzzle & Brain | A | endless | built | round clears + flawless sequence bonus | 120 | Not freshly verified |
+| 134 | Clockwork Clutch | Original Hub arcade game | Driving | A | endless | built | timing hits weighted by precision | 120 | Not freshly verified |
+| 135 | Drift Catcher | Original Hub arcade game | Driving | A | endless | built | items caught + streak bonus | 120 | Not freshly verified |
+| 136 | Ember Evasion | Original Hub arcade game | Survival & Horde | A | endless | built | hazards passed + pickups collected | 120 | Not freshly verified |
+| 137 | Crane Crafter | Original Hub arcade game | Physics & Destruction | A | endless | built | stack height + perfect placements | 120 | Not freshly verified |
+| 138 | Mote Marauder | Original Hub arcade game | Survival & Horde | A | endless | built | motes collected + survival seconds | 120 | Not freshly verified |
+| 139 | Hoop Horizon | Original Hub arcade game | Sports | A | endless | built | timing hits weighted by precision | 120 | Not freshly verified |
+| 140 | Paddle Pulse | Original Hub arcade game | Sports | A | endless | built | targets shattered + rally combo | 120 | Not freshly verified |
+| 141 | Circuit Catcher | Original Hub arcade game | Driving | A | endless | built | items caught + streak bonus | 120 | Not freshly verified |
+| 142 | Meteor Mosaic | Original Hub arcade game | Arcade Shooters | A | endless | built | hazards passed + pickups collected | 120 | Not freshly verified |
+| 143 | Rune Ricochet | Original Hub arcade game | Puzzle & Brain | A | endless | built | targets hit + accuracy bonus | 120 | Not freshly verified |
+| 144 | Spectrum Sprint | Original Hub arcade game | Reflex & Skill | A | endless | built | targets hit + streak bonus | 120 | Not freshly verified |
+| 145 | Memory Meteor | Original Hub arcade game | Puzzle & Brain | A | endless | built | round clears + flawless sequence bonus | 120 | Not freshly verified |
+| 146 | Beat Foundry | Original Hub arcade game | Specialty | A | endless | built | timing hits weighted by precision | 120 | Not freshly verified |
+| 147 | Cloud Courier | Original Hub arcade game | Endless Runners | A | endless | built | items caught + streak bonus | 120 | Not freshly verified |
+| 148 | Tidal Thread | Original Hub arcade game | Endless Runners | A | endless | built | hazards passed + pickups collected | 120 | Not freshly verified |
+| 149 | Monolith Maker | Original Hub arcade game | Physics & Destruction | A | endless | built | stack height + perfect placements | 120 | Not freshly verified |
+| 150 | Ghostlight Gauntlet | Original Hub arcade game | Survival & Horde | A | endless | built | motes collected + survival seconds | 120 | Not freshly verified |
