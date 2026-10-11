@@ -36,7 +36,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [x] Apply L3 score-event validation to both new originals, including per-game point-value rules and progress-marker exclusion.
 - [x] Add game-specific skill tie-break metrics for energy cells and rift shards.
 - [x] Add static CI checks for JavaScript syntax and registry/catalog/docs/local-asset consistency.
-- [ ] Browser-test both new games: title/start, controls, scoring, game-over, retry, score submission, mobile touch, and console errors. A new GitHub Actions browser workflow now performs this smoke test, but it has not yet completed successfully.
+- [x] Automated browser smoke tests passed for both new originals on desktop and iPhone-sized viewports on commit `303570b`; the main Hub/Games Library mobile navigation test also passed. This is smoke coverage, not exhaustive gameplay, anti-cheat, physical-device performance, or full score-submission certification.
 - [ ] Run existing E2E checks for the full library and verify forged-score rejection.
 - [ ] Verify game licenses and assets independently; do not equate a catalog flag with legal or competition approval.
 - [ ] Profile Desert Dash, Rail Rush, Lane Racer, and Moto Lanes on the intended phone; capture reproducible frame-time data.
@@ -45,8 +45,8 @@ This checklist deliberately covers the main Hub application as well as the Games
 ## Release gates
 
 - [x] Static CI passed on earlier branch revisions; each new commit must pass its own checks.
-- [ ] Latest commit CI is green.
-- [ ] Browser/E2E results are green for the release candidate.
+- [x] Latest verified static-check and browser-smoke workflows are green on commit `303570b` (2026-10-10).
+- [ ] Full API E2E suite, official-event end-to-end path, and forged/replayed score rejection are green for the release candidate.
 - [ ] Mobile smoke test completed.
 - [ ] Booking/event permission regression completed.
 - [ ] Deployment URL is reachable and all intended new games can be launched from the Hub.
@@ -55,3 +55,10 @@ This checklist deliberately covers the main Hub application as well as the Games
 ## Current boundary
 
 This branch is based on `v7-wip` and preserves its Hub application files. The current edits add to the Hub navigation/library experience; they do not replace the rest of the Hub. Static checks cannot substitute for the browser, mobile, booking-permission, or anti-cheat checks above.
+
+
+## Verified CI update — 2026-10-10
+
+- Static workflow: passed on `303570b`: JavaScript syntax, inline library-page JavaScript, registry/catalog/docs consistency, and local asset checks.
+- Browser workflow: passed on `303570b`: main Hub and Games Library navigation at a mobile viewport; Neon Circuit and Rift Survival smoke tests at desktop and iPhone-sized viewports; performance-risk diagnostic completed as a non-blocking step.
+- These workflows run against an isolated CI database and local test server. They do not verify Deplexo's deployed commit, persistent production storage, all catalog games, payment processing, or the complete official giveaway flow.
