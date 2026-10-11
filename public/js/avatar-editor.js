@@ -50,9 +50,10 @@ function avBuildCharacter(viewer, gltf, cfg, T, SkeletonUtils, Runner) {
 
   // 3D wearable layer: selected headwear, face accessories, jewelry and held items appear on the character itself.
   const gear = new T.Group(); gear.name = 'AvatarCosmeticLayer'; model.add(gear);
+  const invScale = 1 / Math.max(0.001, model.scale.x);
   const mat = (color, metalness=0.15, roughness=0.36, emissive=0) => new T.MeshStandardMaterial({color,metalness,roughness,envMapIntensity:1.1,emissive:color,emissiveIntensity:emissive});
   const gold = mat('#f6bf4b',0.86,0.22,0.12), silver = mat('#dce7f8',0.82,0.24,0.04), black = mat('#101727',0.18,0.3), neon = mat('#4de5f7',0.56,0.2,0.5);
-  const place = (geometry, material, x, y, z, rx=0, ry=0, rz=0, sx=1, sy=1, sz=1) => { const m=new T.Mesh(geometry,material); m.position.set(x,y,z); m.rotation.set(rx,ry,rz); m.scale.set(sx,sy,sz); m.castShadow=true; m.receiveShadow=true; gear.add(m); return m; };
+  const place = (geometry, material, x, y, z, rx=0, ry=0, rz=0, sx=1, sy=1, sz=1) => { const m=new T.Mesh(geometry,material); m.position.set(x*invScale,y*invScale,z*invScale); m.rotation.set(rx,ry,rz); m.scale.set(sx*invScale,sy*invScale,sz*invScale); m.castShadow=true; m.receiveShadow=true; gear.add(m); return m; };
   if (cfg.hat === 'crown') {
     place(new T.CylinderGeometry(.22,.26,.14,10),gold,0,1.89,.015);
     for(let i=0;i<7;i++){const a=i*Math.PI*2/7;place(new T.ConeGeometry(.045,.13,5),gold,Math.cos(a)*.2,1.99,.015+Math.sin(a)*.2,0,0,a);}
@@ -101,8 +102,11 @@ function avBuildCharacter(viewer, gltf, cfg, T, SkeletonUtils, Runner) {
     const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0];place(new T.SphereGeometry(.12,18,12),mat(hc,.02,.7),0,1.91,-.13);
   } else if (cfg.hair==='long' || cfg.hair==='braids') {
     const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0], hairMat=mat(hc,.02,.7);
-    place(new T.CapsuleGeometry(.065,.36,4,8),hairMat,-.24,1.52,-.01,.04,0,-.08);
-    place(new T.CapsuleGeometry(.065,.36,4,8),hairMat,.24,1.52,-.01,-.04,0,.08);
+    place(new T.CylinderGeometry(.065,.065,.42,12),hairMat,-.24,1.52,-.01,.04,0,-.08);
+    place(new T.CylinderGeometry(.065,.065,.42,12),hairMat,.24,1.52,-.01,-.04,0,.08);
+  } else if (cfg.hair==='afro' || cfg.hair==='curly' || cfg.hair==='waves') {
+    const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0], hairMat=mat(hc,.02,.7);
+    place(new T.SphereGeometry(.28,24,16),hairMat,0,1.84,-.015,0,0,0,1,.68,1);
   }
   if (cfg.held==='controller') {
     place(new T.BoxGeometry(.3,.095,.07),mat('#151d35',.3,.24),.4,.74,.18,0,0,-.12);
