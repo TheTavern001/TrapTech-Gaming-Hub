@@ -175,7 +175,7 @@ const FORMS = {
     return `<h2>${icon('shield-check')} Entry rules</h2>${errBox('entry')}
       <div class="note-box">${icon('info')} Free to enter, always. Hub Points can never buy entries; bonus entries only come from free activity (quests, invites) and only change random draws.</div>
       ${toggle('entry.age21', e.age21, '21+ only', 'Players must have a date of birth showing 21+ (the hub is 21+).')}
-      ${toggle('entry.require_join', !!e.require_join, 'Players tap "Enter giveaway"', 'Needed for the entry rules below to be checked before a player counts. Turned on automatically for 21+, regions, brand-only and entry caps.', 'data-type="int01"')}
+      ${toggle('entry.require_join', !!e.require_join, 'Players tap "Enter giveaway"', 'Needed for entry requirements to be checked before a player counts. Turned on automatically for 21+, regions, brand-only, entry caps, and required checklist steps.', 'data-type="int01"')}
       <h3>Anti-camping</h3><div class="form-grid">
         ${field('Account at least (days old)', num('entry.elig_account_age_days', 0, 365))}${field('Runs in the last 7 days', num('entry.elig_min_runs7', 0, 100), 'Recent activity needed to enter')}
         ${field('XP in the last 7 days', num('entry.elig_min_xp7', 0, 100000))}${field('Max live giveaways per player', num('entry.elig_max_active', 0, 50), '0 = no limit')}
