@@ -30,8 +30,7 @@ function client() {
   r = await anon('/api/auth/signin', { body: { username: ua, password: 'wrongpass' } }); ok(r.status === 401, 'signin wrong password rejected');
   const A2 = client(); r = await A2('/api/auth/signin', { body: { username: ua, password: 'hunter2hunter2' } }); ok(r.body.ok, 'signin A works');
   r = await A2('/api/me'); ok(r.body.user && r.body.user.username === ua, '/api/me returns signed-in user');
-  ok(/^TH-\d{6}$/.test(String(r.body.user && r.body.user.user_id)), '/api/me exposes stable-format public Hub ID', r.body.user);
-  ok(typeof r.body.user.founder === 'boolean' && (r.body.user.founder ? r.body.user.identity_badge === 'FOUNDER' : r.body.user.identity_badge == null), 'Founder identity is server-derived and badge matches flag', r.body.user);
+  ok(!('user_id' in r.body.user) && !('founder' in r.body.user) && !('identity_badge' in r.body.user), '/api/me does not expose internal user IDs or founder-style identity flags', r.body.user);
   r = await anon('/healthz'); ok(r.status === 200 && r.body.ok === true && r.body.version === 'V1', 'health check confirms DB query and V1 version', r.body);
   r = await anon('/api/build'); ok(r.status === 200 && r.body.ok === true && r.body.version === 'V1' && Number(r.body.games_library) >= 100 && Number(r.body.core_games) > 0, 'build metadata reports V1 and game catalog counts', r.body);
   r = await anon('/api/run/start', { body: { game_id: 'jetpack-dash' } }); ok(r.status === 401, 'guest cannot start a scored run');
