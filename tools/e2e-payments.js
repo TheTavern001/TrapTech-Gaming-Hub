@@ -27,7 +27,9 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const ADM = require('./admin-auth').adminClient(BASE); await ADM.login();
   const mk = async () => { const c = client(); c.u = 'pay_' + Math.random().toString(36).slice(2, 8); await c('/api/auth/signup', { body: { username: c.u, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); return c; };
   const [P1, P2, F] = [await mk(), await mk(), await mk()];
-  let r = await client()('/api/store'); ok(r.body.ok && r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 3 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage) && /does not boost XP/.test(r.body.non_advantage), 'store: packs, pass, 3 prestige items, non-advantage statement, checkout on (BTC_ADDRESS set)', r.body.checkout);
+  let r = await client()('/api/store'); ok(r.body.ok && !r.body.checkout.enabled, 'store checkout defaults off until the owner explicitly enables it', r.body.checkout);
+  r = await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: true } }); ok(r.body.checkout.admin_switch === true, 'owner can explicitly enable checkout');
+  r = await client()('/api/store'); ok(r.body.ok && r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 3 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage) && /does not boost XP/.test(r.body.non_advantage), 'store: packs, pass, 3 prestige items, non-advantage statement, checkout on after owner opt-in', r.body.checkout);
   r = await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: false } }); r = await P1('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 503, 'admin switch off -> checkout refused');
   await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: true } });
   r = await client()('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 401, 'checkout needs an account');
