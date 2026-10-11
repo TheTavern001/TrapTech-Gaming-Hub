@@ -34,3 +34,17 @@ body.glplay{background:radial-gradient(900px 500px at 80% -10%,rgba(124,58,237,.
 .glback:hover{border-color:var(--cyan);color:var(--cyan)}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.card .b{padding:10px}.card .t{font-size:.88rem}.card .m{font-size:.69rem}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* Cinematic library presentation: artwork leads, metadata is clean, touch targets remain readable. */
+.grid>.card{position:relative;isolation:isolate;overflow:hidden;border-color:rgba(142,160,255,.24);background:linear-gradient(150deg,#131d42 0%,#090d20 72%);box-shadow:0 16px 38px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.045)}
+.grid>.card:after{content:"";position:absolute;z-index:1;pointer-events:none;left:0;right:0;top:0;height:68%;background:linear-gradient(180deg,rgba(4,7,20,0) 44%,rgba(4,7,20,.12) 62%,rgba(4,7,20,.88) 100%);opacity:.92}
+.grid>.card img{aspect-ratio:16/10;object-fit:cover;filter:saturate(1.12) contrast(1.06);transform:scale(1.001);transition:transform .35s cubic-bezier(.2,.7,.2,1),filter .35s}
+.grid>.card:hover img{transform:scale(1.055);filter:saturate(1.22) contrast(1.08)}
+.grid>.card .b{position:relative;z-index:2;padding:13px 14px 15px;background:linear-gradient(180deg,rgba(7,10,26,.78),rgba(7,10,26,.98))}
+.grid>.card .t{font-size:1rem;letter-spacing:-.015em;line-height:1.25}
+.grid>.card .m{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px;color:#b4c0e6}
+.grid>.card .pill{font-size:.62rem;letter-spacing:.045em;text-transform:uppercase;border-radius:7px}
+.grid>.card:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}
+@media(max-width:600px){.grid>.card .b{padding:10px 10px 12px}.grid>.card .t{font-size:.88rem}}
+@media(prefers-reduced-motion:reduce){.grid>.card img{transition:none}.grid>.card:hover img{transform:none}}
