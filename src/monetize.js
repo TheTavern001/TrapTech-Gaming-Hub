@@ -190,6 +190,7 @@ if (!process.env.PAY_NO_SWEEP) setInterval(() => { if (ADDR() && openOrders().le
 
 function refund(orderRef, actor, note = '') {
   const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(orderRef); if (!o) return { ok: false, error: 'Unknown order.' }; if (o.refunded_at) return { ok: false, error: 'Already refunded.' };
+  if (o.provider === 'stripe') return { ok: false, error: 'For card orders, issue the refund in Stripe Dashboard first. Hub-side card refund and entitlement reconciliation are not yet automated.' };
   const p = prod(o.product_id); const t = Date.now();
   db.transaction(() => {
     if (o.granted_at) { if (p.kind === 'pack') addCrowns(o.user_id, -(p.crowns + p.bonus), 'refund', o.ref, t);
