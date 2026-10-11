@@ -28,9 +28,10 @@ export async function mountAvatar3D(stage, cfg) {
   const css = 'linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')';
   stage.style.background = css;
   scene.background = null;
-  const camera = new THREE.PerspectiveCamera(32, stage.clientWidth / Math.max(1, stage.clientHeight), 0.1, 50);
-  camera.position.set(0, 1.9, 7.5);
-  camera.lookAt(0, 1.55, 0);
+  const portrait = stage.clientWidth < 150;
+  const camera = new THREE.PerspectiveCamera(portrait ? 30 : 32, stage.clientWidth / Math.max(1, stage.clientHeight), 0.1, 50);
+  camera.position.set(0, portrait ? 2.45 : 1.9, portrait ? 4.8 : 7.5);
+  camera.lookAt(0, portrait ? 2.2 : 1.55, 0);
   scene.add(new THREE.HemisphereLight(0xdce8ff, 0x202034, 2.0));
   const key = new THREE.DirectionalLight(0xfff0d8, 3.1); key.position.set(-3, 6, 5); key.castShadow = true; scene.add(key);
   const rim = new THREE.DirectionalLight(0x7dd3fc, 2.4); rim.position.set(4, 3, -4); scene.add(rim);
