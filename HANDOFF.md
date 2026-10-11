@@ -50,6 +50,7 @@ Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DE
 | Suite | How |
 |---|---|
 | Stripe | `node tools/e2e-stripe.js` (isolated local database and mocked Stripe API/webhooks; no real charges) |
+| Cloudflare R2 | `node tools/e2e-cloudflare-r2.js` (mock S3-compatible endpoint/signing; no real Cloudflare account credentials) |
 | API | `tools/fresh-api.sh tools/e2e-api.js` (fresh isolated DB) and the same for `e2e-anticheat`, `e2e-events`, `e2e-tiebreak`, `e2e-avatars`; payments needs its mock explorer: `BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 tools/fresh-api.sh tools/e2e-payments.js`; `SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js` |
 | Unit | `node tools/e2e-timers.js`, `node tools/e2e-economy.js` |
 | Admin | `cd tools && node e2e-admin.js && node e2e-admin-sec.js && node e2e-admin-tour.js` |
