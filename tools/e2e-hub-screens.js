@@ -30,7 +30,7 @@ const routes = [
       for (const path of routes) {
         const response = await page.goto(BASE + path, { waitUntil: 'domcontentloaded' });
         assert.ok(response && response.status() < 500, viewport.name + ' ' + path + ' should not return a server error');
-        await page.waitForTimeout(120);
+        await page.waitForFunction(() => { const app = document.querySelector('#app'); return !!app && app.innerText.trim().length > 12; }, null, { timeout: 10000 });
         const appText = await page.locator('#app').innerText().catch(() => '');
         assert.ok(appText.trim().length > 12, viewport.name + ' ' + path + ' should render a non-empty app screen');
         const main = page.locator('#main');
