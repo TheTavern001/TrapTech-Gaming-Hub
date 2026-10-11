@@ -62,4 +62,14 @@ assert.match(mediaSource, /R2\.put\('media\//, 'admin media uploads must use R2 
 assert.match(mediaSource, /if \(!R2\.configured\(\)\)/, 'media must retain disk fallback when R2 is not configured');
 assert.match(r2Source, /AWS4-HMAC-SHA256/, 'R2 requests must use authenticated S3-compatible signatures');
 assert.doesNotMatch(r2Source, /console\.log\(.*secret/i, 'R2 secrets must not be logged');
+const savedR2 = Object.fromEntries(['CLOUDFLARE_R2_ACCOUNT_ID','CLOUDFLARE_R2_ACCESS_KEY_ID','CLOUDFLARE_R2_SECRET_ACCESS_KEY','CLOUDFLARE_R2_BUCKET'].map(k => [k, process.env[k]]));
+process.env.CLOUDFLARE_R2_ACCOUNT_ID = 'a'.repeat(32);
+process.env.CLOUDFLARE_R2_ACCESS_KEY_ID = 'TESTACCESSKEY12345678';
+process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY = 'test-secret-key-material-that-is-long-enough';
+process.env.CLOUDFLARE_R2_BUCKET = 'hub-test-media';
+const R2 = require('../src/r2');
+const signed = R2._sign('PUT', 'media/example.png', Buffer.from('image'), 'image/png');
+assert.match(signed.headers.Authorization, /^AWS4-HMAC-SHA256 Credential=TESTACCESSKEY12345678\//, 'R2 uploads must produce a signed authorization header');
+assert.match(signed.url, /\.r2\.cloudflarestorage\.com\/hub-test-media\/media\/example\.png$/, 'R2 uploads must target the configured bucket and object key');
+for (const [k, v] of Object.entries(savedR2)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
 console.log('V1 checklist normalization and wiring checks passed.');
