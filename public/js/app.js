@@ -101,7 +101,7 @@ function topbar(path) {
   return `<header class="topbar">
     <button class="iconbtn menu-btn" data-act="menu" aria-label="Open menu">${icon('menu')}</button>
     <a href="/" aria-label="The Gaming Hub home"><img class="logo" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="150" height="28"></a><a class="hd-tt" href="/about" aria-label="By Trap Tech Solutions"><span>by</span>${TT('mono', 30, 'only-ph')}${TT('horizontal', 30, 'only-wide')}</a>
-    <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/sponsor" class="${path.startsWith('/sponsor') ? 'on' : ''}">${icon('briefcase')}Sponsor</a></nav>
+    <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/sponsor" class="${path.startsWith('/sponsor') ? 'on' : ''}">${icon('briefcase')}Book a Giveaway</a></nav>
     <span class="spacer"></span>
     ${S.me && S.me.streak && S.me.streak.current ? `<a class="streak-chip" href="/quests" aria-label="${S.me.streak.current}-day streak - daily quests">${icon('flame')}<b>${S.me.streak.current}</b></a>` : ''}
     <a class="iconbtn" href="/search" aria-label="Search">${icon('search')}</a>
@@ -110,7 +110,7 @@ function topbar(path) {
     <button class="iconbtn more-btn" data-act="menu" aria-label="More options">${icon('ellipsis-vertical')}</button>
   </header>`;
 }
-const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/store', 'Hub Store'], ['/sponsor', 'Sponsor a Host'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
+const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/store', 'Hub Store'], ['/sponsor', 'Book a Giveaway'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
 // v7: shown on game pages, leaderboards and the footer (the server decides what is official, never this file)
 const OFFICIAL_NOTICE = 'Only giveaways shown in the Official Giveaways section of The Gaming Hub are authorized Gaming Hub competitions. Public game scores do not count as entry into an official giveaway.';
 const officialNotice = (cls = '') => `<div class="card pad official-notice ${cls}" role="note"><b>${icon('shield-check')} OFFICIAL GIVEAWAY NOTICE</b><p class="small muted" style="margin:4px 0 0">${OFFICIAL_NOTICE} <a href="/giveaways">Official Giveaways</a></p></div>`;
@@ -127,7 +127,7 @@ function bottomnav(path) {
   const act = navActive(path);
   return `<nav class="bottomnav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}<span>${l}</span></a>`).join('')}</nav>`;
 }
-const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/sponsor': 'Sponsor a Host',
+const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/sponsor': 'Book a Giveaway',
   '/quests': 'Daily Quests', '/season': 'Season Pass', '/tournaments': 'Tournaments', '/notifications': 'Notifications', '/search': 'Search', '/invite': 'Invite Friends',
   '/about': 'About Trap Tech Solutions', '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/settings': 'Settings' };
 function setTitle(t) { document.title = t ? `${t} | The Gaming Hub by Trap Tech Solutions` : 'The Gaming Hub by Trap Tech Solutions'; }
@@ -172,7 +172,7 @@ function openMenu() {
     <a href="/invite">${icon('gift')}Invite Friends</a>
     <a href="/settings#v7-brand">${icon('store')}Your brand</a>
     <div class="dr-sec">More</div>
-    <a href="/sponsor">${icon('briefcase')}Sponsor a Host</a>
+    <a href="/sponsor">${icon('briefcase')}Book a Giveaway</a>
     ${S.me ? `<a href="/notifications">${icon('bell')}Notifications${S.me.unread ? `<span class="pill-mini">${S.me.unread}</span>` : ''}</a><a href="/settings">${icon('settings')}Settings</a><button class="link" data-act="signout">${icon('log-out')}Sign out</button>`
            : `<a href="/signin">${icon('log-in')}Sign in</a><a href="/signup">${icon('user-plus')}Create account</a><a href="/settings">${icon('settings')}Settings</a>`}
     <a href="/about">${icon('building-2')}About Trap Tech</a>
@@ -455,7 +455,7 @@ route(/^\/(home)?$/, async () => {
       <a class="card pad ach-promo" href="/achievements"><span class="ai">${icon('medal')}</span><div><b>Achievements &amp; Rewards</b><div class="small muted">100+ achievements unlock banners, frames and titles. Cosmetic only, no cash value.</div></div>${icon('chevron-right')}</a>
       <a class="card pad ach-promo" href="/invite"><span class="ai">${icon('gift')}</span><div><b>Invite friends</b><div class="small muted">Share your code - earn exclusive Crew Builder cosmetics when friends play.</div></div>${icon('chevron-right')}</a>
     </div>
-    <div class="section-h"><h2>Sponsor a Host</h2><a href="/sponsor">Learn more</a></div>
+    <div class="section-h"><h2>Book a Giveaway</h2><a href="/sponsor">Learn more</a></div>
     <a class="banner" href="/sponsor" style="display:block;color:var(--text)"><h2>Get Your Brand in the Game</h2><div class="small" style="color:#d9dcff">Pick the features you want and get a free quote. Trap Tech Solutions builds your branded giveaway, from a simple prize drop to a full takeover.</div></a>
     <div class="footer-note">${TT('mono', 64)}Powering the next generation of online gaming</div>`, { cls: 'home-redesign' });
   tickCountdowns(); wireDaily();
@@ -1423,7 +1423,7 @@ route(/^\/responsible-play$/, () => legal('/responsible-play', 'Responsible Play
 route(/^\/about$/, () => shell('/about', `<div class="narrow">
   <div class="about-hero card"><div class="about-tt">${TT('horizontal', 84, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
     <p class="muted">Trap Tech Solutions is the studio behind The Gaming Hub. We design, build and run every part of it: the games, leaderboards, tournaments, giveaways, achievements and the admin tools brands use.</p>
-    <div class="btn-row center-row"><a class="btn" href="/sponsor">${icon('briefcase')} Sponsor a Host</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
+    <div class="btn-row center-row"><a class="btn" href="/sponsor">${icon('briefcase')} Book a Giveaway</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
   <div class="about-grid">${[['gamepad-2', 'Original games', '13 original HTML5 skill games, made to play great on phones, with skill-based scoring and server-side anti-cheat.'], ['gift', 'Brand giveaways', 'Sponsors pick exactly the features they want, from a simple prize drop to a full branded takeover, and get a custom quote.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Free to play, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
   <div class="card pad"><h2 style="margin-bottom:6px">The Gaming Hub by Trap Tech Solutions</h2><p class="small muted">Version 7 • Built by Trap Tech Solutions. Every game, banner and badge is original work. See <a href="/terms">Terms</a>, <a href="/privacy">Privacy</a>, <a href="/rules">Official Rules</a> and <a href="/responsible-play">Responsible play</a>.</p></div>
 </div>`));
@@ -1499,7 +1499,7 @@ addEventListener('pointerdown', unlockAudio, true); addEventListener('touchend',
 if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigator.serviceWorker.register('/sw.js').catch(() => {}); } catch {} });
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
-// v7 pages (Sponsor a Host, brands, shop & seasons) - public/js/v7.js
+// v7 pages (Book a Giveaway, brands, shop & seasons) - public/js/v7.js
 V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS, avatar, bumpAvatar });
 // ---------------- boot ----------------
 (async function boot() {
