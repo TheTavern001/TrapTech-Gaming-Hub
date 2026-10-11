@@ -22,6 +22,7 @@ jobs:
         env:
           ADMIN_PASSWORD: v1-check-password-123
           SECRET: v1-check-secret-for-tests-only
+          ADMIN_PATH: v1-ci-private-admin-path-23974
           DATA_DIR: /tmp/gaming-hub-v1-payments
           BTC_ADDRESS: 32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB
           BTC_EXPLORER_URL: http://127.0.0.1:8796
