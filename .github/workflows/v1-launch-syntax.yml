@@ -63,3 +63,5 @@ jobs:
           node --input-type=module --check < public/js/avatar-editor.js
           node --input-type=module --check < public/js/avatar-3d.js
           node --input-type=module --check < public/js/hub-store.js
+      - name: Build Deplexo Docker image (no push or deployment)
+        run: docker build --tag gaming-hub-pr:${{ github.sha }} .
