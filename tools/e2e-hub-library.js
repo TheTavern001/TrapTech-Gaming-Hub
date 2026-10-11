@@ -29,7 +29,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     assert.ok(integratedCount >= 100, `main Games screen should expose the full 100-entry catalog; got ${integratedCount}`);
     await page.locator('#lib-q').fill('Neon Circuit');
     assert.equal(await page.locator('#lib-grid .catalog-game-card').count(), 1, 'main Hub catalog search should filter to Neon Circuit');
-    assert.match(await page.locator('#lib-grid').innerText(), /Neon Circuit/);
+    assert.match(await page.locator('#lib-grid').innerText(), /Neon Circuit/i);
     await page.locator('#lib-q').fill('');
     await page.locator('#lib-category').selectOption({ index: 1 });
     assert.ok(await page.locator('#lib-grid .catalog-game-card').count() > 0, 'main Hub catalog category filter should render results');
