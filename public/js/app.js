@@ -417,9 +417,17 @@ route(/^\/(home)?$/, async () => {
     ${takeover ? heroTakeover(takeover) : `<div class="hero"><img src="/assets/brand/hero-banner.webp" alt="The Gaming Hub - Play, Compete, Win, Connect" width="1336" height="400"></div>`}
     ${S.me && q && q.ok ? dailyPanel(q) : !S.me ? `<div class="card pad cta-card"><span class="es-ic">${icon('sparkles')}</span><div style="flex:1"><b>Play free. Win real prizes.</b><div class="small muted">Create a free account so your scores count for giveaways, tournaments and daily quests.</div></div><a class="btn sm" href="/signup">Sign up</a></div>` : ''}
     ${featuredGw.length ? `<div class="section-h"><h2>${icon('sparkles')} Featured Giveaways</h2><a href="/giveaways">View All</a></div><div class="feat-gw">${featuredGw.map(featCard).join('')}</div>` : ''}
-    <div class="section-h"><h2>Featured Games</h2><a href="/games">View All</a></div>
-    <div class="hscroll">${featured.map(g => gameCard(g, true)).join('')}</div>
-    <a class="catalog-launch-banner" href="/games"><span class="catalog-launch-icon">✦</span><span class="catalog-launch-copy"><b>Want more games?</b><small>Explore the expanded library, browse categories, and launch catalog titles from the Hub.</small></span><span class="catalog-launch-action">EXPLORE LIBRARY ↗</span></a>
+    ${weeklyGame ? `<section class="weekly-feature" aria-labelledby="weekly-feature-title">
+      <div class="weekly-feature-art" style="background-image:linear-gradient(90deg,rgba(5,7,17,.97) 0%,rgba(5,7,17,.82) 42%,rgba(5,7,17,.08) 100%),url('${esc(weeklyGame.art)}')"></div>
+      <div class="weekly-feature-copy"><div class="weekly-feature-kicker"><span class="home-live-dot"></span> THIS WEEK'S FEATURED GAME</div>
+        <h2 id="weekly-feature-title">${esc(weeklyGame.title)}</h2>
+        <div class="weekly-feature-category">${esc(weeklyGame.category || 'Arcade')}</div>
+        <p>One game in the spotlight every week. Play this week's pick, then explore the full catalog for your next favorite.</p>
+        <div class="weekly-feature-actions"><a class="btn" href="${esc(weeklyGame.url)}">▶ Play This Week's Game</a><a class="btn ghost" href="/games">Browse All Games</a></div>
+      </div>
+      <div class="weekly-feature-index">WEEKLY SPOTLIGHT <span>NEW PICK EVERY MONDAY</span></div>
+    </section>` : `<section class="weekly-feature weekly-feature-empty"><div class="weekly-feature-copy"><div class="weekly-feature-kicker">THE FULL ARCADE</div><h2>Explore the Game Library</h2><p>The featured pick will appear here when the catalog is available.</p><a class="btn" href="/games">Browse All Games</a></div></section>`}
+    <a class="catalog-launch-banner" href="/games"><span class="catalog-launch-icon">✦</span><span class="catalog-launch-copy"><b>Explore the full game catalog</b><small>Search every title, browse categories, and find your next favorite.</small></span><span class="catalog-launch-action">BROWSE GAMES ↗</span></a>
     ${tours.length ? `<div class="section-h"><h2>${icon('swords')} Tournaments</h2><a href="/tournaments">View All</a></div><div class="t-strip">${tours.map(tCard).join('')}</div>` : ''}
     <div class="home-split">
       <div class="card">
