@@ -61,7 +61,8 @@ assert.match(paymentSource, /order\.provider_ref !== obj\.id/, 'Stripe event mus
 assert.match(paymentSource, /Number\(obj\.amount_total\) !== Number\(order\.usd_cents\)/, 'Stripe fulfillment must confirm exact server-priced amount');
 assert.match(paymentSource, /Number\(obj\.amount\) === Number\(order\.usd_cents\)/, 'Stripe refunds must match the original amount');
 assert.match(storeSource, /data-provider-choice/, 'store UI must offer configured payment methods');
-assert.match(appSource, /Weekly live-ops rotation/, 'home featured games must rotate automatically');
+assert.match(serverSource, /home_featured: featured\.has\(g\.id\)/, 'weekly featured games must be selected by the server');
+assert.match(appSource, /g\.home_featured/, 'home must render the server-selected featured games');
 assert.match(appSource, /optional paid premium cosmetic track/, 'home must distinguish free and paid season tracks');
 assert.doesNotMatch(serverSource, /identity_badge|isFounder|HUB_OWNER_USER_ID/, 'public server responses must not publish founder identity markers');
 assert.match(mediaSource, /R2\.put\('media\//, 'admin media uploads must use R2 when configured');
