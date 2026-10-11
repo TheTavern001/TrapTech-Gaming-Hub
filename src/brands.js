@@ -8,7 +8,7 @@
 const crypto = require('crypto');
 const db = require('./db');
 const D = 864e5;
-const COOLDOWN_DAYS = 0; // team changes are immediate; old-team active entries are closed by join()/leave()
+const COOLDOWN_DAYS = 30; // protects brand affiliation from rapid switching; enforced server-side
 
 function cols(t) { return new Set(db.prepare(`PRAGMA table_info(${t})`).all().map(c => c.name)); }
 function addCol(t, c, def) { if (!cols(t).has(c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} ${def}`); }
@@ -66,8 +66,11 @@ const pubBrand = (c, full = false) => c && ({ id: c.id, slug: c.slug, name: c.na
 function status(userId, t = Date.now()) {
   const u = db.prepare('SELECT brand_id, brand_joined_at FROM users WHERE id=?').get(userId) || {};
   const b = brandById(u.brand_id);
-  const canAt = 0;
-  return { brand: b && b.active ? pubBrand(b) : null, joined_at: u.brand_joined_at || null, can_switch: true, can_switch_at: null, cooldown_days: 0 };
+  const canAt = u.brand_joined_at ? Number(u.brand_joined_at) + COOLDOWN_DAYS * D : 0;
+  const canSwitch = !u.brand_joined_at || t >= canAt;
+  return { brand: b && b.active ? pubBrand(b) : null, joined_at: u.brand_joined_at || null,
+    can_switch: canSwitch, can_switch_at: canSwitch ? null : canAt, cooldown_days: COOLDOWN_DAYS,
+    days_until_switch: canSwitch ? 0 : Math.max(1, Math.ceil((canAt - t) / D)) };
 }
 const findBrand = (code) => {
   const s = String(code || '').trim(); if (!s) return null;
@@ -76,8 +79,9 @@ const findBrand = (code) => {
 // join / switch. Leaving entries of the old brand's live giveaways keeps the "own brand only" rule true.
 function join(userId, code, via = 'code', t = Date.now()) {
   const b = findBrand(code); if (!b) return { ok: false, error: 'That brand code or link is not valid.' };
-  const st = status(userId, t); const cur = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId);
+  const st = status(userId, t); const cur = db.prepare('SELECT brand_id, brand_joined_at FROM users WHERE id=?').get(userId);
   if (cur && cur.brand_id === b.id) return { ok: true, already: true, ...status(userId, t) };
+  if (!st.can_switch) return { ok: false, error: `You can change your giveaway team in ${st.days_until_switch} day${st.days_until_switch === 1 ? '' : 's'}.`, ...st };
   
   const left = [];
   db.transaction(() => {
@@ -93,7 +97,7 @@ function leave(userId, t = Date.now()) {
   const cur = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId); if (!cur || !cur.brand_id) return { ok: false, error: 'You are not in a brand.' };
   db.transaction(() => {
     db.prepare(`UPDATE giveaway_entries SET left_at=? WHERE user_id=? AND left_at IS NULL AND giveaway_id IN (SELECT id FROM giveaways WHERE channel_id=? AND open_to_all=0 AND finalized_at IS NULL AND end_at > ?)`).run(t, userId, cur.brand_id, t);
-    db.prepare('UPDATE users SET brand_id=NULL WHERE id=?').run(userId); // team changes are immediate; the timestamp is retained for history
+    db.prepare('UPDATE users SET brand_id=NULL WHERE id=?').run(userId); // retain the last affiliation timestamp so leaving cannot bypass the cooldown
     db.prepare('INSERT INTO brand_moves (user_id, from_brand, to_brand, via, at) VALUES (?,?,?,?,?)').run(userId, cur.brand_id, null, 'left', t);
   })();
   return { ok: true, ...status(userId, t) };
@@ -109,7 +113,7 @@ const RULE_TEXT = (g) => { const a = audience(g); return a.open ? 'Open to every
 
 function routes(app, A, h) {
   const { bad, requireUser, currentUser, limiter, str } = h;
-  app.get('/api/brands', (req, res) => res.json({ ok: true, brands: db.prepare('SELECT * FROM channels WHERE active=1 ORDER BY is_demo, name').all().map(c => pubBrand(c, true)), cooldown_days: 0 }));
+  app.get('/api/brands', (req, res) => res.json({ ok: true, brands: db.prepare('SELECT * FROM channels WHERE active=1 ORDER BY is_demo, name').all().map(c => pubBrand(c, true)), cooldown_days: COOLDOWN_DAYS }));
   app.get('/api/brands/invite/:code', limiter('brand-inv', 120, 600e3), (req, res) => { const b = findBrand(req.params.code); if (!b) return bad(res, 404, 'That invite link is not valid.'); const me = currentUser(req); res.json({ ok: true, brand: pubBrand(b, true), me: me ? status(me.id) : null, cooldown_days: 0 }); });
   app.get('/api/me/brand', requireUser, (req, res) => res.json({ ok: true, ...status(req.user.id) }));
   app.post('/api/me/brand', requireUser, limiter('brand-join', 20, 3600e3), (req, res) => { const r = join(req.user.id, str(req.body.code, 40), req.body.via === 'signup' ? 'signup' : req.body.via === 'link' ? 'invite link' : 'code'); r.ok ? res.json(r) : bad(res, 400, r.error, r); });
