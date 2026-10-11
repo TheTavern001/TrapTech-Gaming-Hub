@@ -54,7 +54,7 @@ jobs:
       PORT: 8787
       SECRET: ci-only-not-production
       ADMIN_PASSWORD: ci-only-not-production
-      ADMIN_PATH: ci-hidden-admin
+      ADMIN_PATH: ci-hidden-admin-test-path-2026
       DATA_DIR: /tmp/hub-data
       BASE: http://127.0.0.1:8787
       PLAY_MS: ${{ inputs.play_ms || '4000' }}
