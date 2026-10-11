@@ -24,8 +24,9 @@ function sponsorPage(url) {
     const COMP = { best: 'Highest single score', total: 'Total of best scores (several games)', random: 'Random draw among qualifying players' };
     const pre = url.searchParams.get('feature'); if (pre && cat.features.some(f => f.id === pre)) B.picked[pre] = B.picked[pre] || 1;
     const F = Object.fromEntries(cat.features.map(f => [f.id, f]));
+    const bookingGames = (C.S.libraryGames && C.S.libraryGames.length ? C.S.libraryGames : C.S.games).filter(g => g.playable);
     const persist = () => { const { licensed, step, ...rest } = B; C.ls.setItem(SP_KEY, JSON.stringify(rest)); };
-    const readForm = () => { document.querySelectorAll('[data-b]').forEach(i => { B[i.dataset.b] = i.value.trim(); }); if (document.getElementById('sb-games')) B.games = [...document.querySelectorAll('#sb-games input:checked')].map(i => i.value); const lc = document.getElementById('licensed'); if (lc) B.licensed = lc.checked; persist(); };
+    const readForm = () => { document.querySelectorAll('[data-b]').forEach(i => { B[i.dataset.b] = i.value.trim(); }); if (document.getElementById('sb-games')) { const visible = new Set([...document.querySelectorAll('#sb-games input')].map(i => i.value)); B.games = [...new Set([...B.games.filter(id => !visible.has(id)), ...[...document.querySelectorAll('#sb-games input:checked')].map(i => i.value)])]; } const lc = document.getElementById('licensed'); if (lc) B.licensed = lc.checked; persist(); };
     const pickedList = () => cat.features.filter(f => B.picked[f.id] || f.required || f.included).map(f => ({ id: f.id, qty: f.unit === 'flat' ? 1 : (B.picked[f.id] || f.dflt || 1) }));
     const featRow = (f) => {
       const on = !!(B.picked[f.id] || f.required || f.included); const q = B.picked[f.id] || f.dflt || 1;
@@ -44,7 +45,7 @@ function sponsorPage(url) {
         <div id="lic-wrap">${B.business_type === cat.cannabis ? `<label class="check lic"><input type="checkbox" id="licensed" ${B.licensed ? 'checked' : ''}> <span>I confirm my business is licensed and legally permitted to operate and advertise in my jurisdiction <b class="req">(required)</b></span></label>` : ''}</div>
         <div class="field"><label class="lbl" for="sb-brand">Brand / channel name</label><input class="input" id="sb-brand" data-b="brand" value="${esc(B.brand)}" placeholder="Brand running this giveaway" maxlength="120"></div>
         <div class="field"><label class="lbl" for="sb-prize">Prize</label><input class="input" id="sb-prize" data-b="prize" value="${esc(B.prize)}" maxlength="200" placeholder="What the winner receives"></div>
-        <div class="field"><div class="lbl">Choose game(s)</div><div class="chip-row" id="sb-games">${(C.S.libraryGames && C.S.libraryGames.length ? C.S.libraryGames : C.S.games).filter(g => g.playable).map(g => `<label class="chip"><input type="checkbox" value="${esc(g.id)}" ${B.games.includes(g.id) ? 'checked' : ''}> ${esc(g.title)}</label>`).join('')}</div><p class="tiny muted">Only games approved for official events will be available when Trap Tech configures the final competition.</p></div>
+        <div class="field"><label class="lbl" for="sb-game-search">Choose game(s) from the full Hub catalog</label><input class="input" id="sb-game-search" type="search" placeholder="Search games by title or category…" autocomplete="off" aria-label="Search giveaway games"><div class="chip-row" id="sb-games"></div><p class="tiny muted" id="sb-game-count"></p><p class="tiny muted">Only games approved for official events will be available when Trap Tech configures the final competition.</p></div>
         <div class="field"><label class="lbl" for="sb-comp">How should the winner be determined?</label><select class="input" id="sb-comp" data-b="competition">${Object.entries(COMP).map(([k, l]) => `<option value="${k}" ${B.competition === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
         <div class="grid2"><div class="field"><label class="lbl small" for="sb-s">Preferred start</label><input class="input" id="sb-s" type="date" data-b="start_date" value="${esc(B.start_date)}"></div><div class="field"><label class="lbl small" for="sb-e">Preferred end</label><input class="input" id="sb-e" type="date" data-b="end_date" value="${esc(B.end_date)}"></div></div>
         <div class="grid2"><div class="field"><label class="lbl small" for="sb-len">Length (days)</label><input class="input" id="sb-len" type="number" min="1" max="90" data-b="length_days" value="${esc(B.length_days)}"></div><div class="field"><label class="lbl small" for="sb-col">Brand accent color</label><input class="input" id="sb-col" type="color" data-b="brand_color" value="${esc(B.brand_color)}"></div></div>
@@ -71,6 +72,22 @@ function sponsorPage(url) {
         <div class="card tt-build" style="margin-top:14px"><div class="ttb-head">${C.TT('horizontal', 50)}<span class="pill">${icon('code-xml')} Built in-house</span></div><p class="muted" style="margin:8px 0">Every sponsorship is set up by Trap Tech Solutions: giveaway, brand theme, branded games, verifiable winner draws, official rules with "no purchase necessary".</p><a class="btn sm ghost" href="/about">${icon('building-2')} About Trap Tech</a></div>` : ''}
         <p class="small dim center">Giveaway bookings must comply with all laws that apply to their business, products and advertising. See the <a href="/terms">Terms</a> and <a href="/rules">Official Rules</a>.</p></div>`, { title: 'Book a Giveaway' });
       const root = document.getElementById('main');
+      const gameSearch = document.getElementById('sb-game-search');
+      const renderGameChoices = () => {
+        const host = document.getElementById('sb-games'), count = document.getElementById('sb-game-count');
+        if (!host || !count) return;
+        const q = (gameSearch && gameSearch.value || '').trim().toLowerCase();
+        const matched = bookingGames.filter(g => !q || (g.title + ' ' + (g.category || '')).toLowerCase().includes(q));
+        const shown = matched.slice(0, q ? 40 : 12);
+        host.innerHTML = shown.map(g => `<label class="chip"><input type="checkbox" value="${esc(g.id)}" ${B.games.includes(g.id) ? 'checked' : ''}> ${esc(g.title)}</label>`).join('') || '<span class="tiny muted">No matching games. Try another search.</span>';
+        count.textContent = `${B.games.length} selected · showing ${shown.length} of ${bookingGames.length} games${matched.length > shown.length ? ' · refine your search to see more' : ''}`;
+        host.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.onchange = () => {
+          const visible = new Set([...host.querySelectorAll('input[type="checkbox"]')].map(i => i.value));
+          B.games = [...new Set([...B.games.filter(id => !visible.has(id)), ...[...host.querySelectorAll('input[type="checkbox"]:checked')].map(i => i.value)])];
+          persist(); renderGameChoices();
+        });
+      };
+      if (gameSearch) { gameSearch.oninput = renderGameChoices; renderGameChoices(); }
       root.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { readForm(); if (cb.checked) B.picked[cb.dataset.pick] = F[cb.dataset.pick].dflt || 1; else delete B.picked[cb.dataset.pick]; persist(); const y = scrollY; draw(); scrollTo(0, y); });
       root.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { readForm(); const f = F[b.dataset.q]; B.picked[f.id] = Math.max(f.min, Math.min(f.max, (B.picked[f.id] || f.dflt || 1) + +b.dataset.d)); persist(); const y = scrollY; draw(); scrollTo(0, y); });
       const bt = document.getElementById('bt'); if (bt) bt.onchange = () => { readForm(); B.licensed = false; draw(); };
