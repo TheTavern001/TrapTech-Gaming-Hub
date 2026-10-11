@@ -47,6 +47,14 @@ module.exports = function v5(app, A, h) {
     }
     res.json(out);
   });
+  app.post('/api/giveaways/:id/checklist', requireUser, limiter('gjoin', 60, 60e3), (req, res) => {
+    const g = pubG(req.params.id); if (!g) return bad(res, 404, 'Giveaway not found');
+    const b = req.body || {};
+    if (typeof b.checked !== 'boolean' || typeof b.step_id !== 'string' || b.step_id.length > 24) return bad(res, 400, 'Invalid checklist update.');
+    const r = E.setChecklist(req.user, g, b.step_id, b.checked);
+    if (!r.ok) return bad(res, 400, r.error);
+    res.json(r);
+  });
   app.post('/api/giveaways/:id/join', requireUser, limiter('gjoin', 30, 60e3), (req, res) => {
     const g = pubG(req.params.id); if (!g) return bad(res, 404, 'Giveaway not found');
     const r = E.join(req.user, g); if (!r.ok) return bad(res, 400, r.error, { status: r.status });
