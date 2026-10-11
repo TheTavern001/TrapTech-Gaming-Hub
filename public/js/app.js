@@ -487,16 +487,16 @@ function gameCard(g, tall = false) {
 route(/^\/games$/, () => {
   const library = S.libraryGames.filter(g => g && g.title && g.url);
   const categories = [...new Set(library.map(g => g.category).filter(Boolean))].sort();
-  shell('/games', \`
+  shell('/games', `
     <section class="unified-games-head">
       <div class="home-eyebrow">THE FULL ARCADE</div>
-      <h1>Game Library <span class="pill green" style="vertical-align:middle" id="lib-count">\${library.length} games</span></h1>
+      <h1>Game Library <span class="pill green" style="vertical-align:middle" id="lib-count">${library.length} games</span></h1>
       <p class="small muted">One library. Every game. Browse the full collection, find your next favorite, and play.</p>
     </section>
     <div class="catalog-hub-controls"><input class="input" id="lib-q" placeholder="Search all games…" autocomplete="off" aria-label="Search all games"><select class="input" id="lib-category" aria-label="Filter games by category"><option value="">All categories</option></select></div>
     <div class="catalog-hub-count small muted" id="lib-result-count" aria-live="polite">Loading games…</div>
     <div class="grid2 games-grid catalog-hub-grid unified-game-grid" id="lib-grid"></div>
-    <p class="small dim center" style="margin-top:18px">Official competitions are listed separately. A game being in the library does not automatically make it eligible for a giveaway.</p>\`);
+    <p class="small dim center" style="margin-top:18px">Official competitions are listed separately. A game being in the library does not automatically make it eligible for a giveaway.</p>`);
   const libQ = document.getElementById('lib-q');
   const libCategory = document.getElementById('lib-category');
   const libGrid = document.getElementById('lib-grid');
