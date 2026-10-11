@@ -1,6 +1,13 @@
 name: Full Games Library Audit
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'public/games-lib/**'
+      - 'src/games-lib*.js'
+      - 'src/server.js'
+      - 'tools/e2e-games-lib.js'
+      - '.github/workflows/games-lib-full-audit.yml'
 jobs:
   catalog:
     runs-on: ubuntu-latest
