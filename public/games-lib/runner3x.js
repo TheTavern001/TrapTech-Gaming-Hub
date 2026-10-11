@@ -39,6 +39,30 @@ export function outfit(root, o) { let big = null; root.traverse(m => { if (m.isS
         else if (t < (sleeve > 1.0 ? 0.845 : 0.815) && ax < sleeve) { col = mix(cTop, cTop2, step(0.70, t) * step(ax, 0.2) + step(t, 0.53)) * sh; skin = false; if (ax > 0.62) col *= 0.82; }
         diffuseColor.rgb = col;`); };
     m.material = mat; }); if (o.hair) root.traverse(m => { if (m.isMesh && /Hair|Brow/i.test(m.material.name)) { m.material = m.material.clone(); m.material.color.set(o.hair); } }); return root; }
+export function pbrify(obj, tint) {
+  const tc = new THREE.Color(tint || '#ffffff');
+  obj.traverse(o => {
+    if (!o.isMesh) return;
+    const convert = (src) => {
+      const m = new THREE.MeshStandardMaterial({
+        map: src.map || null, normalMap: src.normalMap || null, roughnessMap: src.roughnessMap || null,
+        metalnessMap: src.metalnessMap || null, aoMap: src.aoMap || null, emissiveMap: src.emissiveMap || null,
+        color: (src.color ? src.color.clone() : new THREE.Color(1,1,1)).multiply(tc),
+        emissive: src.emissive && src.emissive.getHex() ? src.emissive.clone() : new THREE.Color(0),
+        roughness: Number.isFinite(src.roughness) ? src.roughness : 0.72,
+        metalness: Number.isFinite(src.metalness) ? src.metalness : 0.04,
+        alphaMap: src.alphaMap || null, transparent: !!src.transparent,
+        alphaTest: src.alphaTest || (src.alphaMap || src.transparent ? 0.45 : 0),
+        side: src.side, vertexColors: !!src.vertexColors, envMapIntensity: 1.05
+      });
+      m.name = src.name || 'Hub PBR surface';
+      return m;
+    };
+    o.material = Array.isArray(o.material) ? o.material.map(convert) : convert(o.material);
+    o.castShadow = true; o.receiveShadow = true;
+  });
+  return obj;
+}
 export function toonify(obj, tint) { const tc = new THREE.Color(tint || '#ffffff'); obj.traverse(o => { if (!o.isMesh) return; const src = o.material; const key = src.uuid + '|' + tc.getHexString(); if (!MC.has(key)) MC.set(key, toonMat({ map: src.map || null, color: (src.color ? src.color.clone() : new THREE.Color(1, 1, 1)).multiply(tc), vertexColors: !!src.vertexColors, alphaTest: src.alphaTest || (src.alphaMap || src.transparent ? 0.5 : 0), side: src.side, emissive: src.emissive && src.emissive.getHex() ? src.emissive.clone() : new THREE.Color(0), emissiveMap: src.emissiveMap || null })); o.material = MC.get(key); o.material.name = src.name; }); return obj; }
 const BM = new Map();
 export function bake(group, shadows) { group.updateMatrixWorld(true); const by = new Map(); group.traverse(o => { if (!o.isMesh) return; let g = o.geometry.clone(); if (g.index) g = g.toNonIndexed();
@@ -57,11 +81,11 @@ function signTex(text, bg, fg) { return canvasTex(512, 128, (x, w, h) => { const
 
 export function stage(o) {
   const cv = document.createElement('canvas'); cv.id = 'gl3d'; document.body.insertBefore(cv, document.body.firstChild);
-  const r = new THREE.WebGLRenderer({ canvas: cv, antialias: (devicePixelRatio || 1) < 2, powerPreference: 'high-performance' }); r.setPixelRatio(Math.min(1.5, devicePixelRatio || 1));
-  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1; r.outputColorSpace = THREE.SRGBColorSpace;
-  const scene = new THREE.Scene(); const pm = new THREE.PMREMGenerator(r); const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
+  const mobile = matchMedia('(max-width: 700px)').matches; const r = new THREE.WebGLRenderer({ canvas: cv, antialias: !mobile && (devicePixelRatio || 1) < 2, powerPreference: 'high-performance' }); r.setPixelRatio(Math.min(mobile ? 1.5 : 2, devicePixelRatio || 1));
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.14; r.outputColorSpace = THREE.SRGBColorSpace;
+  const scene = new THREE.Scene(); const pm = new THREE.PMREMGenerator(r); const env = pm.fromScene(new RoomEnvironment(), 0.04).texture; scene.environment = env;
   const hemi = new THREE.HemisphereLight('#fff', '#888', 1.6); scene.add(hemi);
-  const sun = new THREE.DirectionalLight('#fff', 2.6); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); const sc = sun.shadow.camera; sc.left = -12; sc.right = 12; sc.top = 16; sc.bottom = -10; sc.near = 1; sc.far = 70; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.04; scene.add(sun, sun.target);
+  const sun = new THREE.DirectionalLight('#fff', 2.6); sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 1536 : 2048, mobile ? 1536 : 2048); const sc = sun.shadow.camera; sc.left = -12; sc.right = 12; sc.top = 16; sc.bottom = -10; sc.near = 1; sc.far = 70; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.04; scene.add(sun, sun.target);
   const cam = new THREE.PerspectiveCamera(58, 1, 0.1, 130); window.__R = r; window.__TRI = () => { const o = {}; scene.traverse(m => { if (m.isMesh && m.visible) { let n = m.name || m.parent?.name || m.geometry.type; const t = (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3 * (m.isInstancedMesh ? m.count : 1); const k = (m.material && m.material.name || m.geometry.type) + (m.isInstancedMesh ? '-inst' : ''); o[k] = (o[k] || 0) + Math.round(t); } }); return o; };
   function sync() { const k = document.getElementById('gl'); if (!k) return; if (cv.style.cssText !== k.style.cssText) { cv.style.cssText = k.style.cssText; cv.style.pointerEvents = 'none'; } const w = parseInt(k.style.width), h = parseInt(k.style.height); if (w && (cam.aspect !== w / h || r.domElement.width !== Math.floor(w * r.getPixelRatio()))) { r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); } }
   function skyTex(top, bot) { return canvasTex(2, 256, (x) => { const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, top); g.addColorStop(0.7, bot); g.addColorStop(1, bot); x.fillStyle = g; x.fillRect(0, 0, 2, 256); }); }
@@ -88,7 +112,7 @@ export default async function RailRunner(cfg) {
   const stoneMat = (rx, ry, tint) => toonMat({ map: phT('ph-castle_wall_slates-diff.webp', rx, ry, true), normalMap: phT('ph-castle_wall_slates-nor_gl.webp', rx, ry), color: new THREE.Color(tint || '#d8d2b8') });
   const JST = JG ? stoneMat(1, 1) : null, JWALL = JG ? stoneMat(ROW / 4, 0.4, '#b9c4a0') : null, JPATH = JG ? toonMat({ map: phT('ph-mossy_cobblestone-diff.webp', 2.5, ROW / 4, true), normalMap: phT('ph-mossy_cobblestone-nor_gl.webp', 2.5, ROW / 4), color: new THREE.Color('#e8e2c8') }) : null;
   const K = window.Kit; const S = stage(cfg); const { scene, cam, sun, hemi } = S; let M = null; await loadModels(MODELS).then(m => (M = m));
-  const place = (n, s, tint) => { const o = toonify(M[n].scene.clone(), tint); o.scale.setScalar(s); return center(o); };
+  const place = (n, s, tint) => { const o = pbrify(M[n].scene.clone(), tint); o.scale.setScalar(s); return center(o); };
   // ---- shared props built in code (bevelled, readable) ----
   const MAT = { post: toonMat({ color: '#e8e8f0' }), stripeR: toonMat({ map: stripes('#ff4d4d', '#ffffff') }), stripeY: toonMat({ map: stripes('#ffd23f', '#2b2b3a') }), wood: toonMat({ map: planks('#d9984f') }), steel: new THREE.MeshStandardMaterial({ color: '#c9d2dc', metalness: 0.9, roughness: 0.3, envMap: S.env }), wire: new THREE.MeshBasicMaterial({ color: '#2a2230' }), steelT: toonMat({ color: '#d6dde6' }), rampSide: toonMat({ color: '#c9d2dc' }) };
   function lowBarrier() { const g = new THREE.Group(); for (const s of [-1, 1]) { const p = new THREE.Mesh(new RoundedBoxGeometry(0.16, 1.05, 0.16, 3, 0.05), MAT.post); p.position.set(s * 0.92, 0.52, 0); g.add(p); } for (const y of [0.55, 0.9]) { const b = new THREE.Mesh(new RoundedBoxGeometry(2.1, 0.3, 0.12, 3, 0.05), MAT.stripeR); b.position.set(0, y, 0.06); g.add(b); } g.traverse(o => o.isMesh && (o.castShadow = true)); return g; }
