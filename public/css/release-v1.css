@@ -305,3 +305,13 @@ table.lb .rk{font-weight:900;color:var(--release-gold)}
 .br-form{display:grid;gap:10px;margin-top:12px}
 .br-mine{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid var(--release-line);border-radius:14px;background:rgba(255,255,255,.025)}
 .br-mine>div{flex:1;min-width:140px}
+
+
+/* Brand affiliation: make the 30-day rule visible and the distinction from giveaway booking explicit. */
+#v7-brand .br-cooldown{display:grid;gap:8px;margin-top:12px;padding:14px;border:1px solid rgba(255,190,92,.34);border-radius:14px;background:linear-gradient(130deg,rgba(120,76,22,.18),rgba(12,16,35,.86))}
+#v7-brand .br-cooldown>b{display:flex;align-items:center;gap:7px;color:#ffe0a0;font-size:.9rem}
+#v7-brand .br-cooldown-track{height:6px;overflow:hidden;border-radius:99px;background:#ffffff14}
+#v7-brand .br-cooldown-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#8b5cf6,#22d3ee,#f6c66b);box-shadow:0 0 12px #22d3ee55}
+#v7-brand a:not(.btn){color:#8beaff;text-decoration:underline;text-underline-offset:3px}
+#v7-brand .br-mine .pill{white-space:nowrap}
+@media(max-width:480px){#v7-brand .br-mine{align-items:flex-start}#v7-brand .br-mine .pill{margin-left:52px}}
