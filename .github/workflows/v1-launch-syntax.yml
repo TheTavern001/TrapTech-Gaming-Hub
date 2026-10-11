@@ -25,6 +25,7 @@ jobs:
           node --check src/db.js
           node --check src/eligibility.js
           node --check src/v5.js
+          node --check src/avatars.js
           node --check src/admin-giveaways.js
           node --check src/admin-ui/admin-builder.js
       - name: Check browser ES modules
