@@ -2,9 +2,9 @@
 
 > Registry reconciliation for branch `games-lib-integrity-audit`. `src/games-lib.js` is the registry source of truth. This report does not imply browser or mobile tests have passed.
 
-- Source registry entries: **100**
-- Public catalog entries: **100**
-- New original games on this branch: Neon Circuit and Rift Survival.
+- Source registry entries: **150**
+- Public catalog entries: **150**
+- New original games on this branch: Neon Circuit, Rift Survival, plus 50 themed Arcade Pack titles using nine mechanic families.
 - Neon Circuit and Rift Survival use L3 score-event validation with game-specific event-value rules; other library entries remain at L2 until individually reviewed.
 - All games still require fresh browser tests, real mobile performance checks, visual review, scoring-integrity validation, and asset-license review before being described as verified.
 
@@ -140,3 +140,58 @@ BASE=http://localhost:8795 node tools/e2e-games-lib.js dino-dash,rail-rush,lane-
 ```
 
 The audit script is structural only. It does not replace E2E testing, device profiling, visual review, or legal asset review.
+
+## Arcade Pack additions
+
+These 50 original titles bring the unified catalog to 150 entries. They use nine shared gameplay mechanics with per-title themes; this is not a claim that every title has passed gameplay or competition-integrity review.
+
+101. **Pulse Painter** — Reflex & Skill; targets hit + streak bonus.
+102. **Orbit Slinger** — Arcade Shooters; targets hit + accuracy bonus.
+103. **Prism Pairs** — Puzzle & Brain; round clears + flawless sequence bonus.
+104. **Tempo Tapper** — Reflex & Skill; timing hits weighted by precision.
+105. **Comet Catcher** — Specialty; items caught + streak bonus.
+106. **Ripple Rider** — Endless Runners; hazards passed + pickups collected.
+107. **Stacksmith** — Physics & Destruction; stack height + perfect placements.
+108. **Vault Vortex** — Survival & Horde; motes collected + survival seconds.
+109. **Goal Glider** — Sports; timing hits weighted by precision.
+110. **Crystal Cascade** — Puzzle & Brain; targets shattered + rally combo.
+111. **Laser Lattice** — Arcade Shooters; hazards passed + pickups collected.
+112. **Pixel Pursuit** — Specialty; targets hit + streak bonus.
+113. **Nova Marksman** — Arcade Shooters; targets hit + accuracy bonus.
+114. **Echo Sequence** — Puzzle & Brain; round clears + flawless sequence bonus.
+115. **Metronome Mayhem** — Sports; timing hits weighted by precision.
+116. **Skyline Scoop** — Endless Runners; items caught + streak bonus.
+117. **Frostline Dash** — Endless Runners; hazards passed + pickups collected.
+118. **Column Climber** — Physics & Destruction; stack height + perfect placements.
+119. **Shard Survivor** — Survival & Horde; motes collected + survival seconds.
+120. **Rally Breaker** — Sports; targets shattered + rally combo.
+121. **Target Twister** — Reflex & Skill; targets hit + accuracy bonus.
+122. **Sugar Sprint** — Specialty; targets hit + streak bonus.
+123. **Cipher Cascade** — Puzzle & Brain; round clears + flawless sequence bonus.
+124. **Pulse Perfect** — Reflex & Skill; timing hits weighted by precision.
+125. **Lantern Leap** — Endless Runners; items caught + streak bonus.
+126. **Monsoon Matrix** — Survival & Horde; hazards passed + pickups collected.
+127. **Tower Tumbler** — Physics & Destruction; stack height + perfect placements.
+128. **Rift Drifter** — Survival & Horde; motes collected + survival seconds.
+129. **Goalkeeper Zero** — Sports; motes collected + survival seconds.
+130. **Brick Orbit** — Arcade Shooters; targets shattered + rally combo.
+131. **Signal Sniper** — Arcade Shooters; targets hit + accuracy bonus.
+132. **Bubble Burst Lab** — Puzzle & Brain; targets hit + streak bonus.
+133. **Glyph Garden** — Puzzle & Brain; round clears + flawless sequence bonus.
+134. **Clockwork Clutch** — Driving; timing hits weighted by precision.
+135. **Drift Catcher** — Driving; items caught + streak bonus.
+136. **Ember Evasion** — Survival & Horde; hazards passed + pickups collected.
+137. **Crane Crafter** — Physics & Destruction; stack height + perfect placements.
+138. **Mote Marauder** — Survival & Horde; motes collected + survival seconds.
+139. **Hoop Horizon** — Sports; timing hits weighted by precision.
+140. **Paddle Pulse** — Sports; targets shattered + rally combo.
+141. **Circuit Catcher** — Driving; items caught + streak bonus.
+142. **Meteor Mosaic** — Arcade Shooters; hazards passed + pickups collected.
+143. **Rune Ricochet** — Puzzle & Brain; targets hit + accuracy bonus.
+144. **Spectrum Sprint** — Reflex & Skill; targets hit + streak bonus.
+145. **Memory Meteor** — Puzzle & Brain; round clears + flawless sequence bonus.
+146. **Beat Foundry** — Specialty; timing hits weighted by precision.
+147. **Cloud Courier** — Endless Runners; items caught + streak bonus.
+148. **Tidal Thread** — Endless Runners; hazards passed + pickups collected.
+149. **Monolith Maker** — Physics & Destruction; stack height + perfect placements.
+150. **Ghostlight Gauntlet** — Survival & Horde; motes collected + survival seconds.
