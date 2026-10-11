@@ -84,6 +84,19 @@ function check(user, g, t = now()) {
     checks.push({ id: 'slots', ok, label: `Max ${r.elig_max_active} live entries at once`, have: act.length, need: r.elig_max_active, entries: act,
       hint: ok ? `${act.length} of ${r.elig_max_active} entry slots used` : `You're in ${act.length} live giveaways (max ${r.elig_max_active}). Leave one to join this one.` });
   }
+  // V7 checklist steps are stored per giveaway and player; a checked box is an attestation, not third-party proof.
+  try {
+    const cfg = g.cfg ? JSON.parse(g.cfg) : null;
+    const steps = cfg && cfg.v === 7 && cfg.entry && Array.isArray(cfg.entry.checklist) ? cfg.entry.checklist : [];
+    const done = new Set(db.prepare('SELECT step_id FROM giveaway_checklist_done WHERE giveaway_id=? AND user_id=?').all(g.id, u.id).map(x => x.step_id));
+    for (const step of steps) {
+      if (!step || !step.id || !step.label) continue;
+      const checked = done.has(step.id);
+      checks.push({ id: 'checklist:' + step.id, checklist: true, checklist_step_id: step.id, ok: step.required === false || checked,
+        checked, required: step.required !== false, label: step.label, url: step.url || '',
+        hint: checked ? 'Confirmed complete' : step.required === false ? 'Optional step' : 'Complete this step, then confirm below' });
+    }
+  } catch (err) { /* malformed legacy configuration should not break giveaway pages */ }
   for (const fn of module.exports.extra) { try { checks.push(...fn(u, g, t)); } catch (e) { /* v7 builder checks never break the page */ } }
   const potatoOk = /^[A-Za-z0-9_]{3,32}$/.test(u.potato || '');
   checks.push({ id: 'potato', ok: potatoOk, label: 'Potato username on file', hint: potatoOk ? `Winner contact: @${u.potato} on Potato` : 'Add your Potato username so we can contact you if you win', potato: u.potato || '' });
@@ -103,6 +116,17 @@ function join(user, g) {
   db.prepare('INSERT INTO giveaway_entries (giveaway_id, user_id, joined_at, left_at) VALUES (?,?,?,NULL) ON CONFLICT(giveaway_id, user_id) DO UPDATE SET joined_at=excluded.joined_at, left_at=NULL').run(g.id, user.id, now());
   return { ok: true, status: check(user, g) };
 }
+function setChecklist(user, g, stepId, checked) {
+  let cfg = {};
+  try { cfg = JSON.parse(g.cfg || '{}'); } catch {}
+  const steps = cfg && cfg.v === 7 && cfg.entry && Array.isArray(cfg.entry.checklist) ? cfg.entry.checklist : [];
+  const step = steps.find(x => x && x.id === stepId && x.label);
+  if (!step) return { ok: false, error: 'Checklist step not found.' };
+  if (boardsStatus(g) === 'past' || g.finalized_at || g.state === 'cancelled') return { ok: false, error: 'This giveaway is closed.' };
+  if (checked) db.prepare('INSERT INTO giveaway_checklist_done (giveaway_id,user_id,step_id,checked_at) VALUES (?,?,?,?) ON CONFLICT(giveaway_id,user_id,step_id) DO UPDATE SET checked_at=excluded.checked_at').run(g.id, user.id, step.id, now());
+  else db.prepare('DELETE FROM giveaway_checklist_done WHERE giveaway_id=? AND user_id=? AND step_id=?').run(g.id, user.id, step.id);
+  return { ok: true, status: check(user, g) };
+}
 function leave(user, g) {
   if (g.finalized_at || g.end_at < now()) return { ok: false, error: 'Entries are locked after the giveaway ends.' };
   const r = db.prepare('UPDATE giveaway_entries SET left_at=? WHERE giveaway_id=? AND user_id=? AND left_at IS NULL').run(now(), g.id, user.id);
@@ -119,4 +143,4 @@ function lockViolation(g, userId, t = now()) {
   if (g.elig_brand_month && g.channel_id) { const w = lastWin(userId, t - 30 * D, g.channel_id); if (w) return `One win per brand per 30 days: already won this brand on ${fmtDate(w)}`; }
   return null;
 }
-module.exports = { extra: [], DEFAULTS, FIELDS, WEIGHT, read, rulesOf, describe, check, join, leave, activeEntries, weightOf, lockViolation, lastWin };
+module.exports = { extra: [], DEFAULTS, FIELDS, WEIGHT, read, rulesOf, describe, check, join, leave, setChecklist, activeEntries, weightOf, lockViolation, lastWin };
