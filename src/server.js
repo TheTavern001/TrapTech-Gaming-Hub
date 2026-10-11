@@ -52,7 +52,7 @@ app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mod
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
 app.get('/healthz', (req, res) => { try { db.prepare('SELECT 1').get(); res.json({ ok: true, product: 'The Gaming Hub', version: HUB_VERSION }); } catch (e) { res.status(500).json({ ok: false, version: HUB_VERSION }); } });
-app.get('/api/build', (req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ ok: true, product: 'The Gaming Hub by Trap Tech Solutions', version: HUB_VERSION, games_library: libraryGames().length, core_games: cfg.GAMES.length, scoring: 'shared signed-run API', deployment_commit: process.env.DEPLOY_COMMIT || null }); });
+app.get('/api/build', (req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ ok: true, product: 'The Gaming Hub by Trap Tech Solutions', version: HUB_VERSION, games_library: libraryGames().length, core_games: cfg.GAMES.length, scoring: 'shared signed-run API' }); });
 
 // ---------- helpers ----------
 const now = () => Date.now();
