@@ -20,6 +20,8 @@ jobs:
           SECRET: v1-check-secret-for-tests-only
           DATA_DIR: /tmp/gaming-hub-v1-checklist-test
         run: node tools/v1-checklist-test.js
+      - name: Test cosmetic-only economy invariants
+        run: node tools/e2e-cosmetic-economy.js
       - name: Check server-side JavaScript
         run: |
           node --check src/db.js
