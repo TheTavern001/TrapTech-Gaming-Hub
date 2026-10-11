@@ -31,7 +31,7 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - [ ] End-to-end test edited/deleted steps, signed-out users, replayed requests, duplicate entries, mobile layout, and event end-time boundaries. Checklist normalization and syntax checks pass; full entry-flow coverage is still outstanding.
 
 ## P0 — Avatar system
-- The editor now has a real-time Three.js/WebGL preview built from procedural 3D geometry, with drag rotation, lighting, idle motion, and an SVG fallback. This is a functional 3D renderer, but the model is not AAA-quality and does not yet use a licensed/owned GLB/glTF character asset.
+- The editor now has a real-time Three.js/WebGL preview built from the same procedural base geometry for all players, with male/female/other presentation, selectable body builds, face/skin/hair/outfit/headwear/accessory/held-item customization, themed 3D backdrops, drag rotation, lighting, idle motion, and an SVG fallback. This is a functional 3D renderer, but the model is not AAA-quality and does not yet use a licensed/owned GLB/glTF character asset.
 - [x] Replace the 2D-only editor preview with a real 3D renderer and static SVG fallback. The Three.js module is loaded lazily from a pinned CDN, so the editor needs network access for 3D mode.
 - [x] Reflect existing face, skin, hair, outfit, accessory, hat, and held-item choices in the 3D preview; provide lighting/materials, idle motion, camera rotation, and a responsive editor.
 - [x] Add selectable average/slim/athletic/stocky/curvy/tall/short build proportions to the procedural model.
