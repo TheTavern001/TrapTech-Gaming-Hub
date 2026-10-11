@@ -144,7 +144,8 @@ function footer() {
       <a class="sf-brand" href="/about" aria-label="About Trap Tech Solutions">${TT('horizontal', 54)}<span>Built by Trap Tech Solutions</span></a>
       <nav class="sf-links" aria-label="Footer">${FOOT_LINKS.map(([h, l]) => `<a href="${h}">${l}</a>`).join('')}</nav>
       <p class="sf-note official-notice"><b>OFFICIAL GIVEAWAY NOTICE:</b> ${OFFICIAL_NOTICE}</p>
-      <p class="sf-note">21+ only. No purchase necessary to enter or win. Points, XP and cosmetics have no cash value. © ${new Date().getFullYear()} Trap Tech Solutions. The Gaming Hub is powered by Trap Tech.</p>
+      <p class="sf-note sf-scam-note"><b>OFFICIAL ACCOUNT / ANTI-SCAM:</b> The official Trap Tech Solutions account is <a href="https://tatokdym.org/TrapTechSolutions" target="_blank" rel="noopener noreferrer">@TrapTechSolutions</a>. Official channel: <a href="https://tatokdym.org/TrapTech_Solutions" target="_blank" rel="noopener noreferrer">TRAP TECH SOLUTIONS</a>. These are the only official Trap Tech account and channel links. Ignore lookalikes. Staff will never ask for your password, login code, wallet recovery phrase, or payment to verify your account.</p>
+      <p class="sf-note">21+ only. No purchase necessary to play or enter eligible giveaways. Points, XP and cosmetics have no cash value. © ${new Date().getFullYear()} Trap Tech Solutions. The Gaming Hub is powered by Trap Tech.</p>
     </div></footer>`;
 }
 function bottomnav(path) {
