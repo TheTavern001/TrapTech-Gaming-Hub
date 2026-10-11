@@ -37,7 +37,7 @@
 <section class="lib-hero" aria-labelledby="lib-title">
 <div class="lib-kicker">Trap Tech Solutions · Browser Game Arcade</div>
 <h1 id="lib-title">The Games Library</h1>
-<p>Find your next game, chase a high score, and compete through the Hub. Original titles and existing library games are listed together; only verified score submissions should count toward official competitions.</p>
+<p>Browse one unified collection of games, find your next favorite, and play on mobile or desktop. Only verified score submissions should count toward official competitions.</p>
 <div class="lib-actions"><a class="lib-btn primary" href="#all-games">Browse all games ↓</a><a class="lib-btn" href="/leaderboard">View leaderboards</a><a class="lib-btn" href="/giveaways">Official events</a></div>
 <div class="lib-stats"><span class="lib-stat"><b id="total">—</b> listed games</span><span class="lib-stat"><b id="giveaway-total">—</b> giveaway-enabled in catalog</span><span class="lib-stat">Free to play · 21+</span></div>
 </section>
@@ -71,7 +71,7 @@
   document.getElementById('giveaway-total').textContent = games.filter(g => g.giveaway).length;
   const cat = document.getElementById('category');
   for (const c of cats) { const o = document.createElement('option'); o.value = c; o.textContent = c; cat.appendChild(o); }
-  const card = g => '<a class="card" href="'+esc(g.url)+'"><img loading="lazy" src="'+esc(g.art || '')+'" alt="" onerror="this.style.display=\'none\'"><div class="b"><div class="t">'+esc(g.title)+'</div><div class="m">'+(g.giveaway ? '<span class="pill g">Event flag · unverified</span>' : '<span class="pill f">Casual catalog</span>')+'<span class="pill">'+esc(g.tier || '—')+'</span><div>'+esc(g.category || '')+' · '+esc(g.competition || 'browser game')+'</div></div></div></a>';
+  const card = g => '<a class="card" href="'+esc(g.url)+'"><img loading="lazy" src="'+esc(g.art || '')+'" alt="" onerror="this.style.display=\'none\'"><div class="b"><div class="t">'+esc(g.title)+'</div><div class="m">'+(g.giveaway ? '<span class="pill g">Event flag · unverified</span>' : '<span class="pill f">Casual catalog</span>')+'<div>'+esc(g.category || 'Arcade')+'</div></div></div></a>';
   function render() {
     const q = document.getElementById('q').value.trim().toLowerCase();
     const selectedCat = cat.value, eligibility = document.getElementById('eligibility').value;
