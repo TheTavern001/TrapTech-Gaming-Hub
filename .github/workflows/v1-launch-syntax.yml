@@ -16,6 +16,8 @@ jobs:
         run: npm ci
       - name: Test Stripe checkout and signed webhook integration (local mock; no real charges)
         run: npm run test:stripe
+      - name: Test Cloudflare R2 signing and storage (mock endpoint; no real account)
+        run: npm run test:r2
       - name: Test checklist normalization
         env:
           ADMIN_PASSWORD: v1-check-password-123
@@ -32,6 +34,7 @@ jobs:
         run: |
           bash -n tools/run-all.sh
           node --check tools/e2e-stripe.js
+          node --check tools/e2e-cloudflare-r2.js
           node --check src/db.js
           node --check src/server.js
           node --check src/monetize.js
