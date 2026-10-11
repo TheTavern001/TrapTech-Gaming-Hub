@@ -58,6 +58,17 @@ export async function mountAvatar3D(stage, cfg) {
   function ball(x,y,z,sx,sy,sz,color,target=root,roughness=0.48,metalness=0.02) {
     return mesh(new THREE.SphereGeometry(1, 32, 24), mat(color,roughness,metalness), x,y,z,sx,sy,sz,target);
   }
+  // Theme-specific 3D set dressing keeps backgrounds distinct without external art dependencies.
+  const backdrop = new THREE.Group(); scene.add(backdrop);
+  const neon = (x,y,z,r,color) => { const ring=mesh(new THREE.TorusGeometry(r,0.035,8,48),mat(color,0.25,0.55),x,y,z,1,1,1,backdrop); ring.rotation.y=0.12; return ring; };
+  if (cfg.bg === 'night-club') { neon(0,2.05,-1.55,1.25,'#f472b6'); neon(0,2.05,-1.48,1.48,'#22d3ee'); neon(-1.05,1.0,-1.35,0.42,'#a78bfa'); neon(1.05,1.0,-1.35,0.42,'#facc15'); }
+  if (cfg.bg === 'hospital') { mesh(new THREE.BoxGeometry(0.22,0.92,0.06),mat('#f8fafc',0.25,0),-1.08,2.0,-1.25,1,1,1,backdrop); mesh(new THREE.BoxGeometry(0.72,0.22,0.06),mat('#f8fafc',0.25,0),-1.08,2.0,-1.25,1,1,1,backdrop); }
+  if (cfg.bg === 'workshop') { neon(-1.15,1.55,-1.2,0.48,'#f59e0b'); neon(1.12,2.4,-1.4,0.32,'#fb923c'); for(let i=0;i<5;i++) ball(-1.1+i*0.12,0.55+(i%2)*0.12,-1.1,0.025,0.10,0.025,'#fbbf24',backdrop); }
+  if (cfg.bg === 'farm' || cfg.bg === 'grow-room') { for(let i=0;i<4;i++){ const x=-1.35+i*0.9; mesh(new THREE.CylinderGeometry(0.025,0.035,0.70,8),mat('#15803d'),x,0.55,-1.2,1,1,1,backdrop); ball(x-0.12,0.72,-1.2,0.15,0.06,0.035,cfg.bg==='farm'?'#a3e635':'#4ade80',backdrop); ball(x+0.12,0.84,-1.2,0.15,0.06,0.035,cfg.bg==='farm'?'#84cc16':'#22c55e',backdrop); } }
+  if (cfg.bg === 'studio') { neon(-1.15,2.1,-1.4,0.42,'#a78bfa'); neon(1.15,2.1,-1.4,0.62,'#c4b5fd'); }
+  if (cfg.bg === 'city-lights') { for(let i=0;i<18;i++){ const x=-1.7+(i%6)*0.68; const y=0.55+Math.floor(i/6)*0.72; ball(x,y,-1.4,0.035,0.035,0.035,i%3===0?'#facc15':i%3===1?'#38bdf8':'#f472b6',backdrop,0.25,0.4); } }
+  if (cfg.bg === 'cash-rain') { for(let i=0;i<8;i++){ const bill=mesh(new THREE.BoxGeometry(0.15,0.075,0.025),mat('#16a34a',0.6,0),-1.45+(i%4)*0.9,0.65+Math.floor(i/4)*1.15,-1.1,1,1,1,backdrop); bill.rotation.z=(i%2?0.3:-0.3); } }
+  if (cfg.bg === 'gold-rays') { neon(0,2.0,-1.55,1.48,'#facc15'); neon(0,2.0,-1.5,1.18,'#fef3c7'); }
   const floor = mesh(new THREE.CircleGeometry(2.3, 64), mat('#111827',0.8,0), 0,0.02,0,1,1,1,scene);
   floor.rotation.x = -Math.PI / 2;
   ball(-0.24,0.66,0,0.20,0.68,0.22,shirt); ball(0.24,0.66,0,0.20,0.68,0.22,shirt);
