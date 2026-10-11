@@ -163,10 +163,10 @@ async function joinPage(m) {
       <div class="br-stats"><span>${icon('users')} ${C.fmt(b.members)} member${b.members === 1 ? '' : 's'}</span><span>${icon('gift')} ${b.live} live giveaway${b.live === 1 ? '' : 's'}</span></div>
       ${mine ? `<div class="pill green">${icon('check')} You're in ${esc(b.name)}</div><a class="btn block" href="/giveaways" style="margin-top:12px">See giveaways</a>`
       : !C.S.me ? `<a class="btn block" href="/signup?brand=${encodeURIComponent(code)}">${icon('user-plus')} Create account &amp; join</a><a class="btn block ghost" href="/signin?next=${encodeURIComponent('/join/' + code)}" style="margin-top:8px">I have an account</a>`
-      : me.brand && !me.can_switch ? `<div class="err">You're in ${esc(me.brand.name)}. You can switch brands from ${day(me.can_switch_at)} (once every ${r.cooldown_days} days).</div>`
+      : me.brand && !me.can_switch ? `<div class="err">You're in ${esc(me.brand.name)}. You can switch teams whenever you need.</div>`
       : `<button class="btn block" id="br-go">${icon('user-check')} ${me.brand ? `Switch from ${esc(me.brand.name)} to ${esc(b.name)}` : `Join ${esc(b.name)}`}</button>${me.brand ? `<p class="tiny muted">Switching leaves your entries in ${esc(me.brand.name)}-only giveaways that are still live.</p>` : ''}`}
     </div>
-    <div class="card pad"><h3>${icon('info')} How brands work</h3><ul class="br-how"><li>You belong to <b>one brand</b> at a time.</li><li>Brand giveaways are for that brand's members. Some are <b>open to everyone</b>.</li><li>You can switch brands once every <b>${r.cooldown_days} days</b>.</li><li>Joining is free. Nothing to buy, ever.</li></ul></div></div>`, { title: `Join ${b.name}` });
+    <div class="card pad"><h3>${icon('info')} How brands work</h3><ul class="br-how"><li>You select one giveaway team at a time.</li><li>Brand giveaways are for that brand's members. Some are <b>open to everyone</b>.</li><li>You can switch teams whenever you need. Switching ends active entries in the previous team's members-only giveaways.</li><li>Joining is free. Nothing to buy, ever.</li></ul></div></div>`, { title: `Join ${b.name}` });
   const g = document.getElementById('br-go'); if (g) g.onclick = async () => { g.disabled = true; const x = await C.api('/api/me/brand', { method: 'POST', body: { code, via: 'link' } }); if (!x.ok) { g.disabled = false; return C.toast(x.error); } C.toast(`You're in ${b.name}`); if (x.left_giveaways && x.left_giveaways.length) C.toast(`Left: ${x.left_giveaways.join(', ')}`, 4000); joinPage(m); };
 }
 // signup: brand picker (prefilled from /join/<code> or ?brand=)
@@ -187,8 +187,8 @@ export async function afterSignup() {
   const x = await C.api('/api/me/brand', { method: 'POST', body: { code: viaLink ? code.value : sel.value, via: viaLink ? 'link' : 'signup' } });
   if (x.ok) { C.ls.removeItem(BR_KEY); C.toast(`You're in ${x.brand.name}`); }
 }
-// Settings: "Your brand" card
-export function brandCard() { setTimeout(mountBrand, 0); return `<div class="card pad" id="v7-brand"><h2 style="margin-bottom:6px">${C.icon('store')} Your brand</h2><div class="small muted">Loading…</div></div>`; }
+// Settings: "Your giveaway team" card
+export function brandCard() { setTimeout(mountBrand, 0); return `<div class="card pad" id="v7-brand"><h2 style="margin-bottom:6px">${C.icon('store')} Your giveaway team</h2><div class="small muted">Loading…</div></div>`; }
 async function mountBrand() {
   const el = document.getElementById('v7-brand'); if (!el || !C.S.me) return;
   const [st, all] = await Promise.all([C.api('/api/me/brand'), C.api('/api/brands')]); if (!st.ok) return;
@@ -200,7 +200,7 @@ async function mountBrand() {
     ${st.can_switch ? `<form id="br-f" class="br-form"><div class="field ic">${icon('link')}<input class="input" id="br-code" placeholder="Paste a Hub brand invite code" maxlength="40" autocapitalize="characters" aria-label="Hub brand invite code"></div><select class="input" id="br-pick" aria-label="Choose an existing Hub brand"><option value="">Or choose a listed Hub brand…</option>${(all.brands || []).filter(b => !st.brand || b.id !== st.brand.id).map(b => `<option value="${esc(b.slug)}">${esc(b.name)} (${C.fmt(b.members)} members)</option>`).join('')}</select><button class="btn sm">${st.brand ? 'Switch Hub brand' : 'Join Hub brand'}</button></form><p class="tiny muted" style="margin:8px 0 0"><b>Switch teams any time. Leaving a team ends your active entries in its members-only giveaways; your public game scores remain separate.</p>` : `<p class="tiny muted" style="margin:8px 0 0">You can select or change your team whenever you need to.</p>`}`;
   if (location.hash === '#v7-brand') el.scrollIntoView({ block: 'start' });
   const f = document.getElementById('br-f'); if (f) f.onsubmit = async (e) => { e.preventDefault(); const code = document.getElementById('br-code').value.trim() || document.getElementById('br-pick').value; if (!code) return C.toast('Enter a code or pick a brand'); if (st.brand && !confirm(`Switch to this team? Your active entries in the current team's members-only giveaways will end.`)) return; const x = await C.api('/api/me/brand', { method: 'POST', body: { code } }); C.toast(x.ok ? `You're in ${x.brand.name}` : x.error); if (x.ok) mountBrand(); };
-  const lv = document.getElementById('br-leave'); if (lv) lv.onclick = async () => { if (!confirm('Leave your brand? Your entries in its members-only giveaways end, and the switch timer keeps counting from when you joined.')) return; const x = await C.api('/api/me/brand/leave', { method: 'POST', body: {} }); C.toast(x.ok ? 'You left the brand' : x.error); mountBrand(); };
+  const lv = document.getElementById('br-leave'); if (lv) lv.onclick = async () => { if (!confirm('Leave your brand? Your entries in its members-only giveaways end, and you can choose another team whenever you need.')) return; const x = await C.api('/api/me/brand/leave', { method: 'POST', body: {} }); C.toast(x.ok ? 'You left the brand' : x.error); mountBrand(); };
 }
 // giveaway pages: the brand/audience pill
 export function audiencePill(g) {
