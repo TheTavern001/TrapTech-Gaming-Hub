@@ -18,7 +18,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     await page.locator('.weekly-feature h2').waitFor({ timeout: 15000 });
     const weeklyTitle = (await page.locator('.weekly-feature h2').innerText()).trim();
     assert.ok(weeklyTitle.length > 0, 'homepage should feature a weekly catalog game');
-    const weeklyHref = await page.locator('.weekly-feature a.btn').getAttribute('href');
+    const weeklyHref = await page.getByRole('link', { name: /Play This Week's Game/ }).getAttribute('href');
     assert.match(weeklyHref || '', /^\/games-lib\//, 'weekly feature should launch a catalog game directly');
     await page.goto(BASE + '/games', { waitUntil: 'networkidle' });
     await page.locator('#lib-q').waitFor({ timeout: 15000 });
