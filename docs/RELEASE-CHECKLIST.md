@@ -61,11 +61,11 @@ This checklist deliberately covers the main Hub application as well as the Games
 
 ## Release gates
 
-- [x] Static CI passed on earlier branch revisions; each new commit must pass its own checks.
-- [x] Latest verified static-check and browser-smoke workflows are green on commit `303570b` (2026-10-10).
-- [ ] Full API E2E suite, official-event end-to-end path, and forged/replayed score rejection are green for the release candidate.
-- [ ] Mobile smoke test completed.
+- [x] Static checks passed on candidate `4e05e90cc8bcec4912d1cd300d518f82733e0b0a`.
+- [ ] Browser suite must finish green on the exact final candidate SHA; main Hub navigation, major-screen smoke tests, and the two original games passed on the current run, while the 50-game desktop/iPhone run was still in progress at the last check.
+- [ ] Full API E2E suite, official-event end-to-end path for a library game, and forged/replayed score rejection are green for the release candidate.
 - [ ] Booking/event permission regression completed.
+- [ ] Fresh desktop/mobile visual review completed.
 - [ ] Deployment URL is reachable and all intended new games can be launched from the Hub.
 - [ ] No merge or production deployment until the release gates above are reviewed.
 
@@ -74,26 +74,23 @@ This checklist deliberately covers the main Hub application as well as the Games
 This branch is based on `v7-wip` and preserves its Hub application files. The current edits add to the Hub navigation/library experience; they do not replace the rest of the Hub. Static checks cannot substitute for the browser, mobile, booking-permission, or anti-cheat checks above.
 
 
-## Verified CI update — 2026-10-10
+## Current candidate validation status — 2026-10-11
 
-- Static workflow: passed on `303570b`: JavaScript syntax, inline library-page JavaScript, registry/catalog/docs consistency, and local asset checks.
-- Browser workflow: passed on `303570b`: main Hub and Games Library navigation at a mobile viewport; Neon Circuit and Rift Survival smoke tests at desktop and iPhone-sized viewports; performance-risk diagnostic completed as a non-blocking step.
-- These workflows run against an isolated CI database and local test server. They do not verify Deplexo's deployed commit, persistent production storage, all catalog games, payment processing, or the complete official giveaway flow.
+- Candidate branch: `release/consolidated-v1`; PR #2 targets `v7-wip` to preserve the existing Hub work.
+- Latest static-check workflow passed on `4e05e90cc8bcec4912d1cd300d518f82733e0b0a`.
+- Browser run `38102971508` passed main Hub/library navigation, major-screen mobile/desktop smoke tests, and Neon Circuit/Rift Survival. The 50-game Arcade Pack desktop/iPhone gameplay run was still in progress at the last check; no result is claimed until it completes.
+- Registry and catalog contain 150 entries. That count is not a claim that all 150 have passed runtime, scoring, anti-cheat, mobile, or licensing review.
+- These checks run against an isolated CI database and local server. They do not verify Deplexo's deployed commit, production persistence, or the live admin/player flows.
 
+## Consolidated release boundary
 
-## Consolidated release candidate update — 2026-10-11
+The release must retain the existing Hub application, use one unified catalog with a weekly featured title, and preserve the official-event boundary. Sharing a public game link or playing the weekly featured game must never create an official giveaway, booking, entrant list, or winner selection.
 
-This repository's current `main` contains the Hub v7 work, the Games Library integrity-audit integration, and the responsive homepage redesign. It is the candidate to prepare for a single final Deplexo deployment. The older statement above that the current edits are still an unmerged branch is historical context and is superseded by this update.
+- [ ] Finish browser and gameplay validation for the candidate.
+- [ ] Run the full API E2E suite and verify library-game event references, including invalid, expired, mismatched, forged, and replayed submissions.
+- [ ] Review event permissions, booking status transitions, vendor/operator roles, publishing, and winner selection.
+- [ ] Complete desktop/mobile visual review and asset/licensing review.
+- [ ] Verify Deplexo's deployment branch, config, health, auth, persistent storage, backups, and rollback plan.
+- [ ] Merge the approved candidate into `v7-wip`, deploy the exact resulting SHA once, and verify the live deployed SHA before asking the user to review.
 
-- [x] Main Hub retained; the library is integrated rather than replacing the app.
-- [x] Homepage redesign committed on `main` (`c98dc18935232b8c71e6cc0fce1a6512d22608b9`).
-- [x] Catalog and registry reconcile at 100 entries; long-term catalog target remains 150+.
-- [x] New library integration limits the new-game giveaway-picker additions to Neon Circuit and Rift Survival.
-- [ ] Confirm blocking CI workflows finish green on the exact finalization commit.
-- [ ] Full official-event flow for a library game, including invalid/expired/mismatched event references and replay/forged-score rejection.
-- [ ] Browser regression for booking status, operator/vendor permissions, giveaway publishing, winner selection, and the rest of the core Hub.
-- [ ] Fresh phone and desktop review of the live homepage and navigation.
-- [ ] Real-device performance, art quality, and licensing reviews for the games that remain unverified.
-- [ ] Back up production data, deploy the latest `main` SHA once, and verify health, persistence, player flows, event controls, and admin access on the live URL.
-
-**Do not interpret “100 catalog entries” as “100 verified giveaway-ready games.”** The user-facing requirement is one consolidated release; the responsible release gate still requires documenting unresolved verification items rather than hiding them. The vendor control boundary is official Hub-managed events and score records: public casual game links can be shared, but a link alone must never authorize a Hub giveaway, paid booking, official entrant list, or winner selection.
+**Do not merge or deploy while any blocking gate remains open.**
