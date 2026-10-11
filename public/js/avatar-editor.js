@@ -12,6 +12,8 @@ const FREE_FALLBACK = { bg:'violet',face:'round',hair:'waves',hairc:'c0',outfit:
 async function editor() {
   const { icon, esc, api, S } = C; if (!S.me) return C.go('/signin?next=/avatar', true);
   const r = await api('/api/avatar'); if (!r.ok) return C.shell('/settings', C.emptyState('user', 'Avatar studio unavailable', 'Please sign in again and retry.'));
+  const profileResponse = await api('/api/profile/' + encodeURIComponent(S.me.username));
+  const profile = profileResponse.ok ? profileResponse.profile : null;
   const cfg = { ...r.avatar }; let tab = 'hair'; let crowns = r.crowns; let activePreset = '';
   const partOwned = (kind,id) => r.parts.some(p=>p.kind===kind&&p.id===id&&p.owned);
   const applyPreset = (preset) => { const next={...cfg}; for(const [k,id] of Object.entries(preset.cfg)) if(partOwned(k,id)) next[k]=id; Object.assign(cfg,next); activePreset=preset.id; };
@@ -22,7 +24,17 @@ async function editor() {
       <div class="avatar-card-top"><span class="avatar-rarity">${rarity.toUpperCase()} PLAYER CARD</span><span class="avatar-live-dot">● ONLINE PROFILE</span></div>
       <div class="avatar-card-art"><div class="avatar-orbit orbit-one"></div><div class="avatar-orbit orbit-two"></div><img id="av-prev" src="${prev(cfg)}" alt="Live avatar preview"><span class="avatar-card-id">${esc(S.me.user_id || 'TH-PLAYER')}</span></div>
       <div class="avatar-card-info"><div><span class="avatar-card-kicker">THE GAMING HUB</span><h2>${esc(S.me.username || 'Player')}</h2><p>${S.me.founder ? '<span class="avatar-founder">♛ FOUNDER</span>' : '<span class="avatar-member">✦ PLAYER</span>'} <span class="avatar-equipped">${esc(cfg.outfit || 'custom')} loadout</span></p></div><div class="avatar-mini-emblem">${S.me.founder ? '♛' : '✦'}</div></div>
-      <div class="avatar-card-footer"><span>COLLECT • CUSTOMIZE • COMPETE</span><span>PROFILE COSMETICS</span></div>
+      <div class="avatar-card-progress">
+        <div class="avatar-level-line"><span>LEVEL ${profile ? profile.level.level : 1}</span><span>${profile ? C.fmt(profile.level.into) + ' / ' + C.fmt(profile.level.need) + ' XP' : 'PLAYER PROGRESSION'}</span></div>
+        <div class="avatar-xp-track"><i style="width:${profile ? Math.max(0,Math.min(100,Math.round(profile.level.into/profile.level.need*100))) : 0}%"></i></div>
+      </div>
+      <div class="avatar-card-stats">
+        <div><b>${profile ? C.fmt(profile.total_score) : '—'}</b><span>TOTAL SCORE</span></div>
+        <div><b>${profile ? C.fmt(profile.games_played) : '—'}</b><span>GAMES PLAYED</span></div>
+        <div><b>${profile ? C.fmt(profile.giveaways_won) : '—'}</b><span>GIVEAWAYS WON</span></div>
+        <div><b>${profile ? profile.achievements.length + '/' + profile.achievements_total : '—'}</b><span>ACHIEVEMENTS</span></div>
+      </div>
+      <div class="avatar-card-footer"><span>COLLECT • CUSTOMIZE • COMPETE</span><span>${profile && profile.global_rank ? 'GLOBAL RANK #' + profile.global_rank : 'PROFILE COSMETICS'}</span></div>
     </div>`;
   };
   const draw = (msg = '') => {
