@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const cfg = require('./config');
+const R2 = require('./r2');
 const DIR = path.join(path.dirname(cfg.DB_PATH), 'media');
 try { fs.mkdirSync(DIR, { recursive: true }); } catch {}
 const SIZES = { card: [800, 450], thumb: [400, 225], tall: [600, 620], square: [512, 512], banner: [1200, 300], badge: [256, 256], og: [1200, 630] };
@@ -54,18 +55,23 @@ async function save(buf, crops, kind = 'giveaway') {
     await serial(async () => {
       for (const [k, crop] of want) {
         const name = `${safeKind}-${hash}-${k}.png`; const f = path.join(DIR, name);
-        if (!fs.existsSync(f)) fs.writeFileSync(f, await renderCrop(buf, info, crop, SIZES[k]));
-        urls[k] = '/media/' + name;
+        const png = await renderCrop(buf, info, crop, SIZES[k]);
+        if (R2.configured()) { await R2.put('media/' + name, png, 'image/png'); urls[k] = R2.publicUrl('media/' + name) || '/media/' + name; }
+        else { if (!fs.existsSync(f)) fs.writeFileSync(f, png); urls[k] = '/media/' + name; }
       }
     });
   } catch (e) { console.error('[media] render failed', e.message); return { ok: false, error: 'Could not read that image. Try a different JPEG or PNG.' }; }
   return { ok: true, urls, w: info.w, h: info.h, type: info.type };
 }
 function serve(app) {
-  app.get('/media/:name', (req, res) => {
+  app.get('/media/:name', async (req, res) => {
     const n = String(req.params.name); if (!/^[a-z0-9-]{1,40}-[a-f0-9]{16}-[a-z]+\.png$/.test(n)) return res.status(404).end();
-    const f = path.join(DIR, n); if (!fs.existsSync(f)) return res.status(404).end();
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); res.setHeader('X-Content-Type-Options', 'nosniff'); res.type('png'); fs.createReadStream(f).pipe(res);
+    const f = path.join(DIR, n);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); res.setHeader('X-Content-Type-Options', 'nosniff');
+    if (fs.existsSync(f)) { res.type('png'); return fs.createReadStream(f).pipe(res); }
+    if (!R2.configured()) return res.status(404).end();
+    try { const object = await R2.get('media/' + n); if (!object) return res.status(404).end(); res.type(object.contentType); return res.end(object.body); }
+    catch { return res.status(502).end(); }
   });
 }
 const exists = (url) => { const m = /^\/media\/([a-z0-9-]+\.png)$/.exec(String(url || '')); return !!m && fs.existsSync(path.join(DIR, m[1])); };
