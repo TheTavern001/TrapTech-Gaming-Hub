@@ -61,6 +61,13 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 CREATE INDEX IF NOT EXISTS idx_runs_game_time ON runs(game_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_runs_user ON runs(user_id, created_at);
+CREATE TABLE IF NOT EXISTS giveaway_checklist_done (
+  giveaway_id INTEGER NOT NULL REFERENCES giveaways(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  step_id TEXT NOT NULL,
+  checked_at INTEGER NOT NULL,
+  PRIMARY KEY (giveaway_id, user_id, step_id)
+);
 CREATE TABLE IF NOT EXISTS giveaways (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
