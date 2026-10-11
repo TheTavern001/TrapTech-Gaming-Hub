@@ -285,18 +285,19 @@ function routes(app, A, H) {
     res.json({ received: true });
   });
   app.get('/api/store', (req, res) => { const me = currentUser(req); const st = checkoutState();
-    res.json({ ok: true, currency: { name: 'Hub Crowns', short: 'Crowns' }, checkout: { enabled: st.enabled, reason: st.reason, methods: st.enabled ? ['bitcoin'] : [] },
+    res.json({ ok: true, currency: { name: 'Hub Crowns', short: 'Crowns' }, checkout: { enabled: st.enabled, reason: st.reason, methods: st.methods || [] },
       packs: products().filter(p => p.kind === 'pack').map(p => ({ id: p.id, name: p.name, usd_cents: p.usd_cents, crowns: p.crowns, bonus: p.bonus })),
       pass: (() => { const p = prod('season-pass'); return p && p.active ? { id: p.id, name: p.name, usd_cents: p.usd_cents, ...p.data } : null; })(),
       prestige: prestigeWall().filter(p => p.active).map(p => ({ ...p, owners: undefined, owners_count: p.owners.length })),
       crowns: me ? crowns(me.id) : null, non_advantage: NON_ADVANTAGE, terms: TERMS }); });
   app.get('/api/store/prestige', (req, res) => res.json({ ok: true, items: prestigeWall() }));
   app.get('/api/users/:u/prestige', (req, res) => { const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(req.params.u); res.json({ ok: true, items: u ? prestigeOf(u.id) : [] }); });
-  app.post('/api/store/orders', requireUser, limiter('store-order', 20, 3600e3), async (req, res) => { const r = await createOrder(req.user, String((req.body || {}).product_id || '')); if (!r.ok) return bad(res, r.status, r.error); r.order.qr_svg = require('./events').qrSvg(r.order.uri); res.json(r); });
+  app.post('/api/store/orders', requireUser, limiter('store-order', 20, 3600e3), async (req, res) => { const b = req.body || {}; const st = checkoutState(); const provider = String(b.provider || (st.providers.bitcoin.configured ? 'bitcoin' : 'stripe')); const r = provider === 'stripe' ? await createStripeOrder(req.user, String(b.product_id || '')) : provider === 'bitcoin' ? await createOrder(req.user, String(b.product_id || '')) : { status: 400, error: 'Unsupported payment method.' }; if (!r.ok) return bad(res, r.status, r.error); if (r.order.uri) r.order.qr_svg = require('./events').qrSvg(r.order.uri); res.json(r); });
   app.get('/api/store/orders', requireUser, (req, res) => res.json({ ok: true, orders: db.prepare('SELECT * FROM store_orders WHERE user_id=? ORDER BY id DESC LIMIT 50').all(req.user.id).map(pubOrder) }));
   const mine = (req) => db.prepare('SELECT * FROM store_orders WHERE ref=? AND user_id=?').get(String(req.params.ref), req.user.id);
   app.get('/api/store/orders/:ref', requireUser, (req, res) => { const o = mine(req); if (!o) return bad(res, 404, 'Order not found.'); const po = pubOrder(o); if (po.uri) po.qr_svg = require('./events').qrSvg(po.uri); res.json({ ok: true, order: po }); });
   app.post('/api/store/orders/:ref/check', requireUser, limiter('store-check', 30, 600e3), async (req, res) => { const o = mine(req); if (!o) return bad(res, 404, 'Order not found.');
+    if (o.provider === 'stripe') return res.json({ ok: true, order: pubOrder(o), crowns: crowns(req.user.id) });
     const txid = String((req.body || {}).txid || '').trim().toLowerCase(); if (txid) { if (!/^[0-9a-f]{64}$/.test(txid)) return bad(res, 400, 'That does not look like a transaction id.'); db.prepare('UPDATE store_orders SET txid_hint=? WHERE id=?').run(txid, o.id); }
     try { await check([o]); } catch (e) { return bad(res, 503, 'Could not reach the blockchain explorer, try again shortly.'); }
     res.json({ ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)), crowns: crowns(req.user.id) }); });
