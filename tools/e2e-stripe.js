@@ -31,18 +31,22 @@ const ok = (condition, message, extra) => {
 
 let checkoutCounter = 0;
 let lastCheckoutForm = null;
+let nextStripeSessionOverride = null;
 global.fetch = async (url, options = {}) => {
   if (String(url) === 'https://api.stripe.com/v1/checkout/sessions') {
     lastCheckoutForm = new URLSearchParams(options.body);
     checkoutCounter++;
     const id = 'cs_test_e2e_' + checkoutCounter;
+    const override = nextStripeSessionOverride || {};
+    nextStripeSessionOverride = null;
     return {
       ok: true, status: 200,
       json: async () => ({
         id,
         url: 'https://checkout.stripe.com/c/pay/' + id,
         expires_at: Number(lastCheckoutForm.get('expires_at')),
-        livemode: false
+        livemode: false,
+        ...override
       })
     };
   }
@@ -116,6 +120,18 @@ async function sendEvent(base, event, sigOverride) {
     ok(!M.checkoutState().providers.stripe.configured, 'PUBLIC_URL with a path is rejected; checkout return URLs must use the exact origin');
     process.env.PUBLIC_URL = 'https://hub.example.test';
 
+    // A successful HTTP response from the API is not sufficient if its session URL or mode is unexpected.
+    nextStripeSessionOverride = { url: 'https://checkout-lookalike.example.test/pay' };
+    const invalidUrl = await M.createStripeOrder({ id: userId }, product.id);
+    const failedUrlRow = db.prepare("SELECT status, checkout_url FROM store_orders WHERE provider='stripe' ORDER BY id DESC LIMIT 1").get();
+    ok(invalidUrl.status === 503 && failedUrlRow.status === 'failed' && !failedUrlRow.checkout_url,
+      'unexpected external checkout host fails closed and leaves an unfulfillable failed order');
+    nextStripeSessionOverride = { livemode: true };
+    const invalidMode = await M.createStripeOrder({ id: userId }, product.id);
+    const failedModeRow = db.prepare("SELECT status, checkout_url FROM store_orders WHERE provider='stripe' ORDER BY id DESC LIMIT 1").get();
+    ok(invalidMode.status === 503 && failedModeRow.status === 'failed' && !failedModeRow.checkout_url,
+      'test-key request rejects a live-mode Checkout Session response');
+
     server = await new Promise((resolve, reject) => {
       const s = app.listen(0, '127.0.0.1', () => resolve(s));
       s.once('error', reject);
@@ -126,7 +142,7 @@ async function sendEvent(base, event, sigOverride) {
     ok(created.ok === true && created.order.provider === 'stripe' && created.order.checkout_url.startsWith('https://checkout.stripe.com/'),
       'Stripe checkout creates a hosted session and stores its verified HTTPS URL', created);
     const order = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(created.order.ref);
-    ok(!!order && order.provider_ref === 'cs_test_e2e_1', 'Stripe session id is linked to its server-created order');
+    ok(!!order && /^cs_test_e2e_\\d+$/.test(order.provider_ref), 'Stripe session id is linked to its server-created order');
     ok(lastCheckoutForm.get('client_reference_id') === order.ref &&
       lastCheckoutForm.get('metadata[order_ref]') === order.ref &&
       lastCheckoutForm.get('metadata[user_id]') === String(userId),
