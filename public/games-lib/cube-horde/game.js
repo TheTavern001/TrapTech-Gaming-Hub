@@ -1,4 +1,4 @@
-// Cube Horde - original blocky zombie-wave arena (Hub build, shared arena.js rules) // @uses arena.js
+// Zombie Cubes Classic Hub Version - independently built voxel zombie-wave arena (Hub build) // @uses arena.js
 // Voxel 3D presentation (three.js, code-built models): instanced voxel shamblers with walk cycles, voxel debris bursts, soft shadows.
 import * as THREE from 'three'; import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'; import { stage, bake, canvasTex } from '../runner3x.js';
 const S3 = stage({}); const { scene, cam, sun, hemi } = S3; scene.background = new THREE.Color('#2a3b2a'); scene.fog = new THREE.Fog('#2a3b2a', 30, 60); hemi.intensity = 0.85; S3.r.toneMappingExposure = 0.95; hemi.color.set('#dfe8ff'); hemi.groundColor.set('#3a4a2a'); sun.intensity = 2.6; sun.color.set('#fff2d8');
@@ -58,7 +58,7 @@ function render(g, c) { const dt = Math.min(0.05, Math.max(0, g.t - lastT)); las
   if (g.state === 'play' && g.wave) { c.save(); c.globalAlpha = 0.18; const vg = c.createRadialGradient(g.W / 2, g.H / 2, g.H * 0.3, g.W / 2, g.H / 2, g.H * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,1)'); c.globalAlpha = 0.5; c.fillStyle = vg; c.fillRect(0, 0, g.W, g.H); c.restore(); } }
 function toScreen(g, x, y) { const v = new THREE.Vector3(x * K, 1, y * K).project(cam); return { x: (v.x + 1) / 2 * g.W, y: (1 - v.y) / 2 * g.H }; }
 window.__GL3 = () => S3.r.info.render;
-Arena({ id: 'gl-cube-horde', title: 'CUBE HORDE', aim: 'auto', lives: 5, fireRate: 0.22, bulletSpeed: 560, world: { w: 1000, h: 1000 }, hpScale: 0.12, waveBonus: w => 100 * w,
+Arena({ id: 'gl-cube-horde', title: 'ZOMBIE CUBES CLASSIC HUB VERSION', aim: 'auto', lives: 5, fireRate: 0.22, bulletSpeed: 560, world: { w: 1000, h: 1000 }, hpScale: 0.12, waveBonus: w => 100 * w,
   help: 'Move: WASD / drag anywhere - you auto-fire\nBlocky zombies come in waves - pick up power crates',
   theme: { bg: 'rgba(0,0,0,0)', grid: 'rgba(132,204,22,.15)', edge: '#84cc16', player: '#38bdf8', bullet: '#fde047' },
   types: { walker: { hp: 2, sp: 70, r: 13, c: '#65a30d', v: 10, shape: 'box' }, runner: { hp: 1, sp: 140, r: 10, c: '#a3e635', v: 15, shape: 'box' }, brute: { hp: 10, sp: 50, r: 22, c: '#3f6212', v: 50, shape: 'box' }, spitter: { hp: 3, sp: 55, r: 13, c: '#16a34a', v: 25, shape: 'box', shoot: 2.5 } },

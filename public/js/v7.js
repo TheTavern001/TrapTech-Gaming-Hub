@@ -1,5 +1,5 @@
-// v7 front-end pages: Sponsor a Host (feature picker + private quote status page), brand affiliation (invite links,
-// signup brand pick, "Your brand" card in Settings). Shop & seasons pages are added below by the economy section.
+// v7 front-end pages: Book a Giveaway (feature picker + private quote status page), brand affiliation (invite links,
+// signup brand pick, "Your giveaway team" card in Settings). Shop & seasons pages are added below by the economy section.
 // install(ctx) is called once from app.js with its helpers.
 import * as ECON from './economy.js';
 import * as STORE from './hub-store.js';
@@ -9,7 +9,7 @@ const money = (c) => '$' + (Math.round(c) / 100).toLocaleString('en-US', { minim
 const day = (t) => new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 const brandLogo = (b, s = 44) => b && b.logo ? `<img class="br-logo" src="${C.esc(b.logo)}" alt="" width="${s}" height="${s}" loading="lazy">` : `<span class="br-logo br-ph" style="width:${s}px;height:${s}px;--bc:${C.esc((b && b.color) || '#8b5cf6')}">${C.esc(((b && b.name) || '?').slice(0, 1))}</span>`;
 
-// ---------------- Sponsor a Host ----------------
+// ---------------- Book a Giveaway ----------------
 let CAT = null;
 async function catalog() { if (!CAT) { const r = await C.api('/api/sponsor/catalog'); if (r.ok) CAT = r; } return CAT; }
 const unitText = (f, q) => f.unit === 'week' ? `${q} week${q === 1 ? '' : 's'}` : f.unit === 'each' ? `x ${q}` : '';
@@ -24,8 +24,9 @@ function sponsorPage(url) {
     const COMP = { best: 'Highest single score', total: 'Total of best scores (several games)', random: 'Random draw among qualifying players' };
     const pre = url.searchParams.get('feature'); if (pre && cat.features.some(f => f.id === pre)) B.picked[pre] = B.picked[pre] || 1;
     const F = Object.fromEntries(cat.features.map(f => [f.id, f]));
+    const bookingGames = (C.S.libraryGames && C.S.libraryGames.length ? C.S.libraryGames : C.S.games).filter(g => g.playable);
     const persist = () => { const { licensed, step, ...rest } = B; C.ls.setItem(SP_KEY, JSON.stringify(rest)); };
-    const readForm = () => { document.querySelectorAll('[data-b]').forEach(i => { B[i.dataset.b] = i.value.trim(); }); if (document.getElementById('sb-games')) B.games = [...document.querySelectorAll('#sb-games input:checked')].map(i => i.value); const lc = document.getElementById('licensed'); if (lc) B.licensed = lc.checked; persist(); };
+    const readForm = () => { document.querySelectorAll('[data-b]').forEach(i => { B[i.dataset.b] = i.value.trim(); }); if (document.getElementById('sb-games')) { const visible = new Set([...document.querySelectorAll('#sb-games input')].map(i => i.value)); B.games = [...new Set([...B.games.filter(id => !visible.has(id)), ...[...document.querySelectorAll('#sb-games input:checked')].map(i => i.value)])]; } const lc = document.getElementById('licensed'); if (lc) B.licensed = lc.checked; persist(); };
     const pickedList = () => cat.features.filter(f => B.picked[f.id] || f.required || f.included).map(f => ({ id: f.id, qty: f.unit === 'flat' ? 1 : (B.picked[f.id] || f.dflt || 1) }));
     const featRow = (f) => {
       const on = !!(B.picked[f.id] || f.required || f.included); const q = B.picked[f.id] || f.dflt || 1;
@@ -38,49 +39,73 @@ function sponsorPage(url) {
       const st = (n, l) => `<div class="st ${B.step >= n ? 'on' : ''}"><i>${n}</i>${l}</div>`;
       const sel = pickedList();
       let body = '';
-      if (B.step === 1) body = `<p class="muted small" style="margin-top:0">Tick everything you want. You can change it later; Trap Tech will send you a quote for exactly what you picked.</p>
-        ${cat.groups.map(g => `<section class="sp-g"><h3>${icon(GROUP_IC[g] || 'sparkles')} ${esc(g)}</h3>${cat.features.filter(f => f.group === g).map(featRow).join('')}</section>`).join('')}`;
-      else if (B.step === 2) body = `
+      if (B.step === 1) body = `
+        <p class="muted small" style="margin-top:0">Book an official giveaway. Tell Trap Tech what the prize is, which game(s) you prefer, how the winner should be decided, and when you want it to run. Trap Tech creates and manages the official event.</p>
         <div class="field"><label class="lbl" for="bt">Business type</label><select class="input" id="bt" data-b="business_type"><option value="">Select your business type</option>${(cat.business_types || []).map(e => `<option ${B.business_type === e ? 'selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
         <div id="lic-wrap">${B.business_type === cat.cannabis ? `<label class="check lic"><input type="checkbox" id="licensed" ${B.licensed ? 'checked' : ''}> <span>I confirm my business is licensed and legally permitted to operate and advertise in my jurisdiction <b class="req">(required)</b></span></label>` : ''}</div>
-        <div class="field"><label class="lbl" for="sb-brand">Brand / channel name</label><input class="input" id="sb-brand" data-b="brand" value="${esc(B.brand)}" placeholder="Your brand or channel" maxlength="120"></div>
+        <div class="field"><label class="lbl" for="sb-brand">Giveaway brand name</label><input class="input" id="sb-brand" data-b="brand" value="${esc(B.brand)}" placeholder="Name displayed on your official giveaway" maxlength="120"></div>
+        <div class="field"><label class="lbl" for="sb-prize">Prize</label><input class="input" id="sb-prize" data-b="prize" value="${esc(B.prize)}" maxlength="200" placeholder="What the winner receives"></div>
+        <div class="field"><label class="lbl" for="sb-game-search">Choose game(s) from the full Hub catalog</label><input class="input" id="sb-game-search" type="search" placeholder="Search games by title or category…" autocomplete="off" aria-label="Search giveaway games"><div class="chip-row" id="sb-games"></div><p class="tiny muted" id="sb-game-count"></p><p class="tiny muted">Only games approved for official events will be available when Trap Tech configures the final competition.</p></div>
+        <div class="field"><label class="lbl" for="sb-comp">How should the winner be determined?</label><select class="input" id="sb-comp" data-b="competition">${Object.entries(COMP).map(([k, l]) => `<option value="${k}" ${B.competition === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+        <div class="grid2"><div class="field"><label class="lbl small" for="sb-s">Preferred start</label><input class="input" id="sb-s" type="date" data-b="start_date" value="${esc(B.start_date)}"></div><div class="field"><label class="lbl small" for="sb-e">Preferred end</label><input class="input" id="sb-e" type="date" data-b="end_date" value="${esc(B.end_date)}"></div></div>
+        <div class="grid2"><div class="field"><label class="lbl small" for="sb-len">Length (days)</label><input class="input" id="sb-len" type="number" min="1" max="90" data-b="length_days" value="${esc(B.length_days)}"></div><div class="field"><label class="lbl small" for="sb-col">Brand accent color</label><input class="input" id="sb-col" type="color" data-b="brand_color" value="${esc(B.brand_color)}"></div></div>
+        <div class="field"><label class="lbl" for="sb-d">Giveaway details / rules</label><textarea class="input" id="sb-d" data-b="details" maxlength="4000" placeholder="Prize details, eligible region or age, brand link, special rules…">${esc(B.details)}</textarea></div>`;
+      else if (B.step === 2) body = `
+        <p class="muted small" style="margin-top:0">Add a reliable contact, then choose any optional promotion or branding extras. The booking request itself is free; Trap Tech sends a private quote before anything is charged.</p>
         <div class="field"><label class="lbl" for="sb-name">Your name <span class="muted small">(optional)</span></label><input class="input" id="sb-name" data-b="contact_name" value="${esc(B.contact_name)}" maxlength="120"></div>
-        <div class="lbl">How can we reach you? <span class="muted small">(at least one)</span></div>
         <div class="field ic">${icon('message-circle')}<input class="input" id="sb-potato" data-b="potato" value="${esc(B.potato)}" placeholder="Potato username" maxlength="40" autocapitalize="none" aria-label="Potato username"></div>
         <div class="field ic">${icon('mail')}<input class="input" id="sb-email" type="email" data-b="email" value="${esc(B.email)}" placeholder="Email (optional if Potato given)" maxlength="160" autocapitalize="none" aria-label="Email"></div>
-        <div class="grid2"><div class="field"><label class="lbl small" for="sb-s">Preferred start</label><input class="input" id="sb-s" type="date" data-b="start_date" value="${esc(B.start_date)}"></div><div class="field"><label class="lbl small" for="sb-e">Preferred end</label><input class="input" id="sb-e" type="date" data-b="end_date" value="${esc(B.end_date)}"></div></div>
-        <div class="field"><label class="lbl" for="sb-prize">Prize</label><input class="input" id="sb-prize" data-b="prize" value="${esc(B.prize)}" maxlength="200" placeholder="What the winner gets"></div>
-        <div class="grid2"><div class="field"><label class="lbl small" for="sb-col">Brand color</label><input class="input" id="sb-col" type="color" data-b="brand_color" value="${esc(B.brand_color)}"></div><div class="field"><label class="lbl small" for="sb-len">Length (days)</label><input class="input" id="sb-len" type="number" min="1" max="90" data-b="length_days" value="${esc(B.length_days)}"></div></div>
-        <div class="field"><label class="lbl" for="sb-comp">Competition type</label><select class="input" id="sb-comp" data-b="competition">${Object.entries(COMP).map(([k, l]) => `<option value="${k}" ${B.competition === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
-        <div class="field"><div class="lbl">Games</div><div class="chip-row" id="sb-games">${C.S.games.filter(g => g.playable).map(g => `<label class="chip"><input type="checkbox" value="${esc(g.id)}" ${B.games.includes(g.id) ? 'checked' : ''}> ${esc(g.title)}</label>`).join('')}</div></div>
-        <div class="field"><label class="lbl" for="sb-d">More giveaway details</label><textarea class="input" id="sb-d" data-b="details" maxlength="4000" placeholder="Prize, which games, brand colors / logo link, age or region rules...">${esc(B.details)}</textarea></div>
+        <div class="section-h" style="margin-top:22px"><h2>${icon('sparkles')} Optional promotion & branding</h2></div>
+        <p class="small muted">Optional add-ons for this booking. The giveaway itself is the main service; leave every extra off unless you specifically want it.</p>
+        ${cat.groups.map(g => `<section class="sp-g"><h3>${icon(GROUP_IC[g] || 'sparkles')} ${esc(g)}</h3>${cat.features.filter(f => f.group === g && !f.required && !f.included).map(featRow).join('')}</section>`).join('')}
         <div class="field"><label class="lbl" for="sb-n">Notes for Trap Tech <span class="muted small">(optional)</span></label><textarea class="input" id="sb-n" data-b="notes" maxlength="2000" placeholder="Budget, timing, anything else we should know">${esc(B.notes)}</textarea></div>`;
-      else body = `<div class="card pad rv">${[['Features', sel.map(x => F[x.id].name + (F[x.id].unit !== 'flat' ? ` (${unitText(F[x.id], x.qty)})` : '')).join(', ')], ['Business type', B.business_type], ...(B.business_type === cat.cannabis ? [['License', 'Confirmed licensed and legally permitted to advertise']] : []), ['Brand', B.brand], ['Prize', B.prize], ['Brand color', B.brand_color], ['Games', B.games.map(id => (C.S.games.find(g => g.id === id) || {}).title || id).join(', ') || 'Trap Tech picks'], ['Competition', COMP[B.competition]], ['Length', B.length_days + ' days'], ['Contact', [B.contact_name, B.potato ? '@' + B.potato.replace(/^@/, '') + ' on Potato' : '', B.email].filter(Boolean).join(' • ')], ['Dates', `${B.start_date || 'flexible'} → ${B.end_date || 'flexible'}`], ['Details', B.details || '-'], ['Notes', B.notes || '-']].map(([k, v]) => `<div class="rv-row"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</div>
+      else body = `<div class="card pad rv">${[['Features', sel.map(x => F[x.id].name + (F[x.id].unit !== 'flat' ? ` (${unitText(F[x.id], x.qty)})` : '')).join(', ')], ['Business type', B.business_type], ...(B.business_type === cat.cannabis ? [['License', 'Confirmed licensed and legally permitted to advertise']] : []), ['Brand', B.brand], ['Prize', B.prize], ['Brand color', B.brand_color], ['Games', B.games.map(id => ((C.S.libraryGames && C.S.libraryGames.length ? C.S.libraryGames : C.S.games).find(g => g.id === id) || {}).title || id).join(', ') || 'Trap Tech picks'], ['Competition', COMP[B.competition]], ['Length', B.length_days + ' days'], ['Contact', [B.contact_name, B.potato ? '@' + B.potato.replace(/^@/, '') + ' on Potato' : '', B.email].filter(Boolean).join(' • ')], ['Dates', `${B.start_date || 'flexible'} → ${B.end_date || 'flexible'}`], ['Details', B.details || '-'], ['Notes', B.notes || '-']].map(([k, v]) => `<div class="rv-row"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</div>
         <p class="small muted">Sending a request is free and commits you to nothing. You'll get a private link to see your quote, then accept or decline it.</p>`;
       C.shell('/sponsor', `<div class="narrow sponsor">
-        ${C.pageHead('Sponsor a Host', 'Put your brand and prize in front of players who are already competing.')}
-        ${B.step === 1 ? `<div class="banner sp-hero"><div class="sp-hero-t"><h2>Pick what you want. <span class="grad-text">Get a quote.</span></h2><div style="color:#d9dcff">No packages to squeeze into: choose any mix of features below. Trap Tech Solutions builds and runs it, contacts your winners on Potato and sends you the stats.</div></div>${C.TT('mono', 72)}</div>
-          <div class="howto sp-how">${[['Pick features', 'Tick what you want from one list.'], ['Send a free request', 'Your brand, prize and how to reach you.'], ['Get your quote', 'We price it and send it to your private status page.'], ['Accept & launch', 'Accept online, settle on Potato, we build and launch.']].map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${t}</b><div class="small muted">${d}</div></div></div>`).join('')}</div>` : ''}
-        <div class="steps">${st(1, 'Features')}<span class="bar"></span>${st(2, 'Details')}<span class="bar"></span>${st(3, 'Review')}</div>
+        ${C.pageHead('Book a Giveaway', 'Book an official competition. You provide the prize; Trap Tech sets up the game, rules, schedule, scoring and winner verification.')}
+        ${B.step === 1 ? `<div class="banner sp-hero"><div class="sp-hero-t"><h2>Book the giveaway. <span class="grad-text">Trap Tech runs it.</span></h2><div style="color:#d9dcff">You provide the prize. Trap Tech handles official setup, scoring, rules, scheduling and winner verification. Promotion extras are optional.</div></div>${C.TT('mono', 72)}</div>
+          <div class="howto sp-how">${[['Set up your giveaway', 'Choose the prize, game, scoring and preferred dates.'], ['Add contact & extras', 'Tell us how to reach you and choose any optional promotion.'], ['Confirm the giveaway', 'Check the event details before submitting.'], ['Approve & launch', 'Review the private quote, then approve the launch.']].map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${t}</b><div class="small muted">${d}</div></div></div>`).join('')}</div>` : ''}
+        <div class="steps">${st(1, 'Giveaway setup')}<span class="bar"></span>${st(2, 'Contact & extras')}<span class="bar"></span>${st(3, 'Review & book')}</div>
         <div class="card pad">${err ? `<div class="err" role="alert">${esc(err)}</div>` : ''}${body}
-          <div class="sp-nav">${B.step > 1 ? `<button class="btn ghost" id="prev">Back</button>` : ''}<button class="btn" id="next">${B.step === 1 ? `Next: your details <span class="sp-count">${sel.length} picked</span>` : B.step === 2 ? 'Review' : 'Send quote request'}</button></div></div>
-        ${B.step === 1 ? `<div class="section-h" id="faq"><h2>${icon('circle-help')} Sponsor FAQ</h2></div><div class="faq">${(cat.faq || []).map(([q, a], i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary>${esc(q)}${icon('chevron-down')}</summary><p>${esc(a)}</p></details>`).join('')}</div>
-        <div class="card tt-build" style="margin-top:14px"><div class="ttb-head">${C.TT('horizontal', 50)}<span class="pill">${icon('code-xml')} Built in-house</span></div><p class="muted" style="margin:8px 0">Every sponsorship is set up by Trap Tech Solutions: giveaway, brand theme, branded games, verifiable winner draws, official rules with "no purchase necessary".</p><a class="btn sm ghost" href="/about">${icon('building-2')} About Trap Tech</a></div>` : ''}
-        <p class="small dim center">Sponsors must comply with all laws that apply to their business, products and advertising. See the <a href="/terms">Terms</a> and <a href="/rules">Official Rules</a>.</p></div>`, { title: 'Sponsor a Host' });
+          <div class="sp-nav">${B.step > 1 ? `<button class="btn ghost" id="prev">Back</button>` : ''}<button class="btn" id="next">${B.step === 1 ? 'Continue: contact details' : B.step === 2 ? 'Review giveaway' : 'Send booking request'}</button></div></div>
+        ${B.step === 1 ? `<div class="section-h" id="faq"><h2>${icon('circle-help')} Booking FAQ</h2></div><div class="faq">${(cat.faq || []).map(([q, a], i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary>${esc(q)}${icon('chevron-down')}</summary><p>${esc(a)}</p></details>`).join('')}</div>
+        <div class="card tt-build" style="margin-top:14px"><div class="ttb-head">${C.TT('horizontal', 50)}<span class="pill">${icon('code-xml')} Built in-house</span></div><p class="muted" style="margin:8px 0">Every booked giveaway is configured by Trap Tech Solutions: official event setup, brand theme, game selection, verifiable winner handling and rules with "no purchase necessary".</p><a class="btn sm ghost" href="/about">${icon('building-2')} About Trap Tech</a></div>` : ''}
+        <p class="small dim center">Giveaway bookings must comply with all laws that apply to their business, products and advertising. See the <a href="/terms">Terms</a> and <a href="/rules">Official Rules</a>.</p></div>`, { title: 'Book a Giveaway' });
       const root = document.getElementById('main');
-      root.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { if (cb.checked) B.picked[cb.dataset.pick] = F[cb.dataset.pick].dflt || 1; else delete B.picked[cb.dataset.pick]; persist(); const y = scrollY; draw(); scrollTo(0, y); });
-      root.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { const f = F[b.dataset.q]; B.picked[f.id] = Math.max(f.min, Math.min(f.max, (B.picked[f.id] || f.dflt || 1) + +b.dataset.d)); persist(); const y = scrollY; draw(); scrollTo(0, y); });
+      const gameSearch = document.getElementById('sb-game-search');
+      const renderGameChoices = () => {
+        const host = document.getElementById('sb-games'), count = document.getElementById('sb-game-count');
+        if (!host || !count) return;
+        const q = (gameSearch && gameSearch.value || '').trim().toLowerCase();
+        const matched = bookingGames.filter(g => !q || (g.title + ' ' + (g.category || '')).toLowerCase().includes(q));
+        const shown = matched.slice(0, q ? 40 : 12);
+        host.innerHTML = shown.map(g => `<label class="chip"><input type="checkbox" value="${esc(g.id)}" ${B.games.includes(g.id) ? 'checked' : ''}> ${esc(g.title)}</label>`).join('') || '<span class="tiny muted">No matching games. Try another search.</span>';
+        count.textContent = `${B.games.length} selected · showing ${shown.length} of ${bookingGames.length} games${matched.length > shown.length ? ' · refine your search to see more' : ''}`;
+        host.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.onchange = () => {
+          const visible = new Set([...host.querySelectorAll('input[type="checkbox"]')].map(i => i.value));
+          B.games = [...new Set([...B.games.filter(id => !visible.has(id)), ...[...host.querySelectorAll('input[type="checkbox"]:checked')].map(i => i.value)])];
+          persist(); renderGameChoices();
+        });
+      };
+      if (gameSearch) { gameSearch.oninput = renderGameChoices; renderGameChoices(); }
+      root.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { readForm(); if (cb.checked) B.picked[cb.dataset.pick] = F[cb.dataset.pick].dflt || 1; else delete B.picked[cb.dataset.pick]; persist(); const y = scrollY; draw(); scrollTo(0, y); });
+      root.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { readForm(); const f = F[b.dataset.q]; B.picked[f.id] = Math.max(f.min, Math.min(f.max, (B.picked[f.id] || f.dflt || 1) + +b.dataset.d)); persist(); const y = scrollY; draw(); scrollTo(0, y); });
       const bt = document.getElementById('bt'); if (bt) bt.onchange = () => { readForm(); B.licensed = false; draw(); };
       const pv = document.getElementById('prev'); if (pv) pv.onclick = () => { if (B.step === 2) readForm(); B.step--; draw(); scrollTo(0, 0); };
       document.getElementById('next').onclick = async () => {
-        if (B.step === 2) {
-          readForm(); B.potato = B.potato.replace(/^@/, '');
+        if (B.step === 1) {
+          readForm();
           if (!B.business_type) return draw('Please choose your business type.');
           if (B.business_type === cat.cannabis && !B.licensed) return draw('Please confirm your business is licensed and legally permitted to operate and advertise in your jurisdiction.');
           if (!B.brand) return draw('Brand / channel name is required.');
+          if (!B.prize) return draw('Describe the prize so the giveaway can be set up correctly.');
+          if (B.start_date && B.end_date && B.end_date < B.start_date) return draw('End date must be after the start date.');
+          if (!Number.isFinite(+B.length_days) || +B.length_days < 1 || +B.length_days > 90) return draw('Giveaway length must be between 1 and 90 days.');
+        }
+        if (B.step === 2) {
+          readForm(); B.potato = B.potato.replace(/^@/, '');
           if (!B.email && !B.potato) return draw('Add a Potato username or an email (at least one) so we can reach you.');
           if (B.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(B.email)) return draw('That email address does not look right.');
-          if (B.start_date && B.end_date && B.end_date < B.start_date) return draw('End date must be after the start date.');
         }
         if (B.step < 3) { B.step++; draw(); return scrollTo(0, 0); }
         const btn = document.getElementById('next'); btn.disabled = true;
@@ -98,12 +123,12 @@ async function sponsorStatus(m, url) {
   setTimeout(() => { const b = document.getElementById('ev-copy'); if (b) b.onclick = () => navigator.clipboard && navigator.clipboard.writeText(location.origin + document.querySelector('#ev-share a').getAttribute('href')); }, 50);
   const { icon, esc } = C;
   const tok = m[1]; const r = await C.api('/api/sponsor/requests/' + encodeURIComponent(tok));
-  if (!r.ok) return C.shell('/sponsor', C.emptyState('file-text', 'Request not found', 'Check that you opened the full link we gave you.', '<a class="btn sm" href="/sponsor">Sponsor a Host</a>'), { title: 'Sponsor request' });
+  if (!r.ok) return C.shell('/sponsor', C.emptyState('file-text', 'Request not found', 'Check that you opened the full link we gave you.', '<a class="btn sm" href="/sponsor">Book a Giveaway</a>'), { title: 'Giveaway booking' });
   const q = r.request; const s = SP_STATE[q.status] || SP_STATE.pending; const hd = q.potato_handle || 'TrapTechSolutions';
   const qt = q.quote; const steps = ['pending', 'sent', 'accepted', 'paid']; const at = q.status === 'declined' ? 1 : steps.indexOf(q.status);
   C.shell('/sponsor', `<div class="narrow sponsor">
     ${q.event ? `<div class="card pad ev-share" id="ev-share"><h2>${icon('badge-check')} Your official giveaway is booked</h2><p class="small muted">Share this private event link (or the QR code) with your audience. Only runs started from this link count.</p><p><a class="btn sm" href="${esc(q.event.url)}">${esc(location.origin + q.event.url)}</a> <button class="btn sm ghost" id="ev-copy">${icon('copy')} Copy</button></p><div class="ev-qr" style="max-width:220px;background:#fff;border-radius:12px;padding:8px">${q.event.qr_svg}</div></div>` : ''}
-    ${C.pageHead('Your sponsor request', esc(q.brand) + ' • sent ' + day(q.created_at), false)}
+    ${C.pageHead('Your giveaway request', esc(q.brand) + ' • sent ' + day(q.created_at), false)}
     ${url.searchParams.get('new') ? `<div class="card pad sp-saved" role="status">${icon('circle-check')}<div><b>Request sent.</b><div class="small muted">Bookmark this page: it's your private link to see and answer the quote. Anyone with the link can see it, so keep it to yourself.</div><button class="btn sm ghost" id="cp-link" style="margin-top:8px">${icon('copy')} Copy my private link</button></div></div>` : ''}
     <div class="card pad sp-state st-${q.status}"><span class="es-ic">${icon(s[0])}</span><div><h2>${s[1]}</h2><p class="muted small" style="margin:4px 0 0">${s[2]}</p></div></div>
     <ol class="sp-track" aria-label="Progress">${['Requested', 'Quote sent', 'Accepted', 'Paid'].map((l, i) => `<li class="${i <= at ? 'on' : ''} ${q.status === 'declined' && i === 2 ? 'x' : ''}">${l}</li>`).join('')}</ol>
@@ -117,7 +142,7 @@ async function sponsorStatus(m, url) {
     <div class="card pad"><h3>${icon('list-checks')} What you asked for</h3><ul class="sp-asked">${q.features.map(f => `<li>${icon('check')}<span>${esc(f.label)}</span></li>`).join('')}</ul>
       ${q.start_date || q.end_date ? `<p class="small muted">Dates: ${esc(q.start_date || 'flexible')} → ${esc(q.end_date || 'flexible')}</p>` : ''}${q.details ? `<p class="small"><b>Details:</b> ${esc(q.details)}</p>` : ''}${q.notes ? `<p class="small"><b>Notes:</b> ${esc(q.notes)}</p>` : ''}</div>
     <div class="potato-confirm"><div class="pc-ic">${icon('message-circle')}</div><div><b>Questions? Message <span class="handle">@${esc(hd)}</span> on Potato.</b><div class="small muted">Mention request #${q.id}.</div></div></div>
-    <div class="btn-row center-row"><button class="btn ghost sm" id="copy-handle">${icon('copy')} Copy @${esc(hd)}</button><a class="btn ghost sm" href="/sponsor">${icon('plus')} New request</a></div></div>`, { title: 'Your sponsor request' });
+    <div class="btn-row center-row"><button class="btn ghost sm" id="copy-handle">${icon('copy')} Copy @${esc(hd)}</button><a class="btn ghost sm" href="/sponsor">${icon('plus')} New request</a></div></div>`, { title: 'Your giveaway booking' });
   const cp = document.getElementById('cp-link'); if (cp) cp.onclick = async () => { if (await C.copyText(((document.querySelector('meta[name="public-url"]') || {}).content || location.origin) + location.pathname, 'Copy your private link')) C.toast('Link copied'); };
   document.getElementById('copy-handle').onclick = async () => { if (await C.copyText('@' + hd, 'Copy our Potato username')) C.toast('Copied @' + hd); };
   const act = (a) => async () => { if (a === 'decline' && !confirm('Decline this quote?')) return; const x = await C.api(`/api/sponsor/requests/${encodeURIComponent(tok)}/${a}`, { method: 'POST', body: {} }); if (!x.ok) return C.toast(x.error || 'Could not save'); C.toast(a === 'accept' ? 'Quote accepted' : 'Quote declined'); sponsorStatus(m, new URL(location.href)); };
@@ -138,10 +163,10 @@ async function joinPage(m) {
       <div class="br-stats"><span>${icon('users')} ${C.fmt(b.members)} member${b.members === 1 ? '' : 's'}</span><span>${icon('gift')} ${b.live} live giveaway${b.live === 1 ? '' : 's'}</span></div>
       ${mine ? `<div class="pill green">${icon('check')} You're in ${esc(b.name)}</div><a class="btn block" href="/giveaways" style="margin-top:12px">See giveaways</a>`
       : !C.S.me ? `<a class="btn block" href="/signup?brand=${encodeURIComponent(code)}">${icon('user-plus')} Create account &amp; join</a><a class="btn block ghost" href="/signin?next=${encodeURIComponent('/join/' + code)}" style="margin-top:8px">I have an account</a>`
-      : me.brand && !me.can_switch ? `<div class="err">You're in ${esc(me.brand.name)}. You can switch brands from ${day(me.can_switch_at)} (once every ${r.cooldown_days} days).</div>`
+      : me.brand && !me.can_switch ? `<div class="err">You're in ${esc(me.brand.name)}. You can switch teams whenever you need.</div>`
       : `<button class="btn block" id="br-go">${icon('user-check')} ${me.brand ? `Switch from ${esc(me.brand.name)} to ${esc(b.name)}` : `Join ${esc(b.name)}`}</button>${me.brand ? `<p class="tiny muted">Switching leaves your entries in ${esc(me.brand.name)}-only giveaways that are still live.</p>` : ''}`}
     </div>
-    <div class="card pad"><h3>${icon('info')} How brands work</h3><ul class="br-how"><li>You belong to <b>one brand</b> at a time.</li><li>Brand giveaways are for that brand's members. Some are <b>open to everyone</b>.</li><li>You can switch brands once every <b>${r.cooldown_days} days</b>.</li><li>Joining is free. Nothing to buy, ever.</li></ul></div></div>`, { title: `Join ${b.name}` });
+    <div class="card pad"><h3>${icon('info')} How brands work</h3><ul class="br-how"><li>You select one giveaway team at a time.</li><li>Brand giveaways are for that brand's members. Some are <b>open to everyone</b>.</li><li>You can switch teams whenever you need. Switching ends active entries in the previous team's members-only giveaways.</li><li>Joining is free. Nothing to buy, ever.</li></ul></div></div>`, { title: `Join ${b.name}` });
   const g = document.getElementById('br-go'); if (g) g.onclick = async () => { g.disabled = true; const x = await C.api('/api/me/brand', { method: 'POST', body: { code, via: 'link' } }); if (!x.ok) { g.disabled = false; return C.toast(x.error); } C.toast(`You're in ${b.name}`); if (x.left_giveaways && x.left_giveaways.length) C.toast(`Left: ${x.left_giveaways.join(', ')}`, 4000); joinPage(m); };
 }
 // signup: brand picker (prefilled from /join/<code> or ?brand=)
@@ -150,7 +175,7 @@ export function signupBrandField(url) {
   setTimeout(async () => {
     const el = document.getElementById('su-brand'); if (!el) return; const r = await C.api('/api/brands'); if (!r.ok || !r.brands.length) return el.remove();
     let preB = null; if (pre) { const x = await C.api('/api/brands/invite/' + encodeURIComponent(pre)); if (x.ok) preB = x.brand; }
-    el.innerHTML = `<label class="lbl" for="su-br">Brand <span class="muted tiny">(optional - one brand at a time, switch every ${r.cooldown_days} days)</span></label>
+    el.innerHTML = `<label class="lbl" for="su-br">Brand <span class="muted tiny">(optional - choose a team for members-only giveaways)</span></label>
       <div class="field ic">${C.icon('store')}<select class="input" id="su-br"><option value="">No brand for now</option>${r.brands.map(b => `<option value="${C.esc(b.slug)}" ${preB && preB.id === b.id ? 'selected' : ''}>${C.esc(b.name)}</option>`).join('')}</select></div>
       ${preB ? `<input type="hidden" id="su-brcode" value="${C.esc(pre)}" data-slug="${C.esc(preB.slug)}">` : ''}`;
   }, 0);
@@ -162,19 +187,22 @@ export async function afterSignup() {
   const x = await C.api('/api/me/brand', { method: 'POST', body: { code: viaLink ? code.value : sel.value, via: viaLink ? 'link' : 'signup' } });
   if (x.ok) { C.ls.removeItem(BR_KEY); C.toast(`You're in ${x.brand.name}`); }
 }
-// Settings: "Your brand" card
-export function brandCard() { setTimeout(mountBrand, 0); return `<div class="card pad" id="v7-brand"><h2 style="margin-bottom:6px">${C.icon('store')} Your brand</h2><div class="small muted">Loading…</div></div>`; }
+// Settings: giveaway-team affiliation (distinct from booking an official giveaway)
+export function brandCard() { setTimeout(mountBrand, 0); return `<div class="card pad" id="v7-brand"><h2 style="margin-bottom:6px">${C.icon('store')} Your Hub brand</h2><div class="small muted">Loading…</div></div>`; }
 async function mountBrand() {
   const el = document.getElementById('v7-brand'); if (!el || !C.S.me) return;
   const [st, all] = await Promise.all([C.api('/api/me/brand'), C.api('/api/brands')]); if (!st.ok) return;
   const { icon, esc } = C;
-  el.innerHTML = `<h2 style="margin-bottom:6px">${icon('store')} Your brand</h2>
-    ${st.brand ? `<div class="br-mine">${brandLogo(st.brand, 40)}<div><b>${esc(st.brand.name)}</b><div class="tiny muted">Joined ${day(st.joined_at)}${st.can_switch ? ' • you can switch any time' : ` • switch from ${day(st.can_switch_at)}`}</div></div><button class="btn sm ghost" id="br-leave">Leave</button></div>`
-      : `<p class="small muted" style="margin:0 0 8px">You're not in a brand. Brand giveaways are for members; open giveaways are for everyone.</p>`}
-    ${st.can_switch ? `<form id="br-f" class="br-form"><div class="field ic">${icon('link')}<input class="input" id="br-code" placeholder="Brand invite code" maxlength="40" autocapitalize="characters" aria-label="Brand invite code"></div><select class="input" id="br-pick" aria-label="Or pick a brand"><option value="">…or pick a brand</option>${(all.brands || []).filter(b => !st.brand || b.id !== st.brand.id).map(b => `<option value="${esc(b.slug)}">${esc(b.name)} (${C.fmt(b.members)})</option>`).join('')}</select><button class="btn sm">${st.brand ? 'Switch' : 'Join'}</button></form><p class="tiny muted" style="margin:6px 0 0">One brand at a time. After joining you can switch again in ${st.cooldown_days} days.</p>` : ''}`;
+  const switchDate = st.can_switch_at ? new Date(st.can_switch_at).toLocaleDateString(undefined, {month:'long',day:'numeric',year:'numeric'}) : '';
+  el.innerHTML = `<h2 style="margin-bottom:6px">${icon('store')} Your Hub brand affiliation</h2>
+    <p class="small muted" style="margin:0 0 12px">This links your Hub account to one listed brand/channel for <b>members-only giveaway eligibility</b>. It does not connect your personal Telegram account, transfer channel ownership, or book a giveaway. To run an official giveaway for your own brand, use <a href="/sponsor"><b>Book a Giveaway</b></a>; Trap Tech must approve and manage the official event.</p>
+    ${st.brand ? `<div class="br-mine">${brandLogo(st.brand, 48)}<div><b>${esc(st.brand.name)}</b><div class="tiny muted">Current Hub brand · joined ${day(st.joined_at)}</div></div><span class="pill">${icon('shield-check')} Linked</span></div>`
+      : `<p class="small muted" style="margin:0 0 8px">No Hub brand linked. You can still play all public games and enter giveaways marked open to everyone.</p>`}
+    ${st.can_switch ? `<form id="br-f" class="br-form"><div class="field ic">${icon('link')}<input class="input" id="br-code" placeholder="Paste a Hub brand invite code" maxlength="40" autocapitalize="characters" aria-label="Hub brand invite code"></div><select class="input" id="br-pick" aria-label="Choose an existing Hub brand"><option value="">Or choose an existing Hub brand…</option>${(all.brands || []).filter(b => !st.brand || b.id !== st.brand.id).map(b => `<option value="${esc(b.slug)}">${esc(b.name)} (${C.fmt(b.members)} members)</option>`).join('')}</select><button class="btn sm">${st.brand ? 'Change linked brand' : 'Link a Hub brand'}</button></form><p class="tiny muted" style="margin:8px 0 0">You can change this affiliation once every ${st.cooldown_days || 30} days. Switching or leaving ends active entries in the previous brand's members-only giveaways. Public scores are not official giveaway entries.</p>`
+      : `<div class="br-cooldown" role="status"><b>${icon('clock')} Brand change locked for ${st.days_until_switch} more day${st.days_until_switch === 1 ? '' : 's'}</b><p class="small muted">You can choose another Hub brand after ${esc(switchDate)}. This 30-day cooldown prevents players from switching teams to enter restricted giveaways.</p><div class="br-cooldown-track"><i style="width:${Math.max(0,Math.min(100,100-(st.days_until_switch/Math.max(1,st.cooldown_days||30))*100))}%"></i></div></div>`}`;
   if (location.hash === '#v7-brand') el.scrollIntoView({ block: 'start' });
-  const f = document.getElementById('br-f'); if (f) f.onsubmit = async (e) => { e.preventDefault(); const code = document.getElementById('br-code').value.trim() || document.getElementById('br-pick').value; if (!code) return C.toast('Enter a code or pick a brand'); if (st.brand && !confirm(`Switch to this brand? You can't switch again for ${st.cooldown_days} days.`)) return; const x = await C.api('/api/me/brand', { method: 'POST', body: { code } }); C.toast(x.ok ? `You're in ${x.brand.name}` : x.error); if (x.ok) mountBrand(); };
-  const lv = document.getElementById('br-leave'); if (lv) lv.onclick = async () => { if (!confirm('Leave your brand? Your entries in its members-only giveaways end, and the switch timer keeps counting from when you joined.')) return; const x = await C.api('/api/me/brand/leave', { method: 'POST', body: {} }); C.toast(x.ok ? 'You left the brand' : x.error); mountBrand(); };
+  const f = document.getElementById('br-f'); if (f) f.onsubmit = async (e) => { e.preventDefault(); const code = document.getElementById('br-code').value.trim() || document.getElementById('br-pick').value; if (!code) return C.toast('Enter a code or choose a brand'); if (st.brand && !confirm(`Change your linked Hub brand? Active entries in ${st.brand.name}'s members-only giveaways will end, and the new brand is locked for 30 days.`)) return; const x = await C.api('/api/me/brand', { method: 'POST', body: { code } }); C.toast(x.ok ? `Linked to ${x.brand.name}` : x.error); if (x.ok) mountBrand(); };
+  const lv = document.getElementById('br-leave'); if (lv) lv.onclick = async () => { if (!st.can_switch) return C.toast(`You can change your Hub brand in ${st.days_until_switch} days.`); if (!confirm('Leave this Hub brand? Active entries in its members-only giveaways will end, and the 30-day brand-change cooldown will still apply.')) return; const x = await C.api('/api/me/brand/leave', { method: 'POST', body: {} }); C.toast(x.ok ? 'Hub brand unlinked' : x.error); mountBrand(); };
 }
 // giveaway pages: the brand/audience pill
 export function audiencePill(g) {

@@ -44,6 +44,10 @@ function client() {
   const t0 = Date.now();
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Test Giveaway', host: 'Test Host', prize: 'Bragging rights', image: '/assets/giveaways/ps5-bundle-art.webp', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', rules: 'test', active: true } });
   ok(r.body.ok, 'admin creates giveaway'); const gid = r.body.id;
+  const L = client(), ul = 'e2e_lib_' + Math.random().toString(36).slice(2, 8);
+  r = await L('/api/auth/signup', { body: { username: ul, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.body.ok, 'signup dedicated library-event test player');
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Library Game Event', host: 'Test Host', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'gl-neon-circuit', active: true } });
+  ok(r.body.ok, 'admin creates official event linked to library game gl-neon-circuit'); const glib = r.body.id;
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Short Giveaway', host: 'Test', start_at: t0 - 60e3, end_at: t0 + 9000, game_id: 'jetpack-dash', active: true } });
   ok(r.body.ok, 'admin creates short giveaway (ends in 9s)'); const gshort = r.body.id;
   r = await ADM('/api/admin/giveaways', { body: { title: 'bad', start_at: t0, end_at: t0 - 1, game_id: 'jetpack-dash' } }); ok(r.status === 400, 'giveaway with end<start rejected');
@@ -53,6 +57,9 @@ function client() {
 
   console.log('# runs + anti-cheat');
   r = await A('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); ok(r.body.ok && r.body.token, 'run/start issues token (official event run)'); const tokA = r.body.token;
+  r = await L('/api/run/start', { body: { game_id: 'gl-neon-circuit', event: glib } }); ok(r.body.ok && r.body.token, 'library-game event token binds gl-neon-circuit to the official event'); const tokLib = r.body.token;
+  await sleep(2200);
+  r = await L('/api/score', { body: { token: tokLib, score: 5, coins: 0, duration_ms: 2000 } }); ok(r.body.ok && r.body.giveaways.some(g => g.id === glib), 'library-game score is accepted and counted in its official event', r.body);
   r = await B('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); const tokB = r.body.token;
   r = await A('/api/run/start', { body: { game_id: 'jetpack-dash', event: gshort } }); const tokShort = r.body.token;
   r = await A('/api/run/start', { body: { game_id: 'jetpack-dash', event: gshort } }); const tokSA = r.body.token;
@@ -360,14 +367,15 @@ function client() {
   const DBP = require(path.join(__dirname, '..', 'src', 'config.js')).DB_PATH; const sdb = new (require('better-sqlite3'))(DBP);
   const play = async (cl, game, score, wait = 1200, extra = {}) => { let x; const event = extra.event; extra = { ...extra }; delete extra.event; for (let k = 0; k < 6; k++) { x = await cl('/api/run/start', { body: { game_id: game, event } }); if (x.status !== 429) break; await sleep(12000); } if (!x.body.ok) return x; const tk = x.body.token; const seed = x.body.seed; if (wait) await sleep(wait); const body = { token: tk, score, coins: 0, duration_ms: wait, tel: { n: 12, mean: 310, sd: 95, min: 120 }, ...extra }; for (let k = 0; k < 6; k++) { x = await cl('/api/score', { body }); if (x.status !== 429 || x.body.rejected) break; await sleep(12000); } x.seed = seed; return x; };
   console.log('# v7: brands (one per player) + paid link placements');
-  r = await anon('/api/brands'); ok(r.body.ok && Array.isArray(r.body.brands) && r.body.cooldown_days === 30, 'public brand list');
+  r = await anon('/api/brands'); ok(r.body.ok && Array.isArray(r.body.brands) && r.body.cooldown_days === 0, 'public brand list with immediate team switching');
   for (const p of ['/api/channels', '/api/channels/terp-tavern', '/api/me/channels']) { r = await anon(p); ok(r.status === 404, `${p} removed`); }
   r = await ADM('/api/admin/channels', { body: { name: 'E2E Brand', slug: 'e2e-brand', link_url: 'https://example.com/brand', link_label: 'Shop' } }); ok(r.body.ok, 'admin creates a brand'); const chE = r.body.id;
   r = await ADM('/api/admin/channels', { body: { name: 'E2E Basic', slug: 'e2e-basic', link_url: 'https://example.com/basic' } }); const chB = r.body.id;
   r = await ADM('/api/admin/channels', { body: { name: 'Bad', link_url: 'http://insecure.example' } }); ok(r.status === 400, 'brand link must be https');
   r = await ADM('/api/admin/brands'); const invE = (r.body.brands.find(b => b.id === chE) || {}).invite_code; ok(/^[A-Z2-9]{8}$/.test(invE || ''), 'new brand gets an invite code');
   r = await C('/api/me/brand', { body: { code: invE, via: 'link' } }); ok(r.body.ok && r.body.brand.slug === 'e2e-brand', 'player joins the brand via its invite code');
-  r = await C('/api/me/brand', { body: { code: 'e2e-basic' } }); ok(r.status === 400 && /30 days/.test(r.body.error), 'switching again within 30 days is refused');
+  r = await C('/api/me/brand', { body: { code: 'e2e-basic' } }); ok(r.body.ok && r.body.switched && r.body.brand.slug === 'e2e-basic', 'switching giveaway teams is immediate');
+  r = await C('/api/me/brand', { body: { code: invE } }); ok(r.body.ok && r.body.switched && r.body.brand.slug === 'e2e-brand', 'player can switch back to the intended giveaway team');
 
   console.log('# v5: eligibility + explicit entries (anti-camping)');
   const t5 = Date.now();
@@ -503,7 +511,7 @@ function client() {
 
   if (!process.env.KEEP) {
     console.log('# cleanup');
-    for (const id of [gid, gshort, gmulti, gmin, grand]) await ADM('/api/admin/giveaways/' + id, { method: 'DELETE' });
+    for (const id of [gid, glib, gshort, gmulti, gmin, grand]) if (id) await ADM('/api/admin/giveaways/' + id, { method: 'DELETE' });
     for (const id of [tid, tbid]) await ADM('/api/admin/tournaments/' + id, { method: 'DELETE' });
     for (const id of [bid, bid2, bid3, bid4]) await ADM('/api/admin/bookings/' + id, { method: 'DELETE' });
     const pl = await ADM('/api/admin/players?q=e2e_'); for (const p of pl.body.players) await ADM('/api/admin/players/' + p.id, { method: 'DELETE' });

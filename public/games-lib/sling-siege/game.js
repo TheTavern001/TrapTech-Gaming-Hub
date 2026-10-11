@@ -1,4 +1,4 @@
-// Sling Siege - original slingshot fort-toppling game (Hub build). Matter.js physics (MIT) via phys.js.
+// Angry Birds 2 Hub Version - independently built slingshot fort-toppling adaptation. Matter.js physics (MIT) via phys.js.
 // Art: Kenney Physics Assets (CC0, see LICENSE-Kenney-CC0.txt). Endless sequence of generated forts.
 // Scoring (unchanged contract): blocks 10-50 by material, targets 500, each unused shot 1000 when a fort falls.
 (function () { const P = Phys, M = P.M, GY = 400, SX = 140, SY = 318;
@@ -16,7 +16,7 @@
       if (g.rnd() < 0.5) { blk(g, x + w / 2, y - 15, 30, 30, g.pick(mats), 'square'); } x += w + g.R(30, 70); }
     for (let i = 0; i < 120; i++) M.Engine.update(g.eng, 1000 / 60); g.breaks = 0; for (const b of P.bodies(g)) if (b.gl && b.gl.hp != null) { b.gl.dead = false; b.gl.hp = b.gl.max = b.gl.kind === 'target' ? 11 : HP[b.gl.m]; }
     g.shots = g.tg.length + 2; g.ready = true; g.proj = null; }
-  Kit.run({ id: 'gl-sling-siege', title: 'SLING SIEGE', orient: 'l', bg: '#bfe6f5', help: 'Drag back from the slingshot and let go\nTopple the forts and pop every lurker - spare shots are bonus',
+  Kit.run({ id: 'gl-sling-siege', title: 'ANGRY BIRDS 2 HUB VERSION', orient: 'l', bg: '#bfe6f5', help: 'Drag back from the slingshot and let go\nTopple the forts and pop every lurker - spare shots are bonus',
     init(g) { g.lv = 0; g.deb = []; g.stars = []; g.trail = []; fort(g); },
     update(g, dt) { P.step(g, dt); const v = P.reap(g, p => p); if (v) { g.add(v, 'b'); g.sfx('thud'); }
       for (const d of g.deb) { d.vy += 600 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.r += d.vr * dt; d.l -= dt; } g.deb = g.deb.filter(d => d.l > 0); for (const s of g.stars) s.l -= dt * 0.8; g.stars = g.stars.filter(s => s.l > 0);

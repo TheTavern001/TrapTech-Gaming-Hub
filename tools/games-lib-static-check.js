@@ -55,15 +55,20 @@ for (const slug of catalogBySlug.keys()) if (!sourceBySlug.has(slug)) errors.pus
 const doc = fs.existsSync(docPath) ? fs.readFileSync(docPath, 'utf8') : '';
 const hubApp = fs.existsSync(hubAppPath) ? fs.readFileSync(hubAppPath, 'utf8') : '';
 const libraryPage = fs.existsSync(libraryPagePath) ? fs.readFileSync(libraryPagePath, 'utf8') : '';
-if (!hubApp.includes('href="/games-lib/index.html"')) errors.push('Main Hub /games page is missing the Games Library entry point.');
+if (!hubApp.includes("route(/^\\/games$/" ) || !hubApp.includes('id="lib-grid"') || !hubApp.includes('id="lib-q"')) errors.push('Main Hub /games page is missing the unified searchable game catalog.');
+if (!hubApp.includes('function weeklyCatalogPick') || !hubApp.includes('THIS WEEK\'S FEATURED GAME')) errors.push('Homepage is missing the weekly rotating catalog spotlight.');
 if (!hubApp.includes("fetch('/api/games-lib'")) errors.push('Main Hub does not read the live Games Library count.');
 if (!hubApp.includes('libraryGames.find') || !hubApp.includes('location.href = libGame.url + url.search')) errors.push('Main Hub play routing does not open library games with their query parameters intact.');
 const adapterPath = path.join(pub, 'adapter.js');
 const adapter = fs.existsSync(adapterPath) ? fs.readFileSync(adapterPath, 'utf8') : '';
 if (!adapter.includes("qs.get('event')") || !adapter.includes("qs.get('giveaway')") || !adapter.includes('body.event = event')) errors.push('Library adapter does not forward official event/giveaway references to server run validation.');
 if (hubApp.includes('150+ more games')) errors.push('Main Hub contains a stale Games Library count.');
+if (libraryPage.includes('source_group') || libraryPage.includes("fetch('/api/games'")) errors.push('Dedicated library must not merge a separate core-game tier into the catalog.');
+if (libraryPage.includes('new-games') || libraryPage.includes('New original')) errors.push('Dedicated library still presents a separate featured/new-original game group.');
+if (!libraryPage.includes('id="all-games"')) errors.push('Dedicated library is missing its unified all-games section anchor.');
+if (!libraryPage.includes('Event flag · unverified')) errors.push('Catalog event flags are not clearly marked as unverified.');
 for (const slug of ['neon-circuit', 'rift-survival']) {
-  if (!libraryPage.includes(slug)) errors.push('Library page is missing new-game spotlight for ' + slug);
+  if (!catalogBySlug.has(slug)) errors.push('Catalog is missing registered game ' + slug);
 }
 if (!libraryPage.includes('id="category"') || !libraryPage.includes('id="eligibility"')) errors.push('Library page is missing category/status filters.');
 if (!doc.includes('wave transition bonus 10 × wave')) errors.push('Games Library documentation has stale Rift Survival scoring text.');

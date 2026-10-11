@@ -1,13 +1,39 @@
 # Release Checklist — Hub + Games Library
 
+## Current one-deployment release candidate (2026-10-11)
+
+Candidate branch: `release/consolidated-v1`; PR [#2](https://github.com/TheTavern001/gaming-hub-2/pull/2). Keep production unchanged until the final candidate is approved. Feature work may create multiple commits and run CI, but must result in one merged release and one production deployment.
+
+- [x] Make `/games` one unified 150-entry catalog with search and category filtering; remove the separate core-game section.
+- [x] Add a synchronized weekly rotating catalog spotlight on the homepage, changing every Monday UTC.
+- [x] Add a shared responsive visual system to the main app shell and major reusable UI surfaces.
+- [x] Add CI coverage for main-screen catalog presence/search/filter (candidate CI must pass).
+- [x] Reach 150 registered catalog entries. This is a catalog-count milestone only, not proof that all entries are playable, competition-safe, or license-cleared.
+- [ ] Validate 150+ genuinely testable games through runtime, score-acceptance, mobile, anti-cheat, and licensing checks. Current registry has 150 entries; test completion and certification remain open.
+- [ ] Launch-test every listed game and classify failures, mobile support, external dependencies, score integration and licensing status.
+- [ ] Verify official event permissions, server-validated scores, anti-cheat and tie-break rules for any game promoted as competition-eligible.
+- [ ] Complete desktop and mobile visual regression across home, library, game player, auth, profiles, leaderboards, quests, tournaments, giveaways, bookings, vendor pages, store, settings and admin tools.
+- [ ] Verify production Deplexo deploy branch, config, health, auth, live catalog, data persistence and rollback plan.
+- [ ] Merge the approved candidate and deploy exactly once; verify the merged SHA is the deployed SHA before asking the user to review.
+
+
 This checklist deliberately covers the main Hub application as well as the Games Library. The feature work already present on `v7-wip` must not be lost while merging the library rebuild.
+
+
+## User-approved design corrections — blocking
+
+- [ ] Customer-facing booking is named **Book a Giveaway** throughout; remove the misleading **Sponsor a Host** framing and explain that Trap Tech creates/manages the official giveaway.
+- [ ] Giveaway team selection must clearly distinguish a Hub team affiliation from connecting the user's own external channel. Team switching is immediate; switching closes active entries in the previous team's members-only giveaways.
+- [ ] Avatar Studio must retain the approved collectible player-card direction and provide deep customization; current editor now has 17 categories, but the full visual/profile pass still needs visual verification.
+- [ ] **Game art and gameplay are not release-ready merely because the catalog count is 150.** User requires recognizable titles labeled as *Hub Version* when they are independent adaptations, meaningfully different gameplay (not reskinned copies), high-quality visuals, score/leaderboard integration, mobile controls and anti-cheat. The 50-title Arcade Pack currently uses nine shared mechanic families and must be individually redesigned/replaced before it can be treated as finished.
+- [ ] Keep production unchanged until the unique-game visual rebuild, full desktop/mobile review, score integrity, licensing and booking/official-event gates are complete. Never label the current visual pass “AAA” without recorded screenshots and device review.
 
 ## Hub shell and navigation
 
 - [x] Keep the current `v7-wip` base as the pull request target; do not replace the Hub shell with a standalone game-only site.
 - [x] Keep the main `/games` route and add a working entry point to `/games-lib/index.html`.
 - [x] Replace the stale hard-coded “150+ more games” label with a count fetched from `/api/games-lib`.
-- [x] Add a new-game spotlight, category/status filters, search, and result counts on the dedicated library page.
+- [x] Add one unified catalog, weekly rotating homepage feature, category filters, search, and result counts on the dedicated library page.
 - [x] Load the library registry into the main Hub's route state so official giveaway links can resolve library game IDs.
 - [x] Route `/play/<library-game-id>?event=...` launches into the corresponding library game while preserving query parameters.
 - [x] Forward `event`, `event_code`, `giveaway_id`, and legacy `giveaway` query parameters through the library adapter to server-side run validation.
@@ -30,7 +56,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 
 ## Games Library
 
-- [x] Registry, catalog, and documentation reconcile at 100 entries.
+- [x] Registry and catalog reconcile at 150 registered entries; registration count does not certify visual quality or playability.
 - [x] No external game redirects are configured in the library registry.
 - [x] Add original Neon Circuit and Rift Survival implementations and SVG cover art.
 - [x] Apply L3 score-event validation to both new originals, including per-game point-value rules and progress-marker exclusion.
@@ -44,39 +70,63 @@ This checklist deliberately covers the main Hub application as well as the Games
 
 ## Release gates
 
-- [x] Static CI passed on earlier branch revisions; each new commit must pass its own checks.
-- [x] Latest verified static-check and browser-smoke workflows are green on commit `303570b` (2026-10-10).
-- [ ] Full API E2E suite, official-event end-to-end path, and forged/replayed score rejection are green for the release candidate.
-- [ ] Mobile smoke test completed.
+- [x] Static checks passed on candidate `4e05e90cc8bcec4912d1cd300d518f82733e0b0a`.
+- [ ] Browser suite must finish green on the exact final candidate SHA; main Hub navigation, major-screen smoke tests, and the two original games passed on the current run, while the 50-game desktop/iPhone run was still in progress at the last check.
+- [ ] Full API E2E suite, official-event end-to-end path for a library game, and forged/replayed score rejection are green for the release candidate.
 - [ ] Booking/event permission regression completed.
+- [ ] Fresh desktop/mobile visual review completed.
 - [ ] Deployment URL is reachable and all intended new games can be launched from the Hub.
 - [ ] No merge or production deployment until the release gates above are reviewed.
 
 ## Current boundary
 
-This branch is based on `v7-wip` and preserves its Hub application files. The current edits add to the Hub navigation/library experience; they do not replace the rest of the Hub. Static checks cannot substitute for the browser, mobile, booking-permission, or anti-cheat checks above.
+The candidate branch currently has PR #2 targeting `main`; verify the complete diff against `v7-wip` before merging. Do not change the PR base without checking ancestry and the full change set. The current edits add to the Hub navigation/library experience; they do not replace the rest of the Hub. Static checks cannot substitute for the browser, mobile, booking-permission, or anti-cheat checks above.
 
 
-## Verified CI update — 2026-10-10
+## Current candidate validation status — 2026-10-11
 
-- Static workflow: passed on `303570b`: JavaScript syntax, inline library-page JavaScript, registry/catalog/docs consistency, and local asset checks.
-- Browser workflow: passed on `303570b`: main Hub and Games Library navigation at a mobile viewport; Neon Circuit and Rift Survival smoke tests at desktop and iPhone-sized viewports; performance-risk diagnostic completed as a non-blocking step.
-- These workflows run against an isolated CI database and local test server. They do not verify Deplexo's deployed commit, persistent production storage, all catalog games, payment processing, or the complete official giveaway flow.
+- Candidate branch: `release/consolidated-v1`; PR #2 currently targets `main`. The base/ancestry discrepancy remains a release gate.
+- Static checks have passed on earlier candidate commits; the exact final candidate SHA must pass after all current UI, brand-cooldown, and rendering changes.
+- Browser coverage on earlier commits is not a substitute for running the full suite on the exact final candidate SHA.
+- Registry and catalog contain 150 entries. That count is not a claim that all 150 have passed runtime, scoring, anti-cheat, mobile, or licensing review.
+- These checks run against an isolated CI database and local server. They do not verify Deplexo's deployed commit, production persistence, or the live admin/player flows.
+
+## Consolidated release boundary
+
+The release must retain the existing Hub application, use one unified catalog with a weekly featured title, and preserve the official-event boundary. Sharing a public game link or playing the weekly featured game must never create an official giveaway, booking, entrant list, or winner selection.
+
+- [ ] Finish browser and gameplay validation for the candidate.
+- [ ] Run the full API E2E suite and verify library-game event references, including invalid, expired, mismatched, forged, and replayed submissions.
+- [ ] Review event permissions, booking status transitions, vendor/operator roles, publishing, and winner selection.
+- [ ] Complete desktop/mobile visual review and asset/licensing review.
+- [ ] Verify Deplexo's deployment branch, config, health, auth, persistent storage, backups, and rollback plan.
+- [ ] Merge the approved candidate into `v7-wip`, deploy the exact resulting SHA once, and verify the live deployed SHA before asking the user to review.
+
+**Do not merge or deploy while any blocking gate remains open.**
 
 
-## Consolidated release candidate update — 2026-10-11
+## User-directed redesign requirements — 2026-10-11
 
-This repository's current `main` contains the Hub v7 work, the Games Library integrity-audit integration, and the responsive homepage redesign. It is the candidate to prepare for a single final Deplexo deployment. The older statement above that the current edits are still an unmerged branch is historical context and is superseded by this update.
+These are release requirements, not optional styling suggestions:
 
-- [x] Main Hub retained; the library is integrated rather than replacing the app.
-- [x] Homepage redesign committed on `main` (`c98dc18935232b8c71e6cc0fce1a6512d22608b9`).
-- [x] Catalog and registry reconcile at 100 entries; long-term catalog target remains 150+.
-- [x] New library integration limits the new-game giveaway-picker additions to Neon Circuit and Rift Survival.
-- [ ] Confirm blocking CI workflows finish green on the exact finalization commit.
-- [ ] Full official-event flow for a library game, including invalid/expired/mismatched event references and replay/forged-score rejection.
-- [ ] Browser regression for booking status, operator/vendor permissions, giveaway publishing, winner selection, and the rest of the core Hub.
-- [ ] Fresh phone and desktop review of the live homepage and navigation.
-- [ ] Real-device performance, art quality, and licensing reviews for the games that remain unverified.
-- [ ] Back up production data, deploy the latest `main` SHA once, and verify health, persistence, player flows, event controls, and admin access on the live URL.
+- [ ] The primary vendor conversion action must be **Book a Giveaway**. Remove confusing “Sponsor a Host” language. The booking flow must explain that the vendor supplies the prize and Trap Tech Solutions creates, authorizes, runs, and verifies the official competition. Free play and public scores must never create an official giveaway or bypass booking.
+- [ ] The account brand section must clearly explain the difference between linking a Hub brand affiliation (used for brand-restricted giveaway eligibility) and booking an official giveaway for a vendor's own brand. State the 30-day team-change cooldown before the user tries to switch; enforce it on the server, including attempts to leave and rejoin to bypass the lock.
+- [ ] Avatar/profile is a major feature, not a generic account icon: player identity and Hub ID, founder status, level/XP, achievements, competition record, collectible 3D-character direction, rarity frames/effects, character parts, cosmetics, titles, ownership, unlock requirements, previews, and purchase/earned unlock paths.
+- [ ] The current stylized/low-poly and generic canvas visuals do **not** meet the user's AAA-quality target. A CSS polish pass is not an acceptable substitute for rebuilding actual in-game art, animation, environments, effects, character models, lighting, sound and UI. The named genre targets from prior discussions include a lane-runner inspired by Subway Surfers, a physics slingshot game inspired by Angry Birds, and a voxel zombie-wave game inspired by Zombie Cubes. Use original assets/designs or properly licensed source material; do not claim proprietary exact-copy status without permission.
+- [ ] Redesign the Hub, Giveaways/booking, player avatar/profile, cosmetics/shop, achievements, settings, About, and the game catalog as one cohesive premium product. The Hub and official Giveaways surfaces are first-class surfaces, not secondary to the games.
+- [ ] Keep one unified catalog; do not split the product into “core games” and “new originals.” Weekly spotlight rotates every Monday UTC. Public game links and high scores remain separate from officially booked competitions.
+- [ ] Require real desktop/mobile gameplay and visual review. A count of 150 registered catalog records is not evidence of 150 AAA-quality, independently playable, event-cleared games.
 
-**Do not interpret “100 catalog entries” as “100 verified giveaway-ready games.”** The user-facing requirement is one consolidated release; the responsible release gate still requires documenting unresolved verification items rather than hiding them. The vendor control boundary is official Hub-managed events and score records: public casual game links can be shared, but a link alone must never authorize a Hub giveaway, paid booking, official entrant list, or winner selection.
+## Latest changes and remaining work
+
+- [x] Replaced brand affiliation copy with explicit explanation of what linking a Hub brand means.
+- [x] Implemented server-side 30-day brand affiliation switching cooldown and visible lock messaging.
+- [x] Expanded avatar card with giveaway-entry, follower, best-game, and streak data plus owned/total cosmetic inventory count.
+- [x] Added a cinematic/PBR material path, environment lighting, softer/higher-resolution shadows, and higher desktop render resolution for the shared 3D runner engine.
+- [x] Added an artwork-led catalog card treatment.
+- [x] Added the booking/brand cooldown regression script to release CI.
+- [ ] Run the newly wired booking/brand cooldown regression and fix any failures.
+- [ ] Re-run static checks and the full desktop/iPhone gameplay suite on the exact current candidate.
+- [ ] Rebuild game visuals to the requested AAA bar; the current engine/rendering improvements are a first pass, not proof that all games meet that bar.
+- [ ] Confirm the PR base and all intended branch changes, finish remaining authorization, persistence, score-forgery, licensing and production deployment checks.
+- [ ] Do not deploy or ask for final review until the above blockers are closed.

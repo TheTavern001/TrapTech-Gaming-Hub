@@ -488,7 +488,7 @@ app.post('/api/community/react', requireUser, limiter('react', 60, 60e3), (req, 
   res.json({ ok: true, key, mine: !had || req.body.on === true, hype: db.prepare('SELECT COUNT(*) AS c FROM reactions WHERE item_key=?').get(key).c, unlocked });
 });
 
-// ---------- Sponsor a Host (feature picker + quotes) lives in src/sponsor.js; old /api/bookings kept there as an alias ----------
+// ---------- Book a Giveaway (feature picker + quotes) lives in src/sponsor.js; old /api/bookings kept there as an alias ----------
 app.get('/api/business-types', (req, res) => res.json({ ok: true, types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE }));
 
 // ---------- admin ----------
@@ -777,7 +777,7 @@ V7A.routes(app, A, H); // v7 admin overhaul: giveaway builder, players, live ops
 require('./v3')(app, A, H);
 Object.assign(H, { csv, sendCsv, sendCsvPaged, iso, giveawayPublic, ipHash });
 require('./v4')(app, A, H);
-require('./sponsor')(app, A, H); // v7 Sponsor a Host: feature picker, admin price sheet, quotes
+require('./sponsor')(app, A, H); // v7 Book a Giveaway: feature picker, admin price sheet, quotes
 require('./brands').routes(app, A, H); // v7 brand affiliation (invite links, one brand per player)
 require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
@@ -803,7 +803,7 @@ app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', 
 const INDEX_FILE = path.join(PUB, 'index.html');
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const PAGE_TITLES = { '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/tournaments': 'Tournaments', '/season': 'Season Pass', '/quests': 'Daily Quests',
-  '/achievements': 'Achievements & Rewards', '/community': 'Community', '/sponsor': 'Sponsor a Host - Trap Tech Solutions', '/about': 'About Trap Tech Solutions',
+  '/achievements': 'Achievements & Rewards', '/community': 'Community', '/sponsor': 'Book a Giveaway - Trap Tech Solutions', '/about': 'About Trap Tech Solutions',
   '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/search': 'Search', '/notifications': 'Notifications', '/settings': 'Settings', '/invite': 'Invite Friends', '/channels': 'Brand Channels', '/friends': 'Friends & Challenges', '/shop': 'Points Shop' };
 function pageMeta(p, origin) {
   let m = null, mm;

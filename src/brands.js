@@ -1,14 +1,14 @@
 'use strict';
 // v7 brand affiliation (replaces v5 "brand channels" pages and follows).
 // A player belongs to ONE brand at a time. They join through the brand's invite link (/join/<CODE>) or code, or pick a
-// brand at signup. Switching to another brand is allowed 30 days after the last join (shown clearly in the UI).
+// brand at signup. Players can switch giveaway teams whenever they choose; switching ends their active entries in the old team's members-only giveaways.
 // Giveaways: a giveaway with a brand (giveaways.channel_id) is only for that brand's members, unless the admin marks it
 // "open to everyone" (giveaways.open_to_all). Giveaways without a brand are hub-wide (open to everyone).
 // Brand registry = the existing `channels` table (same ids, so old giveaways keep their brand).
 const crypto = require('crypto');
 const db = require('./db');
 const D = 864e5;
-const COOLDOWN_DAYS = 30;
+const COOLDOWN_DAYS = 30; // protects brand affiliation from rapid switching; enforced server-side
 
 function cols(t) { return new Set(db.prepare(`PRAGMA table_info(${t})`).all().map(c => c.name)); }
 function addCol(t, c, def) { if (!cols(t).has(c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} ${def}`); }
@@ -66,8 +66,11 @@ const pubBrand = (c, full = false) => c && ({ id: c.id, slug: c.slug, name: c.na
 function status(userId, t = Date.now()) {
   const u = db.prepare('SELECT brand_id, brand_joined_at FROM users WHERE id=?').get(userId) || {};
   const b = brandById(u.brand_id);
-  const canAt = u.brand_joined_at ? u.brand_joined_at + COOLDOWN_DAYS * D : 0;
-  return { brand: b && b.active ? pubBrand(b) : null, joined_at: u.brand_joined_at || null, can_switch: !u.brand_joined_at || t >= canAt, can_switch_at: canAt || null, cooldown_days: COOLDOWN_DAYS };
+  const canAt = u.brand_joined_at ? Number(u.brand_joined_at) + COOLDOWN_DAYS * D : 0;
+  const canSwitch = !u.brand_joined_at || t >= canAt;
+  return { brand: b && b.active ? pubBrand(b) : null, joined_at: u.brand_joined_at || null,
+    can_switch: canSwitch, can_switch_at: canSwitch ? null : canAt, cooldown_days: COOLDOWN_DAYS,
+    days_until_switch: canSwitch ? 0 : Math.max(1, Math.ceil((canAt - t) / D)) };
 }
 const findBrand = (code) => {
   const s = String(code || '').trim(); if (!s) return null;
@@ -76,12 +79,13 @@ const findBrand = (code) => {
 // join / switch. Leaving entries of the old brand's live giveaways keeps the "own brand only" rule true.
 function join(userId, code, via = 'code', t = Date.now()) {
   const b = findBrand(code); if (!b) return { ok: false, error: 'That brand code or link is not valid.' };
-  const st = status(userId, t); const cur = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId);
+  const st = status(userId, t); const cur = db.prepare('SELECT brand_id, brand_joined_at FROM users WHERE id=?').get(userId);
   if (cur && cur.brand_id === b.id) return { ok: true, already: true, ...status(userId, t) };
-  if (cur && cur.brand_id && !st.can_switch) return { ok: false, error: `You can switch brands once every ${COOLDOWN_DAYS} days. You can switch from ${new Date(st.can_switch_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' })}.`, ...st };
+  if (!st.can_switch) return { ok: false, error: `You can change your giveaway team in ${st.days_until_switch} day${st.days_until_switch === 1 ? '' : 's'}.`, ...st };
+  
   const left = [];
   db.transaction(() => {
-    if (cur && cur.brand_id) for (const g of db.prepare(`SELECT g.id, g.title FROM giveaway_entries e JOIN giveaways g ON g.id=e.giveaway_id WHERE e.user_id=? AND e.left_at IS NULL AND g.channel_id=? AND g.open_to_all=0 AND g.finalized_at IS NULL AND g.end_at > ?`).all(userId, cur.brand_id, t)) {
+    if (cur && cur.brand_id) for (const g of db.prepare(`SELECT g.id, g.title FROM giveaway_entries e JOIN giveaways g ON g.id=e.giveaway_id WHERE e.user_id=? AND e.left_at IS NULL AND g.channel_id=? AND g.open_to_all=0 AND g.finalized_at IS NULL AND g.end_at > ?`).all(userId, cur.brand_id, Date.now())) {
       db.prepare('UPDATE giveaway_entries SET left_at=? WHERE giveaway_id=? AND user_id=?').run(t, g.id, userId); left.push(g.title);
     }
     db.prepare('UPDATE users SET brand_id=?, brand_joined_at=? WHERE id=?').run(b.id, t, userId);
@@ -90,10 +94,12 @@ function join(userId, code, via = 'code', t = Date.now()) {
   return { ok: true, switched: !!(cur && cur.brand_id), left_giveaways: left, ...status(userId, t) };
 }
 function leave(userId, t = Date.now()) {
+  const st = status(userId, t);
+  if (!st.can_switch) return { ok: false, error: `You can change your giveaway team in ${st.days_until_switch} day${st.days_until_switch === 1 ? '' : 's'}.`, ...st };
   const cur = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId); if (!cur || !cur.brand_id) return { ok: false, error: 'You are not in a brand.' };
   db.transaction(() => {
     db.prepare(`UPDATE giveaway_entries SET left_at=? WHERE user_id=? AND left_at IS NULL AND giveaway_id IN (SELECT id FROM giveaways WHERE channel_id=? AND open_to_all=0 AND finalized_at IS NULL AND end_at > ?)`).run(t, userId, cur.brand_id, t);
-    db.prepare('UPDATE users SET brand_id=NULL WHERE id=?').run(userId); // joined_at stays: the cooldown still counts from the last join
+    db.prepare('UPDATE users SET brand_id=NULL WHERE id=?').run(userId); // retain the last affiliation timestamp so leaving cannot bypass the cooldown
     db.prepare('INSERT INTO brand_moves (user_id, from_brand, to_brand, via, at) VALUES (?,?,?,?,?)').run(userId, cur.brand_id, null, 'left', t);
   })();
   return { ok: true, ...status(userId, t) };
@@ -105,17 +111,17 @@ function allowed(userId, g) {
   const u = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId);
   return { ok: !!(u && u.brand_id === g.channel_id), ...a };
 }
-const RULE_TEXT = (g) => { const a = audience(g); return a.open ? 'Open to everyone: every eligible hub player can enter, whatever brand they belong to.' : `${a.brand.name} members only: players affiliated with ${a.brand.name} can enter. Each player belongs to one brand at a time (join with the brand's invite link or code; switching is allowed once every ${COOLDOWN_DAYS} days).`; };
+const RULE_TEXT = (g) => { const a = audience(g); return a.open ? 'Open to everyone: every eligible hub player can enter, whatever brand they belong to.' : `${a.brand.name} members only: players affiliated with ${a.brand.name} can enter. Each player selects one giveaway team at a time. Switching teams ends active entries in the previous team's members-only giveaways.`; };
 
 function routes(app, A, h) {
   const { bad, requireUser, currentUser, limiter, str } = h;
   app.get('/api/brands', (req, res) => res.json({ ok: true, brands: db.prepare('SELECT * FROM channels WHERE active=1 ORDER BY is_demo, name').all().map(c => pubBrand(c, true)), cooldown_days: COOLDOWN_DAYS }));
-  app.get('/api/brands/invite/:code', limiter('brand-inv', 120, 600e3), (req, res) => { const b = findBrand(req.params.code); if (!b) return bad(res, 404, 'That invite link is not valid.'); const me = currentUser(req); res.json({ ok: true, brand: pubBrand(b, true), me: me ? status(me.id) : null, cooldown_days: COOLDOWN_DAYS }); });
+  app.get('/api/brands/invite/:code', limiter('brand-inv', 120, 600e3), (req, res) => { const b = findBrand(req.params.code); if (!b) return bad(res, 404, 'That invite link is not valid.'); const me = currentUser(req); res.json({ ok: true, brand: pubBrand(b, true), me: me ? status(me.id) : null, cooldown_days: 0 }); });
   app.get('/api/me/brand', requireUser, (req, res) => res.json({ ok: true, ...status(req.user.id) }));
   app.post('/api/me/brand', requireUser, limiter('brand-join', 20, 3600e3), (req, res) => { const r = join(req.user.id, str(req.body.code, 40), req.body.via === 'signup' ? 'signup' : req.body.via === 'link' ? 'invite link' : 'code'); r.ok ? res.json(r) : bad(res, 400, r.error, r); });
   app.post('/api/me/brand/leave', requireUser, limiter('brand-join', 20, 3600e3), (req, res) => { const r = leave(req.user.id); r.ok ? res.json(r) : bad(res, 400, r.error); });
   // admin: invite codes + member counts for the brand list; set a giveaway's audience
-  A.get('/brands', (req, res) => { ensureCodes(); res.json({ ok: true, brands: db.prepare('SELECT * FROM channels ORDER BY name').all().map(c => ({ ...pubBrand(c, true), invite_code: c.invite_code, invite_path: '/join/' + c.invite_code, active: !!c.active, link_url: c.link_url, business_type: c.business_type })), cooldown_days: COOLDOWN_DAYS }); });
+  A.get('/brands', (req, res) => { ensureCodes(); res.json({ ok: true, brands: db.prepare('SELECT * FROM channels ORDER BY name').all().map(c => ({ ...pubBrand(c, true), invite_code: c.invite_code, invite_path: '/join/' + c.invite_code, active: !!c.active, link_url: c.link_url, business_type: c.business_type })), cooldown_days: 0 }); });
   A.post('/brands/:id/new-code', (req, res) => { const c = brandById(+req.params.id); if (!c) return bad(res, 404, 'Not found'); const code = newCode(); db.prepare('UPDATE channels SET invite_code=? WHERE id=?').run(code, c.id); res.json({ ok: true, invite_code: code }); });
   A.put('/giveaways/:id/audience', (req, res) => {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');

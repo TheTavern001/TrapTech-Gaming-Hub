@@ -101,7 +101,7 @@ function topbar(path) {
   return `<header class="topbar">
     <button class="iconbtn menu-btn" data-act="menu" aria-label="Open menu">${icon('menu')}</button>
     <a href="/" aria-label="The Gaming Hub home"><img class="logo" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="150" height="28"></a><a class="hd-tt" href="/about" aria-label="By Trap Tech Solutions"><span>by</span>${TT('mono', 30, 'only-ph')}${TT('horizontal', 30, 'only-wide')}</a>
-    <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/sponsor" class="${path.startsWith('/sponsor') ? 'on' : ''}">${icon('briefcase')}Sponsor</a></nav>
+    <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/sponsor" class="${path.startsWith('/sponsor') ? 'on' : ''}">${icon('briefcase')}Book a Giveaway</a></nav>
     <span class="spacer"></span>
     ${S.me && S.me.streak && S.me.streak.current ? `<a class="streak-chip" href="/quests" aria-label="${S.me.streak.current}-day streak - daily quests">${icon('flame')}<b>${S.me.streak.current}</b></a>` : ''}
     <a class="iconbtn" href="/search" aria-label="Search">${icon('search')}</a>
@@ -110,7 +110,7 @@ function topbar(path) {
     <button class="iconbtn more-btn" data-act="menu" aria-label="More options">${icon('ellipsis-vertical')}</button>
   </header>`;
 }
-const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/store', 'Hub Store'], ['/sponsor', 'Sponsor a Host'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
+const FOOT_LINKS = [['/about', 'About Trap Tech'], ['/store', 'Hub Store'], ['/sponsor', 'Book a Giveaway'], ['/rules', 'Official Rules'], ['/terms', 'Terms'], ['/privacy', 'Privacy'], ['/responsible-play', 'Responsible play'], ['/settings', 'Settings']];
 // v7: shown on game pages, leaderboards and the footer (the server decides what is official, never this file)
 const OFFICIAL_NOTICE = 'Only giveaways shown in the Official Giveaways section of The Gaming Hub are authorized Gaming Hub competitions. Public game scores do not count as entry into an official giveaway.';
 const officialNotice = (cls = '') => `<div class="card pad official-notice ${cls}" role="note"><b>${icon('shield-check')} OFFICIAL GIVEAWAY NOTICE</b><p class="small muted" style="margin:4px 0 0">${OFFICIAL_NOTICE} <a href="/giveaways">Official Giveaways</a></p></div>`;
@@ -127,7 +127,7 @@ function bottomnav(path) {
   const act = navActive(path);
   return `<nav class="bottomnav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}<span>${l}</span></a>`).join('')}</nav>`;
 }
-const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/sponsor': 'Sponsor a Host',
+const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/sponsor': 'Book a Giveaway',
   '/quests': 'Daily Quests', '/season': 'Season Pass', '/tournaments': 'Tournaments', '/notifications': 'Notifications', '/search': 'Search', '/invite': 'Invite Friends',
   '/about': 'About Trap Tech Solutions', '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/settings': 'Settings' };
 function setTitle(t) { document.title = t ? `${t} | The Gaming Hub by Trap Tech Solutions` : 'The Gaming Hub by Trap Tech Solutions'; }
@@ -170,9 +170,9 @@ function openMenu() {
     <div class="dr-sec">Friends</div>
     <a href="/friends">${icon('users')}Friends &amp; Challenges</a>
     <a href="/invite">${icon('gift')}Invite Friends</a>
-    <a href="/settings#v7-brand">${icon('store')}Your brand</a>
+    <a href="/settings#v7-brand">${icon('store')}Giveaway brand</a>
     <div class="dr-sec">More</div>
-    <a href="/sponsor">${icon('briefcase')}Sponsor a Host</a>
+    <a href="/sponsor">${icon('briefcase')}Book a Giveaway</a>
     ${S.me ? `<a href="/notifications">${icon('bell')}Notifications${S.me.unread ? `<span class="pill-mini">${S.me.unread}</span>` : ''}</a><a href="/settings">${icon('settings')}Settings</a><button class="link" data-act="signout">${icon('log-out')}Sign out</button>`
            : `<a href="/signin">${icon('log-in')}Sign in</a><a href="/signup">${icon('user-plus')}Create account</a><a href="/settings">${icon('settings')}Settings</a>`}
     <a href="/about">${icon('building-2')}About Trap Tech</a>
@@ -274,7 +274,7 @@ function splash() {
       <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub" width="330" height="195">
       <div class="tagline">PLAY <b>•</b> COMPETE <b>•</b> WIN <b>•</b> CONNECT</div>
       <p class="splash-sub">Free arcade games, tournaments and brand giveaways.<br>No purchase necessary. 21+.</p>
-      <div class="splash-feats">${[['gamepad-2','13 skill games','Built for phones, scored fairly'],['gift','Brand giveaways','Official events with real prizes'],['trophy','Seasons & quests','Free season track, earn the pass'],['palette','Your avatar','Dress it up, flex your wins']].map(([i,t,d])=>`<div class="sf">${icon(i)}<b>${t}</b><span>${d}</span></div>`).join('')}</div>
+      <div class="splash-feats">${[['gamepad-2','Full game library','One searchable catalog of games'],['gift','Brand giveaways','Official events with real prizes'],['trophy','Seasons & quests','Free season track, earn the pass'],['palette','Your avatar','Dress it up, flex your wins']].map(([i,t,d])=>`<div class="sf">${icon(i)}<b>${t}</b><span>${d}</span></div>`).join('')}</div>
     </div>
     <div class="cta">
       <a class="btn block" href="/signup">Get Started</a>
@@ -382,6 +382,18 @@ route(/^\/forgot$/, () => shell('/forgot', `<div class="narrow"><div class="back
 
 
 
+function weeklyCatalogPick(games) {
+  // Keep registry order: new titles appended to the catalog join the next available rotation slot without reshuffling existing titles.
+  const eligible = (games || []).filter(g => g && g.title && g.url && g.art);
+  if (!eligible.length) return null;
+  const now = new Date();
+  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const mondayUtc = todayUtc - ((now.getUTCDay() + 6) % 7) * 86400000;
+  const firstMondayUtc = Date.UTC(2024, 0, 1);
+  const weekIndex = Math.floor((mondayUtc - firstMondayUtc) / 604800000);
+  return eligible[((weekIndex % eligible.length) + eligible.length) % eligible.length];
+}
+
 // ---------------- home ----------------
 route(/^\/(home)?$/, async () => {
   if (!S.me && !S.guest && !ls.getItem('gh_seen_splash')) return splash();
@@ -390,7 +402,7 @@ route(/^\/(home)?$/, async () => {
   const takeover = live.find(x => (x.placements || []).includes('hero')); // v7: hero takeover is a sponsor placement
   const featuredGw = live.filter(x => x.featured && x !== takeover);
   const g0 = live.find(x => x !== takeover) || null;
-  const featured = S.games.slice(0, 4);
+  const weeklyGame = weeklyCatalogPick(S.libraryGames);
   const tours = (tn.ok ? tn.tournaments : []).filter(t => t.status !== 'ended').slice(0, 3);
   shell('/', `
     <section class="home-intro">
@@ -406,8 +418,17 @@ route(/^\/(home)?$/, async () => {
     ${takeover ? heroTakeover(takeover) : `<div class="hero"><img src="/assets/brand/hero-banner.webp" alt="The Gaming Hub - Play, Compete, Win, Connect" width="1336" height="400"></div>`}
     ${S.me && q && q.ok ? dailyPanel(q) : !S.me ? `<div class="card pad cta-card"><span class="es-ic">${icon('sparkles')}</span><div style="flex:1"><b>Play free. Win real prizes.</b><div class="small muted">Create a free account so your scores count for giveaways, tournaments and daily quests.</div></div><a class="btn sm" href="/signup">Sign up</a></div>` : ''}
     ${featuredGw.length ? `<div class="section-h"><h2>${icon('sparkles')} Featured Giveaways</h2><a href="/giveaways">View All</a></div><div class="feat-gw">${featuredGw.map(featCard).join('')}</div>` : ''}
-    <div class="section-h"><h2>Featured Games</h2><a href="/games">View All</a></div>
-    <div class="hscroll">${featured.map(g => gameCard(g, true)).join('')}</div>
+    ${weeklyGame ? `<section class="weekly-feature" aria-labelledby="weekly-feature-title">
+      <div class="weekly-feature-art" style="background-image:linear-gradient(90deg,rgba(5,7,17,.97) 0%,rgba(5,7,17,.82) 42%,rgba(5,7,17,.08) 100%),url('${esc(weeklyGame.art)}')"></div>
+      <div class="weekly-feature-copy"><div class="weekly-feature-kicker"><span class="home-live-dot"></span> THIS WEEK'S FEATURED GAME</div>
+        <h2 id="weekly-feature-title">${esc(weeklyGame.title)}</h2>
+        <div class="weekly-feature-category">${esc(weeklyGame.category || 'Arcade')}</div>
+        <p>One game in the spotlight every week. Play this week's pick, then explore the full catalog for your next favorite.</p>
+        <div class="weekly-feature-actions"><a class="btn" href="${esc(weeklyGame.url)}">▶ Play This Week's Game</a><a class="btn ghost" href="/games">Browse All Games</a></div>
+      </div>
+      <div class="weekly-feature-index">WEEKLY SPOTLIGHT <span>NEW PICK EVERY MONDAY</span></div>
+    </section>` : `<section class="weekly-feature weekly-feature-empty"><div class="weekly-feature-copy"><div class="weekly-feature-kicker">THE FULL ARCADE</div><h2>Explore the Game Library</h2><p>The featured pick will appear here when the catalog is available.</p><a class="btn" href="/games">Browse All Games</a></div></section>`}
+    <a class="catalog-launch-banner" href="/games"><span class="catalog-launch-icon">✦</span><span class="catalog-launch-copy"><b>Explore the full game catalog</b><small>Search every title, browse categories, and find your next favorite.</small></span><span class="catalog-launch-action">BROWSE GAMES ↗</span></a>
     ${tours.length ? `<div class="section-h"><h2>${icon('swords')} Tournaments</h2><a href="/tournaments">View All</a></div><div class="t-strip">${tours.map(tCard).join('')}</div>` : ''}
     <div class="home-split">
       <div class="card">
@@ -434,8 +455,8 @@ route(/^\/(home)?$/, async () => {
       <a class="card pad ach-promo" href="/achievements"><span class="ai">${icon('medal')}</span><div><b>Achievements &amp; Rewards</b><div class="small muted">100+ achievements unlock banners, frames and titles. Cosmetic only, no cash value.</div></div>${icon('chevron-right')}</a>
       <a class="card pad ach-promo" href="/invite"><span class="ai">${icon('gift')}</span><div><b>Invite friends</b><div class="small muted">Share your code - earn exclusive Crew Builder cosmetics when friends play.</div></div>${icon('chevron-right')}</a>
     </div>
-    <div class="section-h"><h2>Sponsor a Host</h2><a href="/sponsor">Learn more</a></div>
-    <a class="banner" href="/sponsor" style="display:block;color:var(--text)"><h2>Get Your Brand in the Game</h2><div class="small" style="color:#d9dcff">Pick the features you want and get a free quote. Trap Tech Solutions builds your branded giveaway, from a simple prize drop to a full takeover.</div></a>
+    <div class="section-h"><h2>Book a Giveaway</h2><a href="/sponsor">Learn more</a></div>
+    <a class="banner" href="/sponsor" style="display:block;color:var(--text)"><h2>Book Your Giveaway</h2><div class="small" style="color:#d9dcff">Pick the features you want and get a free quote. Trap Tech Solutions builds your branded giveaway, from a simple prize drop to a full takeover.</div></a>
     <div class="footer-note">${TT('mono', 64)}Powering the next generation of online gaming</div>`, { cls: 'home-redesign' });
   tickCountdowns(); wireDaily();
   if (S.me && q && q.ok && !q.streak.checked_today) doCheckin();
@@ -464,34 +485,52 @@ function gameCard(g, tall = false) {
 }
 
 // ---------------- games ----------------
-route(/^\/games$/, (m, url) => {
-  let cat = url.searchParams.get('cat') || 'All'; let q = '';
-  const cats = ['All', 'Arcade', 'Racing', 'Puzzle', 'Strategy', 'Physics', 'Just for fun'];
-  shell('/games', `<h1>Games <span class="pill green" style="vertical-align:middle">${S.games.length} playable</span></h1><a class="btn sm" style="margin:-6px 0 12px" href="/games-lib/index.html">Explore the Games Library <span id="lib-count" class="pill" style="margin-left:6px">new originals + full catalog</span></a><!-- [games-lib hook] -->
-    <div class="field ic">${icon('search')}<input class="input" id="q" placeholder="Search games..." autocomplete="off"></div>
-    <div class="chips" id="chips">${cats.map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('')}</div>
-    <div class="grid2 games-grid" id="grid"></div>
-    <div class="section-h"><h2>Featured Games</h2><a href="/achievements">${icon('medal')} Achievements</a></div>
-    <div class="grid2 games-grid">${S.games.filter(g => g.featured && g.giveaway !== false).map(g => gameCard(g)).join('')}</div>
-    <p class="small dim center" style="margin-top:14px">All games are free to play. Casino-style games use points only: no real money, no purchases.</p>`);
-  const draw = () => {
-    const match = (g) => (cat === 'All' || g.category === cat || (cat === 'Just for fun' && g.giveaway === false)) && g.title.toLowerCase().includes(q);
-    const list = S.games.filter(g => !g.featured && g.giveaway !== false && match(g));
-    const feat = (cat !== 'All' || q) ? S.games.filter(g => g.featured && g.giveaway !== false && match(g)) : [];
-    // v7: chance games live in their own "Just for fun" section (they never count for giveaways)
-    const fun = S.games.filter(g => g.giveaway === false && match(g));
-    document.getElementById('grid').innerHTML = ([...list, ...feat].map(g => gameCard(g)).join('')
-      + (fun.length ? `<div class="section-h fun-h" style="grid-column:1/-1"><h2>${icon('dices')} Just for fun</h2><span class="small muted">Chance games: points only, not eligible for giveaways</span></div>` + fun.map(g => gameCard(g)).join('') : ''))
-      || `<div class="empty" style="grid-column:1/-1">No games match.</div>`;
+route(/^\/games$/, () => {
+  const library = S.libraryGames.filter(g => g && g.title && g.url);
+  const categories = [...new Set(library.map(g => g.category).filter(Boolean))].sort();
+  shell('/games', `
+    <section class="unified-games-head">
+      <div class="home-eyebrow">THE FULL ARCADE</div>
+      <h1>Game Library <span class="pill green" style="vertical-align:middle" id="lib-count">${library.length} games</span></h1>
+      <p class="small muted">One library. Every game. Browse the full collection, find your next favorite, and play.</p>
+    </section>
+    <div class="catalog-hub-controls"><input class="input" id="lib-q" placeholder="Search all games…" autocomplete="off" aria-label="Search all games"><select class="input" id="lib-category" aria-label="Filter games by category"><option value="">All categories</option></select></div>
+    <div class="catalog-hub-count small muted" id="lib-result-count" aria-live="polite">Loading games…</div>
+    <div class="grid2 games-grid catalog-hub-grid unified-game-grid" id="lib-grid"></div>
+    <p class="small dim center" style="margin-top:18px">Official competitions are listed separately. A game being in the library does not automatically make it eligible for a giveaway.</p>`);
+  const libQ = document.getElementById('lib-q');
+  const libCategory = document.getElementById('lib-category');
+  const libGrid = document.getElementById('lib-grid');
+  const libCount = document.getElementById('lib-result-count');
+  categories.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; libCategory.appendChild(o); });
+  const catalogCard = g => '<a class="gcard wide catalog-game-card" href="' + esc(g.url) + '"><div class="art" style="background-image:linear-gradient(180deg,transparent 45%,rgba(4,7,20,.5)),url(&quot;' + esc(g.art || g.thumbnail || '') + '&quot;)"><span class="live">PLAY NOW</span></div><div class="meta"><div class="t">' + esc(g.title) + '</div><div class="c">🎮 ' + esc(g.category || 'Arcade') + '</div></div></a>';
+  const drawLibrary = () => {
+    const term = libQ.value.trim().toLowerCase(), selected = libCategory.value;
+    const currentGames = S.libraryGames.filter(g => g && g.title && g.url);
+    const filtered = currentGames.filter(g => (!selected || g.category === selected) && (String(g.title) + ' ' + String(g.category || '') + ' ' + String(g.competition || '')).toLowerCase().includes(term));
+    libCount.textContent = 'Showing ' + filtered.length + ' of ' + currentGames.length + ' games';
+    libGrid.innerHTML = filtered.map(catalogCard).join('') || '<div class="empty" style="grid-column:1/-1">No games match. Try another search or category.</div>';
   };
-  draw();
-  // Games Library catalog is served by the same registry as the dedicated library page.
+  drawLibrary();
+  libQ.addEventListener('input', drawLibrary);
+  libCategory.addEventListener('change', drawLibrary);
   fetch('/api/games-lib', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(lib => {
+    if (!lib || !Array.isArray(lib.games)) return;
+    S.libraryGames = lib.games.filter(g => g && g.title && g.url);
+    const currentCategory = libCategory.value;
+    const cats = [...new Set(S.libraryGames.map(g => g.category).filter(Boolean))].sort();
+    libCategory.innerHTML = '<option value="">All categories</option>';
+    cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; libCategory.appendChild(o); });
+    libCategory.value = currentCategory;
     const badge = document.getElementById('lib-count');
-    if (badge && lib && Array.isArray(lib.games)) badge.textContent = lib.games.length + ' library games';
+    if (badge) badge.textContent = S.libraryGames.length + ' games';
+    // Redraw from the server registry so the hub and dedicated library use one source of truth.
+    const updated = S.libraryGames;
+    const term = libQ.value.trim().toLowerCase(), selected = libCategory.value;
+    const filtered = updated.filter(g => (!selected || g.category === selected) && (String(g.title) + ' ' + String(g.category || '') + ' ' + String(g.competition || '')).toLowerCase().includes(term));
+    libCount.textContent = 'Showing ' + filtered.length + ' of ' + updated.length + ' games';
+    libGrid.innerHTML = filtered.map(catalogCard).join('') || '<div class="empty" style="grid-column:1/-1">No games match. Try another search or category.</div>';
   }).catch(() => {});
-  document.getElementById('q').addEventListener('input', (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
-  document.getElementById('chips').addEventListener('click', (e) => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; document.querySelectorAll('#chips .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
 });
 route(/^\/games\/([\w-]+)$/, async (m) => {
   const g = gameById(m[1]); if (!g) return shell('/games', `<div class="empty">Game not found. <a href="/games">All games</a></div>`);
@@ -758,7 +797,7 @@ async function eligCard(g) {
   const slots = e.checks.find(c => c.id === 'slots');
   el.innerHTML = `<h2>${icon('shield-check')} Eligibility</h2>
     <div class="elig-status ${e.joined ? 'joined' : ok ? 'ok' : 'no'}" id="elig-status">${icon(e.joined ? 'ticket' : ok ? 'circle-check' : 'circle-alert')} <b>${esc(e.message)}</b></div>
-    <ul class="elig-checks">${e.checks.map(c => `<li class="${c.ok ? 'ok' : 'no'}" data-chk="${c.id}">${icon(c.ok ? 'check' : 'x')}<span><b>${esc(c.label)}</b><small>${esc(c.hint)}</small></span>${c.id === 'brand_member' && !c.ok ? `<a class="btn sm ghost" href="/settings#v7-brand">Your brand</a>` : ''}</li>`).join('')}</ul>
+    <ul class="elig-checks">${e.checks.map(c => `<li class="${c.ok ? 'ok' : 'no'}" data-chk="${c.id}">${icon(c.ok ? 'check' : 'x')}<span><b>${esc(c.label)}</b><small>${esc(c.hint)}</small></span>${c.id === 'brand_member' && !c.ok ? `<a class="btn sm ghost" href="/settings#v7-brand">Giveaway brand</a>` : ''}</li>`).join('')}</ul>
     ${potatoChk && !potatoChk.ok ? `<form class="potato-form" id="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="potato-in" placeholder="Your Potato username" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></form>` : ''}
     ${slots && !slots.ok ? `<div class="small muted">Your live entries: ${slots.entries.map(x => `<a href="/giveaways/${x.id}">${esc(x.title)}</a>`).join(', ')}. <a href="/me/entries">Manage entries</a></div>` : ''}
     ${e.entries ? `<div class="elig-entries">${icon('ticket')} Draw entries: <b>${e.entries.count}</b> of ${e.entries.max}${e.entries.count < e.entries.max ? ` • ${e.entries.next_at - e.entries.runs} more run${e.entries.next_at - e.entries.runs === 1 ? '' : 's'} for ${e.entries.count + 1}` : ''}</div>` : ''}
@@ -1384,8 +1423,8 @@ route(/^\/responsible-play$/, () => legal('/responsible-play', 'Responsible Play
 route(/^\/about$/, () => shell('/about', `<div class="narrow">
   <div class="about-hero card"><div class="about-tt">${TT('horizontal', 84, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
     <p class="muted">Trap Tech Solutions is the studio behind The Gaming Hub. We design, build and run every part of it: the games, leaderboards, tournaments, giveaways, achievements and the admin tools brands use.</p>
-    <div class="btn-row center-row"><a class="btn" href="/sponsor">${icon('briefcase')} Sponsor a Host</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
-  <div class="about-grid">${[['gamepad-2', 'Original games', '13 original HTML5 skill games, made to play great on phones, with skill-based scoring and server-side anti-cheat.'], ['gift', 'Brand giveaways', 'Sponsors pick exactly the features they want, from a simple prize drop to a full branded takeover, and get a custom quote.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Free to play, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
+    <div class="btn-row center-row"><a class="btn" href="/sponsor">${icon('briefcase')} Book a Giveaway</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
+  <div class="about-grid">${[['gamepad-2', 'Original games', 'One unified 150-entry browser-game catalog with search, categories and mobile play. Catalog count is not a claim that every title has passed runtime or competition certification.'], ['gift', 'Brand giveaways', 'Sponsors pick exactly the features they want, from a simple prize drop to a full branded takeover, and get a custom quote.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Free to play, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
   <div class="card pad"><h2 style="margin-bottom:6px">The Gaming Hub by Trap Tech Solutions</h2><p class="small muted">Version 7 • Built by Trap Tech Solutions. Every game, banner and badge is original work. See <a href="/terms">Terms</a>, <a href="/privacy">Privacy</a>, <a href="/rules">Official Rules</a> and <a href="/responsible-play">Responsible play</a>.</p></div>
 </div>`));
 
@@ -1460,7 +1499,7 @@ addEventListener('pointerdown', unlockAudio, true); addEventListener('touchend',
 if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigator.serviceWorker.register('/sw.js').catch(() => {}); } catch {} });
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
-// v7 pages (Sponsor a Host, brands, shop & seasons) - public/js/v7.js
+// v7 pages (Book a Giveaway, brands, shop & seasons) - public/js/v7.js
 V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS, avatar, bumpAvatar });
 // ---------------- boot ----------------
 (async function boot() {

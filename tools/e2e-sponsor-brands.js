@@ -1,5 +1,4 @@
-// v7 Sponsor a Host (feature picker, admin-only prices, quote flow) + brand affiliation (invite links, one brand per
-// player, 30-day switch cooldown, brand-only vs open giveaways) end to end. Starts its OWN server on a copy of the DB
+// v7 Book a Giveaway (admin-only quote flow) + giveaway team affiliation (invite links, 30-day switching cooldown, brand-only vs open giveaways) end to end. Starts its OWN server on a copy of the DB
 // (port 8798), so nothing touches the dev server. Usage: node tools/e2e-sponsor-brands.js
 const fs = require('fs'); const path = require('path'); const { spawn } = require('child_process');
 const { adminClient, loadEnv } = require('./admin-auth');
@@ -27,7 +26,7 @@ const env0 = loadEnv();
   try {
     const ADM = adminClient(BASE, env); let r = await ADM.login(); ok(r.body.ok, 'admin signs in (password + TOTP)', r.body);
     const anon = client();
-    console.log('# Sponsor a Host: public side has no tiers and no prices');
+    console.log('# Book a Giveaway: public side has no tiers and no prices');
     r = await anon('/api/sponsor/catalog'); const cat = r.body;
     ok(cat.ok && cat.features.length >= 20 && cat.groups.length >= 5, `one combined feature list (${cat.features && cat.features.length} features in ${cat.groups && cat.groups.length} groups)`);
     const catTxt = JSON.stringify(cat); ok(!/price|_cents|\$\d/i.test(catTxt.replace(/"faq":.*$/, '')) && !/\b(basic|premium|elite)\b/i.test(catTxt), 'catalog shows no prices and no tier names', (catTxt.replace(/"faq":.*$/, '').match(/.{0,60}(price|_cents|\$\d|\b(basic|premium|elite)\b).{0,30}/i) || [''])[0]);
@@ -75,8 +74,8 @@ const env0 = loadEnv();
     await ADM('/api/admin/giveaways/' + evid, { method: 'DELETE' });
     r = await ADM('/api/admin/sponsor/requests'); ok(r.body.requests.some(x => x.id === rid && x.quote.status === 'paid'), 'admin request list shows quote states');
 
-    console.log('# brands: invite links, one brand per player, 30-day switch cooldown');
-    r = await anon('/api/brands'); const brands = r.body.brands; ok(r.body.ok && brands.length >= 2 && r.body.cooldown_days === 30, `brand list (${brands.length})`);
+    console.log('# giveaway teams: invite links, one selected team, 30-day switching cooldown');
+    r = await anon('/api/brands'); const brands = r.body.brands; ok(r.body.ok && brands.length >= 2 && r.body.cooldown_days === 30, `team list (${brands.length}); 30-day switching cooldown`);
     r = await ADM('/api/admin/brands'); const ab = r.body.brands; ok(ab.every(b => /^[A-Z2-9]{8}$/.test(b.invite_code)), 'every brand has an invite code', ab.map(b => b.invite_code));
     const [b1, b2] = ab; r = await anon('/api/brands/invite/' + b1.invite_code); ok(r.body.ok && r.body.brand.id === b1.id, 'invite link resolves the brand');
     r = await anon('/api/brands/invite/NOTACODE'); ok(r.status === 404, 'bad invite code -> 404');
@@ -85,9 +84,8 @@ const env0 = loadEnv();
     r = await V('/api/auth/signup', { body: { username: 'e2eb_v' + stamp, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.body.ok, 'signup V');
     for (const C of [U, V]) await C('/api/me/potato', { method: 'PUT', body: { potato: 'e2epot' + stamp } });
     r = await U('/api/me/brand'); ok(r.body.ok && !r.body.brand && r.body.can_switch, 'new player has no brand');
-    r = await U('/api/me/brand', { body: { code: b1.invite_code, via: 'link' } }); ok(r.body.ok && r.body.brand.id === b1.id && !r.body.can_switch, 'U joins brand 1 via invite link');
+    r = await U('/api/me/brand', { body: { code: b1.invite_code, via: 'link' } }); ok(r.body.ok && r.body.brand.id === b1.id && !r.body.can_switch && r.body.cooldown_days === 30, 'U joins team 1 and is locked for 30 days');
     r = await V('/api/me/brand', { body: { code: b2.slug, via: 'signup' } }); ok(r.body.ok && r.body.brand.id === b2.id, 'V picks brand 2 at signup');
-    r = await U('/api/me/brand', { body: { code: b2.invite_code } }); ok(r.status === 400 && /30 days/.test(r.body.error) && r.body.can_switch_at, 'switching again inside 30 days is refused with the date', r.body);
     const t0 = Date.now(); const rules0 = { elig_account_age_days: 0, elig_min_runs7: 0, elig_min_xp7: 0, elig_max_active: 0, elig_win_cooldown_days: 0, require_join: true };
     r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Brand Only', host: b1.name, start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true, channel_id: b1.id, ...rules0 } }); const gB = r.body.id; ok(r.body.ok, 'admin creates a brand-only giveaway');
     r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Open Brand', host: b1.name, start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true, channel_id: b1.id, open_to_all: true, ...rules0 } }); const gO = r.body.id;
@@ -100,14 +98,15 @@ const env0 = loadEnv();
     r = await U('/api/giveaways/' + gB + '/join', { body: {} }); ok(r.body.ok, 'member enters', r.body);
     r = await V('/api/giveaways/' + gO + '/eligibility'); ok(r.body.eligible && !(r.body.checks || []).some(c => c.id === 'brand_member'), 'open-to-everyone giveaway: any brand can enter', r.body);
     r = await anon('/api/giveaways/' + gO); ok(r.body.giveaway.open_to_all === true && r.body.giveaway.eligibility_rules.some(x => /Open to everyone/.test(x)), 'open giveaway rule text');
-    db.prepare('UPDATE users SET brand_joined_at=? WHERE username=?').run(Date.now() - 31 * 864e5, 'e2eb_u' + stamp);
-    r = await U('/api/me/brand', { body: { code: b2.invite_code } }); ok(r.body.ok && r.body.switched && r.body.left_giveaways.includes('E2E Brand Only'), 'after 30 days U switches; old-brand live entries are left automatically', r.body);
+    r = await U('/api/me/brand', { body: { code: b2.invite_code } }); ok(r.status === 400 && /change your giveaway team in/.test(r.body.error), 'server blocks switching during 30-day cooldown', r.body);
+    process.env.DB_PATH = DB; const BrandCooldown = require('../src/brands'); const uId = db.prepare('SELECT id FROM users WHERE username=?').get('e2eb_u' + stamp).id;
+    const sw = BrandCooldown.join(uId, b2.invite_code, 'cooldown-test', Date.now() + 31 * 864e5); ok(sw.ok && sw.switched && sw.left_giveaways.includes('E2E Brand Only') && !sw.can_switch, 'after cooldown, switching closes old entries and starts a fresh 30-day lock', sw);
     r = await U('/api/giveaways/' + gB + '/eligibility'); ok(!r.body.joined && !r.body.eligible, 'U is no longer entered in the old brand giveaway');
     process.env.DB_PATH = DB; const E = require('../src/eligibility');
     const uid = db.prepare('SELECT id FROM users WHERE username=?').get('e2eb_u' + stamp).id;
     ok(/Not a member/.test(E.lockViolation({ channel_id: b1.id, open_to_all: 0 }, uid) || ''), 'at lock time a non-member is skipped with a logged reason');
     ok(E.lockViolation({ channel_id: b1.id, open_to_all: 1 }, uid) === null, 'open giveaways never skip for brand');
-    r = await U('/api/me/brand/leave', { body: {} }); ok(r.body.ok && !r.body.brand, 'player can leave a brand');
+    r = await U('/api/me/brand/leave', { body: {} }); ok(r.status === 400 && /change your giveaway team in/.test(r.body.error), 'leaving cannot bypass the 30-day cooldown');
     console.log('# placements replace tiers');
     r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Linked', host: 'X', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true, link_url: 'https://example.com/x', placements: ['giveaway', 'featured'] } }); const gL = r.body.id;
     r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Unlinked', host: 'X', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true, link_url: 'https://example.com/x' } }); const gN = r.body.id;
