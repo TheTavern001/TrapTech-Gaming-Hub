@@ -1,0 +1,48 @@
+name: Full Games Library Audit
+on:
+  workflow_dispatch:
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NODE_ENV: test
+      PORT: 8787
+      SECRET: ci-only-not-production
+      ADMIN_PASSWORD: ci-only-not-production
+      ADMIN_PATH: ci-hidden-admin
+      DATA_DIR: /tmp/hub-data
+      BASE: http://127.0.0.1:8787
+      PLAY_MS: "2500"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: browser-actions/setup-chrome@v1
+      - run: npm ci && npm install --no-save playwright-core
+      - name: Start isolated Hub
+        run: |
+          mkdir -p "$DATA_DIR"
+          npm start > /tmp/hub-ci.log 2>&1 &
+          echo $! > /tmp/hub-ci.pid
+          for i in $(seq 1 45); do
+            if curl --fail --silent "$BASE/healthz" >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/hub-ci.log
+          exit 1
+      - name: Test all games on desktop and mobile
+        run: node tools/e2e-games-lib.js
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-game-library-audit
+          path: screenshots/v7/games-lib/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Stop Hub
+        if: always()
+        run: if [ -f /tmp/hub-ci.pid ]; then kill "$(cat /tmp/hub-ci.pid)" || true; fi
