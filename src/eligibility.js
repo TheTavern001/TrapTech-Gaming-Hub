@@ -110,7 +110,7 @@ function check(user, g, t = now()) {
   } catch (err) { /* malformed legacy configuration should not break giveaway pages */ }
   for (const fn of module.exports.extra) { try { checks.push(...fn(u, g, t)); } catch (e) { /* v7 builder checks never break the page */ } }
   const potatoOk = /^[A-Za-z0-9_]{3,32}$/.test(u.potato || '');
-  checks.push({ id: 'potato', ok: potatoOk, label: 'Potato username on file', hint: potatoOk ? `Winner contact: @${u.potato} on Potato` : 'Add your Potato username so we can contact you if you win', potato: u.potato || '' });
+  checks.push({ id: 'potato', ok: potatoOk, label: 'Potato username on file', hint: potatoOk ? 'A contact handle is on file for winner notification' : 'Add your Potato username so we can contact you if you win' });
   const eligible = checks.every(c => c.ok);
   const firstBad = checks.find(c => !c.ok);
   const message = !r.require_join ? (eligible ? "You're eligible - play a linked game to enter" : firstBad.hint)
