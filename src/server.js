@@ -20,7 +20,9 @@ const resolveGame = (id) => cfg.GAME_MAP[id] || libraryGames().find(g => g.id ==
 const HUB_VERSION = 'V1';
 
 const app = express();
-app.set('trust proxy', true);
+const proxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
+// Trust only an explicitly configured number of reverse-proxy hops; never trust arbitrary X-Forwarded-* headers by default.
+app.set('trust proxy', Number.isInteger(proxyHops) && proxyHops >= 1 && proxyHops <= 3 ? proxyHops : false);
 const PU = require('./public-url'); app.use(PU.redirect()); // v7: PUBLIC_URL + optional CANONICAL_REDIRECT (src/public-url.js)
 app.disable('x-powered-by');
 // Baseline hardening: client-side code is public by design, but browser capabilities and API responses are constrained.
@@ -68,7 +70,12 @@ function verify(secret, token) {
   if (!safeEq(s, hmac(secret, p))) return null;
   try { return JSON.parse(unb64u(p)); } catch { return null; }
 }
-function clientIp(req) { return String(req.headers['cf-connecting-ip'] || req.ip || '').trim(); }
+function clientIp(req) {
+  const cf = String(req.headers['cf-connecting-ip'] || '').trim();
+  // Only honor Cloudflare's client-IP header when the operator explicitly confirms that direct origin access is blocked.
+  if (process.env.TRUST_CF_IP === '1' && require('net').isIP(cf)) return cf;
+  return String(req.ip || req.socket && req.socket.remoteAddress || '').trim();
+}
 function ipHash(req) { return crypto.createHash('sha256').update(cfg.IP_SALT + clientIp(req)).digest('hex').slice(0, 16); }
 function uaHash(req) { return crypto.createHash('sha256').update(cfg.IP_SALT + ':ua:' + String(req.headers['user-agent'] || '')).digest('hex').slice(0, 12); }
 function parseCookies(req) {
