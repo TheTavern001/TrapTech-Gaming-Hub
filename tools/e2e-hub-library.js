@@ -34,7 +34,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     await page.locator('#lib-category').selectOption({ index: 1 });
     assert.ok(await page.locator('#lib-grid .catalog-game-card').count() > 0, 'main Hub catalog category filter should render results');
     await page.locator('#lib-category').selectOption('');
-    await page.locator('a[href="/games-lib/index.html"]').click();
+    await page.locator('.catalog-hub-head a[href="/games-lib/index.html"]').click();
     await page.locator('#lib-title').waitFor({ timeout: 10000 });
     await page.waitForFunction(() => Number(document.getElementById('total')?.textContent || 0) >= 100, null, { timeout: 15000 });
     const combinedTotal = Number(await page.locator('#total').textContent());
