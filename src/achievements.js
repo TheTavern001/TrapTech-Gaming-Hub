@@ -150,12 +150,10 @@ const BY_ID = Object.fromEntries(A.map(a => [a.id, a]));
 // ---------- v5: admin-granted badges (can never be unlocked by playing) ----------
 const ADMIN_BADGES = [
   { id: 'staff', name: 'Staff', icon: 'shield-check', desc: 'Hub staff member', color: '#a78bfa' },
-  { id: 'traptech-team', name: 'Trap Tech Team', icon: 'code-xml', desc: 'Part of the Trap Tech Solutions team that builds the hub', color: '#22d3ee' },
   { id: 'verified-host', name: 'Verified Host', icon: 'badge-check', desc: 'Verified giveaway host', color: '#4ade80' },
   { id: 'verified-sponsor', name: 'Verified Sponsor', icon: 'store', desc: 'Verified sponsor brand or creator', color: '#34d399' },
   { id: 'giveaway-winner', name: 'Giveaway Winner', icon: 'trophy', desc: 'Confirmed winner of a hub giveaway (granted automatically on confirmation)', color: '#fbbf24' },
   { id: 'beta-tester', name: 'Beta Tester', icon: 'flask-conical', desc: 'Helped test the hub before launch', color: '#f472b6' },
-  { id: 'founder', name: 'Founder', icon: 'gem', desc: 'Founding member of The Gaming Hub', color: '#fde047' },
   { id: 'community-mvp', name: 'Community MVP', icon: 'star', desc: 'Recognised by the team for making the community better', color: '#fb923c' },
 ];
 const ADMIN_BY = Object.fromEntries(ADMIN_BADGES.map(b => [b.id, b]));
