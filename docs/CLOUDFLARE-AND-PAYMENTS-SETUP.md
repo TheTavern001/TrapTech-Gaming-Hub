@@ -32,7 +32,7 @@ R2 does not automatically move the site's source code, SQLite database, backups,
 
 ## Cloudflare DNS and proxy
 
-Cloudflare DNS is separate from R2 storage. Connect the domain in the hosting provider first, then use the exact DNS target the hosting provider gives you. Do not guess an IP address or turn on proxying before confirming the host supports it. Set PUBLIC_URL to the final HTTPS origin. Set TRUST_CF_IP=1 only when requests really arrive through Cloudflare; otherwise keep it disabled.
+Cloudflare DNS is separate from R2 storage. Connect the domain in the hosting provider first, then use the exact DNS target the hosting provider gives you. Do not guess an IP address or turn on proxying before confirming the host supports it. Set PUBLIC_URL to the final HTTPS origin. Set TRUST_PROXY_HOPS only to the actual trusted reverse-proxy hop count, and set TRUST_CF_IP=1 only when Cloudflare is the trusted front proxy and direct access to the origin is blocked. Otherwise, clients can spoof forwarding headers and defeat IP-based rate limits/anti-cheat signals.
 
 ## Security and privacy notes
 
