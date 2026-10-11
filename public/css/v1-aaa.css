@@ -196,8 +196,8 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .play-top .title{font-size:clamp(.72rem,1.4vw,.95rem);letter-spacing:.1em;text-shadow:0 0 18px rgba(72,230,255,.18)}
 .play-top .iconbtn{width:42px;height:42px;flex:none;border:1px solid rgba(148,163,255,.18);border-radius:12px;background:rgba(255,255,255,.035)}
 .play-top .who-chip{max-width:min(42vw,340px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 11px;border:1px solid rgba(148,163,255,.16);border-radius:999px;background:rgba(255,255,255,.025)}
-.play-wrap .play-stage{position:relative;isolation:isolate;flex:1;display:flex;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,rgba(32,44,92,.22),transparent 60%),#03040c}
-.play-wrap .play-stage:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.32;background-image:linear-gradient(rgba(148,163,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,255,.045) 1px,transparent 1px);background-size:36px 36px;mask-image:radial-gradient(ellipse at center,black,transparent 82%)}
+.play-wrap>div[style*="position:relative"]{position:relative;isolation:isolate;flex:1;display:flex;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,rgba(32,44,92,.22),transparent 60%),#03040c}
+.play-wrap>div[style*="position:relative"]:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.32;background-image:linear-gradient(rgba(148,163,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,255,.045) 1px,transparent 1px);background-size:36px 36px;mask-image:radial-gradient(ellipse at center,black,transparent 82%)}
 .play-wrap #game{position:relative;z-index:1;outline:none;touch-action:manipulation}
 .play-wrap .boot-ov{z-index:20;background:radial-gradient(ellipse at 50% 38%,rgba(72,230,255,.12),transparent 34%),radial-gradient(ellipse at 50% 50%,rgba(124,58,237,.32),rgba(5,7,20,.98) 72%)}
 .play-wrap .boot-art{width:clamp(108px,18vw,168px);height:clamp(108px,18vw,168px);border:1px solid rgba(72,230,255,.25);box-shadow:0 0 0 8px rgba(72,230,255,.025),0 0 48px rgba(124,58,237,.38)}
