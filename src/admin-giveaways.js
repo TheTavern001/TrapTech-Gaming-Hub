@@ -561,7 +561,7 @@ function publicExtras(g, out) {
       anticheat: Object.fromEntries(c.games.ids.map(id => [id, (PROF.get(id) || {}).anticheat_level || 'L2'])) },
     prizes: c.prizes.map(p => { const pl = plan(c).places.find(q => q.prize === p.id); return { name: p.name, desc: p.desc, image: p.image, qty: p.qty, value: p.value, type: p.type, type_label: PRIZE_TYPES[p.type], award: p.award, places: pl ? (p.award === 'random' ? 'Random draw' : pl.from === pl.to ? ord(pl.from) : `${ord(pl.from)}-${ord(pl.to)}`) : '' }; }),
     total_value: plan(c).arv, features: { share_cards: f.share_cards, live_standings: f.live_standings && !f.hidden_board, hidden_board: f.hidden_board, tournament_id: (c.runtime || {}).tournament_id || null },
-    board_hidden: hidden, claim_hours: c.winners.claim_hours, regions: c.entry.regions_mode === 'all' ? null : { mode: c.entry.regions_mode, list: c.entry.regions }, brand_only: !c.basics.hub_wide,
+    board_hidden: hidden, claim_hours: c.winners.claim_hours, regions: c.entry.regions_mode === 'all' ? null : { mode: c.entry.regions_mode, list: c.entry.regions }, brand_only: !c.basics.hub_wide, entry_checklist: c.entry.checklist.map(x => ({ id: x.id, label: x.label, url: x.url, required: x.required, attestation: true })),
     official_rules_html: c.rules.official || null };
   if (hidden && out) out.top = [];
   return x;
