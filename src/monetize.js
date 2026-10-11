@@ -68,7 +68,7 @@ function checkoutState() {
   const on = !!setting('checkout_enabled', true);
   const btc = { configured: !!a && v.ok, address: v.ok ? a : null, type: v.ok ? v.type : null, why: v.ok ? null : v.why };
   const publicUrl = String(process.env.PUBLIC_URL || '').trim();
-  const stripe = { configured: !!process.env.STRIPE_SECRET_KEY && !!process.env.STRIPE_WEBHOOK_SECRET && /^https:\/\//i.test(publicUrl),
+  const stripe = { configured: /^sk_(?:test|live)_/.test(String(process.env.STRIPE_SECRET_KEY || '')) && /^whsec_/.test(String(process.env.STRIPE_WEBHOOK_SECRET || '')) && /^https:\/\//i.test(publicUrl),
     mode: 'hosted Stripe Checkout for credit/debit cards' };
   const enabled = on && (btc.configured || stripe.configured);
   return { enabled, admin_switch: on, methods: enabled ? [...(btc.configured ? ['bitcoin'] : []), ...(stripe.configured ? ['stripe'] : [])] : [],
