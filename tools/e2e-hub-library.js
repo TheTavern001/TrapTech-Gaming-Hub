@@ -14,7 +14,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
   page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*4\d\d/.test(m.text())) errors.push(m.text()); });
   try {
     await page.goto(BASE + '/games', { waitUntil: 'networkidle' });
-    await page.locator('a[href="/games-lib/index.html"]').waitFor({ timeout: 15000 });
+    await page.locator('.catalog-hub-head a[href="/games-lib/index.html"]').waitFor({ timeout: 15000 });
     await page.waitForFunction(() => {
       const el = document.getElementById('lib-count');
       return el && /\d+ library games/.test(el.textContent || '');
