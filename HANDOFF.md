@@ -60,3 +60,28 @@ The latest results are in PROGRESS-V7.md (phase 9).
 - Idle RSS is ~75 MB and the measured peak is 87 MB, against the ~100 MB budget on the 128 MB plan.
 - `scripts/build-assets.js` is still untracked on purpose.
 - Games-library suite (other worker's): 61/62; only cloud-hopper failed, and the failure was in the test harness (its random signup username was rejected by the username filter), not in the game.
+
+
+## Final consolidated release handoff — 2026-10-11
+
+**Source of truth for this release:** the latest commit on `main`, not the older branch directions below. The current `main` history includes the v7 Hub, Games Library integrity-audit changes, Deplexo configuration fix, and the consolidated responsive homepage redesign. The current homepage redesign commit is `c98dc18935232b8c71e6cc0fce1a6512d22608b9`; any documentation-only release-finalization commit after it must also be included in the final deployment.
+
+### Scope intended for the single final deployment
+- **Full Hub, not a standalone game portal:** retain accounts, 21+ gate, profiles/avatars, leaderboards, quests/XP, achievements, tournaments, official giveaways/events, bookings/quotes, vendor/brand tools, admin controls, store/cosmetics, language picker, PWA, and the existing data migration path.
+- **Games:** the 13 core skill games plus the dedicated Games Library. The current registry and public catalog reconcile at **100 library entries**. The long-term target remains **150+**. Do not represent all 100 as individually quality-certified: the library handoff records outstanding visual, physical-device performance, asset-license, and full score-integrity reviews. Only Neon Circuit and Rift Survival are added by the current integration to the new library-game giveaway picker; they still need the official event path verified on the release candidate.
+- **Visual experience:** responsive homepage redesign, prominent Explore Games and Official Giveaways actions, the Trap Tech Solutions identity, improved discovery/category/search controls, game spotlights and card layouts, and mobile touch usability. Keep the established app flows; do not replace the Hub with a game-only page.
+- **Giveaway controls:** a casual public game link must not itself create an official event, entrant list, booking, or prize. Hub-managed official events require authorized operator/admin setup, valid booking/approval state, and server-validated event-run tokens and scores. Vendors must not be able to create/activate official Hub competitions or administer winner selection without authorization. Software cannot stop a vendor from sharing a public link or claiming to run an off-platform contest; the enforceable boundary is official Hub records, scoring, entrants, and winner selection.
+- **Brand/channel and conversion:** include the Trap Tech Solutions channel link `https://dympt.org/TrapTechSolutions` in the vendor handoff/marketing materials, alongside the deployed Hub link; keep the two distinct CTAs **PLAY THE HUB** and **BOOK A GIVEAWAY**. The live Hub should make the official booking route discoverable and direct players to the official event listings.
+- **Asset rights:** do not use ripped commercial assets, logos, characters, or pirated game ports. Use original or commercially cleared alternatives; a game’s presence in the catalog is not proof of legal clearance or giveaway readiness.
+
+### Known release gates — not to be silently marked complete
+The repository's release checklist still identifies these as outstanding: full library E2E and forged/replayed-score rejection for the release candidate; full official-event path for a library game; booking-status and vendor/admin permission regression; full browser checks of auth/navigation/leaderboards/profiles/bookings/giveaways/admin; fresh mobile smoke and physical-device profiling for known performance-risk games; asset/license review; and visual inspection at desktop and phone widths. The latest homepage commit's GitHub Actions browser-smoke workflow was running when this handoff was updated. Check the exact workflow result for the final commit before launch.
+
+### One-deployment rule
+1. Finish code and documentation changes on `main` first.
+2. Require the release candidate's static checks and blocking browser smoke tests to pass; separately record any non-blocking diagnostics and unresolved gates honestly.
+3. Back up the production database before deployment. Preserve the existing persistent `/data` volume and secrets if retaining current accounts/data. Confirm Deplexo's `deplexo.yaml` schema and runtime environment against `DEPLOY-DEPLEXO.md`; do not copy stale config examples that use unsupported fields.
+4. Deploy the **final `main` SHA once**, then verify `/healthz`, the visible homepage, game library entry/launch, auth, official event links, admin route, and persistence. Do not call the release fully live until these checks are observed.
+5. Keep the rollback image and database backup available. Never put secrets, the private admin path, or authenticator recovery codes in this document.
+
+Current deployment URL: https://glassy-drifter-9532.de.deplexo.com

@@ -62,3 +62,21 @@ This branch is based on `v7-wip` and preserves its Hub application files. The cu
 - Static workflow: passed on `303570b`: JavaScript syntax, inline library-page JavaScript, registry/catalog/docs consistency, and local asset checks.
 - Browser workflow: passed on `303570b`: main Hub and Games Library navigation at a mobile viewport; Neon Circuit and Rift Survival smoke tests at desktop and iPhone-sized viewports; performance-risk diagnostic completed as a non-blocking step.
 - These workflows run against an isolated CI database and local test server. They do not verify Deplexo's deployed commit, persistent production storage, all catalog games, payment processing, or the complete official giveaway flow.
+
+
+## Consolidated release candidate update — 2026-10-11
+
+This repository's current `main` contains the Hub v7 work, the Games Library integrity-audit integration, and the responsive homepage redesign. It is the candidate to prepare for a single final Deplexo deployment. The older statement above that the current edits are still an unmerged branch is historical context and is superseded by this update.
+
+- [x] Main Hub retained; the library is integrated rather than replacing the app.
+- [x] Homepage redesign committed on `main` (`c98dc18935232b8c71e6cc0fce1a6512d22608b9`).
+- [x] Catalog and registry reconcile at 100 entries; long-term catalog target remains 150+.
+- [x] New library integration limits the new-game giveaway-picker additions to Neon Circuit and Rift Survival.
+- [ ] Confirm blocking CI workflows finish green on the exact finalization commit.
+- [ ] Full official-event flow for a library game, including invalid/expired/mismatched event references and replay/forged-score rejection.
+- [ ] Browser regression for booking status, operator/vendor permissions, giveaway publishing, winner selection, and the rest of the core Hub.
+- [ ] Fresh phone and desktop review of the live homepage and navigation.
+- [ ] Real-device performance, art quality, and licensing reviews for the games that remain unverified.
+- [ ] Back up production data, deploy the latest `main` SHA once, and verify health, persistence, player flows, event controls, and admin access on the live URL.
+
+**Do not interpret “100 catalog entries” as “100 verified giveaway-ready games.”** The user-facing requirement is one consolidated release; the responsible release gate still requires documenting unresolved verification items rather than hiding them. The vendor control boundary is official Hub-managed events and score records: public casual game links can be shared, but a link alone must never authorize a Hub giveaway, paid booking, official entrant list, or winner selection.
