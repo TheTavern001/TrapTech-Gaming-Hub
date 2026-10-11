@@ -58,6 +58,9 @@ jobs:
         run: node tools/e2e-hub-screens.js
       - name: Test new originals on desktop and iPhone viewport
         run: node tools/e2e-games-lib.js neon-circuit,rift-survival
+      - name: Test all 50 Arcade Pack games on desktop and iPhone viewport
+        run: |
+          SLUGS="$(node -e 'const {games}=require("./src/games-lib");process.stdout.write(games.filter(g=>g.source.includes("Arcade Pack")).map(g=>g.slug).join(","))')" node tools/e2e-games-lib.js
       - name: Regression test known performance-risk games (non-blocking diagnostic)
         continue-on-error: true
         env:
