@@ -24,7 +24,7 @@ input:not([type=checkbox]):not([type=radio]),select,textarea{border-radius:12px}
 .bottomnav a{transition:color .15s ease,background .15s ease}
 .bottomnav a.on{background:linear-gradient(180deg,rgba(139,92,246,.13),transparent 88%)}
 .pname .nt{font-weight:800}
-.founder-pill{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:3px 7px;border-radius:999px;border:1px solid rgba(251,191,36,.65);background:linear-gradient(110deg,rgba(120,53,15,.62),rgba(251,191,36,.16));color:#ffe7a3;font-size:.62rem;font-weight:900;letter-spacing:.09em;vertical-align:middle;box-shadow:0 0 14px rgba(251,191,36,.12)}
+
 /* Games, events and bookings are primary destinations: make clickable cards clearer without hiding secondary tools. */
 .game-card,.game-tile,.giveaway-card,.event-card,.booking-card,.shop-item,.achievement-card,.cosmetic-card{border-radius:16px}
 a.game-card:hover,a.game-tile:hover,a.giveaway-card:hover,a.event-card:hover{transform:translateY(-2px);border-color:rgba(34,211,238,.45)}
