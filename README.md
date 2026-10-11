@@ -46,7 +46,7 @@ If you change the secrets, everyone is signed out and runs that are still in pro
 2. In Render: **New > Blueprint**, connect your GitHub account, pick the repo, then click **Apply**.
 3. When Render prompts for **`ADMIN_PASSWORD`**, enter a long random password. `SECRET` is generated automatically.
 4. Wait for the deploy to finish, then open `https://gaming-hub-xxxx.onrender.com` (the exact URL is shown on the service page).
-   The site starts empty (no demo data). Sign in to `/admin` and create your first giveaway.
+   The site starts empty (no demo data). Open the privately stored `ADMIN_PATH` URL, complete password + authenticator sign-in, then create the first giveaway. Never paste that path into public documentation or site copy.
 5. Optional: add a custom domain under the service's Settings > Custom Domains.
 
 **Cost:** Starter is about $7/mo, plus $0.25/GB/mo for the disk ($0.25 for 1 GB), so about **$7.25/mo**. Render takes daily disk snapshots.
@@ -163,7 +163,7 @@ Community feed), Reports (CSV exports and rejected anti-cheat submissions), Sett
   Trap Tech "Built by" footer). Giveaway, profile and tournament pages have share buttons. Sharing unlocks "Hype Sharer".
 - **Search** (`/search`): games, players, giveaways and tournaments.
 - **PWA**: `manifest.webmanifest` ("The Gaming Hub by Trap Tech Solutions", 192/512/maskable icons, shortcuts) and `sw.js`, which uses
-  network-first and caches the app shell for offline. It never caches `/api`, `/og` or `/admin`. Settings has an Install button and a reduce-motion toggle.
+  network-first and caches the app shell for offline. It never caches `/api`, `/og` or the secret-path admin application. Settings has an Install button and a reduce-motion toggle.
 - **Legal templates**: `/terms`, `/privacy`, `/rules` (Official Giveaway Rules template) and `/giveaways/:id/rules` (filled-in rules
   per giveaway: NO PURCHASE NECESSARY, 21+, US/DC, the host as Sponsor, **Trap Tech Solutions as operator/administrator**, dates, free
   entry method, skill/random selection, odds, notification, winners list), plus `/responsible-play`. **These are templates. Have counsel
@@ -257,7 +257,7 @@ src/brands.js        brand affiliation (invite codes, one brand per player, give
 src/packages.js      legacy package copy (sponsor FAQ + Potato handle; v5 tier data kept for old bookings)
 public/index.html    player SPA shell (per-page meta injected server-side), manifest.webmanifest + sw.js (PWA); public/js/app.js (router and all pages), public/js/jetpack.js (Jetpack Dash)
 public/js/games/     engine.js (shared canvas game base + WebAudio synth) and the 7 other games
-public/admin.html    admin SPA; public/js/admin.js, public/css/admin.css
+src/admin-ui/          secret-path admin SPA (served only through authenticated admin routes)
 public/css/app.css   theme (dark navy, neon purple-to-blue, glowing cards, bottom tab nav)
 public/assets/       brand/, cards/, giveaways/, badges/, packages/, avatars/ (from mockups), game/ + sfx/ (Kenney CC0)
 public/fonts/        Orbitron + Exo 2 (OFL)
