@@ -1,9 +1,9 @@
 'use strict';
-// v7 "Sponsor a Host": no tiers, no public prices.
+// v7 "Book a Giveaway": no tiers, no public prices.
 // A sponsor ticks the features they want from ONE combined list (everything the old Basic/Premium/Elite tiers and add-ons
 // offered), adds details, and sends a free quote request. Only admins see the price sheet (settings key "sponsor_prices",
 // seeded from the old v5 prices); the admin gets an auto-totalled draft quote per request, can adjust it (discounts,
-// custom lines), and marks it sent / accepted / declined / paid. The sponsor sees the quote on their private status page
+// custom lines), and marks it sent / accepted / declined / paid. The customer sees the quote on their private status page
 // (/sponsor/status/<token>) once it is sent, and accepts or declines it there. Payment stays the existing manual flow:
 // the accepted quote amount is settled with Trap Tech Solutions on Potato and the admin marks it paid.
 const crypto = require('crypto');
@@ -202,7 +202,7 @@ module.exports = function sponsor(app, A, h) {
     { const cfg = require('./config'); const gids = (Array.isArray(b.games) ? b.games : []).map(String).filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway && !/^gl-/.test(id)).slice(0, 13);
       db.prepare('UPDATE bookings SET prize=?, brand_color=?, game_ids=?, competition=?, length_days=? WHERE id=?').run(str(b.prize, 200), /^#[0-9a-fA-F]{6}$/.test(String(b.brand_color || '')) ? b.brand_color : '', JSON.stringify(gids),
         ['best', 'total', 'random'].includes(b.competition) ? b.competition : 'best', Math.max(1, Math.min(90, parseInt(b.length_days, 10) || 7)), info.lastInsertRowid); }
-    logActivity('booking', `Sponsor quote request: ${brand} (${feats.length} features)`, me ? me.id : null, info.lastInsertRowid);
+    logActivity('booking', `Giveaway booking request: ${brand} (${feats.length} features)`, me ? me.id : null, info.lastInsertRowid);
     const pk = PK.getPackages();
     res.json({ ok: true, id: info.lastInsertRowid, token, status_url: '/sponsor/status/' + token, features: feats.map(x => label(BY[x.id], x.qty)), potato_handle: pk.potato_handle, licensed_confirmed: isCannabis });
   };
