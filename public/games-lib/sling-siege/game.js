@@ -3,7 +3,7 @@
 // Scoring (unchanged contract): blocks 10-50 by material, targets 500, each unused shot 1000 when a fort falls.
 (function () { const P = Phys, M = P.M, GY = 400, SX = 140, SY = 318;
   const IMG = {}; let nL = 0; const NAMES = []; for (const m of ['wood', 'stone', 'glass']) for (const k of ['plank', 'pillar', 'square', 'plank_d', 'pillar_d', 'square_d']) NAMES.push(m + '_' + k);
-  NAMES.push('alienGreen_round', 'alienBlue_round', 'alienPink_round', 'debrisWood_1', 'debrisStone_1', 'debrisGlass_1', 'starGold', 'bg', 'grass', 'dirt', 'bush'); for (const n of NAMES) { const im = new Image(); im.onload = () => nL++; im.src = 'img/' + n + '.webp'; IMG[n] = im; }
+  NAMES.push('alienGreen_round', 'alienBlue_round', 'alienPink_round', 'shot', 'debrisWood_1', 'debrisStone_1', 'debrisGlass_1', 'starGold', 'bg', 'grass', 'dirt', 'bush'); const FILE_MAP = { alienGreen_round:'mossling.svg', alienBlue_round:'glacierling.svg', alienPink_round:'coralling.svg', shot:'comet-projectile.svg' }; for (const n of NAMES) { const im = new Image(); im.onload = () => nL++; im.src = 'img/' + (FILE_MAP[n] || n + '.webp'); IMG[n] = im; }
   const BV = { wood: 20, stone: 50, glass: 10 }; const HP = { wood: 32, stone: 70, glass: 9 }; const DEN = { wood: 0.0016, stone: 0.0034, glass: 0.0012 };
   function blk(g, x, y, w, h, m, shape) { const b = P.box(g, x, y, w, h, { hp: HP[m], v: BV[m], d: DEN[m] }, { kind: m, friction: 0.7 }); b.gl.w = w; b.gl.h = h; b.gl.shape = shape; b.gl.m = m; return b; }
   function alien(g, x, y, i) { const b = P.ball(g, x, y, 15, { hp: 11, v: 500, d: 0.0014 }, { kind: 'target' }); b.gl.spr = ['alienGreen_round', 'alienBlue_round', 'alienPink_round'][i % 3]; return b; }
@@ -31,25 +31,25 @@
       if (g.ready) { const alive = g.tg.filter(t => !t.gl.dead).length; if (!alive) { const bonus = 1000 * g.shots; if (bonus) g.add(bonus, 's'); g.float(400, 140, 'FORT DOWN!' + (bonus ? ' +' + bonus : ''), '#ffe14a', 28); g.sfx('line'); fort(g); } else if (g.shots <= 0) return g.end('Out of shots'); }
       g.hud = 'FORT ' + g.lv + '   SHOTS ' + g.shots + '   LURKERS ' + g.tg.filter(t => !t.gl.dead).length; },
     draw(g, c) { if (nL < NAMES.length) { c.fillStyle = '#bfe6f5'; c.fillRect(0, 0, g.W, g.H); return; }
-      c.drawImage(IMG.bg, 0, -170, 800, 800); for (const bx of [40, 300, 420, 760]) c.drawImage(IMG.bush, bx, GY - 26, 32, 32); for (let x = 0; x < 800; x += 35) { c.drawImage(IMG.grass, x, GY - 4, 35, 35); c.drawImage(IMG.dirt, x, GY + 30, 35, 35); }
+      c.drawImage(IMG.bg, 0, -170, 800, 800); c.save(); c.globalCompositeOperation = 'screen'; const sunGlow = c.createRadialGradient(585, 62, 8, 585, 62, 290); sunGlow.addColorStop(0, 'rgba(255,244,204,.58)'); sunGlow.addColorStop(.35, 'rgba(255,222,166,.17)'); sunGlow.addColorStop(1, 'rgba(255,222,166,0)'); c.fillStyle = sunGlow; c.fillRect(250, -120, 650, 460); c.restore(); c.fillStyle = 'rgba(51,108,100,.22)'; c.beginPath(); c.moveTo(0, 330); c.bezierCurveTo(120, 292, 210, 338, 330, 306); c.bezierCurveTo(465, 276, 560, 337, 800, 294); c.lineTo(800, 410); c.lineTo(0, 410); c.closePath(); c.fill(); for (const bx of [40, 300, 420, 760]) c.drawImage(IMG.bush, bx, GY - 26, 32, 32); for (let x = 0; x < 800; x += 35) { c.drawImage(IMG.grass, x, GY - 4, 35, 35); c.drawImage(IMG.dirt, x, GY + 30, 35, 35); }
       // slingshot back fork + band
       const ax = g.aim ? SX + g.aim.dx : SX, ay = g.aim ? SY + g.aim.dy : SY; const wood = c.createLinearGradient(SX - 20, 0, SX + 20, 0); wood.addColorStop(0, '#8a4b1c'); wood.addColorStop(1, '#5b2e0e');
       c.strokeStyle = wood; c.lineCap = 'round'; c.lineWidth = 11; c.beginPath(); c.moveTo(SX, GY + 2); c.lineTo(SX, SY + 30); c.lineTo(SX + 14, SY - 6); c.stroke();
       if (g.ready || g.aim) { c.strokeStyle = '#3b1d0a'; c.lineWidth = 5; c.beginPath(); c.moveTo(SX + 14, SY - 4); c.lineTo(ax, ay); c.stroke(); }
       // bodies with sprites
-      for (const b of P.bodies(g)) { const d = b.gl; if (!d || b.isStatic) continue; c.save(); c.translate(b.position.x, b.position.y); c.rotate(b.angle); if (d.flash > 0) c.filter = 'brightness(1.8)';
+      for (const b of P.bodies(g)) { const d = b.gl; if (!d || b.isStatic) continue; c.save(); c.translate(b.position.x, b.position.y); c.rotate(b.angle); c.shadowColor = 'rgba(5,10,24,.42)'; c.shadowBlur = d.kind === 'target' ? 8 : 5; c.shadowOffsetY = 3; if (d.flash > 0) c.filter = 'brightness(1.8)';
         if (d.kind === 'target') { const r = b.circleRadius; c.drawImage(IMG[d.spr], -r * 1.15, -r * 1.15, r * 2.3, r * 2.3); }
-        else if (d.kind === 'shot') { const r = b.circleRadius; const gr = c.createRadialGradient(-4, -5, 2, 0, 0, r); gr.addColorStop(0, '#9be36a'); gr.addColorStop(1, '#2f7d34'); c.fillStyle = gr; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-4, -3, 3.4, 0, 7); c.arc(5, -3, 3.4, 0, 7); c.fill(); c.fillStyle = '#123'; c.beginPath(); c.arc(-3, -2.5, 1.6, 0, 7); c.arc(6, -2.5, 1.6, 0, 7); c.fill(); c.fillStyle = '#3e9e4c'; c.beginPath(); c.ellipse(0, -r - 2, 3, 6, 0.3, 0, 7); c.fill(); }
+        else if (d.kind === 'shot') { const r = b.circleRadius; c.drawImage(IMG.shot, -r * 1.22, -r * 1.22, r * 2.44, r * 2.44); }
         else if (d.m) { const dmg = d.max && d.hp < d.max * 0.55 ? '_d' : ''; const im = IMG[d.m + '_' + d.shape + dmg]; c.drawImage(im, -d.w / 2 - 1, -d.h / 2 - 1, d.w + 2, d.h + 2); }
         c.restore(); }
       // projectile resting in the pouch
-      if (g.ready && g.shots > 0) { c.save(); c.translate(ax, ay); const r = 14, gr = c.createRadialGradient(-4, -5, 2, 0, 0, r); gr.addColorStop(0, '#9be36a'); gr.addColorStop(1, '#2f7d34'); c.fillStyle = gr; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-4, -3, 3.4, 0, 7); c.arc(5, -3, 3.4, 0, 7); c.fill(); c.fillStyle = '#123'; c.beginPath(); c.arc(-3, -2.5, 1.6, 0, 7); c.arc(6, -2.5, 1.6, 0, 7); c.fill(); c.restore(); }
+      if (g.ready && g.shots > 0) { c.save(); c.translate(ax, ay); c.shadowColor = 'rgba(10,12,25,.45)'; c.shadowBlur = 9; c.shadowOffsetY = 4; c.drawImage(IMG.shot, -18, -18, 36, 36); c.restore(); }
       if (g.ready || g.aim) { c.strokeStyle = '#4a2410'; c.lineWidth = 5; c.beginPath(); c.moveTo(ax, ay); c.lineTo(SX - 12, SY - 4); c.stroke(); }
       c.strokeStyle = wood; c.lineWidth = 11; c.beginPath(); c.moveTo(SX, SY + 30); c.lineTo(SX - 12, SY - 6); c.stroke();
       for (const t of g.trail) { c.globalAlpha = t.l * 0.8; c.fillStyle = '#fff'; c.beginPath(); c.arc(t.x, t.y, 3 + 2 * t.l, 0, 7); c.fill(); } c.globalAlpha = 1;
       if (g.aim) { const k = 0.23; let x = ax, y = ay, vx = -g.aim.dx * k, vy = -g.aim.dy * k; c.fillStyle = 'rgba(255,255,255,.9)'; for (let i = 0; i < 70; i++) { vy += 0.278 * 0.5; x += vx * 0.5 * 1.0; y += vy * 0.5; vy += 0.278 * 0.5; if (i % 5 === 0) { c.beginPath(); c.arc(x, y, 3 - i * 0.03, 0, 7); c.fill(); } } }
       for (const d of g.deb) { c.save(); c.globalAlpha = Math.min(1, d.l * 2); c.translate(d.x, d.y); c.rotate(d.r); c.drawImage(IMG[d.s], -10, -10, 20, 20); c.restore(); }
       for (const s of g.stars) { c.save(); c.globalAlpha = s.l; c.translate(s.x, s.y - (1 - s.l) * 50); c.rotate((1 - s.l) * 4); c.drawImage(IMG.starGold, -16, -16, 32, 32); c.restore(); }
-      for (let i = 0; i < g.shots - (g.ready ? 1 : 0) && i < 8; i++) { const x = SX - 40 - i * 24, y = GY - 11; c.fillStyle = '#2f7d34'; c.beginPath(); c.arc(x, y, 10, 0, 7); c.fill(); c.fillStyle = '#9be36a'; c.beginPath(); c.arc(x - 3, y - 3, 4, 0, 7); c.fill(); }
+      for (let i = 0; i < g.shots - (g.ready ? 1 : 0) && i < 8; i++) { const x = SX - 40 - i * 24, y = GY - 11; c.drawImage(IMG.shot, x - 10, y - 10, 20, 20); }
     } });
 })();
