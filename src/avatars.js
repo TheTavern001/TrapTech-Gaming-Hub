@@ -34,7 +34,6 @@ add('held', 'laptop', 'DJ laptop'); add('held', 'briefcase', 'Business briefcase
 const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 'outfit', 'hat', 'acc', 'held'];
 const BYK = {}; for (const p of P) (BYK[p.kind] = BYK[p.kind] || {})[p.id] = p;
 const key = (p) => p.kind + ':' + p.id;
-function hashOf(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function defaultFor() {
   const pick = (kind) => Object.keys(BYK[kind] || {}).find(id => BYK[kind][id].unlock === 'free') || Object.keys(BYK[kind] || {})[0];
   return { gender: 'other', bg: pick('bg'), skin: pick('skin'), face: pick('face'), hair: pick('hair'), hairc: pick('hairc'),
