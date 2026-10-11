@@ -9,6 +9,110 @@ const PRESETS = [
   { id:'gold-legend', name:'Gold Legend', rarity:'LEGENDARY', cfg:{bg:'gold-rays',face:'oval',hair:'mohawk',hairc:'c4',outfit:'fur',hat:'crown',acc:'shades',held:'cane'} }
 ];
 const FREE_FALLBACK = { bg:'violet',face:'round',hair:'waves',hairc:'c0',outfit:'hoodie',hat:'none',acc:'none',held:'none' };
+
+// The primary studio preview is a real, animated 3D character. The existing SVG remains a graceful fallback.
+let avatarViewer = null;
+let avatarModelPromise = null;
+const AV_SKIN = ['#f9d7b9','#f1c19b','#e0a679','#c98a5b','#a8693f','#8a5232','#6b3d22','#4a2915'];
+const AV_HAIR = ['#1b1b1f','#4a2f1d','#7b4a24','#c58b3c','#e8c46a','#d9d4cc','#c2410c','#7c3aed','#22d3ee','#16a34a'];
+const AV_OUTFIT = {
+  tee:'#3b82f6', hoodie:'#334155', jersey:'#dc2626', tracksuit:'#111827', 'chain-tee':'#f8fafc',
+  fur:'#a16207', armor:'#475569', techwear:'#111827', varsity:'#7c2d12'
+};
+function avDisposeModel(model) {
+  if (!model) return;
+  model.traverse(o => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach(m => m && m.dispose && m.dispose()); } });
+}
+function avBuildCharacter(viewer, gltf, cfg, T, SkeletonUtils, Runner) {
+  const model = SkeletonUtils.clone(gltf.scene);
+  Runner.pbrChar(model);
+  const outfit = AV_OUTFIT[cfg.outfit] || AV_OUTFIT.hoodie;
+  const hair = AV_HAIR[Number(String(cfg.hairc || 'c0').slice(1))] || AV_HAIR[0];
+  Runner.outfit(model, { top: outfit, top2: cfg.outfit === 'armor' ? '#22d3ee' : outfit, pants:'#182037', shoes:'#101522', sole:'#dbe5f7', hair, sleeve:0.72 });
+  const skin = AV_SKIN[Number(String(cfg.skin || 's2').slice(1))] || AV_SKIN[2];
+  model.traverse(o => {
+    if (!o.isMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const mat of mats) {
+      if (!mat) continue;
+      const name = (o.name + ' ' + (mat.name || '')).toLowerCase();
+      if (/skin|face|body_skin/.test(name) && mat.color) mat.color.set(skin);
+      if (/hair|brow/.test(name) && mat.color) mat.color.set(hair);
+      if (/chain|metal|accessory/.test(name) && mat.metalness !== undefined) mat.metalness = 0.72;
+    }
+  });
+  const bounds = new T.Box3().setFromObject(model);
+  const height = Math.max(0.1, bounds.getSize(new T.Vector3()).y);
+  model.scale.setScalar(2.12 / height);
+  const fitBounds = new T.Box3().setFromObject(model);
+  model.position.y -= fitBounds.min.y;
+  viewer.scene.add(model);
+  if (viewer.model) { viewer.scene.remove(viewer.model); avDisposeModel(viewer.model); }
+  viewer.model = model;
+  viewer.mixer = gltf.animations && gltf.animations.length ? new T.AnimationMixer(model) : null;
+  if (viewer.mixer) viewer.mixer.clipAction(gltf.animations[0]).play();
+  viewer.cfg = { ...cfg };
+}
+async function mountAvatarPreview(cfg) {
+  let canvas = document.getElementById('avatar-3d-preview');
+  if (!canvas) return;
+  const fallback = document.getElementById('av-prev');
+  if (avatarViewer) {
+    if (avatarViewer.canvas !== canvas) canvas.replaceWith(avatarViewer.canvas);
+    avatarViewer.cfg = { ...cfg };
+    if (avatarViewer.failed) { avatarViewer.canvas.style.display='none'; const img=document.getElementById('av-prev'); if(img) img.style.display='block'; }
+    else { avatarViewer.canvas.style.display='block'; const img=document.getElementById('av-prev'); if(img) img.style.display='none'; }
+    if (avatarViewer.model && avatarViewer.modules && avatarViewer.gltf) avBuildCharacter(avatarViewer, avatarViewer.gltf, avatarViewer.cfg, avatarViewer.modules.T, avatarViewer.modules.SkeletonUtils, avatarViewer.modules.Runner);
+    return;
+  }
+  const viewer = avatarViewer = { canvas, cfg:{...cfg}, model:null, mixer:null, raf:0, failed:false, modules:null, gltf:null };
+  try {
+    const [T, GLTFMod, MeshoptMod, RoomMod, SkeletonMod, Runner] = await Promise.all([
+      import('three'),
+      import('three/addons/loaders/GLTFLoader.js'),
+      import('three/addons/libs/meshopt_decoder.module.js'),
+      import('three/addons/environments/RoomEnvironment.js'),
+      import('three/addons/utils/SkeletonUtils.js'),
+      import('../games-lib/runner3x.js')
+    ]);
+    if (avatarViewer !== viewer) return;
+    const GLTFLoader = GLTFMod.GLTFLoader, MeshoptDecoder = MeshoptMod.MeshoptDecoder;
+    const renderer = new T.WebGLRenderer({ canvas:viewer.canvas, alpha:true, antialias:true, powerPreference:'high-performance' });
+    renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+    renderer.outputColorSpace = T.SRGBColorSpace;
+    renderer.toneMapping = T.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = T.PCFSoftShadowMap;
+    const scene = new T.Scene();
+    const pmrem = new T.PMREMGenerator(renderer);
+    const room = new RoomMod.RoomEnvironment();
+    scene.environment = pmrem.fromScene(room, 0.04).texture;
+    pmrem.dispose();
+    const hemi = new T.HemisphereLight('#f5f7ff','#252b4a',1.65); scene.add(hemi);
+    const key = new T.DirectionalLight('#fff0d9',3.1); key.position.set(-3.2,5,4); key.castShadow=true; key.shadow.mapSize.set(1024,1024); scene.add(key);
+    const rim = new T.PointLight('#8b5cf6',36,9); rim.position.set(2.2,2.4,-1.4); scene.add(rim);
+    const fill = new T.PointLight('#22d3ee',18,8); fill.position.set(-2,1.4,2); scene.add(fill);
+    const camera = new T.PerspectiveCamera(34,1,0.1,50); camera.position.set(0,1.18,4.6); camera.lookAt(0,1.02,0);
+    const ring = new T.Mesh(new T.TorusGeometry(0.92,0.014,8,88),new T.MeshStandardMaterial({color:'#8b5cf6',metalness:0.72,roughness:0.25,emissive:'#4c1d95',emissiveIntensity:0.55}));
+    ring.rotation.x=Math.PI/2; ring.position.y=0.035; scene.add(ring);
+    const disc = new T.Mesh(new T.CircleGeometry(0.91,64),new T.MeshStandardMaterial({color:'#111832',metalness:0.18,roughness:0.62,transparent:true,opacity:0.82}));
+    disc.rotation.x=-Math.PI/2; disc.position.y=0.025; scene.add(disc);
+    const resize = () => { const box=viewer.canvas.getBoundingClientRect(); const w=Math.max(1,Math.floor(box.width)),h=Math.max(1,Math.floor(box.height)); if(renderer.domElement.width!==Math.floor(w*renderer.getPixelRatio())||renderer.domElement.height!==Math.floor(h*renderer.getPixelRatio())){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();} };
+    viewer.modules={T,SkeletonUtils:SkeletonMod,Runner}; viewer.renderer=renderer; viewer.scene=scene; viewer.camera=camera; viewer.resize=resize; viewer.ring=ring;
+    if (!avatarModelPromise) { const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder); avatarModelPromise=loader.loadAsync('/games-lib/assets3d/hero.glb'); }
+    const gltf=await avatarModelPromise;
+    if (avatarViewer !== viewer) return;
+    viewer.gltf=gltf; avBuildCharacter(viewer,gltf,viewer.cfg,T,SkeletonMod,Runner);
+    const clock=new T.Clock();
+    const loop=()=>{ if(avatarViewer!==viewer)return; viewer.raf=requestAnimationFrame(loop); const dt=Math.min(0.04,clock.getDelta()); if(viewer.mixer)viewer.mixer.update(dt); if(viewer.model&&!viewer.mixer)viewer.model.rotation.y=Math.sin(performance.now()*0.00035)*0.16; viewer.ring.rotation.z+=dt*0.12; resize(); renderer.render(scene,camera); };
+    viewer.raf=requestAnimationFrame(loop);
+    const img=document.getElementById('av-prev'); if(img)img.style.display='none';
+  } catch (err) {
+    console.error('3D avatar preview unavailable',err);
+    if (avatarViewer===viewer) { viewer.failed=true; viewer.canvas.style.display='none'; const img=document.getElementById('av-prev'); if(img)img.style.display='block'; }
+  }
+}
 async function editor() {
   const { icon, esc, api, S } = C; if (!S.me) return C.go('/signin?next=/avatar', true);
   const r = await api('/api/avatar'); if (!r.ok) return C.shell('/settings', C.emptyState('user', 'Avatar studio unavailable', 'Please sign in again and retry.'));
@@ -22,7 +126,7 @@ async function editor() {
     const rarity = cfg.bg === 'gold-rays' || cfg.hat === 'crown' ? 'legendary' : cfg.acc === 'grill' || cfg.outfit === 'fur' ? 'epic' : cfg.outfit === 'jersey' || cfg.held === 'controller' ? 'rare' : 'common';
     return `<div class="avatar-collect-card rarity-${rarity}">
       <div class="avatar-card-top"><span class="avatar-rarity">${rarity.toUpperCase()} PLAYER CARD</span><span class="avatar-live-dot">● ONLINE PROFILE</span></div>
-      <div class="avatar-card-art"><div class="avatar-orbit orbit-one"></div><div class="avatar-orbit orbit-two"></div><img id="av-prev" src="${prev(cfg)}" alt="Live avatar preview"><span class="avatar-card-id">${esc(S.me.user_id || 'TH-PLAYER')}</span></div>
+      <div class="avatar-card-art"><div class="avatar-orbit orbit-one"></div><div class="avatar-orbit orbit-two"></div><canvas id="avatar-3d-preview" class="avatar-3d-canvas" aria-label="Animated 3D player character"></canvas><img id="av-prev" src="${prev(cfg)}" alt="Avatar preview fallback" style="display:none"><span class="avatar-card-id">${esc(S.me.user_id || 'TH-PLAYER')}</span></div>
       <div class="avatar-card-info"><div><span class="avatar-card-kicker">THE GAMING HUB</span><h2>${esc(S.me.username || 'Player')}</h2><p>${S.me.founder ? '<span class="avatar-founder">♛ FOUNDER</span>' : '<span class="avatar-member">✦ PLAYER</span>'} <span class="avatar-equipped">${esc(cfg.outfit || 'custom')} loadout</span></p></div><div class="avatar-mini-emblem">${S.me.founder ? '♛' : '✦'}</div></div>
       <div class="avatar-card-progress">
         <div class="avatar-level-line"><span>LEVEL ${profile ? profile.level.level : 1}</span><span>${profile ? C.fmt(profile.level.into) + ' / ' + C.fmt(profile.level.need) + ' XP' : 'PLAYER PROGRESSION'}</span></div>
@@ -60,6 +164,7 @@ async function editor() {
         </section>
       </div>
     </div>`, { title: 'Avatar Studio' });
+    mountAvatarPreview(cfg);
     document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;draw();});
     document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRESETS.find(x=>x.id===b.dataset.preset);if(p)applyPreset(p);draw();});
     document.querySelectorAll('.av-opt').forEach(b=>b.onclick=async()=>{const p=r.parts.find(x=>x.kind===b.dataset.k&&x.id===b.dataset.id);if(!p)return;
