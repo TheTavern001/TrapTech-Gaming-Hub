@@ -9,6 +9,183 @@ const PRESETS = [
   { id:'gold-legend', name:'Gold Legend', rarity:'LEGENDARY', cfg:{bg:'gold-rays',face:'oval',hair:'mohawk',hairc:'c4',outfit:'fur',hat:'crown',acc:'shades',held:'cane'} }
 ];
 const FREE_FALLBACK = { bg:'violet',face:'round',hair:'waves',hairc:'c0',outfit:'hoodie',hat:'none',acc:'none',held:'none' };
+
+// The primary studio preview is a real, animated 3D character. The existing SVG remains a graceful fallback.
+let avatarViewer = null;
+let avatarModelPromise = null;
+const AV_SKIN = ['#f9d7b9','#f1c19b','#e0a679','#c98a5b','#a8693f','#8a5232','#6b3d22','#4a2915'];
+const AV_HAIR = ['#1b1b1f','#4a2f1d','#7b4a24','#c58b3c','#e8c46a','#d9d4cc','#c2410c','#7c3aed','#22d3ee','#16a34a'];
+const AV_OUTFIT = {
+  tee:'#3b82f6', hoodie:'#334155', jersey:'#dc2626', tracksuit:'#111827', 'chain-tee':'#f8fafc',
+  fur:'#a16207', armor:'#475569', techwear:'#111827', varsity:'#7c2d12'
+};
+function avDisposeModel(model) {
+  if (!model) return;
+  model.traverse(o => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach(m => m && m.dispose && m.dispose()); } });
+}
+function avBuildCharacter(viewer, gltf, cfg, T, SkeletonUtils, Runner) {
+  const model = SkeletonUtils.clone(gltf.scene);
+  Runner.pbrChar(model);
+  const outfit = AV_OUTFIT[cfg.outfit] || AV_OUTFIT.hoodie;
+  const hair = AV_HAIR[Number(String(cfg.hairc || 'c0').slice(1))] || AV_HAIR[0];
+  Runner.outfit(model, { top: outfit, top2: cfg.outfit === 'armor' ? '#22d3ee' : outfit, pants:'#182037', shoes:'#101522', sole:'#dbe5f7', hair, sleeve:0.72 });
+  const skin = AV_SKIN[Number(String(cfg.skin || 's2').slice(1))] || AV_SKIN[2];
+  model.traverse(o => {
+    if (!o.isMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const mat of mats) {
+      if (!mat) continue;
+      const name = (o.name + ' ' + (mat.name || '')).toLowerCase();
+      if (/skin|face|body_skin/.test(name) && mat.color) mat.color.set(skin);
+      if (/hair|brow/.test(name) && mat.color) mat.color.set(hair);
+      if (/chain|metal|accessory/.test(name) && mat.metalness !== undefined) mat.metalness = 0.72;
+    }
+  });
+  const bounds = new T.Box3().setFromObject(model);
+  const height = Math.max(0.1, bounds.getSize(new T.Vector3()).y);
+  model.scale.setScalar(2.12 / height);
+  const fitBounds = new T.Box3().setFromObject(model);
+  model.position.y -= fitBounds.min.y;
+  model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+
+  // 3D wearable layer: selected headwear, face accessories, jewelry and held items appear on the character itself.
+  const gear = new T.Group(); gear.name = 'AvatarCosmeticLayer'; model.add(gear);
+  const invScale = 1 / Math.max(0.001, model.scale.x);
+  const mat = (color, metalness=0.15, roughness=0.36, emissive=0) => new T.MeshStandardMaterial({color,metalness,roughness,envMapIntensity:1.1,emissive:color,emissiveIntensity:emissive});
+  const gold = mat('#f6bf4b',0.86,0.22,0.12), silver = mat('#dce7f8',0.82,0.24,0.04), black = mat('#101727',0.18,0.3), neon = mat('#4de5f7',0.56,0.2,0.5);
+  const place = (geometry, material, x, y, z, rx=0, ry=0, rz=0, sx=1, sy=1, sz=1) => { const m=new T.Mesh(geometry,material); m.position.set(x*invScale,y*invScale,z*invScale); m.rotation.set(rx,ry,rz); m.scale.set(sx*invScale,sy*invScale,sz*invScale); m.castShadow=true; m.receiveShadow=true; gear.add(m); return m; };
+  if (cfg.hat === 'crown') {
+    place(new T.CylinderGeometry(.22,.26,.14,10),gold,0,1.89,.015);
+    for(let i=0;i<7;i++){const a=i*Math.PI*2/7;place(new T.ConeGeometry(.045,.13,5),gold,Math.cos(a)*.2,1.99,.015+Math.sin(a)*.2,0,0,a);}
+    place(new T.TorusGeometry(.225,.018,8,32),silver,0,1.84,.015,Math.PI/2);
+  } else if (cfg.hat === 'halo') {
+    place(new T.TorusGeometry(.29,.025,10,64),gold,0,2.02,0,Math.PI/2);
+    place(new T.TorusGeometry(.31,.008,6,64),neon,0,2.02,0,Math.PI/2);
+  } else if (cfg.hat === 'beanie') {
+    place(new T.SphereGeometry(.255,24,16),mat('#35425f',.12,.52),0,1.84,0,0,0,0,1,.55,1);
+    place(new T.TorusGeometry(.22,.045,8,32),mat('#22d3ee',.28,.42),0,1.78,0,Math.PI/2);
+  } else if (cfg.hat === 'snapback' || cfg.hat === 'bucket') {
+    const fabric=mat(cfg.hat==='bucket'?'#8b5cf6':'#17223f',.08,.62);
+    place(new T.SphereGeometry(.25,24,14),fabric,0,1.83,0,0,0,0,1,.52,1);
+    place(new T.CylinderGeometry(.25,.26,.055,24),fabric,0,1.78,.015);
+    if(cfg.hat==='snapback')place(new T.BoxGeometry(.25,.035,.19),fabric,0,1.78,.18);
+    else place(new T.CylinderGeometry(.3,.27,.07,24),fabric,0,1.77,0);
+  }
+  if (cfg.acc === 'glasses' || cfg.acc === 'shades') {
+    const lens=cfg.acc==='shades'?mat('#080d1b',.42,.18):mat('#8deaff',.35,.18,.16);
+    place(new T.BoxGeometry(.17,.09,.045),lens,-.105,1.61,.235);
+    place(new T.BoxGeometry(.17,.09,.045),lens,.105,1.61,.235);
+    place(new T.BoxGeometry(.07,.025,.035),silver,0,1.625,.24);
+    place(new T.BoxGeometry(.045,.018,.025),black,-.22,1.63,.19);
+    place(new T.BoxGeometry(.045,.018,.025),black,.22,1.63,.19);
+  }
+  if (cfg.neck && cfg.neck !== 'none') {
+    const chainMat=cfg.neck==='silver-chain'?silver:gold;
+    place(new T.TorusGeometry(.205,.014,8,48),chainMat,0,1.22,.04,Math.PI/2);
+    if(cfg.neck==='diamond-pendant')place(new T.OctahedronGeometry(.065,0),neon,0,1.14,.22,0,0,Math.PI/4);
+  }
+  if (cfg.piercing==='ear-studs' || cfg.piercing==='double-piercing' || cfg.piercing==='nose-ring') {
+    if(cfg.piercing!=='nose-ring'){place(new T.SphereGeometry(.035,12,10),gold,-.25,1.48,.12);place(new T.SphereGeometry(.035,12,10),gold,.25,1.48,.12);}
+    if(cfg.piercing!=='ear-studs')place(new T.TorusGeometry(.035,.009,6,18),silver,0,1.49,.245,0,0,0);
+  }
+  if (cfg.acc==='grill') for(let i=0;i<5;i++)place(new T.BoxGeometry(.035,.035,.018),gold,-.07+i*.035,1.405,.24);
+  if (cfg.beard && cfg.beard!=='none') {
+    const beardMat=mat('#24202a',.02,.82);
+    if(cfg.beard==='mustache'){place(new T.SphereGeometry(.095,16,10),beardMat,-.065,1.405,.21,0,0,-.2,1,.42,.55);place(new T.SphereGeometry(.095,16,10),beardMat,.065,1.405,.21,0,0,.2,1,.42,.55);}
+    else {place(new T.SphereGeometry(.16,18,12),beardMat,0,1.34,.17,0,0,0,cfg.beard==='goatee'?.5:.82,.55,.52);}
+  }
+  if (cfg.hair==='mohawk' || cfg.hair==='spiky') {
+    const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0], hairMat=mat(hc,.03,.65);
+    const count=cfg.hair==='mohawk'?5:7;
+    for(let i=0;i<count;i++){const x=cfg.hair==='mohawk'?(i-2)*.075:(i-3)*.065;place(new T.ConeGeometry(.055,.19+(i%2)*.04,7),hairMat,x,1.91,.015,0,0,(i-3)*.12);}
+  } else if (cfg.hair==='bun') {
+    const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0];place(new T.SphereGeometry(.12,18,12),mat(hc,.02,.7),0,1.91,-.13);
+  } else if (cfg.hair==='long' || cfg.hair==='braids') {
+    const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0], hairMat=mat(hc,.02,.7);
+    place(new T.CylinderGeometry(.065,.065,.42,12),hairMat,-.24,1.52,-.01,.04,0,-.08);
+    place(new T.CylinderGeometry(.065,.065,.42,12),hairMat,.24,1.52,-.01,-.04,0,.08);
+  } else if (cfg.hair==='afro' || cfg.hair==='curly' || cfg.hair==='waves') {
+    const hc=AV_HAIR[Number(String(cfg.hairc||'c0').slice(1))]||AV_HAIR[0], hairMat=mat(hc,.02,.7);
+    place(new T.SphereGeometry(.28,24,16),hairMat,0,1.84,-.015,0,0,0,1,.68,1);
+  }
+  if (cfg.held==='controller') {
+    place(new T.BoxGeometry(.3,.095,.07),mat('#151d35',.3,.24),.4,.74,.18,0,0,-.12);
+    place(new T.SphereGeometry(.035,12,10),neon,.31,.76,.225);
+    place(new T.SphereGeometry(.025,12,10),gold,.47,.76,.225);
+  } else if (cfg.held==='cane') {
+    place(new T.CylinderGeometry(.022,.03,.68,10),gold,.43,.56,.13,0,0,-.1);
+    place(new T.TorusGeometry(.07,.022,8,18),gold,.43,.92,.13,Math.PI/2);
+  } else if (cfg.held==='cash') {
+    for(let i=0;i<4;i++)place(new T.BoxGeometry(.19,.035,.12),mat(i%2?'#15803d':'#22c55e',.12,.5),.42,.7+i*.014,.14+i*.009,0,0,(i-1.5)*.035);
+  }
+  viewer.scene.add(model);
+  if (viewer.model) { viewer.scene.remove(viewer.model); avDisposeModel(viewer.model); }
+  viewer.model = model;
+  viewer.mixer = gltf.animations && gltf.animations.length ? new T.AnimationMixer(model) : null;
+  if (viewer.mixer) viewer.mixer.clipAction(gltf.animations[0]).play();
+  viewer.cfg = { ...cfg };
+}
+async function mountAvatarPreview(cfg) {
+  let canvas = document.getElementById('avatar-3d-preview');
+  if (!canvas) return;
+  const fallback = document.getElementById('av-prev');
+  if (avatarViewer) {
+    if (avatarViewer.canvas !== canvas) canvas.replaceWith(avatarViewer.canvas);
+    avatarViewer.cfg = { ...cfg };
+    if (avatarViewer.failed) { avatarViewer.canvas.style.display='none'; const img=document.getElementById('av-prev'); if(img) img.style.display='block'; }
+    else { avatarViewer.canvas.style.display='block'; const img=document.getElementById('av-prev'); if(img) img.style.display='none'; }
+    if (avatarViewer.model && avatarViewer.modules && avatarViewer.gltf) avBuildCharacter(avatarViewer, avatarViewer.gltf, avatarViewer.cfg, avatarViewer.modules.T, avatarViewer.modules.SkeletonUtils, avatarViewer.modules.Runner);
+    if (avatarViewer.startLoop) avatarViewer.startLoop();
+    return;
+  }
+  const viewer = avatarViewer = { canvas, cfg:{...cfg}, model:null, mixer:null, raf:0, failed:false, modules:null, gltf:null };
+  try {
+    const [T, GLTFMod, MeshoptMod, RoomMod, SkeletonMod, Runner] = await Promise.all([
+      import('three'),
+      import('three/addons/loaders/GLTFLoader.js'),
+      import('three/addons/libs/meshopt_decoder.module.js'),
+      import('three/addons/environments/RoomEnvironment.js'),
+      import('three/addons/utils/SkeletonUtils.js'),
+      import('../games-lib/runner3x.js')
+    ]);
+    if (avatarViewer !== viewer) return;
+    const GLTFLoader = GLTFMod.GLTFLoader, MeshoptDecoder = MeshoptMod.MeshoptDecoder;
+    const renderer = new T.WebGLRenderer({ canvas:viewer.canvas, alpha:true, antialias:true, powerPreference:'high-performance' });
+    renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+    renderer.outputColorSpace = T.SRGBColorSpace;
+    renderer.toneMapping = T.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = T.PCFSoftShadowMap;
+    const scene = new T.Scene();
+    const pmrem = new T.PMREMGenerator(renderer);
+    const room = new RoomMod.RoomEnvironment();
+    scene.environment = pmrem.fromScene(room, 0.04).texture;
+    pmrem.dispose();
+    const hemi = new T.HemisphereLight('#f5f7ff','#252b4a',1.65); scene.add(hemi);
+    const key = new T.DirectionalLight('#fff0d9',3.1); key.position.set(-3.2,5,4); key.castShadow=true; key.shadow.mapSize.set(1024,1024); scene.add(key);
+    const rim = new T.PointLight('#8b5cf6',36,9); rim.position.set(2.2,2.4,-1.4); scene.add(rim);
+    const fill = new T.PointLight('#22d3ee',18,8); fill.position.set(-2,1.4,2); scene.add(fill);
+    const camera = new T.PerspectiveCamera(34,1,0.1,50); camera.position.set(0,1.18,4.6); camera.lookAt(0,1.02,0);
+    const ring = new T.Mesh(new T.TorusGeometry(0.92,0.014,8,88),new T.MeshStandardMaterial({color:'#8b5cf6',metalness:0.72,roughness:0.25,emissive:'#4c1d95',emissiveIntensity:0.55}));
+    ring.rotation.x=Math.PI/2; ring.position.y=0.035; scene.add(ring);
+    const disc = new T.Mesh(new T.CircleGeometry(0.91,64),new T.MeshStandardMaterial({color:'#111832',metalness:0.18,roughness:0.62,transparent:true,opacity:0.82}));
+    disc.rotation.x=-Math.PI/2; disc.position.y=0.025; scene.add(disc);
+    const resize = () => { const box=viewer.canvas.getBoundingClientRect(); const w=Math.max(1,Math.floor(box.width)),h=Math.max(1,Math.floor(box.height)); if(renderer.domElement.width!==Math.floor(w*renderer.getPixelRatio())||renderer.domElement.height!==Math.floor(h*renderer.getPixelRatio())){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();} };
+    viewer.modules={T,SkeletonUtils:SkeletonMod,Runner}; viewer.renderer=renderer; viewer.scene=scene; viewer.camera=camera; viewer.resize=resize; viewer.ring=ring;
+    if (!avatarModelPromise) { const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder); avatarModelPromise=loader.loadAsync('/games-lib/assets3d/hero.glb'); }
+    const gltf=await avatarModelPromise;
+    if (avatarViewer !== viewer) return;
+    viewer.gltf=gltf; avBuildCharacter(viewer,gltf,viewer.cfg,T,SkeletonMod,Runner);
+    const clock=new T.Clock();
+    const loop=()=>{ if(avatarViewer!==viewer)return; if(!viewer.canvas.isConnected){viewer.raf=0;return;} viewer.raf=requestAnimationFrame(loop); const dt=Math.min(0.04,clock.getDelta()); if(viewer.mixer)viewer.mixer.update(dt); if(viewer.model&&!viewer.mixer)viewer.model.rotation.y=Math.sin(performance.now()*0.00035)*0.16; viewer.ring.rotation.z+=dt*0.12; resize(); renderer.render(scene,camera); viewer.canvas.dataset.ready='true'; };
+    viewer.startLoop=()=>{ if(!viewer.raf) viewer.raf=requestAnimationFrame(loop); }; viewer.startLoop();
+    const img=document.getElementById('av-prev'); if(img)img.style.display='none';
+  } catch (err) {
+    console.error('3D avatar preview unavailable',err);
+    if (avatarViewer===viewer) { viewer.failed=true; viewer.canvas.style.display='none'; const img=document.getElementById('av-prev'); if(img)img.style.display='block'; }
+  }
+}
 async function editor() {
   const { icon, esc, api, S } = C; if (!S.me) return C.go('/signin?next=/avatar', true);
   const r = await api('/api/avatar'); if (!r.ok) return C.shell('/settings', C.emptyState('user', 'Avatar studio unavailable', 'Please sign in again and retry.'));
@@ -22,7 +199,7 @@ async function editor() {
     const rarity = cfg.bg === 'gold-rays' || cfg.hat === 'crown' ? 'legendary' : cfg.acc === 'grill' || cfg.outfit === 'fur' ? 'epic' : cfg.outfit === 'jersey' || cfg.held === 'controller' ? 'rare' : 'common';
     return `<div class="avatar-collect-card rarity-${rarity}">
       <div class="avatar-card-top"><span class="avatar-rarity">${rarity.toUpperCase()} PLAYER CARD</span><span class="avatar-live-dot">● ONLINE PROFILE</span></div>
-      <div class="avatar-card-art"><div class="avatar-orbit orbit-one"></div><div class="avatar-orbit orbit-two"></div><img id="av-prev" src="${prev(cfg)}" alt="Live avatar preview"><span class="avatar-card-id">${esc(S.me.user_id || 'TH-PLAYER')}</span></div>
+      <div class="avatar-card-art"><div class="avatar-orbit orbit-one"></div><div class="avatar-orbit orbit-two"></div><canvas id="avatar-3d-preview" class="avatar-3d-canvas" aria-label="Animated 3D player character"></canvas><img id="av-prev" src="${prev(cfg)}" alt="Avatar preview fallback" style="display:none"><span class="avatar-card-id">${esc(S.me.user_id || 'TH-PLAYER')}</span></div>
       <div class="avatar-card-info"><div><span class="avatar-card-kicker">THE GAMING HUB</span><h2>${esc(S.me.username || 'Player')}</h2><p>${S.me.founder ? '<span class="avatar-founder">♛ FOUNDER</span>' : '<span class="avatar-member">✦ PLAYER</span>'} <span class="avatar-equipped">${esc(cfg.outfit || 'custom')} loadout</span></p></div><div class="avatar-mini-emblem">${S.me.founder ? '♛' : '✦'}</div></div>
       <div class="avatar-card-progress">
         <div class="avatar-level-line"><span>LEVEL ${profile ? profile.level.level : 1}</span><span>${profile ? C.fmt(profile.level.into) + ' / ' + C.fmt(profile.level.need) + ' XP' : 'PLAYER PROGRESSION'}</span></div>
@@ -60,6 +237,7 @@ async function editor() {
         </section>
       </div>
     </div>`, { title: 'Avatar Studio' });
+    mountAvatarPreview(cfg);
     document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;draw();});
     document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRESETS.find(x=>x.id===b.dataset.preset);if(p)applyPreset(p);draw();});
     document.querySelectorAll('.av-opt').forEach(b=>b.onclick=async()=>{const p=r.parts.find(x=>x.kind===b.dataset.k&&x.id===b.dataset.id);if(!p)return;
