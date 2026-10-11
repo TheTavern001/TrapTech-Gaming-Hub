@@ -66,7 +66,7 @@ export function elig(el, e, g, refresh) {
   const steps = checks.filter(x => x.checklist && x.checklist_step_id);
   if (!steps.length || el.querySelector('.gw7-checklist')) return;
   const html = `<section class="gw7-checklist card pad"><h3>${icon('list-check')} Entry checklist</h3><p class="small muted">Confirm each required step. External channel actions are self-attested and are not independently verified by the hub.</p>
-    ${steps.map(s => `<label class="gw7-checkrow"><input type="checkbox" data-gw7-check="${esc(s.checklist_step_id)}" ${s.checked ? 'checked' : ''} ${s.required && !e.signed_in ? 'disabled' : ''}><span><b>${esc(s.label)}</b>${s.required ? ' <span class="tiny muted">Required</span>' : ' <span class="tiny muted">Optional</span>'}<small class="muted">${esc(s.hint || '')}${s.url ? ` • <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">Open step</a>` : ''}</small></span></label>`).join('')}
+    ${steps.map(s => `<label class="gw7-checkrow"><input type="checkbox" data-gw7-check="${esc(s.checklist_step_id)}" ${s.checked ? 'checked' : ''} ${s.required && (!e.signed_in || e.joined) ? 'disabled' : ''}><span><b>${esc(s.label)}</b>${s.required ? ' <span class="tiny muted">Required</span>' : ' <span class="tiny muted">Optional</span>'}<small class="muted">${esc(s.hint || '')}${s.url ? ` • <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">Open step</a>` : ''}</small></span></label>`).join('')}
   </section>`;
   el.querySelector('.elig-checks')?.insertAdjacentHTML('afterend', html);
   const box = el.querySelector('.gw7-checklist');
