@@ -39,6 +39,8 @@ export async function mountAvatar3D(stage, cfg) {
   const fill = new THREE.PointLight(0xa78bfa, 1.4, 10); fill.position.set(2, 1, 4); scene.add(fill);
 
   const root = new THREE.Group(); scene.add(root);
+  const builds = { average:[1,1,1], slim:[0.86,1.02,0.92], athletic:[1.06,1.04,1.02], stocky:[1.16,0.95,1.08], curvy:[1.08,1,1], tall:[0.96,1.14,0.96], short:[1.04,0.88,1.02] };
+  root.scale.set(...(builds[cfg.build] || builds.average));
   const materials = new Set();
   function mat(color, roughness = 0.48, metalness = 0.02) {
     const m = new THREE.MeshStandardMaterial({ color, roughness, metalness }); materials.add(m); return m;
