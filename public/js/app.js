@@ -64,8 +64,7 @@ async function hydrateProfileAvatar(username) {
     host.appendChild(img);
   }
 }
-// v7 FINAL Trap Tech logo (Reese, Oct 10): white angular double-T + gold crown (brand-src/traptech-v7/logo-final.jpg),
-// rebuilt as vector SVG by tools/build-brand-tt.py. PNG/WebP copies (same file names) exist for OG images and old links.
+// Official Trap Tech Solutions brand lockup, served as vector SVG for crisp rendering. PNG/WebP variants support social previews and legacy image links.
 const TT_AR = { mono: 100 / 114, horizontal: 3.678, lockup: 1.3068, chrome: 3.9036, badge: 1 };
 function TT(k, h, cls = '', alt = 'Trap Tech Solutions') {
   const w = Math.round(h * (TT_AR[k] || 1));
