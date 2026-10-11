@@ -315,3 +315,12 @@ table.lb .rk{font-weight:900;color:var(--release-gold)}
 #v7-brand a:not(.btn){color:#8beaff;text-decoration:underline;text-underline-offset:3px}
 #v7-brand .br-mine .pill{white-space:nowrap}
 @media(max-width:480px){#v7-brand .br-mine{align-items:flex-start}#v7-brand .br-mine .pill{margin-left:52px}}
+
+
+/* Deeper avatar identity card: social proof, competition history and a favorite-game slot. */
+.avatar-card-record{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:0 12px 14px}
+.avatar-card-record>div{display:grid;gap:5px;min-width:0;padding:10px;border:1px solid color-mix(in srgb,var(--rarity) 22%,transparent);border-radius:10px;background:linear-gradient(135deg,#ffffff08,#05071466)}
+.avatar-card-record span{font-size:.5rem;font-weight:950;letter-spacing:.08em;color:#95a3c7}
+.avatar-card-record b{font-size:.82rem;line-height:1.25;color:#f3f5ff;overflow-wrap:anywhere}
+.avatar-card-record>div:nth-child(3) b{color:var(--rarity);font-size:.72rem}
+@media(max-width:420px){.avatar-card-record{gap:5px;padding-inline:8px}.avatar-card-record>div{padding:8px}.avatar-card-record span{font-size:.44rem}}
