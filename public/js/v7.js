@@ -38,22 +38,25 @@ function sponsorPage(url) {
       const st = (n, l) => `<div class="st ${B.step >= n ? 'on' : ''}"><i>${n}</i>${l}</div>`;
       const sel = pickedList();
       let body = '';
-      if (B.step === 1) body = `<p class="muted small" style="margin-top:0">Your giveaway booking includes the event setup. These optional extras add promotion, branding or reporting; you can leave them all unchecked.</p>
-        ${cat.groups.map(g => `<section class="sp-g"><h3>${icon(GROUP_IC[g] || 'sparkles')} ${esc(g)}</h3>${cat.features.filter(f => f.group === g).map(featRow).join('')}</section>`).join('')}`;
-      else if (B.step === 2) body = `
+      if (B.step === 1) body = `
+        <p class="muted small" style="margin-top:0">Start with the giveaway itself. Choose the prize, game, scoring method and preferred dates. Trap Tech Solutions sets up the official event and verifies the results.</p>
         <div class="field"><label class="lbl" for="bt">Business type</label><select class="input" id="bt" data-b="business_type"><option value="">Select your business type</option>${(cat.business_types || []).map(e => `<option ${B.business_type === e ? 'selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
         <div id="lic-wrap">${B.business_type === cat.cannabis ? `<label class="check lic"><input type="checkbox" id="licensed" ${B.licensed ? 'checked' : ''}> <span>I confirm my business is licensed and legally permitted to operate and advertise in my jurisdiction <b class="req">(required)</b></span></label>` : ''}</div>
-        <div class="field"><label class="lbl" for="sb-brand">Brand / channel name</label><input class="input" id="sb-brand" data-b="brand" value="${esc(B.brand)}" placeholder="Your brand or channel" maxlength="120"></div>
+        <div class="field"><label class="lbl" for="sb-brand">Brand / channel name</label><input class="input" id="sb-brand" data-b="brand" value="${esc(B.brand)}" placeholder="Brand running this giveaway" maxlength="120"></div>
+        <div class="field"><label class="lbl" for="sb-prize">Prize</label><input class="input" id="sb-prize" data-b="prize" value="${esc(B.prize)}" maxlength="200" placeholder="What the winner receives"></div>
+        <div class="field"><div class="lbl">Choose game(s)</div><div class="chip-row" id="sb-games">${C.S.games.filter(g => g.playable).map(g => `<label class="chip"><input type="checkbox" value="${esc(g.id)}" ${B.games.includes(g.id) ? 'checked' : ''}> ${esc(g.title)}</label>`).join('')}</div><p class="tiny muted">Only games approved for official events will be available when Trap Tech configures the final competition.</p></div>
+        <div class="field"><label class="lbl" for="sb-comp">How should the winner be determined?</label><select class="input" id="sb-comp" data-b="competition">${Object.entries(COMP).map(([k, l]) => `<option value="${k}" ${B.competition === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+        <div class="grid2"><div class="field"><label class="lbl small" for="sb-s">Preferred start</label><input class="input" id="sb-s" type="date" data-b="start_date" value="${esc(B.start_date)}"></div><div class="field"><label class="lbl small" for="sb-e">Preferred end</label><input class="input" id="sb-e" type="date" data-b="end_date" value="${esc(B.end_date)}"></div></div>
+        <div class="grid2"><div class="field"><label class="lbl small" for="sb-len">Length (days)</label><input class="input" id="sb-len" type="number" min="1" max="90" data-b="length_days" value="${esc(B.length_days)}"></div><div class="field"><label class="lbl small" for="sb-col">Brand accent color</label><input class="input" id="sb-col" type="color" data-b="brand_color" value="${esc(B.brand_color)}"></div></div>
+        <div class="field"><label class="lbl" for="sb-d">Giveaway details / rules</label><textarea class="input" id="sb-d" data-b="details" maxlength="4000" placeholder="Prize details, eligible region or age, brand link, special rules…">${esc(B.details)}</textarea></div>`;
+      else if (B.step === 2) body = `
+        <p class="muted small" style="margin-top:0">Add a reliable contact, then choose any optional promotion or branding extras. The booking request itself is free; Trap Tech sends a private quote before anything is charged.</p>
         <div class="field"><label class="lbl" for="sb-name">Your name <span class="muted small">(optional)</span></label><input class="input" id="sb-name" data-b="contact_name" value="${esc(B.contact_name)}" maxlength="120"></div>
-        <div class="lbl">How can we reach you? <span class="muted small">(at least one)</span></div>
         <div class="field ic">${icon('message-circle')}<input class="input" id="sb-potato" data-b="potato" value="${esc(B.potato)}" placeholder="Potato username" maxlength="40" autocapitalize="none" aria-label="Potato username"></div>
         <div class="field ic">${icon('mail')}<input class="input" id="sb-email" type="email" data-b="email" value="${esc(B.email)}" placeholder="Email (optional if Potato given)" maxlength="160" autocapitalize="none" aria-label="Email"></div>
-        <div class="grid2"><div class="field"><label class="lbl small" for="sb-s">Preferred start</label><input class="input" id="sb-s" type="date" data-b="start_date" value="${esc(B.start_date)}"></div><div class="field"><label class="lbl small" for="sb-e">Preferred end</label><input class="input" id="sb-e" type="date" data-b="end_date" value="${esc(B.end_date)}"></div></div>
-        <div class="field"><label class="lbl" for="sb-prize">Prize</label><input class="input" id="sb-prize" data-b="prize" value="${esc(B.prize)}" maxlength="200" placeholder="What the winner gets"></div>
-        <div class="grid2"><div class="field"><label class="lbl small" for="sb-col">Brand color</label><input class="input" id="sb-col" type="color" data-b="brand_color" value="${esc(B.brand_color)}"></div><div class="field"><label class="lbl small" for="sb-len">Length (days)</label><input class="input" id="sb-len" type="number" min="1" max="90" data-b="length_days" value="${esc(B.length_days)}"></div></div>
-        <div class="field"><label class="lbl" for="sb-comp">Competition type</label><select class="input" id="sb-comp" data-b="competition">${Object.entries(COMP).map(([k, l]) => `<option value="${k}" ${B.competition === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
-        <div class="field"><div class="lbl">Games</div><div class="chip-row" id="sb-games">${C.S.games.filter(g => g.playable).map(g => `<label class="chip"><input type="checkbox" value="${esc(g.id)}" ${B.games.includes(g.id) ? 'checked' : ''}> ${esc(g.title)}</label>`).join('')}</div></div>
-        <div class="field"><label class="lbl" for="sb-d">More giveaway details</label><textarea class="input" id="sb-d" data-b="details" maxlength="4000" placeholder="Prize, which games, brand colors / logo link, age or region rules...">${esc(B.details)}</textarea></div>
+        <div class="section-h" style="margin-top:22px"><h2>${icon('sparkles')} Optional promotion & branding</h2></div>
+        <p class="small muted">These are extras—not separate giveaway types. Leave anything you do not need unchecked.</p>
+        ${cat.groups.map(g => `<section class="sp-g"><h3>${icon(GROUP_IC[g] || 'sparkles')} ${esc(g)}</h3>${cat.features.filter(f => f.group === g).map(featRow).join('')}</section>`).join('')}
         <div class="field"><label class="lbl" for="sb-n">Notes for Trap Tech <span class="muted small">(optional)</span></label><textarea class="input" id="sb-n" data-b="notes" maxlength="2000" placeholder="Budget, timing, anything else we should know">${esc(B.notes)}</textarea></div>`;
       else body = `<div class="card pad rv">${[['Features', sel.map(x => F[x.id].name + (F[x.id].unit !== 'flat' ? ` (${unitText(F[x.id], x.qty)})` : '')).join(', ')], ['Business type', B.business_type], ...(B.business_type === cat.cannabis ? [['License', 'Confirmed licensed and legally permitted to advertise']] : []), ['Brand', B.brand], ['Prize', B.prize], ['Brand color', B.brand_color], ['Games', B.games.map(id => (C.S.games.find(g => g.id === id) || {}).title || id).join(', ') || 'Trap Tech picks'], ['Competition', COMP[B.competition]], ['Length', B.length_days + ' days'], ['Contact', [B.contact_name, B.potato ? '@' + B.potato.replace(/^@/, '') + ' on Potato' : '', B.email].filter(Boolean).join(' • ')], ['Dates', `${B.start_date || 'flexible'} → ${B.end_date || 'flexible'}`], ['Details', B.details || '-'], ['Notes', B.notes || '-']].map(([k, v]) => `<div class="rv-row"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</div>
         <p class="small muted">Sending a request is free and commits you to nothing. You'll get a private link to see your quote, then accept or decline it.</p>`;
@@ -61,7 +64,7 @@ function sponsorPage(url) {
         ${C.pageHead('Book a Giveaway', 'Book an official competition. You provide the prize; Trap Tech sets up the game, rules, schedule, scoring and winner verification.')}
         ${B.step === 1 ? `<div class="banner sp-hero"><div class="sp-hero-t"><h2>Book the giveaway. <span class="grad-text">Choose the extras.</span></h2><div style="color:#d9dcff">No packages to squeeze into: choose any mix of features below. Trap Tech Solutions builds and runs it, contacts your winners on Potato and sends you the stats.</div></div>${C.TT('mono', 72)}</div>
           <div class="howto sp-how">${[['Pick features', 'Choose any optional promotion and branding extras.'], ['Send a free request', 'Choose the prize, competition, dates and contact details.'], ['Get your quote', 'Trap Tech reviews your booking and sends the quote privately.'], ['Approve & launch', 'Accept online, settle on Potato, we build and launch.']].map(([t, d], i) => `<div class="card"><span class="num">${i + 1}</span><div><b>${t}</b><div class="small muted">${d}</div></div></div>`).join('')}</div>` : ''}
-        <div class="steps">${st(1, 'Optional extras')}<span class="bar"></span>${st(2, 'Details')}<span class="bar"></span>${st(3, 'Review & book')}</div>
+        <div class="steps">${st(1, 'Optional extras')}<span class="bar"></span>${st(2, 'Contact & extras')}<span class="bar"></span>${st(3, 'Review & book')}</div>
         <div class="card pad">${err ? `<div class="err" role="alert">${esc(err)}</div>` : ''}${body}
           <div class="sp-nav">${B.step > 1 ? `<button class="btn ghost" id="prev">Back</button>` : ''}<button class="btn" id="next">${B.step === 1 ? `Continue to booking details <span class="sp-count">${sel.length} picked</span>` : B.step === 2 ? 'Review' : 'Submit booking'}</button></div></div>
         ${B.step === 1 ? `<div class="section-h" id="faq"><h2>${icon('circle-help')} Booking FAQ</h2></div><div class="faq">${(cat.faq || []).map(([q, a], i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary>${esc(q)}${icon('chevron-down')}</summary><p>${esc(a)}</p></details>`).join('')}</div>
@@ -73,14 +76,19 @@ function sponsorPage(url) {
       const bt = document.getElementById('bt'); if (bt) bt.onchange = () => { readForm(); B.licensed = false; draw(); };
       const pv = document.getElementById('prev'); if (pv) pv.onclick = () => { if (B.step === 2) readForm(); B.step--; draw(); scrollTo(0, 0); };
       document.getElementById('next').onclick = async () => {
-        if (B.step === 2) {
-          readForm(); B.potato = B.potato.replace(/^@/, '');
+        if (B.step === 1) {
+          readForm();
           if (!B.business_type) return draw('Please choose your business type.');
           if (B.business_type === cat.cannabis && !B.licensed) return draw('Please confirm your business is licensed and legally permitted to operate and advertise in your jurisdiction.');
           if (!B.brand) return draw('Brand / channel name is required.');
+          if (!B.prize) return draw('Describe the prize so the giveaway can be set up correctly.');
+          if (B.start_date && B.end_date && B.end_date < B.start_date) return draw('End date must be after the start date.');
+          if (!Number.isFinite(+B.length_days) || +B.length_days < 1 || +B.length_days > 90) return draw('Giveaway length must be between 1 and 90 days.');
+        }
+        if (B.step === 2) {
+          readForm(); B.potato = B.potato.replace(/^@/, '');
           if (!B.email && !B.potato) return draw('Add a Potato username or an email (at least one) so we can reach you.');
           if (B.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(B.email)) return draw('That email address does not look right.');
-          if (B.start_date && B.end_date && B.end_date < B.start_date) return draw('End date must be after the start date.');
         }
         if (B.step < 3) { B.step++; draw(); return scrollTo(0, 0); }
         const btn = document.getElementById('next'); btn.disabled = true;
