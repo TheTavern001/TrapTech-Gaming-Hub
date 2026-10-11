@@ -987,6 +987,7 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
       <form id="potf" class="potato-set"><label class="lbl" for="pot">Potato username <span class="muted small">(private - only Trap Tech sees it, to contact you if you win)</span></label><div class="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="pot" value="${esc(S.me.potato || '')}" placeholder="yourhandle" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></div></form>
       <button class="btn danger block" data-act="signout" style="margin-top:10px">${icon('log-out')} Sign out</button></div>` : ''}
   </div>`);
+  if (!p.demo) hydrateProfileAvatar(p.username);
   achToast(r.unlocked);
   setTitle(`${p.username}'s profile`);
   api('/api/users/' + encodeURIComponent(p.username) + '/prestige').then(x => { const el = document.getElementById('px-show'); if (el && x.ok && x.items.length) el.innerHTML = `<div class="px-showcase">${x.items.map(it => `<a href="/prestige" class="pill gold" title="${esc(it.name)}">${icon('gem')} ${esc(it.name)} #${it.serial}/${it.supply}</a>`).join('')}</div>`; });
