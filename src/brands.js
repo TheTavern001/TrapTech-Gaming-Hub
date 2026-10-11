@@ -110,12 +110,12 @@ const RULE_TEXT = (g) => { const a = audience(g); return a.open ? 'Open to every
 function routes(app, A, h) {
   const { bad, requireUser, currentUser, limiter, str } = h;
   app.get('/api/brands', (req, res) => res.json({ ok: true, brands: db.prepare('SELECT * FROM channels WHERE active=1 ORDER BY is_demo, name').all().map(c => pubBrand(c, true)), cooldown_days: 0 }));
-  app.get('/api/brands/invite/:code', limiter('brand-inv', 120, 600e3), (req, res) => { const b = findBrand(req.params.code); if (!b) return bad(res, 404, 'That invite link is not valid.'); const me = currentUser(req); res.json({ ok: true, brand: pubBrand(b, true), me: me ? status(me.id) : null, cooldown_days: COOLDOWN_DAYS }); });
+  app.get('/api/brands/invite/:code', limiter('brand-inv', 120, 600e3), (req, res) => { const b = findBrand(req.params.code); if (!b) return bad(res, 404, 'That invite link is not valid.'); const me = currentUser(req); res.json({ ok: true, brand: pubBrand(b, true), me: me ? status(me.id) : null, cooldown_days: 0 }); });
   app.get('/api/me/brand', requireUser, (req, res) => res.json({ ok: true, ...status(req.user.id) }));
   app.post('/api/me/brand', requireUser, limiter('brand-join', 20, 3600e3), (req, res) => { const r = join(req.user.id, str(req.body.code, 40), req.body.via === 'signup' ? 'signup' : req.body.via === 'link' ? 'invite link' : 'code'); r.ok ? res.json(r) : bad(res, 400, r.error, r); });
   app.post('/api/me/brand/leave', requireUser, limiter('brand-join', 20, 3600e3), (req, res) => { const r = leave(req.user.id); r.ok ? res.json(r) : bad(res, 400, r.error); });
   // admin: invite codes + member counts for the brand list; set a giveaway's audience
-  A.get('/brands', (req, res) => { ensureCodes(); res.json({ ok: true, brands: db.prepare('SELECT * FROM channels ORDER BY name').all().map(c => ({ ...pubBrand(c, true), invite_code: c.invite_code, invite_path: '/join/' + c.invite_code, active: !!c.active, link_url: c.link_url, business_type: c.business_type })), cooldown_days: COOLDOWN_DAYS }); });
+  A.get('/brands', (req, res) => { ensureCodes(); res.json({ ok: true, brands: db.prepare('SELECT * FROM channels ORDER BY name').all().map(c => ({ ...pubBrand(c, true), invite_code: c.invite_code, invite_path: '/join/' + c.invite_code, active: !!c.active, link_url: c.link_url, business_type: c.business_type })), cooldown_days: 0 }); });
   A.post('/brands/:id/new-code', (req, res) => { const c = brandById(+req.params.id); if (!c) return bad(res, 404, 'Not found'); const code = newCode(); db.prepare('UPDATE channels SET invite_code=? WHERE id=?').run(code, c.id); res.json({ ok: true, invite_code: code }); });
   A.put('/giveaways/:id/audience', (req, res) => {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
