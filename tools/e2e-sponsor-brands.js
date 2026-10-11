@@ -1,4 +1,4 @@
-// v7 Book a Giveaway (admin-only quote flow) + giveaway team affiliation (invite links, immediate switching, brand-only vs open giveaways) end to end. Starts its OWN server on a copy of the DB
+// v7 Book a Giveaway (admin-only quote flow) + giveaway team affiliation (invite links, 30-day switching cooldown, brand-only vs open giveaways) end to end. Starts its OWN server on a copy of the DB
 // (port 8798), so nothing touches the dev server. Usage: node tools/e2e-sponsor-brands.js
 const fs = require('fs'); const path = require('path'); const { spawn } = require('child_process');
 const { adminClient, loadEnv } = require('./admin-auth');
