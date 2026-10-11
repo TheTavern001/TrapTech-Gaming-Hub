@@ -69,5 +69,13 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - Automated workflow `V1 launch syntax checks` passed on commit `db3674174d`; it includes server/browser syntax checks and checklist normalization regression checks.
 - Live Deplexo health, deployed SHA, real browser interactions, and full gameplay visual fidelity have not been verified in this audit.
 
+## Security/privacy hardening
+- [x] Add baseline browser security headers (nosniff, frame denial, referrer policy, restrictive permissions policy, cross-origin policies, HSTS on HTTPS).
+- [x] Remove deployment commit metadata from the public build endpoint.
+- [x] Confirm the legacy `/admin`, `/admin.html`, `/api/admin/*`, and old admin asset URLs are 404; the actual dashboard uses the configured secret path and server-side auth/2FA/CSRF/roles.
+- [ ] Verify production environment values: long random `ADMIN_PATH`, strong `ADMIN_PASSWORD`/owner password, unique `SECRET`/session secrets, and `TRUST_CF_IP=1` only when Cloudflare is actually the trusted proxy.
+- [ ] Run external security review / penetration tests and confirm no secrets or creator/account identifiers appear in production HTML, API responses, logs, media metadata, or social previews.
+- Important limitation: browser-delivered JavaScript, HTML and WebGL assets can always be inspected. Security must come from server-side authorization, validation, rate limits, anti-cheat and secret isolation—not attempting to hide client code.
+
 ## Release evidence
 For every release, record commit SHA, automated test results, live deployment status, smoke-test results, known limitations, and rollback point. Do not announce launch-ready until all P0 items pass.
