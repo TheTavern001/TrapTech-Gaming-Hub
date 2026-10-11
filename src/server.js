@@ -20,8 +20,8 @@ const resolveGame = (id) => cfg.GAME_MAP[id] || libraryGames().find(g => g.id ==
 const HUB_VERSION = 'V1';
 
 const app = express();
-const proxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
-// Trust only an explicitly configured number of reverse-proxy hops; never trust arbitrary X-Forwarded-* headers by default.
+const proxyHops = Number(process.env.TRUST_PROXY_HOPS || (process.env.NODE_ENV === 'production' ? 1 : 0));
+// Trust at most the configured reverse-proxy hop count (one hosting ingress hop in production by default); never trust an arbitrary full X-Forwarded-* chain.
 app.set('trust proxy', Number.isInteger(proxyHops) && proxyHops >= 1 && proxyHops <= 3 ? proxyHops : false);
 const PU = require('./public-url'); app.use(PU.redirect()); // v7: PUBLIC_URL + optional CANONICAL_REDIRECT (src/public-url.js)
 app.disable('x-powered-by');
