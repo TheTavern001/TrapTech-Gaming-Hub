@@ -34,6 +34,12 @@ async function editor() {
         <div><b>${profile ? C.fmt(profile.giveaways_won) : '—'}</b><span>GIVEAWAYS WON</span></div>
         <div><b>${profile ? profile.achievements.length + '/' + profile.achievements_total : '—'}</b><span>ACHIEVEMENTS</span></div>
       </div>
+      <div class="avatar-card-record">
+        <div><span>GIVEAWAYS ENTERED</span><b>${profile ? C.fmt(profile.giveaways_entered || 0) : '—'}</b></div>
+        <div><span>FOLLOWERS</span><b>${profile ? C.fmt(profile.followers || 0) : '—'}</b></div>
+        <div><span>BEST GAME</span><b>${profile && profile.best_by_game && profile.best_by_game.length ? esc(profile.best_by_game[0].game_title) : 'Not set'}</b></div>
+        <div><span>DAILY STREAK</span><b>${profile ? C.fmt(profile.streak.current || 0) + ' days' : '—'}</b></div>
+      </div>
       <div class="avatar-card-footer"><span>COLLECT • CUSTOMIZE • COMPETE</span><span>${profile && profile.global_rank ? 'GLOBAL RANK #' + profile.global_rank : 'PROFILE COSMETICS'}</span></div>
     </div>`;
   };
@@ -45,9 +51,9 @@ async function editor() {
         <section class="avatar-preview-column">
           ${cardMarkup()}
           <div class="avatar-preview-actions"><div class="avatar-wallet"><span class="avatar-wallet-icon">✦</span><div><small>HUB CROWNS</small><b>${C.fmt(crowns)}</b></div><a href="/shop">Earn / browse cosmetics ↗</a></div><button class="btn avatar-save" id="av-save">${icon('check')} Save player identity</button><div id="av-msg" aria-live="polite">${msg}</div></div>
-          <div class="avatar-presets card pad"><div class="avatar-section-head"><div><span class="avatar-card-kicker">QUICK LOADOUTS</span><h3>Character presets</h3></div><span class="tiny muted">Owned items only</span></div><div class="avatar-preset-grid">${PRESETS.map(p=>`<button type="button" class="avatar-preset ${activePreset===p.id?'on':''} preset-${p.rarity.toLowerCase()}" data-preset="${p.id}"><img src="${prev({...cfg,...Object.fromEntries(Object.entries(p.cfg).filter(([k,id])=>partOwned(k,id)))})}" alt="" loading="lazy"><span class="preset-rarity">${p.rarity}</span><b>${p.name}</b><small>Apply owned pieces</small></button>`).join('')}</div></div>
+          <div class="avatar-presets card pad"><div class="avatar-section-head"><div><span class="avatar-card-kicker">QUICK LOADOUTS</span><h3>Character presets</h3></div><span class="tiny muted">${r.parts.filter(p=>p.owned).length} owned · ${r.parts.length} total collectibles</span></div><div class="avatar-preset-grid">${PRESETS.map(p=>`<button type="button" class="avatar-preset ${activePreset===p.id?'on':''} preset-${p.rarity.toLowerCase()}" data-preset="${p.id}"><img src="${prev({...cfg,...Object.fromEntries(Object.entries(p.cfg).filter(([k,id])=>partOwned(k,id)))})}" alt="" loading="lazy"><span class="preset-rarity">${p.rarity}</span><b>${p.name}</b><small>Apply owned pieces</small></button>`).join('')}</div></div>
         </section>
-        <section class="avatar-inventory card pad"><div class="avatar-section-head"><div><span class="avatar-card-kicker">COSMETIC INVENTORY</span><h3>Customize each detail</h3><p class="small muted">Choose a part to preview it live. Locked items show the exact unlock condition.</p></div></div>
+        <section class="avatar-inventory card pad"><div class="avatar-section-head"><div><span class="avatar-card-kicker">COSMETIC INVENTORY</span><h3>Customize each detail</h3><p class="small muted">Build a signature character from facial features, hair, skin tone, outfits, accessories, headwear, held items and card effects. Every locked item shows its exact requirement or Crown price before you unlock it.</p></div></div>
           <div class="tabs av-tabs" role="tablist" aria-label="Avatar customization categories">${r.kinds.map(k=>`<button class="tab ${k===tab?'on':''}" data-tab="${k}" role="tab" aria-selected="${k===tab}">${esc(KL[k]||k)}</button>`).join('')}</div>
           <div class="avatar-inventory-summary"><span>${parts.filter(p=>p.owned).length} owned in this category</span><span>${parts.length} total parts</span></div>
           <div class="av-grid">${parts.map(p=>{const c2={...cfg,[p.kind]:p.id};return `<button type="button" class="av-opt ${cfg[p.kind]===p.id?'on':''} ${p.owned?'':'locked'} ${p.unlock.prestige?'prestige':''}" data-k="${p.kind}" data-id="${esc(p.id)}" title="${esc(p.label)}"><img src="${prev(c2)}" alt="" loading="lazy" width="76" height="76"><span class="small">${esc(p.label)}</span><span class="avatar-part-status ${p.owned?'owned':'locked'}">${p.owned?'✓ OWNED':icon('lock')+' '+esc(lockText(p))}</span></button>`;}).join('')}</div>
