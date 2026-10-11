@@ -32,7 +32,7 @@ The admin media uploader supports optional R2 storage. When all R2 credentials a
 4. Optional: connect a dedicated HTTPS custom domain to the bucket and set CLOUDFLARE_R2_PUBLIC_URL to its origin, for example https://media.example.com. If omitted, media is served through the Hub's /media route.
 5. Deploy and test an upload, reload the resulting image, restart the app, and confirm the image still loads. Keep a backup of existing DATA_DIR/media until this passes.
 
-R2 does not automatically move the site's source code, SQLite database, backups, or every static asset. It moves admin-uploaded media only. Database persistence and backups must remain configured separately.
+R2 does not automatically move the site's source code, SQLite database, backups, or every static asset. It moves admin-uploaded media only. Database persistence and backups must remain configured separately. Run `npm run test:r2` to exercise the signing and storage client against a mock endpoint before entering any real R2 credentials. The test does not upload to Cloudflare.
 
 ## Cloudflare DNS, security and proxy
 
