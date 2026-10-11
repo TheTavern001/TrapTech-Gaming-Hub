@@ -54,6 +54,8 @@ jobs:
           exit 1
       - name: Run API end-to-end regression suite
         run: npm test
+      - name: Test giveaway booking, brand affiliation and 30-day cooldown
+        run: node tools/e2e-sponsor-brands.js
       - name: Test main Hub and Games Library navigation on mobile viewport
         run: node tools/e2e-hub-library.js
       - name: Smoke test major Hub screens on mobile and desktop
