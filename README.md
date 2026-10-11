@@ -2,11 +2,12 @@
 
 Mobile-first game hub with accounts, leaderboards, giveaways, a booking request system and an admin dashboard, designed,
 built and operated by **Trap Tech Solutions**. 8 original HTML5 games, daily quests, login streaks, XP levels, a free season
-track, tournaments (timed and bracket), friends, notifications, share cards and invite codes. Everything is **points and
-cosmetics only, with no real money**. Adults only (21+). See `RESEARCH.md` for the v3 feature-gap research and sources.
+track, tournaments (timed and bracket), friends, notifications, share cards and invite codes. Competitive outcomes remain
+server-validated and purchases are limited to cosmetic items, profile presentation, and season-track content—never gameplay
+power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-gap research and sources.
 
 - Local URL: http://localhost:8787 (port is set by `PORT` in `.env` or the environment)
-- Public leaderboard: `/leaderboard` · Giveaways: `/giveaways` · Admin: `/admin` (password = `ADMIN_PASSWORD` env var / `.env`)
+- Public leaderboard: `/leaderboard` · Giveaways: `/giveaways` · Admin: disabled unless `ADMIN_PATH` is configured; the dashboard uses a non-public random path, password + authenticator-based 2FA, CSRF protection, and role permissions. `/admin` is not the dashboard.
 
 ## Run / restart
 ```bash
@@ -30,7 +31,7 @@ All settings come from environment variables. Locally, `src/config.js` also read
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `ADMIN_PASSWORD` | yes | Password for `/admin` |
+| `ADMIN_PASSWORD` | yes | Initial owner password for the secret admin path (never put it in source control) |\n| `ADMIN_PATH` | production | Random secret URL path (16+ random characters); never publish it in site copy or public config |\n| `ADMIN_USERNAME` | no | Initial owner account username (default `owner`) |\n| `TRUST_CF_IP` | no | Set `1` only when the app is actually behind Cloudflare; set `0` otherwise |
 | `SECRET` | yes* | One random secret. Session-cookie and anti-cheat run-token secrets plus the IP-hash salt are derived from it |
 | `SESSION_SECRET`, `RUN_SECRET`, `IP_SALT` | no | *Use these instead of `SECRET` if you prefer (each one overrides the derived value) |
 | `PORT` | no | HTTP port (default 8787; Render sets this for you) |
