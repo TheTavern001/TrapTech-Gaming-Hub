@@ -4,11 +4,12 @@
 
 Candidate branch: `release/consolidated-v1`; PR [#2](https://github.com/TheTavern001/gaming-hub-2/pull/2). Keep production unchanged until the final candidate is approved. Feature work may create multiple commits and run CI, but must result in one merged release and one production deployment.
 
-- [x] Make `/games` one unified 100-entry catalog with search and category filtering; remove the separate core-game section.
+- [x] Make `/games` one unified 150-entry catalog with search and category filtering; remove the separate core-game section.
 - [x] Add a synchronized weekly rotating catalog spotlight on the homepage, changing every Monday UTC.
 - [x] Add a shared responsive visual system to the main app shell and major reusable UI surfaces.
 - [x] Add CI coverage for main-screen catalog presence/search/filter (candidate CI must pass).
-- [ ] Reach the user's target of **150+ genuinely testable games**. Current inventory is 100 catalog entries; do not report the target as met.
+- [x] Reach 150 registered catalog entries. This is a catalog-count milestone only, not proof that all entries are playable, competition-safe, or license-cleared.
+- [ ] Validate 150+ genuinely testable games through runtime, score-acceptance, mobile, anti-cheat, and licensing checks. Current registry has 150 entries; test completion and certification remain open.
 - [ ] Launch-test every listed game and classify failures, mobile support, external dependencies, score integration and licensing status.
 - [ ] Verify official event permissions, server-validated scores, anti-cheat and tie-break rules for any game promoted as competition-eligible.
 - [ ] Complete desktop and mobile visual regression across home, library, game player, auth, profiles, leaderboards, quests, tournaments, giveaways, bookings, vendor pages, store, settings and admin tools.
@@ -23,7 +24,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [x] Keep the current `v7-wip` base as the pull request target; do not replace the Hub shell with a standalone game-only site.
 - [x] Keep the main `/games` route and add a working entry point to `/games-lib/index.html`.
 - [x] Replace the stale hard-coded “150+ more games” label with a count fetched from `/api/games-lib`.
-- [x] Add a new-game spotlight, category/status filters, search, and result counts on the dedicated library page.
+- [x] Add one unified catalog, weekly rotating homepage feature, category filters, search, and result counts on the dedicated library page.
 - [x] Load the library registry into the main Hub's route state so official giveaway links can resolve library game IDs.
 - [x] Route `/play/<library-game-id>?event=...` launches into the corresponding library game while preserving query parameters.
 - [x] Forward `event`, `event_code`, `giveaway_id`, and legacy `giveaway` query parameters through the library adapter to server-side run validation.
