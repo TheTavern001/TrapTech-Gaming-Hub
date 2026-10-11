@@ -1,0 +1,24 @@
+name: V1 launch syntax checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check server-side JavaScript
+        run: |
+          node --check src/db.js
+          node --check src/eligibility.js
+          node --check src/v5.js
+          node --check src/admin-giveaways.js
+          node --check src/admin-ui/admin-builder.js
+      - name: Check browser ES modules
+        run: |
+          node --input-type=module --check < public/js/gw-v7.js
