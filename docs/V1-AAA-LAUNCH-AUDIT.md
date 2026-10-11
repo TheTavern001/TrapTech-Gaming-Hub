@@ -35,9 +35,12 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - [x] Replace the 2D-only editor preview with a real 3D renderer and static SVG fallback. The Three.js module is loaded lazily from a pinned CDN, so the editor needs network access for 3D mode.
 - [x] Reflect existing face, skin, hair, outfit, accessory, hat, and held-item choices in the 3D preview; provide lighting/materials, idle motion, camera rotation, and a responsive editor.
 - [x] Add selectable average/slim/athletic/stocky/curvy/tall/short build proportions to the procedural model.
-- [ ] Upgrade the procedural character to a production-quality, licensed/owned model asset.
+- [ ] Upgrade the procedural character to a production-quality, licensed/owned model asset. CSS polish cannot substitute for a production-quality character asset.
 - [ ] Distinguish earned, achievement-unlocked, event-exclusive, and paid cosmetics in the catalog.
-- [ ] Keep purchases cosmetic-only and validate ownership/prices/grants server-side; never grant an item because the client says it is owned.
+- [x] Keep purchases cosmetic-only and validate ownership/prices/grants server-side; never grant an item because the client says it is owned.
+- [x] Remove the paid Season Pass XP boost: paid ownership unlocks only the optional cosmetic track and bonus cosmetic currency; all players use the same XP progression.
+- [x] Separate free earned Hub Points from optional purchased Hub Crowns and clarify that all games, quests, achievements, and eligible giveaway entry remain available without a purchase.
+- [ ] Run the payment, shop purchase, equip, refund, and duplicate-webhook regression suite against a clean test database.
 - [ ] Provide clear rarity/unlock requirements, preview-before-buy, purchase confirmation, and equipped/owned states.
 - [x] Render the selected avatar in the editor and player profile with the existing SVG fallback.
 - [ ] Extend consistent 3D rendering to leaderboards, giveaway entries/winner cards, and community surfaces without excessive WebGL instances.
@@ -52,6 +55,8 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 ## P1 — Game presentation and assets
 - [ ] Inventory every game and distinguish original game code, licensed/open-source titles, placeholders, and unavailable titles.
 - [ ] Replace placeholder thumbnails/icons with consistent, rights-cleared high-quality artwork.
+- [x] Add an arcade-style gameplay shell, responsive controls header, polished loading treatment, and accessible overlays around the existing canvas.
+- [ ] Upgrade individual game engines with distinct high-fidelity art, animation, audio, effects, and original level design; the shell polish alone is not a full AAA redesign.
 - [ ] Audit game canvas scaling, aspect ratio, touch controls, pause/resume, audio controls, loading/error states, and safe-area handling.
 - [ ] Do not call a game AAA based only on a glossy page or thumbnail; high-fidelity gameplay requires appropriate art, animation, sound, controls, and performance.
 - [ ] Preserve source/license attribution for imported game code and assets.
@@ -68,7 +73,7 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - Checklist schema/UI/server eligibility integration: commits `4af996c`, `50a456e`, `a281040`, `8f50d95`, `2e16069`, `e2bca05` and follow-up fixes.
 - 3D avatar editor/profile renderer: commits `4d771ec`, `0fd7b35`, `572f5c6`, `541f295`, `98c5548`, `24f559b`, `8078dc1`, `b651f89`.
 - Automated workflow `V1 launch syntax checks` passed on commit `db3674174d`; it includes server/browser syntax checks and checklist normalization regression checks.
-- Live Deplexo health, deployed SHA, real browser interactions, and full gameplay visual fidelity have not been verified in this audit.
+- Live Deplexo health, deployed SHA, real browser interactions, production payment/R2 connections, and full gameplay visual fidelity have not been verified in this audit. V1 must not be declared ready until every P0 item and every deployment-dependent payment/security gate is evidenced.
 
 ## Security/privacy hardening
 - [x] Add baseline browser security headers (nosniff, frame denial, referrer policy, restrictive permissions policy, cross-origin policies, HSTS on HTTPS).
@@ -77,6 +82,8 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - [x] Stop trusting arbitrary X-Forwarded-* and CF-Connecting-IP headers by default; proxy hop count and Cloudflare IP trust must be explicitly configured.
 - [x] Confirm the legacy `/admin`, `/admin.html`, `/api/admin/*`, and old admin asset URLs are 404; the actual dashboard uses the configured secret path and server-side auth/2FA/CSRF/roles.
 - [ ] Verify production environment values: long random `ADMIN_PATH`, strong `ADMIN_PASSWORD`/owner password, unique `SECRET`/session secrets, and `TRUST_CF_IP=1` only when Cloudflare is actually the trusted proxy.
+- [x] Add a persistent anti-impersonation notice with the official Trap Tech Solutions account and channel links; do not publish personal admin handles in the Hub UI.
+- [x] Remove player-facing Founder / Trap Tech Team badges and rename the staff-looking cosmetic frame to a neutral theme; staff role remains server-authorized.
 - [ ] Run external security review / penetration tests and confirm no secrets or creator/account identifiers appear in production HTML, API responses, logs, media metadata, or social previews.
 - Important limitation: browser-delivered JavaScript, HTML and WebGL assets can always be inspected. Security must come from server-side authorization, validation, rate limits, anti-cheat and secret isolation—not attempting to hide client code.
 
@@ -84,7 +91,8 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - [x] Add Stripe-hosted card checkout, server-priced orders, signed webhook verification, provider/session matching, idempotent fulfillment, and entitlement reversal for verified full refunds.
 - [x] Keep Bitcoin as a separate direct-to-wallet payment path; no private wallet keys are stored by the Hub.
 - [x] Add optional Cloudflare R2 S3-compatible storage for uploaded admin media, with local disk fallback and a private server-side signing key.
-- [ ] Stripe is not active until production STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, and HTTPS PUBLIC_URL are configured and test-mode purchases/refunds pass. Do not enable live keys before that.
+- [ ] Stripe is not active until production STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, and HTTPS PUBLIC_URL are configured and test-mode purchases/refunds pass.
+- [ ] Verify provider webhook delivery, duplicate-event idempotency, failed/cancelled checkout, underpayment/mismatch handling, and refund reversals on the deployed host. Do not enable live keys before that.
 - [ ] R2 is not connected until bucket-scoped credentials are configured; test upload/reload/restart persistence before relying on it. R2 does not replace SQLite persistence or backup configuration.
 - [ ] Other crypto providers are not integrated; currently only Bitcoin is supported for crypto payments.
 

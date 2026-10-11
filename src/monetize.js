@@ -3,8 +3,8 @@
 // eligibility check or a tie-break: those code paths (src/server.js /api/score, src/events.js, src/results.js,
 // src/eligibility.js, src/anticheat.js) never read anything from this module. tools/e2e-payments.js proves it.
 //  (a) Hub Crowns: hub currency bought in packs with real money, spendable ONLY on cosmetics / avatar items.
-//  (b) Season Pass: premium track on top of the free track (premium cosmetics, bonus Crowns, and a premium-track XP boost
-//      that only speeds up the premium track itself; never the season board, scores, attempts or eligibility).
+//  (b) Season Pass: premium track on top of the free track, with premium cosmetics and bonus Crowns. The premium track uses the same free XP progression as everyone else;
+//      there is no paid XP boost and no paid gameplay advantage.
 //  (c) "Earn next season's pass free": a hard 48-quest chain (src/pass-quests.js, docs/PASS-QUESTS.md).
 //  (d) Prestige showcase items: three numbered, limited, very expensive cosmetics with an "owned by" wall.
 // PAYMENTS are provider-agnostic (PROVIDERS below). Default: BITCOIN to one fixed watch-only address (BTC_ADDRESS):
@@ -49,11 +49,13 @@ const SEED = [
   { id: 'crowns-1100', kind: 'pack', name: '1,100 Hub Crowns', usd_cents: 999, crowns: 1000, bonus: 100, sort: 2 },
   { id: 'crowns-2400', kind: 'pack', name: '2,400 Hub Crowns', usd_cents: 1999, crowns: 2000, bonus: 400, sort: 3 },
   { id: 'crowns-6500', kind: 'pack', name: '6,500 Hub Crowns', usd_cents: 4999, crowns: 5000, bonus: 1500, sort: 4 },
-  { id: 'season-pass', kind: 'pass', name: 'Season Pass (premium track)', usd_cents: 999, crowns: 0, bonus: 0, sort: 10, data: { bonus_crowns_total: 600, xp_boost_pct: 15 } },
+  { id: 'season-pass', kind: 'pass', name: 'Season Pass (premium track)', usd_cents: 999, crowns: 0, bonus: 0, sort: 10, data: { bonus_crowns_total: 600, xp_boost_pct: 0 } },
   ...Object.entries(PRESTIGE).map(([id, p], i) => ({ id, kind: 'prestige', name: p.name, usd_cents: p.usd, crowns: 0, bonus: 0, supply: p.supply, sort: 20 + i, data: { blurb: p.blurb, fx: p.fx, confs: p.confs } })),
 ];
 { const ins = db.prepare('INSERT OR IGNORE INTO store_products (id, kind, name, usd_cents, crowns, bonus, supply, data, active, sort, updated_at) VALUES (?,?,?,?,?,?,?,?,1,?,?)');
   for (const p of SEED) ins.run(p.id, p.kind, p.name, p.usd_cents, p.crowns, p.bonus, p.supply ?? null, JSON.stringify(p.data || {}), p.sort, Date.now()); }
+const passRow = db.prepare("SELECT data FROM store_products WHERE id='season-pass'").get();
+if (passRow) { let passData = {}; try { passData = JSON.parse(passRow.data || '{}'); } catch {} if (passData.xp_boost_pct !== 0) { passData.xp_boost_pct = 0; db.prepare("UPDATE store_products SET data=?, updated_at=? WHERE id='season-pass'").run(JSON.stringify(passData), Date.now()); } }
 const prod = (id) => { const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = JSON.parse(p.data || '{}'); return p; };
 const products = (all = false) => db.prepare(`SELECT * FROM store_products ${all ? '' : 'WHERE active=1'} ORDER BY sort, id`).all().map(p => ({ ...p, data: JSON.parse(p.data || '{}') }));
 const issued = (id) => db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=? AND revoked_at IS NULL').get(id).c;
@@ -234,8 +236,9 @@ const hasPass = (userId, n) => !!db.prepare('SELECT 1 FROM pass_owned WHERE user
 // premium XP boost: ONLY the premium-track level (own progress). The public season board and every score are untouched.
 function passState(user, t = Date.now()) {
   const SE = require('./seasons'); const sp = user ? SE.seasonProgress(user.id, t) : null; const n = SE.seasonAt(t).number; const P = prod('season-pass');
-  const owned = user ? hasPass(user.id, n) : false; const boost = (P && P.data.xp_boost_pct) || 15;
-  const pxp = sp ? Math.floor(sp.xp * (owned ? 1 + boost / 100 : 1)) : 0; const plevel = SE.levelOf(pxp).level;
+  const owned = user ? hasPass(user.id, n) : false; const boost = 0;
+  // Paid pass ownership never changes XP or progression speed. It only unlocks the optional cosmetic reward track.
+  const pxp = sp ? sp.xp : 0; const plevel = SE.levelOf(pxp).level;
   const claimed = new Set(user ? db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(user.id, n).map(r => r.level) : []);
   return { season: n, price_usd_cents: P ? P.usd_cents : null, owned, xp_boost_pct: boost, premium_xp: pxp, premium_level: plevel, free_level: sp ? sp.level : 0,
     track: premiumTrack(n).map(r => ({ ...r, unlocked: owned && plevel >= r.level, claimed: claimed.has(r.level) })), next_free: user ? require('./pass-quests').status(user.id, t) : null };
@@ -250,7 +253,7 @@ function claimPass(user, t = Date.now()) {
 }
 
 // ---------- spend Crowns: cosmetics only ----------
-function crownPrice(it) { return Math.max(50, Math.round(((it && it.price) || 500) / 10 / 5) * 5); }
+function crownPrice(it) { const pointsPrice = Math.max(0, Number((it && it.price) || 0)); return Math.max(50, Math.round((pointsPrice / 4) / 5) * 5); }
 function buyWithCrowns(user, itemId, t = Date.now()) {
   const SH = require('./shop'); const it = SH.BY_ID[itemId]; if (!it) return { ok: false, error: 'Unknown item.' };
   if (it.src === 'k' || it.src === 'b' || it.src === 'p') return { ok: false, error: 'Track and earned items cannot be bought.' };
@@ -263,7 +266,7 @@ function buyWithCrowns(user, itemId, t = Date.now()) {
     return { ok: true, item: it.id, price_crowns: price, crowns: crowns(user.id) }; })();
 }
 
-const NON_ADVANTAGE = 'Everything sold in the Hub Store is cosmetic. Hub Crowns, the Season Pass and Prestige items never change scores, attempts, anti-cheat checks, giveaway entries, eligibility, tie-breaks or winners. Paid and free players are ranked by exactly the same rules.';
+const NON_ADVANTAGE = 'Everything sold in the Hub Store is cosmetic. Hub Crowns, the Season Pass and Prestige items never change scores, attempts, anti-cheat checks, giveaway entries, eligibility, tie-breaks, quest requirements, XP earned or winners. The Season Pass does not boost XP or progression speed. Paid and free players are ranked by exactly the same rules.';
 const TERMS = '[DRAFT - FOR LAWYER REVIEW] Digital items are a limited licence to use cosmetic content in The Gaming Hub, have no cash value and cannot be exchanged for money or prizes. All sales are final once an item is delivered, except where the law requires a refund or an order was charged in error; contact Trap Tech Solutions within 14 days. Bitcoin payments are final on-chain; refunds, when granted, are sent back in BTC at the USD value of the order. You must be 21+. Prestige items are numbered and limited; their serial number is a display feature, not an investment. Trap Tech Solutions may change or retire items.';
 
 function prestigeWall() { return Object.entries(PRESTIGE).map(([id, d]) => { const p = prod(id);

@@ -1,0 +1,96 @@
+name: Full Games Library Audit
+on:
+  workflow_dispatch:
+    inputs:
+      play_ms:
+        description: 'Automated gameplay sample duration per game (milliseconds)'
+        required: true
+        default: '4000'
+        type: string
+  pull_request:
+    paths:
+      - 'public/games-lib/**'
+      - 'src/games-lib*.js'
+      - 'src/server.js'
+      - 'tools/e2e-games-lib.js'
+      - '.github/workflows/games-lib-full-audit.yml'
+permissions:
+  contents: read
+concurrency:
+  group: games-lib-full-audit-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      batches: ${{ steps.set.outputs.batches }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - id: set
+        run: |
+          node - <<'NODE' >> "$GITHUB_OUTPUT"
+          const { games } = require('./src/games-lib');
+          const batches = [];
+          const size = 4;
+          for (let i = 0; i < games.length; i += size) {
+            batches.push({ name: `batch-${String(i / size + 1).padStart(2, '0')}`, slugs: games.slice(i, i + size).map(g => g.slug).join(',') });
+          }
+          console.log('batches=' + JSON.stringify(batches));
+          NODE
+  audit:
+    needs: plan
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.batches) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      PORT: 8787
+      SECRET: ci-only-not-production
+      ADMIN_PASSWORD: ci-only-not-production
+      ADMIN_PATH: ci-hidden-admin-test-path-2026
+      DATA_DIR: /tmp/hub-data
+      BASE: http://127.0.0.1:8787
+      PLAY_MS: ${{ inputs.play_ms || '4000' }}
+      SLUGS: ${{ matrix.slugs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: browser-actions/setup-chrome@v1
+      - run: npm ci && npm install --no-save playwright-core
+      - name: Start isolated test Hub
+        run: |
+          mkdir -p "$DATA_DIR"
+          npm start > /tmp/hub-ci.log 2>&1 &
+          echo $! > /tmp/hub-ci.pid
+          for i in $(seq 1 45); do
+            if curl --fail --silent "$BASE/healthz" >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/hub-ci.log
+          exit 1
+      - name: Audit desktop and mobile gameplay
+        run: node tools/e2e-games-lib.js
+      - name: Upload screenshots and machine-readable results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: games-library-${{ matrix.name }}
+          path: screenshots/v7/games-lib/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Print server logs on failure
+        if: failure()
+        run: cat /tmp/hub-ci.log || true
+      - name: Stop test Hub
+        if: always()
+        run: if [ -f /tmp/hub-ci.pid ]; then kill "$(cat /tmp/hub-ci.pid)" || true; fi

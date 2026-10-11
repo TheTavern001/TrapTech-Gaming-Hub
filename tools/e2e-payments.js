@@ -27,7 +27,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const ADM = require('./admin-auth').adminClient(BASE); await ADM.login();
   const mk = async () => { const c = client(); c.u = 'pay_' + Math.random().toString(36).slice(2, 8); await c('/api/auth/signup', { body: { username: c.u, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); return c; };
   const [P1, P2, F] = [await mk(), await mk(), await mk()];
-  let r = await client()('/api/store'); ok(r.body.ok && r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 3 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage), 'store: packs, pass, 3 prestige items, non-advantage statement, checkout on (BTC_ADDRESS set)', r.body.checkout);
+  let r = await client()('/api/store'); ok(r.body.ok && r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 3 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage) && /does not boost XP/.test(r.body.non_advantage), 'store: packs, pass, 3 prestige items, non-advantage statement, checkout on (BTC_ADDRESS set)', r.body.checkout);
   r = await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: false } }); r = await P1('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 503, 'admin switch off -> checkout refused');
   await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: true } });
   r = await client()('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 401, 'checkout needs an account');
@@ -64,7 +64,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await client()('/api/store/prestige'); const pc = r.body.items.find(i => i.id === 'prestige-crown'); ok(pc.owners.length === 1 && pc.owners[0].serial === 1 && pc.owners[0].username === P1.u && pc.supply === 5, 'prestige: serial #1 of 5 on the global "owned by" wall');
   // pass + crowns spend
   r = await ADM('/api/admin/store/grant', { body: { username: P1.u, product_id: 'season-pass' } }); ok(r.ok !== false && r.body.ok, 'admin can grant a Season Pass manually');
-  r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 15, 'premium track: 20 reward steps, 15% premium-track XP boost');
+  r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 0, 'premium track: 20 cosmetic reward steps with no paid XP boost');
   r = await P1('/api/pass/quests'); ok(r.body.total === 48 && r.body.done < 48 && r.body.reward_season === r.body.season + 1, '48-quest chain toward next season\'s free pass');
   r = await client()('/api/shop'); const any = r.body && (r.body.daily || (r.body.sections && r.body.sections.daily) || []).find(Boolean);
   if (any) { r = await P1('/api/crowns/buy', { body: { item_id: any.id } }); ok(r.body.ok && r.body.price_crowns >= 50, 'Crowns buy a cosmetic from the current shop', r.body); }

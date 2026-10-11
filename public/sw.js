@@ -1,7 +1,7 @@
 // The Gaming Hub service worker (built by Trap Tech Solutions).
 // Network-first for everything (always fresh when online); cached app shell + assets as the offline fallback.
 // API calls, share images and anything sent with Cache-Control: no-store are never cached.
-const CACHE = 'gh-shell-v7';
+const CACHE = 'gh-shell-v8';
 const SHELL = ['/', '/css/app.css', '/cosmetics.css', '/js/app.js', '/js/icons.js', '/manifest.webmanifest',
   '/js/store.js', '/assets/brand/hub-logo.svg', '/assets/brand/hub-stacked.svg', '/assets/brand/tt-mono.svg', '/assets/brand/tt-horizontal.svg', '/assets/brand/favicon.svg', '/css/v7.css', '/js/v7.js',
   '/assets/icons/icon-192.png', '/fonts/orbitron-latin-800-normal.woff2', '/fonts/exo-2-latin-600-normal.woff2'];
@@ -11,7 +11,7 @@ self.addEventListener('fetch', (e) => {
   const req = e.request; const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/og/')) return;
   e.respondWith(fetch(req).then(res => {
-    if (res.ok && !/no-store/i.test(res.headers.get('cache-control') || '') && (req.mode === 'navigate' || /\.(css|js|woff2|webp|png|svg|webmanifest)$/.test(url.pathname))) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req.mode === 'navigate' ? '/' : req, copy)); }
+    if (res.ok && !/no-store/i.test(res.headers.get('cache-control') || '') && (req.mode === 'navigate' || /\.(css|js|woff2|webp|png|svg|webmanifest)$/.test(url.pathname))) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {}); }
     return res;
-  }).catch(() => caches.match(req.mode === 'navigate' ? '/' : req).then(r => r || (req.mode === 'navigate' ? caches.match('/') : Response.error()))));
+  }).catch(() => caches.match(req).then(r => r || (req.mode === 'navigate' ? caches.match('/') : Response.error()))));
 });

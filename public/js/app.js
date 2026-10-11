@@ -144,7 +144,8 @@ function footer() {
       <a class="sf-brand" href="/about" aria-label="About Trap Tech Solutions">${TT('horizontal', 54)}<span>Built by Trap Tech Solutions</span></a>
       <nav class="sf-links" aria-label="Footer">${FOOT_LINKS.map(([h, l]) => `<a href="${h}">${l}</a>`).join('')}</nav>
       <p class="sf-note official-notice"><b>OFFICIAL GIVEAWAY NOTICE:</b> ${OFFICIAL_NOTICE}</p>
-      <p class="sf-note">21+ only. No purchase necessary to enter or win. Points, XP and cosmetics have no cash value. © ${new Date().getFullYear()} Trap Tech Solutions. The Gaming Hub is powered by Trap Tech.</p>
+      <p class="sf-note sf-scam-note"><b>OFFICIAL ACCOUNT / ANTI-SCAM:</b> The official Trap Tech Solutions account is <a href="https://tatokdym.org/TrapTechSolutions" target="_blank" rel="noopener noreferrer">@TrapTechSolutions</a>. Official channel: <a href="https://tatokdym.org/TrapTech_Solutions" target="_blank" rel="noopener noreferrer">TRAP TECH SOLUTIONS</a>. These are the only official Trap Tech account and channel links. Ignore lookalikes. Staff will never ask for your password, login code, wallet recovery phrase, or payment to verify your account.</p>
+      <p class="sf-note">21+ only. No purchase necessary to play or enter eligible giveaways. Points, XP and cosmetics have no cash value. © ${new Date().getFullYear()} Trap Tech Solutions. The Gaming Hub is powered by Trap Tech.</p>
     </div></footer>`;
 }
 function bottomnav(path) {
@@ -1085,7 +1086,7 @@ route(/^\/achievements$/, async (m, url) => {
   if (spUser) api(`/api/users/${encodeURIComponent(spUser)}/special-badges`).then(sb => { const el = document.getElementById('ach-special'); if (!el || !sb.ok) return; const have = new Set(sb.granted.map(b => b.id));
     el.innerHTML = `<div class="card pad special-card" id="special-section"><div class="section-h" style="margin:0 0 8px"><h2 style="font-size:1rem;text-transform:none">${icon('shield-check')} Special badges</h2><span class="small muted">Granted by the Trap Tech team only</span></div>
       <div class="special-grid">${sb.all.map(b => `<div class="special-b ${have.has(b.id) ? 'on' : 'off'}" data-sb="${esc(b.id)}" title="${esc(b.desc)}">${badgeArt('adm:' + b.id, have.has(b.id) ? '' : 'locked')}<b>${esc(b.name)}</b><small>${have.has(b.id) ? 'Granted' : esc(b.desc)}</small></div>`).join('')}</div>
-      <p class="tiny muted" style="margin:8px 0 0">These can't be unlocked by playing. Admins grant them to staff, the Trap Tech team, verified hosts and sponsors, confirmed giveaway winners (automatic), beta testers, founders and community MVPs.</p></div>`; });
+      <p class="tiny muted" style="margin:8px 0 0">These can't be unlocked by playing. These are server-granted trust or event badges only. Player cosmetics never grant staff, creator, founder, moderator, or admin status.</p></div>`; });
   document.getElementById('cats').addEventListener('click', (e) => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; document.querySelectorAll('#cats .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
   document.getElementById('flt').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; filt = b.dataset.f; document.querySelectorAll('#flt button').forEach(x => x.classList.toggle('on', x === b)); draw(); });
   achToast(r.unlocked);
