@@ -55,7 +55,8 @@ for (const slug of catalogBySlug.keys()) if (!sourceBySlug.has(slug)) errors.pus
 const doc = fs.existsSync(docPath) ? fs.readFileSync(docPath, 'utf8') : '';
 const hubApp = fs.existsSync(hubAppPath) ? fs.readFileSync(hubAppPath, 'utf8') : '';
 const libraryPage = fs.existsSync(libraryPagePath) ? fs.readFileSync(libraryPagePath, 'utf8') : '';
-if (!hubApp.includes('href="/games-lib/index.html"')) errors.push('Main Hub /games page is missing the Games Library entry point.');
+if (!hubApp.includes("route(/^\\/games$/" ) || !hubApp.includes('id="lib-grid"') || !hubApp.includes('id="lib-q"')) errors.push('Main Hub /games page is missing the unified searchable game catalog.');
+if (!hubApp.includes('function weeklyCatalogPick') || !hubApp.includes('THIS WEEK\'S FEATURED GAME')) errors.push('Homepage is missing the weekly rotating catalog spotlight.');
 if (!hubApp.includes("fetch('/api/games-lib'")) errors.push('Main Hub does not read the live Games Library count.');
 if (!hubApp.includes('libraryGames.find') || !hubApp.includes('location.href = libGame.url + url.search')) errors.push('Main Hub play routing does not open library games with their query parameters intact.');
 const adapterPath = path.join(pub, 'adapter.js');
