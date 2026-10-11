@@ -94,7 +94,7 @@ const FRAMES = [
   ['friend', 'Friendship', 'conic-gradient(#f472b6,#a855f7,#22d3ee,#f472b6)', 'glow'],
   // v5 legendary + admin-granted
   ['legend-crest', 'Legendary Crest', 'conic-gradient(#fde047,#f472b6,#a855f7,#22d3ee,#fde047)', 'spin'],
-  ['staff-glow', 'Trap Tech Staff', 'conic-gradient(#ffffff,#a78bfa,#ffffff,#22d3ee,#ffffff)', 'glow'],
+  ['staff-glow', 'Prism Signal', 'conic-gradient(#ffffff,#a78bfa,#ffffff,#22d3ee,#ffffff)', 'glow'],
   // v7 endless games
   ['slab', 'Glass Slab', 'repeating-conic-gradient(#22d3ee 0 30deg,#a855f7 30deg 60deg)', 'spin'],
   ['ladybug', 'Ladybug', 'repeating-conic-gradient(#dc2626 0 40deg,#111827 40deg 50deg)', 'glow'],
