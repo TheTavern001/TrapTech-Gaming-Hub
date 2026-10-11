@@ -30,6 +30,8 @@ jobs:
         run: node tools/e2e-cosmetic-economy.js
       - name: Check server-side JavaScript
         run: |
+          bash -n tools/run-all.sh
+          node --check tools/e2e-stripe.js
           node --check src/db.js
           node --check src/server.js
           node --check src/monetize.js
