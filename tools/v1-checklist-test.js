@@ -54,6 +54,8 @@ assert.match(paymentSource, /function stripeSignatureOk/, 'card fulfillment must
 assert.match(paymentSource, /crypto\.timingSafeEqual/, 'webhook signature comparison must be timing-safe');
 assert.match(paymentSource, /checkout\.session\.completed/, 'successful Stripe sessions must be handled server-side');
 assert.match(paymentSource, /order\.provider_ref !== obj\.id/, 'Stripe event must match the stored checkout session');
+assert.match(paymentSource, /Number\(obj\.amount_total\) !== Number\(order\.usd_cents\)/, 'Stripe fulfillment must confirm exact server-priced amount');
+assert.match(paymentSource, /Number\(obj\.amount\) === Number\(order\.usd_cents\)/, 'Stripe refunds must match the original amount');
 assert.match(storeSource, /data-provider-choice/, 'store UI must offer configured payment methods');
 assert.doesNotMatch(serverSource, /identity_badge|isFounder|HUB_OWNER_USER_ID/, 'public server responses must not publish founder identity markers');
 assert.match(mediaSource, /R2\.put\('media\//, 'admin media uploads must use R2 when configured');
