@@ -45,7 +45,7 @@ async function orderPage(m) {
         <div class="field"><div class="lbl">Address</div><div class="copyrow"><code id="ord-addr">${esc(o.address)}</code><button class="btn sm ghost" data-copy="${esc(o.address)}">${icon('copy')} Copy</button></div></div>
         <p class="small muted">Quote valid for <b id="ord-left">${Math.ceil(left / 60000)} min</b>. Small orders are delivered after 1 confirmation, larger ones after 3, Prestige after 6.</p>
         <a class="btn" href="${esc(o.uri)}">${icon('wallet')} Open in my wallet</a>` : ''}
-      ${open ? `<details class="small" style="margin-top:12px"><summary>Already paid? Paste your transaction id to speed things up</summary><div class="copyrow"><input class="input" id="txid" placeholder="64-character transaction id" maxlength="64" autocapitalize="none"><button class="btn sm" id="txid-go">Check</button></div></details>` : ''}
+      ${open && o.provider !== 'stripe' ? `<details class="small" style="margin-top:12px"><summary>Already paid? Paste your transaction id to speed things up</summary><div class="copyrow"><input class="input" id="txid" placeholder="64-character transaction id" maxlength="64" autocapitalize="none"><button class="btn sm" id="txid-go">Check</button></div></details>` : ''}
       ${o.txid ? `<p class="small muted">Transaction: <code>${esc(o.txid)}</code></p>` : ''}
       ${o.flags.includes('overpaid') ? '<p class="small">You sent more than the quote. The admin will refund the difference.</p>' : ''}
       ${o.status === 'granted' ? `<a class="btn" href="/store">${icon('store')} Back to the store</a>` : ''}
