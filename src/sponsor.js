@@ -1,5 +1,5 @@
 'use strict';
-// v7 "Sponsor a Host": no tiers, no public prices.
+// v7 "Book a Giveaway": no tiers, no public prices.
 // A sponsor ticks the features they want from ONE combined list (everything the old Basic/Premium/Elite tiers and add-ons
 // offered), adds details, and sends a free quote request. Only admins see the price sheet (settings key "sponsor_prices",
 // seeded from the old v5 prices); the admin gets an auto-totalled draft quote per request, can adjust it (discounts,
@@ -231,10 +231,11 @@ module.exports = function sponsor(app, A, h) {
   A.get('/sponsor/requests', (req, res) => res.json({ ok: true, requests: db.prepare('SELECT b.*, u.username FROM bookings b LEFT JOIN users u ON u.id=b.user_id ORDER BY b.created_at DESC LIMIT 500').all().map(adminView) }));
   A.get('/sponsor/requests/:id', (req, res) => { const b = db.prepare('SELECT b.*, u.username, (SELECT event_code FROM giveaways WHERE id = b.event_id) AS event_code FROM bookings b LEFT JOIN users u ON u.id=b.user_id WHERE b.id=?').get(req.params.id); if (!b) return bad(res, 404, 'Not found'); res.json({ ok: true, request: adminView(b), placements: placementsFromFeatures(featuresOf(b)) }); });
   A.put('/sponsor/requests/:id/quote', (req, res) => { const r = saveQuote(+req.params.id, req.body || {}, req.admin && req.admin.username); r.ok ? res.json(r) : bad(res, 400, r.error); });
-  // v7 Phase 3: an ACCEPTED (or paid) quote becomes an official event in one click. Idempotent: a second click returns the same event.
+  // v7 Phase 3: a PAID quote becomes an official event. Idempotent: a second click returns the same event.
   A.post('/sponsor/requests/:id/create-event', (req, res) => {
     const b = db.prepare('SELECT * FROM bookings WHERE id=?').get(+req.params.id); if (!b) return bad(res, 404, 'Request not found.');
-    const q = quoteRow(b.id); if (!q || !['accepted', 'paid'].includes(q.status)) return bad(res, 409, 'The client must accept the quote first.');
+    const q = quoteRow(b.id);
+    if (!q || q.status !== 'paid') return bad(res, 409, 'Payment must be received and confirmed before an official giveaway event can be created.');
     const EV = require('./events');
     if (b.event_id) { const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id); if (g) return res.json({ ok: true, existing: true, id: g.id, code: g.event_code, url: '/event/' + g.event_code }); }
     const cfg = require('./config'); let games = JSON.parse(b.game_ids || '[]').filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway); if (!games.length) games = ['stack'];
