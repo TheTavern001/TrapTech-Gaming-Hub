@@ -1,10 +1,13 @@
-# The Gaming Hub v7: handoff
+# The Gaming Hub: consolidated release handoff
 
-The Gaming Hub by Trap Tech Solutions, v7. This covers what changed, how to set it up on Deplexo, and how to check it.
+**Current candidate (2026-10-11):** branch `release/consolidated-v1`, pull request [#2](https://github.com/TheTavern001/gaming-hub-2/pull/2). This branch integrates the 100-entry Games Library directly into the main `/games` screen and applies the shared responsive release design system across the Hub. It is not merged or deployed yet.
+
+**Release truth:** the repository contains 100 catalog entries plus 13 core Hub games, before any overlap/deduplication. The user's 150+ playable/testable game target is **not yet met**. A catalog flag is not proof that a game launches reliably, has Hub score integration, is eligible for official giveaways, or is cleared for licensing. Browser validation of the new main-screen catalog search/filter is being added to CI; runtime certification and live Deplexo verification remain release gates. Do not deploy a partial build or claim the release is complete until all accepted scope and validation gates pass.
+
 Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DEPLEXO.md**. Phase-by-phase proof is in **PROGRESS-V7.md**.
 
 ## What v7 adds
-- **Games:** 13 skill games, all of them giveaway-eligible. The chance games (Plinko, Spin to Win, Blazed Roulette) are retired. Their old URLs now point to Stack. The Games Library (`/games-lib/`) is a separate workstream.
+- **Games:** the core Hub retains its 13 score-integrated skill games; the expanded 100-entry catalog is surfaced both in `/games` and `/games-lib/`. Catalog entries remain separately marked for casual use or catalog event flags until runtime, score-validation, event-permission, and licensing checks are individually complete.
 - **Anti-cheat levels 1-4** (`docs/ANTI-CHEAT.md`): obvious-max caps; session/rate checks; validation of the event log; deterministic server replay.
 - **Official events vs free play:** an admin creates an official event with a private code, the vendor/prize and the booking/payment status. A run only counts for the event when it is started with a short-lived signed event-run token. Event boards are separate from the free-play boards. A run submitted after the event ends goes to free play, so the score is kept.
 - **Skill-only tie-breaks** for every game: (1) the shorter server-timed run to the same score, (2) the game's skill metric from the validated event log (`src/games-lib-playoff.js`), (3) a sudden-death seeded playoff that the admin runs from *Admin > Official events*. A place still tied exactly cannot be confirmed until the playoff is resolved. First-to-score, fewest attempts and submission time are no longer used anywhere.
