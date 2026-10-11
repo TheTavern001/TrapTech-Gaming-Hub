@@ -217,7 +217,7 @@ app.get('/api/leaderboard', (req, res) => {
   let rows;
   if (req.query.giveaway || req.query.contest) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.query.giveaway || req.query.contest);
-    if (!g) return bad(res, 404, 'Giveaway not found');
+    if (!g || !EV.bookingPaymentCleared(g)) return bad(res, 404, 'Giveaway not found');
     rows = giveawayEntrants(R.ready(g));
   } else if (game === 'global') rows = ranked(globalBoard(periodStart(period)));
   else if (resolveGame(game)) rows = ranked(gameBoard(game, periodStart(period)));
@@ -270,7 +270,8 @@ app.post('/api/score', requireUser, (req, res) => {
   if (t - row.started_at > cfg.RUN_TOKEN_TTL_MS) return reject(400, 'Run token expired.');
   if ((tok.e || null) !== (row.event_id || null)) return reject(400, 'Event run token does not match this run.');
   const evOrig = row.event_id || null;
-  { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec && ec.demote) row.event_id = null; else if (ec) return reject(ec.status, ec.error); }
+  let paymentDemoted = false;
+  { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec && ec.demote) { row.event_id = null; paymentDemoted = !!ec.paymentUnconfirmed; } else if (ec) return reject(ec.status, ec.error); }
   const game = resolveGame(row.game_id); if (!game || !game.playable) return reject(400, 'This game is no longer available for scoring.'); const ac = game.ac; const unit = game.unit === 'm' ? 'm' : ' ' + game.unit;
   const score = Number(req.body.score); const coins = Number(req.body.coins || 0);
   if (!Number.isInteger(score) || score < 0 || score > cfg.MAX_SCORE) return reject(400, 'Invalid score value.');
@@ -324,7 +325,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const gid = req.body.giveaway_id || req.body.contest;
   if (gid) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(gid);
-    giveawayStatusOut = !g ? 'not_found' : String(evOrig || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
+    giveawayStatusOut = paymentDemoted ? 'not_event_run' : !g ? 'not_found' : String(evOrig || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
       : !giveawayGameIds(g.id).includes(row.game_id) ? 'game_not_linked' : score < (g.min_score || 0) ? 'below_min_score' : 'counted');
   }
   // achievements are evaluated here, on the server, from the stored runs
@@ -367,15 +368,16 @@ function giveawayPublic(g, withWinners = true) {
 }
 app.get('/api/giveaways', (req, res) => {
   const status = req.query.status;
-  const all = db.prepare('SELECT * FROM giveaways WHERE active=1 ORDER BY start_at DESC').all();
+  const all = db.prepare('SELECT * FROM giveaways WHERE active=1 ORDER BY start_at DESC').all().filter(g => EV.bookingPaymentCleared(g));
   let list = all.map(g => giveawayPublic(R.ready(g)));
   if (['active', 'upcoming', 'past'].includes(status)) list = list.filter(g => g.status === status);
   list.sort((a, b) => a.status === 'past' ? b.end_at - a.end_at : (b.featured - a.featured) || (a.end_at - b.end_at));
   res.json({ ok: true, giveaways: list, now: now() });
 });
 app.get('/api/giveaways/:id', (req, res) => {
-  const g = R.ready(db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(req.params.id));
-  if (!g) return bad(res, 404, 'Giveaway not found');
+  const raw = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(req.params.id);
+  if (!raw || !EV.bookingPaymentCleared(raw)) return bad(res, 404, 'Giveaway not found');
+  const g = R.ready(raw);
   const entrants = giveawayEntrants(g); const me = currentUser(req);
   const mine = me ? entrants.find(e => e.user_id === me.id) : null;
   const hidden = H.v7Hidden && H.v7Hidden(g); // v7: leaderboard hidden until the end
