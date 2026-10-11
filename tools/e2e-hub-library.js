@@ -42,7 +42,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     await page.waitForFunction(() => Number(document.getElementById('total')?.textContent || 0) >= 100, null, { timeout: 15000 });
     const combinedTotal = Number(await page.locator('#total').textContent());
     assert.ok(combinedTotal >= 100, `unified catalog should include at least 100 games; got ${combinedTotal}`);
-    assert.equal(await page.locator('#new-grid .new-card').count(), 2, 'both new originals should be spotlighted');
+    assert.ok(await page.locator('#list .card').count() >= 100, 'dedicated library should show the whole catalog without a separate core-games group');
     await page.locator('#q').fill('Neon Circuit');
     assert.equal(await page.locator('#list .card').count(), 1, 'search should filter to Neon Circuit');
     assert.match(await page.locator('#list').innerText(), /Neon Circuit/);
@@ -50,7 +50,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     await page.locator('#eligibility').selectOption('giveaway');
     assert.ok(Number((await page.locator('#result-count').innerText()).match(/Showing (\d+)/)?.[1]) > 0, 'giveaway filter should render results');
     await page.locator('#eligibility').selectOption('all');
-    await page.locator('.new-card[href="/games-lib/neon-circuit/index.html"]').click();
+    await page.locator('#list .card[href="/games-lib/neon-circuit/index.html"]').click();
     await page.waitForFunction(() => window.__GL && window.__GL.g, null, { timeout: 15000 });
     let forwardedEvent = null;
     await page.route('**/api/run/start', async route => {
