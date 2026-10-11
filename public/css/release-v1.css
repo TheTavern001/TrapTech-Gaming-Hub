@@ -289,3 +289,11 @@ table.lb .rk{font-weight:900;color:var(--release-gold)}
 .avatar-card-stats b{font-size:clamp(.85rem,2vw,1.15rem);font-variant-numeric:tabular-nums;color:#f5f7ff}
 .avatar-card-stats span{font-size:.48rem;line-height:1.3;letter-spacing:.045em;font-weight:900;color:#92a0c5}
 @media(max-width:420px){.avatar-card-stats{gap:4px;padding-inline:8px}.avatar-card-stats>div{padding:8px 3px}.avatar-card-stats span{font-size:.42rem}}
+
+/* Avatar Studio: stronger collectible-character depth without sacrificing fast SVG rendering. */
+.avatar-card-art{perspective:900px;background:radial-gradient(ellipse at 50% 62%,rgba(91,119,255,.18),transparent 52%),radial-gradient(ellipse at 50% 90%,color-mix(in srgb,var(--rarity) 30%,transparent),transparent 58%)}
+.avatar-card-art img{transform:translateZ(28px) rotateY(-4deg);transform-origin:50% 65%;filter:drop-shadow(0 24px 18px #000b) drop-shadow(0 0 26px color-mix(in srgb,var(--rarity) 46%,transparent));}
+.avatar-orbit.orbit-one{transform:rotateX(68deg) rotateZ(-24deg) translateZ(-12px)}
+.avatar-orbit.orbit-two{width:190px;height:190px;transform:rotateX(72deg) rotateZ(38deg);border-style:dashed;opacity:.55}
+.avatar-collect-card:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(115deg,transparent 8%,rgba(255,255,255,.055) 18%,transparent 29%,transparent 72%,rgba(255,255,255,.035) 83%,transparent 94%);mix-blend-mode:screen}
+@media(prefers-reduced-motion:reduce){.avatar-card-art img{animation:none;transform:none}}
