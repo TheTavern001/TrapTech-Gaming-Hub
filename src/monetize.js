@@ -81,11 +81,12 @@ const BTCfmt = (sats) => (sats / 1e8).toFixed(8);
 function pubOrder(o) { const p = prod(o.product_id) || { name: o.product_id, kind: '?' };
   return { ref: o.ref, product: { id: o.product_id, name: p.name, kind: p.kind }, usd_cents: o.usd_cents, provider: o.provider, status: o.status, sats: o.sats, btc: o.sats ? BTCfmt(o.sats) : null, address: o.address,
     uri: o.address && o.sats ? `bitcoin:${o.address}?amount=${BTCfmt(o.sats)}` : null, txid: o.txid, received_sats: o.received_sats, confs: o.confs, need_confs: o.need_confs, created_at: o.created_at,
-    expires_at: o.expires_at, paid_at: o.paid_at, granted_at: o.granted_at, refunded_at: o.refunded_at, flags: o.flags ? o.flags.split(',') : [], note: o.note }; }
+    expires_at: o.expires_at, paid_at: o.paid_at, granted_at: o.granted_at, refunded_at: o.refunded_at, flags: o.flags ? o.flags.split(',') : [], note: o.note, checkout_url: o.checkout_url || null }; }
 
 // ---------- create / match / grant ----------
 async function createOrder(user, productId, t = Date.now()) {
   const st = checkoutState(); if (!st.enabled) return { status: 503, error: st.reason };
+  if (!st.providers.bitcoin.configured) return { status: 503, error: 'Bitcoin checkout is not configured.' };
   const p = prod(productId); if (!p || !p.active) return { status: 404, error: 'That item is not for sale.' };
   if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return { status: 409, error: 'Sold out (or the last ones are reserved by open orders).' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: 'You already have this season\'s pass.' };
@@ -100,6 +101,47 @@ async function createOrder(user, productId, t = Date.now()) {
   return { ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(id)) };
 }
 const curSeason = (t = Date.now()) => require('./seasons').seasonAt(t).number;
+async function createStripeOrder(user, productId, t = Date.now()) {
+  const st = checkoutState();
+  if (!st.enabled) return { status: 503, error: st.reason };
+  if (!st.providers.stripe.configured) return { status: 503, error: 'Credit/debit card checkout is not configured.' };
+  const p = prod(productId); if (!p || !p.active) return { status: 404, error: 'That item is not for sale.' };
+  if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return { status: 409, error: 'Sold out (or the last ones are reserved by open orders).' };
+  if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: "You already have this season's pass." };
+  const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status IN ('pending','seen','confirming') AND expires_at > ?").get(user.id, t).c;
+  if (open >= 3) return { status: 429, error: 'Finish or let your open orders expire first (max 3).' };
+  const ref = 'O' + crypto.randomBytes(6).toString('hex').toUpperCase();
+  const expires = t + ORDER_TTL_MS;
+  const id = db.prepare("INSERT INTO store_orders (ref,user_id,product_id,usd_cents,provider,status,created_at,expires_at,season) VALUES (?,?,?,?,'stripe','pending',?,?,?)")
+    .run(ref, user.id, p.id, p.usd_cents, t, expires, p.kind === 'pass' ? curSeason(t) : null).lastInsertRowid;
+  try {
+    const form = new URLSearchParams();
+    form.set('mode', 'payment');
+    form.set('success_url', process.env.PUBLIC_URL.replace(/\/$/, '') + '/store/order/' + ref + '?payment=success');
+    form.set('cancel_url', process.env.PUBLIC_URL.replace(/\/$/, '') + '/store/order/' + ref + '?payment=cancelled');
+    form.set('client_reference_id', ref);
+    form.set('metadata[order_ref]', ref);
+    form.set('metadata[user_id]', String(user.id));
+    form.set('line_items[0][quantity]', '1');
+    form.set('line_items[0][price_data][currency]', 'usd');
+    form.set('line_items[0][price_data][unit_amount]', String(p.usd_cents));
+    form.set('line_items[0][price_data][product_data][name]', p.name);
+    form.set('expires_at', String(Math.floor(expires / 1000)));
+    form.set('payment_method_types[0]', 'card');
+    const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + process.env.STRIPE_SECRET_KEY, 'Content-Type': 'application/x-www-form-urlencoded', 'Idempotency-Key': 'hub-order-' + ref }, body: form
+    });
+    const session = await response.json().catch(() => ({}));
+    if (!response.ok || !session.id || !session.url) throw new Error('Stripe rejected checkout session');
+    db.prepare('UPDATE store_orders SET provider_ref=?, checkout_url=?, expires_at=? WHERE id=?').run(session.id, session.url, Math.min(expires, Number(session.expires_at || Math.floor(expires / 1000)) * 1000), id);
+    return { ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(id)) };
+  } catch (err) {
+    db.prepare("UPDATE store_orders SET status='failed', note='Stripe checkout session could not be created' WHERE id=?").run(id);
+    console.error('[payments] Stripe Checkout session creation failed:', err.message);
+    return { status: 503, error: 'Could not start secure card checkout. Please try again later.' };
+  }
+}
+
 function grant(o, how = 'auto', t = Date.now()) {
   const p = prod(o.product_id); if (!p) return { ok: false, error: 'unknown product' };
   return db.transaction(() => {
