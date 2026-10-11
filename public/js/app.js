@@ -382,6 +382,17 @@ route(/^\/forgot$/, () => shell('/forgot', `<div class="narrow"><div class="back
 
 
 
+function weeklyCatalogPick(games) {
+  const eligible = (games || []).filter(g => g && g.title && g.url && g.art).slice().sort((a, b) => String(a.slug || a.id || a.title).localeCompare(String(b.slug || b.id || b.title)));
+  if (!eligible.length) return null;
+  const now = new Date();
+  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const mondayUtc = todayUtc - ((now.getUTCDay() + 6) % 7) * 86400000;
+  const firstMondayUtc = Date.UTC(2024, 0, 1);
+  const weekIndex = Math.floor((mondayUtc - firstMondayUtc) / 604800000);
+  return eligible[((weekIndex % eligible.length) + eligible.length) % eligible.length];
+}
+
 // ---------------- home ----------------
 route(/^\/(home)?$/, async () => {
   if (!S.me && !S.guest && !ls.getItem('gh_seen_splash')) return splash();
@@ -390,7 +401,7 @@ route(/^\/(home)?$/, async () => {
   const takeover = live.find(x => (x.placements || []).includes('hero')); // v7: hero takeover is a sponsor placement
   const featuredGw = live.filter(x => x.featured && x !== takeover);
   const g0 = live.find(x => x !== takeover) || null;
-  const featured = S.games.slice(0, 4);
+  const weeklyGame = weeklyCatalogPick(S.libraryGames);
   const tours = (tn.ok ? tn.tournaments : []).filter(t => t.status !== 'ended').slice(0, 3);
   shell('/', `
     <section class="home-intro">
