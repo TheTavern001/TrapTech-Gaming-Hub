@@ -222,28 +222,32 @@ async function sweep(t = Date.now()) { if (busy) return []; busy = true; try { r
 if (!process.env.PAY_NO_SWEEP) setInterval(() => { if (ADDR() && openOrders().length) sweep(); }, 60e3).unref();
 
 function reverseEntitlements(o, actor, note = '', t = Date.now()) {
-  const p = prod(o.product_id); if (!p) return { ok: false, error: 'Unknown product.' };
-  db.transaction(() => {
-    if (o.granted_at) {
-      if (p.kind === 'pack') addCrowns(o.user_id, -(p.crowns + p.bonus), 'refund', o.ref, t);
+  return db.transaction(() => {
+    // Read and mark within one transaction so webhook retries cannot apply entitlement reversals twice.
+    const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(o && o.id);
+    if (!fresh) return { ok: false, error: 'Unknown order.' };
+    if (fresh.refunded_at) return { ok: true, already: true };
+    const p = prod(fresh.product_id); if (!p) return { ok: false, error: 'Unknown product.' };
+    if (fresh.granted_at) {
+      if (p.kind === 'pack') addCrowns(fresh.user_id, -(p.crowns + p.bonus), 'refund', fresh.ref, t);
       if (p.kind === 'pass') {
-        const season = o.season || curSeason(t);
-        const claimed = new Set(db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(o.user_id, season).map(x => x.level));
+        const season = fresh.season || curSeason(t);
+        const claimed = new Set(db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(fresh.user_id, season).map(x => x.level));
         let earnedCrowns = 0;
         for (const reward of premiumTrack(season)) if (claimed.has(reward.level)) {
-          if (reward.item) db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(o.user_id, reward.item.id);
+          if (reward.item) db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(fresh.user_id, reward.item.id);
           earnedCrowns += reward.crowns || 0;
         }
-        if (earnedCrowns) addCrowns(o.user_id, -earnedCrowns, 'refund', o.ref, t);
-        db.prepare('DELETE FROM pass_claims WHERE user_id=? AND season=?').run(o.user_id, season);
-        db.prepare('DELETE FROM pass_owned WHERE user_id=? AND order_id=?').run(o.user_id, o.id);
+        if (earnedCrowns) addCrowns(fresh.user_id, -earnedCrowns, 'refund', fresh.ref, t);
+        db.prepare('DELETE FROM pass_claims WHERE user_id=? AND season=?').run(fresh.user_id, season);
+        db.prepare('DELETE FROM pass_owned WHERE user_id=? AND order_id=?').run(fresh.user_id, fresh.id);
       }
-      if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=? WHERE order_id=?').run(t, o.id);
+      if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=COALESCE(revoked_at, ?) WHERE order_id=?').run(t, fresh.id);
     }
-    db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=?")
-      .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, o.id);
+    db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=? AND refunded_at IS NULL")
+      .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, fresh.id);
+    return { ok: true };
   })();
-  return { ok: true };
 }
 function refund(orderRef, actor, note = '') {
   const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(orderRef);
