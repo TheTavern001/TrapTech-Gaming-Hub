@@ -297,3 +297,11 @@ table.lb .rk{font-weight:900;color:var(--release-gold)}
 .avatar-orbit.orbit-two{width:190px;height:190px;transform:rotateX(72deg) rotateZ(38deg);border-style:dashed;opacity:.55}
 .avatar-collect-card:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(115deg,transparent 8%,rgba(255,255,255,.055) 18%,transparent 29%,transparent 72%,rgba(255,255,255,.035) 83%,transparent 94%);mix-blend-mode:screen}
 @media(prefers-reduced-motion:reduce){.avatar-card-art img{animation:none;transform:none}}
+
+/* Clear booking and team affiliation hierarchy. */
+.sponsor .sp-hero{border:1px solid rgba(77,229,247,.25);background:radial-gradient(ellipse at 85% 15%,rgba(77,229,247,.12),transparent 40%),linear-gradient(135deg,rgba(20,28,62,.98),rgba(8,12,29,.98))}
+.sponsor .sp-how .card{border-color:rgba(151,168,255,.18);background:linear-gradient(145deg,rgba(19,27,58,.92),rgba(8,12,29,.96))}
+#v7-brand{scroll-margin-top:90px;border-color:rgba(77,229,247,.22);background:radial-gradient(ellipse at 95% 0,rgba(77,229,247,.08),transparent 44%),linear-gradient(145deg,rgba(19,27,58,.94),rgba(8,12,29,.97))}
+.br-form{display:grid;gap:10px;margin-top:12px}
+.br-mine{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid var(--release-line);border-radius:14px;background:rgba(255,255,255,.025)}
+.br-mine>div{flex:1;min-width:140px}
