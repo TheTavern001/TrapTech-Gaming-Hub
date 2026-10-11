@@ -3,6 +3,7 @@ import { ls, ss, copyText } from './store.js';
 import * as V7 from './v7.js';
 import * as I18N from './i18n.js'; // v7: multi-language layer (public/i18n/*.json)
 import * as GV7 from './gw-v7.js'; // v7 admin overhaul: builder giveaway extras + admin site settings
+import { mountAvatar3D } from './avatar-3d.js';
 
 // ---------------- core ----------------
 const $app = document.getElementById('app');
@@ -38,6 +39,30 @@ function avatar(name, demo, cls = '') {
   const a = h % 360, b = (a + 60) % 360;
   // v7 Phase 5: every player has a custom avatar (server-rendered SVG; initials stay underneath while it loads)
   return `<span class="av ${cls}" style="background:linear-gradient(135deg,hsl(${a} 80% 55%),hsl(${b} 80% 40%))">${esc(String(name).slice(0, 2).toUpperCase())}${name ? `<img class="av-img" src="/avatar/${encodeURIComponent(name)}.svg${AV_BUST[name] ? '?v=' + AV_BUST[name] : ''}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span>`;
+}
+async function hydrateProfileAvatar(username) {
+  const host = document.querySelector('.prof-head .av');
+  if (!host || host.dataset.webglAvatar) return;
+  const r = await api('/api/avatar/' + encodeURIComponent(username));
+  if (!r.ok || !host.isConnected) return;
+  host.dataset.webglAvatar = '1';
+  host.querySelector('.av-img')?.remove();
+  const stage = document.createElement('span');
+  stage.className = 'avatar-profile-stage';
+  stage.setAttribute('role', 'img');
+  stage.setAttribute('aria-label', username + ' three-dimensional avatar');
+  host.appendChild(stage);
+  try {
+    const cleanup = await mountAvatar3D(stage, r.avatar);
+    if (!stage.isConnected) cleanup();
+    else host._avatar3dCleanup = cleanup;
+  } catch {
+    stage.remove();
+    const img = document.createElement('img');
+    img.className = 'av-img'; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
+    img.src = '/avatar/' + encodeURIComponent(username) + '.svg';
+    host.appendChild(img);
+  }
 }
 // v7 FINAL Trap Tech logo (Reese, Oct 10): white angular double-T + gold crown (brand-src/traptech-v7/logo-final.jpg),
 // rebuilt as vector SVG by tools/build-brand-tt.py. PNG/WebP copies (same file names) exist for OG images and old links.
