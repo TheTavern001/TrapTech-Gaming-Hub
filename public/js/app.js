@@ -383,7 +383,8 @@ route(/^\/forgot$/, () => shell('/forgot', `<div class="narrow"><div class="back
 
 
 function weeklyCatalogPick(games) {
-  const eligible = (games || []).filter(g => g && g.title && g.url && g.art).slice().sort((a, b) => String(a.slug || a.id || a.title).localeCompare(String(b.slug || b.id || b.title)));
+  // Keep registry order: new titles appended to the catalog join the next available rotation slot without reshuffling existing titles.
+  const eligible = (games || []).filter(g => g && g.title && g.url && g.art);
   if (!eligible.length) return null;
   const now = new Date();
   const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
