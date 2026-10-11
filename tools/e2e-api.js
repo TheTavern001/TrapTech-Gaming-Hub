@@ -44,8 +44,8 @@ function client() {
   const t0 = Date.now();
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Test Giveaway', host: 'Test Host', prize: 'Bragging rights', image: '/assets/giveaways/ps5-bundle-art.webp', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', rules: 'test', active: true } });
   ok(r.body.ok, 'admin creates giveaway'); const gid = r.body.id;
-  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Library Game Event', host: 'Test Host', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'neon-circuit', active: true } });
-  ok(r.body.ok, 'admin creates official event linked to library game neon-circuit'); const glib = r.body.id;
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Library Game Event', host: 'Test Host', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'gl-neon-circuit', active: true } });
+  ok(r.body.ok, 'admin creates official event linked to library game gl-neon-circuit'); const glib = r.body.id;
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Short Giveaway', host: 'Test', start_at: t0 - 60e3, end_at: t0 + 9000, game_id: 'jetpack-dash', active: true } });
   ok(r.body.ok, 'admin creates short giveaway (ends in 9s)'); const gshort = r.body.id;
   r = await ADM('/api/admin/giveaways', { body: { title: 'bad', start_at: t0, end_at: t0 - 1, game_id: 'jetpack-dash' } }); ok(r.status === 400, 'giveaway with end<start rejected');
@@ -55,7 +55,7 @@ function client() {
 
   console.log('# runs + anti-cheat');
   r = await A('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); ok(r.body.ok && r.body.token, 'run/start issues token (official event run)'); const tokA = r.body.token;
-  r = await A('/api/run/start', { body: { game_id: 'neon-circuit', event: glib } }); ok(r.body.ok && r.body.token, 'library-game event token binds neon-circuit to the official event'); const tokLib = r.body.token;
+  r = await A('/api/run/start', { body: { game_id: 'gl-neon-circuit', event: glib } }); ok(r.body.ok && r.body.token, 'library-game event token binds gl-neon-circuit to the official event'); const tokLib = r.body.token;
   await sleep(2200);
   r = await A('/api/score', { body: { token: tokLib, score: 5, coins: 0, duration_ms: 2000 } }); ok(r.body.ok && r.body.giveaways.some(g => g.id === glib), 'library-game score is accepted and counted in its official event', r.body);
   r = await B('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); const tokB = r.body.token;
