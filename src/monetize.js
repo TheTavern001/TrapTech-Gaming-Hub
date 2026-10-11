@@ -411,4 +411,4 @@ function routes(app, A, H) {
     if (b.crowns) { addCrowns(u.id, Math.trunc(Number(b.crowns)), 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, crowns: crowns(u.id) }); }
     res.json(manualGrant(u.id, String(b.product_id || ''), (req.admin && req.admin.username) || 'admin', String(b.note || ''))); });
 }
-module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, _stripeSignatureOk: stripeSignatureOk };
+module.exports = { routes, checkoutState, createOrder, createStripeOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, _stripeSignatureOk: stripeSignatureOk };
