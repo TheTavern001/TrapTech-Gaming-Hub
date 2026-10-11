@@ -24,9 +24,9 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 ## P0 — Giveaway entry checklist
 - [x] Add an optional admin-configurable checklist with up to eight steps, optional HTTPS destination URLs, and required/optional status.
 - [x] Support multiple ordered steps, destination URLs, required/optional status, and clear instructions.
-- [x] Show player-facing checklist controls and persist each player's confirmations server-side.
+- [x] Show player-facing checklist status; optional notes may be self-attested but never satisfy required eligibility.
 - [x] Include required checklist completion in server-side eligibility checks; the join endpoint uses that eligibility result.
-- [x] Label external steps as self-attested unless a supported integration actually verifies them. A channel link alone cannot prove membership.
+- [x] Reject self-attestation for required external steps. A channel link alone cannot prove membership; required external steps stay ineligible until a trusted integration verifies them.
 - [x] Keep members-only brand eligibility separate from checklist requirements.
 - [ ] End-to-end test edited/deleted steps, signed-out users, replayed requests, duplicate entries, mobile layout, and event end-time boundaries. Checklist normalization and syntax checks pass; full entry-flow coverage is still outstanding.
 
