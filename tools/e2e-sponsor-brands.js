@@ -1,4 +1,4 @@
-// v7 Sponsor a Host (feature picker, admin-only prices, quote flow) + brand affiliation (invite links, one brand per
+// v7 Book a Giveaway (feature picker, admin-only prices, quote flow) + brand affiliation (invite links, one brand per
 // player, 30-day switch cooldown, brand-only vs open giveaways) end to end. Starts its OWN server on a copy of the DB
 // (port 8798), so nothing touches the dev server. Usage: node tools/e2e-sponsor-brands.js
 const fs = require('fs'); const path = require('path'); const { spawn } = require('child_process');
@@ -27,7 +27,7 @@ const env0 = loadEnv();
   try {
     const ADM = adminClient(BASE, env); let r = await ADM.login(); ok(r.body.ok, 'admin signs in (password + TOTP)', r.body);
     const anon = client();
-    console.log('# Sponsor a Host: public side has no tiers and no prices');
+    console.log('# Book a Giveaway: public side has no tiers and no prices');
     r = await anon('/api/sponsor/catalog'); const cat = r.body;
     ok(cat.ok && cat.features.length >= 20 && cat.groups.length >= 5, `one combined feature list (${cat.features && cat.features.length} features in ${cat.groups && cat.groups.length} groups)`);
     const catTxt = JSON.stringify(cat); ok(!/price|_cents|\$\d/i.test(catTxt.replace(/"faq":.*$/, '')) && !/\b(basic|premium|elite)\b/i.test(catTxt), 'catalog shows no prices and no tier names', (catTxt.replace(/"faq":.*$/, '').match(/.{0,60}(price|_cents|\$\d|\b(basic|premium|elite)\b).{0,30}/i) || [''])[0]);
@@ -61,9 +61,11 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'sent' } }); ok(r.body.ok && r.body.request.quote.status === 'sent', 'admin sends the quote');
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.status === 'sent' && r.body.request.quote.total_cents === tot && r.body.request.quote.lines.length === lines.length, 'sponsor sees the sent quote on the status page', r.body.request);
     r = await anon('/api/sponsor/requests/' + tok + '/accept', { body: {} }); ok(r.body.ok && r.body.request.status === 'accepted', 'sponsor accepts');
+    r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.status === 409 && /payment must be received/i.test(r.body.error), 'accepted but unpaid quote cannot create an official giveaway', r.body);
+    r = await anon('/api/sponsor/requests/' + tok); ok(!r.body.request.event, 'no event or share link exists while payment is unconfirmed');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/quote', { method: 'PUT', body: { lines: [] } }); ok(r.status === 400, 'accepted quote is locked');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'paid' } }); ok(r.body.ok && r.body.request.quote.status === 'paid', 'admin marks the accepted quote paid');
-    r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.ok && /^TT-/.test(r.body.code) && r.body.active, 'one click: accepted quote -> official event', r.body); const evc = r.body.code; const evid = r.body.id;
+    r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.ok && /^TT-/.test(r.body.code) && r.body.active, 'paid quote -> official event', r.body); const evc = r.body.code; const evid = r.body.id;
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.existing && r.body.code === evc, 'second click returns the same event (idempotent)');
     r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.games.join() === 'stack,void-swarm' && r.body.event.vendor === 'E2E Sponsor Co' && r.body.event.label.includes('E2E SPONSOR CO x GAMING HUB'), 'event carries the vendor, games and label', r.body.event);
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.event && r.body.request.event.code === evc && /<svg/.test(r.body.request.event.qr_svg), 'vendor quote page shows the event link + QR code');
