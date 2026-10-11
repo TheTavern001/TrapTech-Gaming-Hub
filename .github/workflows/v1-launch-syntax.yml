@@ -21,6 +21,10 @@ jobs:
           DATA_DIR: /tmp/gaming-hub-v1-checklist-test
         run: node tools/v1-checklist-test.js
       - name: Test cosmetic-only economy invariants
+        env:
+          ADMIN_PASSWORD: v1-check-password-123
+          SECRET: v1-check-secret-for-tests-only
+          DATA_DIR: /tmp/gaming-hub-v1-economy-test
         run: node tools/e2e-cosmetic-economy.js
       - name: Check server-side JavaScript
         run: |
