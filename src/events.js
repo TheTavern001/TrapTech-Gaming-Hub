@@ -163,4 +163,4 @@ function routes(app, A, H) {
 }
 // called after any giveaway insert so new giveaways always get a code
 function ensureCodes() { return backfill(); }
-module.exports = { routes, find, status, label, checkStart, checkSubmit, sessHash, eventPublic, qrSvg, newCode, ensureCodes, NOTICE, EVENT_TOKEN_TTL_MS, gamesOf };
+module.exports = { routes, find, status, label, checkStart, checkSubmit, sessHash, eventPublic, qrSvg, newCode, ensureCodes, NOTICE, EVENT_TOKEN_TTL_MS, gamesOf, bookingPaymentCleared };
