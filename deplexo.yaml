@@ -1,5 +1,11 @@
-# Deplexo app config (https://docs.deplexo.com/reference/configuration/). Build from the Dockerfile in the repo root.
-# Secrets (ADMIN_PASSWORD, SECRET, BACKUP_GITHUB_TOKEN) are set in the dashboard, never here.
-framework: dockerfile
-dockerfile: Dockerfile
-port: 8787
+# Deplexo app config. See https://docs.deplexo.com/reference/configuration/
+# Secrets (ADMIN_PASSWORD, SECRET, BACKUP_GITHUB_TOKEN) belong in the dashboard, never here.
+version: 1
+type: web
+
+build:
+  framework: dockerfile
+  dockerfile: Dockerfile
+
+run:
+  port: 8787
