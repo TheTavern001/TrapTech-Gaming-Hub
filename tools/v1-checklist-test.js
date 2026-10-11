@@ -35,6 +35,8 @@ const avatarEditor = read('public/js/avatar-editor.js');
 const serverSource = read('src/server.js');
 const paymentSource = read('src/monetize.js');
 const storeSource = read('public/js/hub-store.js');
+const mediaSource = read('src/admin-media.js');
+const r2Source = read('src/r2.js');
 assert.match(eligibilitySource, /function setChecklist\(/, 'server checklist persistence function must exist');
 assert.match(eligibilitySource, /Required external steps cannot be self-confirmed/, 'required external actions must reject player attestation');
 assert.match(eligibilitySource, /const eligible = checks\.every\(c => c\.ok\)/, 'checklist checks must participate in eligibility');
@@ -54,4 +56,8 @@ assert.match(paymentSource, /checkout\.session\.completed/, 'successful Stripe s
 assert.match(paymentSource, /order\.provider_ref !== obj\.id/, 'Stripe event must match the stored checkout session');
 assert.match(storeSource, /data-provider-choice/, 'store UI must offer configured payment methods');
 assert.doesNotMatch(serverSource, /identity_badge|isFounder|HUB_OWNER_USER_ID/, 'public server responses must not publish founder identity markers');
+assert.match(mediaSource, /R2\.put\('media\//, 'admin media uploads must use R2 when configured');
+assert.match(mediaSource, /if \(!R2\.configured\(\)\)/, 'media must retain disk fallback when R2 is not configured');
+assert.match(r2Source, /AWS4-HMAC-SHA256/, 'R2 requests must use authenticated S3-compatible signatures');
+assert.doesNotMatch(r2Source, /console\.log\(.*secret/i, 'R2 secrets must not be logged');
 console.log('V1 checklist normalization and wiring checks passed.');
