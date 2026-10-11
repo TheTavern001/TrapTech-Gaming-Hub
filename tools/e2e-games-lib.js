@@ -22,7 +22,7 @@ const PLAY_MS = +(process.env.PLAY_MS || 6000);
 let ip = 0; const nextIp = () => { ip++; return `10.77.${Math.floor(ip / 250) % 250}.${ip % 250 + 1}`; };
 // thumbnails are curated (docs/audit shots): only write one when the game has none yet, or when THUMBS=1 is set
 const WRITE_THUMB = (slug) => process.env.THUMBS === '1' || !require('fs').existsSync(require('path').join(PUB, slug, 'thumb.jpg'));
-let SEQ = 0; const RUN_ID = (Date.now() % 1e7) * 10 + (process.pid % 10);
+let SEQ = 0; const RUN_ID = (Date.now() % 1e6) * 10 + (process.pid % 10);
 async function signup(xff) {
   const u = 'tester' + String(RUN_ID) + String(++SEQ).padStart(3, '0'); // digits only: filter-safe, unique per run
   const r = await fetch(BASE + '/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': xff }, body: JSON.stringify({ username: u, password: 'qa-only-test-password-2026', agree: true, dob: '1990-05-05' }) });
