@@ -55,10 +55,28 @@ export function detail(g, r) {
 }
 // eligibility card: US-state picker when the giveaway is limited to some states
 export function elig(el, e, g, refresh) {
-  const c = e && e.checks && e.checks.find(x => x.id === 'region'); if (!c || c.ok && c.have) return;
-  const opts = (c.options || []).map(s => `<option ${s === c.have ? 'selected' : ''}>${esc(s)}</option>`).join('');
-  el.querySelector('.elig-checks')?.insertAdjacentHTML('afterend', `<form class="gw7-region" id="gw7-region"><label class="small" for="gw7-st">${icon('map')} The US state you live in</label><select class="input" id="gw7-st"><option value="">Pick your state</option>${opts}</select><button class="btn sm">Save</button></form>`);
-  el.querySelector('#gw7-region').onsubmit = async (ev) => { ev.preventDefault(); const v = el.querySelector('#gw7-st').value; if (!v) return toast('Pick your state'); const x = await api('/api/me/region', { method: 'POST', body: { region: v } }); toast(x.ok ? 'State saved' : x.error); if (x.ok) refresh(); };
+  const checks = (e && e.checks) || [];
+  const region = checks.find(x => x.id === 'region');
+  if (region && !(region.ok && region.have) && !el.querySelector('#gw7-region')) {
+    const opts = (region.options || []).map(s => `<option ${s === region.have ? 'selected' : ''}>${esc(s)}</option>`).join('');
+    el.querySelector('.elig-checks')?.insertAdjacentHTML('afterend', `<form class="gw7-region" id="gw7-region"><label class="small" for="gw7-st">${icon('map')} The US state you live in</label><select class="input" id="gw7-st"><option value="">Pick your state</option>${opts}</select><button class="btn sm">Save</button></form>`);
+    const form = el.querySelector('#gw7-region');
+    if (form) form.onsubmit = async (ev) => { ev.preventDefault(); const v = el.querySelector('#gw7-st').value; if (!v) return toast('Pick your state'); const x = await api('/api/me/region', { method: 'POST', body: { region: v } }); toast(x.ok ? 'State saved' : x.error); if (x.ok) refresh(); };
+  }
+  const steps = checks.filter(x => x.checklist && x.checklist_step_id);
+  if (!steps.length || el.querySelector('.gw7-checklist')) return;
+  const html = `<section class="gw7-checklist card pad"><h3>${icon('list-check')} Entry checklist</h3><p class="small muted">Confirm each required step. External channel actions are self-attested and are not independently verified by the hub.</p>
+    ${steps.map(s => `<label class="gw7-checkrow"><input type="checkbox" data-gw7-check="${esc(s.checklist_step_id)}" ${s.checked ? 'checked' : ''} ${s.required && !e.signed_in ? 'disabled' : ''}><span><b>${esc(s.label)}</b>${s.required ? ' <span class="tiny muted">Required</span>' : ' <span class="tiny muted">Optional</span>'}<small class="muted">${esc(s.hint || '')}${s.url ? ` • <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">Open step</a>` : ''}</small></span></label>`).join('')}
+  </section>`;
+  el.querySelector('.elig-checks')?.insertAdjacentHTML('afterend', html);
+  const box = el.querySelector('.gw7-checklist');
+  if (box) box.addEventListener('change', async (ev) => {
+    const input = ev.target.closest('[data-gw7-check]'); if (!input) return;
+    input.disabled = true;
+    const x = await api(`/api/giveaways/${encodeURIComponent(g.id)}/checklist`, { method: 'POST', body: { step_id: input.dataset.gw7Check, checked: input.checked } });
+    if (!x.ok) { input.checked = !input.checked; toast(x.error || 'Could not save checklist step'); input.disabled = false; return; }
+    toast('Checklist updated'); refresh();
+  });
 }
 // Official Rules: builder giveaways carry their own (generated or admin-edited, sanitized on the server)
 export const rules = (g) => (g && g.official_rules_html) || null;
