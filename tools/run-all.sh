@@ -6,7 +6,7 @@ r(){
   local suite="$1"; shift
   echo "=== $suite"
   timeout 2400 "$@" 2>&1 | tail -4
-  local rc=\${PIPESTATUS[0]}
+  local rc=${PIPESTATUS[0]}
   echo "exit=$rc"
   if [ "$rc" -ne 0 ]; then overall=1; fi
 }
