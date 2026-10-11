@@ -30,3 +30,13 @@
 .gw7-dlg { border: 1px solid rgba(148,163,255,.3); border-radius: 16px; background: #0b1030; color: inherit; width: min(420px, calc(100vw - 24px)); padding: 16px; }
 .gw7-dlg::backdrop { background: rgba(0,0,0,.6); }
 .gw7-dlg form { display: grid; gap: 10px; } .gw7-dlg h2 { margin: 0; } .gw7-dlg label { display: grid; gap: 4px; }
+
+/* V1 entry checklist: responsive, accessible confirmation controls */
+.gw7-checklist{margin-top:14px;min-width:0}
+.gw7-checklist h3{margin:0 0 8px}
+.gw7-checkrow{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-top:1px solid var(--line,rgba(255,255,255,.12));min-width:0}
+.gw7-checkrow input{flex:0 0 auto;width:18px;height:18px;margin-top:2px;accent-color:var(--accent,#8b5cf6)}
+.gw7-checkrow>span{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
+.gw7-checkrow small{line-height:1.45;overflow-wrap:anywhere}
+.gw7-checkrow a{overflow-wrap:anywhere}
+@media(max-width:480px){.gw7-checklist{padding:12px}.gw7-checkrow{gap:8px}}
