@@ -89,7 +89,7 @@ function checkSubmit(req, user, row, tok, t = Date.now()) {
   if (t - row.started_at > EVENT_TOKEN_TTL_MS) return { status: 400, error: 'Event run token expired.' };
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(row.event_id);
   if (!g) return { status: 404, error: 'That is not an official Gaming Hub event.' };
-  if (!bookingPaymentCleared(g)) return { status: 403, error: 'This event booking payment is not confirmed.', demote: true };
+  if (!bookingPaymentCleared(g)) return { status: 403, error: 'This event booking payment is not confirmed.', demote: true, paymentUnconfirmed: true };
   // ended (or a run that outlived its event): the run is kept as a free-play run, never as an event entry
   if (t >= g.end_at) return { status: 403, error: 'This event has ended.', demote: true };
   const st = status({ ...g, finalized_at: null }, Math.min(t, g.end_at - 1));
