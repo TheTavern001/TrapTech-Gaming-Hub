@@ -101,6 +101,7 @@ function routes(app, H) {
   app.get('/avatar/:u.svg', (req, res) => { const u = db.prepare('SELECT id, username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u));
     const cfg = u ? configOf(u) : defaultFor(req.params.u); const body = svg(cfg); const et = '"' + crypto.createHash('sha1').update(body).digest('base64').slice(0, 16) + '"';
     res.set({ 'Cache-Control': 'public, max-age=300', ETag: et, 'Content-Type': 'image/svg+xml' }); if (req.headers['if-none-match'] === et) return res.status(304).end(); res.send(body); });
+  app.get('/api/avatar/:u', (req, res) => { const u = db.prepare('SELECT username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u).slice(0, 32)); if (!u) return bad(res, 404, 'Avatar not found'); res.set('Cache-Control', 'public, max-age=60').json({ ok: true, avatar: configOf(u) }); });
   app.get('/avatar-preview.svg', (req, res) => { let c = {}; try { c = JSON.parse(String(req.query.c || '{}')); } catch {} res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(svg(clean(c, defaultFor('preview')))); });
   app.get('/api/avatar', requireUser, (req, res) => res.json({ ok: true, avatar: configOf(req.user), kinds: KINDS, parts: partsFor(req.user.id), bg: BG, skin: SKIN, hair_colors: HAIRC, crowns: require('./monetize').crowns(req.user.id) }));
   app.put('/api/avatar', requireUser, (req, res) => { const want = clean(req.body && req.body.avatar, configOf(req.user)); const ctx = {};
