@@ -73,6 +73,7 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 - [x] Add baseline browser security headers (nosniff, frame denial, referrer policy, restrictive permissions policy, cross-origin policies, HSTS on HTTPS).
 - [x] Remove public founder identity flags, stable internal Hub IDs, and external Potato handles from public profile/eligibility responses. Trap Tech Solutions remains the public operator brand.
 - [x] Remove deployment commit metadata from the public build endpoint.
+- [x] Stop trusting arbitrary X-Forwarded-* and CF-Connecting-IP headers by default; proxy hop count and Cloudflare IP trust must be explicitly configured.
 - [x] Confirm the legacy `/admin`, `/admin.html`, `/api/admin/*`, and old admin asset URLs are 404; the actual dashboard uses the configured secret path and server-side auth/2FA/CSRF/roles.
 - [ ] Verify production environment values: long random `ADMIN_PATH`, strong `ADMIN_PASSWORD`/owner password, unique `SECRET`/session secrets, and `TRUST_CF_IP=1` only when Cloudflare is actually the trusted proxy.
 - [ ] Run external security review / penetration tests and confirm no secrets or creator/account identifiers appear in production HTML, API responses, logs, media metadata, or social previews.
