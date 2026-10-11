@@ -288,6 +288,14 @@ python3 tools/compare.py                   # mockup vs built side-by-side images
 4. If a phone's in-app browser blocks cookies/storage, the hub keeps you signed in for that visit via an in-memory session; open in Safari/Chrome (menu > "Open in browser") to stay signed in between visits.
 5. Test locally: `node tools/e2e-mobile.js` (Pixel 7, iPhone 14, Android WebView, iOS in-app, locked WebView).
 
+## Free play and cosmetic-only purchases
+
+All games remain free to play. Hub Points are earned through play and can be spent on cosmetics. Optional Hub Crowns and the Season Pass only unlock cosmetic options; the paid pass does not boost XP, scores, attempts, achievements, quest progress, giveaway eligibility, or winners. No user cosmetic or badge grants staff, creator, founder, moderator, or admin privileges.
+
+Official Trap Tech Solutions account: https://tatokdym.org/TrapTechSolutions
+Official channel: https://tatokdym.org/TrapTech_Solutions
+Treat lookalike accounts as impersonators. Staff will never ask for passwords, login codes, or payments to verify an account.
+
 ## Optional payments and media storage
 
 - Bitcoin checkout uses BTC_ADDRESS and never stores private wallet keys.
