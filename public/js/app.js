@@ -414,12 +414,8 @@ route(/^\/(home)?$/, async () => {
   const takeover = live.find(x => (x.placements || []).includes('hero')); // v7: hero takeover is a sponsor placement
   const featuredGw = live.filter(x => x.featured && x !== takeover);
   const g0 = live.find(x => x !== takeover) || null;
-  // Weekly live-ops rotation: prefer games explicitly featured by an admin; otherwise rotate the whole active library deterministically.
-  const curated = S.games.filter(g => g && (g.featured === true || g.home_featured === true));
-  const pool = curated.length ? curated : S.games.filter(Boolean);
-  const slot = pool.length ? Math.floor(Date.now() / (7 * 864e5)) % pool.length : 0;
-  const rotated = pool.slice(slot).concat(pool.slice(0, slot));
-  const featured = rotated.slice(0, 4);
+  // The server computes the weekly featured rotation; this view only renders the selected games.
+  const featured = S.games.filter(g => g && g.home_featured).slice(0, 4);
   const tours = (tn.ok ? tn.tournaments : []).filter(t => t.status !== 'ended').slice(0, 3);
   shell('/', `
     <section class="home-intro">
