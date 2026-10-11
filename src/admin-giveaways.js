@@ -138,7 +138,7 @@ function blank(over = {}) {
     prizes: [{ id: 'p1', name: '', desc: '', image: '', qty: 1, value: 0, type: 'physical', award: 'rank' }],
     winners: { alternates: 2, claim_hours: 72, auto_forfeit: false, announce: true, review: true },
     entry: { ...E.DEFAULTS, age21: true, require_join: true, activity_weight: true, max_entrants: 0, regions_mode: 'all', regions: [], brand_only: false, follow_sponsor: false,
-      quest_bonus: { on: false, per: 1, max: 3 }, referral_bonus: { on: false, max: 3 } },
+      quest_bonus: { on: false, per: 1, max: 3 }, referral_bonus: { on: false, max: 3 }, checklist: [] },
     features: { featured: false, pinned_home: false, channel_pin: false, branding: true, game_skin: false, link_giveaway: false, link_channel: false, link_game: false, link_announcement: false,
       link_url: '', link_label: '', tournament: false, live_standings: true, hidden_board: false, share_cards: true, referral_bonus: false,
       notify_announce: true, notify_followers: true, notify_reminder: true, notify_ending: true, analytics_live: true, analytics_report: false, potato_contact: true, delivery_coord: false, category_exclusive: false },
@@ -178,7 +178,7 @@ function normalize(c) {
       regions_mode: ['all', 'allow', 'exclude'].includes(e.regions_mode) ? e.regions_mode : 'all', regions: (Array.isArray(e.regions) ? e.regions : []).map(x => String(x).toUpperCase()).filter(x => REGIONS.includes(x)),
       brand_only: !!e.brand_only, follow_sponsor: !!(e.follow_sponsor || e.elig_followers_only),
       quest_bonus: { on: !!(e.quest_bonus && e.quest_bonus.on), per: int(e.quest_bonus && e.quest_bonus.per, 1, 10, 1), max: int(e.quest_bonus && e.quest_bonus.max, 1, 20, 3) },
-      referral_bonus: { on: !!((e.referral_bonus && e.referral_bonus.on) || f.referral_bonus), max: int(e.referral_bonus && e.referral_bonus.max, 1, 20, 3) } },
+      referral_bonus: { on: !!((e.referral_bonus && e.referral_bonus.on) || f.referral_bonus), max: int(e.referral_bonus && e.referral_bonus.max, 1, 20, 3) },\n      checklist: (Array.isArray(e.checklist) ? e.checklist : []).slice(0, 8).map((x, i) => ({ id: str(x.id, 24) || `step${i+1}`, label: str(x.label, 120), url: /^https:\\/\\/[^\\s\"'<>]{4,300}$/.test(str(x.url, 300)) ? str(x.url, 300) : '', required: x.required !== false, attestation: true })) },
     features: {}, rules: { official: sanitizeHtml(r.official, 60000), edited: !!r.edited, house: str(r.house, 2000) },
     runtime: c.runtime && typeof c.runtime === 'object' ? { tournament_id: parseInt(c.runtime.tournament_id, 10) || null, announced_winners_at: +c.runtime.announced_winners_at || null } : {},
   };
@@ -243,7 +243,7 @@ function validate(c, opts = {}) {
   c.prizes.forEach((p, i) => { if (!p.name) E_('prizes', `prize-${i}`, `Prize ${i + 1} needs a name.`); });
   if (c.prizes.some(p => p.type === 'points') && c.prizes.every(p => p.type === 'points')) W('prizes', 'Points-only prizes are cosmetic; the rules still state no cash value.');
   const pl = plan(c); if (pl.winners > 1000) E_('prizes', 'qty', 'At most 1,000 winners.');
-  if (c.entry.regions_mode !== 'all' && !c.entry.regions.length) E_('entry', 'regions', 'Pick at least one state for the allow / exclude list.');
+  if (c.entry.regions_mode !== 'all' && !c.entry.regions.length) E_('entry', 'regions', 'Pick at least one state for the allow / exclude list.');\n  if (c.entry.checklist.some(x => !x.label)) E_('entry', 'checklist', 'Every checklist step needs a label.');
   if (c.features.hidden_board && c.features.live_standings) W('features', 'Live standings are off while the leaderboard is hidden.');
   if ((c.features.link_giveaway || c.features.link_channel || c.features.link_game || c.features.link_announcement) && !c.features.link_url) E_('features', 'link_url', 'Sponsor link placements need an https:// link.');
   if (c.features.pinned_home) { const other = db.prepare("SELECT id, title FROM giveaways WHERE v7=1 AND placements LIKE '%hero%' AND active=1 AND end_at > ? AND id <> ? AND state IN ('live','scheduled','paused')").get(now(), opts.giveawayId || 0); if (other) W('features', `"${other.title}" already has the Home hero; the newest one shows first.`); }
