@@ -10,7 +10,7 @@ db.exec('CREATE TABLE IF NOT EXISTS avatar_parts_owned (user_id INTEGER NOT NULL
 const SKIN = ['#f9d7b9', '#f1c19b', '#e0a679', '#c98a5b', '#a8693f', '#8a5232', '#6b3d22', '#4a2915'];
 const HAIRC = ['#1b1b1f', '#4a2f1d', '#7b4a24', '#c58b3c', '#e8c46a', '#d9d4cc', '#c2410c', '#7c3aed', '#22d3ee', '#16a34a'];
 const BG = { violet: ['#7c3aed', '#22d3ee'], night: ['#0f172a', '#4338ca'], kush: ['#14532d', '#84cc16'], sunset: ['#f97316', '#db2777'], ocean: ['#0369a1', '#22d3ee'], haze: ['#6b21a8', '#f0abfc'], mono: ['#27272a', '#71717a'], toxic: ['#166534', '#facc15'],
-  'gold-rays': ['#78350f', '#facc15'], 'cash-rain': ['#052e16', '#22c55e'] };
+  'gold-rays': ['#78350f', '#facc15'], 'cash-rain': ['#052e16', '#22c55e'], 'grow-room': ['#052e16', '#15803d'], 'night-club': ['#1e1b4b', '#db2777'], 'hospital': ['#e0f2fe', '#38bdf8'], 'workshop': ['#292524', '#f59e0b'], 'farm': ['#14532d', '#a3e635'], 'studio': ['#111827', '#7c3aed'], 'city-lights': ['#020617', '#475569'] };
 // part catalog: [kind, id, label, unlock]  unlock: 'free' | { crowns: n } | { ach: n } | { prestige: itemId }
 const P = [];
 const add = (kind, id, label, unlock = 'free') => P.push({ kind, id, label, unlock });
@@ -23,9 +23,11 @@ HAIRC.forEach((c, i) => add('hairc', 'c' + i, 'Color ' + (i + 1), i >= 7 ? { cro
 ['smile', 'grin', 'flat', 'open', 'smirk'].forEach(m => add('mouth', m, m));
 ['none', 'mustache', 'goatee', 'beard'].forEach(b => add('beard', b, b));
 add('outfit', 'tee', 'tee'); add('outfit', 'hoodie', 'hoodie'); add('outfit', 'jersey', 'jersey'); add('outfit', 'tracksuit', 'tracksuit', { crowns: 300 }); add('outfit', 'chain-tee', 'tee + gold chain', { crowns: 600 }); add('outfit', 'fur', 'fur coat', { crowns: 900 });
+for (const [id, label] of [['cannabis-hoodie','Cannabis streetwear hoodie'],['dj','DJ performance fit'],['scrubs','Medical scrubs'],['labcoat','Lab coat'],['mechanic','Mechanic coveralls'],['hardhat','Blue-collar workwear'],['farmer','Farm workwear'],['suit','Executive suit'],['tactical','Tactical streetwear'],['chef','Chef jacket'],['firefighter','Firefighter turnout gear'],['varsity','Varsity jacket'],['denim','Denim jacket'],['ranch','Ranch workwear'],['hype','Hype streetwear']]) add('outfit', id, label, ['cannabis-hoodie','dj','scrubs','labcoat','mechanic','hardhat','farmer','suit','tactical','chef','firefighter','varsity','denim','ranch','hype'].includes(id) ? { crowns: 450 } : 'free');
 add('hat', 'none', 'none'); add('hat', 'beanie', 'beanie'); add('hat', 'snapback', 'snapback'); add('hat', 'bucket', 'bucket hat', { crowns: 250 }); add('hat', 'halo', 'halo', { ach: 30 }); add('hat', 'crown', 'solid gold crown', { prestige: 'prestige-crown' });
 add('acc', 'none', 'none'); add('acc', 'glasses', 'glasses'); add('acc', 'shades', 'shades'); add('acc', 'grill', 'diamond grill', { crowns: 800 });
 add('held', 'none', 'none'); add('held', 'controller', 'controller'); add('held', 'cane', 'diamond cane', { prestige: 'prestige-cane' }); add('held', 'cash', 'cash stack', { prestige: 'prestige-throne' });
+add('held', 'microphone', 'DJ microphone'); add('held', 'wrench', 'Mechanic wrench'); add('held', 'sprout', 'Seedling'); add('held', 'stethoscope', 'Stethoscope'); add('held', 'pitchfork', 'Pitchfork'); add('held', 'syringe', 'Medical syringe'); add('held', 'headphones', 'DJ headphones'); add('held', 'toolbox', 'Toolbox');
 const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 'outfit', 'hat', 'acc', 'held'];
 const BYK = {}; for (const p of P) (BYK[p.kind] = BYK[p.kind] || {})[p.id] = p;
 const key = (p) => p.kind + ':' + p.id;
