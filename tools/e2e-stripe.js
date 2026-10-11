@@ -142,7 +142,7 @@ async function sendEvent(base, event, sigOverride) {
     ok(created.ok === true && created.order.provider === 'stripe' && created.order.checkout_url.startsWith('https://checkout.stripe.com/'),
       'Stripe checkout creates a hosted session and stores its verified HTTPS URL', created);
     const order = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(created.order.ref);
-    ok(!!order && /^cs_test_e2e_\\d+$/.test(order.provider_ref), 'Stripe session id is linked to its server-created order');
+    ok(!!order && /^cs_test_e2e_\d+$/.test(order.provider_ref), 'Stripe session id is linked to its server-created order');
     ok(lastCheckoutForm.get('client_reference_id') === order.ref &&
       lastCheckoutForm.get('metadata[order_ref]') === order.ref &&
       lastCheckoutForm.get('metadata[user_id]') === String(userId),
