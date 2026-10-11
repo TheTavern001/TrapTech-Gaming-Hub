@@ -35,6 +35,7 @@ const avatarEditor = read('public/js/avatar-editor.js');
 const serverSource = read('src/server.js');
 const paymentSource = read('src/monetize.js');
 const storeSource = read('public/js/hub-store.js');
+const appSource = read('public/js/app.js');
 const mediaSource = read('src/admin-media.js');
 const r2Source = read('src/r2.js');
 assert.match(eligibilitySource, /function setChecklist\(/, 'server checklist persistence function must exist');
@@ -60,6 +61,8 @@ assert.match(paymentSource, /order\.provider_ref !== obj\.id/, 'Stripe event mus
 assert.match(paymentSource, /Number\(obj\.amount_total\) !== Number\(order\.usd_cents\)/, 'Stripe fulfillment must confirm exact server-priced amount');
 assert.match(paymentSource, /Number\(obj\.amount\) === Number\(order\.usd_cents\)/, 'Stripe refunds must match the original amount');
 assert.match(storeSource, /data-provider-choice/, 'store UI must offer configured payment methods');
+assert.match(appSource, /Weekly live-ops rotation/, 'home featured games must rotate automatically');
+assert.match(appSource, /optional paid premium cosmetic track/, 'home must distinguish free and paid season tracks');
 assert.doesNotMatch(serverSource, /identity_badge|isFounder|HUB_OWNER_USER_ID/, 'public server responses must not publish founder identity markers');
 assert.match(mediaSource, /R2\.put\('media\//, 'admin media uploads must use R2 when configured');
 assert.match(mediaSource, /if \(!R2\.configured\(\)\)/, 'media must retain disk fallback when R2 is not configured');
