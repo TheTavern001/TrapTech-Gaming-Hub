@@ -414,7 +414,12 @@ route(/^\/(home)?$/, async () => {
   const takeover = live.find(x => (x.placements || []).includes('hero')); // v7: hero takeover is a sponsor placement
   const featuredGw = live.filter(x => x.featured && x !== takeover);
   const g0 = live.find(x => x !== takeover) || null;
-  const featured = S.games.slice(0, 4);
+  // Weekly live-ops rotation: prefer games explicitly featured by an admin; otherwise rotate the whole active library deterministically.
+  const curated = S.games.filter(g => g && (g.featured === true || g.home_featured === true));
+  const pool = curated.length ? curated : S.games.filter(Boolean);
+  const slot = pool.length ? Math.floor(Date.now() / (7 * 864e5)) % pool.length : 0;
+  const rotated = pool.slice(slot).concat(pool.slice(0, slot));
+  const featured = rotated.slice(0, 4);
   const tours = (tn.ok ? tn.tournaments : []).filter(t => t.status !== 'ended').slice(0, 3);
   shell('/', `
     <section class="home-intro">
@@ -454,7 +459,7 @@ route(/^\/(home)?$/, async () => {
       </div>
     </div>
     <div class="promo-grid">
-      <a class="card pad ach-promo" href="/season"><span class="ai">${icon('calendar-range')}</span><div><b>Season Pass - free</b><div class="small muted">20 tiers of cosmetic rewards. Earn XP from runs, quests and check-ins.</div></div>${icon('chevron-right')}</a>
+      <a class="card pad ach-promo" href="/season"><span class="ai">${icon('calendar-range')}</span><div><b>Season Pass</b><div class="small muted">Free rewards plus an optional paid premium cosmetic track. XP and cosmetics only—never score or giveaway advantages.</div></div>${icon('chevron-right')}</a>
       <a class="card pad ach-promo" href="/achievements"><span class="ai">${icon('medal')}</span><div><b>Achievements &amp; Rewards</b><div class="small muted">100+ achievements unlock banners, frames and titles. Cosmetic only, no cash value.</div></div>${icon('chevron-right')}</a>
       <a class="card pad ach-promo" href="/invite"><span class="ai">${icon('gift')}</span><div><b>Invite friends</b><div class="small muted">Share your code - earn exclusive Crew Builder cosmetics when friends play.</div></div>${icon('chevron-right')}</a>
     </div>
