@@ -43,7 +43,7 @@ function owns(userId, part, ctx) { const u = part.unlock; if (u === 'free') retu
 function achCount(userId) { try { return db.prepare('SELECT COUNT(*) c FROM user_achievements WHERE user_id=?').get(userId).c; } catch { return 0; } }
 // ---- SVG ----
 function svg(c) {
-  const s = SKIN[+c.skin.slice(1)] || SKIN[2]; const hc = HAIRC[+c.hairc.slice(1)] || HAIRC[0]; const [b1, b2] = BG[c.bg] || BG.violet; const o = [];
+  const s = SKIN[+c.skin.slice(1)] || SKIN[2]; const hc = HAIRC[+c.hairc.slice(1)] || HAIRC[0]; const [b1, b2] = BG[c.bg] || BG.violet; const o = []; const shirt = { tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207' }[c.outfit] || '#3b82f6';
   o.push(`<defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${b1}"/><stop offset=".58" stop-color="${b2}"/><stop offset="1" stop-color="#050714"/></linearGradient>
     <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".48"/><stop offset=".23" stop-color="${s}"/><stop offset=".7" stop-color="${s}"/><stop offset="1" stop-color="#24130e" stop-opacity=".38"/></linearGradient>
@@ -55,7 +55,6 @@ function svg(c) {
   </defs><rect width="120" height="120" rx="24" fill="url(#g)"/><ellipse cx="60" cy="60" rx="48" ry="54" fill="${b2}" opacity=".16"/>`);
   if (c.bg === 'gold-rays') o.push('<g opacity=".35" fill="#fef3c7">' + [0, 30, 60, 90, 120, 150].map(a => `<path d="M60 60 L${60 + 90 * Math.cos(a * Math.PI / 180)} ${60 + 90 * Math.sin(a * Math.PI / 180)} L${60 + 90 * Math.cos((a + 10) * Math.PI / 180)} ${60 + 90 * Math.sin((a + 10) * Math.PI / 180)}Z"/>`).join('') + '<animateTransform attributeName="transform" type="rotate" from="0 60 60" to="360 60 60" dur="24s" repeatCount="indefinite"/></g>');
   if (c.bg === 'cash-rain') o.push('<g fill="#86efac" opacity=".55">' + [12, 34, 58, 82, 104].map((x, i) => `<rect x="${x}" y="-12" width="12" height="7" rx="1"><animate attributeName="y" from="-12" to="124" dur="${3 + i * 0.6}s" repeatCount="indefinite"/></rect>`).join('') + '</g>');
-  const shirt = { tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207' }[c.outfit] || '#3b82f6';
   o.push(`<path d="M18 120 C22 92 40 84 60 84 C80 84 98 92 102 120Z" fill="url(#shirt)"/>`);
   if (c.outfit === 'hoodie') o.push('<path d="M42 88 C48 100 72 100 78 88" fill="none" stroke="#1e293b" stroke-width="4"/>');
   if (c.outfit === 'jersey') o.push('<text x="60" y="112" font-size="16" font-family="Arial" font-weight="700" fill="#fff" text-anchor="middle">7</text>');
