@@ -1,9 +1,9 @@
-# Deplexo app config. See https://docs.deplexo.com/reference/configuration/
-# Secrets (ADMIN_PASSWORD, SECRET, BACKUP_GITHUB_TOKEN) belong in the dashboard, never here.
+# Deplexo app config. Secrets belong in the dashboard, never here.
 version: 1
 type: web
 
 build:
+  framework: dockerfile
   dockerfile: Dockerfile
 
 run:
