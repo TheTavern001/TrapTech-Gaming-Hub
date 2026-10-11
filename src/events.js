@@ -71,7 +71,7 @@ function checkStart(req, user, gameId, ref, t = Date.now()) {
   const g = find(ref);
   if (!g) return { status: 404, error: 'That is not an official Gaming Hub event.' };
   const st = status(g, t);
-  if (st !== 'active') return { status: 403, error: st === 'scheduled' ? 'This event has not started yet.' : st === 'ended' ? 'This event has ended.' : 'This event is not active.' };
+  if (st !== 'active') return { status: 403, error: st === 'scheduled' ? 'This event has not started yet.' : st === 'ended' ? 'This event has ended.' : st === 'unpaid' ? 'This event is unavailable until its booking payment is confirmed.' : 'This event is not active.' };
   if (!user) return { status: 401, error: 'Please sign in first.' };
   const game = cfg.GAME_MAP[gameId];
   if (!game || !game.giveaway) return { status: 400, error: 'That game cannot count for an official giveaway.' };
