@@ -9,6 +9,7 @@ db.exec('CREATE TABLE IF NOT EXISTS avatar_parts_owned (user_id INTEGER NOT NULL
 
 const SKIN = ['#f9d7b9', '#f1c19b', '#e0a679', '#c98a5b', '#a8693f', '#8a5232', '#6b3d22', '#4a2915'];
 const HAIRC = ['#1b1b1f', '#4a2f1d', '#7b4a24', '#c58b3c', '#e8c46a', '#d9d4cc', '#c2410c', '#7c3aed', '#22d3ee', '#16a34a'];
+const EYEC = ['#111827', '#2563eb', '#22d3ee', '#16a34a', '#a16207', '#a855f7', '#f8fafc', '#ef4444'];
 const BG = { violet: ['#7c3aed', '#22d3ee'], night: ['#0f172a', '#4338ca'], kush: ['#14532d', '#84cc16'], sunset: ['#f97316', '#db2777'], ocean: ['#0369a1', '#22d3ee'], haze: ['#6b21a8', '#f0abfc'], mono: ['#27272a', '#71717a'], toxic: ['#166534', '#facc15'],
   'gold-rays': ['#78350f', '#facc15'], 'cash-rain': ['#052e16', '#22c55e'] };
 // part catalog: [kind, id, label, unlock]  unlock: 'free' | { crowns: n } | { ach: n } | { prestige: itemId }
@@ -25,13 +26,19 @@ HAIRC.forEach((c, i) => add('hairc', 'c' + i, 'Color ' + (i + 1), i >= 7 ? { cro
 add('outfit', 'tee', 'tee'); add('outfit', 'hoodie', 'hoodie'); add('outfit', 'jersey', 'jersey'); add('outfit', 'tracksuit', 'tracksuit', { crowns: 300 }); add('outfit', 'chain-tee', 'tee + gold chain', { crowns: 600 }); add('outfit', 'fur', 'fur coat', { crowns: 900 });
 add('hat', 'none', 'none'); add('hat', 'beanie', 'beanie'); add('hat', 'snapback', 'snapback'); add('hat', 'bucket', 'bucket hat', { crowns: 250 }); add('hat', 'halo', 'halo', { ach: 30 }); add('hat', 'crown', 'solid gold crown', { prestige: 'prestige-crown' });
 add('acc', 'none', 'none'); add('acc', 'glasses', 'glasses'); add('acc', 'shades', 'shades'); add('acc', 'grill', 'diamond grill', { crowns: 800 });
+['#111827', '#2563eb', '#22d3ee', '#16a34a', '#a16207', '#a855f7', '#f8fafc', '#ef4444'].forEach((c, i) => add('eyec', 'e' + i, ['Dark brown', 'Blue', 'Ice cyan', 'Green', 'Amber', 'Violet', 'Silver', 'Crimson'][i], i >= 5 ? { crowns: 120 } : 'free'));
+['natural', 'bold', 'angled', 'none'].forEach((x) => add('brow', x, x));
+['none', 'freckles', 'scar', 'war-paint'].forEach((x, i) => add('mark', x, x === 'war-paint' ? 'war paint' : x, i === 3 ? { crowns: 180 } : 'free'));
+['none', 'nose-ring', 'ear-studs', 'double-piercing'].forEach((x, i) => add('piercing', x, x === 'double-piercing' ? 'nose + ear piercings' : x.replace('-', ' '), i === 3 ? { crowns: 200 } : 'free'));
+['none', 'silver-chain', 'gold-chain', 'diamond-pendant'].forEach((x, i) => add('neck', x, x.replace(/-/g, ' '), i === 2 ? { crowns: 220 } : i === 3 ? { crowns: 500 } : 'free'));
+add('outfit', 'armor', 'carbon armor', { crowns: 700 }); add('outfit', 'techwear', 'techwear jacket', { crowns: 500 }); add('outfit', 'varsity', 'varsity jacket', { crowns: 350 });
 add('held', 'none', 'none'); add('held', 'controller', 'controller'); add('held', 'cane', 'diamond cane', { prestige: 'prestige-cane' }); add('held', 'cash', 'cash stack', { prestige: 'prestige-throne' });
-const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 'outfit', 'hat', 'acc', 'held'];
+const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'brow', 'eyes', 'eyec', 'mouth', 'mark', 'beard', 'piercing', 'outfit', 'neck', 'hat', 'acc', 'held'];
 const BYK = {}; for (const p of P) (BYK[p.kind] = BYK[p.kind] || {})[p.id] = p;
 const key = (p) => p.kind + ':' + p.id;
 function hashOf(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function defaultFor(name) { const h = hashOf(name); const pick = (k, n) => Object.keys(BYK[k]).filter(id => BYK[k][id].unlock === 'free')[(h >>> n) % Object.keys(BYK[k]).filter(id => BYK[k][id].unlock === 'free').length];
-  return { bg: pick('bg', 1), skin: pick('skin', 4), face: pick('face', 7), hair: pick('hair', 9), hairc: pick('hairc', 13), eyes: pick('eyes', 16), mouth: pick('mouth', 19), beard: (h >>> 22) % 4 === 0 ? pick('beard', 23) : 'none', outfit: pick('outfit', 25), hat: 'none', acc: (h >>> 27) % 3 === 0 ? 'glasses' : 'none', held: 'none' }; }
+  return { bg: pick('bg', 1), skin: pick('skin', 4), face: pick('face', 7), hair: pick('hair', 9), hairc: pick('hairc', 13), brow: pick('brow', 15), eyes: pick('eyes', 16), eyec: pick('eyec', 18), mouth: pick('mouth', 19), mark: pick('mark', 20), beard: (h >>> 22) % 4 === 0 ? pick('beard', 23) : 'none', piercing: pick('piercing', 24), outfit: pick('outfit', 25), neck: pick('neck', 26), hat: 'none', acc: (h >>> 27) % 3 === 0 ? 'glasses' : 'none', held: 'none' }; }
 function clean(cfg, base) { const out = { ...base }; for (const k of KINDS) if (cfg && BYK[k][cfg[k]]) out[k] = cfg[k]; return out; }
 function configOf(user) { let c = {}; try { c = JSON.parse(user.avatar || '{}'); } catch {} return clean(c, defaultFor(user.username)); }
 // ownership
@@ -43,7 +50,7 @@ function owns(userId, part, ctx) { const u = part.unlock; if (u === 'free') retu
 function achCount(userId) { try { return db.prepare('SELECT COUNT(*) c FROM user_achievements WHERE user_id=?').get(userId).c; } catch { return 0; } }
 // ---- SVG ----
 function svg(c) {
-  const s = SKIN[+c.skin.slice(1)] || SKIN[2]; const hc = HAIRC[+c.hairc.slice(1)] || HAIRC[0]; const [b1, b2] = BG[c.bg] || BG.violet; const o = []; const shirt = { tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207' }[c.outfit] || '#3b82f6';
+  const s = SKIN[+c.skin.slice(1)] || SKIN[2]; const hc = HAIRC[+c.hairc.slice(1)] || HAIRC[0]; const eyeColor = EYEC[+String(c.eyec || 'e0').slice(1)] || EYEC[0]; const [b1, b2] = BG[c.bg] || BG.violet; const o = []; const shirt = { tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207', armor: '#475569', techwear: '#111827', varsity: '#7c2d12' }[c.outfit] || '#3b82f6';
   o.push(`<defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${b1}"/><stop offset=".58" stop-color="${b2}"/><stop offset="1" stop-color="#050714"/></linearGradient>
     <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".48"/><stop offset=".23" stop-color="${s}"/><stop offset=".7" stop-color="${s}"/><stop offset="1" stop-color="#24130e" stop-opacity=".38"/></linearGradient>
@@ -61,6 +68,10 @@ function svg(c) {
   if (c.outfit === 'tracksuit') o.push('<path d="M34 120 L40 90 M86 120 L80 90" stroke="#22d3ee" stroke-width="3"/>');
   if (c.outfit === 'fur') o.push('<path d="M22 118 C26 96 40 88 50 88 L56 120Z M98 118 C94 96 80 88 70 88 L64 120Z" fill="#fde68a" opacity=".85"/>');
   if (c.outfit === 'chain-tee') o.push('<path d="M44 88 Q60 108 76 88" fill="none" stroke="url(#au)" stroke-width="3.5" stroke-dasharray="4 2"/><circle cx="60" cy="102" r="5" fill="url(#au)"/>');
+  if (c.outfit === 'armor') o.push('<path d="M24 100 L36 87 L48 93 L60 90 L72 93 L84 87 L96 100 L90 120 L30 120Z" fill="#334155" stroke="#94a3b8" stroke-width="2"/><path d="M42 94 L60 106 L78 94 M60 106 L60 120" stroke="#22d3ee" stroke-width="2" fill="none"/><circle cx="60" cy="101" r="3" fill="#67e8f9"/>');
+  if (c.outfit === 'techwear') o.push('<path d="M25 103 L39 89 L50 94 L60 91 L70 94 L81 89 L95 103 L88 120 L32 120Z" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/><path d="M38 100 L48 114 M82 100 L72 114" stroke="#22d3ee" stroke-width="3"/><rect x="54" y="103" width="12" height="7" rx="2" fill="#22d3ee"/>');
+  if (c.outfit === 'varsity') o.push('<path d="M25 103 L39 89 L50 94 L60 91 L70 94 L81 89 L95 103 L88 120 L32 120Z" fill="#7c2d12" stroke="#fbbf24" stroke-width="2"/><path d="M60 93 L60 120 M36 106 L45 110 M84 106 L75 110" stroke="#fff7ed" stroke-width="2"/>');
+  if (c.neck === 'silver-chain' || c.neck === 'gold-chain' || c.neck === 'diamond-pendant') { const nc = c.neck === 'silver-chain' ? '#cbd5e1' : '#fbbf24'; o.push(`<path d="M43 91 Q60 112 77 91" fill="none" stroke="${nc}" stroke-width="3"/><path d="M60 105 L66 111 L60 118 L54 111Z" fill="${c.neck === 'diamond-pendant' ? '#67e8f9' : nc}" stroke="#fff" stroke-width=".8"/>`); }
   o.push(`<rect x="52" y="72" width="16" height="16" rx="6" fill="url(#skin)"/>`);
   const face = c.face === 'square' ? `<rect x="34" y="28" width="52" height="54" rx="16" fill="url(#skin)"/>` : c.face === 'oval' ? `<ellipse cx="60" cy="54" rx="25" ry="29" fill="url(#skin)"/>` : `<circle cx="60" cy="55" r="27" fill="url(#skin)"/>`;
   if (c.hair === 'long' || c.hair === 'braids') o.push(`<path d="M32 50 C30 30 44 22 60 22 C76 22 90 30 88 50 L92 92 L76 90 L74 60 L46 60 L44 90 L28 92Z" fill="url(#hair)"/>`);
@@ -77,11 +88,17 @@ function svg(c) {
     waves: `<path d="M35 46 C36 30 48 26 60 26 C72 26 84 30 85 46 C80 38 70 34 60 34 C50 34 40 38 35 46Z" fill="url(#hair)"/><path d="M40 36 Q46 32 52 36 T64 36 T76 36" stroke="#000" stroke-opacity=".25" fill="none"/>`,
     spiky: `<path d="M34 46 L38 26 L44 36 L50 20 L56 34 L62 18 L68 34 L74 22 L78 36 L84 28 L86 46 C78 38 68 35 60 35 C50 35 40 38 34 46Z" fill="url(#hair)"/>` };
   if (HAIR[c.hair]) o.push(HAIR[c.hair]);
-  const EY = { dot: '<circle cx="50" cy="55" r="3.2" fill="#111"/><circle cx="70" cy="55" r="3.2" fill="#111"/>', happy: '<path d="M45 56 Q50 50 55 56 M65 56 Q70 50 75 56" stroke="#111" stroke-width="2.6" fill="none" stroke-linecap="round"/>',
+  const BR = { natural: '<path d="M43 47 Q50 43 56 47 M64 47 Q70 43 77 47" stroke="#35251d" stroke-width="2" fill="none" stroke-linecap="round"/>', bold: '<path d="M42 47 Q50 41 57 46 M63 46 Q70 41 78 47" stroke="#211712" stroke-width="4" fill="none" stroke-linecap="round"/>', angled: '<path d="M42 45 L57 49 M63 49 L78 45" stroke="#211712" stroke-width="3" fill="none" stroke-linecap="round"/>' }; if (BR[c.brow]) o.push(BR[c.brow]);
+  const EY = { dot: `<circle cx="50" cy="55" r="3.2" fill="${eyeColor}" stroke="#111827" stroke-width=".8"/><circle cx="70" cy="55" r="3.2" fill="${eyeColor}" stroke="#111827" stroke-width=".8"/>`, happy: '<path d="M45 56 Q50 50 55 56 M65 56 Q70 50 75 56" stroke="#111" stroke-width="2.6" fill="none" stroke-linecap="round"/>',
     sleepy: '<path d="M45 55 L55 55 M65 55 L75 55" stroke="#111" stroke-width="2.6" stroke-linecap="round"/>', wink: '<circle cx="50" cy="55" r="3.2" fill="#111"/><path d="M65 56 Q70 51 75 56" stroke="#111" stroke-width="2.6" fill="none" stroke-linecap="round"/>',
-    wide: '<circle cx="50" cy="55" r="5" fill="#fff"/><circle cx="70" cy="55" r="5" fill="#fff"/><circle cx="51" cy="56" r="2.6" fill="#111"/><circle cx="71" cy="56" r="2.6" fill="#111"/>',
+    wide: `<circle cx="50" cy="55" r="5" fill="#fff"/><circle cx="70" cy="55" r="5" fill="#fff"/><circle cx="51" cy="56" r="2.6" fill="${eyeColor}"/><circle cx="71" cy="56" r="2.6" fill="${eyeColor}"/>`,
     star: '<g fill="#facc15">' + [50, 70].map(x => `<path d="M${x} 49 L${x + 1.8} 53.5 L${x + 6} 54 L${x + 2.8} 57 L${x + 3.8} 61.5 L${x} 59 L${x - 3.8} 61.5 L${x - 2.8} 57 L${x - 6} 54 L${x - 1.8} 53.5Z"/>`).join('') + '</g>' };
   o.push(EY[c.eyes] || EY.dot);
+  if (c.mark === 'freckles') o.push('<g fill="#6b3d22" opacity=".72">' + [43,48,53,67,72,77].map(x=>`<circle cx="${x}" cy="61" r=".8"/>`).join('') + '</g>');
+  if (c.mark === 'scar') o.push('<path d="M72 39 L64 47 L70 50 L63 58" stroke="#9f4b45" stroke-width="2.5" fill="none" stroke-linecap="round"/>');
+  if (c.mark === 'war-paint') o.push('<path d="M38 51 L53 58 L50 62 L36 56Z M82 51 L67 58 L70 62 L84 56Z" fill="#22d3ee" opacity=".85"/>');
+  if (c.piercing === 'nose-ring' || c.piercing === 'double-piercing') o.push('<circle cx="61" cy="63" r="2.8" fill="none" stroke="#e5e7eb" stroke-width="1.5"/><circle cx="61" cy="63" r="1" fill="#fbbf24"/>');
+  if (c.piercing === 'ear-studs' || c.piercing === 'double-piercing') o.push('<circle cx="33" cy="61" r="2.1" fill="#fbbf24" stroke="#fff" stroke-width=".6"/><circle cx="87" cy="61" r="2.1" fill="#fbbf24" stroke="#fff" stroke-width=".6"/>');
   const MO = { smile: '<path d="M51 68 Q60 75 69 68" stroke="#111" stroke-width="2.6" fill="none" stroke-linecap="round"/>', grin: '<path d="M50 66 Q60 78 70 66Z" fill="#111"/><path d="M52 67 L68 67" stroke="#fff" stroke-width="2.4"/>',
     flat: '<path d="M52 69 L68 69" stroke="#111" stroke-width="2.6" stroke-linecap="round"/>', open: '<ellipse cx="60" cy="69" rx="6" ry="5" fill="#111"/>', smirk: '<path d="M52 69 Q62 72 69 65" stroke="#111" stroke-width="2.6" fill="none" stroke-linecap="round"/>' };
   o.push(MO[c.mouth] || MO.smile);
