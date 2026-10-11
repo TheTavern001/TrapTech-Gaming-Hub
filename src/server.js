@@ -73,7 +73,7 @@ function verify(secret, token) {
 function clientIp(req) {
   const cf = String(req.headers['cf-connecting-ip'] || '').trim();
   // Only honor Cloudflare's client-IP header when the operator explicitly confirms that direct origin access is blocked.
-  if (process.env.TRUST_CF_IP === '1' && require('net').isIP(cf)) return cf;
+  if (proxyHops > 0 && process.env.TRUST_CF_IP === '1' && require('net').isIP(cf)) return cf;
   return String(req.ip || req.socket && req.socket.remoteAddress || '').trim();
 }
 function ipHash(req) { return crypto.createHash('sha256').update(cfg.IP_SALT + clientIp(req)).digest('hex').slice(0, 16); }
