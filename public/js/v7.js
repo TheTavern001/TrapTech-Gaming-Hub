@@ -18,7 +18,7 @@ const SP_KEY = 'gh_sponsor_draft';
 function sponsorPage(url) {
   const { icon, esc } = C;
   return catalog().then((cat) => {
-    if (!cat) return C.shell('/sponsor', C.emptyState('triangle-alert', 'Could not load the sponsor form', 'Please try again in a moment.'));
+    if (!cat) return C.shell('/sponsor', C.emptyState('triangle-alert', 'Could not load Book a Giveaway', 'Please try again in a moment.'));
     let saved = {}; try { saved = JSON.parse(C.ls.getItem(SP_KEY) || '{}'); } catch {}
     const B = { picked: saved.picked || { base: 1, weeks: 1 }, business_type: saved.business_type || '', licensed: false, brand: saved.brand || '', contact_name: saved.contact_name || '', potato: saved.potato || (C.S.me ? (C.S.me.potato || '') : ''), email: saved.email || '', start_date: saved.start_date || '', end_date: saved.end_date || '', details: saved.details || '', notes: saved.notes || '', prize: saved.prize || '', brand_color: saved.brand_color || '#22d3ee', games: saved.games || [], competition: saved.competition || 'best', length_days: saved.length_days || '7', step: 1 };
     const COMP = { best: 'Highest single score', total: 'Total of best scores (several games)', random: 'Random draw among qualifying players' };
