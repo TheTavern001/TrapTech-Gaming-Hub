@@ -34,7 +34,7 @@ jobs:
           node - <<'NODE' >> "$GITHUB_OUTPUT"
           const { games } = require('./src/games-lib');
           const batches = [];
-          const size = 8;
+          const size = 4;
           for (let i = 0; i < games.length; i += size) {
             batches.push({ name: `batch-${String(i / size + 1).padStart(2, '0')}`, slugs: games.slice(i, i + size).map(g => g.slug).join(',') });
           }
