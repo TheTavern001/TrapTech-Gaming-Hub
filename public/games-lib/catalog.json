@@ -615,7 +615,7 @@
     {
       "id": "gl-rail-rush",
       "slug": "rail-rush",
-      "title": "Rail Rush",
+      "title": "Subway Surfers Hub Version",
       "ref_internal": "Subway Surfers",
       "category": "Endless Runners",
       "lib": true,
@@ -799,7 +799,7 @@
     {
       "id": "gl-sling-siege",
       "slug": "sling-siege",
-      "title": "Sling Siege",
+      "title": "Angry Birds 2 Hub Version",
       "ref_internal": "Angry Birds 2",
       "category": "Physics & Destruction",
       "lib": true,
@@ -937,8 +937,8 @@
     {
       "id": "gl-cube-horde",
       "slug": "cube-horde",
-      "title": "Cube Horde",
-      "ref_internal": "Zombie Cubes",
+      "title": "Zombie Cubes Classic Hub Version",
+      "ref_internal": "Zombie Cubes Classic",
       "category": "Survival & Horde",
       "lib": true,
       "playable": true,

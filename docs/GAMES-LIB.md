@@ -25,14 +25,14 @@
 | 11 | Brick Blitz | Breakout | Specialty | A+ | endless | built | Bricks 10-50 x combo, wall bonus | 260 | Not freshly verified |
 | 12 | Rock Buster | Asteroids | Arcade Shooters | A+ | endless | built | Rocks 20/50/100, UFO 300 | 180 | Not freshly verified |
 | 13 | Star Swarm | Galaga | Arcade Shooters | A+ | endless | built | Bugs 50-160 (diving x2), stage bonus | 200 | Not freshly verified |
-| 14 | Rail Rush | Subway Surfers | Endless Runners | A+ | endless | built | Distance x multiplier (1-5 from coins, x2 power-up) + coins 10 x multiplier, power-ups 25 | 900 | Not freshly verified |
+| 14 | Subway Surfers Hub Version | Subway Surfers | Endless Runners | A+ | endless | built | Distance x multiplier (1-5 from coins, x2 power-up) + coins 10 x multiplier, power-ups 25 | 900 | Not freshly verified |
 | 15 | Ruin Runner | Temple Run 2 | Endless Runners | A+ | endless | built | Distance + gems 10 | 60 | Not freshly verified |
 | 16 | Hill Hauler | Hill Climb Racing | Driving | A+ | endless | built | Distance in m + coins 5 | 40 | Not freshly verified |
 | 17 | Most Wanted Run | Smashy Road: Wanted 2 | Driving | A+ | endless | built | Survival time x heat + wrecked cops 50 | 60 | Not freshly verified |
-| 18 | Sling Siege | Angry Birds 2 | Physics & Destruction | A+ | endless-levels | built | Blocks 10-50, targets 500, shots left 1000 | 400 | Not freshly verified |
+| 18 | Angry Birds 2 Hub Version | Angry Birds 2 | Physics & Destruction | A+ | endless-levels | built | Blocks 10-50, targets 500, shots left 1000 | 400 | Not freshly verified |
 | 19 | Lawn Guard | Plants vs. Zombies | Tower Defense | A+ | endless-waves | built | Zombies 10-50, wave bonus 100 x wave | 60 | Not freshly verified |
 | 20 | Pop Defense | Bloons TD 6 | Tower Defense | A+ | endless-waves | built | Layer pops 1, wave bonus 25 x wave | 120 | Not freshly verified |
-| 21 | Cube Horde | Zombie Cubes | Survival & Horde | A+ | endless | built | Kills 10-50 x combo, wave bonus | 120 | Not freshly verified |
+| 21 | Zombie Cubes Classic Hub Version | Zombie Cubes Classic | Survival & Horde | A+ | endless | built | Kills 10-50 x combo, wave bonus | 120 | Not freshly verified |
 | 22 | Arrow Hero | Archero | Survival & Horde | A | endless | built | Kill 25, boss 1000, room clear 100 x room | 400 | Not freshly verified |
 | 23 | Night Shift | 20 Minutes Till Dawn | Survival & Horde | A | endless | built | Kills 10-500 by monster + wave bonus | 400 | Not freshly verified |
 | 24 | Grid Wars | Geometry Wars | Survival & Horde | A+ | endless | built | Enemies 25-150 x multiplier | 400 | Not freshly verified |

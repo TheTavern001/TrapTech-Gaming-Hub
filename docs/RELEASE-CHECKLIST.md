@@ -19,6 +19,15 @@ Candidate branch: `release/consolidated-v1`; PR [#2](https://github.com/TheTaver
 
 This checklist deliberately covers the main Hub application as well as the Games Library. The feature work already present on `v7-wip` must not be lost while merging the library rebuild.
 
+
+## User-approved design corrections — blocking
+
+- [ ] Customer-facing booking is named **Book a Giveaway** throughout; remove the misleading **Sponsor a Host** framing and explain that Trap Tech creates/manages the official giveaway.
+- [ ] Giveaway team selection must clearly distinguish a Hub team affiliation from connecting the user's own external channel. Team switching is immediate; switching closes active entries in the previous team's members-only giveaways.
+- [ ] Avatar Studio must retain the approved collectible player-card direction and provide deep customization; current editor now has 17 categories, but the full visual/profile pass still needs visual verification.
+- [ ] **Game art and gameplay are not release-ready merely because the catalog count is 150.** User requires recognizable titles labeled as *Hub Version* when they are independent adaptations, meaningfully different gameplay (not reskinned copies), high-quality visuals, score/leaderboard integration, mobile controls and anti-cheat. The 50-title Arcade Pack currently uses nine shared mechanic families and must be individually redesigned/replaced before it can be treated as finished.
+- [ ] Keep production unchanged until the unique-game visual rebuild, full desktop/mobile review, score integrity, licensing and booking/official-event gates are complete.
+
 ## Hub shell and navigation
 
 - [x] Keep the current `v7-wip` base as the pull request target; do not replace the Hub shell with a standalone game-only site.

@@ -367,14 +367,15 @@ function client() {
   const DBP = require(path.join(__dirname, '..', 'src', 'config.js')).DB_PATH; const sdb = new (require('better-sqlite3'))(DBP);
   const play = async (cl, game, score, wait = 1200, extra = {}) => { let x; const event = extra.event; extra = { ...extra }; delete extra.event; for (let k = 0; k < 6; k++) { x = await cl('/api/run/start', { body: { game_id: game, event } }); if (x.status !== 429) break; await sleep(12000); } if (!x.body.ok) return x; const tk = x.body.token; const seed = x.body.seed; if (wait) await sleep(wait); const body = { token: tk, score, coins: 0, duration_ms: wait, tel: { n: 12, mean: 310, sd: 95, min: 120 }, ...extra }; for (let k = 0; k < 6; k++) { x = await cl('/api/score', { body }); if (x.status !== 429 || x.body.rejected) break; await sleep(12000); } x.seed = seed; return x; };
   console.log('# v7: brands (one per player) + paid link placements');
-  r = await anon('/api/brands'); ok(r.body.ok && Array.isArray(r.body.brands) && r.body.cooldown_days === 30, 'public brand list');
+  r = await anon('/api/brands'); ok(r.body.ok && Array.isArray(r.body.brands) && r.body.cooldown_days === 0, 'public brand list with immediate team switching');
   for (const p of ['/api/channels', '/api/channels/terp-tavern', '/api/me/channels']) { r = await anon(p); ok(r.status === 404, `${p} removed`); }
   r = await ADM('/api/admin/channels', { body: { name: 'E2E Brand', slug: 'e2e-brand', link_url: 'https://example.com/brand', link_label: 'Shop' } }); ok(r.body.ok, 'admin creates a brand'); const chE = r.body.id;
   r = await ADM('/api/admin/channels', { body: { name: 'E2E Basic', slug: 'e2e-basic', link_url: 'https://example.com/basic' } }); const chB = r.body.id;
   r = await ADM('/api/admin/channels', { body: { name: 'Bad', link_url: 'http://insecure.example' } }); ok(r.status === 400, 'brand link must be https');
   r = await ADM('/api/admin/brands'); const invE = (r.body.brands.find(b => b.id === chE) || {}).invite_code; ok(/^[A-Z2-9]{8}$/.test(invE || ''), 'new brand gets an invite code');
   r = await C('/api/me/brand', { body: { code: invE, via: 'link' } }); ok(r.body.ok && r.body.brand.slug === 'e2e-brand', 'player joins the brand via its invite code');
-  r = await C('/api/me/brand', { body: { code: 'e2e-basic' } }); ok(r.status === 400 && /30 days/.test(r.body.error), 'switching again within 30 days is refused');
+  r = await C('/api/me/brand', { body: { code: 'e2e-basic' } }); ok(r.body.ok && r.body.switched && r.body.brand.slug === 'e2e-basic', 'switching giveaway teams is immediate');
+  r = await C('/api/me/brand', { body: { code: invE } }); ok(r.body.ok && r.body.switched && r.body.brand.slug === 'e2e-brand', 'player can switch back to the intended giveaway team');
 
   console.log('# v5: eligibility + explicit entries (anti-camping)');
   const t5 = Date.now();

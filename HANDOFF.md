@@ -6,6 +6,13 @@
 
 Deploy steps are in **FINALIZE.md**. Host details and backups are in **DEPLOY-DEPLEXO.md**. Phase-by-phase proof is in **PROGRESS-V7.md**.
 
+
+## Latest user corrections (2026-10-11)
+- Booking is **Book a Giveaway**, not “Sponsor a Host”; the public flow should explain official setup/management by Trap Tech and optional add-ons without obscuring the main booking.
+- The Settings “Your giveaway team” card is Hub giveaway affiliation, not an external-channel connector. Explain that distinction. Team changes are immediate; switching closes active entries in the prior team's members-only giveaways.
+- Avatar Studio must continue the approved collectible player-card design and offer detailed character customization. The current 17-category editor is an incremental improvement, not proof of final visual approval.
+- The user rejects generic reskins and low-quality placeholder graphics. Recognizable adaptations should use “Hub Version” naming, genuinely different gameplay loops, polished art, mobile support, validated scores, anti-cheat and license-cleared assets. The 50 Arcade Pack entries built from nine shared mechanic families are not a finished substitute for 50 distinct games. Do not merge/deploy until the quality bar and all release gates pass.
+
 ## What v7 adds
 - **Games:** `/games` is the single unified searchable catalog; the homepage rotates a catalog title into the weekly spotlight. The separate `/games-lib/` reference page remains available for detailed category/eligibility browsing, but there is no separate core-game tier in the product model. Catalog flags are not certification of gameplay, event eligibility, anti-cheat, or licensing.
 - **Anti-cheat levels 1-4** (`docs/ANTI-CHEAT.md`): obvious-max caps; session/rate checks; validation of the event log; deterministic server replay.

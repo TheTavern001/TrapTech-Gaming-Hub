@@ -15,7 +15,7 @@ const cents = (d) => Math.round(d * 100);
 // unit: 'flat' (once), 'week' (per week, qty = weeks), 'each' (qty = how many). min/max bound the qty a sponsor can pick.
 // price = admin-only seed in cents (from the v5 tier + add-on prices). place = giveaway placement the feature unlocks.
 const FEATURES = [
-  { id: 'base', group: 'Giveaway basics', name: 'Hosted giveaway (required)', desc: 'Your giveaway set up by Trap Tech on the Giveaways page: brand name, prize photo, official rules, 1 linked game, 1 winner, entrant list when it ends.', unit: 'flat', required: true, price: cents(49) },
+  { id: 'base', group: 'Giveaway basics', name: 'Official giveaway setup (required)', desc: 'Trap Tech creates the official giveaway page with your brand name, prize details, official rules, one linked game, one winner and an entrant list when it ends.', unit: 'flat', required: true, price: cents(49) },
   { id: 'weeks', group: 'Giveaway basics', name: 'Giveaway length', desc: 'How many weeks your giveaway runs (1 week is included).', unit: 'week', min: 1, max: 8, dflt: 1, free: 1, price: cents(25) },
   { id: 'games', group: 'Giveaway basics', name: 'Extra linked games', desc: 'Runs in more games count toward your giveaway (multi-game).', unit: 'each', min: 1, max: 15, dflt: 2, price: cents(15) },
   { id: 'giveaways', group: 'Giveaway basics', name: 'Extra giveaways in the same campaign', desc: 'Run more than one giveaway (for example a weekly prize) inside your dates.', unit: 'each', min: 1, max: 5, dflt: 1, price: cents(35) },
@@ -23,9 +23,9 @@ const FEATURES = [
   { id: 'weekly-winners', group: 'Winners & rules', name: 'Weekly leaderboard winners', desc: 'Extra winners from each week\'s leaderboard while the giveaway runs.', unit: 'flat', price: cents(49) },
   { id: 'entry-rules', group: 'Winners & rules', name: 'Custom entry rules', desc: 'Minimum score, recent activity or account-age rules to stop giveaway camping.', unit: 'flat', price: cents(19) },
   { id: 'open-to-all', group: 'Winners & rules', name: 'Open to every hub player', desc: 'By default only players affiliated with your brand can enter. Ask for a hub-wide giveaway open to everyone (admin approves).', unit: 'flat', price: cents(59), place: 'open' },
-  { id: 'featured', group: 'Placement & reach', name: 'Home page Featured row', desc: 'Your giveaway in the Featured row on the Home page (shared fairly with other sponsors).', unit: 'week', min: 1, max: 8, dflt: 1, price: cents(49), place: 'featured' },
+  { id: 'featured', group: 'Placement & reach', name: 'Home page Featured row', desc: 'Your giveaway in the Featured row on the Home page (shared fairly between active giveaways).', unit: 'week', min: 1, max: 8, dflt: 1, price: cents(49), place: 'featured' },
   { id: 'hero', group: 'Placement & reach', name: 'Home hero takeover', desc: 'The big banner at the top of Home. Only one runs at a time, booked by date.', unit: 'week', min: 1, max: 4, dflt: 1, price: cents(99), place: 'hero' },
-  { id: 'push', group: 'Placement & reach', name: 'Push / in-app alert blast', desc: 'One alert to every player who opted in. Max one blast per day across all sponsors.', unit: 'each', min: 1, max: 4, dflt: 1, price: cents(79) },
+  { id: 'push', group: 'Placement & reach', name: 'Push / in-app alert blast', desc: 'One alert to every player who opted in. Max one blast per day across all giveaways.', unit: 'each', min: 1, max: 4, dflt: 1, price: cents(79) },
   { id: 'reminder', group: 'Placement & reach', name: 'Final-week reminder alert', desc: 'A second alert in the last week of your giveaway.', unit: 'flat', price: cents(29) },
   { id: 'member-alert', group: 'Placement & reach', name: 'Launch alert to your brand members', desc: 'An in-app alert to the players affiliated with your brand when it goes live.', unit: 'flat', price: cents(19) },
   { id: 'tournament', group: 'Placement & reach', name: 'Featured tournament', desc: 'A timed tournament (leaderboard cup or bracket) with your brand name, listed on Tournaments.', unit: 'each', min: 1, max: 4, dflt: 1, price: cents(99) },
@@ -154,7 +154,7 @@ function setStatus(id, status, by) {
   db.prepare('UPDATE bookings SET status=? WHERE id=?').run(bs, id);
   return { ok: true, request: adminView(db.prepare('SELECT * FROM bookings WHERE id=?').get(id)) };
 }
-// what the sponsor sees on the status page (prices only once a quote has been SENT)
+// what the customer sees on the status page (prices only once a quote has been SENT)
 function sponsorView(b) {
   const q = quoteRow(b.id); const shown = q && ['sent', 'accepted', 'declined', 'paid'].includes(q.status);
   const pk = PK.getPackages();
@@ -180,7 +180,7 @@ const publicCatalog = () => ({ groups: GROUPS, features: FEATURES.map(f => ({ id
 module.exports = function sponsor(app, A, h) {
   const { now, bad, currentUser, str, limiter, logActivity, ipHash } = h;
   h.placementsOf = placementsOf;
-  app.get('/api/sponsor/catalog', (req, res) => { const pk = PK.getPackages(); res.json({ ok: true, ...publicCatalog(), business_types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE, potato_handle: pk.potato_handle, faq: (pk.faq || []).filter(f => !/pay|price|cost/i.test(f[0]) && !/\$\d|\b(basic|premium|elite|tiers?)\b/i.test(f.join(' '))).concat([['When do I pay?', 'Not now. A request is free. Trap Tech looks at the features you picked and sends you a quote on your private status page. You only pay after you accept it, settled with Trap Tech Solutions on Potato.']]) }); });
+  app.get('/api/sponsor/catalog', (req, res) => { const pk = PK.getPackages(); res.json({ ok: true, ...publicCatalog(), business_types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE, potato_handle: pk.potato_handle, faq: (pk.faq || []).filter(f => !/pay|price|cost/i.test(f[0]) && !/\$\d|\b(basic|premium|elite|tiers?)\b/i.test(f.join(' '))).concat([['When do I pay?', 'Not now. A request is free. Trap Tech reviews your giveaway details and any optional add-ons, then sends a quote to your private status page. You only pay after you accept it, settled with Trap Tech Solutions on Potato.']]) }); });
   const create = (req, res) => {
     const b = req.body || {};
     const brand = str(b.brand, 120); const email = str(b.email, 160).toLowerCase(); const potato = str(b.potato, 40).replace(/^@/, '');
@@ -215,7 +215,7 @@ module.exports = function sponsor(app, A, h) {
     const q = quoteRow(b.id); if (!q || q.status !== 'sent') return bad(res, 409, 'There is no open quote to answer.');
     if (q.valid_until && q.valid_until < now()) return bad(res, 409, 'This quote has expired. Ask Trap Tech for a fresh one.');
     const r = setStatus(b.id, req.params.act === 'accept' ? 'accepted' : 'declined', 'sponsor');
-    logActivity('booking', `Sponsor ${req.params.act}ed quote: ${b.brand}`, null, b.id);
+    logActivity('booking', `Giveaway booking ${req.params.act}ed quote: ${b.brand}`, null, b.id);
     res.json({ ok: r.ok, request: sponsorView(db.prepare('SELECT * FROM bookings WHERE id=?').get(b.id)) });
   });
   // ---------- admin ----------
