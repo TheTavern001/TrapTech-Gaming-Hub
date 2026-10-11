@@ -244,7 +244,8 @@ function validate(c, opts = {}) {
   c.prizes.forEach((p, i) => { if (!p.name) E_('prizes', `prize-${i}`, `Prize ${i + 1} needs a name.`); });
   if (c.prizes.some(p => p.type === 'points') && c.prizes.every(p => p.type === 'points')) W('prizes', 'Points-only prizes are cosmetic; the rules still state no cash value.');
   const pl = plan(c); if (pl.winners > 1000) E_('prizes', 'qty', 'At most 1,000 winners.');
-  if (c.entry.regions_mode !== 'all' && !c.entry.regions.length) E_('entry', 'regions', 'Pick at least one state for the allow / exclude list.');\n  if (c.entry.checklist.some(x => !x.label)) E_('entry', 'checklist', 'Every checklist step needs a label.');
+  if (c.entry.regions_mode !== 'all' && !c.entry.regions.length) E_('entry', 'regions', 'Pick at least one state for the allow / exclude list.');
+  if (c.entry.checklist.some(x => !x.label)) E_('entry', 'checklist', 'Every checklist step needs a label.');
   if (c.features.hidden_board && c.features.live_standings) W('features', 'Live standings are off while the leaderboard is hidden.');
   if ((c.features.link_giveaway || c.features.link_channel || c.features.link_game || c.features.link_announcement) && !c.features.link_url) E_('features', 'link_url', 'Sponsor link placements need an https:// link.');
   if (c.features.pinned_home) { const other = db.prepare("SELECT id, title FROM giveaways WHERE v7=1 AND placements LIKE '%hero%' AND active=1 AND end_at > ? AND id <> ? AND state IN ('live','scheduled','paused')").get(now(), opts.giveawayId || 0); if (other) W('features', `"${other.title}" already has the Home hero; the newest one shows first.`); }
