@@ -75,7 +75,7 @@ function stripePublicOriginOk() {
   try {
     const u = new URL(raw);
     return u.protocol === 'https:' && !u.username && !u.password && !u.search && !u.hash &&
-      (u.pathname === '/' || u.pathname === '') && u.origin === raw.replace(/\\/$/, '');
+      (u.pathname === '/' || u.pathname === '') && u.origin === raw.replace(/\/$/, '');
   } catch { return false; }
 }
 function checkoutState() {
