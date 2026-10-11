@@ -15,7 +15,7 @@ r e2e-anticheat tools/fresh-api.sh tools/e2e-anticheat.js
 r e2e-events tools/fresh-api.sh tools/e2e-events.js
 r e2e-tiebreak tools/fresh-api.sh tools/e2e-tiebreak.js
 r e2e-sponsor-brands env SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js
-r e2e-payments env BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 tools/fresh-api.sh tools/e2e-payments.js
+r e2e-payments env BTC_ADDRESS=32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 tools/fresh-api.sh tools/e2e-payments.js
 r e2e-stripe node tools/e2e-stripe.js
 r e2e-avatars tools/fresh-api.sh tools/e2e-avatars.js
 r e2e-timers node tools/e2e-timers.js
