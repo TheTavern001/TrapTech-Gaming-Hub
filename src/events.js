@@ -49,10 +49,14 @@ function find(ref) {
   return db.prepare('SELECT * FROM giveaways WHERE event_code=?').get(norm(ref)) || null;
 }
 const gamesOf = (id) => db.prepare('SELECT game_id FROM giveaway_games WHERE giveaway_id=? ORDER BY rowid').all(id).map(r => r.game_id);
+// A booking-backed official event must not run until payment is explicitly confirmed.
+// Legacy non-booking events stay unaffected; owner-approved comped bookings are allowed.
+const bookingPaymentCleared = (g) => !g || !g.booking_id || ['paid', 'comped'].includes(String(g.payment_status || '').toLowerCase());
 function status(g, t = Date.now()) {
   if (!g) return 'missing';
   if (g.state === 'cancelled') return 'cancelled';
   if (g.archived) return 'archived';
+  if (!bookingPaymentCleared(g)) return 'unpaid';
   if (!g.active || g.state === 'paused') return g.state === 'paused' ? 'paused' : 'draft';
   if (t < g.start_at) return 'scheduled';
   if (t >= g.end_at || g.finalized_at) return 'ended';
@@ -85,6 +89,7 @@ function checkSubmit(req, user, row, tok, t = Date.now()) {
   if (t - row.started_at > EVENT_TOKEN_TTL_MS) return { status: 400, error: 'Event run token expired.' };
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(row.event_id);
   if (!g) return { status: 404, error: 'That is not an official Gaming Hub event.' };
+  if (!bookingPaymentCleared(g)) return { status: 403, error: 'This event booking payment is not confirmed.', demote: true };
   // ended (or a run that outlived its event): the run is kept as a free-play run, never as an event entry
   if (t >= g.end_at) return { status: 403, error: 'This event has ended.', demote: true };
   const st = status({ ...g, finalized_at: null }, Math.min(t, g.end_at - 1));
@@ -108,6 +113,7 @@ function routes(app, A, H) {
   });
   app.get('/api/event/:code', (req, res) => {
     const g = find(req.params.code); if (!g || /^\d+$/.test(req.params.code)) return res.status(404).json({ ok: false, error: 'That is not an official Gaming Hub event.', notice: NOTICE });
+    if (!bookingPaymentCleared(g)) return res.status(404).json({ ok: false, error: 'This event is unavailable.', notice: NOTICE });
     const R = require('./results'); const rows = (H.giveawayEntrants ? H.giveawayEntrants(g) : R.liveStandings(g)).slice(0, 100)
       .map(r => ({ rank: r.rank, username: r.username, score: r.score, cos: r.cos, avatar: r.avatar }));
     res.json({ ok: true, notice: NOTICE, event: eventPublic(g), board: rows, board_label: label(g) });
