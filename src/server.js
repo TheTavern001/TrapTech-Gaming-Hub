@@ -390,7 +390,7 @@ app.get('/api/profile/:username', (req, res) => {
   const me = currentUser(req);
   // catch up on achievements that depend on things other people did (giveaway draws, leaderboard moves)
   const unlocked = me && me.id === u.id ? ach.evaluate(u.id).fresh : [];
-  res.json({ ok: true, profile: { ...profileFor(u), ...H.profileExtras(u, me), user_id: publicPlayerId(u.id), founder: isFounder(u.id), identity_badge: isFounder(u.id) ? 'FOUNDER' : null }, is_me: !!(me && me.id === u.id), unlocked, version: HUB_VERSION });
+  res.json({ ok: true, profile: { ...profileFor(u), ...H.profileExtras(u, me) }, is_me: !!(me && me.id === u.id), unlocked, version: HUB_VERSION });
 });
 
 // ---------- achievements & cosmetics ----------
