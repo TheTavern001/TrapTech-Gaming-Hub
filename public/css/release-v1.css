@@ -324,3 +324,11 @@ table.lb .rk{font-weight:900;color:var(--release-gold)}
 .avatar-card-record b{font-size:.82rem;line-height:1.25;color:#f3f5ff;overflow-wrap:anywhere}
 .avatar-card-record>div:nth-child(3) b{color:var(--rarity);font-size:.72rem}
 @media(max-width:420px){.avatar-card-record{gap:5px;padding-inline:8px}.avatar-card-record>div{padding:8px}.avatar-card-record span{font-size:.44rem}}
+
+
+/* Real-time 3D collectible character in Avatar Studio; SVG is retained only as an error fallback. */
+.avatar-3d-canvas{position:relative;z-index:2;display:block;width:100%;height:300px;max-width:100%;pointer-events:none;filter:drop-shadow(0 22px 24px #0008)}
+.avatar-card-art:has(.avatar-3d-canvas){background:radial-gradient(ellipse at 50% 72%,rgba(139,92,246,.25),transparent 52%),radial-gradient(ellipse at 50% 20%,rgba(34,211,238,.12),transparent 54%)}
+.avatar-card-art #av-prev{position:absolute;z-index:2;width:min(78%,280px);height:auto;aspect-ratio:1;object-fit:contain}
+@media(max-width:860px){.avatar-3d-canvas{height:290px}}
+@media(max-width:480px){.avatar-3d-canvas{height:250px}}
