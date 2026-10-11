@@ -8,12 +8,13 @@ const PX_ICON = { 'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair
 export function prestigeArt(id, fx, size = 120) { return `<div class="px-art ${FX_CLASS[fx] || ''}" style="--s:${size}px" aria-hidden="true"><span class="px-glow"></span>${C.icon(PX_ICON[id] || 'gem')}<i></i><i></i><i></i></div>`; }
 async function storePage() {
   const { icon, esc, api, S } = C; const r = await api('/api/store'); if (!r.ok) return C.shell('/shop', C.emptyState('store', 'Store unavailable', 'Try again in a moment.'));
-  const co = r.checkout; const pass = S.me ? await api('/api/pass') : null;
-  const buy = (id, label) => co.enabled ? (S.me ? `<button class="btn sm" data-buy="${esc(id)}">${icon('wallet')} ${label}</button>` : `<a class="btn sm" href="/signin?next=/store">Sign in to buy</a>`) : `<button class="btn sm" disabled title="${esc(co.reason || '')}">${label}</button>`;
+  const co = r.checkout; const pass = S.me ? await api('/api/pass') : null; let paymentProvider = (co.methods || []).includes('bitcoin') ? 'bitcoin' : 'stripe';
+  const buy = (id, label) => co.enabled ? (S.me ? `<button class="btn sm" data-buy="${esc(id)}" data-provider="${paymentProvider}">${icon('wallet')} ${label}</button>` : `<a class="btn sm" href="/signin?next=/store">Sign in to buy</a>`) : `<button class="btn sm" disabled title="${esc(co.reason || '')}">${label}</button>`;
   C.shell('/shop', `<div class="narrow store">
     ${C.pageHead('Hub Store', 'Cosmetics only. Never a score, an entry or an edge.')}
     <div class="card pad na-note" id="non-advantage">${icon('shield-check')} <b>Cosmetic only.</b> ${esc(r.non_advantage)}</div>
     ${co.enabled ? '' : `<div class="card pad muted small" id="checkout-off">${icon('lock')} ${esc(co.reason || 'Checkout is not available right now.')}</div>`}
+    ${co.enabled ? `<div class="card pad payment-methods"><b>Payment method</b><div class="btn-row" role="group" aria-label="Payment method">${(co.methods || []).map(method => `<button type="button" class="btn sm ${method === paymentProvider ? 'on' : ''}" data-provider-choice="${method}" aria-pressed="${method === paymentProvider}">${method === 'bitcoin' ? icon('bitcoin') + ' Bitcoin (crypto)' : icon('credit-card') + ' Credit / debit card'}</button>`).join('')}</div><p class="tiny muted">Card details are handled by Stripe-hosted checkout. Bitcoin is paid directly to the configured receiving address.</p></div>` : ''}
     ${S.me ? `<p class="small">Your balance: <b id="crowns-bal">${C.fmt(r.crowns || 0)} Hub Crowns</b> <a href="/shop">Spend in the shop</a></p>` : ''}
     <div class="section-h"><h2>${icon('coins')} Hub Crowns</h2><span class="small muted">Spend on cosmetics and avatar items only</span></div>
     <div class="store-grid">${r.packs.map(p => `<div class="card pad st-pack"><b>${C.fmt(p.crowns + p.bonus)}</b><span class="small muted">Hub Crowns${p.bonus ? ` (incl. ${C.fmt(p.bonus)} bonus)` : ''}</span><div class="st-price">${usd(p.usd_cents)}</div>${buy(p.id, 'Buy')}</div>`).join('')}</div>
@@ -24,11 +25,12 @@ async function storePage() {
     <div class="store-grid px-grid">${r.prestige.map(p => `<div class="card pad px-card">${prestigeArt(p.id, p.fx)}<b>${esc(p.name)}</b><p class="small muted">${esc(p.blurb)}</p><div class="small">Numbered: ${p.issued} of ${p.supply} issued</div><div class="st-price">${usd(p.usd_cents)}</div>${p.issued >= p.supply ? '<span class="pill">Sold out</span>' : buy(p.id, 'Buy')}</div>`).join('')}</div>
     <details class="card pad small muted" style="margin-top:14px"><summary>Terms (draft)</summary><p>${esc(r.terms)}</p></details>
   </div>`, { title: 'Hub Store' });
-  document.querySelectorAll('[data-buy]').forEach(b => b.onclick = async () => { b.disabled = true; const x = await api('/api/store/orders', { method: 'POST', body: { product_id: b.dataset.buy } }); b.disabled = false; if (!x.ok) return C.toast(x.error); C.go('/store/order/' + x.order.ref); });
+  document.querySelectorAll('[data-provider-choice]').forEach(b => b.onclick = () => { paymentProvider = b.dataset.providerChoice; document.querySelectorAll('[data-provider-choice]').forEach(x => { const on = x.dataset.providerChoice === paymentProvider; x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); }); document.querySelectorAll('[data-buy]').forEach(x => x.dataset.provider = paymentProvider); });
+  document.querySelectorAll('[data-buy]').forEach(b => b.onclick = async () => { b.disabled = true; const x = await api('/api/store/orders', { method: 'POST', body: { product_id: b.dataset.buy, provider: b.dataset.provider } }); b.disabled = false; if (!x.ok) return C.toast(x.error); if (x.order.checkout_url) { window.location.assign(x.order.checkout_url); return; } C.go('/store/order/' + x.order.ref); });
   const pc = document.getElementById('pass-claim'); if (pc) pc.onclick = async () => { const x = await api('/api/pass/claim', { method: 'POST', body: {} }); C.toast(x.ok ? `Claimed ${x.claimed.length} reward${x.claimed.length === 1 ? '' : 's'}` : x.error); };
   const qc = document.getElementById('pq-claim'); if (qc) qc.onclick = async () => { const x = await api('/api/pass/quests/claim', { method: 'POST', body: {} }); C.toast(x.ok ? `Season ${x.season} pass unlocked!` : x.error); storePage(); };
 }
-const ST = { pending: 'Waiting for your payment', seen: 'Payment seen, waiting for a confirmation', confirming: 'Confirming on the blockchain', paid: 'Paid', granted: 'Delivered to your account', underpaid: 'Underpaid: we contacted the admin', expired: 'Quote expired', refunded: 'Refunded', sold_out_refund: 'Sold out: refund pending' };
+const ST = { pending: 'Waiting for your payment', failed: 'Payment could not be completed', seen: 'Payment seen, waiting for a confirmation', confirming: 'Confirming on the blockchain', paid: 'Paid', granted: 'Delivered to your account', underpaid: 'Underpaid: we contacted the admin', expired: 'Quote expired', refunded: 'Refunded', sold_out_refund: 'Sold out: refund pending' };
 async function orderPage(m) {
   const { icon, esc, api } = C; let poll = null;
   const draw = async (o) => {
@@ -36,7 +38,8 @@ async function orderPage(m) {
     C.shell('/shop', `<div class="narrow order" id="order">
       ${C.pageHead('Checkout', esc(o.product.name) + ' - ' + usd(o.usd_cents))}
       <div class="card pad"><div class="ord-st st-${esc(o.status)}" id="ord-status">${icon(o.status === 'granted' ? 'circle-check' : open ? 'clock' : 'circle-alert')} <b>${esc(ST[o.status] || o.status)}</b>${o.confs ? ` <span class="small muted">(${o.confs}/${o.need_confs} confirmations)</span>` : ''}</div>
-      ${o.status === 'pending' ? `<p>Send <b>exactly</b> this amount of Bitcoin to this address. The exact amount is how we recognise your payment, so do not round it.</p>
+      ${o.status === 'pending' && o.provider === 'stripe' ? `<p>Payment is processed on Stripe's secure hosted checkout. If you have not completed payment, continue below.</p><a class="btn" href="${esc(o.checkout_url || '')}">${icon('credit-card')} Continue to secure card checkout</a>` : ''}
+      ${o.status === 'pending' && o.provider !== 'stripe' ? `<p>Send <b>exactly</b> this amount of Bitcoin to this address. The exact amount is how we recognise your payment, so do not round it.</p>
         <div class="ord-qr">${o.qr_svg || ''}</div>
         <div class="field"><div class="lbl">Amount (BTC)</div><div class="copyrow"><code id="ord-amt">${esc(o.btc)}</code><button class="btn sm ghost" data-copy="${esc(o.btc)}">${icon('copy')} Copy</button></div></div>
         <div class="field"><div class="lbl">Address</div><div class="copyrow"><code id="ord-addr">${esc(o.address)}</code><button class="btn sm ghost" data-copy="${esc(o.address)}">${icon('copy')} Copy</button></div></div>
@@ -46,7 +49,7 @@ async function orderPage(m) {
       ${o.txid ? `<p class="small muted">Transaction: <code>${esc(o.txid)}</code></p>` : ''}
       ${o.flags.includes('overpaid') ? '<p class="small">You sent more than the quote. The admin will refund the difference.</p>' : ''}
       ${o.status === 'granted' ? `<a class="btn" href="/store">${icon('store')} Back to the store</a>` : ''}
-      <p class="tiny muted">Order ${esc(o.ref)}. Payments go straight to Trap Tech Solutions' own Bitcoin wallet; the Hub never holds keys or card details.</p></div></div>`, { title: 'Checkout' });
+      <p class="tiny muted">Order ${esc(o.ref)}. ${o.provider === 'stripe' ? 'Card details are entered on Stripe-hosted checkout; the Hub never stores card numbers.' : 'Bitcoin is sent to the configured receiving wallet; the Hub never holds private keys.'}</p></div></div>`, { title: 'Checkout' });
     document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(b.dataset.copy); C.toast('Copied'); });
     const tg = document.getElementById('txid-go'); if (tg) tg.onclick = async () => { const x = await api(`/api/store/orders/${o.ref}/check`, { method: 'POST', body: { txid: document.getElementById('txid').value.trim() } }); if (!x.ok) return C.toast(x.error); draw(x.order); };
   };
