@@ -22,6 +22,8 @@ assert.equal(cfg.entry.checklist[0].required, true);
 assert.equal(cfg.entry.checklist[0].attestation, true, 'external action is explicitly self-attested');
 assert.equal(cfg.entry.checklist[1].url, '', 'unsafe destinations must be removed');
 assert.equal(cfg.entry.checklist[1].required, false);
+const derived = G.derive({ ...cfg, basics: { ...cfg.basics, channel_id: null, hub_wide: true }, entry: { ...cfg.entry, age21: false, require_join: false, regions_mode: 'all', max_entrants: 0 } });
+assert.equal(derived.require_join, 1, 'required checklist steps must force explicit entry so server eligibility is enforced');
 const fs = require('node:fs');
 const read = (p) => fs.readFileSync(require('node:path').join(__dirname, '..', p), 'utf8');
 const eligibilitySource = read('src/eligibility.js');
