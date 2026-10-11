@@ -184,14 +184,15 @@ const FORMS = {
       <h3>Regions</h3><div class="seg-row">${[['all', 'All US states'], ['allow', 'Only these states'], ['exclude', 'All except these']].map(([k, l]) => `<label class="chip ${e.regions_mode === k ? 'on' : ''}"><input type="radio" name="rm" data-k="entry.regions_mode" value="${k}" data-rerender="1" ${e.regions_mode === k ? 'checked' : ''} hidden>${l}</label>`).join('')}</div>
       ${e.regions_mode !== 'all' ? `<div class="states">${M.regions.map(r => `<label class="st ${e.regions.includes(r) ? 'on' : ''}"><input type="checkbox" data-act="region" value="${r}" ${e.regions.includes(r) ? 'checked' : ''}>${r}</label>`).join('')}</div><small class="muted">Players confirm their state when they enter.</small>` : ''}
       <h3>Entry checklist</h3>
-      <p class="small muted">Players must confirm required steps before entering. External channel membership is self-attested unless a verified integration is connected.</p>
+      <p class="small muted">Required steps must be verified by the server. A player checkbox is never proof. Use automatic game-run verification for the built-in option; external membership/actions remain blocked until a trusted platform integration can verify them.</p>
       \${(e.checklist || []).map((step, i) => \`<div class="card pad sub"><div class="form-grid">
         \${field('Step ' + (i + 1), inp('entry.checklist.' + i + '.label', 'maxlength="120" placeholder="e.g. Join the linked channel"'))}
         \${field('Destination URL (optional)', inp('entry.checklist.' + i + '.url', 'maxlength="300" placeholder="https://..."'))}
+        <label class="field"><span>Verification method</span><select data-k="entry.checklist.\${i}.verify"><option value="external" \${step.verify !== 'hub_run' ? 'selected' : ''}>External action (blocked until trusted integration)</option><option value="hub_run" \${step.verify === 'hub_run' ? 'selected' : ''}>Automatic: valid game run during this giveaway</option></select></label>
       </div><div class="btn-row"><label class="small"><input type="checkbox" data-k="entry.checklist.\${i}.required" data-type="bool" \${step.required !== false ? 'checked' : ''}> Required</label>
       <button type="button" class="btn sm danger" data-act="checklist-rm" data-index="\${i}">Remove step</button></div></div>\`).join('')}
       <button type="button" class="btn sm" data-act="checklist-add" \${(e.checklist || []).length >= 8 ? 'disabled' : ''}>+ Add checklist step</button>
-      <div class="note-box">Checklist confirmations are not proof of external channel membership. Do not advertise them as verified.</div>
+      <div class="note-box">Security rule: required external steps do not pass on player confirmation. Connect an authenticated platform API/bot integration before making external membership a required condition.</div>
       <h3>Brand + sponsor</h3>${toggle('entry.brand_only', e.brand_only, 'Brand members only', S.d.basics.channel_id ? 'Same as "Who can enter" on Basics.' : 'Pick a brand on Basics first.', `data-rerender="1" ${S.d.basics.channel_id ? '' : 'disabled'}`)}
       ${toggle('entry.follow_sponsor', e.follow_sponsor, 'Require following the sponsor', 'This requires the player to be a member of the selected brand. It does not connect or transfer ownership of their personal channel.', `data-rerender="1" ${S.d.basics.channel_id ? '' : 'disabled'}`)}
       <h3>Bonus entries (random draws only)</h3>${toggle('entry.activity_weight', e.activity_weight, 'Activity entries', '1 entry + 1 more per 5 runs in the window (max 5).')}
