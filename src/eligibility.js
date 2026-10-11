@@ -96,7 +96,7 @@ function check(user, g, t = now()) {
       let verified = false;
       if (verify === 'hub_run') {
         const end = Number(g.end_at) || t;
-        verified = !!db.prepare('SELECT 1 FROM runs WHERE user_id=? AND is_demo=0 AND created_at>=? AND created_at<=? AND started_at>=? LIMIT 1')
+        verified = !!db.prepare('SELECT 1 FROM runs WHERE user_id=? AND is_demo=0 AND held=0 AND duration_ms>0 AND created_at>=? AND created_at<=? AND started_at>=? LIMIT 1')
           .get(u.id, Number(g.start_at) || 0, Math.min(t, end), Number(g.start_at) || 0);
       }
       const checked = verify === 'hub_run' ? verified : done.has(step.id);
