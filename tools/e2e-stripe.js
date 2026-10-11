@@ -183,6 +183,11 @@ async function sendEvent(base, event, sigOverride) {
     const refunded = db.prepare('SELECT * FROM store_orders WHERE id=?').get(order.id);
     ok(response.status === 200 && refunded.status === 'refunded' && M.crowns(userId) === 0,
       'signed full-refund event reverses the granted cosmetic entitlement', { status: refunded.status, crowns: M.crowns(userId) });
+    const firstRefundAt = refunded.refunded_at;
+    response = await sendEvent(base, refundEvent);
+    const refundedAgain = db.prepare('SELECT * FROM store_orders WHERE id=?').get(order.id);
+    ok(response.status === 200 && refundedAgain.refunded_at === firstRefundAt && M.crowns(userId) === 0,
+      'replayed full-refund webhook is idempotent and does not repeat entitlement reversal');
 
     const second = await M.createStripeOrder({ id: userId }, product.id);
     const secondRow = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(second.order.ref);
