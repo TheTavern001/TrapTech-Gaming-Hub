@@ -143,3 +143,48 @@ input:focus,select:focus,textarea:focus{border-color:rgba(72,230,255,.65);box-sh
 @media(max-width:760px){.home-redesign .home-intro{grid-template-columns:minmax(0,1fr);min-height:0;padding:25px 21px;border-radius:21px}.home-redesign .home-intro-mark{position:absolute;right:-54px;top:6px;width:180px;min-height:180px;opacity:.32;transform:scale(.82);pointer-events:none}.home-redesign .home-intro-copy{max-width:100%}.home-redesign .home-eyebrow{font-size:.58rem;letter-spacing:.1em}.home-redesign .home-intro h1{max-width:90%;font-size:clamp(1.8rem,8vw,2.65rem)}.home-redesign .home-intro-copy>p{max-width:95%;font-size:.9rem}.home-redesign .home-points{gap:9px 12px;margin-top:18px;font-size:.68rem}.home-redesign .hscroll{grid-auto-columns:minmax(155px,46%)}.home-redesign .feat-gw{grid-auto-columns:minmax(255px,84%)}.home-redesign .promo-grid{grid-template-columns:1fr;gap:10px}.home-redesign .promo-grid .ach-promo{min-height:0}}
 @media(max-width:420px){.home-redesign .home-intro-actions .btn{flex:1;padding:0 10px;font-size:.78rem}.home-redesign .home-points{display:grid;grid-template-columns:1fr}.home-redesign .home-intro-mark{right:-72px;opacity:.23}}
 @media(prefers-reduced-motion:reduce){.home-redesign .home-intro *{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* V1 launch audit — responsive containment pass.
+   Fixes long text, nested grid/flex overflow, mobile forms and embedded media without clipping content. */
+*,*::before,*::after{box-sizing:border-box}
+html{max-width:100%;overflow-x:clip}
+body{width:100%;max-width:100%;overflow-x:clip}
+#app,#main,.page,.narrow,.card,.card.pad,.banner,.section-h,.home-redesign,
+.av-ed,.av-prev,.av-grid,.store-grid,.game-grid,.games-grid,.giveaway-grid,
+.profile-grid,.settings-grid,.form-grid,.tabs,.tab-row,.row,.stack{min-width:0;max-width:100%}
+#main,.page,.narrow,.card,.card.pad,.banner,.prose,.muted,.small,.tiny,
+p,h1,h2,h3,h4,summary,label,legend,li,a,button,code,pre{
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+img,video,canvas,svg{max-width:100%}
+img,video{height:auto}
+pre,pre code{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+table{max-width:100%;border-collapse:collapse}
+.table-wrap,.table-scroll,.admin-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+input,select,textarea{min-width:0;max-width:100%}
+button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.section-h{display:flex;align-items:center;flex-wrap:wrap}
+.section-h>*{min-width:0}
+.form-grid,.av-grid,.store-grid,.game-grid,.games-grid,.giveaway-grid,.profile-grid,.settings-grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));
+}
+.av-tabs,.tabs{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}
+.av-opt{min-width:0;max-width:100%;white-space:normal}
+.av-opt img{display:block;max-width:100%;object-fit:contain}
+@media(max-width:480px){
+  .page{padding-left:12px;padding-right:12px}
+  .card.pad{padding:12px}
+  .section-h{align-items:flex-start}
+  .section-h h2{min-width:0;flex:1 1 100%}
+  .section-h>.btn,.section-h>a.btn{flex:1 1 auto}
+  .form-grid{grid-template-columns:minmax(0,1fr)}
+  .av-ed{grid-template-columns:minmax(0,1fr)!important}
+  .av-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .btn-row{flex-wrap:wrap}
+  .btn-row>*{min-width:0;max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .av-prev,.av-opt,.avatar-3d,.avatar-stage{animation:none!important;transition:none!important}
+}
