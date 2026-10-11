@@ -114,7 +114,7 @@
       }
       if (g.state === 'title' || g.state === 'starting') {
         c.fillStyle = 'rgba(3,5,15,.66)'; c.fillRect(0, 0, W, Hh);
-        const glow = c.createRadialGradient(W/2,Hh*.45,4,W/2,Hh*.45,Math.max(W,H)*.7); glow.addColorStop(0,'rgba(124,58,237,.26)'); glow.addColorStop(.5,'rgba(34,211,238,.08)'); glow.addColorStop(1,'rgba(3,5,15,0)'); c.fillStyle=glow;c.fillRect(0,0,W,Hh);
+        const glow = c.createRadialGradient(W/2,Hh*.45,4,W/2,Hh*.45,Math.max(W,Hh)*.7); glow.addColorStop(0,'rgba(124,58,237,.26)'); glow.addColorStop(.5,'rgba(34,211,238,.08)'); glow.addColorStop(1,'rgba(3,5,15,0)'); c.fillStyle=glow;c.fillRect(0,0,W,Hh);
         const px=W*.055, py=Hh*.235, pw=W*.89, ph=Hh*.55, card=c.createLinearGradient(px,py,px+pw,py+ph);card.addColorStop(0,'rgba(25,34,72,.97)');card.addColorStop(.55,'rgba(10,15,38,.96)');card.addColorStop(1,'rgba(6,9,24,.98)');
         K.rr(c,px,py,pw,ph,22);c.fillStyle=card;c.fill();c.strokeStyle='rgba(151,168,255,.36)';c.lineWidth=1.25;c.stroke();
         c.fillStyle='#4de5f7';c.fillRect(px+18,py+18,36,3);c.fillStyle='#a78bfa';c.fillRect(px+59,py+18,16,3);
@@ -126,7 +126,7 @@
       }
       if (g.state === 'over') {
         c.fillStyle=`rgba(3,5,15,${Math.min(.78,g.overT*1.6)})`;c.fillRect(0,0,W,Hh);
-        const glow=c.createRadialGradient(W/2,Hh*.44,5,W/2,Hh*.44,Math.max(W,H)*.62);glow.addColorStop(0,g.newBest?'rgba(255,209,102,.2)':'rgba(124,58,237,.2)');glow.addColorStop(1,'rgba(3,5,15,0)');c.fillStyle=glow;c.fillRect(0,0,W,Hh);
+        const glow=c.createRadialGradient(W/2,Hh*.44,5,W/2,Hh*.44,Math.max(W,Hh)*.62);glow.addColorStop(0,g.newBest?'rgba(255,209,102,.2)':'rgba(124,58,237,.2)');glow.addColorStop(1,'rgba(3,5,15,0)');c.fillStyle=glow;c.fillRect(0,0,W,Hh);
         const px=W*.08,py=Hh*.22,pw=W*.84,ph=Hh*.56,panel=c.createLinearGradient(px,py,px+pw,py+ph);panel.addColorStop(0,'rgba(25,34,72,.98)');panel.addColorStop(1,'rgba(6,9,24,.98)');K.rr(c,px,py,pw,ph,22);c.fillStyle=panel;c.fill();c.strokeStyle=g.newBest?'rgba(255,209,102,.6)':'rgba(151,168,255,.35)';c.lineWidth=1.3;c.stroke();
         txt(def.overText||(g.newBest?'NEW PERSONAL BEST':'RUN COMPLETE'),W/2,Hh*.31,Math.min(29,W*.085),g.newBest?'#ffdf83':'#e7ecff');if(g.why)txt(g.why,W/2,Hh*.31+29,12,'#aab7d8');
         txt(Math.floor(g.score).toLocaleString('en-US')+(def.unit?' '+def.unit:''),W/2,Hh*.445,37,'#ffffff');if(g.newBest)txt('✦ NEW BEST ✦',W/2,Hh*.49,13,'#ffdf83');
