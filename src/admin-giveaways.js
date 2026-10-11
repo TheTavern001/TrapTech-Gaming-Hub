@@ -264,7 +264,7 @@ function derive(c) {
     brand_color: f.branding ? c.media.accent : '', brand_logo: f.branding ? c.basics.sponsor_logo : '', featured: (f.featured || f.pinned_home) ? 1 : 0,
     min_score: c.games.min_score, prize_tiers: pl.tiers.join('\n').slice(0, 1000), win_method: pl.method === 'hybrid' ? 'hybrid' : pl.method, winner_count: pl.winners,
     channel_id: c.basics.channel_id || null, open_to_all: !c.basics.channel_id || c.basics.hub_wide ? 1 : 0, link_url: anyLink ? f.link_url : '', link_label: anyLink ? f.link_label : '',
-    require_join: ((c.basics.channel_id && !c.basics.hub_wide) || e.age21 || e.regions_mode !== 'all' || e.max_entrants) ? 1 : e.require_join, elig_min_runs7: e.elig_min_runs7, elig_min_xp7: e.elig_min_xp7, elig_account_age_days: e.elig_account_age_days, elig_max_active: e.elig_max_active,
+    require_join: ((c.basics.channel_id && !c.basics.hub_wide) || e.age21 || e.regions_mode !== 'all' || e.max_entrants || e.checklist.some(x => x.required !== false && x.label)) ? 1 : e.require_join, elig_min_runs7: e.elig_min_runs7, elig_min_xp7: e.elig_min_xp7, elig_account_age_days: e.elig_account_age_days, elig_max_active: e.elig_max_active,
     elig_win_cooldown_days: e.elig_win_cooldown_days, elig_brand_month: e.elig_brand_month, elig_followers_only: e.elig_followers_only,
     weight_mode: (e.activity_weight || e.quest_bonus.on || e.referral_bonus.on) && pl.method !== 'score' ? 'activity' : '',
     v7: 1, slug: c.basics.slug || null, score_rule: c.games.score_rule, score_top_n: c.games.top_n, min_runs: c.games.min_runs,
