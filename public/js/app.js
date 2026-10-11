@@ -1353,7 +1353,7 @@ route(/^\/terms$/, () => legal('/terms', 'Terms of Service', 'October 3, 2026', 
   <h2>7. Sponsors</h2><p>Sponsors can be any legitimate business or creator. Every sponsor must comply with all laws and regulations that apply to its business, products and advertising, and is responsible for its prizes as described on the giveaway page. Sponsors that sell cannabis products must be licensed and legally permitted to operate and advertise in their jurisdiction; Trap Tech does not accept unlicensed sellers. Sponsor content is for adults 21+ in locations where such content is legal.</p>
   <h2>8. Disclaimers & liability</h2><p>The Hub is provided "as is". To the extent allowed by law, ${OP} is not liable for indirect or consequential damages, lost data or service interruptions.</p>
   <h2>9. Changes</h2><p>We may update these Terms. We will post the new date above; continued use means you accept the update.</p>
-  <h2>10. Contact</h2><p>Questions? Contact ${OP} via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
+  <h2>10. Contact</h2><p>Questions? Contact ${OP} via the <a href="/sponsor">Book a Giveaway</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
 route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 3, 2026', `
   <p>${OP} operates The Gaming Hub. This policy explains what we collect and why.</p>
@@ -1363,7 +1363,7 @@ route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 3, 2026'
   <h2>Sharing</h2><p>We do not sell your data. When you win a giveaway we may share the details needed to deliver the prize with the sponsor brand.</p>
   <h2>Retention & deletion</h2><p>We keep data while your account is active. Ask us to delete your account at any time and we remove your profile, runs and related data.</p>
   <h2>Age</h2><p>The Hub is for adults 21+. We do not knowingly collect data from anyone under 21.</p>
-  <h2>Contact</h2><p>${OP} - via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
+  <h2>Contact</h2><p>${OP} - via the <a href="/sponsor">Book a Giveaway</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
 function rulesHTML(g) {
   if (GV7.rules(g)) return GV7.rules(g); // v7 builder giveaways carry their own Official Rules
