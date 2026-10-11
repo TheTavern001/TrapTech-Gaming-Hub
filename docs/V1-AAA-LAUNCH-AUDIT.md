@@ -71,11 +71,20 @@ Status: active pre-launch audit. The public launch is V1. Subsequent public rele
 
 ## Security/privacy hardening
 - [x] Add baseline browser security headers (nosniff, frame denial, referrer policy, restrictive permissions policy, cross-origin policies, HSTS on HTTPS).
+- [x] Remove public founder identity flags, stable internal Hub IDs, and external Potato handles from public profile/eligibility responses. Trap Tech Solutions remains the public operator brand.
 - [x] Remove deployment commit metadata from the public build endpoint.
 - [x] Confirm the legacy `/admin`, `/admin.html`, `/api/admin/*`, and old admin asset URLs are 404; the actual dashboard uses the configured secret path and server-side auth/2FA/CSRF/roles.
 - [ ] Verify production environment values: long random `ADMIN_PATH`, strong `ADMIN_PASSWORD`/owner password, unique `SECRET`/session secrets, and `TRUST_CF_IP=1` only when Cloudflare is actually the trusted proxy.
 - [ ] Run external security review / penetration tests and confirm no secrets or creator/account identifiers appear in production HTML, API responses, logs, media metadata, or social previews.
 - Important limitation: browser-delivered JavaScript, HTML and WebGL assets can always be inspected. Security must come from server-side authorization, validation, rate limits, anti-cheat and secret isolation—not attempting to hide client code.
+
+## Payments and storage integrations
+- [x] Add Stripe-hosted card checkout, server-priced orders, signed webhook verification, provider/session matching, idempotent fulfillment, and entitlement reversal for verified full refunds.
+- [x] Keep Bitcoin as a separate direct-to-wallet payment path; no private wallet keys are stored by the Hub.
+- [x] Add optional Cloudflare R2 S3-compatible storage for uploaded admin media, with local disk fallback and a private server-side signing key.
+- [ ] Stripe is not active until production STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, and HTTPS PUBLIC_URL are configured and test-mode purchases/refunds pass. Do not enable live keys before that.
+- [ ] R2 is not connected until bucket-scoped credentials are configured; test upload/reload/restart persistence before relying on it. R2 does not replace SQLite persistence or backup configuration.
+- [ ] Other crypto providers are not integrated; currently only Bitcoin is supported for crypto payments.
 
 ## Release evidence
 For every release, record commit SHA, automated test results, live deployment status, smoke-test results, known limitations, and rollback point. Do not announce launch-ready until all P0 items pass.
