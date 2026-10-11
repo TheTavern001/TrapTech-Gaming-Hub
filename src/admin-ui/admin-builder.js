@@ -183,6 +183,15 @@ const FORMS = {
       ${toggle('entry.elig_brand_month', !!e.elig_brand_month, 'One win per brand per 30 days', '', 'data-type="int01"')}
       <h3>Regions</h3><div class="seg-row">${[['all', 'All US states'], ['allow', 'Only these states'], ['exclude', 'All except these']].map(([k, l]) => `<label class="chip ${e.regions_mode === k ? 'on' : ''}"><input type="radio" name="rm" data-k="entry.regions_mode" value="${k}" data-rerender="1" ${e.regions_mode === k ? 'checked' : ''} hidden>${l}</label>`).join('')}</div>
       ${e.regions_mode !== 'all' ? `<div class="states">${M.regions.map(r => `<label class="st ${e.regions.includes(r) ? 'on' : ''}"><input type="checkbox" data-act="region" value="${r}" ${e.regions.includes(r) ? 'checked' : ''}>${r}</label>`).join('')}</div><small class="muted">Players confirm their state when they enter.</small>` : ''}
+      <h3>Entry checklist</h3>
+      <p class="small muted">Players must confirm required steps before entering. External channel membership is self-attested unless a verified integration is connected.</p>
+      \${(e.checklist || []).map((step, i) => \`<div class="card pad sub"><div class="form-grid">
+        \${field('Step ' + (i + 1), inp('entry.checklist.' + i + '.label', 'maxlength="120" placeholder="e.g. Join the linked channel"'))}
+        \${field('Destination URL (optional)', inp('entry.checklist.' + i + '.url', 'maxlength="300" placeholder="https://..."'))}
+      </div><div class="btn-row"><label class="small"><input type="checkbox" data-k="entry.checklist.\${i}.required" data-type="bool" \${step.required !== false ? 'checked' : ''}> Required</label>
+      <button type="button" class="btn sm danger" data-act="checklist-rm" data-index="\${i}">Remove step</button></div></div>\`).join('')}
+      <button type="button" class="btn sm" data-act="checklist-add" \${(e.checklist || []).length >= 8 ? 'disabled' : ''}>+ Add checklist step</button>
+      <div class="note-box">Checklist confirmations are not proof of external channel membership. Do not advertise them as verified.</div>
       <h3>Brand + sponsor</h3>${toggle('entry.brand_only', e.brand_only, 'Brand members only', S.d.basics.channel_id ? 'Same as "Who can enter" on Basics.' : 'Pick a brand on Basics first.', `data-rerender="1" ${S.d.basics.channel_id ? '' : 'disabled'}`)}
       ${toggle('entry.follow_sponsor', e.follow_sponsor, 'Require following the sponsor', 'This requires the player to be a member of the selected brand. It does not connect or transfer ownership of their personal channel.', `data-rerender="1" ${S.d.basics.channel_id ? '' : 'disabled'}`)}
       <h3>Bonus entries (random draws only)</h3>${toggle('entry.activity_weight', e.activity_weight, 'Activity entries', '1 entry + 1 more per 5 runs in the window (max 5).')}
@@ -240,7 +249,7 @@ function onInput(e) {
   if (e.type === 'input' && (el.type === 'radio' || el.tagName === 'SELECT' || el.type === 'checkbox')) return;
   if (e.type === 'change' && ['text', 'number', 'textarea', 'url'].includes(el.type || el.tagName.toLowerCase()) && !el.dataset.rerender) return;
   const k = el.dataset.k; let v;
-  if (el.dataset.type === 'html') v = el.innerHTML; else if (el.dataset.type === 'html-rules') { v = el.innerHTML; S.d.rules.edited = true; }
+  if (el.dataset.type === 'html') v = el.innerHTML; else if (el.dataset.type === 'bool') v = !!el.checked; else if (el.dataset.type === 'html-rules') { v = el.innerHTML; S.d.rules.edited = true; }
   else if (el.dataset.type === 'date') v = el.value ? Date.parse(el.value + 'T23:59:00') : null;
   else v = readInput(el);
   if (k === 'basics.channel_id') { v = +v || null; if (!v) { S.d.basics.hub_wide = true; S.d.entry.brand_only = false; S.d.entry.follow_sponsor = false; } }
@@ -289,6 +298,8 @@ async function onClick(e) {
     case 'metric': { d.games.competition.metric = a.value; const m = M.comp[d.games.competition.type].metrics[a.value]; if (m) { d.games.score_rule = m[1]; if (m[2] && m[2].cap) d.games.run_cap_sec = m[2].cap; if (m[2] && m[2].attempts) d.games.attempts = m[2].attempts; } break; }
     case 'att-mode': d.games.attempts = a.value === 'n' ? (d.games.attempts || 3) : 0; break;
     case 'cap': d.games.run_cap_sec = Math.max(0, Math.round((+a.value || 0) * 60)); rerender = false; break;
+    case 'checklist-add': if (d.entry.checklist.length < 8) d.entry.checklist.push({ id: 'step' + Date.now().toString(36), label: '', url: '', required: true, attestation: true }); break;
+    case 'checklist-rm': d.entry.checklist.splice(+a.dataset.index, 1); break;
     case 'region': { const s = new Set(d.entry.regions); a.checked ? s.add(a.value) : s.delete(a.value); d.entry.regions = [...s].sort(); rerender = false; a.parentElement.classList.toggle('on', a.checked); break; }
     case 'pz-add': d.prizes.push({ id: 'p' + Date.now().toString(36), name: '', desc: '', image: '', qty: 1, value: 0, type: 'physical', award: 'rank' }); break;
     case 'pz-rm': { const i = prizeI(); if (d.prizes.length > 1 || await dialog({ title: 'Remove the only prize?', confirm: 'Remove', danger: true })) d.prizes.splice(i, 1); break; }
