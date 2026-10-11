@@ -250,8 +250,40 @@ function prestigeWall() { return Object.entries(PRESTIGE).map(([id, d]) => { con
     owners: db.prepare('SELECT o.serial, u.username, o.created_at FROM prestige_owned o JOIN users u ON u.id=o.user_id WHERE o.item_id=? AND o.revoked_at IS NULL ORDER BY o.serial').all(id) }; }); }
 const prestigeOf = (userId) => db.prepare('SELECT item_id, serial, created_at FROM prestige_owned WHERE user_id=? AND revoked_at IS NULL ORDER BY created_at').all(userId).map(r => ({ ...r, name: (PRESTIGE[r.item_id] || {}).name, fx: (PRESTIGE[r.item_id] || {}).fx, supply: (prod(r.item_id) || {}).supply }));
 
+function stripeSignatureOk(req) {
+  const secret = String(process.env.STRIPE_WEBHOOK_SECRET || '');
+  const raw = req.rawBody;
+  if (!secret || !Buffer.isBuffer(raw)) return false;
+  const parts = String(req.headers['stripe-signature'] || '').split(',').map(x => x.split('='));
+  const ts = Number((parts.find(x => x[0] === 't') || [])[1]);
+  const signatures = parts.filter(x => x[0] === 'v1').map(x => x[1]).filter(Boolean);
+  if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300 || !signatures.length) return false;
+  const expected = crypto.createHmac('sha256', secret).update(String(ts) + '.').update(raw).digest();
+  return signatures.some(sig => { try { const got = Buffer.from(sig, 'hex'); return got.length === expected.length && crypto.timingSafeEqual(got, expected); } catch { return false; } });
+}
 function routes(app, A, H) {
   const { requireUser, currentUser, bad, limiter } = H;
+  // Stripe sends signed, raw-body webhooks. Never grant based on a browser redirect or query parameter.
+  app.post('/api/store/webhook/stripe', (req, res) => {
+    if (!stripeSignatureOk(req)) return res.status(400).json({ ok: false, error: 'Invalid payment signature.' });
+    const event = req.body || {}; const obj = event.data && event.data.object || {};
+    if (['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)) {
+      if (obj.payment_status !== 'paid' || obj.mode !== 'payment') return res.json({ received: true });
+      const ref = String((obj.metadata && obj.metadata.order_ref) || obj.client_reference_id || '');
+      const order = db.prepare("SELECT * FROM store_orders WHERE ref=? AND provider='stripe'").get(ref);
+      if (!order || order.provider_ref !== obj.id) { console.warn('[payments] Signed Stripe event did not match a stored order.'); return res.json({ received: true }); }
+      db.prepare("UPDATE store_orders SET status='paid', paid_at=COALESCE(paid_at,?), provider_payment_id=COALESCE(?,provider_payment_id) WHERE id=? AND granted_at IS NULL")
+        .run(Date.now(), typeof obj.payment_intent === 'string' ? obj.payment_intent : null, order.id);
+      const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(order.id);
+      const result = grant(fresh, 'Stripe webhook');
+      if (!result.ok) console.error('[payments] Stripe payment received but fulfillment needs review:', ref, result.error);
+    } else if (event.type === 'checkout.session.expired') {
+      db.prepare("UPDATE store_orders SET status='expired' WHERE provider='stripe' AND provider_ref=? AND granted_at IS NULL AND status='pending'").run(obj.id);
+    } else if (event.type === 'checkout.session.async_payment_failed') {
+      db.prepare("UPDATE store_orders SET status='failed', note='Stripe payment failed' WHERE provider='stripe' AND provider_ref=? AND granted_at IS NULL AND status='pending'").run(obj.id);
+    }
+    res.json({ received: true });
+  });
   app.get('/api/store', (req, res) => { const me = currentUser(req); const st = checkoutState();
     res.json({ ok: true, currency: { name: 'Hub Crowns', short: 'Crowns' }, checkout: { enabled: st.enabled, reason: st.reason, methods: st.enabled ? ['bitcoin'] : [] },
       packs: products().filter(p => p.kind === 'pack').map(p => ({ id: p.id, name: p.name, usd_cents: p.usd_cents, crowns: p.crowns, bonus: p.bonus })),
