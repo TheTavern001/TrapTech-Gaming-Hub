@@ -206,3 +206,6 @@
 .avatar-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
 .av-prev .avatar-stage+p{margin:0}
 @media(max-width:480px){.avatar-stage{width:100%;height:min(78vw,320px);min-height:240px;border-radius:20px}.av-prev{position:static}}
+
+.avatar-profile-stage{position:absolute;inset:0;display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden;z-index:1}
+.avatar-profile-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
