@@ -54,6 +54,8 @@ jobs:
           exit 1
       - name: Test main Hub and Games Library navigation on mobile viewport
         run: node tools/e2e-hub-library.js
+      - name: Smoke test major Hub screens on mobile and desktop
+        run: node tools/e2e-hub-screens.js
       - name: Test new originals on desktop and iPhone viewport
         run: node tools/e2e-games-lib.js neon-circuit,rift-survival
       - name: Regression test known performance-risk games (non-blocking diagnostic)
