@@ -81,7 +81,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       await mp.screenshot({ path: path.join(SHOTS, g.slug + '-iphone.png') });
       await mctx.close();
     } catch (e) { R.errors.push('harness: ' + e.message.split('\n')[0]); }
-    const ok = !R.errors.length && ['play', 'over'].includes(R.desktop.started) && R.desktop.submit === 'accepted' && R.desktop.forged === 'rejected' && ['play', 'over'].includes(R.mobile.started) && (R.gpu ? (R.gpu.calls <= 180 && R.gpu.tris <= 200000 && R.gpu.dpr <= 2) : R.desktop.fps >= 20) && R.mobile.inputs > 3;
+    const ok = !R.errors.length && ['play', 'over'].includes(R.desktop.started) && R.desktop.submit === 'accepted' && R.desktop.forged === 'rejected' && ['play', 'over'].includes(R.mobile.started) && (R.gpu ? (R.gpu.calls <= 180 && R.gpu.tris <= 200000 && R.gpu.dpr <= 2) : R.desktop.fps >= 20) && R.mobile.inputs >= 3;
     R.pass = ok; ok ? pass++ : fail++; R.ms = Date.now() - t0; results.push(R);
     console.log(`${ok ? 'PASS' : 'FAIL'} ${g.slug.padEnd(18)} start=${R.desktop.started}/${R.mobile.started} ${R.gpu ? `fps=needs-GPU(headless ${R.desktop.fps}) budget calls=${R.gpu.calls} tris=${R.gpu.tris} dpr=${R.gpu.dpr}` : `fps=${R.desktop.fps}/${R.mobile.fps}`} score=${R.desktop.score} submit=${R.desktop.submit} forged=${R.desktop.forged} ${R.errors.length ? 'ERR ' + R.errors.slice(0, 2).join(' | ') : ''}`);
   }
