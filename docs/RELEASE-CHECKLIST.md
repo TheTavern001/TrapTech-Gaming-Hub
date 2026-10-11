@@ -1,5 +1,21 @@
 # Release Checklist — Hub + Games Library
 
+## Current one-deployment release candidate (2026-10-11)
+
+Candidate branch: `release/consolidated-v1`; PR [#2](https://github.com/TheTavern001/gaming-hub-2/pull/2). Keep production unchanged until the final candidate is approved. Feature work may create multiple commits and run CI, but must result in one merged release and one production deployment.
+
+- [x] Surface the 100-entry library inside the main `/games` route, with search and category filtering.
+- [x] Add a home-screen entry point to the expanded library.
+- [x] Add a shared responsive visual system to the main app shell and major reusable UI surfaces.
+- [x] Add CI coverage for main-screen catalog presence/search/filter (candidate CI must pass).
+- [ ] Reach the user's target of **150+ genuinely testable games**. Current inventory is 100 catalog entries plus 13 core Hub games before overlap/deduplication; do not report the target as met.
+- [ ] Launch-test every listed game and classify failures, mobile support, external dependencies, score integration and licensing status.
+- [ ] Verify official event permissions, server-validated scores, anti-cheat and tie-break rules for any game promoted as competition-eligible.
+- [ ] Complete desktop and mobile visual regression across home, library, game player, auth, profiles, leaderboards, quests, tournaments, giveaways, bookings, vendor pages, store, settings and admin tools.
+- [ ] Verify production Deplexo deploy branch, config, health, auth, live catalog, data persistence and rollback plan.
+- [ ] Merge the approved candidate and deploy exactly once; verify the merged SHA is the deployed SHA before asking the user to review.
+
+
 This checklist deliberately covers the main Hub application as well as the Games Library. The feature work already present on `v7-wip` must not be lost while merging the library rebuild.
 
 ## Hub shell and navigation
