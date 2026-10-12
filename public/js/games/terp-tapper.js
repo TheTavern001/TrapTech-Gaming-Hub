@@ -16,13 +16,13 @@ export class TerpTapper extends Game {
   bpm() { const t = this.playT || 0; return t <= 120 ? 96 + t * 0.6 : Math.min(220, 168 + (t - 120) * 0.15); } // v7 endless: keeps speeding up to 220 BPM
   speed() { return 470 + clamp((this.playT || 0) / 120, 0, 1) * 380; }
   mult() { return Math.min(4, 1 + Math.floor(this.combo / 10)); }
-  lane() { let l; do { l = Math.floor(this.r() * 4); } while (l === this.lastLane && Math.random() < 0.6); this.lastLane = l; return l; }
+  lane() { let l; do { l = Math.floor(this.r() * 4); } while (l === this.lastLane && this.r() < 0.6); this.lastLane = l; return l; }
   schedule() {
     while (this.nextBeat < this.playT + 3) {
-      const beat = 60 / this.bpm(); const t = this.nextBeat; const r = Math.random();
-      if (this.beatN % 16 === 15) { /* breath */ } else if (r < 0.1 && this.playT > 10) { const a = this.lane(); let b; do { b = Math.floor(Math.random() * 4); } while (b === a); this.notes.push({ lane: a, t }, { lane: b, t }); }
+      const beat = 60 / this.bpm(); const t = this.nextBeat; const r = this.r();
+      if (this.beatN % 16 === 15) { /* breath */ } else if (r < 0.1 && this.playT > 10) { const a = this.lane(); let b; do { b = Math.floor(this.r() * 4); } while (b === a); this.notes.push({ lane: a, t }, { lane: b, t }); }
       else if (r < 0.82) this.notes.push({ lane: this.lane(), t });
-      if (Math.random() < 0.18 && this.bpm() < 150 && this.playT > 6) this.notes.push({ lane: this.lane(), t: t + beat / 2 });
+      if (this.r() < 0.18 && this.bpm() < 150 && this.playT > 6) this.notes.push({ lane: this.lane(), t: t + beat / 2 });
       this.nextBeat += beat; this.beatN++;
     }
   }
