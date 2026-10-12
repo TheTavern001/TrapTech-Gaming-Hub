@@ -110,6 +110,16 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   check('PWA manifest responds with valid JSON', manifestResult.res.status === 200 && !!manifest && Array.isArray(manifest.icons), { status: manifestResult.res.status, icons: manifest?.icons?.length || 0 });
   if (!(manifestResult.res.status === 200 && manifest && Array.isArray(manifest.icons))) failures.push('PWA manifest responds with valid JSON');
 
+  // Container-build smoke mode deliberately verifies the highest-value HTTP contracts without
+  // crawling every game and asset under a CPU/memory-constrained image builder. The full audit
+  // remains available when BUILD_SMOKE is unset and is intended for a provisioned test runner.
+  if (process.env.BUILD_SMOKE === '1') {
+    const uniqueFailures = [...new Set(failures)];
+    const summary = { mode: 'build-smoke', base: BASE, expectedFingerprint: expected, deployedFingerprint: buildJson?.build_fingerprint || null, checks: results.length, passed: results.filter(x => x.ok).length, failed: uniqueFailures.length, failures: uniqueFailures };
+    console.log('\\nBUILD SMOKE VERIFICATION SUMMARY\\n' + JSON.stringify(summary, null, 2));
+    process.exit(failures.length ? 1 : 0);
+  }
+
   const svgPaths = ['/assets/brand/traptech-app-icon.svg', '/assets/brand/favicon.svg', '/assets/brand/hub-mark.svg', '/assets/brand/tt-favicon.svg', '/assets/brand/tt-maskable.svg'];
   const svgBodies = {};
   await bounded(svgPaths, 5, async p => {
