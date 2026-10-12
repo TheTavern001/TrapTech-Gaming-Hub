@@ -212,12 +212,21 @@ export class Game {
       pm: (e) => { if (this.state === 'play') { const [x, y] = pos(e); this.onMove(x, y, e); } },
       pu: (e) => { this._activePointers.delete(e.pointerId); if (this.state === 'play') { const [x, y] = pos(e); this.onUp(x, y, e); } },
       kd: (e) => {
+        const target = e.target;
+        const uiTarget = target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(target.tagName || ''));
+        // Do not let game-wide shortcuts steal Space/Enter or arrows from focused controls.
+        if (uiTarget) return;
         if (e.code === 'KeyP' || e.code === 'Escape') { this.togglePause(); return; }
         if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
         if (this.state === 'ready' && !e.repeat && (e.code === 'Space' || e.code === 'Enter')) { this.sfx._ctx(); this.begin(); if (this.startOnTapOnly) return; }
         if (this.state === 'play') { this._activeKeys.add(e.code); if (!e.repeat) this.tel.hit(); this.onKey(e.code, true, e); }
       },
-      ku: (e) => { this._activeKeys.delete(e.code); if (this.state === 'play') this.onKey(e.code, false, e); },
+      ku: (e) => {
+        // Only release keys that the game actually captured; cancelled input is also cleared by clearInputs().
+        if (!this._activeKeys.has(e.code)) return;
+        this._activeKeys.delete(e.code);
+        if (this.state === 'play') this.onKey(e.code, false, e);
+      },
       vis: () => { if (document.hidden && this.state === 'play') this.pause(true); },
       rs: () => this.resize(),
     };
