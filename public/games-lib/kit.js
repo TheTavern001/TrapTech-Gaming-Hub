@@ -3,6 +3,18 @@
 // particles, floating text, screen shake, WebAudio synth SFX, seeded RNG, title/game-over screens and the Hub adapter.
 (function () {
   const TAU = Math.PI * 2;
+  // Safari/embedded WebViews may deny storage access entirely; gameplay must still boot.
+  const safeStore = {
+    get(key) { try { return window.localStorage.getItem(key); } catch { return null; } },
+    set(key, value) { try { window.localStorage.setItem(key, String(value)); } catch {} }
+  };
+  // Do not disable browser zoom: game canvases own their gestures via touch-action, while players retain page zoom.
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) {
+    const parts = viewport.content.split(',').map(x => x.trim()).filter(x => !/^(?:maximum-scale|user-scalable)\s*=/i.test(x));
+    if (!parts.some(x => /^viewport-fit\s*=/i.test(x))) parts.push('viewport-fit=cover');
+    viewport.content = parts.join(', ');
+  }
   const K = window.Kit = { TAU };
   K.clamp = (v, a, b) => v < a ? a : v > b ? b : v; K.lerp = (a, b, t) => a + (b - a) * t;
   K.dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
@@ -12,7 +24,7 @@
   K.cr = (cx, cy, r, b) => { const x = K.clamp(cx, b.x, b.x + b.w), y = K.clamp(cy, b.y, b.y + b.h); return (cx - x) ** 2 + (cy - y) ** 2 < r * r; };
   function mulberry(seedHex) { let a = (parseInt(String(seedHex || '').slice(0, 8), 16) || (Math.random() * 4e9)) >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   // ---- WebAudio synth ----
-  let AC = null, muted = localStorage.getItem('gl_mute') === '1';
+  let AC = null, muted = safeStore.get('gl_mute') === '1';
   function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
   function tone(f, d, type, vol, slide, delay) { const a = ac(); if (!a || muted) return; const t = a.currentTime + (delay || 0); const o = a.createOscillator(), g = a.createGain(); o.type = type || 'square'; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, f * slide), t + d); g.gain.setValueAtTime(vol || 0.08, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + 0.02); }
   function noise(d, vol, hp) { const a = ac(); if (!a || muted) return; const n = Math.floor(a.sampleRate * d), b = a.createBuffer(1, n, a.sampleRate), ch = b.getChannelData(0); for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = a.createBufferSource(); s.buffer = b; const g = a.createGain(); g.gain.value = vol || 0.15; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = hp || 1200; s.connect(f); f.connect(g); g.connect(a.destination); s.start(); }
@@ -33,7 +45,7 @@
     let scale = 1, ox = 0, oy = 0;
     function resize() { const vw = innerWidth, vh = innerHeight, d = Math.min(2, devicePixelRatio || 1); scale = Math.min(vw / W, vh / Hh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - cw) / 2; oy = (vh - ch) / 2; cv.style.cssText = `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`; cv.width = Math.floor(cw * d); cv.height = Math.floor(ch * d); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
     addEventListener('resize', resize); resize();
-    const g = { W, H: Hh, c, t: 0, score: 0, best: +(localStorage.getItem('gl_best_' + def.id) || 0), state: 'title', rnd: Math.random, keys: {}, hud: '', parts: [], texts: [], shakeT: 0, shakeM: 0, flashT: 0, flashC: '#fff', frames: 0, fps: 60, inputs: 0,
+    const g = { W, H: Hh, c, t: 0, score: 0, best: +(safeStore.get('gl_best_' + def.id) || 0), state: 'title', rnd: Math.random, keys: {}, hud: '', parts: [], texts: [], shakeT: 0, shakeM: 0, flashT: 0, flashC: '#fff', frames: 0, fps: 60, inputs: 0,
       ptr: { x: W / 2, y: Hh / 2, down: false, pressed: false, released: false, sx: 0, sy: 0 }, stick: { x: 0, y: 0, on: false, cx: 0, cy: 0 }, btn: {}, def, sub: null };
     g.R = (a, b) => a + g.rnd() * (b - a); g.RI = (a, b) => Math.floor(g.R(a, b + 1)); g.pick = (arr) => arr[Math.floor(g.rnd() * arr.length)];
     g.add = (v, k) => { v = Math.round(v); if (!v || g.state !== 'play') return; g.score += v; window.Hub && Hub.event(k || 'p', v); };
@@ -43,7 +55,7 @@
     g.shake = (m, t) => { g.shakeM = Math.max(g.shakeM, m); g.shakeT = Math.max(g.shakeT, t || 0.25); };
     g.flash = (col, t) => { g.flashC = col || '#fff'; g.flashT = t || 0.12; };
     g.sfx = K.sfx;
-    g.end = (why) => { if (g.state !== 'play') return; g.state = 'over'; g.overT = 0; g.why = why || ''; K.sfx('die'); g.shake(8, 0.4); if (g.score > g.best) { g.best = g.score; localStorage.setItem('gl_best_' + def.id, g.best); g.newBest = true; } else g.newBest = false;
+    g.end = (why) => { if (g.state !== 'play') return; g.state = 'over'; g.overT = 0; g.why = why || ''; K.sfx('die'); g.shake(8, 0.4); if (g.score > g.best) { g.best = g.score; safeStore.set('gl_best_' + def.id, g.best); g.newBest = true; } else g.newBest = false;
       g.sub = { pending: true }; const p = window.Hub ? Hub.submit(g.score) : Promise.resolve({ ok: false, error: 'offline' }); p.then(r => { g.sub = r; window.__GL.lastSubmit = r; }); };
     g.held = () => g.ptr.down || g.keys[' '] || g.keys.ArrowUp || g.keys.w || g.keys.W;
     g.tap = () => g.ptr.pressed || g._kp;
@@ -63,7 +75,7 @@
     function onUp(e) { const t = touches.get(e.pointerId); touches.delete(e.pointerId); if (t && t.k === 'btn') { g.btn[t.b.id] = false; if (t.b.key) g.keys[t.b.key] = false; return; } if (t && t.k === 'stick') { g.stick.on = false; g.stick.x = g.stick.y = 0; if (!def.stickAlsoPtr) return; } g.ptr.down = false; g.ptr.released = true; }
     cv.addEventListener('pointerdown', onDown); addEventListener('pointermove', onMove); addEventListener('pointerup', onUp); addEventListener('pointercancel', onUp);
     cv.addEventListener('contextmenu', e => e.preventDefault());
-    addEventListener('keydown', e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted = !muted; localStorage.setItem('gl_mute', muted ? '1' : '0'); }
+    addEventListener('keydown', e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted = !muted; safeStore.set('gl_mute', muted ? '1' : '0'); }
       if (!g.keys[e.key]) { g._kp = true; g.kp = g.kp || {}; g.kp[e.key] = true; g.inputs++; window.Hub && Hub.input(); ac(); } g.keys[e.key] = true; if (e.key === 'p' || e.key === 'Escape') g.paused = !g.paused && g.state === 'play'; });
     addEventListener('keyup', e => { g.keys[e.key] = false; });
     document.addEventListener('visibilitychange', () => { if (document.hidden && g.state === 'play') g.paused = true; });
