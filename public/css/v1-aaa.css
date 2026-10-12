@@ -173,6 +173,10 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .av-tabs,.tabs{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}
 .av-opt{min-width:0;max-width:100%;white-space:normal}
 .av-opt img{display:block;max-width:100%;object-fit:contain}
+.av-view-controls,.av-style-controls,.av-saved-looks .av-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}
+.av-saved-looks{display:grid;gap:.55rem;margin:.8rem 0;padding:.8rem;border:1px solid var(--v1-border);border-radius:14px;min-width:0}
+.av-saved-looks h3{margin:0}
+.av-saved-looks input,.av-saved-looks select{width:100%;min-height:42px;padding:.55rem .7rem}
 @media(max-width:480px){
   .page{padding-left:12px;padding-right:12px}
   .card.pad{padding:12px}
@@ -210,3 +214,54 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .free-play-note{margin:10px 0 18px;border-color:rgba(72,230,255,.24);background:linear-gradient(120deg,rgba(72,230,255,.055),rgba(152,116,255,.05))}
 .free-play-note>p{margin:7px 0 0;max-width:820px;line-height:1.65}
 @media(max-width:600px){.play-top{gap:6px;padding-inline:8px}.play-top .who-chip{font-size:.67rem;max-width:34vw;padding:6px 8px}.play-top .title{letter-spacing:.04em}.play-top .iconbtn{width:38px;height:38px}}
+
+
+/* Responsive release pass: retain the hub brand and stop game HUD/controller overflow. */
+.topbar>a[aria-label="The Gaming Hub home"]{display:flex;align-items:center;flex:0 0 auto;min-width:0}
+.topbar .logo{display:block;width:clamp(108px,14vw,164px);max-width:100%;height:auto;object-fit:contain;flex-shrink:0}
+.play-wrap{width:100%;max-width:100vw;height:100dvh;min-height:100dvh;overflow:hidden;box-sizing:border-box}
+.play-wrap .play-top{flex:0 0 auto;display:flex;align-items:center;gap:clamp(4px,1.3vw,10px);min-width:0;max-width:100%;padding:calc(6px + env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left));box-sizing:border-box}
+.play-wrap .play-top .title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.play-wrap .play-top .who-chip{max-width:25vw;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.play-wrap>div[style*="position:relative"]{min-width:0;max-width:100%;width:100%;overflow:hidden}
+.play-wrap #game{display:block;flex:1 1 auto;min-width:0;max-width:100%;width:100%;height:100%;touch-action:manipulation}
+.play-wrap .overlay,.play-wrap .boot-ov{max-width:100%;box-sizing:border-box}
+@media(max-width:560px){.topbar .logo{width:clamp(108px,28vw,132px)}.play-wrap .play-top .who-chip{display:none}.play-wrap .play-top .iconbtn{min-width:44px;min-height:44px}}
+.store-cosmetics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.store-cosmetic-card{display:flex;min-width:0;flex-direction:column;align-items:stretch;gap:8px;padding:10px;border:1px solid var(--v1-border);border-radius:14px;background:var(--v1-surface);text-align:left;overflow:hidden;cursor:pointer;color:inherit}
+.store-cosmetic-card:hover,.store-cosmetic-card:focus-visible{border-color:rgba(72,230,255,.65);transform:translateY(-2px)}
+.store-cosmetic-preview{display:block;min-width:0;overflow:hidden;border-radius:10px}
+.store-cosmetic-card .ec-prev.store-preview{display:flex;width:100%;height:116px;min-height:116px;overflow:hidden;border-radius:10px}
+.store-cosmetic-card .store-cosmetic-name{font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.store-cosmetic-card .store-cosmetic-meta{font-size:.74rem;color:var(--muted,#aab2ce);line-height:1.35;overflow-wrap:anywhere}
+.store-cosmetic-card .store-cosmetic-price{font-weight:750;color:var(--cyan,#22d3ee);font-size:.88rem}
+.store-cosmetic-card .store-cosmetic-preview .ec-mini{max-width:100%;transform:scale(.86)}
+.av-ed{display:grid;grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr);gap:16px;align-items:start}
+.av-ed>*{min-width:0}
+.av-prev{position:sticky;top:14px;min-width:0}
+.avatar-stage{position:relative;height:clamp(320px,44vw,490px);min-height:320px;width:100%;max-width:100%;overflow:hidden;border-radius:18px;background:radial-gradient(ellipse at 50% 20%,rgba(90,172,255,.18),transparent 66%),linear-gradient(180deg,#17172c,#070a16)}
+.avatar-stage canvas{display:block;width:100%;height:100%;max-width:100%;image-rendering:pixelated}
+.av-view-controls,.av-style-controls,.av-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.av-saved-looks{display:grid;gap:8px;margin:14px 0}
+.av-saved-looks input,.av-saved-looks select{width:100%;min-width:0}
+.av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:10px}
+.av-opt{min-width:0;overflow:hidden}
+@media(max-width:760px){.store-cosmetics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.av-ed{grid-template-columns:1fr}.av-prev{position:relative;top:auto}.avatar-stage{height:min(54vh,420px);min-height:300px}.av-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:390px){.store-cosmetics-grid{gap:8px}.store-cosmetic-card{padding:8px}.store-cosmetic-card .ec-prev.store-preview{height:100px;min-height:100px}.av-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Permanent 1,000+ item cosmetic catalogue */
+.shop-catalog-section{margin-top:30px}
+.catalog-filter{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.7fr) auto auto;align-items:end;gap:10px;margin:12px 0 14px}
+.catalog-filter label{font-size:.76rem;color:var(--muted,#a7b0d4);font-weight:750}
+.catalog-filter input,.catalog-filter select{width:100%;min-width:0}
+.catalog-more{display:flex;justify-content:center;padding:18px}
+#catalog-count{margin:8px 0}
+@media(max-width:650px){.catalog-filter{grid-template-columns:1fr 1fr}.catalog-filter label:nth-of-type(1),.catalog-filter input{grid-column:1/-1}.catalog-filter button{width:100%}}
+
+/* Hub Store's permanent catalogue controls */
+.store-full-catalog{margin-top:28px}
+.store-catalog-filter{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.7fr) auto auto;align-items:end;gap:10px;margin:12px 0 14px}
+.store-catalog-filter label{font-size:.76rem;color:var(--muted,#a7b0d4);font-weight:750}
+.store-catalog-filter input,.store-catalog-filter select{width:100%;min-width:0}
+.store-catalog-grid{margin-top:12px}
+@media(max-width:650px){.store-catalog-filter{grid-template-columns:1fr 1fr}.store-catalog-filter label:nth-of-type(1),.store-catalog-filter input{grid-column:1/-1}.store-catalog-filter button{width:100%}}

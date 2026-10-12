@@ -254,3 +254,18 @@ shop screens. Item ids from `catalog()` are valid in pins, featured and retired 
 Every constant is at the top of its file. Changing `CAP`, `COOL`, the slot counts or `EPOCH_DAY` changes **past** shop
 history too, because the sim re-runs from the epoch. Owned items are never affected. Price constants only change
 future prices. Season length changes only apply to seasons that have not started (use `adminUpdate` for the live one).
+
+
+## Permanent 1,000-item catalogue
+
+The Points Shop exposes `GET /api/shop/catalog` with search, category filtering and offset pagination. It contains 1,000 stable, procedurally authored original cosmetic IDs plus the handmade legacy set. Catalog items are always available for Hub Points, while daily/weekly/season/event rotations remain separate. The API sends CSS only for the current page so mobile clients do not download styles for all 1,000 items at once. Catalog purchases use the normal transactional Hub Points ledger and cannot be purchased with cash or used for gameplay/giveaway advantage.
+
+
+## Limited prestige showcase
+
+The paid store has ten numbered prestige showcase collectibles. All are limited-supply cosmetic collectibles priced at $1,000 USD or more, with six-confirmation settings retained for prestige orders. These are deliberately separate from the Hub Points catalogue: Hub Points cannot be purchased with cash and are never used for game scoring or giveaway entries. The current storefront rendering is a collectible showcase; this catalogue change does not claim that every prestige collectible is a wearable 3D avatar mesh.
+
+
+## Rotating collection spotlight
+
+The 1,000-item core catalogue remains searchable as a collection archive. In addition, the storefront features 12 items from that collection in a daily spotlight and 20 items in a weekly spotlight. Both lists are deterministic for the hub date/week, shared by all players, and refresh at midnight US Eastern / Monday midnight US Eastern. The spotlight uses stable catalogue IDs, excludes the ordinary daily and weekly picks, and does not create duplicate IDs within a rotation. Spotlight items are highlighted offers, not exclusive ownership locks: the core catalogue remains available for browsing and purchase. This keeps the shop feeling active without making a player's favourite cosmetic disappear from the catalogue forever. The 10 limited prestige collectibles remain a separate real-money tier.

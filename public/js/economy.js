@@ -82,9 +82,20 @@ async function detailSheet(id, onBought) {
 // ---------- /shop ----------
 async function shopPage() {
   const { shell, api, icon, esc, fmt } = C;
+  let catalogOffset = 0, catalogType = '', catalogQuery = '', catalogResults = [];
   const draw = async () => {
     const r = await api('/api/shop'); if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is unavailable', esc(r.error || '')));
     const bal = r.balance; const ev = r.events || [];
+    const catUrl = '/api/shop/catalog?limit=24&offset=' + catalogOffset + '&type=' + encodeURIComponent(catalogType) + '&q=' + encodeURIComponent(catalogQuery);
+    const cat = await api(catUrl);
+    if (cat.ok) {
+      const page = cat.items || [];
+      if (catalogOffset === 0) catalogResults = page;
+      else { const byId = new Map(catalogResults.map(x => [x.id, x])); page.forEach(x => byId.set(x.id, x)); catalogResults = [...byId.values()]; }
+      let style = document.getElementById('shop-catalog-css');
+      if (!style) { style = document.createElement('style'); style.id = 'shop-catalog-css'; document.head.appendChild(style); }
+      style.textContent = cat.css || '';
+    }
     shell('/shop', `<div class="narrow wide ec">
       <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Points Shop</h1><a class="ec-how small" href="/shop/how-it-works">${icon('circle-help')} How it works</a></div>
       ${r.signed_in ? `<div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><div class="tiny muted orb">HUB POINTS</div><b class="sb-n" id="pts-bal">${fmt(bal)}</b><div class="tiny muted">${fmt(r.earned)} earned all-time${r.perks && r.perks.discount ? ` • ${r.perks.discount}% season discount` : ''}</div></div><a class="btn sm ghost" href="#earn">How to earn</a></div>`
@@ -93,12 +104,32 @@ async function shopPage() {
       ${ev.map(e => `<div class="ec-event card"><div class="ec-ev-h">${icon(e.icon || 'party-popper')}<div><b>${esc(e.name)}</b><div class="tiny muted">Event items for ${cdi(e.ends_at)} • ends ${localAt(e.ends_at)}</div></div></div>${grid('shop-event-' + esc(e.key), e.items, bal)}</div>`).join('')}
       <div class="section-h"><h2>${icon('sparkles')} Weekly featured</h2><span class="small muted">New in ${cdi(r.weekly_ends)} <span class="ec-at">(${localAt(r.weekly_ends)})</span></span></div>
       ${grid('shop-weekly', r.weekly, bal)}
+      <div class="section-h"><h2>${icon('flame')} Weekly cosmetic spotlight</h2><span class="small muted">20 featured from the 1,000+ collection · rotates Monday</span></div>
+      ${grid('shop-catalog-weekly-spotlight', r.spotlight_weekly || [], bal)}
       <div class="section-h"><h2>${icon('clock')} Daily picks</h2><span class="small muted">New in ${cdi(r.daily_ends)} <span class="ec-at">(${localAt(r.daily_ends, { hour: 'numeric', minute: '2-digit' })} your time)</span></span></div>
       ${grid('shop-daily', r.daily, bal)}
+      <div class="section-h"><h2>${icon('zap')} Daily cosmetic spotlight</h2><span class="small muted">12 more items from the collection · rotates at midnight ET</span></div>
+      ${grid('shop-catalog-daily-spotlight', r.spotlight_daily || [], bal)}
       <div class="section-h"><h2>${icon('calendar-range')} Season ${r.season.number} shop: ${esc(r.season.name)}</h2><span class="small muted">Leaves in ${cdi(r.season_ends)}</span></div>
       ${grid('shop-season', r.season.items, bal)}
       ${r.peek ? `<div class="section-h"><h2>${icon('eye')} Tomorrow's daily picks</h2><span class="small muted">Season perk: early peek</span></div><div class="ec-peek">${r.peek.map(i => `<button class="ec-peek-i" data-item="${esc(i.id)}">${preview(i, 'sm')}<span>${esc(i.name)}</span></button>`).join('')}</div>` : ''}
       ${r.vault_radar ? `<div class="section-h"><h2>${icon('history')} Vault radar</h2><span class="small muted">Season perk</span></div>${r.vault_radar.length ? `<div class="card pad ec-radar">${r.vault_radar.map(v => `<div class="mini-row" data-item="${esc(v.item.id)}"><b>${esc(v.item.name)}</b><span class="small muted">${dateOf(v.at)}</span></div>`).join('')}</div>` : `<p class="small muted">No Vault returns in the next 7 days.</p>`}` : ''}
+      <section class="shop-catalog-section" id="catalogue">
+        <div class="section-h"><h2>${icon('shopping-bag')} Full Cosmetic Catalogue</h2><span class="small muted">${cat.ok ? fmt(cat.total) + ' items' : '1,000+ items'}</span></div>
+        <p class="small muted">Browse 1,000+ original cosmetics plus daily and weekly spotlights: banners, frames, nameplates, titles, badges and animated profile effects. All items are cosmetic only—no score, XP leaderboard or giveaway advantage.</p>
+        <form class="catalog-filter card pad" id="catalog-filter">
+          <label for="catalog-search">Search cosmetics</label><input id="catalog-search" name="q" type="search" maxlength="80" value="${esc(catalogQuery)}" placeholder="Search names, styles, colors…">
+          <label for="catalog-type">Category</label><select id="catalog-type" name="type">
+            <option value="" ${!catalogType ? 'selected' : ''}>All cosmetics</option><option value="banner" ${catalogType === 'banner' ? 'selected' : ''}>Banners</option>
+            <option value="frame" ${catalogType === 'frame' ? 'selected' : ''}>Avatar frames</option><option value="color" ${catalogType === 'color' ? 'selected' : ''}>Nameplates &amp; colors</option>
+            <option value="title" ${catalogType === 'title' ? 'selected' : ''}>Titles</option><option value="badge" ${catalogType === 'badge' ? 'selected' : ''}>Badges &amp; accessories</option>
+            <option value="effect" ${catalogType === 'effect' ? 'selected' : ''}>Animated effects</option>
+          </select><button class="btn sm" type="submit">${icon('search')} Search</button><button class="btn sm ghost" type="button" id="catalog-clear">Clear</button>
+        </form>
+        <p class="tiny muted" id="catalog-count">${cat.ok ? 'Showing ' + fmt(catalogResults.length) + ' of ' + fmt(cat.total) + ' items' : 'Catalogue temporarily unavailable.'}</p>
+        ${catalogResults.length ? grid('shop-catalog', catalogResults, bal) : '<div class="card pad">No cosmetics match this search. Try another name or category.</div>'}
+        ${cat.ok && cat.has_more ? '<div class="catalog-more"><button class="btn" id="catalog-more">' + icon('chevrons-down') + ' Load more cosmetics</button></div>' : ''}
+      </section>
       <div class="section-h" id="earned"><h2>${icon('target')} Earned, not bought</h2><span class="small muted">Unlock by score or weekly rank</span></div>
       <div class="ec-earned">${r.earned_items.map(i => { const pct = i.need ? Math.min(100, Math.round((i.best || 0) / i.need * 100)) : 0;
         return `<div class="card ec-earn ${i.owned ? 'owned' : ''}" data-item="${esc(i.id)}" tabindex="0" role="button">${preview(i, 'sm')}<div class="ec-earn-b"><b>${esc(i.name)}</b><div class="tiny muted">${esc(i.requirement)}</div>
@@ -112,6 +143,13 @@ async function shopPage() {
     </div>`);
     C.tickInline && C.tickInline();
     document.querySelectorAll('main [data-item]').forEach(el => { const open = (e) => { e.preventDefault(); detailSheet(el.dataset.item, draw); }; el.addEventListener('click', open); el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }); });
+    const filter = document.getElementById('catalog-filter');
+    if (filter) filter.onsubmit = (e) => { e.preventDefault(); const fd = new FormData(filter); catalogQuery = String(fd.get('q') || '').trim(); catalogType = String(fd.get('type') || ''); catalogOffset = 0; catalogResults = []; draw(); };
+    const clear = document.getElementById('catalog-clear');
+    if (clear) clear.onclick = () => { catalogQuery = ''; catalogType = ''; catalogOffset = 0; catalogResults = []; draw(); };
+    const more = document.getElementById('catalog-more');
+    if (more) more.onclick = () => { catalogOffset += 24; draw(); };
+
   };
   await draw();
 }
@@ -130,7 +168,7 @@ async function seasonPage() {
           <div class="tiny">${fmt(s.xp)} season XP${s.head_start ? ` (incl. ${fmt(s.head_start)} head start)` : ''} • ${fmt(s.need - s.into)} XP to ${lvl >= s.levels ? 'the next Overdrive star' : 'level ' + (lvl + 1)}</div>`
           : `<a class="btn sm" href="/signup?next=/season">Sign up to start earning</a>`}
       </div></div>
-    <div class="nocash">${icon('shield')} <span><b>Free track only.</b> No paid pass. Every level is earned by playing; rewards are cosmetic with no cash value and never affect giveaways.</span></div>
+    <div class="nocash">${icon('shield')} <span><b>Free track for everyone.</b> All players earn raw season XP at the same rate and share the same public leaderboard. An optional pass adds a 10% boost only to premium cosmetic-track unlocks; it never changes game score or giveaway results.</span></div>
     <div class="section-h"><h2>${icon('zap')} Season perks</h2><a class="small" href="/shop/how-it-works#seasons">How seasons work</a></div>
     <div class="ec-perks">${s.perks.map(p => `<div class="card ec-perk ${p.active ? 'on' : ''}"><span class="ec-pl">Lv ${p.level}</span><b>${esc(p.name)}</b><span class="tiny muted">${esc(p.desc)}</span>${p.active ? `<span class="pill green">${icon('check')} Active</span>` : ''}</div>`).join('')}</div>
     <div class="section-h"><h2>${icon('list-checks')} Reward track</h2><span class="small muted">${s.levels} levels • ${fmt(s.max_xp)} XP</span></div>

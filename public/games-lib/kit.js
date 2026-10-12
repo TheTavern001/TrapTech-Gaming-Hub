@@ -95,19 +95,46 @@
     }
     function txt(s, x, y, size, col, al) { c.font = `bold ${size}px system-ui,sans-serif`; c.textAlign = al || 'center'; c.textBaseline = 'middle'; c.lineWidth = 4; c.strokeStyle = 'rgba(5,7,20,.75)'; c.strokeText(s, x, y); c.fillStyle = col || '#eef0ff'; c.fillText(s, x, y); }
     g.txt = txt;
+    function panel(x, y, w, h, accent) {
+      c.save();
+      const grad = c.createLinearGradient(x, y, x + w, y + h);
+      grad.addColorStop(0, 'rgba(21,30,78,.94)'); grad.addColorStop(1, 'rgba(5,9,29,.92)');
+      K.rr(c, x, y, w, h, Math.min(14, h * 0.28)); c.fillStyle = grad; c.fill();
+      c.lineWidth = 1.2; c.strokeStyle = accent || '#22d3ee'; c.globalAlpha = 0.68; c.stroke();
+      c.globalAlpha = 0.45; c.fillStyle = accent || '#22d3ee'; c.fillRect(x + 12, y + 2, Math.max(8, w - 24), 2);
+      c.restore();
+    }
     function drawHud() {
-      if (def.hudDraw && (g.state === 'play' || g.state === 'over')) def.hudDraw(g, c); else if (g.state === 'play' || g.state === 'over') { txt(Math.floor(g.score).toLocaleString('en-US'), 12, 22, 22, '#fff', 'left'); txt('BEST ' + Math.floor(g.best).toLocaleString('en-US'), W - 12, 22, 13, '#9aa3d0', 'right'); if (g.hud) txt(g.hud, W / 2, 22, 14, '#22d3ee'); }
-      if (g.state === 'play') { for (const b of btns) { c.globalAlpha = g.btn[b.id] ? 0.55 : 0.28; K.circ(c, b.x, b.y, b.r, '#6366f1'); c.globalAlpha = 0.9; txt(b.label || b.id, b.x, b.y, 12, '#fff'); c.globalAlpha = 1; }
+      if (def.hudDraw && (g.state === 'play' || g.state === 'over')) def.hudDraw(g, c);
+      else if (g.state === 'play' || g.state === 'over') {
+        const pw = Math.min(148, W * 0.37);
+        panel(7, 6, pw, 34, '#22d3ee');
+        panel(W - pw - 7, 6, pw, 34, '#a855f7');
+        txt(Math.floor(g.score).toLocaleString('en-US'), 15, 22, 22, '#fff', 'left');
+        txt('BEST ' + Math.floor(g.best).toLocaleString('en-US'), W - 15, 22, 13, '#d3d7ff', 'right');
+        if (g.hud) { const hw = Math.min(232, W - 20); panel((W - hw) / 2, 43, hw, 25, '#22d3ee'); txt(g.hud, W / 2, 55, 12, '#67e8f9'); }
+      }
+      if (g.state === 'play') {
+        for (const b of btns) { c.globalAlpha = g.btn[b.id] ? 0.55 : 0.28; K.circ(c, b.x, b.y, b.r, '#6366f1'); c.globalAlpha = 0.9; txt(b.label || b.id, b.x, b.y, 12, '#fff'); c.globalAlpha = 1; }
         if (g.stick.on) { c.globalAlpha = 0.25; K.circ(c, g.stick.cx, g.stick.cy, 50, '#22d3ee'); c.globalAlpha = 0.6; K.circ(c, g.stick.cx + g.stick.x * 50, g.stick.cy + g.stick.y * 50, 22, '#a855f7'); c.globalAlpha = 1; }
-        if (g.paused) { c.fillStyle = 'rgba(5,7,20,.6)'; c.fillRect(0, 0, W, Hh); txt('PAUSED', W / 2, Hh / 2, 34); txt('tap or press P', W / 2, Hh / 2 + 36, 14, '#9aa3d0'); if (g.ptr.pressed) g.paused = false; } }
-      if (g.state === 'title' || g.state === 'starting') { c.fillStyle = 'rgba(5,7,20,.62)'; c.fillRect(0, 0, W, Hh); const gr = c.createLinearGradient(W / 2 - 150, 0, W / 2 + 150, 0); gr.addColorStop(0, '#a855f7'); gr.addColorStop(0.6, '#3b82f6'); gr.addColorStop(1, '#22d3ee');
-        c.font = `900 ${Math.min(40, W / (def.title.length * 0.62))}px system-ui,sans-serif`; c.textAlign = 'center'; c.fillStyle = gr; c.fillText(def.title, W / 2, Hh * 0.36);
-        const lines = (def.help || '').split('\n'); lines.forEach((l, i) => txt(l, W / 2, Hh * 0.36 + 46 + i * 22, 14, '#9aa3d0'));
-        txt(g.state === 'starting' ? 'Starting...' : 'TAP / SPACE TO PLAY', W / 2, Hh * 0.72 + Math.sin(performance.now() / 300) * 4, 18, '#34d399'); if (g.best) txt('Best ' + g.best.toLocaleString('en-US'), W / 2, Hh * 0.72 + 34, 13, '#fbbf24'); }
-      if (g.state === 'over') { c.fillStyle = `rgba(5,7,20,${Math.min(0.7, g.overT * 1.5)})`; c.fillRect(0, 0, W, Hh); txt(def.overText || 'GAME OVER', W / 2, Hh * 0.33, 34, '#ef4444'); if (g.why) txt(g.why, W / 2, Hh * 0.33 + 32, 14, '#9aa3d0');
+        if (g.paused) { c.fillStyle = 'rgba(5,7,20,.6)'; c.fillRect(0, 0, W, Hh); panel(W * 0.12, Hh * 0.40, W * 0.76, Hh * 0.20, '#22d3ee'); txt('PAUSED', W / 2, Hh / 2 - 10, 34); txt('tap or press P', W / 2, Hh / 2 + 28, 14, '#9aa3d0'); if (g.ptr.pressed) g.paused = false; }
+      }
+      if (g.state === 'title' || g.state === 'starting') {
+        c.fillStyle = 'rgba(5,7,20,.62)'; c.fillRect(0, 0, W, Hh);
+        panel(12, Hh * 0.19, W - 24, Hh * 0.60, '#8b5cf6');
+        const gr = c.createLinearGradient(W / 2 - 150, 0, W / 2 + 150, 0); gr.addColorStop(0, '#a855f7'); gr.addColorStop(0.6, '#3b82f6'); gr.addColorStop(1, '#22d3ee');
+        c.font = \`900 \${Math.min(40, W / (def.title.length * 0.62))}px system-ui,sans-serif\`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = gr; c.fillText(def.title, W / 2, Hh * 0.36);
+        const lines = (def.help || '').split('\n'); lines.forEach((l, i) => txt(l, W / 2, Hh * 0.36 + 46 + i * 22, 14, '#c2c9ed'));
+        txt(g.state === 'starting' ? 'Starting...' : 'TAP / SPACE TO PLAY', W / 2, Hh * 0.72 + Math.sin(performance.now() / 300) * 4, 18, '#34d399'); if (g.best) txt('Best ' + g.best.toLocaleString('en-US'), W / 2, Hh * 0.72 + 34, 13, '#fbbf24');
+      }
+      if (g.state === 'over') {
+        c.fillStyle = \`rgba(5,7,20,\${Math.min(0.7, g.overT * 1.5)})\`; c.fillRect(0, 0, W, Hh);
+        panel(12, Hh * 0.20, W - 24, Hh * 0.59, g.newBest ? '#fbbf24' : '#22d3ee');
+        txt(def.overText || 'GAME OVER', W / 2, Hh * 0.33, 34, '#ff858f'); if (g.why) txt(g.why, W / 2, Hh * 0.33 + 32, 14, '#b9c1eb');
         txt(Math.floor(g.score).toLocaleString('en-US') + (def.unit ? ' ' + def.unit : ''), W / 2, Hh * 0.47, 40, '#fff'); if (g.newBest) txt('NEW BEST!', W / 2, Hh * 0.47 + 36, 16, '#fbbf24');
-        const s = g.sub; const m = !s || s.pending ? 'Saving score...' : s.ok ? `Saved to the leaderboard${s.rank ? ' - rank #' + s.rank : ''}` : (s.error || 'Score not saved'); txt(m, W / 2, Hh * 0.6, 13, s && s.ok ? '#34d399' : '#9aa3d0');
-        if (g.overT > 0.8) txt('TAP TO PLAY AGAIN', W / 2, Hh * 0.72, 18, '#34d399'); }
+        const s = g.sub; const m = !s || s.pending ? 'Saving score...' : s.ok ? \`Saved to the leaderboard\${s.rank ? ' - rank #' + s.rank : ''}\` : (s.error || 'Score not saved'); txt(m, W / 2, Hh * 0.6, 13, s && s.ok ? '#34d399' : '#9aa3d0');
+        if (g.overT > 0.8) txt('TAP TO PLAY AGAIN', W / 2, Hh * 0.72, 18, '#34d399');
+      }
     }
     requestAnimationFrame(frame);
     addEventListener('error', e => window.__GL.errors.push(String(e.message)));

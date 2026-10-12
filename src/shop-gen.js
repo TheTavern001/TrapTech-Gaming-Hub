@@ -3,9 +3,9 @@
 // shop can keep inventing new items forever without storing designs: the id encodes where the item came from
 // (daily drop, weekly drop, season shop, season track, event, earned) plus a number and a slot, and the same id
 // always rebuilds the same name, rarity, art and CSS. Art is original SVG/CSS (no third-party assets).
-//   id = [fx-]v7<src><num>s<slot>      src: d daily (num = hub day), w weekly (num = week), s season shop (num = season),
-//                                        k season track reward (num = season), e event (num = event key), b earned (num = gate)
-const ID_RE = /^(?:fx-)?v7([dwskebp])(\d{1,9})s(\d{1,3})$/;
+//   id = [fx-]v7<src><num>s<slot>      src: d daily, w weekly, s season, k free track, e event, b earned, p premium track,
+//                                        c permanent catalog (1,000 stable original cosmetics)
+const ID_RE = /^(?:fx-)?v7([dwskebpc])(\d{1,9})s(\d{1,3})$/;
 const TYPES = ['banner', 'frame', 'color', 'title', 'badge', 'effect'];
 const RARITIES = ['common', 'rare', 'epic', 'legendary'];
 
@@ -133,6 +133,7 @@ function bannerSvg(seed, pal, motif, rarity) {
 // ---------- the generator ----------
 const RARITY_BY_SRC = {
   d: (r, slot) => slot === 0 ? wpick(r, [['common', 60], ['rare', 40]]) : wpick(r, [['common', 25], ['rare', 50], ['epic', 25]]),
+  c: (r, slot) => slot % 100 < 48 ? 'common' : slot % 100 < 78 ? 'rare' : slot % 100 < 95 ? 'epic' : 'legendary',
   w: (r, slot) => slot === 0 ? 'legendary' : wpick(r, [['epic', 75], ['legendary', 25]]),
   s: (r, slot) => ['rare', 'rare', 'epic', 'epic', 'legendary', 'epic'][slot % 6],
   e: (r, slot) => ['rare', 'epic', 'legendary', 'epic'][slot % 4],

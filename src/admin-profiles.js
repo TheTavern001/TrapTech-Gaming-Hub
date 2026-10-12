@@ -21,7 +21,7 @@ const COMP = {
     survival_distance: ['Survival + distance', 'best'], kills_score: ['Kills + score', 'best'], marathon: ['Marathon (every run adds up)', 'total'] } },
   campaign: { label: 'Campaign', desc: 'A defined set of levels. Cumulative score across the set, or fastest completion plus score.', metrics: {
     cumulative: ['Cumulative score across the level set', 'campaign'], fastest: ['Fastest completion + score', 'fastest'] } },
-  short_session: { label: 'Short session', desc: 'Short timed score attacks or a fixed number of attempts.', metrics: {
+  short_session: { label: 'Time Attack / High Score', desc: 'Timed score attacks, high-score runs and fixed-attempt formats. Run duration and score are validated server-side.', metrics: {
     attack_60: ['60-second score attack', 'best', { cap: 60 }], attack_180: ['3-minute score attack', 'best', { cap: 180 }], best_of_3: ['Best of 3 runs', 'best', { attempts: 3 }],
     best_of_5: ['Best of 5 runs', 'best', { attempts: 5 }], single: ['Highest single run', 'best'] } },
   strategy: { label: 'Strategy', desc: 'Defense / economy games: highest wave, total score or economy-adjusted score.', metrics: {

@@ -164,14 +164,34 @@ const realToday = () => dayNum(Date.now());
 function syncGen() { const today = realToday(); ensure(today + 2); for (const [d, id] of SIM.intro) { if (d > today + 2) break; if (!GEN.has(id)) { const it = resolve(id); GEN.set(id, it); ITEMS.push(it); } } }
 
 // what is on sale at time t (pure; the admin overlay in src/admin-ops.js may wrap this to add pins / remove retired items)
+function spotlightItems(seed, count, exclude = []) {
+  const used = new Set(exclude.map(x => typeof x === 'string' ? x : x && x.id).filter(Boolean));
+  const out = []; const start = G.hash('catalog-spotlight', seed) % 1000;
+  // A fixed stride coprime to 1,000 walks the full catalogue without duplicates.
+  for (let n = 0; n < 1000 && out.length < count; n++) {
+    const slot = (start + n * 379) % 1000;
+    const id = G.make('c', 1, slot, G.parse.contexts.c(1, slot)).id;
+    if (used.has(id)) continue;
+    const it = resolve(id); if (!it) continue;
+    used.add(id); out.push(it);
+  }
+  return out;
+}
 function rotation(t = Date.now()) {
   const day = Math.max(EPOCH_DAY, dayNum(t)); ensure(day + 1); syncGen();
   const w = weekOf(day); const wk = SIM.weeks.get(w); const dd = SIM.days.get(day);
   const season = SE().seasonAt(t); const seasonItems = [0, 1, 2, 3, 4, 5].map(s => resolve(G.make('s', season.number, s, G.parse.contexts.s(season.number, s)).id));
   const evs = eventsOn(day).map(ev => ({ key: ev.key, name: ev.name, icon: ev.icon, year: ev.year, starts_at: PR().dayStart(ev.first), ends_at: PR().dayStart(ev.last + 1), items: eventItems(ev) }));
   for (const e of adminEvents(t)) evs.push(e);
-  const tags = { ...wk.tags, ...dd.tags }; for (const e of evs) for (const x of e.items) tags[x.it.id] = x.tag;
-  return { day, week: w, daily: dd.ids.map(resolve), weekly: wk.ids.map(resolve), season: { number: season.number, name: season.name, ends_at: season.end_at + 1, items: seasonItems },
+  const daily = dd.ids.map(resolve), weekly = wk.ids.map(resolve);
+  const catalogDaily = spotlightItems('d:' + day, 12, [...daily, ...weekly]);
+  const catalogWeekly = spotlightItems('w:' + w, 20, [...daily, ...weekly, ...catalogDaily]);
+  const tags = { ...wk.tags, ...dd.tags };
+  for (const it of catalogDaily) tags[it.id] = 'spotlight';
+  for (const it of catalogWeekly) tags[it.id] = 'weekly-spotlight';
+  for (const e of evs) for (const x of e.items) tags[x.it.id] = x.tag;
+  return { day, week: w, daily, weekly, spotlight_daily: catalogDaily, spotlight_weekly: catalogWeekly,
+    season: { number: season.number, name: season.name, ends_at: season.end_at + 1, items: seasonItems },
     events: evs.map(e => ({ ...e, items: e.items.map(x => x.it) })), tags,
     daily_ends: PR().dayStart(day + 1), weekly_ends: PR().dayStart(weekStartDay(w) + 7), season_ends: season.end_at + 1 };
 }
@@ -181,8 +201,8 @@ function adminEvents(t) {
     return { key: 'admin-' + e.id, name: e.name, icon: 'party-popper', starts_at: e.starts_at, ends_at: e.ends_at, admin: true,
       items: [...[0, 1].map(s => ({ it: resolve(G.make('e', 900000 + e.id, s, G.parse.contexts.e(900000 + e.id, s)).id), tag: 'event' })), ...picked.map(resolve).filter(Boolean).map(it => ({ it, tag: 'event' }))] }; });
 }
-const allOnSale = (rot) => [...rot.daily, ...rot.weekly, ...(rot.season ? rot.season.items : []), ...(rot.events || []).flatMap(e => e.items)];
-const inRotation = (rot, it) => allOnSale(rot).some(x => x && it && x.id === it.id);
+const allOnSale = (rot) => [...rot.daily, ...rot.weekly, ...(rot.spotlight_daily || []), ...(rot.spotlight_weekly || []), ...(rot.season ? rot.season.items : []), ...(rot.events || []).flatMap(e => e.items)];
+const inRotation = (rot, it) => !!(it && ((it.src === 'c' && it.num === 1 && it.slot >= 0 && it.slot < 1000) || (HANDMADE_BY[it.id] && it.src !== 'k' && it.src !== 'b'))) || allOnSale(rot).some(x => x && it && x.id === it.id);
 
 // ---------- earned (score / leaderboard gated) items: never sold ----------
 let RANGES = {}; try { RANGES = require('../docs/score-ranges.json').games || {}; } catch {}
@@ -199,6 +219,20 @@ G.parse.contexts.b = (num, slot) => {
   if (num === PODIUM) return slot === 0 ? { type: 'badge', rarity: 'epic', palette: 'gold', theme: 'gaming', name: 'Weekly Podium', icon: 'trophy' } : slot === 1 ? { type: 'title', rarity: 'rare', palette: 'chrome', theme: 'gaming', name: 'Weekly Top 10' } : null;
   const g = GATE_BY.get(num); if (!g || slot > 1) return null; const pal = G.PAL_KEYS[G.hash('gp', g.id) % G.PAL_KEYS.length];
   return slot === 0 ? { type: 'banner', rarity: 'epic', palette: pal, theme: 'gaming', name: `${g.title} Pro` } : { type: 'frame', rarity: 'legendary', palette: pal, theme: 'gaming', name: `${g.title} Elite` };
+};
+G.parse.contexts.c = (num, slot) => {
+  if (num !== 1 || !Number.isInteger(slot) || slot < 0 || slot >= 1000) return null;
+  const type = G.TYPES[slot % G.TYPES.length];
+  const theme = ['gaming', 'culture', 'money'][Math.floor(slot / 2) % 3];
+  const rarity = slot % 100 < 48 ? 'common' : slot % 100 < 78 ? 'rare' : slot % 100 < 95 ? 'epic' : 'legendary';
+  const paletteSets = { gaming: ['neon', 'arcade', 'galaxy', 'toxic', 'chrome', 'ocean'], culture: ['kush', 'haze', 'terp', 'sunset', 'mint', 'dab'], money: ['gold', 'chrome', 'ice', 'royal', 'mint', 'rose'] };
+  const palette = paletteSets[theme][(slot * 7 + Math.floor(slot / 6)) % paletteSets[theme].length];
+  const r = G.rng(G.hash('catalog-name', num, slot)); const words = G.WORDS[theme];
+  const pick = (xs) => xs[Math.floor(r() * xs.length)];
+  const nouns = { banner: words.noun, frame: ['Frame', 'Orbit', 'Rim', 'Halo', 'Border'], color: ['Glow', 'Ink', 'Shine', 'Script', 'Tone'], title: words.title, badge: ['Badge', 'Medallion', 'Insignia', 'Emblem', 'Crest'], effect: ['Aura', 'Trail', 'Particles', 'Pulse', 'Atmosphere'] };
+  const kind = { banner: 'Banner', frame: 'Frame', color: 'Nameplate', title: 'Title', badge: 'Badge', effect: 'Effect' }[type];
+  const stem = type === 'title' ? pick(words.title) : pick(words.adj) + ' ' + pick(nouns[type]);
+  return { type, rarity, theme, palette, name: stem + ' ' + kind + ' ' + String(slot + 1).padStart(4, '0') };
 };
 const gateItem = (gt) => resolve(G.make('b', gt.num, gt.slot, G.parse.contexts.b(gt.num, gt.slot)).id);
 const gateText = (gt) => gt.kind === 'weekly' ? (gt.need === 3 ? 'Finish top 3 on any game\'s weekly leaderboard' : 'Finish top 10 on any game\'s weekly leaderboard')
@@ -263,7 +297,7 @@ function priceParts(it, t = Date.now()) {
 function currentTag(id, day) { const d = SIM.days.get(day); if (d && d.tags[id]) return d.tags[id]; const w = SIM.weeks.get(weekOf(day)); return w && w.tags[id] ? w.tags[id] : null; }
 function listPrice(it, t = Date.now()) { const day = dayNum(t); const st = priceStats(Math.max(EPOCH_DAY, day)); const c = st.cache.get(it.id); if (c !== undefined) return c; const p = priceParts(it, t).price; st.cache.set(it.id, p); return p; }
 // what this player pays (season perks: 5 / 10 / 15% off)
-function priceFor(it, user, t = Date.now()) { const p = it.price; const d = user ? SE().perksOf(user.id, t).discount : 0; return d ? Math.max(PRICE_FLOOR, Math.round(p * (100 - d) / 100 / 5) * 5) : p; }
+function priceFor(it, user, t = Date.now()) { const p = module.exports.listPrice(it, t); const d = user ? SE().perksOf(user.id, t).discount : 0; return d ? Math.max(PRICE_FLOOR, Math.round(p * (100 - d) / 100 / 5) * 5) : p; }
 
 // ---------- earning (idempotent ledger sync from server-validated data) ----------
 // v7 rebalance: runs pay 5, +5 for a score at a strong player's level and +15 at the top-1% level (docs/score-ranges.json),
@@ -336,7 +370,10 @@ function liveGenerated() {
 }
 let CSS_CACHE = { key: '', css: '' };
 function css() {
-  const gen = liveGenerated(); const key = realToday() + ':' + gen.length;
+  const rot = rotation();
+  const spotlight = [...(rot.spotlight_daily || []), ...(rot.spotlight_weekly || [])];
+  const gen = [...new Map([...liveGenerated(), ...spotlight].map(i => [i.id, i])).values()];
+  const key = realToday() + ':' + gen.length;
   if (CSS_CACHE.key === key) return CSS_CACHE.css;
   const out = ['/* v5 + v7 shop cosmetics (generated by src/shop.js + src/shop-gen.js) */', G.KEYFRAMES];
   for (const i of HANDMADE) {
@@ -363,8 +400,11 @@ const RULES = [
 function view(user, t = Date.now()) {
   const rot = module.exports.rotation(t); const own = user ? owned(user.id) : new Set(); const P = (i) => module.exports.pub(i, own.has(i.id));
   const perks = user ? SE().perksOf(user.id, t) : { discount: 0 };
-  const card = (i) => { const o = P(i); const tg = rot.tags[i.id]; if (tg) { o.tag = tg; o.tag_label = TAG_LABEL[tg]; } if (perks.discount && !o.owned) o.your_price = module.exports.priceFor(i, user, t); return o; };
-  const out = { daily: rot.daily.map(card), weekly: rot.weekly.map(card), season: { ...rot.season, items: rot.season.items.map(i => ({ ...card(i), tag: 'season', tag_label: 'Season' })) },
+  const card = (i) => { const o = P(i); const tg = rot.tags[i.id]; if (tg) { o.tag = tg; o.tag_label = TAG_LABEL[tg]; } o.current_price = module.exports.listPrice(i, t); if (perks.discount && !o.owned) o.your_price = Math.max(PRICE_FLOOR, Math.round(o.current_price * (100 - perks.discount) / 100 / 5) * 5); return o; };
+  const out = { daily: rot.daily.map(card), weekly: rot.weekly.map(card),
+    spotlight_daily: rot.spotlight_daily.map(i => ({ ...card(i), tag: 'spotlight', tag_label: 'Daily spotlight' })),
+    spotlight_weekly: rot.spotlight_weekly.map(i => ({ ...card(i), tag: 'weekly-spotlight', tag_label: 'Weekly spotlight' })),
+    season: { ...rot.season, items: rot.season.items.map(i => ({ ...card(i), tag: 'season', tag_label: 'Season' })) },
     events: rot.events.map(e => ({ ...e, items: e.items.map(card) })), daily_ends: rot.daily_ends, weekly_ends: rot.weekly_ends, season_ends: rot.season_ends, perks, rules: RULES };
   if (perks.peek) { const tm = module.exports.rotation(PR().dayStart(rot.day + 1) + 3600e3); out.peek = tm.daily.map(i => ({ ...P(i), tag: tm.tags[i.id], tag_label: TAG_LABEL[tm.tags[i.id]] })); }
   if (perks.vault) { const list = []; for (let d = rot.day + 1; d <= rot.day + 7; d++) { ensure(d); const x = SIM.days.get(d); for (const id of x.ids) if (x.tags[id] === 'vault') list.push({ day: d, at: PR().dayStart(d), item: P(resolve(id)) }); } out.vault_radar = list; }
@@ -381,11 +421,15 @@ function history(id) {
 function detail(user, id, t = Date.now()) {
   const it = resolve(id); if (!it) return null; const rot = module.exports.rotation(t); const own = user ? owned(user.id).has(it.id) : false;
   const o = module.exports.pub(it, own); const on = inRotation(rot, it); const tag = rot.tags[it.id] || (rot.season.items.some(x => x.id === it.id) ? 'season' : null);
-  const where = rot.daily.some(x => x.id === it.id) ? { section: 'daily', ends_at: rot.daily_ends } : rot.weekly.some(x => x.id === it.id) ? { section: 'weekly', ends_at: rot.weekly_ends }
-    : rot.season.items.some(x => x.id === it.id) ? { section: 'season', ends_at: rot.season_ends } : (() => { const e = rot.events.find(e => e.items.some(x => x.id === it.id)); return e ? { section: 'event', event: e.name, ends_at: e.ends_at } : null; })();
+  const where = rot.daily.some(x => x.id === it.id) ? { section: 'daily', ends_at: rot.daily_ends }
+    : rot.weekly.some(x => x.id === it.id) ? { section: 'weekly', ends_at: rot.weekly_ends }
+    : rot.spotlight_daily.some(x => x.id === it.id) ? { section: 'daily spotlight', ends_at: rot.daily_ends }
+    : rot.spotlight_weekly.some(x => x.id === it.id) ? { section: 'weekly spotlight', ends_at: rot.weekly_ends }
+    : rot.season.items.some(x => x.id === it.id) ? { section: 'season', ends_at: rot.season_ends }
+    : (() => { const e = rot.events.find(e => e.items.some(x => x.id === it.id)); return e ? { section: 'event', event: e.name, ends_at: e.ends_at } : null; })();
   const gate = GATES.find(g => gateItem(g).id === it.id);
   const owners = db.prepare('SELECT COUNT(*) AS n FROM user_items WHERE item_id=?').get(it.id).n;
-  return { item: { ...o, tag, tag_label: TAG_LABEL[tag] }, on_sale: on, where, source: it.src === 'k' ? `Season ${it.num} free track (${it.label || 'level reward'})` : it.src === 'b' ? 'Earned, not sold' : it.src === 's' ? `Season ${it.num} shop` : it.src === 'e' ? 'Event item' : it.src === 'w' ? 'Weekly featured drop' : it.src === 'd' ? 'Daily drop' : 'Original v5 collection',
+  return { item: { ...o, tag, tag_label: TAG_LABEL[tag] }, on_sale: on, where, source: it.src === 'k' ? `Season ${it.num} free track (${it.label || 'level reward'})` : it.src === 'b' ? 'Earned, not sold' : it.src === 's' ? `Season ${it.num} shop` : it.src === 'e' ? 'Event item' : it.src === 'w' ? 'Weekly featured drop' : it.src === 'd' ? 'Daily drop' : it.src === 'c' ? 'Permanent 1,000-item cosmetic catalogue' : 'Original v5 collection',
     sold: it.src !== 'k' && it.src !== 'b', requirement: gate ? gateText(gate) : null, price: on ? priceParts(it, t) : null, your_price: on && user ? module.exports.priceFor(it, user, t) : null, history: history(it.id), owners };
 }
 // for the admin panel (src/admin-ops.js) and tests: the catalog that has appeared so far, newest first
@@ -394,7 +438,27 @@ function catalog({ limit = 500, type = '', q = '' } = {}) {
   const list = [...HANDMADE, ...[...GEN.values()].filter(i => (SIM.seen.get(i.id) || {}).first <= today).reverse()];
   return list.filter(i => (!type || i.type === type) && (!q || i.name.toLowerCase().includes(String(q).toLowerCase()))).slice(0, limit).map(i => ({ ...pub(i, false), src: i.generated ? i.src : 'v5', history: history(i.id) }));
 }
-function schedule(days = 14, t = Date.now()) { const d0 = Math.max(EPOCH_DAY, dayNum(t)); const out = []; for (let d = d0; d < d0 + days; d++) { const r = module.exports.rotation(PR().dayStart(d) + 3600e3); out.push({ day: d, at: PR().dayStart(d), daily: r.daily.map(i => ({ id: i.id, name: i.name, tag: r.tags[i.id] || null })), weekly: r.weekly.map(i => i.id), events: r.events.map(e => e.name) }); } return out; }
+// Permanent, searchable catalogue: 1,000 stable original cosmetics plus the handmade legacy collection.
+function catalogItems({ limit = 24, offset = 0, type = '', q = '', user = null, t = Date.now() } = {}) {
+  const lim = Math.max(1, Math.min(60, Number.parseInt(limit, 10) || 24));
+  const off = Math.max(0, Math.min(5000, Number.parseInt(offset, 10) || 0));
+  const query = String(q || '').trim().toLowerCase().slice(0, 80);
+  const allowed = new Set([...G.TYPES, '']); const filterType = allowed.has(String(type)) ? String(type) : '';
+  const own = user ? owned(user.id) : new Set();
+  const generated = Array.from({ length: 1000 }, (_, slot) => resolve(G.make('c', 1, slot, G.parse.contexts.c(1, slot)).id));
+  const all = [...HANDMADE, ...generated].filter(it => it && (!filterType || it.type === filterType) && (!query || it.name.toLowerCase().includes(query)));
+  const page = all.slice(off, off + lim);
+  const items = page.map(it => {
+    const item = { ...pub(it, own.has(it.id)), src: it.generated ? it.src : 'v5', on_sale: true, current_price: module.exports.listPrice(it, t), tag: it.src === 'c' ? 'catalog' : null, tag_label: it.src === 'c' ? 'Always available' : undefined };
+    if (user && !item.owned) item.your_price = module.exports.priceFor(it, user, t);
+    return item;
+  });
+  const css = [G.KEYFRAMES, ...page.filter(it => it.generated).map(it => it.type === 'banner'
+    ? '.bn-' + it.id + '{background:url(/shop/art/' + it.id + '.svg) center/cover no-repeat;background-color:' + (G.PALETTES[it.palette] || G.PALETTES.neon)[0] + '}'
+    : G.itemCss(it)).filter(Boolean)].join('\n');
+  return { ok: true, total: all.length, catalogue_count: 1000, limit: lim, offset: off, has_more: off + lim < all.length, items, css };
+}
+function schedule(days = 14, t = Date.now()) { const d0 = Math.max(EPOCH_DAY, dayNum(t)); const out = []; for (let d = d0; d < d0 + days; d++) { const r = module.exports.rotation(PR().dayStart(d) + 3600e3); out.push({ day: d, at: PR().dayStart(d), daily: r.daily.map(i => ({ id: i.id, name: i.name, tag: r.tags[i.id] || null })), weekly: r.weekly.map(i => i.id), spotlight_daily: r.spotlight_daily.map(i => i.id), spotlight_weekly: r.spotlight_weekly.map(i => i.id), events: r.events.map(e => e.name) }); } return out; }
 function stats() { syncGen(); return { generated_so_far: GEN.size, handmade: HANDMADE.length, vaulted: [...SIM.vaulted.values()].filter(v => v <= realToday()).length, simulated_to: SIM.day }; }
 // owned + currently-listed shop items of one type (Customize page lists only these, not the whole endless catalog)
 function listFor(own, type) {
@@ -407,6 +471,21 @@ function listFor(own, type) {
 let ICONS = null;
 function icons() { if (!ICONS) { try { ICONS = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'public', 'js', 'icons.js'), 'utf8').match(/export const ICONS=(\{.*?\});/s)[1]); } catch { ICONS = {}; } } return ICONS; }
 function routes(app, A, H) {
+  app.get('/api/shop/catalog', (req, res) => { const me = H.currentUser(req); const result = catalogItems({ limit: req.query.limit, offset: req.query.offset, type: req.query.type, q: req.query.q, user: me }); res.setHeader('Cache-Control', 'no-store'); res.json(result); });
+  app.get('/api/shop', (req, res) => {
+    const me = H.currentUser(req);
+    const balanceNow = me ? module.exports.sync(me.id) : 0;
+    const snapshot = module.exports.view(me);
+    const ownItems = me ? [...module.exports.owned(me.id)].map(id => { const it = resolve(id); return it ? module.exports.pub(it, true) : null; }).filter(Boolean) : [];
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ ok: true, ...snapshot, signed_in: !!me, balance: balanceNow, earned: me ? module.exports.earned(me.id) : 0, owned: ownItems, earn: EARN, disclaimer: DISCLAIMER });
+  });
+  app.post('/api/shop/buy', H.requireUser, (req, res) => {
+    const id = String((req.body || {}).item || '').slice(0, 128);
+    const result = module.exports.buy(req.user, id);
+    if (!result.ok) return res.status(400).json(result);
+    res.setHeader('Cache-Control', 'no-store'); res.json(result);
+  });
   app.get('/shop/art/:id.svg', (req, res) => {
     const it = resolve(req.params.id); if (!it || !it.generated || (it.type !== 'banner' && it.type !== 'badge')) return res.status(404).end();
     const svg = it.type === 'banner' ? G.bannerSvg(it.art.seed, it.palette, it.art.motif, it.rarity) : G.badgeArt(it, icons()[it.art.icon] || '');
@@ -422,5 +501,5 @@ function upcomingEvents(t = Date.now()) { const d0 = dayNum(t); const out = []; 
 
 module.exports = { ITEMS, BY_ID, RARITY, THEMES, EARN, sync, balance, earned, owned, rotation, buy, pub, css, cssKey, attach,
   // v7 engine (docs/ECONOMY.md)
-  EPOCH_DAY, EVENTS, GATES, CAP, COOL, TYPE_MULT, RULES, DISCLAIMER, resolve, listPrice, priceParts, priceFor, inRotation, allOnSale, view, detail, history, catalog, schedule, stats, listFor,
+  EPOCH_DAY, EVENTS, GATES, CAP, COOL, TYPE_MULT, RULES, DISCLAIMER, resolve, listPrice, priceParts, priceFor, inRotation, allOnSale, view, detail, history, catalog, catalogItems, schedule, stats, listFor,
   grantGates, grantWeekly, eventsOn, upcomingEvents, routes, gateItem, _sim: SIM };

@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const db = require('./db');
 try { db.prepare('SELECT avatar FROM users LIMIT 1').get(); } catch { db.exec("ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT ''"); }
 db.exec('CREATE TABLE IF NOT EXISTS avatar_parts_owned (user_id INTEGER NOT NULL, part TEXT NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (user_id, part))');
+db.exec(`CREATE TABLE IF NOT EXISTS avatar_looks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, name TEXT COLLATE NOCASE NOT NULL, avatar TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(user_id, name));`);
 
 const SKIN = ['#f9d7b9', '#f1c19b', '#e0a679', '#c98a5b', '#a8693f', '#8a5232', '#6b3d22', '#4a2915'];
 const HAIRC = ['#1b1b1f', '#4a2f1d', '#7b4a24', '#c58b3c', '#e8c46a', '#d9d4cc', '#c2410c', '#7c3aed', '#22d3ee', '#16a34a'];
@@ -111,10 +112,42 @@ function routes(app, H) {
     res.set({ 'Cache-Control': 'public, max-age=300', ETag: et, 'Content-Type': 'image/svg+xml' }); if (req.headers['if-none-match'] === et) return res.status(304).end(); res.send(body); });
   app.get('/api/avatar/:u', (req, res) => { const u = db.prepare('SELECT username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u).slice(0, 32)); if (!u) return bad(res, 404, 'Avatar not found'); res.set('Cache-Control', 'public, max-age=60').json({ ok: true, avatar: configOf(u) }); });
   app.get('/avatar-preview.svg', (req, res) => { let c = {}; try { c = JSON.parse(String(req.query.c || '{}')); } catch {} res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(svg(clean(c, defaultFor('preview')))); });
+  const validateOwned = (userId, input, base) => {
+    const want = clean(input, base); const ctx = {};
+    for (const k of KINDS) { const p = BYK[k][want[k]]; if (!owns(userId, p, ctx)) return { error: `Unlock "${p.label}" first.` }; }
+    return { avatar: want };
+  };
+  const looksFor = (userId) => db.prepare('SELECT id, name, avatar, updated_at FROM avatar_looks WHERE user_id=? ORDER BY updated_at DESC, id DESC').all(userId).map(x => ({ ...x, avatar: JSON.parse(x.avatar) }));
   app.get('/api/avatar', requireUser, (req, res) => res.json({ ok: true, avatar: configOf(req.user), kinds: KINDS, parts: partsFor(req.user.id), bg: BG, skin: SKIN, hair_colors: HAIRC, crowns: require('./monetize').crowns(req.user.id) }));
-  app.put('/api/avatar', requireUser, (req, res) => { const want = clean(req.body && req.body.avatar, configOf(req.user)); const ctx = {};
-    for (const k of KINDS) { const p = BYK[k][want[k]]; if (!owns(req.user.id, p, ctx)) return bad(res, 403, `Unlock "${p.label}" first.`); }
-    db.prepare('UPDATE users SET avatar=? WHERE id=?').run(JSON.stringify(want), req.user.id); res.json({ ok: true, avatar: want }); });
+  app.put('/api/avatar', requireUser, (req, res) => {
+    const v = validateOwned(req.user.id, req.body && req.body.avatar, configOf(req.user)); if (v.error) return bad(res, 403, v.error);
+    db.prepare('UPDATE users SET avatar=? WHERE id=?').run(JSON.stringify(v.avatar), req.user.id); res.json({ ok: true, avatar: v.avatar });
+  });
+  app.get('/api/avatar-looks', requireUser, (req, res) => res.json({ ok: true, looks: looksFor(req.user.id), max: 12 }));
+  app.post('/api/avatar-looks', requireUser, (req, res) => {
+    const name = String((req.body || {}).name || '').trim().replace(/\s+/g, ' ').slice(0, 32);
+    if (!name) return bad(res, 400, 'Give this saved look a name (up to 32 characters).');
+    const v = validateOwned(req.user.id, req.body && req.body.avatar, configOf(req.user)); if (v.error) return bad(res, 403, v.error);
+    const old = db.prepare('SELECT id FROM avatar_looks WHERE user_id=? AND name=? COLLATE NOCASE').get(req.user.id, name);
+    if (!old && db.prepare('SELECT COUNT(*) AS c FROM avatar_looks WHERE user_id=?').get(req.user.id).c >= 12) return bad(res, 409, 'You can save up to 12 looks. Delete one before saving another.');
+    const t = Date.now();
+    if (old) db.prepare('UPDATE avatar_looks SET avatar=?, updated_at=? WHERE id=? AND user_id=?').run(JSON.stringify(v.avatar), t, old.id, req.user.id);
+    else db.prepare('INSERT INTO avatar_looks (user_id,name,avatar,created_at,updated_at) VALUES (?,?,?,?,?)').run(req.user.id, name, JSON.stringify(v.avatar), t, t);
+    res.json({ ok: true, looks: looksFor(req.user.id) });
+  });
+  app.delete('/api/avatar-looks/:id', requireUser, (req, res) => {
+    const r = db.prepare('DELETE FROM avatar_looks WHERE id=? AND user_id=?').run(+req.params.id, req.user.id);
+    if (!r.changes) return bad(res, 404, 'Saved look not found.');
+    res.json({ ok: true, looks: looksFor(req.user.id) });
+  });
+  app.post('/api/avatar-looks/:id/apply', requireUser, (req, res) => {
+    const row = db.prepare('SELECT * FROM avatar_looks WHERE id=? AND user_id=?').get(+req.params.id, req.user.id);
+    if (!row) return bad(res, 404, 'Saved look not found.');
+    let stored = {}; try { stored = JSON.parse(row.avatar); } catch {}
+    const v = validateOwned(req.user.id, stored, configOf(req.user)); if (v.error) return bad(res, 403, v.error);
+    db.prepare('UPDATE users SET avatar=? WHERE id=?').run(JSON.stringify(v.avatar), req.user.id);
+    res.json({ ok: true, name: row.name, avatar: v.avatar });
+  });
   app.post('/api/avatar/buy', requireUser, (req, res) => { const [k, id] = String((req.body || {}).part || '').split(':'); const p = BYK[k] && BYK[k][id]; if (!p || !p.unlock.crowns) return bad(res, 400, 'That part is not sold for Crowns.');
     const M = require('./monetize'); const t = Date.now();
     const r = db.transaction(() => { if (db.prepare('SELECT 1 FROM avatar_parts_owned WHERE user_id=? AND part=?').get(req.user.id, key(p))) return { error: 'You already own it.' };
