@@ -21,7 +21,11 @@ async function storePage() {
   }
   const dropCandidates = [];
   if (shop && shop.ok) {
-    for (const [items, label] of [[shop.daily || [], 'Daily pick'], [shop.weekly || [], 'Weekly featured'], [((shop.season || {}).items || []), 'Season rotation']]) for (const item of items) dropCandidates.push({ ...item, drop_source: label });
+    for (const [items, label] of [
+      [shop.spotlight_daily || [], 'Daily spotlight'], [shop.spotlight_weekly || [], 'Weekly spotlight'],
+      [shop.daily || [], 'Daily pick'], [shop.weekly || [], 'Weekly featured'],
+      [((shop.season || {}).items || []), 'Season rotation']
+    ]) for (const item of items) dropCandidates.push({ ...item, drop_source: label });
     for (const ev of shop.events || []) for (const item of ev.items || []) dropCandidates.push({ ...item, drop_source: ev.name || 'Limited event' });
   }
   const cosmeticDrops = [...new Map(dropCandidates.filter(x => x && x.id).map(x => [x.id, x])).values()].slice(0, 18);
@@ -39,13 +43,13 @@ async function storePage() {
       ${pass && pass.owned ? `<p class="ok-msg">You own this season's pass. Premium level ${pass.premium_level}. <button class="btn sm" id="pass-claim">Claim unlocked rewards</button></p>` : buy('season-pass', `Get the pass ${usd(r.pass.usd_cents)}`)}
       ${pass && pass.next_free ? `<details class="pq" id="pass-quests"><summary>${icon('flame')} Earn next season's pass free: ${pass.next_free.done}/${pass.next_free.total} quests</summary><p class="small muted">Very hard on purpose: about ${Math.round(pass.next_free.est_completion * 100)}% of active players finish all 48.</p><ol class="pq-list">${pass.next_free.quests.map(q => `<li class="${q.done ? 'done' : ''}"><b>${esc(q.title)}</b> <span class="small muted">${esc(q.desc)} (${C.fmt(q.progress)}/${C.fmt(q.target)})</span></li>`).join('')}</ol>${pass.next_free.complete && !pass.next_free.granted ? '<button class="btn sm" id="pq-claim">Claim next season\'s pass</button>' : ''}</details>` : ''}</div>` : ''}
     <div class="section-h"><h2>${icon('sparkles')} Cosmetic drops</h2><span class="small muted">${cosmeticDrops.length} rotating items · earned Hub Points</span></div>
-    <p class="small muted">Banners, frames, titles, name colors, effects and badges rotate through daily, weekly, seasonal and event drops. Hub Points are earned in play; they are not sold for cash. Tap any item to preview it on your profile and see its current price.</p>
+    <p class="small muted">Banners, frames, titles, name colors, effects and badges rotate through daily picks, a 12-item daily spotlight, a 20-item weekly spotlight, seasonal and event drops. Hub Points are earned in play; they are not sold for cash. Tap any item to preview it on your profile and see its current price.</p>
     ${cosmeticDrops.length ? `<div class="store-cosmetics-grid">${cosmeticDrops.map(item => `<button type="button" class="store-cosmetic-card" data-cosmetic="${esc(item.id)}" aria-label="Preview ${esc(item.name)}"><span class="store-cosmetic-preview">${preview(item, 'store-preview')}</span><span class="store-cosmetic-name">${esc(item.name)}</span><span class="store-cosmetic-meta">${esc(item.rarity_label || item.rarity || 'Cosmetic')} · ${esc(item.drop_source || 'Rotating drop')}</span><span class="store-cosmetic-price">${item.owned ? 'Owned' : `${C.fmt(item.your_price ?? item.current_price ?? item.price ?? 0)} Hub Points`}</span></button>`).join('')}</div>` : `<div class="card pad">The rotating cosmetic catalogue is temporarily unavailable. <a href="/shop">Open the Points Shop</a>.</div>`}
     <p class="small"><a class="btn sm ghost" href="/shop">Browse the full Points Shop and earned collection</a></p>
 
     <section class="store-full-catalog" id="store-catalog">
       <div class="section-h"><h2>${icon('shopping-bag')} Full Cosmetic Catalogue</h2><span class="small muted">${cat && cat.ok ? C.fmt(cat.total) + ' items' : '1,000+ items'}</span></div>
-      <p class="small muted">Browse 1,000 permanent original cosmetics plus the rotating collection. Search by name or filter banners, avatar frames, nameplates, titles, badges and animated profile effects. Everything here is cosmetic only.</p>
+      <p class="small muted">Browse 1,000+ original cosmetics alongside a daily and weekly rotating spotlight. Search by name or filter banners, avatar frames, nameplates, titles, badges and animated profile effects. Everything here is cosmetic only.</p>
       <form class="store-catalog-filter card pad" id="store-catalog-filter">
         <label for="store-catalog-search">Search</label><input id="store-catalog-search" name="q" type="search" maxlength="80" value="${esc(catalogState.query)}" placeholder="Search cosmetics…">
         <label for="store-catalog-type">Category</label><select id="store-catalog-type" name="type">

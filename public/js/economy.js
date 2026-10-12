@@ -104,15 +104,19 @@ async function shopPage() {
       ${ev.map(e => `<div class="ec-event card"><div class="ec-ev-h">${icon(e.icon || 'party-popper')}<div><b>${esc(e.name)}</b><div class="tiny muted">Event items for ${cdi(e.ends_at)} • ends ${localAt(e.ends_at)}</div></div></div>${grid('shop-event-' + esc(e.key), e.items, bal)}</div>`).join('')}
       <div class="section-h"><h2>${icon('sparkles')} Weekly featured</h2><span class="small muted">New in ${cdi(r.weekly_ends)} <span class="ec-at">(${localAt(r.weekly_ends)})</span></span></div>
       ${grid('shop-weekly', r.weekly, bal)}
+      <div class="section-h"><h2>${icon('flame')} Weekly cosmetic spotlight</h2><span class="small muted">20 featured from the 1,000+ collection · rotates Monday</span></div>
+      ${grid('shop-catalog-weekly-spotlight', r.spotlight_weekly || [], bal)}
       <div class="section-h"><h2>${icon('clock')} Daily picks</h2><span class="small muted">New in ${cdi(r.daily_ends)} <span class="ec-at">(${localAt(r.daily_ends, { hour: 'numeric', minute: '2-digit' })} your time)</span></span></div>
       ${grid('shop-daily', r.daily, bal)}
+      <div class="section-h"><h2>${icon('zap')} Daily cosmetic spotlight</h2><span class="small muted">12 more items from the collection · rotates at midnight ET</span></div>
+      ${grid('shop-catalog-daily-spotlight', r.spotlight_daily || [], bal)}
       <div class="section-h"><h2>${icon('calendar-range')} Season ${r.season.number} shop: ${esc(r.season.name)}</h2><span class="small muted">Leaves in ${cdi(r.season_ends)}</span></div>
       ${grid('shop-season', r.season.items, bal)}
       ${r.peek ? `<div class="section-h"><h2>${icon('eye')} Tomorrow's daily picks</h2><span class="small muted">Season perk: early peek</span></div><div class="ec-peek">${r.peek.map(i => `<button class="ec-peek-i" data-item="${esc(i.id)}">${preview(i, 'sm')}<span>${esc(i.name)}</span></button>`).join('')}</div>` : ''}
       ${r.vault_radar ? `<div class="section-h"><h2>${icon('history')} Vault radar</h2><span class="small muted">Season perk</span></div>${r.vault_radar.length ? `<div class="card pad ec-radar">${r.vault_radar.map(v => `<div class="mini-row" data-item="${esc(v.item.id)}"><b>${esc(v.item.name)}</b><span class="small muted">${dateOf(v.at)}</span></div>`).join('')}</div>` : `<p class="small muted">No Vault returns in the next 7 days.</p>`}` : ''}
       <section class="shop-catalog-section" id="catalogue">
         <div class="section-h"><h2>${icon('shopping-bag')} Full Cosmetic Catalogue</h2><span class="small muted">${cat.ok ? fmt(cat.total) + ' items' : '1,000+ items'}</span></div>
-        <p class="small muted">Browse 1,000 permanent original cosmetics plus the rotating shop: banners, frames, nameplates, titles, badges and animated profile effects. All items are cosmetic only—no score, XP leaderboard or giveaway advantage.</p>
+        <p class="small muted">Browse 1,000+ original cosmetics plus daily and weekly spotlights: banners, frames, nameplates, titles, badges and animated profile effects. All items are cosmetic only—no score, XP leaderboard or giveaway advantage.</p>
         <form class="catalog-filter card pad" id="catalog-filter">
           <label for="catalog-search">Search cosmetics</label><input id="catalog-search" name="q" type="search" maxlength="80" value="${esc(catalogQuery)}" placeholder="Search names, styles, colors…">
           <label for="catalog-type">Category</label><select id="catalog-type" name="type">

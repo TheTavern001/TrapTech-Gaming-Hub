@@ -264,3 +264,8 @@ The Points Shop exposes `GET /api/shop/catalog` with search, category filtering 
 ## Limited prestige showcase
 
 The paid store has ten numbered prestige showcase collectibles. All are limited-supply cosmetic collectibles priced at $1,000 USD or more, with six-confirmation settings retained for prestige orders. These are deliberately separate from the Hub Points catalogue: Hub Points cannot be purchased with cash and are never used for game scoring or giveaway entries. The current storefront rendering is a collectible showcase; this catalogue change does not claim that every prestige collectible is a wearable 3D avatar mesh.
+
+
+## Rotating collection spotlight
+
+The 1,000-item core catalogue remains searchable as a collection archive. In addition, the storefront features 12 items from that collection in a daily spotlight and 20 items in a weekly spotlight. Both lists are deterministic for the hub date/week, shared by all players, and refresh at midnight US Eastern / Monday midnight US Eastern. The spotlight uses stable catalogue IDs, excludes the ordinary daily and weekly picks, and does not create duplicate IDs within a rotation. Spotlight items are highlighted offers, not exclusive ownership locks: the core catalogue remains available for browsing and purchase. This keeps the shop feeling active without making a player's favourite cosmetic disappear from the catalogue forever. The 10 limited prestige collectibles remain a separate real-money tier.
