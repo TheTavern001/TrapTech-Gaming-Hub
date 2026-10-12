@@ -1,6 +1,6 @@
 // High Score - neon reflex target game. Original code/art.
 // v5 art: brick wall (Poly Haven CC0 brick_wall_02), real archery-target photo (rawpixel, public domain), gold-coin bonus targets (Wikimedia, public domain). See /CREDITS.md
-import { Game, TAU, rnd, clamp, fmt, loadArt, loadAtlas, sprC, coinFrame, Ambient } from './engine.js';
+import { Game, TAU, clamp, fmt, loadArt, loadAtlas, sprC, coinFrame, Ambient } from './engine.js';
 // v6: lacquered 3D target boards, black bomb with lit fuse, spinning gold coin x2 targets (original Blender renders), smoky arcade ambience.
 export class HighScore extends Game {
   get title() { return 'HIGH SCORE'; }
@@ -10,12 +10,13 @@ export class HighScore extends Game {
   diff() { return clamp(this.playT / 90, 0, 1); }
   over() { return clamp((this.playT - 90) / 240, 0, 1); } // v7 endless: keeps ramping after 90 s (shorter life, smaller, more targets)
   mult() { return Math.min(5, 1 + Math.floor(this.combo / 5)); }
+  range(min, max) { return min + this.r() * (max - min); }
   spawn() {
     const d = this.diff(), o = this.over(); const R = 48 - d * 16 - o * 8; const top = 110, pad = R + 12;
     let x, y, tries = 0;
-    do { x = rnd(pad, this.W - pad); y = rnd(top + pad, this.H - pad); tries++; } while (tries < 20 && this.targets.some(t => Math.hypot(t.x - x, t.y - y) < t.R + R + 16));
-    const roll = Math.random(); const type = this.playT > 8 && roll < 0.13 + d * 0.07 ? 'bomb' : roll > 0.9 ? 'gold' : 'norm';
-    this.targets.push({ x, y, R, life: Math.max(0.6, 1.85 - d * 0.9 - o * 0.3), age: 0, type, hue: rnd(0, 1) });
+    do { x = this.range(pad, this.W - pad); y = this.range(top + pad, this.H - pad); tries++; } while (tries < 20 && this.targets.some(t => Math.hypot(t.x - x, t.y - y) < t.R + R + 16));
+    const roll = this.r(); const type = this.playT > 8 && roll < 0.13 + d * 0.07 ? 'bomb' : roll > 0.9 ? 'gold' : 'norm';
+    this.targets.push({ x, y, R, life: Math.max(0.6, 1.85 - d * 0.9 - o * 0.3), age: 0, type, hue: this.r() });
   }
   onDown(x, y) {
     let best = null, bd = 1e9;
@@ -36,7 +37,7 @@ export class HighScore extends Game {
     for (const r of this.rings) { r.r += 140 * dt; r.life -= dt; } this.rings = this.rings.filter(r => r.life > 0);
     if (this.dead) { this.endT += dt; if (this.endT > 0.8) { this.sfx.lose(); this.finish(); } return; }
     const d = this.diff(); this.spawnT -= dt;
-    if (this.spawnT <= 0 && this.targets.length < 5 + Math.round(this.over() * 2)) { this.spawn(); this.spawnT = Math.max(0.32, rnd(0.95, 1.15) - d * 0.55 - this.over() * 0.12); }
+    if (this.spawnT <= 0 && this.targets.length < 5 + Math.round(this.over() * 2)) { this.spawn(); this.spawnT = Math.max(0.32, this.range(0.95, 1.15) - d * 0.55 - this.over() * 0.12); }
     for (const t of this.targets) t.age += dt;
     for (const t of this.targets.filter(t => t.age >= t.life)) { if (t.type !== 'bomb') this.loseLife(t.x, t.y, 'MISS'); }
     this.targets = this.targets.filter(t => t.age < t.life);
