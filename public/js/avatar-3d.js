@@ -53,7 +53,7 @@ export async function mountAvatar3D(stage, cfg) {
   const hairPalette = ['#1b1b1f','#4a2f1d','#7b4a24','#c58b3c','#e8c46a','#d9d4cc','#c2410c','#7c3aed','#22d3ee','#16a34a'];
   const skin = skinPalette[Number(String(cfg.skin || 's2').slice(1))] || skinPalette[2];
   const hair = hairPalette[Number(String(cfg.hairc || 'c0').slice(1))] || hairPalette[0];
-  const outfitColors = { tee:'#3b82f6', hoodie:'#334155', jersey:'#dc2626', tracksuit:'#111827', 'chain-tee':'#f8fafc', fur:'#d6d3d1', 'cannabis-hoodie':'#166534', dj:'#312e81', scrubs:'#0e7490', labcoat:'#f8fafc', mechanic:'#292524', hardhat:'#f59e0b', farmer:'#365314', suit:'#111827', tactical:'#374151', chef:'#f8fafc', firefighter:'#991b1b', varsity:'#7f1d1d', denim:'#1d4ed8', ranch:'#92400e', hype:'#db2777' };
+  const outfitColors = { tee:'#3b82f6', hoodie:'#334155', jersey:'#dc2626', tracksuit:'#111827', 'chain-tee':'#f8fafc', fur:'#d6d3d1', 'cannabis-hoodie':'#166534', dj:'#312e81', scrubs:'#0e7490', labcoat:'#f8fafc', mechanic:'#292524', hardhat:'#f59e0b', farmer:'#365314', suit:'#111827', tactical:'#374151', chef:'#f8fafc', firefighter:'#991b1b', varsity:'#7f1d1d', denim:'#1d4ed8', ranch:'#92400e', hype:'#db2777', 'titan-exoframe':'#334155' };
   const shirt = outfitColors[cfg.outfit] || '#3b82f6';
   const presentation = ['male','female','other'].includes(cfg.gender) ? cfg.gender : 'other';
   const metal = mat('#d6a94f', 0.22, 0.86);
