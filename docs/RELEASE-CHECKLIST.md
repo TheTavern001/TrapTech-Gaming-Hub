@@ -124,5 +124,5 @@ This repository's current `main` contains the Hub v7 work, the Games Library int
 
 ## Branch integration gate — 2026-10-12
 
-- [ ] Resolve release target before merge: PR #8 currently targets `games/deep-distinctness-audit`, not `main`. The candidate includes 188 commits beyond current `main`; the integration branch itself contains 90 commits not present on `main`. Do not merge this PR into the integration branch and then assume production `main` was updated.
+- [ ] Resolve release target before merge: PR #8 currently targets `games/deep-distinctness-audit`, not `main`. The candidate is currently 192 commits ahead of `main` (0 behind) and includes the integration branch's 90 commits not present on `main`. Although the ancestry is linear, retargeting the PR to `main` would bring that entire 192-commit range into the production diff; review the complete tree/catalog and all intermediate changes before deciding. Do not merge this PR into the integration branch and then assume production `main` was updated.
 - [ ] After CI and runtime checks are available, review the complete candidate diff and integration ancestry, then explicitly prepare and validate the intended release commit/PR against `main`. Do not retarget/merge solely to make the PR appear current.
