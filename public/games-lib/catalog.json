@@ -3542,8 +3542,8 @@
       "endless_mode": true,
       "scoring": "Energy cells 30–125 by combo; near-miss 5",
       "event_length": "3 days",
-      "acLevel": 2,
-      "ac_level": "L2 session checks",
+      "acLevel": 3,
+      "ac_level": "L3 score-event validation",
       "ac": {
         "perSec": 120,
         "ramp": 0,
@@ -3587,8 +3587,8 @@
       "endless_mode": true,
       "scoring": "Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop",
       "event_length": "3 days",
-      "acLevel": 2,
-      "ac_level": "L2 session checks",
+      "acLevel": 3,
+      "ac_level": "L3 score-event validation",
       "ac": {
         "perSec": 180,
         "ramp": 0,

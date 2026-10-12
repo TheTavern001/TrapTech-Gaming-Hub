@@ -98,8 +98,8 @@
 | 76 | Duck Shot | Duck Hunt | Reflex & Skill | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 400/s, L2 | 14 KB | not run |
 | 77 | Paper Toss | Paper Toss | Reflex & Skill | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 8/s, L2 | 12 KB | not run |
 | 78 | Skee Roll | Skee-Ball | Reflex & Skill | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 100/s, L2 | 25 KB | not run |
-| 79 | Neon Circuit | Original neon arcade racer | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 120/s, L2 | 9 KB | not run |
-| 80 | Rift Survival | — | Survival & Horde | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 180/s, L2 | 10 KB | not run |
+| 79 | Neon Circuit | Original neon arcade racer | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 120/s, L3 | 9 KB | not run |
+| 80 | Rift Survival | — | Survival & Horde | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 180/s, L3 | 10 KB | not run |
 
 ## Release qualification
 - Current generated catalog consistency is checked by `node tools/games-lib-static-check.js`.
