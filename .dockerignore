@@ -28,3 +28,6 @@ render.yaml
 Dockerfile
 .dockerignore
 !tools/verify-live-deployment.js
+# Required by Dockerfile prelaunch audits; otherwise these files vanish from the build context.
+!tools/games-lib-static-check.js
+!docs/GAMES-LIB.md
