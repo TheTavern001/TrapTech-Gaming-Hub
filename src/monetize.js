@@ -89,7 +89,8 @@ const reserved = (id) => db.prepare("SELECT COUNT(*) c FROM store_orders WHERE p
 const setting = (k, d) => { const r = db.prepare('SELECT value FROM settings WHERE key=?').get(k); try { return r ? JSON.parse(r.value) : d; } catch { return d; } };
 const setSetting = (k, v) => db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at').run(k, JSON.stringify(v), Date.now());
 const ADDR = () => String(process.env.BTC_ADDRESS || '').trim();
-const prestigeSalesEnabled = () => process.env.PRESTIGE_SALES_ENABLED === '1';
+// Two independent deployment flags are required; keep originals preview-only until the owner has completed real-device compatibility checks.
+const prestigeSalesEnabled = () => process.env.PRESTIGE_SALES_ENABLED === '1' && process.env.PRESTIGE_COMPATIBILITY_APPROVED === '1';
 function checkoutState() {
   const a = ADDR(); const v = a ? BTC.validateAddress(a) : { ok: false, why: 'BTC_ADDRESS is not set' };
   const on = !!setting('checkout_enabled', true);
