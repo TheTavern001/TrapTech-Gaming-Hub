@@ -65,6 +65,12 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [ ] Execute the updated sponsor E2E test against the exact candidate. The current GitHub Actions runs fail before test steps and provide no step logs; do not mark this runtime validation as passed.
 - [x] Independently parsed the six changed JavaScript source/test files for syntax errors; this is syntax-only validation and does not replace Node execution or E2E/browser tests.
 
+## Skill tie-break integrity review — 2026-10-12
+
+- [x] Secondary skill metrics now require the anti-cheat pipeline to mark the run's event log/replay verified. Unverified client-submitted event logs and coin totals no longer decide skill tie-breaks; server-measured elapsed time remains available, with unresolved ties sent to playoff.
+- [x] Added regression assertions for unverified versus verified library-game event metrics and coin metrics.
+- [ ] Execute the Games Library E2E suite and test forged logs against the exact release candidate; syntax parsing alone is insufficient.
+
 ## Current boundary
 
 This branch is based on `v7-wip` and preserves its Hub application files. The current edits add to the Hub navigation/library experience; they do not replace the rest of the Hub. Static checks cannot substitute for the browser, mobile, booking-permission, or anti-cheat checks above.
