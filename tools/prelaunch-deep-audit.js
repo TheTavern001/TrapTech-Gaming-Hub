@@ -212,7 +212,8 @@ const evidence = {
   mode: 'read-only structural audit of core Hub games and Games Library; not a visual/gameplay/physical-device pass',
   summary: {
     registryGames: games.length,
-    coreGamesRegistered: coreGames.length,
+    // Match the public runtime registry: archived chance games are audited below but are not active core titles.
+    coreGamesRegistered: coreGames.filter(g => !new Set(['plinko', 'spin-to-win', 'blazed-roulette']).has(g.id)).length,
     coreGamesWithBlockers: coreRows.filter(r => r.problems.length).length,
     coreGamesWithReviewNotes: coreRows.filter(r => r.notes.length).length,
     gamesWithBlockers: rows.filter(r => r.problems.length).length,
