@@ -2,6 +2,16 @@
 
 Status: **in progress; not launch-approved**. This is the implementation workboard, not a claim that visual/gameplay QA has passed.
 
+## Implemented fixes and verification hardening
+
+- **Sky Hopper:** bounded successive obstacle-gap shifts to reduce unfair/unreachable mobile layouts. Source-level syntax was checked after the change; full gameplay remains unverified.
+- **Games Library shared engine:** wrapped localStorage reads/writes so denied storage does not prevent the game engine from booting; normalizes legacy viewport metadata so pinch zoom is not deliberately disabled while retaining safe-area support.
+- **Prelaunch verification:** checks syntax across repository JavaScript, checks each original built game implementation, validates vendored multi-file entrypoints, confirms required shared library files, and checks icon/manifest wiring. The audit distinguishes original built titles from the three vendored multi-file titles rather than incorrectly requiring every title to have a `game.js` file.
+- **Build gate:** the Docker build now stops if the deep audit reports a blocker instead of treating the existence of a report file as success.
+- **Branding:** canonical crowned-TT Trap Tech artwork is wired to the browser icon, startup splash, PWA icons, shortcuts, and generated PNG icon routes. Deployment still needs live response verification.
+
+These are source-level changes, not proof of a full browser/device pass. Keep each title blocked until its game-specific test evidence is recorded below or in the generated audit report.
+
 ## Implemented fixes awaiting runtime regression
 
 - Shared engine now clears held pointer/key state on pause, restart, finish and destroy; forced cancellations are marked separately so they do not accidentally trigger release actions.
