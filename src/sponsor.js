@@ -148,10 +148,17 @@ function setStatus(id, status, by) {
   const q = quoteRow(id); const t = Date.now();
   if (status === 'paid' && q.status !== 'accepted') return { ok: false, error: 'Only an accepted quote can be marked paid.' };
   if (status === 'sent' && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'Already accepted.' };
-  db.prepare(`UPDATE sponsor_quotes SET status=?, updated_at=?, updated_by=?, sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END, responded_at=CASE WHEN ? IN ('accepted','declined') THEN ? ELSE responded_at END, paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END WHERE booking_id=?`)
-    .run(status, t, by || null, status, t, status, t, status, t, id);
   const bs = { sent: 'quoted', accepted: 'approved', declined: 'declined', paid: 'paid', draft: 'pending' }[status];
-  db.prepare('UPDATE bookings SET status=? WHERE id=?').run(bs, id);
+  // Quote, booking state and the linked event's payment gate change atomically. This also repairs
+  // pre-gate events which were created while accepted-but-unpaid and were later verified as paid.
+  db.transaction(() => {
+    db.prepare(`UPDATE sponsor_quotes SET status=?, updated_at=?, updated_by=?, sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END, responded_at=CASE WHEN ? IN ('accepted','declined') THEN ? ELSE responded_at END, paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END WHERE booking_id=?`)
+      .run(status, t, by || null, status, t, status, t, status, t, id);
+    db.prepare('UPDATE bookings SET status=? WHERE id=?').run(bs, id);
+    if (status === 'paid' && b.event_id) {
+      db.prepare(`UPDATE giveaways SET payment_status='paid', booking_status='booked', updated_at=? WHERE id=? AND booking_id=?`).run(t, b.event_id, id);
+    }
+  })();
   return { ok: true, request: adminView(db.prepare('SELECT * FROM bookings WHERE id=?').get(id)) };
 }
 // what the sponsor sees on the status page (prices only once a quote has been SENT)
