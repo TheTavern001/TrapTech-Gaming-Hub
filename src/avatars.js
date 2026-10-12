@@ -18,7 +18,7 @@ const BG = { violet: ['#7c3aed', '#22d3ee'], night: ['#0f172a', '#4338ca'], kush
 const P = [];
 const add = (kind, id, label, unlock = 'free') => P.push({ kind, id, label, unlock });
 const PRESTIGE_BG = {
-  'diamond-prism': 'prestige-original-cane', 'stack-throne': 'prestige-original-throne', 'royal-crown': 'prestige-original-crown',
+  'diamond-prism': 'prestige-original-cane', 'cash-rain': 'prestige-throne', 'gold-rays': 'prestige-crown', 'stack-throne': 'prestige-original-throne', 'royal-crown': 'prestige-original-crown',
   'phoenix-mantle': 'prestige-original-phoenix', 'singularity-orbit': 'prestige-original-singularity', 'void-dragon': 'prestige-original-dragon',
   'nebula-wings': 'prestige-original-nebula', 'titan-exoframe': 'prestige-original-mech', 'holo-decree': 'prestige-original-holo',
   'storm-halo': 'prestige-original-storm', 'chronos-mantle': 'prestige-original-chronos', 'aurora-crown': 'prestige-original-aurora'
