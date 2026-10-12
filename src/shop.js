@@ -263,7 +263,7 @@ function priceParts(it, t = Date.now()) {
 function currentTag(id, day) { const d = SIM.days.get(day); if (d && d.tags[id]) return d.tags[id]; const w = SIM.weeks.get(weekOf(day)); return w && w.tags[id] ? w.tags[id] : null; }
 function listPrice(it, t = Date.now()) { const day = dayNum(t); const st = priceStats(Math.max(EPOCH_DAY, day)); const c = st.cache.get(it.id); if (c !== undefined) return c; const p = priceParts(it, t).price; st.cache.set(it.id, p); return p; }
 // what this player pays (season perks: 5 / 10 / 15% off)
-function priceFor(it, user, t = Date.now()) { const p = it.price; const d = user ? SE().perksOf(user.id, t).discount : 0; return d ? Math.max(PRICE_FLOOR, Math.round(p * (100 - d) / 100 / 5) * 5) : p; }
+function priceFor(it, user, t = Date.now()) { const p = module.exports.listPrice(it, t); const d = user ? SE().perksOf(user.id, t).discount : 0; return d ? Math.max(PRICE_FLOOR, Math.round(p * (100 - d) / 100 / 5) * 5) : p; }
 
 // ---------- earning (idempotent ledger sync from server-validated data) ----------
 // v7 rebalance: runs pay 5, +5 for a score at a strong player's level and +15 at the top-1% level (docs/score-ranges.json),
@@ -363,7 +363,7 @@ const RULES = [
 function view(user, t = Date.now()) {
   const rot = module.exports.rotation(t); const own = user ? owned(user.id) : new Set(); const P = (i) => module.exports.pub(i, own.has(i.id));
   const perks = user ? SE().perksOf(user.id, t) : { discount: 0 };
-  const card = (i) => { const o = P(i); const tg = rot.tags[i.id]; if (tg) { o.tag = tg; o.tag_label = TAG_LABEL[tg]; } if (perks.discount && !o.owned) o.your_price = module.exports.priceFor(i, user, t); return o; };
+  const card = (i) => { const o = P(i); const tg = rot.tags[i.id]; if (tg) { o.tag = tg; o.tag_label = TAG_LABEL[tg]; } o.current_price = module.exports.listPrice(i, t); if (perks.discount && !o.owned) o.your_price = Math.max(PRICE_FLOOR, Math.round(o.current_price * (100 - perks.discount) / 100 / 5) * 5); return o; };
   const out = { daily: rot.daily.map(card), weekly: rot.weekly.map(card), season: { ...rot.season, items: rot.season.items.map(i => ({ ...card(i), tag: 'season', tag_label: 'Season' })) },
     events: rot.events.map(e => ({ ...e, items: e.items.map(card) })), daily_ends: rot.daily_ends, weekly_ends: rot.weekly_ends, season_ends: rot.season_ends, perks, rules: RULES };
   if (perks.peek) { const tm = module.exports.rotation(PR().dayStart(rot.day + 1) + 3600e3); out.peek = tm.daily.map(i => ({ ...P(i), tag: tm.tags[i.id], tag_label: TAG_LABEL[tm.tags[i.id]] })); }
