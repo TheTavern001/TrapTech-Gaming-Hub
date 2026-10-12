@@ -230,7 +230,7 @@ export class Game {
   clearInputs() {
     for (const id of this._activePointers) this.onUp(0, 0, { pointerId: id, pointerType: 'touch', cancelled: true });
     this._activePointers.clear();
-    for (const code of this._activeKeys) this.onKey(code, false, { code });
+    for (const code of this._activeKeys) this.onKey(code, false, { code, cancelled: true });
     this._activeKeys.clear();
   }
   destroy() {
