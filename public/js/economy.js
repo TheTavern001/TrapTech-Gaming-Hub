@@ -80,10 +80,12 @@ async function detailSheet(id, onBought) {
 }
 
 // ---------- /shop ----------
+let catalogOpen = false, catalogOffset = 0, catalogType = '', catalogQuery = '';
 async function shopPage() {
   const { shell, api, icon, esc, fmt } = C;
   const draw = async () => {
     const r = await api('/api/shop'); if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is unavailable', esc(r.error || '')));
+    const catalog = catalogOpen ? await api('/api/shop/catalog?limit=24&offset=' + catalogOffset + '&type=' + encodeURIComponent(catalogType) + '&q=' + encodeURIComponent(catalogQuery)) : null;
     const bal = r.balance; const ev = r.events || [];
     shell('/shop', `<div class="narrow wide ec">
       <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Points Shop</h1><a class="ec-how small" href="/shop/how-it-works">${icon('circle-help')} How it works</a></div>
@@ -104,6 +106,20 @@ async function shopPage() {
         return `<div class="card ec-earn ${i.owned ? 'owned' : ''}" data-item="${esc(i.id)}" tabindex="0" role="button">${preview(i, 'sm')}<div class="ec-earn-b"><b>${esc(i.name)}</b><div class="tiny muted">${esc(i.requirement)}</div>
           ${i.owned ? `<span class="pill green">${icon('check')} Unlocked</span>` : i.need ? `<div class="xpbar"><i style="width:${pct}%"></i></div><div class="tiny muted">Your best: ${fmt(i.best || 0)} / ${fmt(i.need)}</div>` : `<div class="tiny muted">Checked every Monday</div>`}</div></div>`; }).join('')}</div>
       ${r.owned.length ? `<div class="section-h"><h2>${icon('package')} Your collection</h2><span class="small muted">${r.owned.length} items</span></div><div class="shop-owned">${r.owned.slice(0, 60).map(it => `<button class="chip" data-item="${esc(it.id)}">${esc(it.name)}</button>`).join('')}</div>` : ''}
+      <div class="section-h shop-catalog-head"><h2>${icon('boxes')} Cosmetic catalog</h2><button class="btn sm ghost" type="button" data-act="catalog-toggle">${catalogOpen ? 'Hide catalog' : 'Browse 1,200+ items'}</button></div>
+      ${catalogOpen ? `<div class="card pad shop-catalog">
+        <p class="small muted">Browse the long-term cosmetic universe. Items marked “Not in current rotation” are previews only; they can only be purchased when they appear in Daily, Weekly, Season, or Event offers.</p>
+        <form id="shop-catalog-search" class="shop-catalog-filters">
+          <input class="input" name="q" value="${esc(catalogQuery)}" placeholder="Search cosmetics" aria-label="Search cosmetics">
+          <select class="input" name="type" aria-label="Filter by cosmetic type">
+            ${[['','All types'],['banner','Banners'],['frame','Frames'],['color','Name colors'],['title','Titles'],['badge','Badges'],['effect','Profile effects']].map(([v,label]) => `<option value="${v}" ${catalogType===v?'selected':''}>${label}</option>`).join('')}
+          </select>
+          <button class="btn sm" type="submit">Search</button>
+        </form>
+        ${catalog && catalog.ok ? `<div class="shop-owned">${catalog.items.map(i => `<button class="card shop-catalog-item" type="button" data-item="${esc(i.id)}">${preview(i,'sm')}<b>${esc(i.name)}</b><span class="tiny muted">${esc(i.rarity_label || i.rarity)} • ${i.on_sale ? 'In current rotation' : 'Not in current rotation'}</span><span class="tiny">${fmt(i.price)} pts</span></button>`).join('')}</div>
+          <div class="btn-row shop-catalog-pager"><span class="small muted">${catalog.total ? catalogOffset+1 : 0}–${Math.min(catalogOffset+catalog.items.length,catalog.total)} of ${fmt(catalog.total)} items</span><button class="btn sm ghost" type="button" data-act="catalog-prev" ${catalogOffset<=0?'disabled':''}>Previous</button><button class="btn sm" type="button" data-act="catalog-next" ${catalogOffset+24>=catalog.total?'disabled':''}>Next</button></div>`
+          : `<p class="small muted">Catalog is loading or unavailable. Try again shortly.</p>`}
+      </div>` : ''}
       <div class="card pad" id="earn"><h2 style="font-size:1rem;margin-bottom:8px">${icon('trending-up')} How to earn Hub Points</h2>
         <ul class="earn-list"><li><b>+${r.earn.run}</b> per finished run (first ${r.earn.runDailyCap} runs each day)</li><li><b>+${r.earn.skill.good} / +${r.earn.skill.top1}</b> more for a strong / top-1% score in that game</li><li><b>+${r.earn.pb}</b> bonus for a new personal best</li>
         <li><b>+${r.earn.quest}</b> per daily quest claimed</li><li><b>+${r.earn.checkinPerDay}</b> per streak day on check-in (up to +${r.earn.checkinMax})</li><li><b>+40 to +140</b> per season level, +100 per Overdrive star (<a href="/season">season pass</a>)</li>
@@ -112,6 +128,11 @@ async function shopPage() {
     </div>`);
     C.tickInline && C.tickInline();
     document.querySelectorAll('main [data-item]').forEach(el => { const open = (e) => { e.preventDefault(); detailSheet(el.dataset.item, draw); }; el.addEventListener('click', open); el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }); });
+    document.querySelectorAll('main [data-act="catalog-toggle"]').forEach(el => el.addEventListener('click', () => { catalogOpen = !catalogOpen; catalogOffset = 0; draw(); }));
+    document.querySelectorAll('main [data-act="catalog-prev"]').forEach(el => el.addEventListener('click', () => { catalogOffset = Math.max(0, catalogOffset - 24); draw(); }));
+    document.querySelectorAll('main [data-act="catalog-next"]').forEach(el => el.addEventListener('click', () => { catalogOffset += 24; draw(); }));
+    const search = document.querySelector('main #shop-catalog-search');
+    if (search) search.addEventListener('submit', (e) => { e.preventDefault(); const fd = new FormData(search); catalogQuery = String(fd.get('q') || '').trim(); catalogType = String(fd.get('type') || ''); catalogOffset = 0; draw(); });
   };
   await draw();
 }
