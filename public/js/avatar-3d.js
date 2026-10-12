@@ -13,8 +13,9 @@ export async function mountAvatar3D(stage, cfg) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
-  renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional avatar preview. Drag to rotate.');
+  renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional avatar preview. Drag to rotate. Focus the preview and use left/right arrows or A/D to rotate, plus or minus to zoom, and zero to reset.');
   renderer.domElement.setAttribute('role', 'img');
+  renderer.domElement.tabIndex = 0;
   renderer.domElement.style.cssText = 'width:100%;height:100%;display:block;touch-action:pan-y;outline:none';
   stage.replaceChildren(renderer.domElement);
 
@@ -31,8 +32,9 @@ export async function mountAvatar3D(stage, cfg) {
   scene.background = null;
   const portrait = stage.clientWidth < 150;
   const camera = new THREE.PerspectiveCamera(portrait ? 30 : 32, stage.clientWidth / Math.max(1, stage.clientHeight), 0.1, 50);
-  camera.position.set(0, portrait ? 2.45 : 1.9, portrait ? 4.8 : 7.5);
-  camera.lookAt(0, portrait ? 2.2 : 1.55, 0);
+  const baseCamera = { y: portrait ? 2.45 : 1.9, z: portrait ? 4.8 : 7.5, targetY: portrait ? 2.2 : 1.55 };
+  camera.position.set(0, baseCamera.y, baseCamera.z);
+  camera.lookAt(0, baseCamera.targetY, 0);
   scene.add(new THREE.HemisphereLight(0xdce8ff, 0x202034, 2.0));
   const key = new THREE.DirectionalLight(0xfff0d8, 3.1); key.position.set(-3, 6, 5); key.castShadow = true; scene.add(key);
   const rim = new THREE.DirectionalLight(0x7dd3fc, 2.4); rim.position.set(4, 3, -4); scene.add(rim);
@@ -186,10 +188,20 @@ export async function mountAvatar3D(stage, cfg) {
   const down = (e) => { pointer.down=true; pointer.x=e.clientX; pointer.y=e.clientY; renderer.domElement.setPointerCapture?.(e.pointerId); };
   const move = (e) => { if(!pointer.down) return; pointer.rot += (e.clientX-pointer.x)*0.012; pointer.tilt = Math.max(-0.20,Math.min(0.20,pointer.tilt+(e.clientY-pointer.y)*0.003)); pointer.x=e.clientX; pointer.y=e.clientY; root.rotation.y=pointer.rot; root.rotation.x=pointer.tilt; };
   const up = () => { pointer.down=false; };
+  const zoom = (delta) => { camera.position.z = Math.max(3.2, Math.min(11, camera.position.z + delta)); camera.lookAt(0, baseCamera.targetY, 0); };
+  const resetView = () => { pointer.rot = 0; pointer.tilt = 0; root.rotation.set(0, 0, 0); camera.position.set(0, baseCamera.y, baseCamera.z); camera.lookAt(0, baseCamera.targetY, 0); };
+  const keydown = (e) => {
+    if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') { e.preventDefault(); root.rotation.y -= 0.16; pointer.rot = root.rotation.y; }
+    else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') { e.preventDefault(); root.rotation.y += 0.16; pointer.rot = root.rotation.y; }
+    else if (e.key === '+' || e.key === '=') { e.preventDefault(); zoom(-0.45); }
+    else if (e.key === '-' || e.key === '_') { e.preventDefault(); zoom(0.45); }
+    else if (e.key === '0') { e.preventDefault(); resetView(); }
+  };
   renderer.domElement.addEventListener('pointerdown',down);
   renderer.domElement.addEventListener('pointermove',move);
   renderer.domElement.addEventListener('pointerup',up);
   renderer.domElement.addEventListener('pointercancel',up);
+  renderer.domElement.addEventListener('keydown',keydown);
   const resize = () => { if(!stage.isConnected) return; const w=Math.max(180,stage.clientWidth), h=Math.max(220,stage.clientHeight); renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
   const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null; if(observer) observer.observe(stage); else window.addEventListener('resize',resize);
   let frame=0, alive=true, cleanup=null;
@@ -197,8 +209,9 @@ export async function mountAvatar3D(stage, cfg) {
   frame=requestAnimationFrame(animate);
   cleanup = () => {
     if(!alive) return; alive=false; cancelAnimationFrame(frame); if(observer) observer.disconnect(); else window.removeEventListener('resize',resize);
-    renderer.domElement.removeEventListener('pointerdown',down); renderer.domElement.removeEventListener('pointermove',move); renderer.domElement.removeEventListener('pointerup',up); renderer.domElement.removeEventListener('pointercancel',up);
+    renderer.domElement.removeEventListener('pointerdown',down); renderer.domElement.removeEventListener('pointermove',move); renderer.domElement.removeEventListener('pointerup',up); renderer.domElement.removeEventListener('pointercancel',up); renderer.domElement.removeEventListener('keydown',keydown);
     scene.traverse(o=>{if(o.geometry)o.geometry.dispose();}); materials.forEach(m=>m.dispose()); renderer.dispose(); renderer.domElement.remove();
   };
+  cleanup.zoomIn = () => zoom(-0.45); cleanup.zoomOut = () => zoom(0.45); cleanup.resetView = resetView;
   return cleanup;
 }
