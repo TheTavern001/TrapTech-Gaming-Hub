@@ -54,6 +54,18 @@ app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mod
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
 app.get('/healthz', (req, res) => { try { db.prepare('SELECT 1').get(); res.json({ ok: true, product: 'The Gaming Hub', version: HUB_VERSION }); } catch (e) { res.status(500).json({ ok: false, version: HUB_VERSION }); } });
 app.get('/api/build', (req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ ok: true, product: 'The Gaming Hub by Trap Tech Solutions', version: HUB_VERSION, build_fingerprint: BUILD_FINGERPRINT, games_library: libraryGames().length, core_games: cfg.GAMES.length, scoring: 'shared signed-run API' }); });
+// Read-only release audit endpoint. The report is generated during the image build and copied into BUILD_DIR.
+// It contains structural findings only (no account records, secrets, or runtime database data).
+app.get('/api/audit/report', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const auditPath = path.join(process.env.BUILD_DIR || path.join(__dirname, '..', 'build'), 'audit', 'prelaunch-structural-audit.json');
+  try {
+    const report = JSON.parse(fs.readFileSync(auditPath, 'utf8'));
+    res.json({ ok: true, report });
+  } catch (err) {
+    res.status(503).json({ ok: false, error: 'Release audit report is not available in this build.' });
+  }
+});
 
 // ---------- helpers ----------
 const now = () => Date.now();
