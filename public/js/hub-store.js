@@ -6,10 +6,19 @@ let C = null;
 const usd = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
 const FX_CLASS = { sparkle: 'px-sparkle', cashrain: 'px-cash', goldsweep: 'px-gold' };
 const PX_ICON = { 'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair', 'prestige-crown': 'crown', 'prestige-aurora-halo': 'orbit', 'prestige-voidwing-mantle': 'feather', 'prestige-neon-orbit': 'atom', 'prestige-sovereign-visor': 'eye', 'prestige-celestial-sigil': 'sparkles', 'prestige-obsidian-aura': 'shield', 'prestige-chrono-relic': 'clock-3' };
+let catalogState = { offset: 0, type: '', query: '', items: [], css: {} };
 export function prestigeArt(id, fx, size = 120) { return `<div class="px-art ${FX_CLASS[fx] || ''}" style="--s:${size}px" aria-hidden="true"><span class="px-glow"></span>${C.icon(PX_ICON[id] || 'gem')}<i></i><i></i><i></i></div>`; }
 async function storePage() {
-  const { icon, esc, api, S } = C; const [r, shop] = await Promise.all([api('/api/store'), api('/api/shop')]); if (!r.ok) return C.shell('/shop', C.emptyState('store', 'Store unavailable', 'Try again in a moment.'));
+  const { icon, esc, api, S } = C; const catUrl = '/api/shop/catalog?limit=24&offset=' + catalogState.offset + '&type=' + encodeURIComponent(catalogState.type) + '&q=' + encodeURIComponent(catalogState.query); const [r, shop, cat] = await Promise.all([api('/api/store'), api('/api/shop'), api(catUrl)]); if (!r.ok) return C.shell('/shop', C.emptyState('store', 'Store unavailable', 'Try again in a moment.'));
   const co = r.checkout; const pass = S.me ? await api('/api/pass') : null; let paymentProvider = (co.methods || []).includes('bitcoin') ? 'bitcoin' : 'stripe';
+  if (cat && cat.ok) {
+    if (catalogState.offset === 0) { catalogState.items = cat.items || []; catalogState.css = {}; }
+    else { const byId = new Map(catalogState.items.map(x => [x.id, x])); (cat.items || []).forEach(x => byId.set(x.id, x)); catalogState.items = [...byId.values()]; }
+    catalogState.css[catalogState.offset] = cat.css || '';
+    let style = document.getElementById('store-catalog-css');
+    if (!style) { style = document.createElement('style'); style.id = 'store-catalog-css'; document.head.appendChild(style); }
+    style.textContent = Object.values(catalogState.css).join('\n');
+  }
   const dropCandidates = [];
   if (shop && shop.ok) {
     for (const [items, label] of [[shop.daily || [], 'Daily pick'], [shop.weekly || [], 'Weekly featured'], [((shop.season || {}).items || []), 'Season rotation']]) for (const item of items) dropCandidates.push({ ...item, drop_source: label });
@@ -33,11 +42,39 @@ async function storePage() {
     <p class="small muted">Banners, frames, titles, name colors, effects and badges rotate through daily, weekly, seasonal and event drops. Hub Points are earned in play; they are not sold for cash. Tap any item to preview it on your profile and see its current price.</p>
     ${cosmeticDrops.length ? `<div class="store-cosmetics-grid">${cosmeticDrops.map(item => `<button type="button" class="store-cosmetic-card" data-cosmetic="${esc(item.id)}" aria-label="Preview ${esc(item.name)}"><span class="store-cosmetic-preview">${preview(item, 'store-preview')}</span><span class="store-cosmetic-name">${esc(item.name)}</span><span class="store-cosmetic-meta">${esc(item.rarity_label || item.rarity || 'Cosmetic')} · ${esc(item.drop_source || 'Rotating drop')}</span><span class="store-cosmetic-price">${item.owned ? 'Owned' : `${C.fmt(item.your_price ?? item.current_price ?? item.price ?? 0)} Hub Points`}</span></button>`).join('')}</div>` : `<div class="card pad">The rotating cosmetic catalogue is temporarily unavailable. <a href="/shop">Open the Points Shop</a>.</div>`}
     <p class="small"><a class="btn sm ghost" href="/shop">Browse the full Points Shop and earned collection</a></p>
+
+    <section class="store-full-catalog" id="store-catalog">
+      <div class="section-h"><h2>${icon('shopping-bag')} Full Cosmetic Catalogue</h2><span class="small muted">${cat && cat.ok ? C.fmt(cat.total) + ' items' : '1,000+ items'}</span></div>
+      <p class="small muted">Browse 1,000 permanent original cosmetics plus the rotating collection. Search by name or filter banners, avatar frames, nameplates, titles, badges and animated profile effects. Everything here is cosmetic only.</p>
+      <form class="store-catalog-filter card pad" id="store-catalog-filter">
+        <label for="store-catalog-search">Search</label><input id="store-catalog-search" name="q" type="search" maxlength="80" value="${esc(catalogState.query)}" placeholder="Search cosmetics…">
+        <label for="store-catalog-type">Category</label><select id="store-catalog-type" name="type">
+          <option value="" ${!catalogState.type ? 'selected' : ''}>All cosmetics</option>
+          <option value="banner" ${catalogState.type === 'banner' ? 'selected' : ''}>Banners</option>
+          <option value="frame" ${catalogState.type === 'frame' ? 'selected' : ''}>Avatar frames</option>
+          <option value="color" ${catalogState.type === 'color' ? 'selected' : ''}>Nameplates &amp; colors</option>
+          <option value="title" ${catalogState.type === 'title' ? 'selected' : ''}>Titles</option>
+          <option value="badge" ${catalogState.type === 'badge' ? 'selected' : ''}>Badges &amp; accessories</option>
+          <option value="effect" ${catalogState.type === 'effect' ? 'selected' : ''}>Animated effects</option>
+        </select><button class="btn sm" type="submit">${icon('search')} Search</button><button class="btn sm ghost" type="button" id="store-catalog-clear">Clear</button>
+      </form>
+      <p class="tiny muted">Showing ${C.fmt(catalogState.items.length)} of ${cat && cat.ok ? C.fmt(cat.total) : '1,000+'} items</p>
+      ${catalogState.items.length ? '<div class="store-cosmetics-grid store-catalog-grid">' + catalogState.items.map(item => '<button type="button" class="store-cosmetic-card" data-cosmetic="' + esc(item.id) + '" aria-label="Preview ' + esc(item.name) + '"><span class="store-cosmetic-preview">' + preview(item, 'store-preview') + '</span><span class="store-cosmetic-name">' + esc(item.name) + '</span><span class="store-cosmetic-meta">' + esc(item.rarity_label || item.rarity || 'Cosmetic') + ' · ' + esc(item.type) + ' · ' + esc(item.theme || '') + '</span><span class="store-cosmetic-price">' + (item.owned ? 'Owned' : C.fmt(item.your_price ?? item.current_price ?? item.price ?? 0) + ' Hub Points') + '</span></button>').join('') + '</div>' : '<div class="card pad">No cosmetics match that search. Try another term or category.</div>'}
+      ${cat && cat.ok && cat.has_more ? '<div class="catalog-more"><button class="btn" id="store-catalog-more">' + icon('chevrons-down') + ' Load more cosmetics</button></div>' : ''}
+      <p class="small"><a href="/shop">Open the full Points Shop</a> for daily/weekly rotations and earned-only rewards.</p>
+    </section>
     <div class="section-h"><h2>${icon('gem')} Prestige</h2><a class="small" href="/prestige">Owned-by wall</a></div>
     <div class="store-grid px-grid">${r.prestige.map(p => `<div class="card pad px-card">${prestigeArt(p.id, p.fx)}<b>${esc(p.name)}</b><p class="small muted">${esc(p.blurb)}</p><div class="small">Numbered: ${p.issued} of ${p.supply} issued · cosmetic only</div><div class="st-price">${usd(p.usd_cents)}</div>${p.issued >= p.supply ? '<span class="pill">Sold out</span>' : buy(p.id, 'Buy')}</div>`).join('')}</div>
     <details class="card pad small muted" style="margin-top:14px"><summary>Terms (draft)</summary><p>${esc(r.terms)}</p></details>
   </div>`, { title: 'Hub Store' });
   document.querySelectorAll('[data-cosmetic]').forEach(b => b.onclick = () => detailSheet(b.dataset.cosmetic, storePage));
+  const catalogFilter = document.getElementById('store-catalog-filter');
+  if (catalogFilter) catalogFilter.onsubmit = (e) => { e.preventDefault(); const fd = new FormData(catalogFilter); catalogState.query = String(fd.get('q') || '').trim(); catalogState.type = String(fd.get('type') || ''); catalogState.offset = 0; catalogState.items = []; catalogState.css = {}; storePage(); };
+  const catalogClear = document.getElementById('store-catalog-clear');
+  if (catalogClear) catalogClear.onclick = () => { catalogState.query = ''; catalogState.type = ''; catalogState.offset = 0; catalogState.items = []; catalogState.css = {}; storePage(); };
+  const catalogMore = document.getElementById('store-catalog-more');
+  if (catalogMore) catalogMore.onclick = () => { catalogState.offset += 24; storePage(); };
+
   document.querySelectorAll('[data-provider-choice]').forEach(b => b.onclick = () => { paymentProvider = b.dataset.providerChoice; document.querySelectorAll('[data-provider-choice]').forEach(x => { const on = x.dataset.providerChoice === paymentProvider; x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); }); document.querySelectorAll('[data-buy]').forEach(x => x.dataset.provider = paymentProvider); });
   document.querySelectorAll('[data-buy]').forEach(b => b.onclick = async () => { b.disabled = true; const x = await api('/api/store/orders', { method: 'POST', body: { product_id: b.dataset.buy, provider: b.dataset.provider } }); b.disabled = false; if (!x.ok) return C.toast(x.error); if (x.order.checkout_url) { window.location.assign(x.order.checkout_url); return; } C.go('/store/order/' + x.order.ref); });
   const pc = document.getElementById('pass-claim'); if (pc) pc.onclick = async () => { const x = await api('/api/pass/claim', { method: 'POST', body: {} }); C.toast(x.ok ? `Claimed ${x.claimed.length} reward${x.claimed.length === 1 ? '' : 's'}` : x.error); };

@@ -257,3 +257,11 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .catalog-more{display:flex;justify-content:center;padding:18px}
 #catalog-count{margin:8px 0}
 @media(max-width:650px){.catalog-filter{grid-template-columns:1fr 1fr}.catalog-filter label:nth-of-type(1),.catalog-filter input{grid-column:1/-1}.catalog-filter button{width:100%}}
+
+/* Hub Store's permanent catalogue controls */
+.store-full-catalog{margin-top:28px}
+.store-catalog-filter{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.7fr) auto auto;align-items:end;gap:10px;margin:12px 0 14px}
+.store-catalog-filter label{font-size:.76rem;color:var(--muted,#a7b0d4);font-weight:750}
+.store-catalog-filter input,.store-catalog-filter select{width:100%;min-width:0}
+.store-catalog-grid{margin-top:12px}
+@media(max-width:650px){.store-catalog-filter{grid-template-columns:1fr 1fr}.store-catalog-filter label:nth-of-type(1),.store-catalog-filter input{grid-column:1/-1}.store-catalog-filter button{width:100%}}
