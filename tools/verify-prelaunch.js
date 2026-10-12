@@ -211,6 +211,9 @@ if (new Set(artClasses).size !== prestigeItems.length) fail('public/js/hub-store
 if (!prestigeCss.includes('.px-art .px-artwork')) fail('public/css/app.css', 'Original Prestige SVG artwork is not styled for display');
 if (!storeUi.includes('/assets/prestige/')) fail('public/js/hub-store.js', 'Prestige SVG artwork is not loaded by the store UI');
 if (!prestigeSource.includes('prestige_original_one_owner')) fail('src/monetize.js', 'Missing database-level one-active-owner constraint for Prestige originals');
+if (!prestigeSource.includes('issuedEver >= p.supply')) fail('src/monetize.js', 'A refunded/revoked prestige original must not be reissued as a new original');
+if ((prestigeSource.match(/p\.kind === 'prestige' && !prestigeSalesEnabled\(\)/g) || []).length < 2) fail('src/monetize.js', 'Both Bitcoin and Stripe order creation must enforce the prestige sales gate');
+if (!prestigeSource.includes('WHERE item_id LIKE \'prestige-original-%\' AND revoked_at IS NULL')) fail('src/monetize.js', 'Database uniqueness must constrain active ownership of each new prestige original');
 
 const shopSource = read(path.join(ROOT, 'src/shop.js')) || '';
 if (!/const CATALOG_UNIVERSE_SIZE = 1200/.test(shopSource) || !shopSource.includes("app.get('/api/shop/catalog'") || !shopSource.includes('catalog_only: !onSale.has(it.id)') || !shopSource.includes('if (!inRotation(rot, it))')) fail('src/shop.js', 'The 1,200-item catalog must be paginated, preview-only outside rotation, and protected by purchase-time rotation checks');
