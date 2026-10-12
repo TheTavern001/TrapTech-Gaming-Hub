@@ -131,8 +131,11 @@ function routes(app, A, H) {
     // For booking-backed events the sponsor quote is the payment source of truth. The legacy
     // event-metadata editor must not bypass the quote's verified-paid transition and unhide an
     // unpaid event. Payment can still be revoked here to block an event immediately.
-    if (g.booking_id && nextPayment === 'paid' && String(g.payment_status || '').toLowerCase() !== 'paid') {
+    if (g.booking_id && ['paid', 'comped'].includes(nextPayment) && String(g.payment_status || '').toLowerCase() !== nextPayment) {
+      // This legacy editor is not a payment reconciliation interface. Neither "paid" nor
+      // "comped" may be used to bypass the booking's verified quote/payment workflow.
       const quote = db.prepare('SELECT status FROM sponsor_quotes WHERE booking_id=?').get(g.booking_id);
+      if (nextPayment === 'comped') return res.status(409).json({ ok: false, error: 'Booking payment cannot be waived from event metadata; use the audited reconciliation workflow.' });
       if (!quote || quote.status !== 'paid') return res.status(409).json({ ok: false, error: 'Booking payment can only be confirmed after its sponsor quote is verified as paid.' });
     }
     db.prepare('UPDATE giveaways SET vendor=?, booking_status=?, payment_status=?, updated_at=? WHERE id=?').run(String(b.vendor ?? g.vendor).slice(0, 80),
