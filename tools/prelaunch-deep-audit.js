@@ -80,8 +80,9 @@ for (const g of games) {
   registrySlugs.add(slug);
   if (!exists(dir)) problems.push('game directory missing');
   if (!html) problems.push('game entry HTML missing/unreadable');
-  // The registry exposes `src` (built/vendored), not `build`; every catalog entry must have its own runnable game.js wrapper.
-  if (!js) problems.push('game.js missing/unreadable (registry `build` is not a field; check every entry regardless of source type)');
+  // Original Hub-built games require game.js; vendored games have their own multi-file entrypoints.
+  if (g.build === 'built' && !js) problems.push('built game.js missing/unreadable');
+  if (g.build === 'vendored' && html && !/<script[^>]+src=["'][^"']+\.js["']/i.test(html)) problems.push('vendored game has no script entrypoint');
   if (html) {
     if (!/<meta[^>]+name=["']viewport["']/i.test(html)) problems.push('viewport meta missing');
     if (!/<title\b/i.test(html)) notes.push('document title missing');
@@ -103,8 +104,8 @@ for (const g of games) {
     if (/innerHTML\s*=\s*[^;]*(?:username|title|message|error)/i.test(js)) notes.push('review dynamic HTML writes for escaping/XSS');
   }
   const record = {
-    slug, id: g.id, title: g.title, category: g.category, source: g.src || 'unknown',
-    implementationPresent: !!js, htmlHash: html ? hash(html) : null, gameJsHash: js ? hash(js) : null,
+    slug, id: g.id, title: g.title, category: g.category, build: g.build, source: g.source || g.src || 'unknown',
+    implementationPresent: !!js || (g.build === 'vendored' && !!html), htmlHash: html ? hash(html) : null, gameJsHash: js ? hash(js) : null,
     hasCanvas: /<canvas\b/i.test(html || '') || /createElement\(['"]canvas['"]\)/i.test(js || ''),
     hasWebGL: /webgl|three\.module|WebGLRenderer/i.test((html || '') + (js || '')),
     hasTouchControlsToken: /touchstart|pointerdown|touch-action|ontouch/i.test((html || '') + (js || '')),
