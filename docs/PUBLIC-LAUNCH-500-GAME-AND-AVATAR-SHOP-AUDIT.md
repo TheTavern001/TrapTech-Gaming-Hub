@@ -1,10 +1,10 @@
-# Public Launch Readiness: 100-Game Audit + Avatar/Shop Deep Audit
+# Public Launch Readiness: 80-Game Baseline + 500-Game Goal + Avatar/Shop Deep Audit
 
 Status: **audit program committed; launch readiness not yet established.** This plan does not claim the existing library has passed or that all reported defects are fixed. Each title must earn a pass with fresh evidence.
 
 ## Release decision
 
-The launch target is **500 distinct, launch-ready games**, not 500 registry rows. The current library is the first 100-game batch. The owner will test the visuals after the first batch's audit/fix cycle, then review each subsequent batch of 100. Do not add the next batch until the current batch is accepted.
+The launch target is **500 distinct, launch-ready games**, not 500 registry rows. The active source registry currently contains **80 Games Library titles** plus the core Hub games; this is the baseline to audit and fix first. After the active baseline is accepted, add and review games in subsequent batches of up to 100. Do not count registry rows as ready until every title has passed its required gates.
 
 ### Batch gates
 
@@ -24,7 +24,7 @@ The audit scope is the entire playable catalog, not just the Games Library:
 - **Shared engine and platform:** regression-test `public/js/games/engine.js`, the signed-run adapter, scoring submission, restart/pause behavior, account cosmetics, leaderboards, and the host page after each batch of changes.
 - **Scope changes:** a game added to either registry automatically becomes part of the audit. A title must not be excluded because it is old, was previously tested, or is not part of the latest batch.
 
-The repository's current source snapshot registers 16 core games and 100 Games Library titles. These are inventory counts, not quality passes. The build-time structural audit report must show separate core-game and library totals and retain blocker/review findings for both groups. Real-device and visual/gameplay gates remain mandatory.
+The repository's current source snapshot registers 16 core games and 80 Games Library titles. These are inventory counts, not quality passes. The build-time structural audit report must show separate core-game and library totals and retain blocker/review findings for both groups. Real-device and visual/gameplay gates remain mandatory.
 
 ## Redesign execution order
 
