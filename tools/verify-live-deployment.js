@@ -149,13 +149,33 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   });
   // Validate local dependencies used by the catalog, not just its HTML shell. This catches
   // missing scripts, styles, atlases, textures and fonts that static entry checks can miss.
+  const nestedCssAssets = new Map();
   await bounded([...localAssets.entries()], 12, async ([asset, slugsForAsset]) => {
     try {
       const r = await get(BASE + asset);
       const ok = r.res.status === 200 && r.body.length > 0;
       check('Library dependency ' + asset, ok, { status: r.res.status, bytes: r.body.length, referencedBy: [...slugsForAsset].slice(0, 5), gameCount: slugsForAsset.size });
+      if (ok && /\.css$/i.test(asset)) {
+        for (const m of r.text.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi)) {
+          const ref = m[2].trim();
+          if (!ref || /^(?:data:|#|blob:|https?:|\/\/)/i.test(ref)) continue;
+          let u; try { u = new URL(ref, BASE + asset); } catch { continue; }
+          if (u.origin !== new URL(BASE).origin || !/\.(?:png|jpe?g|webp|avif|gif|svg|woff2?|ttf|otf|ico)$/i.test(u.pathname)) continue;
+          nestedCssAssets.set(u.pathname, (nestedCssAssets.get(u.pathname) || new Set()).union ? nestedCssAssets.get(u.pathname) : new Set());
+          const users = nestedCssAssets.get(u.pathname);
+          for (const slug of slugsForAsset) users.add(slug);
+        }
+      }
     } catch (e) { fail('Library dependency ' + asset, e.message); }
   });
+  const cssAssetFailures = [];
+  await bounded([...nestedCssAssets.entries()], 12, async ([asset, slugsForAsset]) => {
+    try {
+      const r = await get(BASE + asset);
+      if (r.res.status !== 200 || !r.body.length) cssAssetFailures.push({ path: asset, status: r.res.status, bytes: r.body.length, referencedBy: [...slugsForAsset].slice(0, 5) });
+    } catch (e) { cssAssetFailures.push({ path: asset, error: e.message }); }
+  });
+  check('All CSS-referenced local assets respond', cssAssetFailures.length === 0, { checked: nestedCssAssets.size, failures: cssAssetFailures.slice(0, 100) });
 
   const uniqueFailures = [...new Set(failures)];
   const summary = { base: BASE, expectedFingerprint: expected, deployedFingerprint: buildJson?.build_fingerprint || null, checks: results.length, passed: results.filter(x => x.ok).length, failed: uniqueFailures.length, failures: uniqueFailures };
