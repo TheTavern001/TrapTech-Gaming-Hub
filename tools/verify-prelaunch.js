@@ -101,6 +101,15 @@ const jetpackCoinSource = (jetpackSource.match(/_spawnCoins\(\) \{([\s\S]*?)\n  
 if (!jetpackSource.includes('setSeed(seed)') || !jetpackSource.includes('seededRng(seed)') || /Math\.random\(\)|\brnd\(/.test(jetpackObstacleSource + jetpackCoinSource)) fail('public/js/jetpack.js', 'Jetpack obstacle and coin layouts must respect the server seed');
 if (!mobileTest.includes("id: 'desktop-chrome'") || !mobileTest.includes('p.mouse.click')) fail('tools/e2e-mobile.js', 'Core game regression must include a desktop viewport using mouse input');
 
+const runner3xSource = read(path.join(ROOT, 'public/games-lib/runner3x.js')) || '';
+if (!runner3xSource.includes('function adaptResolution(now)') ||
+    !runner3xSource.includes('frameMs > 23') ||
+    !runner3xSource.includes('slowFrameStreak >= 45') ||
+    !runner3xSource.includes('r.setPixelRatio(activePixelRatio)') ||
+    !runner3xSource.includes('Math.max(1, Math.round((activePixelRatio - 0.25) * 100) / 100)')) {
+  fail('public/games-lib/runner3x.js', '3D runner must retain the sustained-slow-frame adaptive DPR fallback (1.5 → 1.25 → 1.0).');
+}
+
 const lib = fs.readFileSync(path.join(ROOT, 'src/games-lib.js'), 'utf8');
 const slugs = [...lib.matchAll(/T\('([^']+)'\s*,\s*'([^']+)'/g)].map(m => ({ slug: m[1], title: m[2] }));
 const libraryBySlug = new Map(require('../src/games-lib').games.map(g => [g.slug, g]));
