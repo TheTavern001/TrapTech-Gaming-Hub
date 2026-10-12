@@ -149,18 +149,24 @@ const manifestRaw = read(path.join(ROOT, 'public', 'manifest.webmanifest'));
 let manifest = null;
 try { manifest = manifestRaw ? JSON.parse(manifestRaw) : null; } catch { /* recorded below */ }
 const canonicalIconPath = path.join(ROOT, 'public', 'assets', 'brand', 'traptech-app-icon.svg');
+const canonicalIcon = (read(canonicalIconPath) || '').trim();
+const iconAliases = ['favicon.svg', 'hub-mark.svg', 'tt-favicon.svg', 'tt-maskable.svg'];
+const mismatchedAliases = iconAliases.filter(name => (read(path.join(ROOT, 'public', 'assets', 'brand', name)) || '').trim() !== canonicalIcon);
 const brandIcons = {
   canonicalSvgPresent: exists(canonicalIconPath),
-  faviconMatchesCanonical: (read(path.join(ROOT, 'public', 'assets', 'brand', 'favicon.svg')) || '').trim() === (read(canonicalIconPath) || '').trim(),
+  faviconMatchesCanonical: !mismatchedAliases.includes('favicon.svg'),
+  iconAliases,
+  mismatchedAliases,
   indexUsesCanonicalSvg: /assets\/brand\/traptech-app-icon\.svg/.test(indexHtml),
+  splashUsesCanonicalSvg: /<img[^>]+src=["']\/assets\/brand\/traptech-app-icon\.svg["']/.test(indexHtml),
   dynamicRasterRoutePresent: /HUB_ICON_ROUTES/.test(serverSrc) && /@resvg\/resvg-js/.test(serverSrc),
   manifestValidJson: !!manifest,
   manifestIcons: Array.isArray(manifest?.icons) ? manifest.icons.map(x => ({ src: x.src, sizes: x.sizes, type: x.type, purpose: x.purpose || 'any' })) : [],
   missingManifestIconRoutes: []
 };
 if (!brandIcons.canonicalSvgPresent) issues.push({ severity: 'blocker', finding: 'Canonical Trap Tech app icon SVG is missing.' });
-if (!brandIcons.faviconMatchesCanonical) warnings.push({ severity: 'review', finding: 'favicon.svg differs from the canonical Trap Tech app icon.' });
-if (!brandIcons.indexUsesCanonicalSvg) warnings.push({ severity: 'review', finding: 'HTML does not reference the canonical Trap Tech app icon SVG.' });
+if (mismatchedAliases.length) warnings.push({ severity: 'review', finding: 'Trap Tech icon aliases differ from canonical artwork.', paths: mismatchedAliases });
+if (!brandIcons.indexUsesCanonicalSvg || !brandIcons.splashUsesCanonicalSvg) warnings.push({ severity: 'review', finding: 'Browser icon or startup splash does not reference the canonical Trap Tech app icon SVG.' });
 if (!brandIcons.dynamicRasterRoutePresent) issues.push({ severity: 'blocker', finding: 'Dynamic Trap Tech raster icon route is missing.' });
 if (!brandIcons.manifestValidJson) issues.push({ severity: 'blocker', finding: 'Web app manifest is missing or invalid JSON.' });
 for (const item of brandIcons.manifestIcons) {
