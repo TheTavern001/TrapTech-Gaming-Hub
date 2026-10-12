@@ -122,6 +122,15 @@ This repository's current `main` contains the Hub v7 work, the Games Library int
 **Status at this revision:** not deployment-ready. No production deployment or live payment configuration change has been made.
 
 
+## AAA graphics/gameplay and full Hub acceptance — 2026-10-12
+
+- [x] Added a comprehensive audit/evidence ledger at [`docs/AAA-GRAPHICS-GAMEPLAY-AND-HUB-AUDIT.md`](AAA-GRAPHICS-GAMEPLAY-AND-HUB-AUDIT.md), covering graphics/art direction, gameplay/control loops, mobile/desktop UX, scoring/anti-cheat, booking/payment/giveaway boundaries, accessibility, performance, security, asset licensing, and per-game evidence.
+- [ ] **Do not mark the AAA audit complete yet.** The ledger records the current verdict as NOT READY FOR PUBLIC USE because the current candidate has not received full runtime tests or human visual/gameplay inspection. All 100 games remain unsigned-off; historical smoke tests are not current release proof.
+- [ ] Run every relevant API/security/payment/avatar/library/browser test against the exact candidate SHA in local Node/Docker or a private preview, and retain logs.
+- [ ] Human-playtest each game intended for launch on Android and desktop; capture screenshots/video, record defects, and individually ship/fix/disable/replace each game.
+- [ ] Inspect all core Hub pages and workflows at phone and desktop sizes; verify accessibility, score integrity, booking/event permissions, persistence, backup/restore, and rollback.
+- [ ] Verify source/license/attribution rights for all assets and third-party dependencies before public use.
+
 ## Branch integration gate — 2026-10-12
 
 - [ ] Resolve release target before merge: PR #8 currently targets `games/deep-distinctness-audit`, not `main`. The candidate is currently 192 commits ahead of `main` (0 behind) and includes the integration branch's 90 commits not present on `main`. Although the ancestry is linear, retargeting the PR to `main` would bring that entire 192-commit range into the production diff; review the complete tree/catalog and all intermediate changes before deciding. Do not merge this PR into the integration branch and then assume production `main` was updated.
