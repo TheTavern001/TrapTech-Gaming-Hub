@@ -16,6 +16,7 @@ const SC = require('./admin-scoring');
 const RO = require('./admin-roles');
 const now = () => Date.now();
 const H = 3600e3, D = 864e5;
+const bookingPaymentCleared = (g) => !g || !g.booking_id || ['paid', 'comped'].includes(String(g.payment_status || '').toLowerCase());
 
 // ---------- schema ----------
 const addCol = (t, c, def) => { if (!db.prepare(`PRAGMA table_info(${t})`).all().some(x => x.name === c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} ${def}`); };
@@ -399,6 +400,7 @@ function writeRow(c, existing, actor, opts = {}) {
   return { ok: true, id };
 }
 function goLive(g, c) {
+  if (!bookingPaymentCleared(g)) return false;
   const f = c.features; const t = now();
   db.prepare("UPDATE giveaways SET active=1, state='live', updated_at=? WHERE id=?").run(t, g.id);
   try { db.prepare("INSERT INTO activity (type,message,user_id,ref_id,created_at,is_demo) VALUES ('giveaway',?,NULL,?,?,0)").run(`Giveaway created: ${g.title}`, g.id, t); } catch {}
@@ -420,10 +422,12 @@ function goLive(g, c) {
       c.runtime = { ...(c.runtime || {}), tournament_id: info.lastInsertRowid }; db.prepare('UPDATE giveaways SET cfg=? WHERE id=?').run(JSON.stringify(c), g.id);
     } catch (e) { console.error('[gw] tournament mode', e.message); }
   }
+  return true;
 }
 function publishDraft(draftId, actor) {
   const d = db.prepare('SELECT * FROM gw_drafts WHERE id=?').get(draftId); if (!d) return { ok: false, status: 404, error: 'Draft not found.' };
   let c = normalize(JSON.parse(d.data)); const existing = d.giveaway_id ? getRow(d.giveaway_id) : null;
+  if (existing && !bookingPaymentCleared(existing)) return { ok: false, status: 409, error: 'This booking-backed giveaway cannot be republished until payment is confirmed.' };
   if (!c.rules.edited) c.rules.official = officialRules(c, existing);
   const v = validate(c, { giveawayId: existing ? existing.id : 0, existing: !!existing }); if (!v.ok) return { ok: false, status: 400, error: v.errors[0].msg, errors: v.errors, warnings: v.warnings };
   if (existing) c.runtime = cfgOf(existing).runtime || {};
@@ -451,6 +455,7 @@ function resume(g, actor) {
   db.prepare("UPDATE giveaways SET state='live', pauses=?, updated_at=? WHERE id=?").run(JSON.stringify(p), now(), g.id); R.audit(g.id, actor, 'resumed', null, { paused_ms: last ? last[1] - last[0] : 0 }); return { ok: true };
 }
 function endEarly(g, actor) {
+  if (!bookingPaymentCleared(g)) return { ok: false, error: 'This booking-backed giveaway cannot be ended or finalized until payment is confirmed.' };
   if (g.finalized_at) return { ok: false, error: 'Final standings are already locked.' };
   const t = now(); if (t < g.start_at) return { ok: false, error: 'This giveaway has not started yet; cancel it instead.' };
   if (g.state === 'paused') resume(g, actor);
@@ -520,7 +525,7 @@ let sweeping = false;
 function sweep() {
   if (sweeping) return; sweeping = true; const t = now(); const out = { published: 0, notified: 0, made: 0, forfeited: 0 };
   try {
-    for (const g of db.prepare("SELECT * FROM giveaways WHERE state='scheduled' AND active=0 AND publish_at IS NOT NULL AND publish_at <= ?").all(t)) { goLive(g, cfgOf(g)); R.audit(g.id, 'system', 'published', null, { scheduled_for: g.publish_at }); out.published++; }
+    for (const g of db.prepare("SELECT * FROM giveaways WHERE state='scheduled' AND active=0 AND publish_at IS NOT NULL AND publish_at <= ? AND (booking_id IS NULL OR LOWER(payment_status) IN ('paid','comped'))").all(t)) { goLive(g, cfgOf(g)); R.audit(g.id, 'system', 'published', null, { scheduled_for: g.publish_at }); out.published++; }
     db.prepare("UPDATE giveaways SET state='ended' WHERE state IN ('live','paused') AND (finalized_at IS NOT NULL OR end_at < ?)").run(t);
     const sent = db.prepare('INSERT OR IGNORE INTO gw_notif (giveaway_id, kind, at) VALUES (?,?,?)');
     for (const g of db.prepare("SELECT * FROM giveaways WHERE v7=1 AND active=1 AND state='live' AND start_at <= ? AND end_at > ? AND finalized_at IS NULL").all(t, t)) {
