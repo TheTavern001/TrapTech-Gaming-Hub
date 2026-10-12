@@ -49,7 +49,10 @@ export function prestigeArt(id, fx, size = 120) {
 async function storePage() {
   const { icon, esc, api, S } = C; const r = await api('/api/store'); if (!r.ok) return C.shell('/shop', C.emptyState('store', 'Store unavailable', 'Try again in a moment.'));
   const co = r.checkout; const pass = S.me ? await api('/api/pass') : null; let paymentProvider = (co.methods || []).includes('bitcoin') ? 'bitcoin' : 'stripe';
-  const buy = (id, label) => co.enabled ? (S.me ? `<button class="btn sm" data-buy="${esc(id)}" data-provider="${paymentProvider}">${icon('wallet')} ${label}</button>` : `<a class="btn sm" href="/signin?next=/store">Sign in to buy</a>`) : `<button class="btn sm" disabled title="${esc(co.reason || '')}">${label}</button>`;
+  const buy = (id, label) => {
+    if (id.startsWith('prestige-original-') && !r.prestige_sales_enabled) return `<button class="btn sm" disabled title="Wearable variations and compatibility review are not approved yet.">Preview only</button>`;
+    return co.enabled ? (S.me ? `<button class="btn sm" data-buy="${esc(id)}" data-provider="${paymentProvider}">${icon('wallet')} ${label}</button>` : `<a class="btn sm" href="/signin?next=/store">Sign in to buy</a>`) : `<button class="btn sm" disabled title="${esc(co.reason || '')}">${label}</button>`;
+  };
   C.shell('/shop', `<div class="narrow store">
     ${C.pageHead('Hub Store', 'Cosmetics only. Never a score, an entry or an edge.')}
     <div class="card pad na-note" id="non-advantage">${icon('shield-check')} <b>Cosmetic only.</b> ${esc(r.non_advantage)}</div>
