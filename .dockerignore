@@ -11,7 +11,10 @@ build
 screenshots
 mockups
 assets-src
-tools
+# Keep the build context lean while allowing the one audit script explicitly copied by Dockerfile.
+!tools/
+tools/*
+!tools/prelaunch-deep-audit.js
 licenses
 *.db
 *.db-*
