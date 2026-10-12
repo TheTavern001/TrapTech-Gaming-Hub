@@ -173,6 +173,10 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .av-tabs,.tabs{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}
 .av-opt{min-width:0;max-width:100%;white-space:normal}
 .av-opt img{display:block;max-width:100%;object-fit:contain}
+.av-view-controls,.av-style-controls,.av-saved-looks .av-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}
+.av-saved-looks{display:grid;gap:.55rem;margin:.8rem 0;padding:.8rem;border:1px solid var(--v1-border);border-radius:14px;min-width:0}
+.av-saved-looks h3{margin:0}
+.av-saved-looks input,.av-saved-looks select{width:100%;min-height:42px;padding:.55rem .7rem}
 @media(max-width:480px){
   .page{padding-left:12px;padding-right:12px}
   .card.pad{padding:12px}
