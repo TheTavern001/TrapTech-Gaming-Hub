@@ -44,3 +44,7 @@ Some checks need a local running app or service-specific variables. Keep product
 
 ## Deployment caution
 Owner screenshots indicate a single-app Deplexo Free plan, but earlier captures conflicted about the connected branch. This atomic commit targets the reported audit branch; whether it auto-deploys depends on the current dashboard branch and auto-deploy setting. Verify the Current full SHA and health in Deplexo. Source rollback does not restore SQLite state.
+
+
+## Local CI workaround when GitHub Actions allowance is exhausted
+From a clone with Node.js 20+ and dependencies installed, run `tools/owner-zero-ci.sh`. It syntax-checks source and browser-module JavaScript and runs the project API/browser suites against the existing `tools/fresh-api.sh` throwaway database path; it does not call GitHub Actions. Do not run against the production `/data` database. It still depends on the local machine having the required test/browser dependencies and a working Node environment; this script was added but not executed in this tool session.

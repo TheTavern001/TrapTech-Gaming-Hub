@@ -173,6 +173,10 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .av-tabs,.tabs{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}
 .av-opt{min-width:0;max-width:100%;white-space:normal}
 .av-opt img{display:block;max-width:100%;object-fit:contain}
+.av-view-controls,.av-style-controls,.av-saved-looks .av-controls{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}
+.av-saved-looks{display:grid;gap:.55rem;margin:.8rem 0;padding:.8rem;border:1px solid var(--v1-border);border-radius:14px;min-width:0}
+.av-saved-looks h3{margin:0}
+.av-saved-looks input,.av-saved-looks select{width:100%;min-height:42px;padding:.55rem .7rem}
 @media(max-width:480px){
   .page{padding-left:12px;padding-right:12px}
   .card.pad{padding:12px}
@@ -223,7 +227,6 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .play-wrap #game{display:block;flex:1 1 auto;min-width:0;max-width:100%;width:100%;height:100%;touch-action:manipulation}
 .play-wrap .overlay,.play-wrap .boot-ov{max-width:100%;box-sizing:border-box}
 @media(max-width:560px){.topbar .logo{width:clamp(108px,28vw,132px)}.play-wrap .play-top .who-chip{display:none}.play-wrap .play-top .iconbtn{min-width:44px;min-height:44px}}
-/* The store exposes a useful slice of the existing daily/weekly/seasonal cosmetic rotation. */
 .store-cosmetics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .store-cosmetic-card{display:flex;min-width:0;flex-direction:column;align-items:stretch;gap:8px;padding:10px;border:1px solid var(--v1-border);border-radius:14px;background:var(--v1-surface);text-align:left;overflow:hidden;cursor:pointer;color:inherit}
 .store-cosmetic-card:hover,.store-cosmetic-card:focus-visible{border-color:rgba(72,230,255,.65);transform:translateY(-2px)}
@@ -231,9 +234,8 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .store-cosmetic-card .ec-prev.store-preview{display:flex;width:100%;height:116px;min-height:116px;overflow:hidden;border-radius:10px}
 .store-cosmetic-card .store-cosmetic-name{font-weight:800;line-height:1.25;overflow-wrap:anywhere}
 .store-cosmetic-card .store-cosmetic-meta{font-size:.74rem;color:var(--muted,#aab2ce);line-height:1.35;overflow-wrap:anywhere}
-.store-cosmetic-card .store-cosmetic-price{font-weight:750;color:var(--v1-cyan);font-size:.88rem}
+.store-cosmetic-card .store-cosmetic-price{font-weight:750;color:var(--cyan,#22d3ee);font-size:.88rem}
 .store-cosmetic-card .store-cosmetic-preview .ec-mini{max-width:100%;transform:scale(.86)}
-/* Avatar editor: large 3D character stage with reachable controls on mobile. */
 .av-ed{display:grid;grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr);gap:16px;align-items:start}
 .av-ed>*{min-width:0}
 .av-prev{position:sticky;top:14px;min-width:0}
