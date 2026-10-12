@@ -40,16 +40,20 @@ function metricsForLib(slugOrId) { const slug = String(slugOrId).replace(/^gl-/,
   return [{ id: 'faster', label: 'Faster run (server-timed) to the same score', dir: 'asc' }, m ? { id: 'count:' + m[0], label: m[1], dir: 'desc' } : { id: 'eff', label: 'Higher efficiency: more points per scoring action (combos, chains, multipliers)', dir: 'desc' }]; }
 
 // derive m1/m2 from the stored run + its event log; invalid (log does not add up to the score) -> metrics null = ranks last on ties
-function derive(gameId, score, elapsedMs, ev, coins = null) { const ms = metricsFor(gameId); const e = ev && Array.isArray(ev.e) ? ev.e : [];
+function derive(gameId, score, elapsedMs, ev, coins = null, verified = false) { const ms = metricsFor(gameId); const e = ev && Array.isArray(ev.e) ? ev.e : [];
   let sum = 0, n = 0; const cnt = {}; for (let i = 0; i + 2 < e.length + 0.5 && i + 2 <= e.length - 1; i += 3) { const k = String(e[i + 1]); if (k[0] === '#') continue; const v = Number(e[i + 2]) || 0; sum += v; if (v > 0) n++; cnt[k] = (cnt[k] || 0) + 1; }
   const valid = e.length >= 3 ? Math.abs(sum - score) <= Math.max(2, score * 0.001) : score === 0;
   const m1 = Math.max(0, Math.round(elapsedMs)); let m2 = null; const d = ms[1].id;
+  // Client-submitted event logs and coin totals are not proof by themselves. Only use secondary
+  // skill metrics when the main anti-cheat pipeline verified the run's log/replay. Server time
+  // (m1) remains usable; an exact score/time tie with unverified metrics goes to a playoff.
+  if (!verified || !valid) return { m1, m2: null, valid: 0 };
   if (d === 'coins') return { m1, m2: coins == null ? null : coins, valid: 1 }; if (d.startsWith('count:')) m2 = cnt[d.slice(6)] || 0; else m2 = n ? Math.round(score / n * 100) / 100 : 0;
-  return { m1, m2: valid ? m2 : null, valid: valid ? 1 : 0 }; }
+  return { m1, m2, valid: 1 }; }
 
 function isLib(gameId) { return /^gl-/.test(String(gameId)); }
-function record(runId, userId, gameId, score, startedAt, createdAt, ev, rid) { try { // every game (core + library) since Oct 10 2026
-  const coins = (db.prepare('SELECT coins FROM runs WHERE id=?').get(runId) || {}).coins; const d = derive(gameId, score, createdAt - startedAt, ev, coins == null ? null : coins);
+function record(runId, userId, gameId, score, startedAt, createdAt, ev, rid, verify = '') { try { // every game (core + library) since Oct 10 2026
+  const coins = (db.prepare('SELECT coins FROM runs WHERE id=?').get(runId) || {}).coins; const d = derive(gameId, score, createdAt - startedAt, ev, coins == null ? null : coins, ['events-ok', 'replay-ok', 'cleared'].includes(verify));
   db.prepare('INSERT OR REPLACE INTO lib_run_metrics (run_id,user_id,game_id,score,m1,m2,valid,created_at) VALUES (?,?,?,?,?,?,?,?)').run(runId, userId, gameId, score, d.m1, d.m2, d.valid, createdAt);
   if (rid) { const pe = db.prepare('SELECT * FROM lib_playoff_entries WHERE rid=?').get(rid); if (pe && pe.run_id == null) db.prepare('UPDATE lib_playoff_entries SET run_id=?, score=?, m1=?, m2=? WHERE playoff_id=? AND user_id=?').run(runId, score, d.m1, d.m2, pe.playoff_id, pe.user_id); }
   } catch (e) { console.error('[games-lib-playoff] record', e.message); } }
