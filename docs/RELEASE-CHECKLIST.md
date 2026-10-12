@@ -80,3 +80,13 @@ This repository's current `main` contains the Hub v7 work, the Games Library int
 - [ ] Back up production data, deploy the latest `main` SHA once, and verify health, persistence, player flows, event controls, and admin access on the live URL.
 
 **Do not interpret “100 catalog entries” as “100 verified giveaway-ready games.”** The user-facing requirement is one consolidated release; the responsible release gate still requires documenting unresolved verification items rather than hiding them. The vendor control boundary is official Hub-managed events and score records: public casual game links can be shared, but a link alone must never authorize a Hub giveaway, paid booking, official entrant list, or winner selection.
+
+
+## Current master tracker (2026-10-12)
+
+Use [docs/HUB-MASTER-CHECKLIST.md](HUB-MASTER-CHECKLIST.md) as the project-wide source-of-truth index for all requirements, subsystem status, test gates, evidence locations, and deployment history. This file retains detailed release-specific checks; when the two appear inconsistent, reconcile both against the current source and record the correction rather than relying on historical notes.
+
+- [x] Root cause for the `bb2346e` Deplexo build failure identified from the supplied build log: the deep audit incorrectly rejected a valid static manifest icon because its URL was not hard-coded in `src/server.js`.
+- [x] Audit logic corrected in `ea454f93a05ecf715d880d880e42228327f0a7b6` to accept a manifest icon when either a server route is declared or the corresponding file exists under `public/`.
+- [ ] Verify Deplexo build reaches READY on the fix commit or later.
+- [ ] Verify live `/healthz`, `/api/build`, and `/api/audit/report` on the exact deployed build.
