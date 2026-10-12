@@ -161,6 +161,9 @@ for (const [, id, supply, usd, fx] of prestigeRows) {
 }
 if (!monetizeSource.includes('const LEGACY_PRESTIGE') || !monetizeSource.includes('SET active=0') || !monetizeSource.includes('issued(p.id) + reserved(p.id) >= p.supply')) fail('src/monetize.js', 'Legacy ownership must be preserved and one-of-one supply/reservation enforced');
 if (!monetizeSource.includes('const insertOrder = db.transaction') || !monetizeSource.includes('One-of-one original already awarded')) fail('src/monetize.js', 'Prestige reservations and award checks must be transaction-protected');
+if (!/const CATALOG_UNIVERSE_SIZE = 1200/.test(fs.readFileSync(path.join(ROOT, 'src/shop.js'), 'utf8'))) fail('src/shop.js', 'Rotating cosmetic catalog must contain at least 1,000 scheduled items');
+const shopSource = fs.readFileSync(path.join(ROOT, 'src/shop.js'), 'utf8');
+if (!shopSource.includes("app.get('/api/shop/catalog'") || !shopSource.includes('catalogUniverse') || !shopSource.includes('catalog_only: !onSale.has(it.id)')) fail('src/shop.js', 'Paginated catalog endpoint must expose future items as preview-only until they rotate in');
 const avatarSource = fs.readFileSync(path.join(ROOT, 'src/avatars.js'), 'utf8');
 const prestigeBgBlock = (avatarSource.match(/const PRESTIGE_BG = \{([\s\S]*?)\n\};/) || [])[1] || '';
 for (const id of prestigeIds) {
