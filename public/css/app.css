@@ -1063,3 +1063,20 @@ input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):n
 @keyframes px-float { to { transform:translateY(-7px) rotate(10deg); } }
 @keyframes px-spark { to { transform:translateY(-9px) scale(1.5); opacity:.2; } }
 @media (prefers-reduced-motion: reduce) { .px-art *, .px-art::before, .px-art::after { animation:none !important; transition:none !important; } }
+
+
+/* Searchable rotating cosmetic catalog */
+.shop-catalog-head { align-items:center; gap:12px; }
+.shop-catalog { margin-bottom:18px; }
+.shop-catalog-filters { display:grid; grid-template-columns:minmax(0,1fr) minmax(130px,.65fr) auto; gap:8px; margin:12px 0 16px; }
+.shop-catalog-filters .input { min-width:0; width:100%; }
+.shop-catalog .shop-owned { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.shop-catalog-item { min-width:0; width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding:10px; text-align:left; color:var(--text); border:1px solid var(--line); background:var(--panel-2); border-radius:12px; cursor:pointer; }
+.shop-catalog-item b { overflow-wrap:anywhere; }
+.shop-catalog-item .ec-prev { width:100%; min-height:64px; }
+.shop-catalog-pager { align-items:center; justify-content:space-between; margin-top:14px; }
+@media (max-width:700px) {
+  .shop-catalog-filters { grid-template-columns:1fr 1fr; }
+  .shop-catalog-filters button { grid-column:1 / -1; }
+  .shop-catalog .shop-owned { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
