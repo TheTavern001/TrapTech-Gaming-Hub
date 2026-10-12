@@ -41,6 +41,15 @@ jobs:
           SECRET: v1-check-secret-for-tests-only
           DATA_DIR: /tmp/gaming-hub-v1-economy-test
         run: node tools/e2e-cosmetic-economy.js
+
+      - name: Test sponsor booking payment gate and brand affiliation
+        env:
+          NODE_ENV: test
+          ADMIN_PASSWORD: ci-only-admin-password-do-not-use-in-production
+          SECRET: ci-only-secret-do-not-use-in-production
+          ADMIN_PATH: ci-hidden-admin-path
+          DATA_DIR: /tmp/gaming-hub-ci-sponsor-payment
+        run: SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js
       - name: Check server-side JavaScript
         run: |
           bash -n tools/run-all.sh
