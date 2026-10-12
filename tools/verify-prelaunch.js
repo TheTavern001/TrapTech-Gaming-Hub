@@ -34,7 +34,7 @@ for (const root of SCAN_ROOTS) {
     const source = fs.readFileSync(file, 'utf8');
     // Use the correct parser goal: ESM for files with static imports/exports, script mode otherwise.
     // This also keeps legacy vendored browser scripts (which may use script-only syntax) testable.
-    const isModule = /^\\s*(?:import|export)\\s/m.test(source);
+    const isModule = /^\s*(?:import|export)\s/m.test(source);
     const args = isModule ? ['--input-type=module', '--check', '-'] : ['--check', '-'];
     const result = spawnSync(process.execPath, args, {
       input: source, encoding: 'utf8', timeout: 15000
