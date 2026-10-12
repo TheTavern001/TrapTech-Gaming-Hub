@@ -10,9 +10,14 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const A = client(); const ua = 'av_' + Math.random().toString(36).slice(2, 8); await A('/api/auth/signup', { body: { username: ua, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } });
   let r = await client()(`/avatar/${ua}.svg`); ok(r.status === 200 && r.ct.includes('image/svg+xml') && r.body.startsWith('<svg') && r.body.length < 8000, 'every player has a default avatar SVG (< 8 KB)', r.body.length);
   const def = r.body; r = await client()('/avatar/nobody_here.svg'); ok(r.status === 200, 'unknown names still get a generated avatar (no broken images)');
-  r = await A('/api/avatar'); ok(r.body.ok && r.body.kinds.length === 12 && r.body.parts.length > 70, 'editor lists 12 part kinds and 70+ parts', r.body.parts && r.body.parts.length);
+  r = await A('/api/avatar'); ok(r.body.ok && r.body.kinds.length === 13 && r.body.parts.length > 70, 'editor lists 13 part kinds and 70+ parts', r.body.parts && r.body.parts.length);
   const P = r.body.parts; const cfg = { ...r.body.avatar, hair: 'mohawk', hairc: 'c3', outfit: 'hoodie', hat: 'beanie', held: 'controller' };
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: cfg } }); ok(r.body.ok && r.body.avatar.hair === 'mohawk', 'save free parts');
+  r = await A('/api/avatar-looks', { method: 'POST', body: { name: 'Locked look', avatar: { ...cfg, outfit: 'fur' } } }); ok(r.status === 403, 'saved looks cannot bypass locked cosmetic ownership');
+  r = await A('/api/avatar-looks', { method: 'POST', body: { name: 'Street Fit', avatar: cfg } }); ok(r.body.ok && r.body.looks.length === 1, 'save a named avatar look'); const lookId = r.body.looks[0].id;
+  r = await A('/api/avatar-looks', { method: 'POST', body: { name: 'street fit', avatar: { ...cfg, hat: 'snapback' } } }); ok(r.body.ok && r.body.looks.length === 1 && r.body.looks[0].id === lookId, 'saved look names are case-insensitive and update in place');
+  r = await A('/api/avatar-looks/' + lookId + '/apply', { body: {} }); ok(r.body.ok && r.body.avatar.hat === 'snapback', 'apply a saved look to the profile');
+  r = await A('/api/avatar-looks/' + lookId, { method: 'DELETE' }); ok(r.body.ok && r.body.looks.length === 0, 'delete a saved look');
   r = await client()(`/avatar/${ua}.svg`); ok(r.body !== def, 'the public avatar changes after saving');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur' } } }); ok(r.status === 403, 'a Crowns part cannot be worn before it is bought');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, hat: 'crown' } } }); ok(r.status === 403, 'the gold crown is Prestige-only');

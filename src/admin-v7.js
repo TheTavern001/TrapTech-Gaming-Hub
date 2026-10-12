@@ -85,11 +85,12 @@ function routes(app, A, H) {
   // ===== giveaways builder =====
   const gwRow = (req, res) => { const g = G.getRow(+req.params.id); if (!g) { bad(res, 404, 'Giveaway not found.'); return null; } return g; };
   M.get('/v7/gw/meta', perm('giveaways.view'), (req, res) => {
-    const games = cfg.GAMES.map(x => ({ id: x.id, title: x.title, art: x.art, eligible: G.eligible(x.id), playable: x.playable !== false, desc: x.desc || x.tagline || '' }));
+    const catalog = [...cfg.GAMES, ...(cfg.LIB_GAMES || [])];
+    const games = catalog.map(x => ({ id: x.id, title: x.title, art: x.art, eligible: G.eligible(x.id), playable: x.playable !== false, desc: x.desc || x.tagline || '' }));
     res.json({ ok: true, prize_types: G.PRIZE_TYPES, score_rules: G.SCORE_RULES, regions: G.REGIONS, themes: G.THEMES, presets: G.PRESETS, features: G.FEATURES, games, tz: cfg.TZ, blank: G.blank(),
       brands: db.prepare('SELECT id, name, slug, color, logo FROM channels WHERE active=1 ORDER BY name').all(), templates: db.prepare('SELECT id, name, created_at, created_by FROM gw_templates ORDER BY id DESC').all(),
       media_sizes: MEDIA.SIZES, migration: RO.getS('gw_migration_v7', null),
-      profiles: Object.fromEntries(cfg.GAMES.map(x => [x.id, PROF.get(x.id)])), defaults: Object.fromEntries(cfg.GAMES.map(x => [x.id, PROF.builderDefaults(x.id)])), comp: PROF.COMP, ac_levels: PROF.AC, winner_rule: PROF.WINNER_RULE });
+      profiles: Object.fromEntries(catalog.map(x => [x.id, PROF.get(x.id)])), defaults: Object.fromEntries(catalog.map(x => [x.id, PROF.builderDefaults(x.id)])), comp: PROF.COMP, ac_levels: PROF.AC, winner_rule: PROF.WINNER_RULE });
   });
   M.get('/v7/gw', perm('giveaways.view'), (req, res) => {
     const t = now(); const rows = db.prepare('SELECT * FROM giveaways ORDER BY COALESCE(archived,0) ASC, start_at DESC LIMIT 500').all();

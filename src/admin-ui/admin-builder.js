@@ -19,12 +19,15 @@ const METHOD = { score: 'Ranked by score', random: 'Random draw among qualifiers
 const RULE_HINT = { best: 'Highest single run across the linked games.', sum_best: 'Best run in each linked game, added up.', total: 'Every qualifying run adds up (rewards playing more).', avg_top: 'Average of the top N runs; missing runs count as 0.', improved: 'Best in the window minus the best before it started.', campaign: 'Cumulative score across the campaign\'s level set.', fastest: 'Best single run; equal scores go to the faster completion.' };
 // Reese's example formats (Game Rules Profiles brief); game falls back to the current pick when it isn't available
 const FORMATS = [
-  { label: '7-day campaign, levels 1-30', icon: 'map', hint: 'Cumulative score across levels 1-30 for 7 days', game: 'sling-smash', comp: { type: 'campaign', metric: 'cumulative', level_from: 1, level_to: 30 }, rule: 'campaign', attempts: 0, cap: 0, hours: 168 },
-  { label: '72-hour endless chase', icon: 'infinity', hint: 'Endless, scored on survival + distance, 72 hours', game: 'drift-rush', comp: { type: 'endless', metric: 'survival_distance' }, rule: 'best', attempts: 0, cap: 0, hours: 72 },
-  { label: '5-day tower defense', icon: 'castle', hint: 'Strategy, highest round, 5 days', game: 'haze-defense', comp: { type: 'strategy', metric: 'wave' }, rule: 'best', attempts: 0, cap: 0, hours: 120 },
-  { label: '24-hour marathon', icon: 'timer', hint: 'Every run adds up for 24 hours', game: null, comp: { type: 'endless', metric: 'marathon' }, rule: 'total', attempts: 0, cap: 0, hours: 24 },
-  { label: '48 h, 30-min run cap', icon: 'crosshair', hint: 'Kills + score, each run capped at 30 minutes, 48 hours', game: 'void-swarm', comp: { type: 'endless', metric: 'kills_score' }, rule: 'best', attempts: 0, cap: 1800, hours: 48 },
-  { label: '60-s score attack, best of 3', icon: 'zap', hint: 'Short session: 60-second runs, first 3 count', game: null, comp: { type: 'short_session', metric: 'attack_60' }, rule: 'best', attempts: 3, cap: 60, hours: 24 },
+  { label: 'Time Attack · 60 sec', icon: 'zap', hint: '60-second score attack using the best validated score', game: null, comp: { type: 'short_session', metric: 'attack_60' }, rule: 'best', attempts: 0, cap: 60, hours: 24 },
+  { label: 'Time Attack · 3 min', icon: 'timer', hint: 'Three-minute score attack using the best validated score', game: null, comp: { type: 'short_session', metric: 'attack_180' }, rule: 'best', attempts: 0, cap: 180, hours: 24 },
+  { label: 'High Score · single run', icon: 'trophy', hint: 'Highest single run wins; shorter server-timed run breaks ties', game: null, comp: { type: 'short_session', metric: 'single' }, rule: 'best', attempts: 0, cap: 0, hours: 24 },
+  { label: 'Best of 3 runs', icon: 'target', hint: 'Three counted attempts; best validated score wins', game: null, comp: { type: 'short_session', metric: 'best_of_3' }, rule: 'best', attempts: 3, cap: 0, hours: 48 },
+  { label: 'Best of 5 runs', icon: 'medal', hint: 'Five counted attempts; best validated score wins', game: null, comp: { type: 'short_session', metric: 'best_of_5' }, rule: 'best', attempts: 5, cap: 0, hours: 48 },
+  { label: '7-day campaign · levels 1–30', icon: 'map', hint: 'Cumulative score across levels 1–30 for 7 days', game: 'sling-smash', comp: { type: 'campaign', metric: 'cumulative', level_from: 1, level_to: 30 }, rule: 'campaign', attempts: 0, cap: 0, hours: 168 },
+  { label: '72-hour endless chase', icon: 'infinity', hint: 'Endless, scored on survival and distance, 72 hours', game: 'drift-rush', comp: { type: 'endless', metric: 'survival_distance' }, rule: 'best', attempts: 0, cap: 0, hours: 72 },
+  { label: '5-day tower defense', icon: 'castle', hint: 'Strategy, highest wave/round, 5 days', game: 'haze-defense', comp: { type: 'strategy', metric: 'wave' }, rule: 'best', attempts: 0, cap: 0, hours: 120 },
+  { label: '24-hour marathon', icon: 'timer', hint: 'Every eligible run adds up over 24 hours', game: null, comp: { type: 'endless', metric: 'marathon' }, rule: 'total', attempts: 0, cap: 0, hours: 24 },
 ];
 function applyDefaults(d, id, { schedule = true } = {}) {
   const x = (M.defaults || {})[id]; if (!x) return false;

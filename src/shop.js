@@ -407,6 +407,20 @@ function listFor(own, type) {
 let ICONS = null;
 function icons() { if (!ICONS) { try { ICONS = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'public', 'js', 'icons.js'), 'utf8').match(/export const ICONS=(\{.*?\});/s)[1]); } catch { ICONS = {}; } } return ICONS; }
 function routes(app, A, H) {
+  app.get('/api/shop', (req, res) => {
+    const me = H.currentUser(req);
+    const balanceNow = me ? module.exports.sync(me.id) : 0;
+    const snapshot = module.exports.view(me);
+    const ownItems = me ? [...module.exports.owned(me.id)].map(id => { const it = resolve(id); return it ? module.exports.pub(it, true) : null; }).filter(Boolean) : [];
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ ok: true, ...snapshot, signed_in: !!me, balance: balanceNow, earned: me ? module.exports.earned(me.id) : 0, owned: ownItems, earn: EARN, disclaimer: DISCLAIMER });
+  });
+  app.post('/api/shop/buy', H.requireUser, (req, res) => {
+    const id = String((req.body || {}).item || '').slice(0, 128);
+    const result = module.exports.buy(req.user, id);
+    if (!result.ok) return res.status(400).json(result);
+    res.setHeader('Cache-Control', 'no-store'); res.json(result);
+  });
   app.get('/shop/art/:id.svg', (req, res) => {
     const it = resolve(req.params.id); if (!it || !it.generated || (it.type !== 'banner' && it.type !== 'badge')) return res.status(404).end();
     const svg = it.type === 'banner' ? G.bannerSvg(it.art.seed, it.palette, it.art.motif, it.rarity) : G.badgeArt(it, icons()[it.art.icon] || '');
