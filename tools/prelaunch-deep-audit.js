@@ -61,6 +61,9 @@ for (const g of coreGames) {
   for (const n of notes) warnings.push({ id: g.id, title: g.title, severity: 'review', finding: n });
 }
 
+const sharedLibraryFiles = ['adapter.js', 'kit.js', 'lib.css'];
+for (const name of sharedLibraryFiles) if (!exists(path.join(GAME_ROOT, name))) issues.push({ severity: 'blocker', finding: 'Games Library shared runtime asset missing: ' + name });
+
 const registrySlugs = new Set();
 for (const g of games) {
   const slug = String(g.slug || '');
@@ -77,7 +80,8 @@ for (const g of games) {
   registrySlugs.add(slug);
   if (!exists(dir)) problems.push('game directory missing');
   if (!html) problems.push('game entry HTML missing/unreadable');
-  if (g.build === 'built' && !js) problems.push('built game.js missing/unreadable');
+  // The registry exposes `src` (built/vendored), not `build`; every catalog entry must have its own runnable game.js wrapper.
+  if (!js) problems.push('game.js missing/unreadable (registry `build` is not a field; check every entry regardless of source type)');
   if (html) {
     if (!/<meta[^>]+name=["']viewport["']/i.test(html)) problems.push('viewport meta missing');
     if (!/<title\b/i.test(html)) notes.push('document title missing');
