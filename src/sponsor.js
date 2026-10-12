@@ -174,7 +174,7 @@ function sponsorView(b) {
   const q = quoteRow(b.id); const shown = q && ['sent', 'accepted', 'declined', 'paid'].includes(q.status);
   const pk = PK.getPackages();
   const evRow = b.event_id ? db.prepare('SELECT id, event_code, title, start_at, end_at, booking_id, payment_status FROM giveaways WHERE id=?').get(b.event_id) : null;
-  const ev = q && q.status === 'paid' && evRow && (!evRow.booking_id || ['paid', 'comped'].includes(String(evRow.payment_status || '').toLowerCase())) ? evRow : null;
+  const ev = q && q.status === 'paid' && evRow && evRow.booking_id === b.id && ['paid', 'comped'].includes(String(evRow.payment_status || '').toLowerCase()) ? evRow : null;
   return { id: b.id, brand: b.brand, created_at: b.created_at, start_date: b.start_date, end_date: b.end_date, details: b.details, notes: b.notes, business_type: b.business_type,
     prize: b.prize || '', brand_color: b.brand_color || '', games: JSON.parse(b.game_ids || '[]'), competition: b.competition || 'best', length_days: b.length_days || 7,
     event: ev ? { code: ev.event_code, url: '/event/' + ev.event_code, qr_svg: require('./events').qrSvg((require('./public-url').PUBLIC_URL || '') + '/event/' + ev.event_code), start_at: ev.start_at, end_at: ev.end_at } : null,
