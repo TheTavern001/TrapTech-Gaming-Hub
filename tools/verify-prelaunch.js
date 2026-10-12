@@ -69,6 +69,7 @@ const mobileBlock = (mobileTest.match(/const GAMES = \[([^\]]*)\]/) || [])[1] ||
 const mobileIds = [...mobileBlock.matchAll(/'([^']+)'/g)].map(m => m[1]);
 for (const id of ids) if (!mobileIds.includes(id)) fail('tools/e2e-mobile.js', 'Core game missing from mobile regression suite: ' + id);
 for (const id of mobileIds) if (!ids.has(id)) fail('tools/e2e-mobile.js', 'Mobile suite references an unregistered core game: ' + id);
+if (!mobileTest.includes("id: 'desktop-chrome'") || !mobileTest.includes('p.mouse.click')) fail('tools/e2e-mobile.js', 'Core game regression must include a desktop viewport using mouse input');
 
 const lib = fs.readFileSync(path.join(ROOT, 'src/games-lib.js'), 'utf8');
 const slugs = [...lib.matchAll(/T\('([^']+)'\s*,\s*'([^']+)'/g)].map(m => ({ slug: m[1], title: m[2] }));
