@@ -394,8 +394,31 @@ function catalog({ limit = 500, type = '', q = '' } = {}) {
   const list = [...HANDMADE, ...[...GEN.values()].filter(i => (SIM.seen.get(i.id) || {}).first <= today).reverse()];
   return list.filter(i => (!type || i.type === type) && (!q || i.name.toLowerCase().includes(String(q).toLowerCase()))).slice(0, limit).map(i => ({ ...pub(i, false), src: i.generated ? i.src : 'v5', history: history(i.id) }));
 }
+// A deterministic 1,200-item rotating universe: two new daily originals for 600 days.
+ // Items are previewable in the catalog, but purchase still requires the item to be in the active rotation.
+const CATALOG_UNIVERSE_SIZE = 1200;
+function catalogUniverse({ limit = 50, offset = 0, type = '', q = '', user = null, t = Date.now() } = {}) {
+  const safeLimit = Math.max(1, Math.min(100, Math.floor(Number(limit) || 50)));
+  const safeOffset = Math.max(0, Math.floor(Number(offset) || 0));
+  const needle = String(q || '').trim().toLowerCase();
+  const rot = module.exports.rotation(t);
+  const onSale = new Set(module.exports.allOnSale(rot).map(it => it.id));
+  const own = user ? owned(user.id) : new Set();
+  const matches = [];
+  for (let n = 0; n < 600 && matches.length < safeOffset + safeLimit; n++) {
+    const day = EPOCH_DAY + n;
+    for (let slot = 0; slot < 2; slot++) {
+      const it = resolve(G.make('d', day, slot).id);
+      if (!it || (type && it.type !== type) || (needle && !it.name.toLowerCase().includes(needle))) continue;
+      matches.push({ ...module.exports.pub(it, own.has(it.id)), catalog_only: !onSale.has(it.id), on_sale: onSale.has(it.id), scheduled_day: day });
+      if (matches.length >= safeOffset + safeLimit) break;
+    }
+  }
+  return { total: matches.length < safeOffset + safeLimit ? matches.length : CATALOG_UNIVERSE_SIZE, offset: safeOffset, limit: safeLimit,
+    items: matches.slice(safeOffset, safeOffset + safeLimit) };
+}
 function schedule(days = 14, t = Date.now()) { const d0 = Math.max(EPOCH_DAY, dayNum(t)); const out = []; for (let d = d0; d < d0 + days; d++) { const r = module.exports.rotation(PR().dayStart(d) + 3600e3); out.push({ day: d, at: PR().dayStart(d), daily: r.daily.map(i => ({ id: i.id, name: i.name, tag: r.tags[i.id] || null })), weekly: r.weekly.map(i => i.id), events: r.events.map(e => e.name) }); } return out; }
-function stats() { syncGen(); return { generated_so_far: GEN.size, handmade: HANDMADE.length, vaulted: [...SIM.vaulted.values()].filter(v => v <= realToday()).length, simulated_to: SIM.day }; }
+function stats() { syncGen(); return { catalog_universe: CATALOG_UNIVERSE_SIZE, generated_so_far: GEN.size, handmade: HANDMADE.length, vaulted: [...SIM.vaulted.values()].filter(v => v <= realToday()).length, simulated_to: SIM.day }; }
 // owned + currently-listed shop items of one type (Customize page lists only these, not the whole endless catalog)
 function listFor(own, type) {
   const rot = module.exports.rotation(); const ids = new Set([...HANDMADE.filter(i => i.type === type).map(i => i.id)]);
@@ -412,6 +435,12 @@ function routes(app, A, H) {
     const svg = it.type === 'banner' ? G.bannerSvg(it.art.seed, it.palette, it.art.motif, it.rarity) : G.badgeArt(it, icons()[it.art.icon] || '');
     res.setHeader('Content-Type', 'image/svg+xml'); res.setHeader('Cache-Control', 'public, max-age=2592000, immutable'); res.send(svg);
   });
+  app.get('/api/shop/catalog', (req, res) => {
+    const me = H.currentUser(req);
+    const page = module.exports.catalogUniverse({ limit: req.query.limit, offset: req.query.offset, type: req.query.type, q: req.query.q, user: me });
+    res.setHeader('Cache-Control', 'private, max-age=60');
+    res.json({ ok: true, catalog_size: CATALOG_UNIVERSE_SIZE, ...page });
+  });
   app.get('/api/shop/item/:id', (req, res) => { const me = H.currentUser(req); const d = detail(me, req.params.id); if (!d) return res.status(404).json({ ok: false, error: 'No such item.' }); res.json({ ok: true, ...d }); });
   app.get('/api/shop/rules', (req, res) => res.json({ ok: true, rules: RULES, earn: EARN, rarity: RARITY, type_mult: TYPE_MULT, caps: CAP, cooldowns: COOL, seasons: SE().RULES, perks: SE().PERKS, disclaimer: DISCLAIMER }));
   app.get('/api/shop/upcoming', (req, res) => res.json({ ok: true, events: upcomingEvents(), season: (() => { const s = SE().seasonAt(); return { number: s.number, name: s.name, ends_at: s.end_at + 1 }; })() }));
@@ -422,5 +451,5 @@ function upcomingEvents(t = Date.now()) { const d0 = dayNum(t); const out = []; 
 
 module.exports = { ITEMS, BY_ID, RARITY, THEMES, EARN, sync, balance, earned, owned, rotation, buy, pub, css, cssKey, attach,
   // v7 engine (docs/ECONOMY.md)
-  EPOCH_DAY, EVENTS, GATES, CAP, COOL, TYPE_MULT, RULES, DISCLAIMER, resolve, listPrice, priceParts, priceFor, inRotation, allOnSale, view, detail, history, catalog, schedule, stats, listFor,
+  EPOCH_DAY, EVENTS, GATES, CAP, COOL, TYPE_MULT, RULES, DISCLAIMER, resolve, listPrice, priceParts, priceFor, inRotation, allOnSale, view, detail, history, catalog, catalogUniverse, CATALOG_UNIVERSE_SIZE, schedule, stats, listFor,
   grantGates, grantWeekly, eventsOn, upcomingEvents, routes, gateItem, _sim: SIM };
