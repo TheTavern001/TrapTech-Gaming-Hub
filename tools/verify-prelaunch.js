@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// Zero-cost, local prelaunch verification. This deliberately avoids depending on
-// GitHub status reporting: run it in the repository checkout or the deployment build.
+// Zero-cost local prelaunch verification. Run it in the repository checkout or Docker build.
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
