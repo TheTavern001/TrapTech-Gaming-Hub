@@ -18,7 +18,7 @@ export class SpinToWin extends Game {
     this.double = false; this.lastRes = null; this.resultT = 0; this.endT = 0; this.history = [];
   }
   onDown() { if (!this.spin && this.lives > 0) { this.charging = true; this.chargeT = 0; } }
-  onUp() { if (this.charging) this.release(); }
+  onUp(x, y, e) { if (e && e.cancelled) { this.charging = false; this.chargeT = 0; return; } if (this.charging) this.release(); }
   onKey(code, down) { if (code !== 'Space' && code !== 'Enter') return; if (down && !this.charging) this.onDown(); if (!down && this.charging) this.release(); }
   meter(t) { const P = this.period || PERIOD; const u = (t % P) / P; return u < 0.5 ? u * 2 : 2 - u * 2; }
   release() {
