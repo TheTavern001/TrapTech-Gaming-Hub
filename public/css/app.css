@@ -1080,19 +1080,3 @@ input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):n
   .shop-catalog-filters button { grid-column:1 / -1; }
   .shop-catalog .shop-owned { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
-
-/* Full cosmetic catalog: touch-friendly search, readable on narrow Android screens. */
-.catalog-search { display:grid; grid-template-columns:minmax(0,1fr) minmax(140px,.55fr) auto; align-items:end; gap:10px; }
-.catalog-search label { display:block; font-size:.78rem; color:var(--muted,#a1a1aa); }
-.catalog-search input,.catalog-search select { width:100%; min-width:0; min-height:42px; padding:9px 11px; border:1px solid var(--line,#3f3f46); border-radius:10px; color:inherit; background:var(--panel,#18181b); }
-.catalog-search button { min-height:42px; white-space:nowrap; }
-#cosmetic-catalog { scroll-margin-top:90px; }
-#shop-catalog .ec-card { min-width:0; }
-@media(max-width:560px) {
-  .catalog-search { grid-template-columns:1fr 1fr; }
-  .catalog-search label:first-of-type,.catalog-search input[type='search'] { grid-column:1 / -1; }
-  .catalog-search button { grid-column:1 / -1; width:100%; }
-}
-@media(prefers-reduced-motion:reduce) {
-  #shop-catalog *,#shop-catalog *::before,#shop-catalog *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
-}
