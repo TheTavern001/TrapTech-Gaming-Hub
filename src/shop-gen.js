@@ -161,6 +161,8 @@ function make(src, num, slot, ctx = {}) {
   else if (type === 'title') { it.name = ctx.name || pick(r, words.title); if (!ctx.name && r() < 0.45) it.name = `${pick(r, words.adj)} ${it.name.split(' ').pop()}`; }
   else if (type === 'badge') { it.art.icon = ctx.icon || pick(r, BADGE_ICONS); it.name = ctx.name || `${pick(r, words.adj)}${KIND_NOUN.badge}`; }
   else { it.art.kind = pick(r, FX_KINDS); it.art.hue = Math.round(r() * 360); it.name = ctx.name || `${pick(r, words.adj)} ${EFFECT_NOUN[FX_KINDS.indexOf(it.art.kind)]}`; }
+  // Give each scheduled daily drop a stable edition mark so the 1,200-item catalog has distinct display names.
+  if (src === 'd' && slot < 2) it.name = `${it.name} · ${String(num - 20727 + 1).padStart(3, '0')}${slot === 0 ? 'A' : 'B'}`;
   if (ctx.label) it.label = ctx.label;
   it.extra = itemCss(it, true); // inline preview value (banner background / frame bg / color gradient)
   return it;
