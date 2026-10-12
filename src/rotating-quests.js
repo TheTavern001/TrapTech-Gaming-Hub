@@ -18,7 +18,7 @@ const OBJECTIVES = Object.freeze([
   { id: 'distinct-games', label: 'complete runs in distinct games', base: 2, cap: 25 },
   { id: 'play-days', label: 'play on distinct days', base: 1, cap: 28 },
   { id: 'tier-medals', label: 'earn score-tier milestones', base: 2, cap: 100 },
-  { id: 'streak', label: 'maintain a verified play streak', base: 2, cap: 60 }
+  { id: 'streak', label: 'complete consecutive verified runs', base: 2, cap: 60 }
 ]);
 const PERIOD_MULTIPLIER = Object.freeze({ daily: 1, weekly: 3, seasonal: 8 });
 const GAME_IDS = () => {
@@ -35,7 +35,12 @@ function buildTemplates(gameIds = GAME_IDS()) {
     const variants = objective.id === 'distinct-games' || objective.id === 'play-days' || objective.id === 'streak' ? 30 : 40;
     for (let v = 0; v < variants; v++) {
       const game = objective.id === 'score' || objective.id === 'tier-medals' ? games[v % Math.max(1, games.length)] || null : null;
-      const target = Math.min(objective.cap, objective.base * tier.multiplier * (v + 1) * PERIOD_MULTIPLIER[period]);
+      const rawTarget = objective.base * tier.multiplier * (v + 1) * PERIOD_MULTIPLIER[period];
+      // Distinct-day objectives must be achievable within the period being assigned.
+      const targetCap = objective.id === 'play-days'
+        ? (period === 'daily' ? 1 : period === 'weekly' ? 7 : 28)
+        : objective.cap;
+      const target = Math.min(targetCap, rawTarget);
       const id = 'q-' + sha([period, objective.id, tier.id, game || 'hub', v].join('|')).slice(0, 20);
       const title = period === 'daily' ? 'Daily' : period === 'weekly' ? 'Weekly' : 'Season';
       const scope = game ? ' in ' + game.replace(/-/g, ' ') : '';
