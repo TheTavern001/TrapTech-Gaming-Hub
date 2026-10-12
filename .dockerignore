@@ -11,11 +11,12 @@ build
 screenshots
 mockups
 assets-src
-# Keep the build context lean while allowing verification and E2E JavaScript for build-time syntax checks.
+# Keep the build context lean while allowing verification, regression tests, and E2E JavaScript for build-time checks.
 !tools/
 tools/*
 !tools/prelaunch-deep-audit.js
 !tools/verify-prelaunch.js
+!tools/test-rotating-quests.js
 !tools/e2e-*.js
 licenses
 *.db
