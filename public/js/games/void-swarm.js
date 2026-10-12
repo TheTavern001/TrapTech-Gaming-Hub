@@ -16,7 +16,7 @@ export class VoidSwarm extends Game {
     this.score = 0; this.coins = 0; this.lives = 3; this.wave = 0; this.px = this.W / 2; this.py = this.H - 120; this.inv = 2; this.dead = 0; this.over = 0;
     this.enemies = []; this.shots = []; this.bolts = []; this.pus = []; this.fx = []; this.fireT = 0; this.diveT = 3; this.shake = 0; this.pw = { spread: 0, rapid: 0, shield: 0 };
     this.sway = 0; this.drag = null; this.keys = {}; this.waveT = 1.2; this.banner = 0; this.kills = 0; this.boss = null;
-    this.stars = Array.from({ length: 90 }, (_, i) => ({ x: this.r(), y: Math.random(), z: [0.25, 0.5, 1][i % 3] }));
+    this.stars = Array.from({ length: 90 }, (_, i) => ({ x: this.r(), y: this.r(), z: [0.25, 0.5, 1][i % 3] }));
     this.gl = { blue: glow('#60a5fa', 16), pink: glow('#f472b6', 14), orange: glow('#fb923c', 30), white: glow('#e0f2fe', 20) };
   }
   mult() { return Math.min(4, 1 + 0.05 * (this.wave - 1)); }
@@ -47,7 +47,7 @@ export class VoidSwarm extends Game {
     const rate = this.pw.rapid > 0 ? 0.085 : 0.16; if (this.fireT > 0) return; this.fireT = rate;
     const sp = -820; const add = (dx, vx) => this.shots.push({ x: this.px + dx, y: this.py - 30, vx, vy: sp });
     add(-9, 0); add(9, 0); if (this.pw.spread > 0) { add(-14, -220); add(14, 220); }
-    if (Math.random() < 0.5) this.sfx.tone(1400, 0.035, { type: 'square', vol: 0.05, slide: -0.5 });
+    if (this.r() < 0.5) this.sfx.tone(1400, 0.035, { type: 'square', vol: 0.05, slide: -0.5 });
   }
   explode(x, y, col, big = 1) {
     this.fx.push({ k: 'ring', x, y, t: 0, max: 0.45 * big, r: 60 * big, col }); this.fx.push({ k: 'flash', x, y, t: 0, max: 0.25, r: 50 * big });
@@ -63,12 +63,12 @@ export class VoidSwarm extends Game {
   kill(e) {
     const T = TYPES[e.type]; const diving = e.mode === 'dive'; const pts = this.award(Math.round(T.pts * (diving ? 2 : 1) * this.mult()), 'k'); this.kills++;
     this.explode(e.x, e.y, T.col, e.type === 'c' ? 1.2 : 0.9); if (diving || e.type === 'c') this.pop(e.x, e.y - 12, `+${fmt(pts)}`, diving ? '#fde047' : '#fff', diving ? 20 : 16);
-    if (Math.random() < 0.05 + (diving ? 0.04 : 0)) { const r = Math.random(); let k = r < 0.36 ? 'spread' : r < 0.72 ? 'rapid' : r < 0.94 ? 'shield' : 'life'; if (k === 'life' && this.lives >= 3) k = 'shield'; this.pus.push({ k, x: e.x, y: e.y, vy: 120 }); }
+    if (this.r() < 0.05 + (diving ? 0.04 : 0)) { const r = this.r(); let k = r < 0.36 ? 'spread' : r < 0.72 ? 'rapid' : r < 0.94 ? 'shield' : 'life'; if (k === 'life' && this.lives >= 3) k = 'shield'; this.pus.push({ k, x: e.x, y: e.y, vy: 120 }); }
     if (this.kills % 40 === 0) this.coins++;
   }
   update(dt) {
     const W = this.W, H = this.H; if (this.shake > 0) this.shake -= dt; if (this.banner > 0) this.banner -= dt;
-    for (const s of this.stars) { s.y += s.z * dt * 0.25; if (s.y > 1) { s.y -= 1; s.x = Math.random(); } }
+    for (const s of this.stars) { s.y += s.z * dt * 0.25; if (s.y > 1) { s.y -= 1; s.x = this.r(); } }
     if (this.over) { this.over -= dt; this._fx(dt); if (this.over <= 0) this.finish(); return; }
     if (this.inv > 0) this.inv -= dt; for (const k in this.pw) if (this.pw[k] > 0) this.pw[k] -= dt; this.fireT -= dt;
     if (this.dead > 0) { this.dead -= dt; if (this.dead <= 0) { this.px = W / 2; this.py = H - 120; } }
@@ -84,24 +84,24 @@ export class VoidSwarm extends Game {
     for (const e of this.enemies) {
       if (e.hitT > 0) e.hitT -= dt; const slotX = W / 2 + (e.slot[0] - W / 2) * breathe + sx, slotY = e.slot[1];
       if (e.mode === 'enter' || e.mode === 'return') { e.t += dt / e.dur * espd; if (e.t < 0) continue; const tt = Math.min(1, e.t); const p = e.path.slice(); p[3] = [slotX, slotY]; const [nx, ny] = bez(p[0], p[1], p[2], p[3], tt); e.ang = Math.atan2(ny - e.y, nx - e.x) + Math.PI / 2; e.x = nx; e.y = ny; if (e.t >= 1) { e.mode = 'form'; e.ang = 0; } }
-      else if (e.mode === 'form') { e.x = slotX; e.y = slotY; e.ang = lerp(e.ang || 0, 0, Math.min(1, dt * 6)); inForm++; if (Math.random() < dt * 0.04 * (0.5 + w * 0.06) * (1 + Math.max(0, w - 8) * 0.12)) this.enemyShot(e, w >= 10 && Math.random() < 0.3); }
+      else if (e.mode === 'form') { e.x = slotX; e.y = slotY; e.ang = lerp(e.ang || 0, 0, Math.min(1, dt * 6)); inForm++; if (this.r() < dt * 0.04 * (0.5 + w * 0.06) * (1 + Math.max(0, w - 8) * 0.12)) this.enemyShot(e, w >= 10 && this.r() < 0.3); }
       else if (e.mode === 'dive') { e.t += dt / e.dur * espd; const [nx, ny] = bez(e.path[0], e.path[1], e.path[2], e.path[3], Math.min(1, e.t)); e.ang = Math.atan2(ny - e.y, nx - e.x) - Math.PI / 2; e.x = nx; e.y = ny;
-        if (e.shots > 0 && e.y > 140 && e.y < this.py - 140 && Math.random() < dt * 2.2) { e.shots--; this.enemyShot(e, true); }
+        if (e.shots > 0 && e.y > 140 && e.y < this.py - 140 && this.r() < dt * 2.2) { e.shots--; this.enemyShot(e, true); }
         if (e.t >= 1) { e.mode = 'return'; e.t = 0; e.dur = 1.3; e.path = [[e.x, -50], [slotX, 0], [slotX, slotY - 60], [slotX, slotY]]; e.x = e.path[0][0]; e.y = -50; } }
       if (this.dead <= 0 && this.inv <= 0 && Math.abs(e.x - this.px) < 26 && Math.abs(e.y - this.py) < 26) { e.hp = 0; this.kill(e); this.hitPlayer(); }
     }
     this.diveT -= dt;
     if (this.diveT <= 0 && inForm > 0 && this.dead <= 0) { const n = Math.min(1 + Math.floor(w / 4), w >= 12 ? 7 : 4); const cands = this.enemies.filter(e => e.mode === 'form');
-      for (let i = 0; i < n && cands.length; i++) { const e = cands.splice(Math.floor(Math.random() * cands.length), 1)[0]; const side = e.x < W / 2 ? -1 : 1;
+      for (let i = 0; i < n && cands.length; i++) { const e = cands.splice(Math.floor(this.r() * cands.length), 1)[0]; const side = e.x < W / 2 ? -1 : 1;
         e.mode = 'dive'; e.t = 0; e.dur = 2.4 - Math.min(1, w * 0.05); e.shots = 1 + Math.floor(w / 4); e.path = [[e.x, e.y], [e.x + side * 140, e.y - 90], [this.px + this.range(-60, 60), this.py - 120], [this.px - side * this.range(40, 140), H + 70]]; }
-      this.diveT = Math.max(w >= 12 ? 0.45 : 0.7, 2.8 - w * 0.12) * this.range(0.7, 1.3); if (Math.random() < 0.5) this.sfx.tone(900, 0.4, { type: 'sine', vol: 0.08, slide: -0.6 }); }
+      this.diveT = Math.max(w >= 12 ? 0.45 : 0.7, 2.8 - w * 0.12) * this.range(0.7, 1.3); if (this.r() < 0.5) this.sfx.tone(900, 0.4, { type: 'sine', vol: 0.08, slide: -0.6 }); }
     // boss
     const B = this.boss; if (B) { B.t += dt; if (B.hitT > 0) B.hitT -= dt; B.y = lerp(B.y, B.ty, Math.min(1, dt * 1.2)); B.x = W / 2 + Math.sin(B.t * 0.7) * (W * 0.28); B.fire -= dt;
       if (B.fire <= 0 && B.y > 60) { B.fire = Math.max(0.7, 1.8 - w * 0.03); const n = 5 + Math.min(6, Math.floor(w / 5)); for (let i = 0; i < n; i++) { const a = Math.PI / 2 + (i - (n - 1) / 2) * 0.18; this.bolts.push({ x: B.x, y: B.y + 50, vx: Math.cos(a) * 210, vy: Math.sin(a) * 210, big: true }); } this.sfx.tone(180, 0.2, { type: 'sawtooth', vol: 0.12 }); } }
     // player shots
     for (const s of this.shots) { s.x += s.vx * dt; s.y += s.vy * dt;
       for (const e of this.enemies) { if (e.hp <= 0 || (e.mode === 'enter' && e.t < 0)) continue; if (Math.abs(s.x - e.x) < 20 && Math.abs(s.y - e.y) < 20) { s.dead = 1; e.hp--; e.hitT = 0.08; if (e.hp <= 0) this.kill(e); break; } }
-      if (!s.dead && B && B.hp > 0 && Math.abs(s.x - B.x) < 90 && Math.abs(s.y - B.y) < 60) { s.dead = 1; B.hp--; B.hitT = 0.06; if (Math.random() < 0.3) this.burst(s.x, s.y, ['#fde047', '#fff'], 3, 120, 0.25, 2);
+      if (!s.dead && B && B.hp > 0 && Math.abs(s.x - B.x) < 90 && Math.abs(s.y - B.y) < 60) { s.dead = 1; B.hp--; B.hitT = 0.06; if (this.r() < 0.3) this.burst(s.x, s.y, ['#fde047', '#fff'], 3, 120, 0.25, 2);
         if (B.hp <= 0) { const pts = this.award(Math.round(2000 * Math.max(1, w / 5)), 'b'); this.pop(B.x, B.y, `MOTHERSHIP +${fmt(pts)}`, '#fde047', 26); for (let i = 0; i < 5; i++) this.explode(B.x + this.range(-70, 70), B.y + this.range(-40, 40), '#fb7185', 1.6); this.shake = 0.6; this.coins += 2; this.pus.push({ k: 'life', x: B.x, y: B.y, vy: 110 }); this.boss = null; } } }
     this.shots = this.shots.filter(s => !s.dead && s.y > -30 && s.x > -30 && s.x < W + 30); this.enemies = this.enemies.filter(e => e.hp > 0);
     // enemy bolts
