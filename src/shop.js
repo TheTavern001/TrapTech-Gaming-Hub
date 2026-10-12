@@ -320,7 +320,7 @@ function buy(user, itemId, t = Date.now()) {
 const TAG_LABEL = { new: 'New', vault: 'Back from the Vault', returning: 'Returning', event: 'Event', season: 'Season' };
 const pub = (i, own) => ({ id: i.id, type: i.type, name: i.name, rarity: i.rarity, rarity_label: RARITY[i.rarity].label, theme: THEMES[i.theme] || i.theme, price: i.price, owned: !!own,
   ...(i.type === 'badge' ? { icon: i.generated ? i.art.icon : i.extra } : {}), ...(i.type === 'frame' ? { anim: i.extra.split('|')[1] } : {}),
-  generated: !!i.generated, ...(i.generated && (i.type === 'banner' || i.type === 'badge') ? { art: `/shop/art/${i.id}.svg` } : {}), ...(i.label ? { label: i.label } : {}) });
+  generated: !!i.generated, ...(i.generated && ['banner', 'frame', 'color', 'title', 'badge', 'effect'].includes(i.type) ? { art: `/shop/art/${i.id}.svg` } : {}), ...(i.label ? { label: i.label } : {}) });
 
 // ---------- generated CSS: handmade items + every generated item that could be on screen ----------
 function liveGenerated() {
