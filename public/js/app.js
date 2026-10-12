@@ -194,7 +194,7 @@ function openMenu() {
     <div class="dr-sec">Friends</div>
     <a href="/friends">${icon('users')}Friends &amp; Challenges</a>
     <a href="/invite">${icon('gift')}Invite Friends</a>
-    <a href="/settings#v7-brand">${icon('store')}Your brand</a>
+    <a href="/settings#v7-brand">${icon('store')}Giveaway affiliation</a>
     <div class="dr-sec">More</div>
     <a href="/sponsor">${icon('briefcase')}Book a Giveaway</a>
     ${S.me ? `<a href="/notifications">${icon('bell')}Notifications${S.me.unread ? `<span class="pill-mini">${S.me.unread}</span>` : ''}</a><a href="/settings">${icon('settings')}Settings</a><button class="link" data-act="signout">${icon('log-out')}Sign out</button>`
@@ -785,7 +785,7 @@ async function eligCard(g) {
   const slots = e.checks.find(c => c.id === 'slots');
   el.innerHTML = `<h2>${icon('shield-check')} Eligibility</h2>
     <div class="elig-status ${e.joined ? 'joined' : ok ? 'ok' : 'no'}" id="elig-status">${icon(e.joined ? 'ticket' : ok ? 'circle-check' : 'circle-alert')} <b>${esc(e.message)}</b></div>
-    <ul class="elig-checks">${e.checks.filter(c => !c.checklist).map(c => `<li class="${c.ok ? 'ok' : 'no'}" data-chk="${c.id}">${icon(c.ok ? 'check' : 'x')}<span><b>${esc(c.label)}</b><small>${esc(c.hint)}</small></span>${c.id === 'brand_member' && !c.ok ? `<a class="btn sm ghost" href="/settings#v7-brand">Your brand</a>` : ''}</li>`).join('')}</ul>
+    <ul class="elig-checks">${e.checks.filter(c => !c.checklist).map(c => `<li class="${c.ok ? 'ok' : 'no'}" data-chk="${c.id}">${icon(c.ok ? 'check' : 'x')}<span><b>${esc(c.label)}</b><small>${esc(c.hint)}</small></span>${c.id === 'brand_member' && !c.ok ? `<a class="btn sm ghost" href="/settings#v7-brand">Giveaway affiliation</a>` : ''}</li>`).join('')}</ul>
     ${potatoChk && !potatoChk.ok ? `<form class="potato-form" id="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="potato-in" placeholder="Your Potato username" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></form>` : ''}
     ${slots && !slots.ok ? `<div class="small muted">Your live entries: ${slots.entries.map(x => `<a href="/giveaways/${x.id}">${esc(x.title)}</a>`).join(', ')}. <a href="/me/entries">Manage entries</a></div>` : ''}
     ${e.entries ? `<div class="elig-entries">${icon('ticket')} Draw entries: <b>${e.entries.count}</b> of ${e.entries.max}${e.entries.count < e.entries.max ? ` • ${e.entries.next_at - e.entries.runs} more run${e.entries.next_at - e.entries.runs === 1 ? '' : 's'} for ${e.entries.count + 1}` : ''}</div>` : ''}
