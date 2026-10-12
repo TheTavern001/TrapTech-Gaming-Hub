@@ -8,6 +8,7 @@ const bez = (p0, p1, p2, p3, t) => { const u = 1 - t; return [u * u * u * p0[0] 
 const glow = (col, r) => { const c = document.createElement('canvas'); c.width = c.height = r * 2; const g = c.getContext('2d'); const gr = g.createRadialGradient(r, r, 0, r, r, r); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.2, col); gr.addColorStop(1, col + '00'); g.fillStyle = gr; g.fillRect(0, 0, r * 2, r * 2); return c; };
 export class VoidSwarm extends Game {
   get title() { return 'VOID SWARM'; }
+  range(min, max) { return min + this.r() * (max - min); }
   get hint() { return 'Drag anywhere to fly; your fighter fires automatically. Shoot drones while they dive for double points, grab capsules for power-ups, and survive the endless waves. Every 5th wave brings a mothership.'; }
   async load() { this.S = await loadAtlas('/assets/v7/ships'); }
   layout() { this.py = this.H - 120; if (this.px === undefined) this.px = this.W / 2; this._neb = null; }
@@ -15,7 +16,7 @@ export class VoidSwarm extends Game {
     this.score = 0; this.coins = 0; this.lives = 3; this.wave = 0; this.px = this.W / 2; this.py = this.H - 120; this.inv = 2; this.dead = 0; this.over = 0;
     this.enemies = []; this.shots = []; this.bolts = []; this.pus = []; this.fx = []; this.fireT = 0; this.diveT = 3; this.shake = 0; this.pw = { spread: 0, rapid: 0, shield: 0 };
     this.sway = 0; this.drag = null; this.keys = {}; this.waveT = 1.2; this.banner = 0; this.kills = 0; this.boss = null;
-    this.stars = Array.from({ length: 90 }, (_, i) => ({ x: Math.random(), y: Math.random(), z: [0.25, 0.5, 1][i % 3] }));
+    this.stars = Array.from({ length: 90 }, (_, i) => ({ x: this.r(), y: Math.random(), z: [0.25, 0.5, 1][i % 3] }));
     this.gl = { blue: glow('#60a5fa', 16), pink: glow('#f472b6', 14), orange: glow('#fb923c', 30), white: glow('#e0f2fe', 20) };
   }
   mult() { return Math.min(4, 1 + 0.05 * (this.wave - 1)); }
@@ -92,8 +93,8 @@ export class VoidSwarm extends Game {
     this.diveT -= dt;
     if (this.diveT <= 0 && inForm > 0 && this.dead <= 0) { const n = Math.min(1 + Math.floor(w / 4), w >= 12 ? 7 : 4); const cands = this.enemies.filter(e => e.mode === 'form');
       for (let i = 0; i < n && cands.length; i++) { const e = cands.splice(Math.floor(Math.random() * cands.length), 1)[0]; const side = e.x < W / 2 ? -1 : 1;
-        e.mode = 'dive'; e.t = 0; e.dur = 2.4 - Math.min(1, w * 0.05); e.shots = 1 + Math.floor(w / 4); e.path = [[e.x, e.y], [e.x + side * 140, e.y - 90], [this.px + rnd(-60, 60), this.py - 120], [this.px - side * rnd(40, 140), H + 70]]; }
-      this.diveT = Math.max(w >= 12 ? 0.45 : 0.7, 2.8 - w * 0.12) * rnd(0.7, 1.3); if (Math.random() < 0.5) this.sfx.tone(900, 0.4, { type: 'sine', vol: 0.08, slide: -0.6 }); }
+        e.mode = 'dive'; e.t = 0; e.dur = 2.4 - Math.min(1, w * 0.05); e.shots = 1 + Math.floor(w / 4); e.path = [[e.x, e.y], [e.x + side * 140, e.y - 90], [this.px + this.range(-60, 60), this.py - 120], [this.px - side * this.range(40, 140), H + 70]]; }
+      this.diveT = Math.max(w >= 12 ? 0.45 : 0.7, 2.8 - w * 0.12) * this.range(0.7, 1.3); if (Math.random() < 0.5) this.sfx.tone(900, 0.4, { type: 'sine', vol: 0.08, slide: -0.6 }); }
     // boss
     const B = this.boss; if (B) { B.t += dt; if (B.hitT > 0) B.hitT -= dt; B.y = lerp(B.y, B.ty, Math.min(1, dt * 1.2)); B.x = W / 2 + Math.sin(B.t * 0.7) * (W * 0.28); B.fire -= dt;
       if (B.fire <= 0 && B.y > 60) { B.fire = Math.max(0.7, 1.8 - w * 0.03); const n = 5 + Math.min(6, Math.floor(w / 5)); for (let i = 0; i < n; i++) { const a = Math.PI / 2 + (i - (n - 1) / 2) * 0.18; this.bolts.push({ x: B.x, y: B.y + 50, vx: Math.cos(a) * 210, vy: Math.sin(a) * 210, big: true }); } this.sfx.tone(180, 0.2, { type: 'sawtooth', vol: 0.12 }); } }
@@ -101,7 +102,7 @@ export class VoidSwarm extends Game {
     for (const s of this.shots) { s.x += s.vx * dt; s.y += s.vy * dt;
       for (const e of this.enemies) { if (e.hp <= 0 || (e.mode === 'enter' && e.t < 0)) continue; if (Math.abs(s.x - e.x) < 20 && Math.abs(s.y - e.y) < 20) { s.dead = 1; e.hp--; e.hitT = 0.08; if (e.hp <= 0) this.kill(e); break; } }
       if (!s.dead && B && B.hp > 0 && Math.abs(s.x - B.x) < 90 && Math.abs(s.y - B.y) < 60) { s.dead = 1; B.hp--; B.hitT = 0.06; if (Math.random() < 0.3) this.burst(s.x, s.y, ['#fde047', '#fff'], 3, 120, 0.25, 2);
-        if (B.hp <= 0) { const pts = this.award(Math.round(2000 * Math.max(1, w / 5)), 'b'); this.pop(B.x, B.y, `MOTHERSHIP +${fmt(pts)}`, '#fde047', 26); for (let i = 0; i < 5; i++) this.explode(B.x + rnd(-70, 70), B.y + rnd(-40, 40), '#fb7185', 1.6); this.shake = 0.6; this.coins += 2; this.pus.push({ k: 'life', x: B.x, y: B.y, vy: 110 }); this.boss = null; } } }
+        if (B.hp <= 0) { const pts = this.award(Math.round(2000 * Math.max(1, w / 5)), 'b'); this.pop(B.x, B.y, `MOTHERSHIP +${fmt(pts)}`, '#fde047', 26); for (let i = 0; i < 5; i++) this.explode(B.x + this.range(-70, 70), B.y + this.range(-40, 40), '#fb7185', 1.6); this.shake = 0.6; this.coins += 2; this.pus.push({ k: 'life', x: B.x, y: B.y, vy: 110 }); this.boss = null; } } }
     this.shots = this.shots.filter(s => !s.dead && s.y > -30 && s.x > -30 && s.x < W + 30); this.enemies = this.enemies.filter(e => e.hp > 0);
     // enemy bolts
     for (const b of this.bolts) { b.x += b.vx * dt; b.y += b.vy * dt; if (this.dead <= 0 && Math.abs(b.x - this.px) < (b.big ? 12 : 9) && Math.abs(b.y - this.py) < 16) { b.dead = 1; this.hitPlayer(); } }
@@ -111,7 +112,7 @@ export class VoidSwarm extends Game {
     this.pus = this.pus.filter(p => !p.dead && p.y < H + 40);
     this._fx(dt);
   }
-  enemyShot(e, aimed) { const sp = 230 + Math.min(200, this.wave * 9); const a = aimed ? Math.atan2(this.py - e.y, this.px - e.x) : Math.PI / 2 + rnd(-0.15, 0.15); this.bolts.push({ x: e.x, y: e.y + 16, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp }); }
+  enemyShot(e, aimed) { const sp = 230 + Math.min(200, this.wave * 9); const a = aimed ? Math.atan2(this.py - e.y, this.px - e.x) : Math.PI / 2 + this.range(-0.15, 0.15); this.bolts.push({ x: e.x, y: e.y + 16, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp }); }
   _fx(dt) { for (const f of this.fx) f.t += dt; this.fx = this.fx.filter(f => f.t < f.max); }
   render(ctx) {
     const W = this.W, H = this.H, S = this.S, t = this.t; const rm = reducedMotion();
