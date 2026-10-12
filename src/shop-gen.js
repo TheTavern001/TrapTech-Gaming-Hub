@@ -217,4 +217,56 @@ function badgeArt(it, iconPaths = '') {
   return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='r' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${rim[0]}'/><stop offset='1' stop-color='${rim[1]}'/></linearGradient><radialGradient id='f' cx='.35' cy='.3' r='.8'><stop offset='0' stop-color='${p[2]}'/><stop offset='1' stop-color='${p[1]}'/></radialGradient></defs>`
     + `<circle cx='50' cy='50' r='46' fill='url(#r)'/><circle cx='50' cy='50' r='39' fill='url(#f)'/><circle cx='50' cy='50' r='30' fill='none' stroke='#fff' stroke-opacity='.15' stroke-width='5'/><g transform='translate(26 26) scale(2)' fill='none' stroke='#fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'>${iconPaths}</g></svg>`;
 }
-module.exports = { make, parse, itemCss, KEYFRAMES, PALETTES, PAL_KEYS, MOTIFS, MOTIF_KEYS, WORDS, hash, rng, ID_RE, TYPES, RARITIES, bannerSvg, svgUri, badgeArt };
+
+function itemThumbSvg(it, iconMap = {}) {
+  if (!it || !it.generated || !TYPES.includes(it.type)) return null;
+  if (it.type === 'banner') return bannerSvg(it.art.seed, it.palette, it.art.motif, it.rarity);
+  if (it.type === 'badge') return badgeArt(it, iconMap[it.art.icon] || '');
+  const p = PALETTES[it.palette] || PALETTES.neon;
+  const r = rng(hash('thumbnail', it.id));
+  const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  const title = esc(it.name || 'Cosmetic');
+  const rarity = esc(String(it.rarity || 'rare').toUpperCase());
+  const dots = Array.from({ length: 28 }, () => {
+    const x = Math.round(r() * 640), y = Math.round(r() * 400), rad = (r() * 2.8 + 0.7).toFixed(1), op = (r() * 0.45 + 0.12).toFixed(2);
+    return '<circle cx="' + x + '" cy="' + y + '" r="' + rad + '" fill="' + p[4] + '" opacity="' + op + '"/>';
+  }).join('');
+  const base = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400"><defs>' +
+    '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="' + p[0] + '"/><stop offset="1" stop-color="' + p[1] + '"/></linearGradient>' +
+    '<linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="' + p[4] + '"/><stop offset=".45" stop-color="' + p[2] + '"/><stop offset="1" stop-color="' + p[3] + '"/></linearGradient>' +
+    '<radialGradient id="glow"><stop stop-color="' + p[2] + '" stop-opacity=".48"/><stop offset="1" stop-color="' + p[2] + '" stop-opacity="0"/></radialGradient>' +
+    '<linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#fff" stop-opacity=".015"/></linearGradient>' +
+    '<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="15"/></filter></defs>' +
+    '<rect width="640" height="400" rx="26" fill="url(#bg)"/><ellipse cx="320" cy="170" rx="240" ry="180" fill="url(#glow)"/>' + dots +
+    '<path d="M0 330 Q150 280 320 345 T640 315 V400 H0Z" fill="#02040c" opacity=".36"/>' +
+    '<rect x="12" y="12" width="616" height="376" rx="20" fill="url(#glass)" stroke="url(#metal)" stroke-opacity=".8" stroke-width="2"/>';
+  let art = '';
+  if (it.type === 'frame') {
+    art = '<circle cx="320" cy="168" r="112" fill="#020617" opacity=".8"/><circle cx="320" cy="168" r="100" fill="none" stroke="' + p[2] + '" stroke-opacity=".18" stroke-width="34"/>' +
+      '<circle cx="320" cy="168" r="100" fill="none" stroke="url(#metal)" stroke-width="18"/><circle cx="320" cy="168" r="82" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2" stroke-dasharray="' +
+      (it.art.style === 'ticks' ? '3 8' : it.art.style === 'segments' ? '28 9' : '260 370') + '"/>' +
+      '<path d="M260 204 Q260 164 286 164 Q320 185 354 164 Q380 164 380 204 L380 226 L260 226Z" fill="' + p[3] + '" opacity=".9"/><circle cx="320" cy="126" r="39" fill="url(#metal)"/><path d="M272 247 Q320 224 368 247" fill="none" stroke="' + p[4] + '" stroke-width="4" stroke-linecap="round"/>';
+  } else if (it.type === 'color') {
+    const swatches = [0,1,2,3,4].map((n) => '<rect x="' + (145+n*74) + '" y="238" width="56" height="12" rx="6" fill="' + p[n] + '"/>').join('');
+    art = '<rect x="90" y="92" width="460" height="180" rx="24" fill="#020617" opacity=".72" stroke="url(#metal)" stroke-width="2"/>' +
+      '<text x="320" y="190" text-anchor="middle" font-family="Arial,sans-serif" font-size="52" font-weight="900" letter-spacing="2" fill="url(#metal)">' + title + '</text>' +
+      '<path d="M132 220 H508" stroke="url(#metal)" stroke-width="4" stroke-linecap="round"/><g>' + swatches + '</g>';
+  } else if (it.type === 'title') {
+    const fs = title.length > 22 ? 25 : title.length > 14 ? 34 : 43;
+    art = '<path d="M92 150 L145 112 H495 L548 150 L495 188 H145Z" fill="#020617" opacity=".78" stroke="url(#metal)" stroke-width="3"/>' +
+      '<path d="M120 150 H520" stroke="' + p[2] + '" stroke-opacity=".4"/><text x="320" y="160" text-anchor="middle" font-family="Arial,sans-serif" font-size="' + fs + '" font-weight="900" letter-spacing="1.5" fill="url(#metal)">' + title + '</text>' +
+      '<path d="M190 214 H450" stroke="url(#metal)" stroke-width="3" stroke-linecap="round"/>';
+  } else if (it.type === 'effect') {
+    const fx = Array.from({ length: 18 }, () => {
+      const a = r() * Math.PI * 2, d = 35 + r() * 115, x = 320 + Math.cos(a) * d, y = 175 + Math.sin(a) * d, rr = 3 + r() * 8;
+      return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + rr.toFixed(1) + '" fill="' + p[2] + '" opacity="' + (0.25+r()*0.65).toFixed(2) + '"/>' +
+        '<path d="M' + (x-rr*2).toFixed(1) + ' ' + y.toFixed(1) + ' l' + (rr*3).toFixed(1) + ' ' + (-rr*2).toFixed(1) + '" stroke="' + p[4] + '" stroke-width="2" opacity=".65"/>';
+    }).join('');
+    art = '<circle cx="320" cy="170" r="128" fill="url(#glow)" filter="url(#soft)"/><circle cx="320" cy="170" r="88" fill="none" stroke="url(#metal)" stroke-width="2" stroke-opacity=".65" stroke-dasharray="4 11"/>' +
+      fx + '<path d="M320 108 L336 151 L382 154 L346 182 L358 225 L320 199 L282 225 L294 182 L258 154 L304 151Z" fill="url(#metal)" opacity=".92"/>';
+  }
+  return base + art + '<text x="36" y="354" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="3" fill="' + p[4] + '" opacity=".9">' + rarity + '</text>' +
+    '<text x="36" y="378" font-family="Arial,sans-serif" font-size="12" letter-spacing="1.5" fill="#fff" opacity=".65">TRAPTECH • ORIGINAL COSMETIC</text></svg>';
+}
+
+module.exports = { make, parse, itemCss, KEYFRAMES, PALETTES, PAL_KEYS, MOTIFS, MOTIF_KEYS, WORDS, hash, rng, ID_RE, TYPES, RARITIES, bannerSvg, svgUri, badgeArt, itemThumbSvg };
