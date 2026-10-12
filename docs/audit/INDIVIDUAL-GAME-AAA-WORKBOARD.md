@@ -26,7 +26,7 @@ These are source-level changes, not proof of a full browser/device pass. Keep ea
 - Desktop mouse and mobile/in-app-browser regression coverage now includes all 16 registered core games.
 - A direct local verifier and ten-title Games Library E2E batch runner are available; the Docker build executes structural/syntax verification and the live verifier can compare a deployed fingerprint with the checkout.
 
-These are code changes, **not passes**. The fixes remain pending browser/gameplay execution and real-device review.
+These are code changes, **not passes**. The fixes remain pending browser/gameplay execution and real-device review. The per-title record for all 116 games is in [GAME-QA-TRACKER.md](GAME-QA-TRACKER.md).
 
 ## Release gates (apply to every title)
 
