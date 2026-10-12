@@ -183,6 +183,21 @@ const shopSource = read(path.join(ROOT, 'src/shop.js')) || '';
 if (!/const CATALOG_UNIVERSE_SIZE = 1200/.test(shopSource) || !shopSource.includes("app.get('/api/shop/catalog'") || !shopSource.includes('catalog_only: !onSale.has(it.id)')) fail('src/shop.js', 'The 1,200-item catalog must be paginated and mark unscheduled items preview-only');
 const prestigePriceRows = [...prestigeBlock.matchAll(/'([^']+)': \{[^\n]*?usd: (\d+)/gm)];
 if (prestigePriceRows.length !== 12 || prestigePriceRows.some(m => Number(m[2]) < 100000)) fail('src/monetize.js', 'All 12 prestige originals must cost at least $1,000');
+try {
+  const Database = require('better-sqlite3');
+  const testDb = new Database(':memory:');
+  testDb.exec("CREATE TABLE prestige_owned (item_id TEXT NOT NULL, serial INTEGER NOT NULL, user_id INTEGER, order_id INTEGER, created_at INTEGER NOT NULL, revoked_at INTEGER, PRIMARY KEY(item_id, serial)); CREATE UNIQUE INDEX prestige_original_one_owner ON prestige_owned(item_id) WHERE item_id LIKE 'prestige-original-%' AND revoked_at IS NULL;");
+  const insertOwner = testDb.prepare('INSERT INTO prestige_owned (item_id, serial, user_id, order_id, created_at, revoked_at) VALUES (?,?,?,?,?,?)');
+  insertOwner.run('prestige-original-cane', 1, 1, null, Date.now(), null);
+  let duplicateBlocked = false;
+  try { insertOwner.run('prestige-original-cane', 2, 2, null, Date.now(), null); } catch (e) { duplicateBlocked = /UNIQUE constraint failed/.test(e.message); }
+  if (!duplicateBlocked) fail('prestige_original_one_owner', 'Database allowed two active owners for one original');
+  insertOwner.run('prestige-original-cane', 2, 2, null, Date.now(), Date.now());
+  insertOwner.run('prestige-cane', 1, 1, null, Date.now(), null);
+  insertOwner.run('prestige-cane', 2, 2, null, Date.now(), null);
+  testDb.close();
+} catch (e) { fail('prestige_original_one_owner', 'SQLite one-of-one constraint test failed: ' + e.message); }
+
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/manifest.webmanifest'), 'utf8'));
 for (const icon of (manifest.icons || [])) {
   counts.manifestIcons++;
