@@ -12,6 +12,11 @@ const ok = (c, m, extra) => { if (c) { pass++; console.log('  PASS', m); } else 
   ok(new Set(j.items.map(x => x.id)).size === j.items.length, 'page has unique item IDs');
   ok(j.items.every(x => x.on_sale && x.current_price > 0), 'permanent catalogue items are priced and available');
   ok(j.css && j.css.includes('v7'), 'page-scoped preview CSS is returned');
+  r = await fetch(BASE + '/api/store');
+  const store = await r.json();
+  ok(r.status === 200 && store.ok && store.prestige.length === 10, 'store exposes ten limited prestige collectibles');
+  ok(store.prestige.every(x => x.usd_cents >= 100000 && x.supply > 0), 'prestige collectibles are all $1,000+ with finite supply');
+
   const first = j.items.find(x => x.generated);
   r = await fetch(BASE + '/api/shop/item/' + encodeURIComponent(first.id));
   const detail = await r.json();

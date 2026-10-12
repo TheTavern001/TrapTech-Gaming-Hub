@@ -259,3 +259,8 @@ future prices. Season length changes only apply to seasons that have not started
 ## Permanent 1,000-item catalogue
 
 The Points Shop exposes `GET /api/shop/catalog` with search, category filtering and offset pagination. It contains 1,000 stable, procedurally authored original cosmetic IDs plus the handmade legacy set. Catalog items are always available for Hub Points, while daily/weekly/season/event rotations remain separate. The API sends CSS only for the current page so mobile clients do not download styles for all 1,000 items at once. Catalog purchases use the normal transactional Hub Points ledger and cannot be purchased with cash or used for gameplay/giveaway advantage.
+
+
+## Limited prestige showcase
+
+The paid store has ten numbered prestige showcase collectibles. All are limited-supply cosmetic collectibles priced at $1,000 USD or more, with six-confirmation settings retained for prestige orders. These are deliberately separate from the Hub Points catalogue: Hub Points cannot be purchased with cash and are never used for game scoring or giveaway entries. The current storefront rendering is a collectible showcase; this catalogue change does not claim that every prestige collectible is a wearable 3D avatar mesh.
