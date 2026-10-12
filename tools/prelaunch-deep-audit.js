@@ -47,7 +47,7 @@ for (const g of coreGames) {
   if (!source) problems.push('core game module missing/unreadable: ' + g.module);
   if (source && !/(?:requestAnimationFrame|setInterval|setTimeout)/.test(source)) notes.push('no obvious game-loop/timer token; inspect interaction model');
   if (source && !/(?:pointerdown|pointerup|touchstart|touchend|addEventListener\(['"]key|onKey|pointer|touch)/i.test(source)) notes.push('no obvious pointer/touch/keyboard input token');
-  if (source && /Math\.random\(\)/.test(source) && /score|submit/i.test(source)) notes.push('randomness appears in scoring-related code; review deterministic scoring and server validation');
+  if (source && /Math\.random\(\)/.test(source) && /score|submit/i.test(source)) notes.push('module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects');
   const row = {
     id: g.id, title: g.title, module: g.module, moduleHash: source ? hash(source) : null,
     hasCanvasToken: /canvas|\.ctx\b|getContext\(/i.test(source || ''),
@@ -100,7 +100,7 @@ for (const g of games) {
   if (js) {
     if (!/(?:requestAnimationFrame|setInterval|setTimeout)/.test(js)) notes.push('no obvious game-loop/timer token; inspect interaction model');
     if (!/(?:touchstart|pointerdown|pointerup|touch-action|addEventListener\(['"]key)/i.test((html || '') + js)) notes.push('no obvious touch/pointer/keyboard control token');
-    if (/Math\.random\(\)/.test(js) && /score|submit/i.test(js)) notes.push('randomness appears in scoring-related code; review determinism and anti-cheat');
+    if (/Math\.random\(\)/.test(js) && /score|submit/i.test(js)) notes.push('module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects');
     if (/innerHTML\s*=\s*[^;]*(?:username|title|message|error)/i.test(js)) notes.push('review dynamic HTML writes for escaping/XSS');
   }
   const record = {
