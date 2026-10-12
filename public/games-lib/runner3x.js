@@ -1,5 +1,5 @@
 // Shared three.js lane-runner engine v2 (original code, MIT) - "bright stylized cartoon" art direction.
-// Toon gradient shading + warm rim light, ACES tone mapping, one tuned shadow map, fog, DPR cap 1.5, baked scenery,
+// Toon gradient shading + warm rim light, ACES tone mapping, tuned shadows, fog, adaptive DPR (cap 1.5), baked scenery,
 // instanced glossy coins with sparkles, rotating world themes (desert town / old town). Models: Kenney CC0 kits
 // (assets3d/*.glb, meshopt + WebP), retinted; barriers, ramps, coins, signs, wires, ground built in code.
 // Kit (kit.js) runs the logic, input, HUD overlay, title/over screens and the Hub adapter on a transparent 2D canvas.
@@ -57,7 +57,9 @@ function signTex(text, bg, fg) { return canvasTex(512, 128, (x, w, h) => { const
 
 export function stage(o) {
   const cv = document.createElement('canvas'); cv.id = 'gl3d'; document.body.insertBefore(cv, document.body.firstChild);
-  const r = new THREE.WebGLRenderer({ canvas: cv, antialias: (devicePixelRatio || 1) < 2, powerPreference: 'high-performance' }); r.setPixelRatio(Math.min(1.5, devicePixelRatio || 1));
+  const maxPixelRatio = Math.min(1.5, devicePixelRatio || 1);
+  let activePixelRatio = maxPixelRatio, lastRenderAt = 0, slowFrameStreak = 0;
+  const r = new THREE.WebGLRenderer({ canvas: cv, antialias: (devicePixelRatio || 1) < 2, powerPreference: 'high-performance' }); r.setPixelRatio(activePixelRatio);
   r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1; r.outputColorSpace = THREE.SRGBColorSpace;
   const scene = new THREE.Scene(); const pm = new THREE.PMREMGenerator(r); const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
   const hemi = new THREE.HemisphereLight('#fff', '#888', 1.6); scene.add(hemi);
@@ -65,7 +67,20 @@ export function stage(o) {
   const cam = new THREE.PerspectiveCamera(58, 1, 0.1, 130); window.__R = r; window.__TRI = () => { const o = {}; scene.traverse(m => { if (m.isMesh && m.visible) { let n = m.name || m.parent?.name || m.geometry.type; const t = (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3 * (m.isInstancedMesh ? m.count : 1); const k = (m.material && m.material.name || m.geometry.type) + (m.isInstancedMesh ? '-inst' : ''); o[k] = (o[k] || 0) + Math.round(t); } }); return o; };
   function sync() { const k = document.getElementById('gl'); if (!k) return; if (cv.style.cssText !== k.style.cssText) { cv.style.cssText = k.style.cssText; cv.style.pointerEvents = 'none'; } const w = parseInt(k.style.width), h = parseInt(k.style.height); if (w && (cam.aspect !== w / h || r.domElement.width !== Math.floor(w * r.getPixelRatio()))) { r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); } }
   function skyTex(top, bot) { return canvasTex(2, 256, (x) => { const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, top); g.addColorStop(0.7, bot); g.addColorStop(1, bot); x.fillStyle = g; x.fillRect(0, 0, 2, 256); }); }
-  return { r, scene, sun, hemi, cam, env, sync, skyTex, render() { sync(); r.render(scene, cam); } };
+  function adaptResolution(now) {
+    if (lastRenderAt) {
+      const frameMs = now - lastRenderAt;
+      // Only reduce resolution after sustained slow frames; never oscillate or lower fidelity on one-off spikes.
+      slowFrameStreak = frameMs > 23 ? slowFrameStreak + 1 : 0;
+      if (slowFrameStreak >= 45 && activePixelRatio > 1) {
+        activePixelRatio = Math.max(1, Math.round((activePixelRatio - 0.25) * 100) / 100);
+        r.setPixelRatio(activePixelRatio);
+        slowFrameStreak = 0;
+      }
+    }
+    lastRenderAt = now;
+  }
+  return { r, scene, sun, hemi, cam, env, sync, skyTex, render() { adaptResolution(performance.now()); sync(); r.render(scene, cam); } };
 }
 
 // ---- world themes (original names/signs; no references to any commercial game) ----
