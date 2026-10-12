@@ -94,7 +94,11 @@ for (const g of slugs) {
   if (fs.existsSync(gameJs)) {
     const js = fs.readFileSync(gameJs, 'utf8');
     if (!js.trim()) fail(g.slug, 'game.js is empty');
-    const syntax = spawnSync(process.execPath, ['--check', '-'], { input: js, encoding: 'utf8', timeout: 15000 });
+    // Three.js-based titles use native ES modules and bare imports resolved by each page's import map.
+    // Parse those as modules rather than misclassifying valid import/export syntax as CommonJS errors.
+    const isModule = /^\s*(?:import|export)\s/m.test(js);
+    const syntaxArgs = isModule ? ['--input-type=module', '--check', '-'] : ['--check', '-'];
+    const syntax = spawnSync(process.execPath, syntaxArgs, { input: js, encoding: 'utf8', timeout: 15000 });
     if (syntax.status !== 0) fail(g.slug + '/game.js', (syntax.stderr || syntax.stdout || 'Game JavaScript syntax check failed').trim().slice(0, 1400));
   }
   if (fs.existsSync(entry)) {
