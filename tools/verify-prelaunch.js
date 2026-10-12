@@ -74,14 +74,24 @@ const lib = fs.readFileSync(path.join(ROOT, 'src/games-lib.js'), 'utf8');
 const slugs = [...lib.matchAll(/T\('([^']+)'\s*,\s*'([^']+)'/g)].map(m => ({ slug: m[1], title: m[2] }));
 counts.libraryGames = slugs.length;
 if (!slugs.length) fail('src/games-lib.js', 'No Games Library entries were parsed');
+if (slugs.length !== 100) fail('src/games-lib.js', 'Expected the current 100-title Games Library, found ' + slugs.length);
+for (const shared of ['adapter.js', 'kit.js', 'lib.css']) if (!fs.existsSync(path.join(ROOT, 'public/games-lib', shared))) fail('public/games-lib/' + shared, 'Required shared Games Library runtime asset is missing');
 const slugSet = new Set();
 for (const g of slugs) {
   if (slugSet.has(g.slug)) fail(g.slug, 'Duplicate Games Library slug');
   slugSet.add(g.slug);
   const dir = path.join(ROOT, 'public/games-lib', g.slug);
   const entry = path.join(dir, 'index.html');
+  const gameJs = path.join(dir, 'game.js');
   if (!fs.existsSync(entry)) fail(g.slug, 'Missing game entry HTML');
+  if (!fs.existsSync(gameJs)) fail(g.slug, 'Missing required game.js implementation/wrapper');
   else {
+    const js = fs.readFileSync(gameJs, 'utf8');
+    if (!js.trim()) fail(g.slug, 'game.js is empty');
+    const syntax = spawnSync(process.execPath, ['--check'], { input: js, encoding: 'utf8', timeout: 15000 });
+    if (syntax.status !== 0) fail(g.slug + '/game.js', (syntax.stderr || syntax.stdout || 'Game JavaScript syntax check failed').trim().slice(0, 1400));
+  }
+  if (fs.existsSync(entry)) {
     const html = fs.readFileSync(entry, 'utf8');
     for (const m of html.matchAll(/(?:src|href)=["']([^"']+)["']/gi)) {
       const ref = m[1];
