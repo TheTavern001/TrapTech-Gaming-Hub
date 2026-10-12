@@ -11,7 +11,8 @@
     "test:browser": "node tools/e2e-browser.js",
     "verify:prelaunch": "node tools/verify-prelaunch.js && node tools/prelaunch-deep-audit.js",
     "test:games-lib-batches": "node tools/e2e-games-lib-batches.js",
-    "test:mobile": "node tools/e2e-mobile.js"
+    "test:mobile": "node tools/e2e-mobile.js",
+    "verify:live": "node tools/verify-live-deployment.js"
   },
   "keywords": [],
   "author": "",
