@@ -31,6 +31,36 @@ function duplicates(entries, keyFn) {
   return [...groups.entries()].filter(([, group]) => group.length > 1).map(([key, group]) => ({ key, items: group }));
 }
 
+// Core Hub games live in public/js and are registered in src/config.js. Parse the source
+// instead of requiring config.js because production secrets are intentionally mandatory there.
+const configSource = read(path.join(ROOT, 'src', 'config.js')) || '';
+const coreRegistryBlock = (configSource.match(/const GAMES = \\[([\\s\\S]*?)\\n\\];/) || [])[1] || '';
+const coreGames = [...coreRegistryBlock.matchAll(/\\{\\s*id:\\s*'([^']+)',\\s*title:\\s*'([^']+)'[\\s\\S]*?module:\\s*'([^']+)'/g)]
+  .map(m => ({ id: m[1], title: m[2], module: m[3] }));
+const coreRows = [];
+for (const g of coreGames) {
+  const modulePath = path.resolve(ROOT, 'public', 'js', g.module);
+  const safeRoot = path.resolve(ROOT, 'public', 'js') + path.sep;
+  const source = modulePath.startsWith(safeRoot) ? read(modulePath) : null;
+  const problems = [];
+  const notes = [];
+  if (!source) problems.push('core game module missing/unreadable: ' + g.module);
+  if (source && !/(?:requestAnimationFrame|setInterval|setTimeout)/.test(source)) notes.push('no obvious game-loop/timer token; inspect interaction model');
+  if (source && !/(?:pointerdown|pointerup|touchstart|touchend|addEventListener\\(['"]key|onKey|pointer|touch)/i.test(source)) notes.push('no obvious pointer/touch/keyboard input token');
+  if (source && /Math\\.random\\(\\)/.test(source) && /score|submit/i.test(source)) notes.push('randomness appears in scoring-related code; review deterministic scoring and server validation');
+  const row = {
+    id: g.id, title: g.title, module: g.module, moduleHash: source ? hash(source) : null,
+    hasCanvasToken: /canvas|\\.ctx\\b|getContext\\(/i.test(source || ''),
+    hasWebGLToken: /WebGLRenderer|THREE\\.|webgl/i.test(source || ''),
+    hasPointerOrTouchToken: /pointerdown|pointerup|touchstart|touchend|ontouch/i.test(source || ''),
+    hasKeyboardToken: /keydown|keyup|KeyboardEvent/i.test(source || ''),
+    problems, notes
+  };
+  coreRows.push(row);
+  for (const p of problems) issues.push({ id: g.id, title: g.title, severity: 'blocker', finding: p });
+  for (const n of notes) warnings.push({ id: g.id, title: g.title, severity: 'review', finding: n });
+}
+
 const registrySlugs = new Set();
 for (const g of games) {
   const slug = String(g.slug || '');
@@ -134,7 +164,7 @@ if (shop.staticItemIdDuplicates.length) issues.push({ severity: 'duplicate-revie
 
 const evidence = {
   generatedAt: new Date().toISOString(),
-  mode: 'read-only structural audit; not a visual/gameplay/physical-device pass',
+  mode: 'read-only structural audit of core Hub games and Games Library; not a visual/gameplay/physical-device pass',
   summary: {
     registryGames: games.length,
     gamesWithBlockers: rows.filter(r => r.problems.length).length,
@@ -143,7 +173,7 @@ const evidence = {
     avatar: { editorPresent: avatar.editorPresent, rendererPresent: avatar.rendererPresent, ownershipTestsDetected: avatar.testsCoverOwnership },
     shop: { staticItemsFound: shop.staticItemsFound, duplicateStaticIds: shop.staticItemIdDuplicates.length, generatorPresent: shop.generatorPresent }
   },
-  games: rows, issues, warnings, avatar, shop,
+  coreGames: coreRows, games: rows, issues, warnings, avatar, shop,
   requiredHumanGates: [
     'Fresh desktop and real Android device playthrough for every game',
     'Record controls, pause/resume, restart, scoring, score submission and invalid/forged-score rejection',
@@ -157,5 +187,5 @@ const evidence = {
 };
 fs.mkdirSync(REPORT_DIR, { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(evidence, null, 2) + '\n');
-console.log(JSON.stringify({ output: path.relative(ROOT, OUT), summary: evidence.summary, blockers: issues.length, reviewNotes: warnings.length }, null, 2));
+console.log(JSON.stringify({ output: path.relative(ROOT, OUT), summary: evidence.summary, coreGamesAudited: coreRows.length, libraryGamesAudited: rows.length, blockers: issues.length, reviewNotes: warnings.length }, null, 2));
 if (issues.some(i => i.severity === 'blocker')) process.exitCode = 1;
