@@ -8,7 +8,7 @@ const lockText = (p) => p.owned ? '' : p.unlock.crowns ? `${p.unlock.crowns} Cro
 async function editor() {
   const { icon, esc, api, S } = C; if (!S.me) return C.go('/signin?next=/avatar', true);
   const r = await api('/api/avatar'); if (!r.ok) return C.shell('/settings', C.emptyState('user', 'Avatar unavailable', ''));
-  const lr = await api('/api/avatar/looks'); let looks = lr.ok ? lr.looks : [];
+  const lr = await api('/api/avatar-looks'); let looks = lr.ok ? lr.looks : [];
   const cfg = { ...r.avatar }; let tab = 'hair'; let crowns = r.crowns;
   const baseAvatar = { ...r.avatar, gender: 'other' };
   for (const kind of r.kinds) { const free = r.parts.find(p => p.kind === kind && p.unlock === 'free'); if (free) baseAvatar[kind] = free.id; }
@@ -30,18 +30,18 @@ async function editor() {
     document.getElementById('av-reset-base').onclick = () => { replaceCfg(baseAvatar); draw(); };
     document.getElementById('av-look-save').onclick = async () => {
       const name = document.getElementById('av-look-name').value.trim();
-      const x = await api('/api/avatar/looks', { method: 'POST', body: { name, avatar: cfg } });
+      const x = await api('/api/avatar-looks', { method: 'POST', body: { name, avatar: cfg } });
       if (!x.ok) return C.toast(x.error); looks = x.looks; draw('Saved look.');
     };
     document.getElementById('av-look-apply').onclick = async () => {
       const id = document.getElementById('av-look-select').value; if (!id) return C.toast('Choose a saved look first.');
-      const x = await api('/api/avatar/looks/' + id + '/apply', { method: 'POST', body: {} });
+      const x = await api('/api/avatar-looks/' + id + '/apply', { method: 'POST', body: {} });
       if (!x.ok) return C.toast(x.error); replaceCfg(x.avatar); C.bumpAvatar(S.me.username); draw('Saved look applied and saved to your profile.');
     };
     document.getElementById('av-look-delete').onclick = async () => {
       const id = document.getElementById('av-look-select').value; if (!id) return C.toast('Choose a saved look first.');
       if (!confirm('Delete this saved look?')) return;
-      const x = await api('/api/avatar/looks/' + id, { method: 'DELETE' }); if (!x.ok) return C.toast(x.error); looks = x.looks; draw('Saved look deleted.');
+      const x = await api('/api/avatar-looks/' + id, { method: 'DELETE' }); if (!x.ok) return C.toast(x.error); looks = x.looks; draw('Saved look deleted.');
     };
     document.querySelectorAll('[data-gender]').forEach(b => b.onclick = () => { cfg.gender = b.dataset.gender; draw(); });
     document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; draw(); });
