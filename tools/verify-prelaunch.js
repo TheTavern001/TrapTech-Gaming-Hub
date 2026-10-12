@@ -72,6 +72,7 @@ for (const id of mobileIds) if (!ids.has(id)) fail('tools/e2e-mobile.js', 'Mobil
 
 const lib = fs.readFileSync(path.join(ROOT, 'src/games-lib.js'), 'utf8');
 const slugs = [...lib.matchAll(/T\('([^']+)'\s*,\s*'([^']+)'/g)].map(m => ({ slug: m[1], title: m[2] }));
+const libraryBySlug = new Map(require('../src/games-lib').games.map(g => [g.slug, g]));
 counts.libraryGames = slugs.length;
 if (!slugs.length) fail('src/games-lib.js', 'No Games Library entries were parsed');
 if (slugs.length !== 100) fail('src/games-lib.js', 'Expected the current 100-title Games Library, found ' + slugs.length);
@@ -86,9 +87,11 @@ for (const g of slugs) {
   const dir = path.join(ROOT, 'public/games-lib', g.slug);
   const entry = path.join(dir, 'index.html');
   const gameJs = path.join(dir, 'game.js');
+  const catalogGame = libraryBySlug.get(g.slug);
+  if (!catalogGame) fail(g.slug, 'Slug is not present in exported Games Library registry');
   if (!fs.existsSync(entry)) fail(g.slug, 'Missing game entry HTML');
-  if (!fs.existsSync(gameJs)) fail(g.slug, 'Missing required game.js implementation/wrapper');
-  else {
+  if (catalogGame?.build === 'built' && !fs.existsSync(gameJs)) fail(g.slug, 'Missing game.js for an original built title');
+  if (fs.existsSync(gameJs)) {
     const js = fs.readFileSync(gameJs, 'utf8');
     if (!js.trim()) fail(g.slug, 'game.js is empty');
     const syntax = spawnSync(process.execPath, ['--check', '-'], { input: js, encoding: 'utf8', timeout: 15000 });
