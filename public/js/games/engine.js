@@ -382,8 +382,13 @@ export class Game {
     ctx.restore();
   }
   hudScore(ctx, label = 'SCORE') {
-    this.text(ctx, label, 18, 30, { size: 12, weight: 700, color: '#9aa3d0' });
-    this.text(ctx, fmt(this.score || 0), 18, 62, { size: 30, weight: 900, glow: '#7c4dff' });
-    this.text(ctx, `BEST ${fmt(Math.max(this.best, this.score || 0))}`, 18, 82, { size: 12, weight: 700, color: '#b9b3ff', font: 'Exo' });
+    // Compact glass HUD stays legible over bright scenes and scales to the game's logical canvas.
+    const x=12,y=12,w=Math.min(168,Math.max(132,this.W*.38)),h=78;
+    const grad=ctx.createLinearGradient(x,y,x+w,y+h);grad.addColorStop(0,'rgba(20,19,52,.88)');grad.addColorStop(1,'rgba(5,18,38,.82)');
+    roundRect(ctx,x,y,w,h,14);ctx.fillStyle=grad;ctx.fill();ctx.strokeStyle='rgba(145,125,255,.52)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#6ee7ff';ctx.fillRect(x+12,y+12,3,13);
+    this.text(ctx,label.toUpperCase(),x+22,y+23,{size:10,weight:800,color:'#bcb5ff'});
+    this.text(ctx,fmt(this.score||0),x+12,y+50,{size:27,weight:900,glow:'#7c4dff'});
+    this.text(ctx,'BEST  '+fmt(Math.max(this.best,this.score||0)),x+12,y+68,{size:10,weight:700,color:'#9cecff',font:'Exo'});
   }
 }
