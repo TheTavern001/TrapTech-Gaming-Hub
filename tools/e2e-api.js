@@ -512,6 +512,15 @@ function client() {
   ok((r.body.items || []).every(i => i.catalog_only === !i.on_sale), 'catalog-only and active-rotation flags are exact opposites');
   const catalogFiltered = await anon('/api/shop/catalog?limit=10&type=frame');
   ok(catalogFiltered.status === 200 && catalogFiltered.body.total > 0 && catalogFiltered.body.items.every(i => i.type === 'frame'), 'catalog type filter returns matching cosmetics only');
+  console.log('# one-of-one prestige catalog');
+  const prestigeState = await anon('/api/store');
+  ok(prestigeState.status === 200 && prestigeState.body.ok === true && typeof prestigeState.body.prestige_sales_enabled === 'boolean', 'store reports the server-side prestige sales gate');
+  const originals = prestigeState.body.prestige || [];
+  ok(originals.length === 12, 'store lists exactly 12 prestige originals', { count: originals.length });
+  ok(new Set(originals.map(i => i.id)).size === 12 && originals.every(i => String(i.id).startsWith('prestige-original-')), 'prestige original IDs are unique and namespaced');
+  ok(originals.every(i => Number(i.supply) === 1), 'every prestige original has a one-of-one supply');
+  ok(originals.every(i => Number(i.usd_cents) >= 100000 && Number(i.usd_cents) <= 500000), 'prestige originals are priced from $1,000 to $5,000');
+
 
 
   if (!process.env.KEEP) {
