@@ -256,6 +256,8 @@ module.exports = function sponsor(app, A, h) {
     if (b.event_id) {
       const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id);
       if (g) {
+        // The booking's event pointer is not enough: confirm the event is still bound to this booking.
+        if (g.booking_id !== b.id) return bad(res, 409, 'The existing event is not linked to this booking; reconcile the booking/event association before sharing.');
         // Idempotency must not re-issue a share URL for an event whose payment gate is closed.
         if (!EV.bookingPaymentCleared(g)) return bad(res, 409, 'The existing event is blocked until its booking payment is reconciled.');
         return res.json({ ok: true, existing: true, id: g.id, code: g.event_code, url: '/event/' + g.event_code });
