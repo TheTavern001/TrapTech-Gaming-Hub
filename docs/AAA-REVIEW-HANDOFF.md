@@ -3,7 +3,7 @@
 ## Review surface
 - Public app: https://glassy-drifter-9532.de.deplexo.com
 - Project dashboard: https://deplexo.com/apps/20e0c3e0-87bf-4d2f-8c25-5e41401a5121
-- Source branch: `games/deep-distinctness-audit`. Previous dashboard snapshots conflicted about the connected branch; verify the Current full SHA in Deplexo.
+- Matching source updates are committed to both `games/deep-distinctness-audit` and `fix/payment-required-event` because owner-provided screenshots disagreed about which branch the single Deplexo app tracks. Verify Deplexo's Current deployment full SHA before reviewing.
 
 ## Candidate changes
 - Restored public APIs for the rotating Hub Points shop: `GET /api/shop`, `POST /api/shop/buy`, item details and generated cosmetic art; ownership, rotations, balance and purchase validation remain server-authoritative.
@@ -21,16 +21,11 @@
 Run in a clone with Node.js 20 and dependencies installed. Use a disposable database, never production `/data/hub.db`.
 
 ```sh
-node --check src/server.js
-node --check src/admin-giveaways.js
-node --check src/admin-v7.js
-node --check src/admin-profiles.js
-node --check src/shop.js
-node --check src/avatars.js
-node tools/e2e-avatars.js
-npm test
-npm run test:browser
+npm ci
+bash tools/owner-zero-ci.sh
 ```
+
+The script uses a throwaway DB path for the API suites and never targets Deplexo's `/data` volume.
 
 Some checks need a local running app or service-specific variables. Keep production payments disabled during QA.
 
@@ -43,7 +38,7 @@ Some checks need a local running app or service-specific variables. Keep product
 - Record game ID, full build SHA, device/browser, evidence, defects and pass/fail. Keep every title unsigned-off until tested.
 
 ## Deployment caution
-Owner screenshots indicate a single-app Deplexo Free plan, but earlier captures conflicted about the connected branch. This atomic commit targets the reported audit branch; whether it auto-deploys depends on the current dashboard branch and auto-deploy setting. Verify the Current full SHA and health in Deplexo. Source rollback does not restore SQLite state.
+Owner screenshots indicate a single-app Deplexo Free plan, but earlier captures conflicted about the connected branch. Both reported source branches were updated with matching candidate functionality. Deplexo deploys pushes only if automatic deployment is enabled for the connected repository/branch. Verify the Current full SHA, build logs and live route health in Deplexo; this tool session could not reach the app. Source rollback does not restore SQLite state.
 
 
 ## Local CI workaround when GitHub Actions allowance is exhausted
