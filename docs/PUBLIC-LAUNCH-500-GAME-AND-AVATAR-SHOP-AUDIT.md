@@ -16,6 +16,25 @@ The launch target is **500 distinct, launch-ready games**, not 500 registry rows
 6. Give the owner a reviewable batch of 100 only when every title has a completed record. No automatic pass from a title existing, loading, or appearing in a catalog.
 7. Repeat for batches 2–5. The final 500-game release must also pass duplicate, license, performance, score integrity and shared-account regression checks.
 
+## Full-catalog scope: core games + Games Library
+
+The audit scope is the entire playable catalog, not just the Games Library:
+- **Core Hub games:** parse the registered game modules from `src/config.js` and inspect each matching `public/js/<module>` source file.
+- **Games Library:** inspect every registry entry from `src/games-lib.js` and its `public/games-lib/<slug>/` implementation.
+- **Shared engine and platform:** regression-test `public/js/games/engine.js`, the signed-run adapter, scoring submission, restart/pause behavior, account cosmetics, leaderboards, and the host page after each batch of changes.
+- **Scope changes:** a game added to either registry automatically becomes part of the audit. A title must not be excluded because it is old, was previously tested, or is not part of the latest batch.
+
+The repository's current source snapshot registers 16 core games and 100 Games Library titles. These are inventory counts, not quality passes. The build-time structural audit report must show separate core-game and library totals and retain blocker/review findings for both groups. Real-device and visual/gameplay gates remain mandatory.
+
+## Redesign execution order
+
+1. Freeze a source commit and record every registered core game and library title.
+2. Audit every title for boot/loading failures, controls, game-loop stability, score validity, duplicate experience, asset references/licensing, accessibility, and mobile behavior.
+3. Redesign and fix the core games first as the baseline quality bar, one title at a time, while retaining each game's distinct identity and core loop.
+4. Apply the same audit-and-redesign gate to every Games Library title. Do not bulk-apply one visual skin and call all titles redesigned.
+5. Re-run shared-engine and signed-score regressions after each batch; re-test every modified game on desktop and the user's Android device.
+6. Mark each title **PASS**, **FIX**, or **REPLACE** with evidence. No title is launch-ready solely because its source file exists or a static check passes.
+
 ## Per-game AAA acceptance record
 
 Each game's record must include:
