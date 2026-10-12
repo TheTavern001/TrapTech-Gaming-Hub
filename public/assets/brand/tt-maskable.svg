@@ -1,2 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Trap Tech Solutions"><title>Trap Tech Solutions</title><defs><linearGradient id="ttg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6dc9c"/><stop offset=".45" stop-color="#c9954a"/><stop offset=".7" stop-color="#8a5a24"/><stop offset="1" stop-color="#e7c27a"/></linearGradient></defs><rect width="128" height="128" fill="#0b1530"/><g transform="translate(30 26) scale(0.10089) translate(-18 -18)"><g><g fill="#ffffff"><polygon points="25,255 335,255 335,770 250,682 250,328 192,328 162,366 124,366"/><polygon points="685,255 375,255 375,770 460,682 460,328 518,328 548,366 586,366"/></g>
-<g fill="none" stroke-linejoin="miter" stroke-miterlimit="8" stroke-linecap="butt"><path d="M180,88 L196,150 L226,203 M196,150 L214,120 M226,203 L258,110 L304,182 L355,34 L406,182 L452,110 L484,203 M514,150 L496,120 M484,203 L514,150 L530,88" stroke="#2a1a08" stroke-width="18"/><path d="M218,214 Q355,196 492,214" stroke="#2a1a08" stroke-width="24"/><path d="M180,88 L196,150 L226,203 M196,150 L214,120 M226,203 L258,110 L304,182 L355,34 L406,182 L452,110 L484,203 M514,150 L496,120 M484,203 L514,150 L530,88" stroke="url(#ttg)" stroke-width="13"/><path d="M218,214 Q355,196 492,214" stroke="url(#ttg)" stroke-width="19"/></g></g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512" role="img" aria-label="Trap Tech Solutions">
+  <title>Trap Tech Solutions</title>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9ae"/>
+      <stop offset=".45" stop-color="#f0c46e"/>
+      <stop offset="1" stop-color="#a86b24"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="#050b1d"/>
+  <g transform="translate(8 8) scale(.75)">
+    <path d="M12 21 18 32 25 26 31 34 32 13 39 34 45 26 52 32 56 21 M18 35 Q32 30 46 35" fill="none" stroke="url(#gold)" stroke-width="2.5" stroke-linejoin="miter"/>
+    <path d="M7 37 H29 L32 40 V59 L25 52 V44 H18 L22 48 H14 Z M57 37 H35 L32 40 V59 L39 52 V44 H46 L42 48 H50 Z" fill="#fff"/>
+  </g>
+</svg>
