@@ -30,7 +30,7 @@ RUN mkdir -p docs/audit \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/verify-prelaunch.js \
  && node tools/verify-prelaunch.js \
- && (node tools/prelaunch-deep-audit.js || test -f docs/audit/prelaunch-structural-audit.json) \
+ && node tools/prelaunch-deep-audit.js \
  && BUILD_DIR=/app/build node scripts/deplexo-prebuild.js \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
 
