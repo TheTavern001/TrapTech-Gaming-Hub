@@ -55,6 +55,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     assert.equal(signup.status, 200, 'avatar browser test account should be created');
     await context.addCookies(signup.headers.getSetCookie().map(raw => { const pair = raw.split(';', 1)[0]; const i = pair.indexOf('='); return { name: pair.slice(0, i), value: pair.slice(i + 1), url: BASE, sameSite: 'Lax' }; }));
     const avatarPage = await context.newPage(); const avatarErrors = [];
+    avatarPage.on('dialog', dialog => dialog.accept());
     avatarPage.on('pageerror', e => avatarErrors.push(e.message));
     avatarPage.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*4\d\d|cdn\.jsdelivr\.net|dynamically imported module/i.test(m.text())) avatarErrors.push(m.text()); });
     await avatarPage.goto(BASE + '/avatar', { waitUntil: 'networkidle' });
