@@ -18,6 +18,7 @@ COPY src ./src
 COPY public ./public
 COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
 COPY tools/prelaunch-deep-audit.js ./tools/prelaunch-deep-audit.js
+COPY tools/verify-prelaunch.js ./tools/verify-prelaunch.js
 # Pre-gzip static text assets, pre-scale OG card art, pre-render the default share image (-> /app/build).
 # Runs without secrets (env vars are not available at build time on Deplexo).
 RUN mkdir -p docs/audit \
@@ -25,6 +26,8 @@ RUN mkdir -p docs/audit \
  && node --check src/shop-gen.js \
  && node --check src/avatars.js \
  && node --check tools/prelaunch-deep-audit.js \
+ && node --check tools/verify-prelaunch.js \
+ && node tools/verify-prelaunch.js \
  && (node tools/prelaunch-deep-audit.js || test -f docs/audit/prelaunch-structural-audit.json) \
  && BUILD_DIR=/app/build node scripts/deplexo-prebuild.js \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
