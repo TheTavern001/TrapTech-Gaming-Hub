@@ -17,10 +17,7 @@ RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY src ./src
 COPY public ./public
 COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
-COPY tools/prelaunch-deep-audit.js ./tools/prelaunch-deep-audit.js
-COPY tools/verify-prelaunch.js ./tools/verify-prelaunch.js
-COPY tools/e2e-mobile.js ./tools/e2e-mobile.js
-COPY tools/verify-live-deployment.js ./tools/verify-live-deployment.js
+COPY tools ./tools
 # Pre-gzip static text assets, pre-scale OG card art, pre-render the default share image (-> /app/build).
 # Runs without secrets (env vars are not available at build time on Deplexo).
 RUN mkdir -p docs/audit \
