@@ -45,6 +45,14 @@ This runs sequential batches of ten, continues after a failed batch, and returns
 
 ## 5. Live deployment checks
 
+The read-only live verifier compares the deployed fingerprint with the checkout, checks health/build metadata, confirms the icon artwork and PNG dimensions, and requests all core modules and all 100 library entry pages:
+
+```sh
+BASE=https://your-deployment.example npm run verify:live
+```
+
+The `/api/build` response includes `build_fingerprint`, computed from the app/server sources, icon assets, all registered core modules, and each library entry/build. A mismatch means the live deployment does not match this checkout.
+
 After deployment, verify the deployed build—not just the GitHub source:
 
 - `/healthz` responds successfully.
