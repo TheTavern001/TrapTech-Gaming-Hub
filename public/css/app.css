@@ -1071,7 +1071,7 @@ input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):n
 .shop-catalog-filters { display:grid; grid-template-columns:minmax(0,1fr) minmax(130px,.65fr) auto; gap:8px; margin:12px 0 16px; }
 .shop-catalog-filters .input { min-width:0; width:100%; }
 .shop-catalog .shop-owned { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
-.shop-catalog-item { min-width:0; width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding:10px; text-align:left; color:var(--text); border:1px solid var(--line); background:var(--panel-2); border-radius:12px; cursor:pointer; }
+.shop-catalog-item { min-width:0; width:100%; display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding:10px; text-align:left; color:var(--text); border:1px solid var(--line); background:rgba(15,23,42,.92); border-radius:12px; cursor:pointer; }
 .shop-catalog-item b { overflow-wrap:anywhere; }
 .shop-catalog-item .ec-prev { width:100%; min-height:64px; }
 .shop-catalog-pager { align-items:center; justify-content:space-between; margin-top:14px; }
