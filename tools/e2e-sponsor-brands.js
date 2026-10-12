@@ -115,7 +115,7 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} });
     ok(r.status === 409 && /payment is reconciled/i.test(r.body.error), 'idempotent create-event does not reissue a share URL while existing event payment is blocked');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'declined' } });
-    ok(r.status === 400 && /paid quote is locked/i.test(r.body.error), 'settled quote cannot be downgraded to declined');
+    ok(r.status === 400 && /accepted quote is locked/i.test(r.body.error), 'accepted quote cannot be downgraded to declined while payment is unresolved');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'paid' } });
     ok(r.body.ok && r.body.request.quote.status === 'paid', 'admin verifies receipt and marks legacy quote paid');
     r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.status === 'active', 'verified payment atomically restores the pre-existing event');
