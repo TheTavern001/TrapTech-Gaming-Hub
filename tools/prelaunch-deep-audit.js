@@ -64,6 +64,12 @@ for (const g of coreGames) {
 const sharedLibraryFiles = ['adapter.js', 'kit.js', 'lib.css'];
 for (const name of sharedLibraryFiles) if (!exists(path.join(GAME_ROOT, name))) issues.push({ severity: 'blocker', finding: 'Games Library shared runtime asset missing: ' + name });
 
+const RETIRED_DUPLICATE_SLUGS = Object.freeze(["jet-blaster","sky-flap","hoop-flap","slab-stack","neon-snake","brick-blitz","sling-siege","castle-crush","moto-lanes","lane-racer","ruin-runner","gem-rush","toad-cross","bat-boy","highway-heist","park-getaway","night-shift","hill-glider","pen-throw","lawn-guard"]);
+if (games.length !== 80) issues.push({ severity: 'blocker', finding: 'Curated Games Library must contain exactly 80 active titles before expansion; found ' + games.length });
+for (const slug of RETIRED_DUPLICATE_SLUGS) {
+  if (games.some(g => g.slug === slug)) issues.push({ severity: 'blocker', finding: 'Retired duplicate still registered: ' + slug });
+  if (exists(path.join(GAME_ROOT, slug))) issues.push({ severity: 'blocker', finding: 'Retired duplicate game folder still ships: ' + slug });
+}
 const registrySlugs = new Set();
 for (const g of games) {
   const slug = String(g.slug || '');
@@ -117,6 +123,9 @@ for (const g of games) {
   for (const n of notes) warnings.push({ slug, severity: 'review', finding: n });
 }
 
+for (const d of duplicates(games, g => normalized(g.ref_internal))) {
+  issues.push({ severity: 'duplicate-review', finding: 'Duplicate internal gameplay reference; review whether these are duplicate game loops', key: d.key, slugs: d.items.map(g => g.slug) });
+}
 for (const d of duplicates(games, g => normalized(g.title))) {
   issues.push({ severity: 'duplicate-review', finding: 'Duplicate/near-duplicate normalized game titles', key: d.key, slugs: d.items.map(g => g.slug) });
 }
@@ -209,6 +218,7 @@ const evidence = {
     gamesWithBlockers: rows.filter(r => r.problems.length).length,
     gamesWithReviewNotes: rows.filter(r => r.notes.length).length,
     duplicateReviewFindings: issues.filter(i => i.severity === 'duplicate-review').length,
+    activeRegistryReferences: new Set(games.map(g => normalized(g.ref_internal)).filter(Boolean)).size,
     avatar: { editorPresent: avatar.editorPresent, rendererPresent: avatar.rendererPresent, ownershipTestsDetected: avatar.testsCoverOwnership },
     shop: { staticItemsFound: shop.staticItemsFound, duplicateStaticIds: shop.staticItemIdDuplicates.length, generatorPresent: shop.generatorPresent }
   },

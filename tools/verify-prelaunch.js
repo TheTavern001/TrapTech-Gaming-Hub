@@ -119,6 +119,13 @@ for (const shared of ['adapter.js', 'kit.js', 'lib.css']) if (!fs.existsSync(pat
 const libraryKit = fs.readFileSync(path.join(ROOT, 'public/games-lib/kit.js'), 'utf8');
 if (!/const safeStore\s*=/.test(libraryKit) || !/safeStore\.get\('gl_mute'\)/.test(libraryKit) || !/safeStore\.set\('gl_mute'/.test(libraryKit)) fail('public/games-lib/kit.js', 'Games Library localStorage access must be guarded for locked WebViews');
 if (!/meta\[name="viewport"\]/.test(libraryKit) || !/maximum-scale|user-scalable/.test(libraryKit) || !/viewport-fit=cover/.test(libraryKit)) fail('public/games-lib/kit.js', 'Games Library must preserve zoom while normalizing mobile safe-area viewport settings');
+const libraryReferenceOwners = new Map();
+for (const game of libraryBySlug.values()) {
+  const key = String(game.ref_internal || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  if (!key) fail(game.slug, 'Internal gameplay reference is missing; unique game identity must be reviewable');
+  else if (libraryReferenceOwners.has(key)) fail(game.slug, 'Duplicate internal gameplay reference shared with ' + libraryReferenceOwners.get(key) + ': ' + key);
+  else libraryReferenceOwners.set(key, game.slug);
+}
 const slugSet = new Set();
 for (const g of slugs) {
   if (slugSet.has(g.slug)) fail(g.slug, 'Duplicate Games Library slug');
