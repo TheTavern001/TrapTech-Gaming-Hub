@@ -1,5 +1,5 @@
 'use strict';
-// v7 "Sponsor a Host": no tiers, no public prices.
+// v7 "Book a Giveaway": no tiers, no public prices.
 // A sponsor ticks the features they want from ONE combined list (everything the old Basic/Premium/Elite tiers and add-ons
 // offered), adds details, and sends a free quote request. Only admins see the price sheet (settings key "sponsor_prices",
 // seeded from the old v5 prices); the admin gets an auto-totalled draft quote per request, can adjust it (discounts,
