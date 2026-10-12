@@ -10,7 +10,7 @@ const ROOT = path.resolve(__dirname, '..');
 const EXCLUDED = new Set(['node_modules', '.git', 'coverage', 'screenshots']);
 const SCAN_ROOTS = ['src', 'tools', 'public/js', 'public/games-lib'];
 const failures = [];
-const counts = { javascriptFiles: 0, jsonFiles: 0, manifestIcons: 0, coreGames: 0, libraryGames: 0 };
+const counts = { javascriptFiles: 0, localModuleImports: 0, jsonFiles: 0, manifestIcons: 0, coreGames: 0, libraryGames: 0 };
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return [];
@@ -40,6 +40,19 @@ for (const root of SCAN_ROOTS) {
       input: source, encoding: 'utf8', timeout: 15000
     });
     if (result.status !== 0) fail(rel(file), (result.stderr || result.stdout || 'JavaScript syntax check failed').trim().slice(0, 1400));
+    const importSpecs = new Set();
+    for (const m of source.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\bimport\s*(?:\(\s*)?['"]([^'"]+)['"]/g)) {
+      const spec = m[1] || m[2];
+      if (!spec || /^(?:[a-z]+:|\/\/|data:)/i.test(spec) || (!spec.startsWith('.') && !spec.startsWith('/'))) continue;
+      importSpecs.add(spec);
+    }
+    for (const spec of importSpecs) {
+      const target = path.resolve(spec.startsWith('/') ? path.join(ROOT, 'public', spec.slice(1)) : path.resolve(path.dirname(file), spec));
+      const safeRoots = [path.resolve(ROOT, 'src') + path.sep, path.resolve(ROOT, 'tools') + path.sep, path.resolve(ROOT, 'public') + path.sep];
+      if (!safeRoots.some(base => target.startsWith(base))) { fail(rel(file), 'Local module import escapes repository scan roots: ' + spec); continue; }
+      counts.localModuleImports++;
+      if (!fs.existsSync(target) || !fs.statSync(target).isFile()) fail(rel(file), 'Missing local module dependency: ' + spec);
+    }
   }
 }
 
