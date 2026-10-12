@@ -102,6 +102,9 @@ const wKey = (h, w) => -Math.log((parseInt(h.slice(0, 13), 16) + 1) / (2 ** 52 +
 function finalize(g, actor = 'system', opts = {}) {
   g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(g.id);
   if (!g || g.finalized_at) return g;
+  // A booking-backed giveaway cannot lock entrants or publish a winner snapshot until the
+  // payment gate is cleared. This protects both scheduled sweeps and admin force-finalization.
+  if (g.booking_id && !['paid', 'comped'].includes(String(g.payment_status || '').toLowerCase())) return g;
   if (now() <= g.end_at && !opts.force) return g;
   g = ensureCommit(g);
   cache.delete(g.id);
@@ -225,7 +228,7 @@ function sweep() {
   if (sweeping) return 0; sweeping = true; let n = 0;
   try {
     for (const g of db.prepare('SELECT id FROM giveaways WHERE draw_commit IS NULL AND finalized_at IS NULL').all()) ensureCommit(g); // publish a commit for older giveaways
-    for (const g of db.prepare('SELECT * FROM giveaways WHERE finalized_at IS NULL AND end_at < ?').all(now())) { finalize(g, 'system'); n++; }
+    for (const g of db.prepare("SELECT * FROM giveaways WHERE finalized_at IS NULL AND end_at < ? AND (booking_id IS NULL OR LOWER(payment_status) IN ('paid','comped'))").all(now())) { finalize(g, 'system'); n++; }
   }
   catch (e) { console.error('finalize sweep failed', e); } finally { sweeping = false; }
   return n;
