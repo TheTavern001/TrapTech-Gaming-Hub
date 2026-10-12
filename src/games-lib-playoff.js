@@ -16,6 +16,10 @@ db.exec(`CREATE TABLE IF NOT EXISTS lib_run_metrics (run_id INTEGER PRIMARY KEY,
     created_by INTEGER, created_at INTEGER NOT NULL, note TEXT NOT NULL DEFAULT '');
   CREATE TABLE IF NOT EXISTS lib_playoff_entries (playoff_id INTEGER NOT NULL, user_id INTEGER NOT NULL, rid TEXT, run_id INTEGER, score INTEGER, m1 REAL, m2 REAL,
     started_at INTEGER, PRIMARY KEY (playoff_id, user_id));`);
+// One-time-on-each-startup cleanup for historical tie-break values captured before verification
+// was enforced. Only verified runs may retain secondary metrics in winner ranking.
+const invalidMetrics = db.prepare("UPDATE lib_run_metrics SET m2=NULL, valid=0 WHERE m2 IS NOT NULL AND run_id IN (SELECT id FROM runs WHERE COALESCE(verify,'') NOT IN ('events-ok','replay-ok','cleared'))").run();
+if (invalidMetrics.changes) console.log(`[games-lib-playoff] cleared ${invalidMetrics.changes} unverified historical skill metric(s)`);
 
 // ---- per-game metric definitions --------------------------------------------------------------------------------
 // m1 (all games): 'faster' = shorter server-timed run (created_at - started_at) to post the same score.
