@@ -206,6 +206,9 @@ for (const bg of prestigeBackgrounds) {
 }
 const economyUi = read(path.join(ROOT, 'public/js/economy.js')) || '';
 if (!economyUi.includes('Browse 1,200+ items') || !economyUi.includes('/api/shop/catalog?limit=24') || !economyUi.includes('catalog-prev') || !economyUi.includes('catalog-next')) fail('public/js/economy.js', 'Points Shop must expose searchable paginated catalog browsing');
+const avatarPartsSource = read(path.join(ROOT, 'src/avatars.js')) || '';
+const avatarPrestigeMap = (avatarPartsSource.match(/const PRESTIGE_BG = \{([\s\S]*?)\n\};/) || [])[1] || '';
+if (!avatarPrestigeMap.includes("'cash-rain': 'prestige-throne'") || !avatarPrestigeMap.includes("'gold-rays': 'prestige-crown'")) fail('src/avatars.js', 'Legacy prestige backgrounds must remain locked to their historic owners');
 const prestigePriceRows = [...prestigeBlock.matchAll(/'([^']+)': \{[^\n]*?usd: (\d+)/gm)];
 if (prestigePriceRows.length !== 12 || prestigePriceRows.some(m => Number(m[2]) < 100000)) fail('src/monetize.js', 'All 12 prestige originals must cost at least $1,000');
 try {
