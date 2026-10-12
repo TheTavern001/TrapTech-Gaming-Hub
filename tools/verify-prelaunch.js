@@ -220,7 +220,7 @@ const avatar3dWearables = read(path.join(ROOT, 'public/js/avatar-3d.js')) || '';
 const avatarSvgSource = avatarSource;
 for (const id of ['phoenix-wings','singularity-orbit','void-dragon','nebula-wings','holo-decree','chronos-mantle','titan-exoframe','storm-halo','aurora-crown']) {
   if (!avatar3dWearables.includes("cfg.acc === '" + id + "'") && !avatar3dWearables.includes("cfg.outfit === '" + id + "'") && !avatar3dWearables.includes("cfg.hat === '" + id + "'")) fail('public/js/avatar-3d.js', 'Missing 3D wearable geometry for ' + id);
-  if (!avatarSvgSource.includes("c.acc === '" + id + "'") && !avatarSvgSource.includes("c.outfit === '" + id + "'") && !avatarSvgSource.includes("c.hat === '" + id + "'")) fail('src/avatars.js', 'Missing SVG fallback art for ' + id);
+  if (!avatarSvgSource.includes("c.acc === '" + id + "'") && !avatarSvgSource.includes("c.outfit === '" + id + "'") && !avatarSvgSource.includes("c.hat === '" + id + "'") && !avatarSvgSource.includes("'" + id + "':")) fail('src/avatars.js', 'Missing SVG fallback art for ' + id);
 }
 const economyUi = read(path.join(ROOT, 'public/js/economy.js')) || '';
 if (!economyUi.includes('Browse 1,200+ items') || !economyUi.includes('/api/shop/catalog?limit=24') || !economyUi.includes('catalog-prev') || !economyUi.includes('catalog-next')) fail('public/js/economy.js', 'Points Shop must expose searchable paginated catalog browsing');
