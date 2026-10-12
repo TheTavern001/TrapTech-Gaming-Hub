@@ -393,6 +393,16 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   console.log('# desktop pages');
   const dctx = await browser.newContext(DESKTOP); await passGate(dctx); const d = await dctx.newPage(); watch(d, 'desktop');
   await d.goto(BASE + '/signin'); await d.fill('#u', uname); await d.fill('#p', pw); await d.click('button[type=submit]'); await d.waitForSelector('.hero, .hero-take');
+  await d.goto(BASE + '/avatar'); await d.waitForSelector('#av-look-name');
+  ok(await d.isVisible('#av-randomize') && await d.isVisible('#av-reset-base'), 'avatar editor exposes randomize-owned-parts and reset-to-base actions');
+  if (await d.isVisible('#av-zoom-in')) { await d.click('#av-zoom-in'); await d.click('#av-zoom-out'); await d.click('#av-view-reset'); ok(true, 'WebGL avatar zoom in/out and reset controls respond'); }
+  else { ok(await d.isVisible('#av-prev'), 'SVG avatar fallback remains visible when WebGL is unavailable'); }
+  await d.fill('#av-look-name', 'E2E Saved Look'); await d.click('#av-look-save'); await d.waitForSelector('#av-look-select option:has-text("E2E Saved Look")');
+  ok(await d.locator('#av-look-select option').count() >= 2, 'avatar editor saves a named look to the account');
+  await d.locator('#av-look-select').selectOption({ label: 'E2E Saved Look' }); await d.click('#av-look-apply'); await d.waitForSelector('#av-look-select');
+  ok((await d.textContent('#av-msg')).includes('Saved look applied'), 'avatar editor applies a saved look to the profile');
+  await d.locator('#av-look-select').selectOption({ label: 'E2E Saved Look' }); await d.click('#av-look-delete'); await d.waitForFunction(() => document.querySelectorAll('#av-look-select option').length === 1);
+  ok(true, 'avatar editor deletes a saved look');
   await shot(d, 'desktop-01-home', true); await v3(d, 'd01-home'); await v3(d, 'd01b-home-full', true);
   ok(await d.isVisible('.site-foot .sf-brand img') && (await d.locator('.site-foot .sf-links a').count()) >= 6 && await d.isVisible('.desk-nav a[href="/tournaments"]'), 'desktop: Trap Tech footer with links + Tournaments in nav');
   await d.click('.topbar .more-btn'); await d.waitForSelector('.drawer .dr-tt'); ok(true, 'desktop "more" menu opens the drawer'); await d.keyboard.press('Escape');
