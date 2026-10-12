@@ -9,7 +9,9 @@
     "demo:wipe": "node src/demo.js wipe",
     "test": "node tools/e2e-api.js",
     "test:browser": "node tools/e2e-browser.js",
-    "verify:prelaunch": "node tools/verify-prelaunch.js && node tools/prelaunch-deep-audit.js"
+    "verify:prelaunch": "node tools/verify-prelaunch.js && node tools/prelaunch-deep-audit.js",
+    "test:games-lib-batches": "node tools/e2e-games-lib-batches.js",
+    "test:mobile": "node tools/e2e-mobile.js"
   },
   "keywords": [],
   "author": "",
