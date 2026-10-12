@@ -146,7 +146,10 @@ function setStatus(id, status, by) {
   if (!['sent', 'accepted', 'declined', 'paid', 'draft'].includes(status)) return { ok: false, error: 'Unknown status.' };
   if (!quoteRow(id)) { const r = saveQuote(id, {}, by); if (!r.ok) return r; }
   const q = quoteRow(id); const t = Date.now();
-  if (status === 'paid' && q.status !== 'accepted') return { ok: false, error: 'Only an accepted quote can be marked paid.' };
+  // A paid quote is a settled record. Do not let a later status edit hide the sponsor link
+  // while leaving the linked public event marked paid/active.
+  if (q.status === 'paid' && status !== 'paid') return { ok: false, error: 'A paid quote is locked. Correct payment or event state through the audited reconciliation flow.' };
+  if (status === 'paid' && q.status !== 'accepted' && q.status !== 'paid') return { ok: false, error: 'Only an accepted quote can be marked paid.' };
   if (status === 'sent' && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'Already accepted.' };
   const bs = { sent: 'quoted', accepted: 'approved', declined: 'declined', paid: 'paid', draft: 'pending' }[status];
   // Quote, booking state and the linked event's payment gate change atomically. This also repairs
@@ -245,7 +248,14 @@ module.exports = function sponsor(app, A, h) {
     const q = quoteRow(b.id);
     if (!q || q.status !== 'paid') return bad(res, 409, 'Payment must be received and confirmed before an official giveaway event can be created.');
     const EV = require('./events');
-    if (b.event_id) { const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id); if (g) return res.json({ ok: true, existing: true, id: g.id, code: g.event_code, url: '/event/' + g.event_code }); }
+    if (b.event_id) {
+      const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id);
+      if (g) {
+        // Idempotency must not re-issue a share URL for an event whose payment gate is closed.
+        if (!EV.bookingPaymentCleared(g)) return bad(res, 409, 'The existing event is blocked until its booking payment is reconciled.');
+        return res.json({ ok: true, existing: true, id: g.id, code: g.event_code, url: '/event/' + g.event_code });
+      }
+    }
     const cfg = require('./config'); let games = JSON.parse(b.game_ids || '[]').filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway); if (!games.length) games = ['stack'];
     const day = 86400e3; const parse = (d) => { const t = Date.parse(String(d || '') + 'T12:00:00-04:00'); return Number.isFinite(t) ? t : null; };
     const start = Math.max(Date.now(), parse(b.start_date) || Date.now() + day); const end = parse(b.end_date) && parse(b.end_date) > start ? parse(b.end_date) : start + (b.length_days || 7) * day;
