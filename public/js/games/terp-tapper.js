@@ -1,6 +1,6 @@
 // Terp Tapper - four-lane rhythm tapper; music is synthesized live (WebAudio).
 // v5 art: real citrus-slice notes (lime/lemon/orange/grapefruit - rawpixel public-domain photos), lounge photo backdrop (Poly Haven CC0). See /CREDITS.md
-import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, Ambient } from './engine.js';
+import { Game, TAU, clamp, roundRect, fmt, loadArt, Ambient } from './engine.js';
 // v6: real citrus slices cut from one CC0 StockSnap photo (lime, lemon, orange, pink grapefruit - no recolours), club light ambience.
 const LANE_COL = ['#a3e635', '#fde047', '#fb923c', '#f472b6']; // lime, lemon, orange, grapefruit (terpene citrus notes)
 const LANE_ART = ['/assets/v6/tt-lime.webp', '/assets/v6/tt-lemon.webp', '/assets/v6/tt-orange.webp', '/assets/v6/tt-grapefruit.webp'];
@@ -16,7 +16,7 @@ export class TerpTapper extends Game {
   bpm() { const t = this.playT || 0; return t <= 120 ? 96 + t * 0.6 : Math.min(220, 168 + (t - 120) * 0.15); } // v7 endless: keeps speeding up to 220 BPM
   speed() { return 470 + clamp((this.playT || 0) / 120, 0, 1) * 380; }
   mult() { return Math.min(4, 1 + Math.floor(this.combo / 10)); }
-  lane() { let l; do { l = Math.floor(Math.random() * 4); } while (l === this.lastLane && Math.random() < 0.6); this.lastLane = l; return l; }
+  lane() { let l; do { l = Math.floor(this.r() * 4); } while (l === this.lastLane && Math.random() < 0.6); this.lastLane = l; return l; }
   schedule() {
     while (this.nextBeat < this.playT + 3) {
       const beat = 60 / this.bpm(); const t = this.nextBeat; const r = Math.random();
