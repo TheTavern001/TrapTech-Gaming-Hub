@@ -43,6 +43,13 @@ const PRESTIGE = {
   'prestige-cane': { name: 'Diamond Don Cane', blurb: 'Hand-set diamond pave on a solid-gold shaft, topped with a cut-crystal crown. Sparkle trail and a slow gold shimmer.', fx: 'sparkle', supply: 25, usd: 250000, confs: 6 },
   'prestige-throne': { name: 'Stack Throne Aura', blurb: 'A towering throne of banded cash stacks with a drifting bill rain and a green-gold aura behind your avatar.', fx: 'cashrain', supply: 10, usd: 350000, confs: 6 },
   'prestige-crown': { name: 'Solid Gold Crown & Chain', blurb: 'A heavy solid-gold crown with an emerald inlay and a matching link chain. Animated light sweep and a crown-glow halo.', fx: 'goldsweep', supply: 5, usd: 500000, confs: 6 },
+  'prestige-aurora-halo': { name: 'Aurora Halo Relic', blurb: 'A numbered prismatic halo with a slow aurora sweep, iridescent highlights and a permanent prestige-wall display.', fx: 'sparkle', supply: 10, usd: 150000, confs: 6 },
+  'prestige-voidwing-mantle': { name: 'Voidwing Mantle', blurb: 'A limited obsidian-and-violet showcase mantle with a deep-space shimmer and numbered ownership record.', fx: 'goldsweep', supply: 5, usd: 180000, confs: 6 },
+  'prestige-neon-orbit': { name: 'Neon Orbit Crown', blurb: 'A cyber-arcade crown surrounded by a dual neon orbit and a vivid cyan-magenta light sweep.', fx: 'sparkle', supply: 10, usd: 125000, confs: 6 },
+  'prestige-sovereign-visor': { name: 'Sovereign Visor Relic', blurb: 'A mirror-chrome visor collectible with a gold edge and a premium animated showcase treatment.', fx: 'goldsweep', supply: 8, usd: 110000, confs: 6 },
+  'prestige-celestial-sigil': { name: 'Celestial Sigil', blurb: 'A numbered celestial emblem with a starfield shimmer and a bright spectral aura for the prestige wall.', fx: 'sparkle', supply: 10, usd: 100000, confs: 6 },
+  'prestige-obsidian-aura': { name: 'Obsidian Aura Relic', blurb: 'A black-glass prestige collectible with a green-gold energy haze and a limited ownership serial.', fx: 'cashrain', supply: 5, usd: 140000, confs: 6 },
+  'prestige-chrono-relic': { name: 'Chrono Relic', blurb: 'A numbered timepiece collectible with a luminous gold sweep and a highly limited issue count.', fx: 'goldsweep', supply: 3, usd: 200000, confs: 6 },
 };
 const SEED = [
   { id: 'crowns-500', kind: 'pack', name: '500 Hub Crowns', usd_cents: 499, crowns: 500, bonus: 0, sort: 1 },

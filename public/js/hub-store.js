@@ -5,7 +5,7 @@ import { preview, detailSheet } from './economy.js';
 let C = null;
 const usd = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
 const FX_CLASS = { sparkle: 'px-sparkle', cashrain: 'px-cash', goldsweep: 'px-gold' };
-const PX_ICON = { 'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair', 'prestige-crown': 'crown' };
+const PX_ICON = { 'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair', 'prestige-crown': 'crown', 'prestige-aurora-halo': 'orbit', 'prestige-voidwing-mantle': 'feather', 'prestige-neon-orbit': 'atom', 'prestige-sovereign-visor': 'eye', 'prestige-celestial-sigil': 'sparkles', 'prestige-obsidian-aura': 'shield', 'prestige-chrono-relic': 'clock-3' };
 export function prestigeArt(id, fx, size = 120) { return `<div class="px-art ${FX_CLASS[fx] || ''}" style="--s:${size}px" aria-hidden="true"><span class="px-glow"></span>${C.icon(PX_ICON[id] || 'gem')}<i></i><i></i><i></i></div>`; }
 async function storePage() {
   const { icon, esc, api, S } = C; const [r, shop] = await Promise.all([api('/api/store'), api('/api/shop')]); if (!r.ok) return C.shell('/shop', C.emptyState('store', 'Store unavailable', 'Try again in a moment.'));
