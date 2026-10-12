@@ -91,18 +91,41 @@ export async function mountAvatar3D(stage, cfg) {
   floor.rotation.x = -Math.PI / 2;
   ball(-0.24,0.66,0,0.20,0.68,0.22,shirt); ball(0.24,0.66,0,0.20,0.68,0.22,shirt);
   ball(-0.24,0.16,0.02,0.19,0.14,0.25,'#111827'); ball(0.24,0.16,0.02,0.19,0.14,0.25,'#111827');
+  // Layered footwear adds a grounded silhouette instead of floating block-like feet.
+  for (const x of [-0.24,0.24]) {
+    ball(x,0.105,0.12,0.205,0.065,0.29,'#05070d');
+    ball(x,0.20,0.035,0.17,0.11,0.235,cfg.outfit === 'suit' ? '#0b0f19' : '#202735');
+    ball(x,0.15,0.22,0.13,0.018,0.035,cfg.outfit === 'hype' ? '#f472b6' : '#94a3b8');
+  }
   const torso = ball(0,1.45,0,presentation === 'male' ? 0.66 : presentation === 'female' ? 0.54 : 0.60,0.75,0.34,shirt);
   ball(0,1.00,0,presentation === 'female' ? 0.43 : 0.36,0.30,0.29,shirt); // pelvis/waist silhouette
   if (presentation === 'female') { ball(-0.19,1.62,0.28,0.22,0.20,0.10,shirt); ball(0.19,1.62,0.28,0.22,0.20,0.10,shirt); }
-  ball(0,2.05,0,0.19,0.26,0.18,skin);
+  // Neck, collar and layered arms give the character more coherent anatomy and tailored clothing.
+  mesh(new THREE.CylinderGeometry(0.13,0.16,0.34,24),mat(skin,0.56,0),0,2.12,0.015,1,1,1);
+  ball(0,1.99,0.29,0.28,0.09,0.085,shirt);
   ball(-0.72,1.55,0,presentation === 'male' ? 0.21 : 0.17,0.56,0.20,shirt).rotation.z = -0.14;
   ball(0.72,1.55,0,presentation === 'male' ? 0.21 : 0.17,0.56,0.20,shirt).rotation.z = 0.14;
-  ball(-0.75,0.98,0.02,0.15,0.16,0.16,skin); ball(0.75,0.98,0.02,0.15,0.16,0.16,skin);
+  for (const side of [-1,1]) {
+    ball(side*0.73,1.27,0.015,0.145,0.34,0.155,shirt).rotation.z=side*0.12;
+    ball(side*0.75,0.98,0.035,0.13,0.17,0.135,skin);
+    // Simplified but visible fingers and knuckles improve close-up avatar previews.
+    for(let finger=0;finger<4;finger++) ball(side*(0.67+finger*0.052),0.89-(finger%2)*0.018,0.075,0.025,0.075,0.028,skin);
+    ball(side*0.64,0.97,0.09,0.035,0.065,0.03,skin).rotation.z=side*0.55;
+    // Outfit cuff accents are driven by the equipped outfit rather than separate ownership state.
+    const cuffColor = ['suit','tactical','mechanic','firefighter','titan-exoframe'].includes(cfg.outfit) ? '#94a3b8' : shirt;
+    ball(side*0.73,1.08,0.015,0.145,0.045,0.15,cuffColor);
+  }
   const head = new THREE.Group(); root.add(head); head.position.set(0,2.62,0);
   const faceScale = cfg.face === 'square' || (presentation === 'male' && cfg.face !== 'round') ? [0.56,0.60,0.48] : cfg.face === 'round' ? [0.54,0.53,0.46] : presentation === 'female' ? [0.48,0.62,0.42] : [0.50,0.61,0.44];
   ball(0,0,0,...faceScale,skin,head);
   ball(-0.51,-0.02,0,0.10,0.16,0.12,skin,head); ball(0.51,-0.02,0,0.10,0.16,0.12,skin,head);
-  ball(0,-0.08,0.425,0.075,0.12,0.08,skin,head);
+  // Ear inset, nose bridge/tip and brows provide stronger facial read at profile-card scale.
+  ball(-0.52,-0.035,0.075,0.045,0.085,0.055,'#b87559',head);
+  ball(0.52,-0.035,0.075,0.045,0.085,0.055,'#b87559',head);
+  ball(0,-0.035,0.425,0.055,0.105,0.075,skin,head);
+  ball(0,-0.105,0.445,0.07,0.055,0.07,skin,head);
+  ball(-0.19,0.205,0.405,0.135,0.035,0.045,hair,head);
+  ball(0.19,0.205,0.405,0.135,0.035,0.045,hair,head);
   const eyeWhite = mat('#f8fafc',0.25,0); const pupil = mat('#10131d',0.18,0);
   for (const x of [-0.19,0.19]) {
     ball(x,0.06,0.394,0.095,0.075,0.045,'#f8fafc',head,0.28);
