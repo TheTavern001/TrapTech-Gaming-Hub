@@ -68,6 +68,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 ## Skill tie-break integrity review — 2026-10-12
 
 - [x] Secondary skill metrics now require the anti-cheat pipeline to mark the run's event log/replay verified. Unverified client-submitted event logs and coin totals no longer decide skill tie-breaks; server-measured elapsed time remains available, with unresolved ties sent to playoff.
+- [x] Startup cleanup nulls previously stored secondary metrics for historical runs without an accepted anti-cheat verification marker, so old unverified values cannot continue deciding ties.
 - [x] Added regression assertions for unverified versus verified library-game event metrics and coin metrics.
 - [ ] Execute the Games Library E2E suite and test forged logs against the exact release candidate; syntax parsing alone is insufficient.
 
