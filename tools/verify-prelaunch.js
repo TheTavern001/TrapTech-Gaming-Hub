@@ -103,7 +103,7 @@ for (const g of slugs) {
       const ref = m[1];
       if (!ref || /^(?:https?:|\/\/|data:|#|javascript:|mailto:)/i.test(ref)) continue;
       const clean = ref.split(/[?#]/)[0];
-      if (!/\.(?:js|css|json|wasm|png|jpe?g|webp|svg|woff2?|mp3|ogg|wav)$/i.test(clean)) continue;
+      if (!/\.(?:m?js|css|json|wasm|png|jpe?g|webp|avif|gif|svg|woff2?|ttf|otf|mp3|ogg|wav|ico)$/i.test(clean)) continue;
       const target = path.resolve(dir, clean.startsWith('/') ? path.join(ROOT, 'public', clean.slice(1)) : clean);
       const safe = [path.resolve(dir) + path.sep, path.resolve(ROOT, 'public') + path.sep];
       if (!safe.some(root => target.startsWith(root))) fail(g.slug, 'Asset path escapes game roots: ' + ref);
