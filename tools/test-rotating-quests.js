@@ -23,4 +23,10 @@ assert.notDeepEqual(daily.map(q => q.assignment_id), nextDay.map(q => q.assignme
 assert.throws(() => Q.rotation({ userId: 1, period: 'daily', count: 5, secret: 'short' }), /secret/, 'weak secrets are rejected');
 assert.throws(() => Q.rotation({ userId: 1, period: 'daily', count: 101, secret: 'test-only-secret-which-is-longer-than-32-characters' }), /size/, 'oversized rotations are rejected');
 assert.equal(Q.validateRotation([{ ...daily[0], id: 'forged-id' }]), false, 'unknown template IDs are rejected');
+assert.equal(Q.validateRotation([{ ...daily[0], xp: daily[0].xp + 999 }]), false, 'altered XP reward is rejected');
+assert.equal(Q.validateRotation([{ ...daily[0], target: daily[0].target + 1 }]), false, 'altered target is rejected');
+assert.equal(Q.validateRotation([{ ...daily[0], reward: 'premium-currency' }]), false, 'altered reward track is rejected');
+assert.equal(Q.validateRotation([{ ...daily[0], slot: 1 }]), false, 'forged rotation slot is rejected');
+assert.equal(Q.validateRotation([daily[0], { ...daily[1], user_id: 'another-user' }]), false, 'mixed-user assignments are rejected');
+assert.equal(Q.validateRotation([daily[0], { ...daily[1], period_key: '2099-01-01' }]), false, 'mixed-period assignments are rejected');
 console.log('Rotating quest engine checks passed:', Q.TEMPLATES.length, 'templates');
