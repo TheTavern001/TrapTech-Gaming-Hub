@@ -57,6 +57,20 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   check('Deployed source fingerprint matches this checkout', buildJson?.build_fingerprint === expected, { expected, deployed: buildJson?.build_fingerprint || null });
   if (buildJson?.build_fingerprint !== expected) failures.push('Deployed source fingerprint matches this checkout');
 
+  const storeResult = await get(BASE + '/api/store');
+  let storeJson = null; try { storeJson = JSON.parse(storeResult.text); } catch {}
+  const prestigeItems = storeJson?.prestige || [];
+  const prestigeIds = prestigeItems.map(p => p.id);
+  const prestigeReady = storeResult.res.status === 200 && prestigeItems.length === 12 && new Set(prestigeIds).size === 12 && prestigeItems.every(p => p.supply === 1 && p.usd_cents >= 100000);
+  check('Store returns 12 one-of-one originals priced at $1,000+', prestigeReady, { status: storeResult.res.status, count: prestigeItems.length, unique: new Set(prestigeIds).size, invalid: prestigeItems.filter(p => p.supply !== 1 || p.usd_cents < 100000).map(p => p.id) });
+  if (!prestigeReady) failures.push('Store returns 12 one-of-one originals priced at $1,000+');
+  check('Prestige sales remain preview-only until wearable release approval', storeResult.res.status === 200 && storeJson?.prestige_sales_enabled === false, { status: storeResult.res.status, enabled: storeJson?.prestige_sales_enabled });
+  if (!(storeResult.res.status === 200 && storeJson?.prestige_sales_enabled === false)) failures.push('Prestige sales remain preview-only until wearable release approval');
+
+  const storeUi = await get(BASE + '/js/hub-store.js');
+  check('Store UI loads the Prestige preview-only gate', storeUi.res.status === 200 && storeUi.text.includes('Preview only') && storeUi.text.includes('/assets/prestige/'), { status: storeUi.res.status });
+  if (!(storeUi.res.status === 200 && storeUi.text.includes('Preview only') && storeUi.text.includes('/assets/prestige/'))) failures.push('Store UI loads the Prestige preview-only gate');
+
   const manifestResult = await get(BASE + '/manifest.webmanifest');
   let manifest = null; try { manifest = JSON.parse(manifestResult.text); } catch {}
   check('PWA manifest responds with valid JSON', manifestResult.res.status === 200 && !!manifest && Array.isArray(manifest.icons), { status: manifestResult.res.status, icons: manifest?.icons?.length || 0 });
