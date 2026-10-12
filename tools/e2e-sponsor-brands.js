@@ -64,6 +64,8 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.status === 409 && /payment must be received/i.test(r.body.error), 'accepted but unpaid quote cannot create an official giveaway', r.body);
     r = await anon('/api/sponsor/requests/' + tok); ok(!r.body.request.event, 'no event or share link exists while payment is unconfirmed');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/quote', { method: 'PUT', body: { lines: [] } }); ok(r.status === 400, 'accepted quote is locked');
+    r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'draft' } }); ok(r.status === 400 && /accepted quote is locked/i.test(r.body.error), 'accepted quote cannot be downgraded to draft');
+    r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'declined' } }); ok(r.status === 400 && /accepted quote is locked/i.test(r.body.error), 'accepted quote cannot be downgraded to declined');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'paid' } }); ok(r.body.ok && r.body.request.quote.status === 'paid', 'admin marks the accepted quote paid');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.ok && /^TT-/.test(r.body.code) && r.body.active, 'paid quote -> official event', r.body); const evc = r.body.code; const evid = r.body.id;
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.existing && r.body.code === evc, 'second click returns the same event (idempotent)');
