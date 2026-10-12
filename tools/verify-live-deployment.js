@@ -36,7 +36,9 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   const expected = buildFingerprint(ROOT);
   const config = fs.readFileSync(path.join(ROOT, 'src/config.js'), 'utf8');
   const block = (config.match(/const GAMES = \[([\s\S]*?)\n\];/) || [])[1] || '';
-  const core = [...block.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)].map(m => ({ id: m[1], title: m[2], module: m[3] }));
+  const coreAll = [...block.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)].map(m => ({ id: m[1], title: m[2], module: m[3] }));
+  const RETIRED_CHANCE = new Set(['plinko', 'spin-to-win', 'blazed-roulette']);
+  const core = coreAll.filter(g => !RETIRED_CHANCE.has(g.id));
   const index = await get(BASE + '/');
   check('Homepage responds 200', index.res.status === 200, { status: index.res.status, type: index.type });
   if (index.res.status === 200) {
