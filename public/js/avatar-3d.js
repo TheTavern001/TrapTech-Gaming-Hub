@@ -185,7 +185,7 @@ export async function mountAvatar3D(stage, cfg) {
   if (cfg.held === 'flower') { mesh(new THREE.CylinderGeometry(0.02,0.025,0.40,8),mat('#15803d'),0.84,0.76,0.08,1,1,1); for(let j=0;j<5;j++) ball(0.84+Math.cos(j*Math.PI*2/5)*0.07,1.02+Math.sin(j*Math.PI*2/5)*0.07,0.08,0.06,0.06,0.04,'#f472b6'); ball(0.84,1.02,0.09,0.035,0.035,0.025,'#facc15'); }
 
   const pointer = { down:false, x:0, y:0, rot:0, tilt:0 };
-  const down = (e) => { pointer.down=true; pointer.x=e.clientX; pointer.y=e.clientY; renderer.domElement.setPointerCapture?.(e.pointerId); };
+  const down = (e) => { pointer.down=true; pointer.rot=root.rotation.y; pointer.tilt=root.rotation.x; pointer.x=e.clientX; pointer.y=e.clientY; renderer.domElement.setPointerCapture?.(e.pointerId); };
   const move = (e) => { if(!pointer.down) return; pointer.rot += (e.clientX-pointer.x)*0.012; pointer.tilt = Math.max(-0.20,Math.min(0.20,pointer.tilt+(e.clientY-pointer.y)*0.003)); pointer.x=e.clientX; pointer.y=e.clientY; root.rotation.y=pointer.rot; root.rotation.x=pointer.tilt; };
   const up = () => { pointer.down=false; };
   const zoom = (delta) => { camera.position.z = Math.max(3.2, Math.min(11, camera.position.z + delta)); camera.lookAt(0, baseCamera.targetY, 0); };
