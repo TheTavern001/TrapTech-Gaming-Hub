@@ -184,7 +184,9 @@ if (!brandIcons.indexUsesCanonicalSvg || !brandIcons.splashUsesCanonicalSvg) war
 if (!brandIcons.dynamicRasterRoutePresent) issues.push({ severity: 'blocker', finding: 'Dynamic Trap Tech raster icon route is missing.' });
 if (!brandIcons.manifestValidJson) issues.push({ severity: 'blocker', finding: 'Web app manifest is missing or invalid JSON.' });
 for (const item of brandIcons.manifestIcons) {
-  if (!item.src || !serverSrc.includes(item.src.split('?')[0])) brandIcons.missingManifestIconRoutes.push(item.src || '(missing src)');
+  const iconRoute = item.src ? item.src.split('?')[0] : '';
+  const staticAsset = iconRoute.startsWith('/') && exists(path.join(ROOT, 'public', ...iconRoute.slice(1).split('/')));
+  if (!iconRoute || (!serverSrc.includes(iconRoute) && !staticAsset)) brandIcons.missingManifestIconRoutes.push(item.src || '(missing src)');
 }
 if (brandIcons.missingManifestIconRoutes.length) issues.push({ severity: 'blocker', finding: 'Manifest icons do not map to a declared server icon route or static asset.', paths: brandIcons.missingManifestIconRoutes });
 
