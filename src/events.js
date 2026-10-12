@@ -131,6 +131,9 @@ function routes(app, A, H) {
     // For booking-backed events the sponsor quote is the payment source of truth. The legacy
     // event-metadata editor must not bypass the quote's verified-paid transition and unhide an
     // unpaid event. Payment can still be revoked here to block an event immediately.
+    if (g.booking_id && nextPayment === 'paid' && String(g.payment_status || '').toLowerCase() === 'refunded') {
+      return res.status(409).json({ ok: false, error: 'A refunded booking cannot be reactivated from event metadata; use the audited payment reconciliation workflow.' });
+    }
     if (g.booking_id && ['paid', 'comped'].includes(nextPayment) && String(g.payment_status || '').toLowerCase() !== nextPayment) {
       // This legacy editor is not a payment reconciliation interface. Neither "paid" nor
       // "comped" may be used to bypass the booking's verified quote/payment workflow.
