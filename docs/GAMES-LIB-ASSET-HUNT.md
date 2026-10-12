@@ -25,3 +25,22 @@ Sources checked and the licence verdict. Rule: CC0 / CC-BY / royalty-free-for-ga
 | daleharvey/pacman | WTFPL | reject: uses the original Namco trademark/character art |
 | Anuken/Mindustry, hedgewars/hw | GPL | reject for web: no maintained browser build within size cap |
 | mozilla/BrowserQuest | mixed (code MPL, art CC-BY-SA) | out of scope (MMO server) |
+
+## Kenney-first expansion pass (2026-10-11)
+Kenney is a first-class asset source for the game's visual rebuild, not just a fallback. Prioritize packs that solve a specific visible weakness in a game: environments/tilesets, props, vehicles, characters, UI, particles and sound effects. Use the official pack page and the license file shipped inside the downloaded archive as the source of truth; record the exact pack, source URL, license, download date and shipped file paths in `CREDITS.md`.
+
+### Selection and integration rules
+- Prefer cohesive packs with matching art direction over mixing unrelated packs in one scene.
+- For each game, capture a baseline screenshot and list the placeholder/weak assets before choosing a Kenney pack.
+- Import only the files needed for that game; optimize image dimensions, audio format and model complexity for mobile.
+- Do not treat a pack download as a game upgrade by itself: connect assets to the actual runtime, lighting, collision, animation, feedback and game loop.
+- Check each asset's license individually where pack contents or bundled files differ. Preserve included license files.
+- Run the game smoke test after integration and compare before/after screenshots at phone and desktop sizes. Keep the old assets available for rollback until the new build passes.
+
+### Priority use cases
+1. **Platformers / runners:** character animation, tilesets, hazards, collectibles, hit/boost feedback and layered backgrounds.
+2. **Racing / driving:** vehicle silhouettes, road props, barriers, signs, scenery and roadside variation; validate perspective and scale before shipping.
+3. **Arcade / space games:** cohesive ships, projectiles, enemies, pickups, impact effects and backgrounds.
+4. **Hub-wide polish:** consistent buttons, icons, achievement/UI elements, audio cues and menus where a pack fits the Gaming Hub style.
+
+Status: this is an asset-selection and QA policy. It does not mean additional Kenney packs have already been downloaded or integrated by this commit.
