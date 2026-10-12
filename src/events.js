@@ -121,6 +121,7 @@ function routes(app, A, H) {
   // vendor share kit (admin): link + QR code
   A.get('/events/:id/share', (req, res) => {
     const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });
+    if (!bookingPaymentCleared(g)) return res.status(409).json({ ok: false, error: 'The official event share link is unavailable until booking payment is confirmed.' });
     const url = PU.originOf(req) + '/event/' + g.event_code;
     res.json({ ok: true, code: g.event_code, url, label: label(g), qr_svg: qrSvg(url), status: status(g), vendor: g.vendor || g.host, booking_status: g.booking_status || null, payment_status: g.payment_status || null, booking_id: g.booking_id || null });
   });
