@@ -107,6 +107,19 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     });
   }
 
+  const monetizeSource = fs.readFileSync(path.join(ROOT, 'src/monetize.js'), 'utf8');
+  const prestigeBlock = (monetizeSource.match(/const PRESTIGE = \{([\s\S]*?)\n\};/) || [])[1] || '';
+  const prestigeSlugs = [...prestigeBlock.matchAll(/^\s*'prestige-original-([^']+)':/gm)].map(m => m[1]);
+  const prestigeFailures = [];
+  await bounded(prestigeSlugs, 6, async slug => {
+    const p = '/assets/prestige/' + slug + '.svg';
+    try {
+      const r = await get(BASE + p);
+      if (r.res.status !== 200 || !r.type.includes('image/svg+xml') || !r.text.trim().startsWith('<svg') || r.body.length > 30000 || /<script\b|(?:href|src)=["']https?:/i.test(r.text)) prestigeFailures.push({ path: p, status: r.res.status, type: r.type, bytes: r.body.length });
+    } catch (e) { prestigeFailures.push({ path: p, error: e.message }); }
+  });
+  check('All one-of-one Prestige SVGs are served as safe vector art', prestigeSlugs.length === 12 && prestigeFailures.length === 0, { count: prestigeSlugs.length, failures: prestigeFailures });
+
   const fixedPages = ['/games', '/games-lib/index.html', '/css/launch-redesign.css'];
   await bounded(fixedPages, 3, async p => {
     try {
