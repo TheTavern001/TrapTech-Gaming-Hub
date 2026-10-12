@@ -512,6 +512,17 @@ function client() {
   ok((r.body.items || []).every(i => i.catalog_only === !i.on_sale), 'catalog-only and active-rotation flags are exact opposites');
   const catalogFiltered = await anon('/api/shop/catalog?limit=10&type=frame');
   ok(catalogFiltered.status === 200 && catalogFiltered.body.total > 0 && catalogFiltered.body.items.every(i => i.type === 'frame'), 'catalog type filter returns matching cosmetics only');
+  console.log('# generated art thumbnail coverage');
+  for (const type of ['banner', 'frame', 'color', 'title', 'badge', 'effect']) {
+    const page = await anon('/api/shop/catalog?limit=1&type=' + type);
+    const item = page.body && page.body.items && page.body.items[0];
+    ok(page.status === 200 && item && item.type === type, 'catalog provides a generated ' + type + ' item');
+    if (item) {
+      const art = await anon('/shop/art/' + encodeURIComponent(item.id) + '.svg');
+      ok(art.status === 200 && typeof art.body === 'string' && /<svg\\b/.test(art.body), type + ' cosmetic thumbnail returns SVG');
+      ok(/image\\/svg\\+xml/.test(art.ct || ''), type + ' cosmetic thumbnail has SVG content type');
+    }
+  }
   console.log('# one-of-one prestige catalog');
   const prestigeState = await anon('/api/store');
   ok(prestigeState.status === 200 && prestigeState.body.ok === true && typeof prestigeState.body.prestige_sales_enabled === 'boolean', 'store reports the server-side prestige sales gate');
