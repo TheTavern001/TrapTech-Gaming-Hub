@@ -821,8 +821,34 @@ require('./games-lib').mount(app); // [games-lib hook] GET /api/games-lib
 require('./games-lib-playoff').mount(app, { requireUser, requireAdmin }); // [games-lib hook] skill tie-breaks + sudden-death playoffs
 app.use('/api', (req, res) => bad(res, 404, 'Not found'));
 
-// ---------- static ----------
+// ---------- static + canonical Trap Tech app icons ----------
 const PUB = path.join(cfg.ROOT, 'public');
+// Raster icon URLs are generated from the canonical Trap Tech crowned-TT SVG so browsers,
+// Android/PWA installs, iOS home-screen shortcuts and legacy PNG references share one mark.
+const HUB_ICON_ROUTES = {
+  '/assets/icons/icon-192.png': 192,
+  '/assets/icons/icon-512.png': 512,
+  '/assets/icons/maskable-512.png': 512,
+  '/assets/icons/apple-touch-icon.png': 180,
+  '/assets/brand/favicon.png': 64
+};
+const HUB_ICON_CACHE = new Map();
+app.get(Object.keys(HUB_ICON_ROUTES), (req, res) => {
+  try {
+    const size = HUB_ICON_ROUTES[req.path];
+    let png = HUB_ICON_CACHE.get(size);
+    if (!png) {
+      const svg = fs.readFileSync(path.join(PUB, 'assets', 'brand', 'traptech-app-icon.svg'), 'utf8');
+      const { Resvg } = require('@resvg/resvg-js');
+      png = new Resvg(svg, { fitTo: { mode: 'width', value: size } }).render().asPng();
+      HUB_ICON_CACHE.set(size, png);
+    }
+    res.status(200).set('Content-Type', 'image/png').set('Cache-Control', 'public, max-age=86400').send(png);
+  } catch (err) {
+    console.error('Trap Tech app icon render failed:', err);
+    res.status(500).type('text').send('App icon unavailable');
+  }
+});
 app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
 // Per-page <title> / description / Open Graph + Twitter card tags for share links (crawlers don't run JS).
 const INDEX_FILE = path.join(PUB, 'index.html');
