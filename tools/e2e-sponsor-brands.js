@@ -69,6 +69,17 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.existing && r.body.code === evc, 'second click returns the same event (idempotent)');
     r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.games.join() === 'stack,void-swarm' && r.body.event.vendor === 'E2E Sponsor Co' && r.body.event.label.includes('E2E SPONSOR CO x GAMING HUB'), 'event carries the vendor, games and label', r.body.event);
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.event && r.body.request.event.code === evc && /<svg/.test(r.body.request.event.qr_svg), 'vendor quote page shows the event link + QR code after payment');
+    // Simulate a legacy event created before the payment gate, where the quote is accepted
+    // and an event exists but its payment_status is still unpaid. Marking the verified quote paid
+    // must update both records atomically so the sponsor does not remain permanently blocked.
+    db.prepare("UPDATE sponsor_quotes SET status='accepted' WHERE booking_id=?").run(rid);
+    db.prepare("UPDATE giveaways SET payment_status='unpaid' WHERE id=?").run(evid);
+    r = await anon('/api/event/' + evc); ok(r.status === 404, 'legacy accepted-but-unpaid event is hidden before payment verification');
+    r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'paid' } });
+    ok(r.body.ok && r.body.request.quote.status === 'paid', 'admin verifies receipt and marks legacy quote paid');
+    r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.status === 'active', 'verified payment atomically restores the pre-existing event');
+    r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.event && r.body.request.event.code === evc, 'vendor status page regains its event link after verified payment');
+
     const payGuardName = 'paygate_' + Date.now().toString(36).slice(-6);
     const payGuard = client();
     r = await payGuard('/api/auth/signup', { body: { username: payGuardName, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } });
