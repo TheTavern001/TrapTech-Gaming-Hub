@@ -125,7 +125,9 @@ if (!engine.includes('clearInputs()') || !/destroy\(\)\s*\{\s*this\.clearInputs\
 for (const [file, token] of [['public/js/games/plinko.js', 'e.cancelled'], ['public/js/games/spin-to-win.js', 'e.cancelled'], ['public/js/games/sling-smash.js', 'e.cancelled']]) {
   if (!(read(path.join(ROOT, file)) || '').includes(token)) fail(file, 'Forced input cancellation must not trigger a gameplay release action');
 }
-if (!(read(path.join(ROOT, 'public/js/games/brick-breaker.js')) || '').includes('Math.max(1, Math.ceil(Math.hypot(b.vx, b.vy) * dt / 6))')) fail('public/js/games/brick-breaker.js', 'Physics must retain a safe minimum substep for zero/near-zero frame deltas');
+const brick = read(path.join(ROOT, 'public/js/games/brick-breaker.js')) || '';
+if (!brick.includes('Math.max(1, Math.ceil(Math.hypot(b.vx, b.vy) * dt / 6))')) fail('public/js/games/brick-breaker.js', 'Physics must retain a safe minimum substep for zero/near-zero frame deltas');
+if (!brick.includes('b.x = k.x - r') || !brick.includes('b.y = k.y - r')) fail('public/js/games/brick-breaker.js', 'Brick collisions must resolve penetration to prevent repeated damage during one contact');
 const sky = read(path.join(ROOT, 'public/js/games/sky-hopper.js')) || '';
 if (!sky.includes('const maxShift = prevPipe') || !sky.includes('const shift = prev ?')) fail('public/js/games/sky-hopper.js', 'Gap transitions must remain bounded during generation and movement');
 const server = fs.readFileSync(path.join(ROOT, 'src/server.js'), 'utf8');
