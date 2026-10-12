@@ -99,8 +99,19 @@ function validateRotation(items) {
     }
     if (!Number.isInteger(q.slot) || q.slot !== index ||
         typeof q.user_id !== 'string' || !q.user_id || q.user_id.length > 128 ||
-        typeof q.period_key !== 'string' || !q.period_key ||
+        typeof q.period_key !== 'string' ||
         typeof q.assignment_id !== 'string' || !/^[a-f0-9]{32}$/.test(q.assignment_id)) return false;
+    // Validate the assignment's period format and derive its ID from canonical fields.
+    // This catches fabricated IDs even when a caller supplies an otherwise valid template.
+    const periodDate = /^\d{4}-\d{2}-\d{2}$/.test(q.period_key) ? new Date(q.period_key + 'T00:00:00.000Z') : null;
+    const validDailyKey = periodDate && !Number.isNaN(periodDate.getTime()) && periodDate.toISOString().slice(0, 10) === q.period_key;
+    const validWeeklyKey = validDailyKey && periodDate.getUTCDay() === 1;
+    const validSeasonalKey = /^\d{4}-S[1-4]$/.test(q.period_key);
+    if (q.period === 'daily' && !validDailyKey) return false;
+    if (q.period === 'weekly' && !validWeeklyKey) return false;
+    if (q.period === 'seasonal' && !validSeasonalKey) return false;
+    const expectedAssignment = sha([q.user_id, q.period, q.period_key, q.id, q.definition_version].join('|')).slice(0, 32);
+    if (q.assignment_id !== expectedAssignment) return false;
     if (userId !== null && q.user_id !== userId) return false;
     if (periodKeyValue !== null && q.period_key !== periodKeyValue) return false;
     if (periodValue !== null && q.period !== periodValue) return false;
