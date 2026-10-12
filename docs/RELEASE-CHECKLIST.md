@@ -63,6 +63,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [x] Added an E2E assertion that the v7 admin force-end action is rejected before payment confirmation.
 - [x] Added a regression assertion that an admin read cannot cause an expired unpaid booking to lock results.
 - [ ] Execute the updated sponsor E2E test against the exact candidate. The current GitHub Actions runs fail before test steps and provide no step logs; do not mark this runtime validation as passed.
+- [x] Independently parsed the six changed JavaScript source/test files for syntax errors; this is syntax-only validation and does not replace Node execution or E2E/browser tests.
 
 ## Current boundary
 
