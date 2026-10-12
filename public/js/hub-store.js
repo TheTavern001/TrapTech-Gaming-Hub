@@ -19,8 +19,8 @@ const PX_ART = {
   'prestige-original-dragon': 'px-art-void-dragon',
   'prestige-original-nebula': 'px-art-nebula-wings',
   'prestige-original-mech': 'px-art-titan-exoframe',
-  'prestige-original-holo-decree': 'px-art-holo-decree',
-  'prestige-original-storm-halo': 'px-art-storm-halo',
+  'prestige-original-holo': 'px-art-holo-decree',
+  'prestige-original-storm': 'px-art-storm-halo',
   'prestige-original-chronos': 'px-art-chronos-mantle',
   'prestige-original-aurora': 'px-art-aurora-crown',
   'prestige-cane': 'px-art-prism-cane', 'prestige-throne': 'px-art-stack-throne', 'prestige-crown': 'px-art-royal-crown'
@@ -28,8 +28,8 @@ const PX_ART = {
 const PX_ICON = {
   'prestige-original-cane': 'gem', 'prestige-original-throne': 'armchair', 'prestige-original-crown': 'crown',
   'prestige-original-phoenix': 'flame', 'prestige-original-singularity': 'orbit', 'prestige-original-dragon': 'swords',
-  'prestige-original-nebula': 'wind', 'prestige-original-mech': 'shield', 'prestige-original-holo-decree': 'scroll-text',
-  'prestige-original-storm-halo': 'zap', 'prestige-original-chronos': 'clock', 'prestige-original-aurora': 'sunrise',
+  'prestige-original-nebula': 'wind', 'prestige-original-mech': 'shield', 'prestige-original-holo': 'scroll-text',
+  'prestige-original-storm': 'zap', 'prestige-original-chronos': 'clock', 'prestige-original-aurora': 'sunrise',
   'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair', 'prestige-crown': 'crown'
 };
 export function prestigeArt(id, fx, size = 120) {
