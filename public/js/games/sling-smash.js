@@ -26,7 +26,7 @@ export class SlingSmash extends Game {
   }
   onDown(x, y) { if (this.ball || this.over || this.next > 0 || this.balls <= 0) return; if (Math.hypot(x - this.sx, y - this.sy) < 140) this.aim = [x, y]; }
   onMove(x, y) { if (this.aim) this.aim = [x, y]; }
-  onUp() { if (!this.aim) return; const [dx, dy] = this.pull(); this.aim = null; if (Math.hypot(dx, dy) < 18) return; this.balls--; this.used++; this.ball = { x: this.sx, y: this.sy, vx: -dx * 7.2, vy: -dy * 7.2, r: 13, life: 7, rest: 0 }; this.trail = []; this.sfx.tone(240, 0.12, { type: 'sawtooth', vol: 0.18, slide: 2 }); }
+  onUp(x, y, e) { if (e && e.cancelled) { this.aim = null; return; } if (!this.aim) return; const [dx, dy] = this.pull(); this.aim = null; if (Math.hypot(dx, dy) < 18) return; this.balls--; this.used++; this.ball = { x: this.sx, y: this.sy, vx: -dx * 7.2, vy: -dy * 7.2, r: 13, life: 7, rest: 0 }; this.trail = []; this.sfx.tone(240, 0.12, { type: 'sawtooth', vol: 0.18, slide: 2 }); }
   pull() { const [x, y] = this.aim; let dx = x - this.sx, dy = y - this.sy; const d = Math.hypot(dx, dy), m = 110; if (d > m) { dx *= m / d; dy *= m / d; } return [dx, dy]; }
   onKey() {}
   support(b) { if (b.y + b.h >= this.ground - 0.5) return true; return this.blocks.some(o => o !== b && !o.dead && o.y >= b.y + b.h - 2 && o.y <= b.y + b.h + 2 && o.x < b.x + b.w - 2 && o.x + o.w > b.x + 2); }
