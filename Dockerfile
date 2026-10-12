@@ -16,6 +16,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY src ./src
 COPY public ./public
+# Build-time audits consume the generated library inventory and supporting audit data.
+COPY docs ./docs
 COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
 COPY tools ./tools
 # Pre-gzip static text assets, pre-scale OG card art, pre-render the default share image (-> /app/build).
@@ -67,6 +69,8 @@ COPY --from=build --chown=root:root /app/build ./build
 COPY --chown=root:root package.json ./
 COPY --chown=root:root src ./src
 COPY --chown=root:root public ./public
+# The shop uses these score ranges to expose legitimate score-gated cosmetics at runtime.
+COPY --chown=root:root docs/score-ranges.json ./docs/score-ranges.json
 # App files are owned by root and read-only for the runtime user; only /data (volume) and /tmp are written.
 RUN mkdir -p /data && chown node:node /data
 USER node
