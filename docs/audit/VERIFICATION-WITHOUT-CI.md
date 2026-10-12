@@ -51,7 +51,7 @@ The read-only live verifier compares the deployed fingerprint with the checkout,
 BASE=https://your-deployment.example npm run verify:live
 ```
 
-The `/api/build` response includes `build_fingerprint`, computed from the app/server sources, icon assets, all registered core modules, and each library entry/build. A mismatch means the live deployment does not match this checkout.
+The `/api/build` response includes `build_fingerprint`, computed from first-party server, shop, avatar, CSS, catalog and game source/metadata files, icon assets, all registered core modules, and all library source entries. A mismatch means the live deployment does not match this checkout.
 
 After deployment, verify the deployed build—not just the GitHub source:
 
