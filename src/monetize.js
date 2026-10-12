@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS pass_owned (user_id INTEGER NOT NULL, season INTEGER 
 CREATE TABLE IF NOT EXISTS pass_claims (user_id INTEGER NOT NULL, season INTEGER NOT NULL, level INTEGER NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (user_id, season, level));
 CREATE TABLE IF NOT EXISTS prestige_owned (item_id TEXT NOT NULL, serial INTEGER NOT NULL, user_id INTEGER, order_id INTEGER, created_at INTEGER NOT NULL, revoked_at INTEGER, PRIMARY KEY (item_id, serial));
 `);
+// Database-level guard: each new Prestige original can have only one active owner.
+// Legacy numbered editions are excluded because their historical supply may exceed one.
+db.exec("CREATE UNIQUE INDEX IF NOT EXISTS prestige_original_one_owner ON prestige_owned(item_id) WHERE item_id LIKE 'prestige-original-%' AND revoked_at IS NULL");
 for (const [name, type] of [['provider_ref','TEXT'], ['checkout_url','TEXT'], ['provider_payment_id','TEXT']]) {
   if (!db.prepare('PRAGMA table_info(store_orders)').all().some(c => c.name === name)) db.exec(`ALTER TABLE store_orders ADD COLUMN ${name} ${type}`);
 }
