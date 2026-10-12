@@ -500,6 +500,19 @@ function client() {
   r = await anon('/js/jetpack.js'); ok(r.status === 200 && String(r.body).includes('class JetpackDash'), 'game JS served');
   for (const p of ['/achievements', '/sponsor', '/join/ABCDEFGH', '/games/stack', '/play/terp-tapper']) { r = await anon(p); ok(r.status === 200, `GET ${p} serves HTML`); }
   r = await anon('/assets/cards/jetpack-dash.webp'); ok(r.status === 200, 'card art served');
+  console.log('# rotating cosmetic catalog');
+  r = await anon('/api/shop/catalog?limit=24&offset=0');
+  ok(r.status === 200 && r.body.ok === true, 'cosmetic catalog endpoint responds');
+  ok(r.body.catalog_size === 1200 && r.body.total === 1200, 'catalog exposes exactly 1,200 deterministic cosmetic entries', { catalog_size: r.body.catalog_size, total: r.body.total });
+  ok(Array.isArray(r.body.items) && r.body.items.length === 24, 'catalog pagination returns requested first page');
+  ok(new Set((r.body.items || []).map(i => i.id)).size === (r.body.items || []).length, 'catalog first page has no duplicate item IDs');
+  ok((r.body.items || []).every(i => Number.isInteger(i.scheduled_day) && typeof i.on_sale === 'boolean' && typeof i.catalog_only === 'boolean'), 'catalog entries include rotation availability metadata');
+  const catalogTail = await anon('/api/shop/catalog?limit=24&offset=1176');
+  ok(catalogTail.status === 200 && catalogTail.body.total === 1200 && catalogTail.body.items.length === 24, 'catalog final page contains entries 1,177–1,200');
+  ok(!((r.body.items || []).some(i => i.on_sale) && (r.body.items || []).some(i => i.catalog_only && i.on_sale)), 'catalog-only items are not simultaneously marked as active offers');
+  const catalogFiltered = await anon('/api/shop/catalog?limit=10&type=frame');
+  ok(catalogFiltered.status === 200 && catalogFiltered.body.total > 0 && catalogFiltered.body.items.every(i => i.type === 'frame'), 'catalog type filter returns matching cosmetics only');
+
 
   if (!process.env.KEEP) {
     console.log('# cleanup');
