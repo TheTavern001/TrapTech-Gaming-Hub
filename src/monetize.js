@@ -41,18 +41,23 @@ db.exec('CREATE UNIQUE INDEX IF NOT EXISTS store_orders_provider_ref ON store_or
 // ---------- catalog (prices are PUBLIC for player items; booking prices are not) ----------
 // Exactly 12 prestige originals. Each is a one-of-one digital cosmetic; never duplicate, recolor, or replenish.
 const PRESTIGE = {
-  'prestige-cane': { name: 'Diamond Don Cane', blurb: 'A cut-crystal crown tops a hand-set diamond cane; prismatic sparkle trail, gold reflections, and a slow ceremonial reveal.', fx: 'prism-cane', supply: 1, usd: 100000, confs: 6 },
-  'prestige-throne': { name: 'Stack Throne Aura', blurb: 'A towering cash-stack throne with individually drifting bills, emerald-gold backlight, and a slow orbiting crown crest.', fx: 'stack-throne', supply: 1, usd: 125000, confs: 6 },
-  'prestige-crown': { name: 'Solid Gold Crown & Chain', blurb: 'A sculpted gold crown with emerald inlay, a separate link-chain silhouette, and a sweeping metallic highlight.', fx: 'royal-crown', supply: 1, usd: 150000, confs: 6 },
-  'prestige-phoenix': { name: 'Phoenix Rebirth Mantle', blurb: 'An original feathered mantle with ember wings, rising ash motes, and a one-time phoenix flare on profile reveal.', fx: 'phoenix-mantle', supply: 1, usd: 175000, confs: 6 },
-  'prestige-singularity': { name: 'Singularity Orbit', blurb: 'A dark matter core surrounded by offset orbital rings, lensing distortion, and a restrained violet event horizon.', fx: 'singularity-orbit', supply: 1, usd: 200000, confs: 6 },
-  'prestige-dragon': { name: 'Void Dragon Familiar', blurb: 'A bespoke spectral dragon curls around the player card, with articulated head motion, scale shimmer, and a cyan-violet wake.', fx: 'void-dragon', supply: 1, usd: 225000, confs: 6 },
-  'prestige-nebula': { name: 'Nebula Sovereign Wings', blurb: 'A broad, asymmetric pair of nebula wings with starfield depth, drifting particles, and layered cosmic gradients.', fx: 'nebula-wings', supply: 1, usd: 250000, confs: 6 },
-  'prestige-mech': { name: 'Titanfall Exo Frame', blurb: 'A custom angular exo-frame with shoulder plates, illuminated seams, servo glints, and a restrained mechanical idle loop.', fx: 'titan-exoframe', supply: 1, usd: 275000, confs: 6 },
-  'prestige-holo': { name: 'Holographic Royal Decree', blurb: 'A floating holographic crest with scanline refraction, chromatic edges, and an animated seal unlike any standard badge.', fx: 'holo-decree', supply: 1, usd: 300000, confs: 6 },
-  'prestige-storm': { name: 'Stormforged Halo', blurb: 'A broken-ring halo forged from stormglass, with branching contained lightning and a slow electric-blue corona.', fx: 'storm-halo', supply: 1, usd: 350000, confs: 6 },
-  'prestige-chronos': { name: 'Chronos Clockwork Mantle', blurb: 'A precision clockwork backpiece with independently moving gold rings, engraved markers, and a subtle time-fracture shimmer.', fx: 'chronos-mantle', supply: 1, usd: 400000, confs: 6 },
-  'prestige-aurora': { name: 'Aurora Crown of Worlds', blurb: 'A singular crown silhouette with suspended crystal fins, flowing aurora ribbons, and a multi-layered spectrum glow.', fx: 'aurora-crown', supply: 1, usd: 500000, confs: 6 },
+  'prestige-original-cane': { name: 'Diamond Don Cane', blurb: 'A cut-crystal crown tops a hand-set diamond cane; prismatic sparkle trail, gold reflections, and a slow ceremonial reveal.', fx: 'prism-cane', supply: 1, usd: 100000, confs: 6 },
+  'prestige-original-throne': { name: 'Stack Throne Aura', blurb: 'A towering cash-stack throne with individually drifting bills, emerald-gold backlight, and a slow orbiting crown crest.', fx: 'stack-throne', supply: 1, usd: 125000, confs: 6 },
+  'prestige-original-crown': { name: 'Solid Gold Crown & Chain', blurb: 'A sculpted gold crown with emerald inlay, a separate link-chain silhouette, and a sweeping metallic highlight.', fx: 'royal-crown', supply: 1, usd: 150000, confs: 6 },
+  'prestige-original-phoenix': { name: 'Phoenix Rebirth Mantle', blurb: 'An original feathered mantle with ember wings, rising ash motes, and a one-time phoenix flare on profile reveal.', fx: 'phoenix-mantle', supply: 1, usd: 175000, confs: 6 },
+  'prestige-original-singularity': { name: 'Singularity Orbit', blurb: 'A dark matter core surrounded by offset orbital rings, lensing distortion, and a restrained violet event horizon.', fx: 'singularity-orbit', supply: 1, usd: 200000, confs: 6 },
+  'prestige-original-dragon': { name: 'Void Dragon Familiar', blurb: 'A bespoke spectral dragon curls around the player card, with articulated head motion, scale shimmer, and a cyan-violet wake.', fx: 'void-dragon', supply: 1, usd: 225000, confs: 6 },
+  'prestige-original-nebula': { name: 'Nebula Sovereign Wings', blurb: 'A broad, asymmetric pair of nebula wings with starfield depth, drifting particles, and layered cosmic gradients.', fx: 'nebula-wings', supply: 1, usd: 250000, confs: 6 },
+  'prestige-original-mech': { name: 'Titanfall Exo Frame', blurb: 'A custom angular exo-frame with shoulder plates, illuminated seams, servo glints, and a restrained mechanical idle loop.', fx: 'titan-exoframe', supply: 1, usd: 275000, confs: 6 },
+  'prestige-original-holo': { name: 'Holographic Royal Decree', blurb: 'A floating holographic crest with scanline refraction, chromatic edges, and an animated seal unlike any standard badge.', fx: 'holo-decree', supply: 1, usd: 300000, confs: 6 },
+  'prestige-original-storm': { name: 'Stormforged Halo', blurb: 'A broken-ring halo forged from stormglass, with branching contained lightning and a slow electric-blue corona.', fx: 'storm-halo', supply: 1, usd: 350000, confs: 6 },
+  'prestige-original-chronos': { name: 'Chronos Clockwork Mantle', blurb: 'A precision clockwork backpiece with independently moving gold rings, engraved markers, and a subtle time-fracture shimmer.', fx: 'chronos-mantle', supply: 1, usd: 400000, confs: 6 },
+  'prestige-original-aurora': { name: 'Aurora Crown of Worlds', blurb: 'A singular crown silhouette with suspended crystal fins, flowing aurora ribbons, and a multi-layered spectrum glow.', fx: 'aurora-crown', supply: 1, usd: 500000, confs: 6 },
+};
+const LEGACY_PRESTIGE = {
+  'prestige-cane': { name: 'Diamond Don Cane', fx: 'sparkle' },
+  'prestige-throne': { name: 'Stack Throne Aura', fx: 'cashrain' },
+  'prestige-crown': { name: 'Solid Gold Crown & Chain', fx: 'goldsweep' }
 };
 const SEED = [
   { id: 'crowns-500', kind: 'pack', name: '500 Hub Crowns', usd_cents: 499, crowns: 500, bonus: 0, sort: 1 },
@@ -70,6 +75,8 @@ const SEED = [
     if (p.kind === 'prestige') updPrestige.run(p.name, p.usd_cents, JSON.stringify(p.data || {}), p.sort, Date.now(), p.id);
   }
 }
+ // Retire the three former multi-supply showcase items without rewriting their history or existing owners.
+db.prepare("UPDATE store_products SET active=0, updated_at=? WHERE id IN ('prestige-cane','prestige-throne','prestige-crown') AND kind='prestige'").run(Date.now());
 const prod = (id) => { const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = JSON.parse(p.data || '{}'); return p; };
 const products = (all = false) => db.prepare(`SELECT * FROM store_products ${all ? '' : 'WHERE active=1'} ORDER BY sort, id`).all().map(p => ({ ...p, data: JSON.parse(p.data || '{}') }));
 const issued = (id) => db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=? AND revoked_at IS NULL').get(id).c;
@@ -303,7 +310,7 @@ const TERMS = '[DRAFT - FOR LAWYER REVIEW] Digital items are a limited licence t
 function prestigeWall() { return Object.entries(PRESTIGE).map(([id, d]) => { const p = prod(id);
   return { id, name: p ? p.name : d.name, blurb: d.blurb, fx: d.fx, usd_cents: p ? p.usd_cents : d.usd, supply: p ? p.supply : d.supply, issued: issued(id), active: p ? !!p.active : false,
     owners: db.prepare('SELECT o.serial, u.username, o.created_at FROM prestige_owned o JOIN users u ON u.id=o.user_id WHERE o.item_id=? AND o.revoked_at IS NULL ORDER BY o.serial').all(id) }; }); }
-const prestigeOf = (userId) => db.prepare('SELECT item_id, serial, created_at FROM prestige_owned WHERE user_id=? AND revoked_at IS NULL ORDER BY created_at').all(userId).map(r => ({ ...r, name: (PRESTIGE[r.item_id] || {}).name, fx: (PRESTIGE[r.item_id] || {}).fx, supply: (prod(r.item_id) || {}).supply }));
+const prestigeOf = (userId) => db.prepare('SELECT item_id, serial, created_at FROM prestige_owned WHERE user_id=? AND revoked_at IS NULL ORDER BY created_at').all(userId).map(r => ({ ...r, name: (PRESTIGE[r.item_id] || LEGACY_PRESTIGE[r.item_id] || {}).name, fx: (PRESTIGE[r.item_id] || LEGACY_PRESTIGE[r.item_id] || {}).fx, supply: (prod(r.item_id) || {}).supply }));
 
 function stripeSignatureOk(req) {
   const secret = String(process.env.STRIPE_WEBHOOK_SECRET || '');
