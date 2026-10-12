@@ -36,7 +36,7 @@ for (const root of SCAN_ROOTS) {
     // Use the correct parser goal: ESM for files with static imports/exports, script mode otherwise.
     // This also keeps legacy vendored browser scripts (which may use script-only syntax) testable.
     const isModule = /^\\s*(?:import|export)\\s/m.test(source);
-    const args = isModule ? ['--input-type=module', '--check'] : ['--check'];
+    const args = isModule ? ['--input-type=module', '--check', '-'] : ['--check', '-'];
     const result = spawnSync(process.execPath, args, {
       input: source, encoding: 'utf8', timeout: 15000
     });
@@ -88,7 +88,7 @@ for (const g of slugs) {
   else {
     const js = fs.readFileSync(gameJs, 'utf8');
     if (!js.trim()) fail(g.slug, 'game.js is empty');
-    const syntax = spawnSync(process.execPath, ['--check'], { input: js, encoding: 'utf8', timeout: 15000 });
+    const syntax = spawnSync(process.execPath, ['--check', '-'], { input: js, encoding: 'utf8', timeout: 15000 });
     if (syntax.status !== 0) fail(g.slug + '/game.js', (syntax.stderr || syntax.stdout || 'Game JavaScript syntax check failed').trim().slice(0, 1400));
   }
   if (fs.existsSync(entry)) {
