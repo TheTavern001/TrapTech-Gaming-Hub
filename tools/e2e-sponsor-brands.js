@@ -100,6 +100,8 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/events/' + evid + '/meta', { method: 'PUT', body: { payment_status: 'comped' } });
     ok(r.status === 409 && /cannot be waived/i.test(r.body.error), 'event metadata editor cannot bypass payment by marking booking comped');
     r = await anon('/api/event/' + evc); ok(r.status === 404, 'event remains hidden after rejected comped bypass');
+    r = await ADM('/api/admin/events/' + evid + '/share');
+    ok(r.status === 409 && /share link is unavailable/i.test(r.body.error), 'admin share kit does not expose an official URL while booking payment is blocked');
     r = await ADM('/api/admin/giveaways/' + evid + '/draw', { body: { method: 'random', count: 1 } });
     ok(r.status === 409 && /payment is confirmed/i.test(r.body.error), 'admin cannot draw winners for an unpaid booking-backed giveaway');
     db.prepare('UPDATE giveaways SET end_at=? WHERE id=?').run(Date.now() - 1000, evid);
