@@ -1,6 +1,18 @@
 # One-of-One Prestige Collectibles — Product and Engineering Specification
 
-Status: product requirements committed for implementation; not a claim that storefront, database enforcement, payments, or assets are already implemented.
+Status: **partially implemented; not launch-approved**.
+
+Implemented in the repository:
+- 12 catalog entries priced from $1,000 to $5,000, each with supply 1.
+- A SQLite partial unique index prevents more than one active owner for each `prestige-original-*` item, alongside the existing server-side transactional issuance checks.
+- Twelve separate, original SVG showcase illustrations and item-specific art/effect classes are wired into the Prestige storefront and owner wall.
+- Build-time verification checks that all 12 items have distinct art classes, matching SVG assets, effect styles, and one-of-one supply.
+
+Still required before any prestige item can be represented as a complete, launch-ready wearable:
+- Bespoke 3D/2D wearable geometry or item-specific avatar integration, where supported.
+- Owner-only included variations and an explicit supported-game compatibility manifest.
+- Visual review at actual player-card and avatar scale, plus browser/device evidence.
+- A payment/refund/recovery review using the persistent production database and the final checkout configuration.
 
 ## Core promise
 The $1,000+ prestige tier consists of genuinely unique, one-of-one collectibles. A prestige collectible is not just a recolor, material swap, glow change, renamed template, or inflated price. Each piece must have a distinct silhouette and authored design language, with bespoke geometry/artwork, signature animation/VFX, and an unmistakable identity.
