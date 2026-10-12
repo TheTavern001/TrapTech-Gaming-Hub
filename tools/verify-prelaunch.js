@@ -174,6 +174,30 @@ for (const visual of ['diamond-prism','stack-throne','royal-crown','phoenix-mant
 }
 counts.prestigeOriginals = prestigeRows.length;
 
+const prestigeSource = read(path.join(ROOT, 'src/monetize.js')) || '';
+const prestigeBlock = (prestigeSource.match(/const PRESTIGE = \{([\s\S]*?)\n\};/) || [])[1] || '';
+const prestigeItems = [...prestigeBlock.matchAll(/^\s*'([^']+)': \{[^\n]*?fx: '([^']+)', supply: (\d+)/gm)].map(m => ({ id: m[1], fx: m[2], supply: Number(m[3]) }));
+const storeUi = read(path.join(ROOT, 'public/js/hub-store.js')) || '';
+const artBlock = (storeUi.match(/const PX_ART = \{([\s\S]*?)\n\};/) || [])[1] || '';
+const iconBlock = (storeUi.match(/const PX_ICON = \{([\s\S]*?)\n\};/) || [])[1] || '';
+const fxBlock = (storeUi.match(/const FX_CLASS = \{([\s\S]*?)\n\};/) || [])[1] || '';
+const prestigeCss = read(path.join(ROOT, 'public/css/app.css')) || '';
+if (prestigeItems.length !== 12) fail('src/monetize.js', 'Expected exactly 12 Prestige originals, found ' + prestigeItems.length);
+const artClasses = [];
+for (const item of prestigeItems) {
+  if (item.supply !== 1) fail('src/monetize.js', item.id + ' must have one-of-one supply');
+  const art = new RegExp("'" + item.id + "':\\s*'([^']+)'").exec(artBlock);
+  const icon = new RegExp("'" + item.id + "':\\s*'([^']+)'").exec(iconBlock);
+  const fx = new RegExp("'" + item.fx + "':\\s*'([^']+)'").exec(fxBlock);
+  if (!art) fail('public/js/hub-store.js', 'Missing unique prestige art class for ' + item.id);
+  else { artClasses.push(art[1]); if (!prestigeCss.includes('.px-art.' + art[1])) fail('public/css/app.css', 'Missing art CSS for ' + item.id + ' (' + art[1] + ')'); }
+  if (!icon) fail('public/js/hub-store.js', 'Missing icon mapping for ' + item.id);
+  if (!fx) fail('public/js/hub-store.js', 'Missing visual effect mapping for ' + item.fx);
+  else if (!prestigeCss.includes('.' + fx[1])) fail('public/css/app.css', 'Missing effect CSS for ' + item.fx + ' (' + fx[1] + ')');
+}
+if (new Set(artClasses).size !== prestigeItems.length) fail('public/js/hub-store.js', 'Prestige originals must not share art classes');
+if (!prestigeSource.includes('prestige_original_one_owner')) fail('src/monetize.js', 'Missing database-level one-active-owner constraint for Prestige originals');
+
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/manifest.webmanifest'), 'utf8'));
 for (const icon of (manifest.icons || [])) {
   counts.manifestIcons++;
