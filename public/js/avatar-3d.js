@@ -23,7 +23,11 @@ export async function mountAvatar3D(stage, cfg) {
     sunset: ['#f97316', '#db2777'], ocean: ['#0369a1', '#22d3ee'], haze: ['#6b21a8', '#f0abfc'],
     mono: ['#27272a', '#71717a'], toxic: ['#166534', '#facc15'], 'gold-rays': ['#78350f', '#facc15'],
     'cash-rain': ['#052e16', '#22c55e'], 'grow-room': ['#052e16','#15803d'], 'night-club': ['#1e1b4b','#db2777'],
-    hospital: ['#e0f2fe','#38bdf8'], workshop: ['#292524','#f59e0b'], farm: ['#14532d','#a3e635'], studio: ['#111827','#7c3aed'], 'city-lights': ['#020617','#475569']
+    hospital: ['#e0f2fe','#38bdf8'], workshop: ['#292524','#f59e0b'], farm: ['#14532d','#a3e635'], studio: ['#111827','#7c3aed'], 'city-lights': ['#020617','#475569'],
+    'diamond-prism': ['#172554','#a5f3fc'], 'stack-throne': ['#052e16','#facc15'], 'royal-crown': ['#422006','#fbbf24'],
+    'phoenix-mantle': ['#450a0a','#fb923c'], 'singularity-orbit': ['#020617','#7c3aed'], 'void-dragon': ['#082f49','#a78bfa'],
+    'nebula-wings': ['#312e81','#ec4899'], 'titan-exoframe': ['#111827','#22d3ee'], 'holo-decree': ['#164e63','#e879f9'],
+    'storm-halo': ['#0f172a','#60a5fa'], 'chronos-mantle': ['#422006','#fbbf24'], 'aurora-crown': ['#052e16','#c084fc']
   };
   const bg = backgrounds[cfg.bg] || backgrounds.violet;
   const css = 'linear-gradient(145deg,' + bg[0] + ',' + bg[1] + ')';
@@ -71,6 +75,18 @@ export async function mountAvatar3D(stage, cfg) {
   if (cfg.bg === 'city-lights') { for(let i=0;i<18;i++){ const x=-1.7+(i%6)*0.68; const y=0.55+Math.floor(i/6)*0.72; ball(x,y,-1.4,0.035,0.035,0.035,i%3===0?'#facc15':i%3===1?'#38bdf8':'#f472b6',backdrop,0.25,0.4); } }
   if (cfg.bg === 'cash-rain') { for(let i=0;i<8;i++){ const bill=mesh(new THREE.BoxGeometry(0.15,0.075,0.025),mat('#16a34a',0.6,0),-1.45+(i%4)*0.9,0.65+Math.floor(i/4)*1.15,-1.1,1,1,1,backdrop); bill.rotation.z=(i%2?0.3:-0.3); } }
   if (cfg.bg === 'gold-rays') { neon(0,2.0,-1.55,1.48,'#facc15'); neon(0,2.0,-1.5,1.18,'#fef3c7'); }
+  if (cfg.bg === 'diamond-prism') { neon(0,2.0,-1.5,1.28,'#67e8f9'); neon(0,2.0,-1.45,0.92,'#f0abfc'); for(let i=0;i<6;i++){ const crystal=mesh(new THREE.OctahedronGeometry(0.14,0),mat(i%2?'#e0f2fe':'#a5f3fc',0.16,0.75),-1.35+i*0.54,0.55+(i%3)*0.6,-1.12,1,1.6,1,backdrop); crystal.rotation.set(i*.3,i*.4,i*.2); } }
+  if (cfg.bg === 'stack-throne') { mesh(new THREE.BoxGeometry(1.15,0.12,0.18),mat('#14532d',0.45,0.3),0,0.65,-1.28,1,1,1,backdrop); for(let i=0;i<5;i++){ const b=mesh(new THREE.BoxGeometry(0.20,0.12,0.13),mat(i%2?'#22c55e':'#15803d',0.55,0.15),-0.45+i*0.22,0.79+(i%2)*0.12,-1.22,1,1,1,backdrop); b.rotation.z=(i%2?0.08:-0.08); } neon(0,1.95,-1.45,1.05,'#facc15'); }
+  if (cfg.bg === 'royal-crown') { neon(0,2.15,-1.45,1.28,'#fbbf24'); const gold=mat('#fbbf24',0.2,0.9); mesh(new THREE.CylinderGeometry(0.42,0.48,0.22,8),gold,0,1.55,-1.15,1,1,1,backdrop); for(let i=0;i<5;i++) mesh(new THREE.ConeGeometry(0.09,0.34,5),gold,-0.32+i*0.16,1.82+(i===2?0.08:0),-1.15,1,1,1,backdrop); }
+  if (cfg.bg === 'phoenix-mantle') { for(let side of [-1,1]) for(let i=0;i<5;i++){ const feather=ball(side*(0.35+i*0.13),1.55-i*0.08,-1.12,0.11,0.40-i*0.035,0.045,i%2?'#f97316':'#fbbf24',backdrop,0.25,0.3); feather.rotation.z=side*(-0.3-i*0.07); } neon(0,1.2,-1.25,0.78,'#fb923c'); }
+  if (cfg.bg === 'singularity-orbit') { ball(0,1.65,-1.28,0.34,0.34,0.24,'#080616',backdrop,0.12,0.65); neon(0,1.65,-1.24,0.62,'#c4b5fd').rotation.x=0.65; neon(0,1.65,-1.18,0.82,'#818cf8').rotation.z=0.5; }
+  if (cfg.bg === 'void-dragon') { for(let i=0;i<9;i++){ const d=ball(-1.15+i*0.28,1.15+Math.sin(i*0.7)*0.38,-1.16,0.17-i*0.008,0.14-i*0.004,0.12,i%2?'#22d3ee':'#8b5cf6',backdrop,0.25,0.5); d.rotation.z=Math.sin(i)*0.4; } ball(1.1,1.62,-1.14,0.22,0.18,0.17,'#a5f3fc',backdrop,0.2,0.6); }
+  if (cfg.bg === 'nebula-wings') { for(let side of [-1,1]) for(let i=0;i<5;i++){ const wing=ball(side*(0.42+i*0.15),1.45+i*0.12,-1.12,0.13,0.43-i*0.035,0.04,i%2?'#f0abfc':'#818cf8',backdrop,0.25,0.35); wing.rotation.z=side*(-0.38-i*0.06); } for(let i=0;i<12;i++) ball(-1.35+(i%6)*0.54,0.6+Math.floor(i/6)*1.4,-1.3,0.025,0.025,0.025,'#fff',backdrop,0.2,0.4); }
+  if (cfg.bg === 'titan-exoframe') { const steel=mat('#475569',0.24,0.82); for(let side of [-1,1]){ const plate=mesh(new THREE.BoxGeometry(0.36,0.58,0.16),steel,side*0.88,1.55,-1.1,1,1,1,backdrop); plate.rotation.z=side*0.18; mesh(new THREE.BoxGeometry(0.07,0.42,0.04),mat('#22d3ee',0.2,0.6),side*0.88,1.55,-1.0,1,1,1,backdrop); } neon(0,2.2,-1.3,0.58,'#22d3ee'); }
+  if (cfg.bg === 'holo-decree') { const h=mesh(new THREE.OctahedronGeometry(0.68,0),mat('#67e8f9',0.12,0.65),0,1.7,-1.3,1,1,1,backdrop); h.material.transparent=true; h.material.opacity=0.24; neon(0,1.7,-1.18,0.9,'#e879f9'); neon(0,1.7,-1.12,0.65,'#67e8f9'); }
+  if (cfg.bg === 'storm-halo') { neon(0,2.25,-1.35,0.85,'#93c5fd'); neon(0,2.25,-1.30,0.62,'#e0f2fe'); for(let i=0;i<5;i++){ const bolt=mesh(new THREE.CylinderGeometry(0.018,0.035,0.38,5),mat('#60a5fa',0.15,0.7),-0.9+i*0.45,1.1+(i%2)*0.65,-1.12,1,1,1,backdrop); bolt.rotation.z=(i%2?0.4:-0.4); } }
+  if (cfg.bg === 'chronos-mantle') { for(let i=0;i<3;i++){ const ring=neon(0,1.65,-1.28+i*0.04,0.56+i*0.20,i%2?'#fbbf24':'#fef3c7'); ring.rotation.x=0.45+i*0.35; ring.rotation.z=i*0.22; } for(let i=0;i<12;i++){ const tick=mesh(new THREE.BoxGeometry(0.025,0.10,0.025),mat('#fef3c7',0.3,0.8),Math.cos(i*Math.PI/6)*0.82,1.65+Math.sin(i*Math.PI/6)*0.82,-1.15,1,1,1,backdrop); tick.rotation.z=-i*Math.PI/6; } }
+  if (cfg.bg === 'aurora-crown') { for(let i=0;i<3;i++){ const ribbon=neon(0,1.85,-1.35+i*0.05,0.82+i*0.15,['#34d399','#a78bfa','#f0abfc'][i]); ribbon.scale.y=0.35; ribbon.rotation.x=0.25+i*0.2; } mesh(new THREE.CylinderGeometry(0.35,0.43,0.17,8),mat('#fbbf24',0.2,0.9),0,2.28,-1.1,1,1,1,backdrop); for(let i=0;i<5;i++) mesh(new THREE.ConeGeometry(0.075,0.24,5),mat('#fde68a',0.15,0.85),-0.27+i*0.135,2.47+(i===2?0.08:0),-1.1,1,1,1,backdrop); }
   const floor = mesh(new THREE.CircleGeometry(2.3, 64), mat('#111827',0.8,0), 0,0.02,0,1,1,1,scene);
   floor.rotation.x = -Math.PI / 2;
   ball(-0.24,0.66,0,0.20,0.68,0.22,shirt); ball(0.24,0.66,0,0.20,0.68,0.22,shirt);
@@ -193,7 +209,7 @@ export async function mountAvatar3D(stage, cfg) {
   const resize = () => { if(!stage.isConnected) return; const w=Math.max(180,stage.clientWidth), h=Math.max(220,stage.clientHeight); renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
   const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null; if(observer) observer.observe(stage); else window.addEventListener('resize',resize);
   let frame=0, alive=true, cleanup=null;
-  const animate = (t) => { if(!alive) return; if(!stage.isConnected && cleanup) { cleanup(); return; } frame=requestAnimationFrame(animate); if(!pointer.down && !reduced) root.rotation.y += 0.0012; torso.scale.y=0.75+(reduced?0:Math.sin(t*0.0015)*0.008); renderer.render(scene,camera); };
+  const animate = (t) => { if(!alive) return; if(!stage.isConnected && cleanup) { cleanup(); return; } frame=requestAnimationFrame(animate); if(!pointer.down && !reduced) { root.rotation.y += 0.0012; backdrop.rotation.y += 0.0008; } torso.scale.y=0.75+(reduced?0:Math.sin(t*0.0015)*0.008); renderer.render(scene,camera); };
   frame=requestAnimationFrame(animate);
   cleanup = () => {
     if(!alive) return; alive=false; cancelAnimationFrame(frame); if(observer) observer.disconnect(); else window.removeEventListener('resize',resize);
