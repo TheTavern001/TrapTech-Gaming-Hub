@@ -22,7 +22,11 @@ COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
 COPY tools ./tools
 # Pre-gzip static text assets, pre-scale OG card art, pre-render the default share image (-> /app/build).
 # Runs without secrets (env vars are not available at build time on Deplexo).
-RUN mkdir -p docs/audit \
+RUN test -s tools/games-lib-static-check.js \
+ && test -s docs/GAMES-LIB.md \
+ && test -s docs/score-ranges.json \
+ && echo 'Required prelaunch audit inputs present' \
+ && mkdir -p docs/audit \
  && node --check src/shop.js \
  && node --check src/shop-gen.js \
  && node --check src/avatars.js \
