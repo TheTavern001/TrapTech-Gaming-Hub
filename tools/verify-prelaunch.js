@@ -180,7 +180,7 @@ if (!storeUi.includes('/assets/prestige/')) fail('public/js/hub-store.js', 'Pres
 if (!prestigeSource.includes('prestige_original_one_owner')) fail('src/monetize.js', 'Missing database-level one-active-owner constraint for Prestige originals');
 
 const shopSource = read(path.join(ROOT, 'src/shop.js')) || '';
-if (!/const CATALOG_UNIVERSE_SIZE = 1200/.test(shopSource) || !shopSource.includes("app.get('/api/shop/catalog'") || !shopSource.includes('catalog_only: !onSale.has(it.id)')) fail('src/shop.js', 'The 1,200-item catalog must be paginated and mark unscheduled items preview-only');
+if (!/const CATALOG_UNIVERSE_SIZE = 1200/.test(shopSource) || !shopSource.includes("app.get('/api/shop/catalog'") || !shopSource.includes('catalog_only: !onSale.has(it.id)') || !shopSource.includes('if (!inRotation(rot, it))')) fail('src/shop.js', 'The 1,200-item catalog must be paginated, preview-only outside rotation, and protected by purchase-time rotation checks');
 try {
   const generator = require('../src/shop-gen');
   const ids = new Set();
