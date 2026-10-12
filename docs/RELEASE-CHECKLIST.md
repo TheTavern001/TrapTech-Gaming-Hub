@@ -120,3 +120,9 @@ This repository's current `main` contains the Hub v7 work, the Games Library int
 - [ ] Verify deployment environment, persistent database storage, secret values, backup/restore, rollback, and live health/persistence checks before production release.
 
 **Status at this revision:** not deployment-ready. No production deployment or live payment configuration change has been made.
+
+
+## Branch integration gate — 2026-10-12
+
+- [ ] Resolve release target before merge: PR #8 currently targets `games/deep-distinctness-audit`, not `main`. The candidate includes 188 commits beyond current `main`; the integration branch itself contains 90 commits not present on `main`. Do not merge this PR into the integration branch and then assume production `main` was updated.
+- [ ] After CI and runtime checks are available, review the complete candidate diff and integration ancestry, then explicitly prepare and validate the intended release commit/PR against `main`. Do not retarget/merge solely to make the PR appear current.
