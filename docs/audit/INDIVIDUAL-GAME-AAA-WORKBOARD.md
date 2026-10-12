@@ -10,6 +10,10 @@ Status: **in progress; not launch-approved**. This is the implementation workboa
 - **Build gate:** the Docker build now stops if the deep audit reports a blocker instead of treating the existence of a report file as success.
 - **Branding:** canonical crowned-TT Trap Tech artwork is wired to the browser icon, startup splash, PWA icons, shortcuts, and generated PNG icon routes. Deployment still needs live response verification.
 
+
+- **Live deployment verifier expanded:** it now checks each library game's referenced same-origin JavaScript, CSS, image, font, audio, JSON and WebAssembly dependencies in addition to checking the HTML entrypoint. Missing runtime assets will be reported by path and by the titles that reference them.
+- **Prelaunch regression gate expanded:** it now fails if the launch redesign stylesheet is absent/empty or if the homepage stops linking to that stylesheet or the canonical Trap Tech splash/favicon mark.
+
 These are source-level changes, not proof of a full browser/device pass. Keep each title blocked until its game-specific test evidence is recorded below or in the generated audit report.
 
 ## Implemented fixes awaiting runtime regression
