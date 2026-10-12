@@ -147,7 +147,9 @@ try {
 // Prestige store contract: exactly 12 new one-of-one originals, each >= $1,000 and bound to unique animated avatar art.
 const monetizeSource = fs.readFileSync(path.join(ROOT, 'src/monetize.js'), 'utf8');
 const prestigeBlock = (monetizeSource.match(/const PRESTIGE = \{([\s\S]*?)\n\};/) || [])[1] || '';
-const prestigeRows = [...prestigeBlock.matchAll(/'([^']+)'\s*:\s*\{[^}]*?supply:\s*(\d+)[^}]*?usd:\s*(\d+)[^}]*?fx:\s*'([^']+)'/g)];
+const prestigeRows = [...prestigeBlock.matchAll(/'([^']+)'\s*:\s*\{([^}]*)\}/g)].map(([, id, body]) => [
+  id, (body.match(/supply:\s*(\d+)/) || [])[1], (body.match(/usd:\s*(\d+)/) || [])[1], (body.match(/fx:\s*'([^']+)'/) || [])[1]
+]);
 if (prestigeRows.length !== 12) fail('src/monetize.js', 'Expected exactly 12 new prestige originals, found ' + prestigeRows.length);
 const prestigeIds = new Set(), prestigeFx = new Set();
 for (const [, id, supply, usd, fx] of prestigeRows) {
