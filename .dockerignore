@@ -11,10 +11,11 @@ build
 screenshots
 mockups
 assets-src
-# Keep the build context lean while allowing the one audit script explicitly copied by Dockerfile.
+# Keep the build context lean while allowing only the two build-time verification scripts.
 !tools/
 tools/*
 !tools/prelaunch-deep-audit.js
+!tools/verify-prelaunch.js
 licenses
 *.db
 *.db-*
