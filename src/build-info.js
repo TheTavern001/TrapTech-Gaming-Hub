@@ -23,9 +23,18 @@ function buildFingerprint(root = path.resolve(__dirname, '..')) {
     'public/games-lib/kit.js',
     'public/games-lib/catalog.json'
   ]);
-  const config = fs.readFileSync(path.join(root, 'src/config.js'), 'utf8');
-  const block = (config.match(/const GAMES = \[([\s\S]*?)\n\];/) || [])[1] || '';
-  for (const m of block.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)) files.add('public/js/' + m[3]);
+  // Include all first-party source/metadata files so changes to avatar, shop, navigation,
+  // CSS, catalog metadata or a vendored game's JS/HTML change the live fingerprint too.
+  const sourceExt = new Set(['.js', '.html', '.css', '.json', '.webmanifest', '.svg']);
+  const collect = (dir) => {
+    if (!fs.existsSync(dir)) return;
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      const abs = path.join(dir, ent.name);
+      if (ent.isDirectory()) collect(abs);
+      else if (ent.isFile() && sourceExt.has(path.extname(ent.name).toLowerCase())) files.add(path.relative(root, abs).split(path.sep).join('/'));
+    }
+  };
+  for (const dir of ['src', 'public/js', 'public/css', 'public/games-lib', 'public/assets/brand']) collect(path.join(root, dir));
   const { games } = require('./games-lib');
   for (const game of games) {
     files.add('public/games-lib/' + game.slug + '/index.html');
