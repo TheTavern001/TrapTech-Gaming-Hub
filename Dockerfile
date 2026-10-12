@@ -32,7 +32,7 @@ RUN mkdir -p docs/audit \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
 
 # Run the actual server in an isolated, disposable build-time database and verify its HTTP routes.
-# This catches runtime/icon/static-file regressions without relying on an external status service.
+# This catches startup/runtime/icon/static-file regressions before the image is produced.
 RUN set -eu; \
  mkdir -p /tmp/hub-build-smoke; \
  ADMIN_PASSWORD='BuildOnlyPassword-123!' SECRET='BuildOnlySecret-OnlyForSmokeTest-NotProduction-42' DATA_DIR=/tmp/hub-build-smoke PORT=18787 NODE_ENV=production node src/server.js >/tmp/hub-build-smoke.log 2>&1 & \
