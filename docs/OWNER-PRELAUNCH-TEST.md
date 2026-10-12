@@ -4,10 +4,10 @@ This is the safe path to validate the current work without spending GitHub Actio
 
 ## Current status — not deployment-ready
 
-- The latest four GitHub Actions workflows failed before their first test step ran. The runner/job records expose no executed steps and no retrievable logs. This is an infrastructure/orchestration failure of unknown cause, **not evidence that the application tests passed or failed**.
+- The latest four GitHub Actions workflows for candidate `3ac1e0966fc971b04d5e888189ef731e8879baab` failed before their first test step ran (runs `38194429776`, `38194429775`, `38194429804`, `38194429779`). GitHub reports completed failed jobs but no step summaries or logs. This is an infrastructure/orchestration failure of unknown cause, **not evidence that the application tests passed or failed**.
 - A parser-only V8 syntax check passed for 14 changed JavaScript files on the current candidate. Import/export statements were stripped for that check; it is not equivalent to native Node syntax validation, module resolution, runtime tests, or API/browser tests.
-- The current payment-gate/avatar branch is `fix/payment-required-event`, head `3a0915c8397e72be5ac0e1ddc3ad486c1cf27214` at the time this status was recorded. PR #8 is a draft and targets `games/deep-distinctness-audit`, **not `main`**.
-- Branches have diverged materially. Do not retarget or merge PR #8 blindly.
+- The current payment-gate/avatar branch is `fix/payment-required-event`, head `3ac1e0966fc971b04d5e888189ef731e8879baab`. PR #8 is a draft and targets `games/deep-distinctness-audit`, **not `main`**.
+- GitHub's compare API confirms the branch is linear: 195 commits ahead of `main`, 0 behind; it is 105 commits ahead of the PR's integration base, 0 behind. This is not a merge-conflict divergence, but retargeting the PR to `main` would expose a much larger 195-commit release range than the 27-file PR diff shown against its current base. Do not retarget or merge blindly.
 - All 100 games remain NOT SIGNED OFF for human visual/gameplay quality and asset rights. No AAA quality or production readiness is certified.
 
 ## Existing live deployment
