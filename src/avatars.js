@@ -110,7 +110,7 @@ function routes(app, H) {
   app.get('/avatar/:u.svg', (req, res) => { const u = db.prepare('SELECT id, username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u));
     const cfg = u ? configOf(u) : defaultFor(req.params.u); const body = svg(cfg); const et = '"' + crypto.createHash('sha1').update(body).digest('base64').slice(0, 16) + '"';
     res.set({ 'Cache-Control': 'public, max-age=300', ETag: et, 'Content-Type': 'image/svg+xml' }); if (req.headers['if-none-match'] === et) return res.status(304).end(); res.send(body); });
-  app.get('/api/avatar/:u', (req, res) => { const u = db.prepare('SELECT username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u).slice(0, 32)); if (!u) return bad(res, 404, 'Avatar not found'); res.set('Cache-Control', 'public, max-age=60').json({ ok: true, avatar: configOf(u) }); });
+  app.get('/api/avatar/:u', (req, res, next) => { if (req.params.u === 'looks') return next(); const u = db.prepare('SELECT username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u).slice(0, 32)); if (!u) return bad(res, 404, 'Avatar not found'); res.set('Cache-Control', 'public, max-age=60').json({ ok: true, avatar: configOf(u) }); });
   app.get('/avatar-preview.svg', (req, res) => { let c = {}; try { c = JSON.parse(String(req.query.c || '{}')); } catch {} res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(svg(clean(c, defaultFor('preview')))); });
   const validateOwned = (userId, input, base) => {
     const want = clean(input, base); const ctx = {};
@@ -125,7 +125,7 @@ function routes(app, H) {
   });
   app.get('/api/avatar/looks', requireUser, (req, res) => res.json({ ok: true, looks: looksFor(req.user.id), max: 12 }));
   app.post('/api/avatar/looks', requireUser, (req, res) => {
-    const name = String((req.body || {}).name || '').trim().replace(/\\s+/g, ' ').slice(0, 32);
+    const name = String((req.body || {}).name || '').trim().replace(/\s+/g, ' ').slice(0, 32);
     if (!name) return bad(res, 400, 'Give this saved look a name (up to 32 characters).');
     const v = validateOwned(req.user.id, req.body && req.body.avatar, configOf(req.user)); if (v.error) return bad(res, 403, v.error);
     const old = db.prepare('SELECT id FROM avatar_looks WHERE user_id=? AND name=? COLLATE NOCASE').get(req.user.id, name);
