@@ -86,7 +86,7 @@ const env0 = loadEnv();
     r = await anon('/api/giveaways/' + evid + '/standings'); ok(r.status === 404, 'unpaid booking standings are hidden');
     r = await anon('/api/giveaways/' + evid + '/verify'); ok(r.status === 404, 'unpaid booking verification bundle is hidden');
     r = await anon('/api/games/stack/sponsor'); ok(r.body.ok && !r.body.sponsor, 'unpaid booking does not appear in in-game sponsor placements');
-    db.prepare("UPDATE giveaways SET link_url='https://example.com/paygate', placements='[\\"giveaway\\"]' WHERE id=?").run(evid);
+    db.prepare("UPDATE giveaways SET link_url='https://example.com/paygate', placements='[\"giveaway\"]' WHERE id=?").run(evid);
     r = await fetch(BASE + '/go/g/' + evid + '?p=giveaway', { redirect: 'manual' }); ok(r.status === 302 && r.headers.get('location') === '/', 'unpaid booking cannot redirect through a paid giveaway link');
     r = await anon('/api/event/' + evc); ok(r.status === 404, 'direct official-event URL is unavailable while booking is unpaid');
     r = await anon('/api/giveaways'); ok(!r.body.giveaways.some(g => g.id === evid), 'unpaid booking-backed giveaway is hidden from the public giveaway feed');
