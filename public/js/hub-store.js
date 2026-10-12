@@ -32,10 +32,19 @@ const PX_ICON = {
   'prestige-original-storm': 'zap', 'prestige-original-chronos': 'clock', 'prestige-original-aurora': 'sunrise',
   'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair', 'prestige-crown': 'crown'
 };
+const PX_ASSET = {
+  'prestige-original-cane': 'cane', 'prestige-original-throne': 'throne', 'prestige-original-crown': 'crown',
+  'prestige-original-phoenix': 'phoenix', 'prestige-original-singularity': 'singularity', 'prestige-original-dragon': 'dragon',
+  'prestige-original-nebula': 'nebula', 'prestige-original-mech': 'mech', 'prestige-original-holo': 'holo',
+  'prestige-original-storm': 'storm', 'prestige-original-chronos': 'chronos', 'prestige-original-aurora': 'aurora',
+  'prestige-cane': 'cane', 'prestige-throne': 'throne', 'prestige-crown': 'crown'
+};
 export function prestigeArt(id, fx, size = 120) {
   const art = PX_ART[id] || 'px-art-generic';
   const effect = FX_CLASS[fx] || '';
-  return `<div class="px-art ${art} ${effect}" style="--s:${size}px" aria-hidden="true"><span class="px-glow"></span>${C.icon(PX_ICON[id] || 'gem')}<i></i><i></i><i></i></div>`;
+  const asset = PX_ASSET[id];
+  const illustration = asset ? `<img class="px-artwork" src="/assets/prestige/${asset}.svg" alt="" loading="lazy" decoding="async">` : C.icon(PX_ICON[id] || 'gem');
+  return `<div class="px-art ${art} ${effect}" style="--s:${size}px" aria-hidden="true"><span class="px-glow"></span>${illustration}<i></i><i></i><i></i></div>`;
 }
 async function storePage() {
   const { icon, esc, api, S } = C; const r = await api('/api/store'); if (!r.ok) return C.shell('/shop', C.emptyState('store', 'Store unavailable', 'Try again in a moment.'));
