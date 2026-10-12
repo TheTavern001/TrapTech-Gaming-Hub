@@ -16,9 +16,9 @@ const PX_ART = {
   'prestige-original-crown': 'px-art-royal-crown',
   'prestige-original-phoenix': 'px-art-phoenix-mantle',
   'prestige-original-singularity': 'px-art-singularity',
-  'prestige-original-void-dragon': 'px-art-void-dragon',
-  'prestige-original-nebula-wings': 'px-art-nebula-wings',
-  'prestige-original-titan': 'px-art-titan-exoframe',
+  'prestige-original-dragon': 'px-art-void-dragon',
+  'prestige-original-nebula': 'px-art-nebula-wings',
+  'prestige-original-mech': 'px-art-titan-exoframe',
   'prestige-original-holo-decree': 'px-art-holo-decree',
   'prestige-original-storm-halo': 'px-art-storm-halo',
   'prestige-original-chronos': 'px-art-chronos-mantle',
@@ -27,8 +27,8 @@ const PX_ART = {
 };
 const PX_ICON = {
   'prestige-original-cane': 'gem', 'prestige-original-throne': 'armchair', 'prestige-original-crown': 'crown',
-  'prestige-original-phoenix': 'flame', 'prestige-original-singularity': 'orbit', 'prestige-original-void-dragon': 'swords',
-  'prestige-original-nebula-wings': 'wind', 'prestige-original-titan': 'shield', 'prestige-original-holo-decree': 'scroll-text',
+  'prestige-original-phoenix': 'flame', 'prestige-original-singularity': 'orbit', 'prestige-original-dragon': 'swords',
+  'prestige-original-nebula': 'wind', 'prestige-original-mech': 'shield', 'prestige-original-holo-decree': 'scroll-text',
   'prestige-original-storm-halo': 'zap', 'prestige-original-chronos': 'clock', 'prestige-original-aurora': 'sunrise',
   'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair', 'prestige-crown': 'crown'
 };
