@@ -7,6 +7,8 @@ Status: **in progress; not launch-approved**. This is the implementation workboa
 - Shared engine now clears held pointer/key state on pause, restart, finish and destroy; forced cancellations are marked separately so they do not accidentally trigger release actions.
 - Plinko, Spin to Win and Sling Smash now cancel an in-progress aim/charge when the engine forcibly releases controls instead of launching/dropping/spinning during pause or teardown.
 - Sky Hopper gap generation and moving-gap animation now bound successive gap transitions to reduce unfair mobile obstacle sequences.
+- Brick Breaker now resolves ball/brick penetration and enforces a minimum physics substep, preventing repeated damage from one overlap and zero-step frames.
+- Games Library storage access is guarded for locked WebViews, and its viewport handling preserves pinch zoom while adding safe-area support.
 - Mobile regression coverage now includes all 16 registered core games.
 - A direct local verifier and ten-title Games Library E2E batch runner are available; the Docker build executes structural/syntax verification and the live verifier can compare a deployed fingerprint with the checkout.
 
