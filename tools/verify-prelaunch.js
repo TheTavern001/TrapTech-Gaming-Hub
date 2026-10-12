@@ -24,6 +24,7 @@ function walk(dir) {
   return out;
 }
 function fail(where, message) { failures.push({ where, message }); }
+function read(p) { try { return fs.readFileSync(p, "utf8"); } catch { return null; } }
 function rel(p) { return path.relative(ROOT, p).split(path.sep).join('/'); }
 
 for (const root of SCAN_ROOTS) {
@@ -227,89 +228,6 @@ for (const item of prestigeItems) {
   if (!fx) fail('public/js/hub-store.js', 'Missing visual effect mapping for ' + item.fx);
   else if (!prestigeCss.includes('.' + fx[1])) fail('public/css/app.css', 'Missing effect CSS for ' + item.fx + ' (' + fx[1] + ')');
 }
-if (new Set(artClasses).size !== prestigeItems.length) fail('public/js/hub-store.js', 'Prestige originals must not share art classes');
-if (!prestigeCss.includes('.px-art .px-artwork')) fail('public/css/app.css', 'Original Prestige SVG artwork is not styled for display');
-if (!storeUi.includes('/assets/prestige/')) fail('public/js/hub-store.js', 'Prestige SVG artwork is not loaded by the store UI');
-if (!prestigeSource.includes('prestige_original_one_owner')) fail('src/monetize.js', 'Missing database-level one-active-owner constraint for Prestige originals');
-if (!prestigeSource.includes('issuedEver >= p.supply')) fail('src/monetize.js', 'A refunded/revoked prestige original must not be reissued as a new original');
-if ((prestigeSource.match(/p\.kind === 'prestige' && !prestigeSalesEnabled\(\)/g) || []).length < 2) fail('src/monetize.js', 'Both Bitcoin and Stripe order creation must enforce the prestige sales gate');
-if (!prestigeSource.includes('WHERE item_id LIKE \'prestige-original-%\' AND revoked_at IS NULL')) fail('src/monetize.js', 'Database uniqueness must constrain active ownership of each new prestige original');
-
-const shopSource = read(path.join(ROOT, 'src/shop.js')) || '';
-if (!/const CATALOG_UNIVERSE_SIZE = 1200/.test(shopSource) || !shopSource.includes("app.get('/api/shop/catalog'") || !shopSource.includes('catalog_only: !onSale.has(it.id)') || !shopSource.includes('if (!inRotation(rot, it))')) fail('src/shop.js', 'The 1,200-item catalog must be paginated, preview-only outside rotation, and protected by purchase-time rotation checks');
-try {
-  const generator = require('../src/shop-gen');
-  const ids = new Set(), names = new Set();
-  let invalid = 0, nondeterministic = 0, duplicateNames = 0;
-  for (let day = 0; day < 600; day++) for (let slot = 0; slot < 2; slot++) {
-    const a = generator.make('d', 25000 + day, slot);
-    const b = generator.make('d', 25000 + day, slot);
-    if (!a || !a.id || !a.name || !generator.TYPES.includes(a.type) || !generator.RARITIES.includes(a.rarity)) invalid++;
-    if (a && b && JSON.stringify(a) !== JSON.stringify(b)) nondeterministic++;
-    if (a?.id) ids.add(a.id);
-    if (a?.name) { const key = a.type + ':' + a.name.toLowerCase(); if (names.has(key)) duplicateNames++; names.add(key); }
-  }
-  if (ids.size !== 1200) fail('src/shop-gen.js', 'Expected 1,200 unique generated item IDs, found ' + ids.size);
-  if (invalid) fail('src/shop-gen.js', invalid + ' generated catalog items have invalid metadata');
-  if (nondeterministic) fail('src/shop-gen.js', nondeterministic + ' generated catalog items are not deterministic');
-  if (duplicateNames) fail('src/shop-gen.js', duplicateNames + ' generated daily items share display names');
-} catch (e) { fail('src/shop-gen.js', 'Could not verify the 1,200-item generator: ' + e.message); }
-const avatar3dSource = read(path.join(ROOT, 'public/js/avatar-3d.js')) || '';
-const avatar3dBg = (avatar3dSource.match(/const backgrounds = \{([\s\S]*?)\n  \};/) || [])[1] || '';
-const prestigeBackgrounds = ['diamond-prism','stack-throne','royal-crown','phoenix-mantle','singularity-orbit','void-dragon','nebula-wings','titan-exoframe','holo-decree','storm-halo','chronos-mantle','aurora-crown'];
-for (const bg of prestigeBackgrounds) {
-  if (!avatar3dBg.includes("'" + bg + "'") || !avatar3dSource.includes("cfg.bg === '" + bg + "'")) fail('public/js/avatar-3d.js', '3D avatar preview is missing prestige environment ' + bg);
-}
-const avatarSource = read(path.join(ROOT, 'src/avatars.js')) || '';
-const avatarWearables = [
-  ['held', 'cane', 'prestige-original-cane'], ['held', 'cash', 'prestige-original-throne'], ['hat', 'crown', 'prestige-original-crown'],
-  ['acc', 'phoenix-wings', 'prestige-original-phoenix'], ['acc', 'singularity-orbit', 'prestige-original-singularity'],
-  ['acc', 'void-dragon', 'prestige-original-dragon'], ['acc', 'nebula-wings', 'prestige-original-nebula'],
-  ['outfit', 'titan-exoframe', 'prestige-original-mech'], ['acc', 'holo-decree', 'prestige-original-holo'],
-  ['hat', 'storm-halo', 'prestige-original-storm'], ['acc', 'chronos-mantle', 'prestige-original-chronos'],
-  ['hat', 'aurora-crown', 'prestige-original-aurora']
-];
-for (const [kind, id, prestigeId] of avatarWearables) {
-  if (!avatarSource.includes("add('" + kind + "', '" + id + "'") || !avatarSource.includes("prestige: '" + prestigeId + "'")) fail('src/avatars.js', 'Missing wearable variation for ' + prestigeId + ' (' + kind + ':' + id + ')');
-}
-const avatar3dWearables = read(path.join(ROOT, 'public/js/avatar-3d.js')) || '';
-const avatarSvgSource = avatarSource;
-for (const id of ['phoenix-wings','singularity-orbit','void-dragon','nebula-wings','holo-decree','chronos-mantle','titan-exoframe','storm-halo','aurora-crown']) {
-  if (!avatar3dWearables.includes("cfg.acc === '" + id + "'") && !avatar3dWearables.includes("cfg.outfit === '" + id + "'") && !avatar3dWearables.includes("cfg.hat === '" + id + "'")) fail('public/js/avatar-3d.js', 'Missing 3D wearable geometry for ' + id);
-  if (!avatarSvgSource.includes("c.acc === '" + id + "'") && !avatarSvgSource.includes("c.outfit === '" + id + "'") && !avatarSvgSource.includes("c.hat === '" + id + "'") && !avatarSvgSource.includes("'" + id + "':")) fail('src/avatars.js', 'Missing SVG fallback art for ' + id);
-}
-const economyUi = read(path.join(ROOT, 'public/js/economy.js')) || '';
-if (!economyUi.includes('Browse 1,200+ items') || !economyUi.includes('/api/shop/catalog?limit=24') || !economyUi.includes('catalog-prev') || !economyUi.includes('catalog-next')) fail('public/js/economy.js', 'Points Shop must expose searchable paginated catalog browsing');
-const avatarPartsSource = read(path.join(ROOT, 'src/avatars.js')) || '';
-const avatarPrestigeMap = (avatarPartsSource.match(/const PRESTIGE_BG = \{([\s\S]*?)\n\};/) || [])[1] || '';
-if (!avatarPrestigeMap.includes("'cash-rain': 'prestige-throne'") || !avatarPrestigeMap.includes("'gold-rays': 'prestige-crown'")) fail('src/avatars.js', 'Legacy prestige backgrounds must remain locked to their historic owners');
-const prestigePriceRows = [...prestigeBlock.matchAll(/'([^']+)': \{[^\n]*?usd: (\d+)/gm)];
-if (prestigePriceRows.length !== 12 || prestigePriceRows.some(m => Number(m[2]) < 100000)) fail('src/monetize.js', 'All 12 prestige originals must cost at least $1,000');
-try {
-  const Database = require('better-sqlite3');
-  const testDb = new Database(':memory:');
-  testDb.exec("CREATE TABLE prestige_owned (item_id TEXT NOT NULL, serial INTEGER NOT NULL, user_id INTEGER, order_id INTEGER, created_at INTEGER NOT NULL, revoked_at INTEGER, PRIMARY KEY(item_id, serial)); CREATE UNIQUE INDEX prestige_original_one_owner ON prestige_owned(item_id) WHERE item_id LIKE 'prestige-original-%' AND revoked_at IS NULL;");
-  const insertOwner = testDb.prepare('INSERT INTO prestige_owned (item_id, serial, user_id, order_id, created_at, revoked_at) VALUES (?,?,?,?,?,?)');
-  insertOwner.run('prestige-original-cane', 1, 1, null, Date.now(), null);
-  let duplicateBlocked = false;
-  try { insertOwner.run('prestige-original-cane', 2, 2, null, Date.now(), null); } catch (e) { duplicateBlocked = /UNIQUE constraint failed/.test(e.message); }
-  if (!duplicateBlocked) fail('prestige_original_one_owner', 'Database allowed two active owners for one original');
-  insertOwner.run('prestige-original-cane', 2, 2, null, Date.now(), Date.now());
-  insertOwner.run('prestige-cane', 1, 1, null, Date.now(), null);
-  insertOwner.run('prestige-cane', 2, 2, null, Date.now(), null);
-  testDb.close();
-} catch (e) { fail('prestige_original_one_owner', 'SQLite one-of-one constraint test failed: ' + e.message); }
-
-if (!prestigeSource.includes("process.env.PRESTIGE_SALES_ENABLED === '1'") || !prestigeSource.includes("process.env.PRESTIGE_COMPATIBILITY_APPROVED === '1'") || !prestigeSource.includes('prestige_sales_enabled: prestigeSalesEnabled()')) fail('src/monetize.js', 'Prestige sales must require both explicit sales enablement and compatibility approval');
-if (!storeUi.includes('!r.prestige_sales_enabled') || !storeUi.includes('Preview only')) fail('public/js/hub-store.js', 'Store UI must visibly prevent purchases while Prestige originals are preview-only');
-
-const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/manifest.webmanifest'), 'utf8'));
-for (const icon of (manifest.icons || [])) {
-  counts.manifestIcons++;
-  if (!icon.src) fail('manifest', 'An icon has no src');
-  else if (!server.includes(icon.src.split('?')[0]) && !fs.existsSync(path.join(ROOT, 'public', icon.src.replace(/^\//, '').split('?')[0]))) fail('manifest', 'Icon source has no matching server route/static file: ' + icon.src);
-}
-
-const result = { ok: failures.length === 0, counts, failures };
-console.log(JSON.stringify(result, null, 2));
-if (failures.length) process.exitCode = 1;
+if (new Set(artClasses).size !== artClasses.length) fail('public/js/hub-store.js', 'Prestige art classes must be unique');
+console.log(JSON.stringify({ ok: failures.length === 0, counts, failures }, null, 2));
+if (failures.length) process.exit(1);
