@@ -158,6 +158,7 @@ const assetBlock = (storeUi.match(/const PX_ASSET = \{([\s\S]*?)\n\};/) || [])[1
 const fxBlock = (storeUi.match(/const FX_CLASS = \{([\s\S]*?)\n\};/) || [])[1] || '';
 const prestigeCss = read(path.join(ROOT, 'public/css/app.css')) || '';
 if (prestigeItems.length !== 12) fail('src/monetize.js', 'Expected exactly 12 Prestige originals, found ' + prestigeItems.length);
+if (new Set(prestigeItems.map(item => item.fx)).size !== prestigeItems.length) fail('src/monetize.js', 'Each Prestige original must have a unique signature effect');
 const artClasses = [];
 for (const item of prestigeItems) {
   if (item.supply !== 1) fail('src/monetize.js', item.id + ' must have one-of-one supply');
