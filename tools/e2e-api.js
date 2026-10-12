@@ -520,8 +520,8 @@ function client() {
     ok(page.status === 200 && item && item.type === type, 'catalog provides a generated ' + type + ' item');
     if (item) {
       const art = await anon('/shop/art/' + encodeURIComponent(item.id) + '.svg');
-      ok(art.status === 200 && typeof art.body === 'string' && /<svg\\b/.test(art.body), type + ' cosmetic thumbnail returns SVG');
-      ok(/image\\/svg\\+xml/.test(art.ct || ''), type + ' cosmetic thumbnail has SVG content type');
+      ok(art.status === 200 && typeof art.body === 'string' && /<svg\b/.test(art.body), type + ' cosmetic thumbnail returns SVG');
+      ok(/image\/svg\+xml/.test(art.ct || ''), type + ' cosmetic thumbnail has SVG content type');
     }
   }
   console.log('# one-of-one prestige catalog');
