@@ -334,14 +334,42 @@ export class Game {
     ctx.restore();
   }
   center(ctx, title, sub, cta) {
-    ctx.save(); ctx.fillStyle = 'rgba(5,6,20,0.62)'; ctx.fillRect(0, 0, this.W, this.H);
-    const cy = this.H / 2; const big = Math.min(46, this.W / (title.length * 0.78));
-    this.text(ctx, title, this.W / 2, cy - 30, { size: big, weight: 900, align: 'center', glow: '#00e5ff' });
-    const words = String(sub).split(' '); const lines = []; let cur = '';
-    ctx.font = '600 17px "Exo 2", sans-serif';
-    for (const w of words) { const nx = cur ? cur + ' ' + w : w; if (ctx.measureText(nx).width > this.W * 0.82) { lines.push(cur); cur = w; } else cur = nx; } if (cur) lines.push(cur);
-    lines.slice(0, 4).forEach((l, i) => this.text(ctx, l, this.W / 2, cy + 8 + i * 22, { size: 17, weight: 600, color: '#c9c4ff', align: 'center', font: 'Exo' }));
-    if (cta) { const a = 0.6 + Math.sin(this.t * 4) * 0.4; ctx.globalAlpha = a; this.text(ctx, cta, this.W / 2, cy + 30 + Math.min(4, lines.length) * 22 + 16, { size: 20, weight: 800, color: '#22d3ee', align: 'center', glow: '#22d3ee' }); ctx.globalAlpha = 1; }
+    // Unified launch/pause overlay for the original core games: designed, readable and touch-first.
+    ctx.save();
+    const g = ctx.createLinearGradient(0, 0, this.W, this.H);
+    g.addColorStop(0, 'rgba(5,7,25,.94)'); g.addColorStop(.55, 'rgba(16,11,42,.90)'); g.addColorStop(1, 'rgba(3,18,35,.94)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, this.W, this.H);
+    // Fine grid, vignette and animated orbit accents add depth without external assets.
+    ctx.strokeStyle = 'rgba(123,112,255,.12)'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let x=0; x<this.W; x+=32) { ctx.moveTo(x,0); ctx.lineTo(x,this.H); }
+    for (let y=0; y<this.H; y+=32) { ctx.moveTo(0,y); ctx.lineTo(this.W,y); } ctx.stroke();
+    const cx=this.W/2, cy=this.H/2, pulse=1+Math.sin(this.t*2.1)*.025;
+    ctx.save(); ctx.translate(cx,cy-55); ctx.rotate(this.t*.045);
+    for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(0,0,(72+i*22)*pulse,(20+i*8)*pulse,i*.28,0,TAU);ctx.strokeStyle=i===1?'rgba(101,226,255,.25)':'rgba(165,120,255,.28)';ctx.lineWidth=1.5;ctx.stroke();}
+    ctx.restore();
+    const pw=Math.min(this.W-28,440), ph=Math.min(this.H-36,360), px=(this.W-pw)/2, py=(this.H-ph)/2;
+    const pg=ctx.createLinearGradient(px,py,px+pw,py+ph);pg.addColorStop(0,'rgba(28,22,64,.95)');pg.addColorStop(1,'rgba(7,20,42,.96)');
+    roundRect(ctx,px,py,pw,ph,24);ctx.fillStyle=pg;ctx.fill();ctx.strokeStyle='rgba(157,132,255,.65)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='rgba(110,225,255,.65)';ctx.fillRect(px+24,py+18,pw-48,2);
+    const big=Math.min(42,this.W/(Math.max(6,title.length)*.63));
+    ctx.save();ctx.shadowColor='#9874ff';ctx.shadowBlur=22;
+    const tg=ctx.createLinearGradient(cx-150,0,cx+150,0);tg.addColorStop(0,'#c5a8ff');tg.addColorStop(.5,'#fff');tg.addColorStop(1,'#8beaff');
+    ctx.font='900 '+big+'px "Exo 2",system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=tg;ctx.fillText(title,cx,py+66,pw-34);ctx.restore();
+    roundRect(ctx,cx-70,py+91,140,22,11);ctx.fillStyle='rgba(126,102,255,.18)';ctx.fill();ctx.strokeStyle='rgba(155,132,255,.45)';ctx.stroke();
+    this.text(ctx,'TRAP TECH  /  ARCADE',cx,py+102,{size:9,weight:800,color:'#c9bdff',align:'center'});
+    const words=String(sub||'').split(/\s+/),lines=[];let cur='';
+    ctx.font='600 16px "Exo 2",system-ui,sans-serif';
+    for(const w of words){const nx=cur?cur+' '+w:w;if(ctx.measureText(nx).width>pw*.82){if(cur)lines.push(cur);cur=w;}else cur=nx;}if(cur)lines.push(cur);
+    lines.slice(0,4).forEach((line,i)=>this.text(ctx,line,cx,py+139+i*23,{size:16,weight:600,color:'#c7cbed',align:'center',font:'Exo'}));
+    if(cta){
+      const by=Math.min(py+ph-38,py+145+Math.min(4,lines.length)*23+18);
+      const pulseAlpha=.82+Math.sin(this.t*4)*.18;
+      ctx.globalAlpha=pulseAlpha;const bg=ctx.createLinearGradient(cx-120,by-19,cx+120,by+19);bg.addColorStop(0,'#875cff');bg.addColorStop(.55,'#666dff');bg.addColorStop(1,'#2bcce9');
+      roundRect(ctx,cx-Math.min(140,pw*.38),by-19,Math.min(280,pw*.76),38,13);ctx.fillStyle=bg;ctx.fill();ctx.strokeStyle='rgba(255,255,255,.45)';ctx.stroke();ctx.globalAlpha=1;
+      this.text(ctx,cta,cx,by,{size:14,weight:900,color:'#fff',align:'center',glow:'#7e7aff'});
+    }
+    // Clear instructions remain visible on desktop and phones.
+    this.text(ctx,'KEYBOARD  ·  TOUCH  ·  GAMEPAD-READY',cx,py+ph-14,{size:9,weight:700,color:'#8da8d8',align:'center'});
     ctx.restore();
   }
   hudScore(ctx, label = 'SCORE') {
