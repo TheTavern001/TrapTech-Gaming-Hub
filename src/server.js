@@ -309,7 +309,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held,event_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
     .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req), row.seed || '', verdict.verify || '', verdict.held || 0, row.event_id || null);
   AC.record(info.lastInsertRowid, req.user.id, row.game_id, score, verdict, t);
-  require('./games-lib-playoff').record(info.lastInsertRowid, req.user.id, row.game_id, score, row.started_at, t, req.body.ev, row.rid); // [games-lib hook] server-derived skill tie-break metrics
+  require('./games-lib-playoff').record(info.lastInsertRowid, req.user.id, row.game_id, score, row.started_at, t, req.body.ev, row.rid, verdict.verify || ''); // [games-lib hook] verified server-derived skill tie-break metrics
   for (const g of newEntries) logActivity('entry', `${req.user.username} entered "${g.title}"`, req.user.id, g.id);
   const isBest = prevBest === null || prevBest === undefined || score > prevBest;
   if (isBest && !verdict.held && score >= (game.tiers ? game.tiers[0] : 100)) logActivity('highscore', `New high score (${game.title}): ${req.user.username} - ${score.toLocaleString('en-US')}${unit}`, req.user.id, info.lastInsertRowid);
