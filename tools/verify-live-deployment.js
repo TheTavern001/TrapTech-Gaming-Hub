@@ -59,6 +59,15 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   check('Deployed source fingerprint matches this checkout', buildJson?.build_fingerprint === expected, { expected, deployed: buildJson?.build_fingerprint || null });
   if (buildJson?.build_fingerprint !== expected) failures.push('Deployed source fingerprint matches this checkout');
 
+  const auditResult = await get(BASE + '/api/audit/report');
+  let auditJson = null; try { auditJson = JSON.parse(auditResult.text); } catch {}
+  const auditReport = auditJson?.report;
+  const auditReady = auditResult.res.status === 200 && auditJson?.ok === true && auditReport?.summary?.registryGames === games.length && auditReport?.summary?.coreGamesRegistered === core.length && Array.isArray(auditReport?.games) && Array.isArray(auditReport?.coreGames) && Array.isArray(auditReport?.issues) && Array.isArray(auditReport?.warnings);
+  check('Deep structural audit report is available on the deployed build', auditReady, { status: auditResult.res.status, coreGames: auditReport?.summary?.coreGamesRegistered, libraryGames: auditReport?.summary?.registryGames, blockers: auditReport?.summary?.gamesWithBlockers, coreBlockers: auditReport?.summary?.coreGamesWithBlockers, issues: auditReport?.issues?.length, warnings: auditReport?.warnings?.length });
+  if (!auditReady) failures.push('Deep structural audit report is available on the deployed build');
+  check('Audit explicitly retains human visual/gameplay gates', auditReady && Array.isArray(auditReport.requiredHumanGates) && auditReport.requiredHumanGates.some(x => /real Android device playthrough/i.test(x)) && auditReport.requiredHumanGates.some(x => /avatar slot/i.test(x)), { gateCount: auditReport?.requiredHumanGates?.length || 0 });
+  if (!(auditReady && Array.isArray(auditReport.requiredHumanGates) && auditReport.requiredHumanGates.some(x => /real Android device playthrough/i.test(x)) && auditReport.requiredHumanGates.some(x => /avatar slot/i.test(x)))) failures.push('Audit explicitly retains human visual/gameplay gates');
+
   const storeResult = await get(BASE + '/api/store');
   let storeJson = null; try { storeJson = JSON.parse(storeResult.text); } catch {}
   const prestigeItems = storeJson?.prestige || [];
