@@ -9,6 +9,10 @@ const Q = require('../src/rotating-quests');
 assert.ok(Q.TEMPLATES.length >= 3000, 'quest template library contains several thousand entries');
 assert.equal(new Set(Q.TEMPLATES.map(q => q.id)).size, Q.TEMPLATES.length, 'all template IDs are unique');
 assert.ok(Q.TEMPLATES.every(q => Q.BY_ID.get(q.id) === q), 'every template is addressable by stable ID');
+for (const q of Q.TEMPLATES.filter(x => x.objective === 'play-days')) {
+  const cap = q.period === 'daily' ? 1 : q.period === 'weekly' ? 7 : 28;
+  assert.ok(q.target >= 1 && q.target <= cap, q.period + ' distinct-day target is achievable within its period');
+}
 for (const period of Q.PERIODS) {
   const a = Q.rotation({ userId: 42, period, now: Date.UTC(2026, 9, 12, 12), count: 5, secret: 'test-only-secret-which-is-longer-than-32-characters' });
   const b = Q.rotation({ userId: 42, period, now: Date.UTC(2026, 9, 12, 12), count: 5, secret: 'test-only-secret-which-is-longer-than-32-characters' });
