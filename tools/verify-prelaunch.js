@@ -106,6 +106,12 @@ if (!html.includes('/assets/brand/traptech-app-icon.svg')) fail('public/index.ht
 if (!/<img[^>]+src=["']\/assets\/brand\/traptech-app-icon\.svg["']/.test(html)) fail('public/index.html', 'Startup splash does not use the canonical Trap Tech icon');
 const server = fs.readFileSync(path.join(ROOT, 'src/server.js'), 'utf8');
 if (!server.includes('@resvg/resvg-js') || !server.includes('HUB_ICON_ROUTES')) fail('src/server.js', 'Dynamic PNG icon route/rasterizer is missing');
+if (!server.includes('build_fingerprint') || !server.includes('BUILD_FINGERPRINT')) fail('src/server.js', 'Live build fingerprint is not exposed by /api/build');
+try {
+  const { buildFingerprint } = require('../src/build-info');
+  const first = buildFingerprint(ROOT), second = buildFingerprint(ROOT);
+  if (!/^[a-f0-9]{24}$/.test(first) || first !== second) fail('src/build-info.js', 'Build fingerprint is invalid or non-deterministic');
+} catch (e) { fail('src/build-info.js', 'Build fingerprint could not be computed: ' + e.message); }
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/manifest.webmanifest'), 'utf8'));
 for (const icon of (manifest.icons || [])) {
   counts.manifestIcons++;
