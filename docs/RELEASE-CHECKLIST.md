@@ -58,6 +58,8 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [x] Source guard: booking-backed event metadata cannot mark a booking comped; waiving payment must use the audited reconciliation workflow.
 - [x] Added E2E assertions that both metadata bypass attempts return HTTP 409 and the unpaid event remains hidden.
 - [x] Result finalization now refuses unpaid booking-backed events, including admin force-finalization; the periodic finalization sweep skips unpaid bookings.
+- [x] v7 giveaway lifecycle actions now refuse republishing or force-ending an unpaid booking-backed event; scheduled publishing skips unpaid bookings.
+- [x] Added an E2E assertion that the v7 admin force-end action is rejected before payment confirmation.
 - [x] Added a regression assertion that an admin read cannot cause an expired unpaid booking to lock results.
 - [ ] Execute the updated sponsor E2E test against the exact candidate. The current GitHub Actions runs fail before test steps and provide no step logs; do not mark this runtime validation as passed.
 
