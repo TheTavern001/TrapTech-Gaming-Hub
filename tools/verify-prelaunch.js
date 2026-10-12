@@ -97,10 +97,13 @@ for (const g of slugs) {
 }
 
 const canonical = fs.readFileSync(path.join(ROOT, 'public/assets/brand/traptech-app-icon.svg'), 'utf8').trim();
-const favicon = fs.readFileSync(path.join(ROOT, 'public/assets/brand/favicon.svg'), 'utf8').trim();
-if (canonical !== favicon) fail('brand', 'favicon.svg is not identical to the canonical Trap Tech app icon');
+for (const alias of ['favicon.svg', 'hub-mark.svg', 'tt-favicon.svg', 'tt-maskable.svg']) {
+  const file = path.join(ROOT, 'public/assets/brand', alias);
+  if (!fs.existsSync(file) || fs.readFileSync(file, 'utf8').trim() !== canonical) fail('brand', alias + ' is not identical to the canonical Trap Tech app icon');
+}
 const html = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
 if (!html.includes('/assets/brand/traptech-app-icon.svg')) fail('public/index.html', 'Canonical Trap Tech icon is not referenced');
+if (!/<img[^>]+src=["']\/assets\/brand\/traptech-app-icon\.svg["']/.test(html)) fail('public/index.html', 'Startup splash does not use the canonical Trap Tech icon');
 const server = fs.readFileSync(path.join(ROOT, 'src/server.js'), 'utf8');
 if (!server.includes('@resvg/resvg-js') || !server.includes('HUB_ICON_ROUTES')) fail('src/server.js', 'Dynamic PNG icon route/rasterizer is missing');
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/manifest.webmanifest'), 'utf8'));
