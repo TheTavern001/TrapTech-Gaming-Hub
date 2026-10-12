@@ -2,6 +2,16 @@
 
 Status: **in progress; not launch-approved**. This is the implementation workboard, not a claim that visual/gameplay QA has passed.
 
+## Implemented fixes awaiting runtime regression
+
+- Shared engine now clears held pointer/key state on pause, restart, finish and destroy; forced cancellations are marked separately so they do not accidentally trigger release actions.
+- Plinko, Spin to Win and Sling Smash now cancel an in-progress aim/charge when the engine forcibly releases controls instead of launching/dropping/spinning during pause or teardown.
+- Sky Hopper gap generation and moving-gap animation now bound successive gap transitions to reduce unfair mobile obstacle sequences.
+- Mobile regression coverage now includes all 16 registered core games.
+- A direct local verifier and ten-title Games Library E2E batch runner are available; the Docker build executes structural/syntax verification and the live verifier can compare a deployed fingerprint with the checkout.
+
+These are code changes, **not passes**. The fixes remain pending browser/gameplay execution and real-device review.
+
 ## Release gates (apply to every title)
 
 A title stays **blocked** until it passes all gates:
