@@ -81,6 +81,19 @@ const mobileBlock = (mobileTest.match(/const GAMES = \[([^\]]*)\]/) || [])[1] ||
 const mobileIds = [...mobileBlock.matchAll(/'([^']+)'/g)].map(m => m[1]);
 for (const id of ids) if (!mobileIds.includes(id)) fail('tools/e2e-mobile.js', 'Core game missing from mobile regression suite: ' + id);
 for (const id of mobileIds) if (!ids.has(id)) fail('tools/e2e-mobile.js', 'Mobile suite references an unregistered core game: ' + id);
+const seededSource = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
+const highScoreSource = seededSource('public/js/games/high-score.js');
+if (!highScoreSource.includes('range(min, max)') || !highScoreSource.includes('this.r()') || /Math\.random\(\)|\brnd\(/.test(highScoreSource)) fail('public/js/games/high-score.js', 'Score-affecting target placement and spawn timing must use the server-seeded RNG');
+const terpTapperSource = seededSource('public/js/games/terp-tapper.js');
+if (!terpTapperSource.includes('this.r()') || /Math\.random\(\)/.test(terpTapperSource)) fail('public/js/games/terp-tapper.js', 'Rhythm chart generation must use the server-seeded RNG');
+const voidSwarmSource = seededSource('public/js/games/void-swarm.js');
+if (!voidSwarmSource.includes('range(min, max)') || /Math\.random\(\)/.test(voidSwarmSource)) fail('public/js/games/void-swarm.js', 'Enemy attacks, dives, and power-up drops must use the server-seeded RNG');
+const growGuardSource = seededSource('public/js/games/grow-guard.js');
+if (/Math\.random\(\)/.test(growGuardSource) || !growGuardSource.includes('const noise = () =>')) fail('public/js/games/grow-guard.js', 'Decorative soil texture noise must be isolated from gameplay RNG');
+const jetpackSource = seededSource('public/js/jetpack.js');
+const jetpackObstacleSource = (jetpackSource.match(/_spawnObstacle\(\) \{([\s\S]*?)\n  \}/) || [])[1] || '';
+const jetpackCoinSource = (jetpackSource.match(/_spawnCoins\(\) \{([\s\S]*?)\n  \}/) || [])[1] || '';
+if (!jetpackSource.includes('setSeed(seed)') || !jetpackSource.includes('seededRng(seed)') || /Math\.random\(\)|\brnd\(/.test(jetpackObstacleSource + jetpackCoinSource)) fail('public/js/jetpack.js', 'Jetpack obstacle and coin layouts must respect the server seed');
 if (!mobileTest.includes("id: 'desktop-chrome'") || !mobileTest.includes('p.mouse.click')) fail('tools/e2e-mobile.js', 'Core game regression must include a desktop viewport using mouse input');
 
 const lib = fs.readFileSync(path.join(ROOT, 'src/games-lib.js'), 'utf8');
