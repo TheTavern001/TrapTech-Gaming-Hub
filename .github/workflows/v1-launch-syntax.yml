@@ -45,6 +45,7 @@ jobs:
         run: |
           bash -n tools/run-all.sh
           node --check tools/e2e-stripe.js
+          node --check tools/e2e-sponsor-brands.js
           node --check tools/e2e-cloudflare-r2.js
           node --check src/db.js
           node --check src/server.js
