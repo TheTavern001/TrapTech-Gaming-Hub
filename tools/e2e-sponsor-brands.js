@@ -60,6 +60,7 @@ const env0 = loadEnv();
     r = await anon('/api/sponsor/requests/' + tok + '/accept', { body: {} }); ok(r.status === 409, 'sponsor cannot accept an unsent quote');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'sent' } }); ok(r.body.ok && r.body.request.quote.status === 'sent', 'admin sends the quote');
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.status === 'sent' && r.body.request.quote.total_cents === tot && r.body.request.quote.lines.length === lines.length, 'sponsor sees the sent quote on the status page', r.body.request);
+    r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'accepted' } }); ok(r.status === 400 && /only the sponsor/i.test(r.body.error), 'admin cannot impersonate sponsor acceptance');
     r = await anon('/api/sponsor/requests/' + tok + '/accept', { body: {} }); ok(r.body.ok && r.body.request.status === 'accepted', 'sponsor accepts');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.status === 409 && /payment must be received/i.test(r.body.error), 'accepted but unpaid quote cannot create an official giveaway', r.body);
     r = await anon('/api/sponsor/requests/' + tok); ok(!r.body.request.event, 'no event or share link exists while payment is unconfirmed');
