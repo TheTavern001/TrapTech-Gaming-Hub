@@ -8,6 +8,11 @@ The repository already contains a genuine WebGL avatar preview implementation:
 
 Therefore, it would be inaccurate to say that no 3D avatar implementation exists. The correct status is: **a prototype 3D viewer exists; parity with the requested fully customizable, polished avatar product is not yet verified.**
 
+## Implementation update — 2026-10-12
+The avatar preview now has explicit zoom-in, zoom-out and reset-view controls, plus keyboard rotation (arrow keys or A/D), zoom (+/−) and reset (0). The WebGL canvas is keyboard-focusable and exposes the control instructions in its accessible label. Drag-start now synchronizes with the current auto-rotation to avoid a jump when the user begins rotating. The editor also has a randomize-owned-parts shortcut and a reset-to-base action; neither grants ownership of locked items. Named saved looks are now stored per account on the server (up to 12), with ownership validation on save/apply, case-insensitive name upsert, apply-to-profile and delete actions. API regression tests cover the saved-look lifecycle and locked-item rejection. The browser E2E suite now exercises the randomize/reset controls, WebGL zoom controls when available, SVG fallback, and save/apply/delete saved-look flow; it still needs an actual browser run.
+
+This is source-level implementation only. The interactions still need real browser, touch, keyboard, reduced-motion and WebGL-fallback testing before the avatar acceptance gate can be marked complete.
+
 ## Source-level risks and unknowns
 1. **Runtime dependency:** Three.js is loaded from a public CDN at runtime. The editor may fall back when import fails, but offline startup, CSP compatibility, CDN availability, privacy implications and version integrity need explicit testing. Consider pinning and bundling the exact approved dependency after checking repository/build constraints.
 2. **Art direction:** procedural or primitive meshes and material styling can demonstrate customization but do not automatically deliver the screenshot's premium character-art quality. Inspect the full mesh construction and real-device renders before deciding whether to rebuild the model pipeline.

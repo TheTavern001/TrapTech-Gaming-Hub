@@ -30,7 +30,7 @@ const NAV_G = [
   ['Giveaways', [['giveaways', 'gift', 'Giveaways', 'giveaways.view', 'drafts'], ['game-rules', 'list-checks', 'Game rules', 'giveaways.view'], ['games', 'gamepad-2', 'Games', 'giveaways.view'], ['tournaments', 'swords', 'Tournaments', 'giveaways.edit'], ['leaderboards', 'trophy', 'Leaderboards', 'giveaways.view']]],
   ['Players', [['players', 'users', 'Players', 'users.view'], ['moderation', 'scan-eye', 'Moderation', 'moderation.queue', 'mod'], ['reports', 'file-text', 'Exports', 'giveaways.view']]],
   ['Live ops', [['events', 'party-popper', 'Specials & events', 'events.manage'], ['seasons', 'calendar-range', 'Seasons', 'seasons.manage'], ['shop', 'shopping-bag', 'Shop', 'shop.manage'], ['badges', 'badge-check', 'Badges', 'badges.award'], ['announcements', 'megaphone', 'Announcements', 'announcements.post']]],
-  ['Business', [['sponsor', 'briefcase', 'Sponsor requests', 'billing.view'], ['official', 'badge-check', 'Official events', 'giveaways.view'], ['store', 'wallet', 'Store & orders', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
+  ['Business', [['sponsor', 'briefcase', 'Giveaway bookings', 'billing.view'], ['official', 'badge-check', 'Official events', 'giveaways.view'], ['store', 'wallet', 'Store & orders', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
   ['Admin', [['team', 'shield-half', 'Team & roles', 'dashboard.view'], ['log', 'history', 'Action log', 'actionlog.view'], ['security', 'shield-check', 'Security', 'dashboard.view'], ['settings', 'settings', 'Settings', 'settings.manage'], ['system', 'server-cog', 'System', 'settings.manage']]],
 ];
 let V7 = null, V7ME = null, V7AT = 0;
@@ -549,7 +549,7 @@ async function security() {
   $('#lo-all').onclick = async () => { if (!confirm('Sign out every admin session, including this one?')) return; await api('/api/admin/security/logout-all', { method: 'POST' }); location.href = AP + '/'; };
 }
 
-// ---------- v7: Sponsor a Host - requests, quote builder, price sheet (admin-only prices) ----------
+// ---------- v7: Book a Giveaway - requests, quote builder, price sheet (admin-only prices) ----------
 const PLACE_L = [['giveaway', 'Link on the giveaway page'], ['game', 'Link on the game page'], ['announcement', 'Link in the launch announcement'], ['featured', 'Home Featured row'], ['hero', 'Home hero takeover'], ['skin', 'Branded game skin / theme'], ['open', 'Open to every hub player']];
 const usd = (c) => '$' + ((Math.round(c) || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const QS_PILL = { draft: ['', 'Draft'], sent: ['amber', 'Sent'], accepted: ['green', 'Accepted'], declined: ['red', 'Declined'], paid: ['green', 'Paid'] };
@@ -579,12 +579,13 @@ async function sponsorAdmin(id) {
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         ${locked ? '' : `<button class="btn ghost" id="q-save">${icon('check')} Save draft</button><button class="btn" id="q-send">${icon('mail')} ${Q.status === 'sent' ? 'Re-send' : 'Send to sponsor'}</button>`}
         ${Q.status === 'accepted' ? `<button class="btn" id="q-paid">${icon('banknote')} Mark paid</button>` : ''}
-        ${['accepted', 'paid'].includes(Q.status) ? (q.event_id ? `<a class="btn ghost" href="${AP}/official/${q.event_id}">${icon('settings')} Manage event</a> <a class="btn ghost" href="/event/${esc(q.event_code || '')}" target="_blank">${icon('badge-check')} Event ${esc(q.event_code || '')}</a>` : `<button class="btn" id="q-event">${icon('badge-check')} Create official event</button>`) : ''}
+        ${Q.status === 'paid' ? (q.event_id ? `<a class="btn ghost" href="${AP}/official/${q.event_id}">${icon('settings')} Manage event</a> <a class="btn ghost" href="/event/${esc(q.event_code || '')}" target="_blank">${icon('badge-check')} Event ${esc(q.event_code || '')}</a>` : `<button class="btn" id="q-event">${icon('badge-check')} Create official event</button>`) : ''}
         ${['draft', 'sent'].includes(Q.status) ? `<button class="btn danger sm" id="q-dec">Mark declined</button>` : ''}
         <button class="btn ghost sm" id="q-link" title="${esc(statusUrl)}">${icon('copy')} Copy sponsor status link</button>
         <button class="btn danger sm" id="q-del">${icon('trash-2')}</button></div>
+      ${Q.status === 'accepted' ? '<p class="small muted">Payment must be received and verified before an official giveaway can be created. Use “Mark paid” only after the payment has actually been received.</p>' : ''}
       <p class="tiny muted">${Q.sent_at ? `Sent ${dt(Q.sent_at)}. ` : ''}${Q.responded_at ? `Answered ${dt(Q.responded_at)}. ` : ''}${Q.paid_at ? `Paid ${dt(Q.paid_at)}. ` : ''}Saving a draft after sending takes the quote back to draft until you send again. Accepted quotes are locked.</p></div>`;
-    frame('sponsor', 'Sponsor requests', `${tabs}<div class="cols" style="margin-top:0;grid-template-columns:1fr 1.3fr"><div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th class="num">Features</th><th>Quote</th><th class="num">Total</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>${editor}</div>`,
+    frame('sponsor', 'Giveaway bookings', `${tabs}<div class="cols" style="margin-top:0;grid-template-columns:1fr 1.3fr"><div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th class="num">Features</th><th>Quote</th><th class="num">Total</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>${editor}</div>`,
       `<a class="btn ghost sm" href="/api/admin/export/bookings.csv" target="_blank">${icon('download')} CSV</a>`);
     const P = (await api('/api/admin/sponsor/prices')).prices || {};
     const total = () => { const sub = L.reduce((t, l) => t + (Number(l.amount_cents) || 0), 0); const pct = +$('#q-pct').value || 0; const off = Math.round((+$('#q-off').value || 0) * 100); return [sub, Math.max(0, Math.round(sub * (1 - Math.min(100, pct) / 100)) - off)]; };
@@ -608,13 +609,13 @@ async function sponsorAdmin(id) {
     on('#q-event', async () => { const x = await api(`/api/admin/sponsor/requests/${q.id}/create-event`, { method: 'POST', body: {} }); if (!x.ok) return msg(x.error); toast('Official event ' + x.code + ' created'); sponsorAdmin(q.id); });
     on('#q-save', async () => { if (await save()) { toast('Draft saved'); sponsorAdmin(q.id); } });
     on('#q-send', async () => { if (!confirm(`Send this ${$('#q-tot').textContent} quote to ${q.brand}? They see it on their private status page.`)) return; if (await save()) status('sent', 'Quote sent'); });
-    on('#q-paid', () => { if (confirm('Mark this accepted quote as paid?')) status('paid', 'Marked paid'); });
+    on('#q-paid', () => { if (confirm('Confirm you have received and verified the sponsor payment outside the Hub? The official giveaway can be created only after payment is confirmed.')) status('paid', 'Payment marked received'); });
     on('#q-dec', () => { if (confirm('Mark this request declined?')) status('declined', 'Marked declined'); });
     on('#q-link', async () => { try { await navigator.clipboard.writeText(statusUrl); toast('Status link copied'); } catch { prompt('Sponsor status link', statusUrl); } });
     on('#q-del', async () => { if (!confirm(`Delete request #${q.id}? This cannot be undone.`)) return; await api('/api/admin/bookings/' + q.id, { method: 'DELETE' }); toast('Deleted'); nav(AP + '/sponsor'); });
     return;
   }
-  frame('sponsor', 'Sponsor requests', `${tabs}<div class="cols" style="margin-top:0;grid-template-columns:1fr 1.3fr"><div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th class="num">Features</th><th>Quote</th><th class="num">Total</th></tr></thead><tbody>${list.map(row).join('') || '<tr><td colspan="5" class="empty">No sponsor requests yet.</td></tr>'}</tbody></table></div>${editor}</div>`,
+  frame('sponsor', 'Giveaway bookings', `${tabs}<div class="cols" style="margin-top:0;grid-template-columns:1fr 1.3fr"><div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th class="num">Features</th><th>Quote</th><th class="num">Total</th></tr></thead><tbody>${list.map(row).join('') || '<tr><td colspan="5" class="empty">No sponsor requests yet.</td></tr>'}</tbody></table></div>${editor}</div>`,
     `<a class="btn ghost sm" href="/api/admin/export/bookings.csv" target="_blank">${icon('download')} CSV</a>`);
 }
 async function sponsorPrices() {

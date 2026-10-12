@@ -49,10 +49,14 @@ function find(ref) {
   return db.prepare('SELECT * FROM giveaways WHERE event_code=?').get(norm(ref)) || null;
 }
 const gamesOf = (id) => db.prepare('SELECT game_id FROM giveaway_games WHERE giveaway_id=? ORDER BY rowid').all(id).map(r => r.game_id);
+// A booking-backed official event must not run until payment is explicitly confirmed.
+// Legacy non-booking events stay unaffected; owner-approved comped bookings are allowed.
+const bookingPaymentCleared = (g) => !g || !g.booking_id || ['paid', 'comped'].includes(String(g.payment_status || '').toLowerCase());
 function status(g, t = Date.now()) {
   if (!g) return 'missing';
   if (g.state === 'cancelled') return 'cancelled';
   if (g.archived) return 'archived';
+  if (!bookingPaymentCleared(g)) return 'unpaid';
   if (!g.active || g.state === 'paused') return g.state === 'paused' ? 'paused' : 'draft';
   if (t < g.start_at) return 'scheduled';
   if (t >= g.end_at || g.finalized_at) return 'ended';
@@ -67,7 +71,7 @@ function checkStart(req, user, gameId, ref, t = Date.now()) {
   const g = find(ref);
   if (!g) return { status: 404, error: 'That is not an official Gaming Hub event.' };
   const st = status(g, t);
-  if (st !== 'active') return { status: 403, error: st === 'scheduled' ? 'This event has not started yet.' : st === 'ended' ? 'This event has ended.' : 'This event is not active.' };
+  if (st !== 'active') return { status: 403, error: st === 'scheduled' ? 'This event has not started yet.' : st === 'ended' ? 'This event has ended.' : st === 'unpaid' ? 'This event is unavailable until its booking payment is confirmed.' : 'This event is not active.' };
   if (!user) return { status: 401, error: 'Please sign in first.' };
   const game = cfg.GAME_MAP[gameId];
   if (!game || !game.giveaway) return { status: 400, error: 'That game cannot count for an official giveaway.' };
@@ -85,6 +89,7 @@ function checkSubmit(req, user, row, tok, t = Date.now()) {
   if (t - row.started_at > EVENT_TOKEN_TTL_MS) return { status: 400, error: 'Event run token expired.' };
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(row.event_id);
   if (!g) return { status: 404, error: 'That is not an official Gaming Hub event.' };
+  if (!bookingPaymentCleared(g)) return { status: 403, error: 'This event booking payment is not confirmed.', demote: true, paymentUnconfirmed: true };
   // ended (or a run that outlived its event): the run is kept as a free-play run, never as an event entry
   if (t >= g.end_at) return { status: 403, error: 'This event has ended.', demote: true };
   const st = status({ ...g, finalized_at: null }, Math.min(t, g.end_at - 1));
@@ -108,6 +113,7 @@ function routes(app, A, H) {
   });
   app.get('/api/event/:code', (req, res) => {
     const g = find(req.params.code); if (!g || /^\d+$/.test(req.params.code)) return res.status(404).json({ ok: false, error: 'That is not an official Gaming Hub event.', notice: NOTICE });
+    if (!bookingPaymentCleared(g)) return res.status(404).json({ ok: false, error: 'This event is unavailable.', notice: NOTICE });
     const R = require('./results'); const rows = (H.giveawayEntrants ? H.giveawayEntrants(g) : R.liveStandings(g)).slice(0, 100)
       .map(r => ({ rank: r.rank, username: r.username, score: r.score, cos: r.cos, avatar: r.avatar }));
     res.json({ ok: true, notice: NOTICE, event: eventPublic(g), board: rows, board_label: label(g) });
@@ -115,14 +121,29 @@ function routes(app, A, H) {
   // vendor share kit (admin): link + QR code
   A.get('/events/:id/share', (req, res) => {
     const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });
+    if (!bookingPaymentCleared(g)) return res.status(409).json({ ok: false, error: 'The official event share link is unavailable until booking payment is confirmed.' });
     const url = PU.originOf(req) + '/event/' + g.event_code;
     res.json({ ok: true, code: g.event_code, url, label: label(g), qr_svg: qrSvg(url), status: status(g), vendor: g.vendor || g.host, booking_status: g.booking_status || null, payment_status: g.payment_status || null, booking_id: g.booking_id || null });
   });
   A.put('/events/:id/meta', (req, res) => {
     const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });
     const b = req.body || {}; const pick = (v, ok, d) => ok.includes(v) ? v : d;
+    const nextPayment = pick(b.payment_status, ['n/a', 'unpaid', 'paid', 'refunded', 'comped'], g.payment_status);
+    // For booking-backed events the sponsor quote is the payment source of truth. The legacy
+    // event-metadata editor must not bypass the quote's verified-paid transition and unhide an
+    // unpaid event. Payment can still be revoked here to block an event immediately.
+    if (g.booking_id && nextPayment === 'paid' && String(g.payment_status || '').toLowerCase() === 'refunded') {
+      return res.status(409).json({ ok: false, error: 'A refunded booking cannot be reactivated from event metadata; use the audited payment reconciliation workflow.' });
+    }
+    if (g.booking_id && ['paid', 'comped'].includes(nextPayment) && String(g.payment_status || '').toLowerCase() !== nextPayment) {
+      // This legacy editor is not a payment reconciliation interface. Neither "paid" nor
+      // "comped" may be used to bypass the booking's verified quote/payment workflow.
+      const quote = db.prepare('SELECT status FROM sponsor_quotes WHERE booking_id=?').get(g.booking_id);
+      if (nextPayment === 'comped') return res.status(409).json({ ok: false, error: 'Booking payment cannot be waived from event metadata; use the audited reconciliation workflow.' });
+      if (!quote || quote.status !== 'paid') return res.status(409).json({ ok: false, error: 'Booking payment can only be confirmed after its sponsor quote is verified as paid.' });
+    }
     db.prepare('UPDATE giveaways SET vendor=?, booking_status=?, payment_status=?, updated_at=? WHERE id=?').run(String(b.vendor ?? g.vendor).slice(0, 80),
-      pick(b.booking_status, ['none', 'requested', 'quoted', 'accepted', 'booked'], g.booking_status), pick(b.payment_status, ['n/a', 'unpaid', 'paid', 'refunded', 'comped'], g.payment_status), Date.now(), g.id);
+      pick(b.booking_status, ['none', 'requested', 'quoted', 'accepted', 'booked'], g.booking_status), nextPayment, Date.now(), g.id);
     res.json({ ok: true, event: eventPublic(find(g.id)) });
   });
   // sudden-death playoff for an exact skill tie on a winning place (src/games-lib-playoff.js; admin page /games-lib/admin-playoffs.html)
@@ -157,4 +178,4 @@ function routes(app, A, H) {
 }
 // called after any giveaway insert so new giveaways always get a code
 function ensureCodes() { return backfill(); }
-module.exports = { routes, find, status, label, checkStart, checkSubmit, sessHash, eventPublic, qrSvg, newCode, ensureCodes, NOTICE, EVENT_TOKEN_TTL_MS, gamesOf };
+module.exports = { routes, find, status, label, checkStart, checkSubmit, sessHash, eventPublic, qrSvg, newCode, ensureCodes, NOTICE, EVENT_TOKEN_TTL_MS, gamesOf, bookingPaymentCleared };

@@ -37,7 +37,8 @@ function describe(g, channel) {
 const entryOf = (gid, uid) => db.prepare('SELECT * FROM giveaway_entries WHERE giveaway_id=? AND user_id=?').get(gid, uid);
 function activeEntries(uid, t = now()) {
   return db.prepare(`SELECT g.id, g.title, g.end_at FROM giveaway_entries e JOIN giveaways g ON g.id = e.giveaway_id
-    WHERE e.user_id=? AND e.left_at IS NULL AND g.active=1 AND g.finalized_at IS NULL AND g.start_at <= ? AND g.end_at > ? ORDER BY g.end_at`).all(uid, t, t);
+    WHERE e.user_id=? AND e.left_at IS NULL AND g.active=1 AND g.finalized_at IS NULL AND g.start_at <= ? AND g.end_at > ?
+      AND (g.booking_id IS NULL OR LOWER(g.payment_status) IN ('paid','comped')) ORDER BY g.end_at`).all(uid, t, t);
 }
 function lastWin(uid, since, channelId = null) {
   const q = `SELECT MAX(t) AS t FROM (

@@ -49,6 +49,31 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
     await page.waitForFunction(() => window.__GL.g && window.Hub && window.Hub.id === 'gl-neon-circuit' && window.Hub.err, null, { timeout: 5000 }).catch(() => {});
     assert.equal(forwardedEvent, 'TT-ABCDE', 'library adapter should forward the event reference for server-side validation');
     assert.deepEqual(errors, [], 'no browser console/page errors during Hub -> library -> game navigation');
+    // Authenticated mobile avatar editor acceptance: keep this in the same Chrome job as Hub navigation.
+    const avatarUser = 'avatar_browser_' + Date.now().toString(36);
+    const signup = await fetch(BASE + '/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: avatarUser, password: 'test-avatar-password-123', agree: true, dob: '1990-05-05' }) });
+    assert.equal(signup.status, 200, 'avatar browser test account should be created');
+    await context.addCookies(signup.headers.getSetCookie().map(raw => { const pair = raw.split(';', 1)[0]; const i = pair.indexOf('='); return { name: pair.slice(0, i), value: pair.slice(i + 1), url: BASE, sameSite: 'Lax' }; }));
+    const avatarPage = await context.newPage(); const avatarErrors = [];
+    avatarPage.on('dialog', dialog => dialog.accept());
+    avatarPage.on('pageerror', e => avatarErrors.push(e.message));
+    avatarPage.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*4\d\d|cdn\.jsdelivr\.net|dynamically imported module/i.test(m.text())) avatarErrors.push(m.text()); });
+    await avatarPage.goto(BASE + '/avatar', { waitUntil: 'networkidle' });
+    await avatarPage.locator('#av-look-name').waitFor({ timeout: 15000 });
+    assert.ok(await avatarPage.isVisible('#av-randomize'), 'avatar randomize control is visible on mobile');
+    await avatarPage.click('#av-randomize'); await avatarPage.click('#av-reset-base');
+    if (await avatarPage.isVisible('#av-zoom-in')) {
+      await avatarPage.click('#av-zoom-in'); await avatarPage.click('#av-zoom-out'); await avatarPage.click('#av-view-reset');
+      await avatarPage.locator('#avatar-stage canvas').focus(); await avatarPage.keyboard.press('ArrowRight'); await avatarPage.keyboard.press('0');
+    } else assert.ok(await avatarPage.isVisible('#av-prev'), 'SVG fallback is visible when WebGL is unavailable');
+    await avatarPage.fill('#av-look-name', 'Mobile Test Look'); await avatarPage.click('#av-look-save');
+    await avatarPage.locator('#av-look-select option:has-text("Mobile Test Look")').waitFor({ timeout: 10000 });
+    await avatarPage.locator('#av-look-select').selectOption({ label: 'Mobile Test Look' }); await avatarPage.click('#av-look-apply');
+    await avatarPage.waitForFunction(() => (document.querySelector('#av-msg')?.textContent || '').includes('Saved look applied'));
+    await avatarPage.locator('#av-look-select').selectOption({ label: 'Mobile Test Look' }); await avatarPage.click('#av-look-delete');
+    await avatarPage.waitForFunction(() => document.querySelectorAll('#av-look-select option').length === 1);
+    assert.deepEqual(avatarErrors, [], 'avatar editor has no unexpected browser errors');
+    await avatarPage.close();
     console.log(JSON.stringify({ ok: true, libraryCount: count, spotlightCards: 2, search: 'passed', statusFilter: 'passed', launch: 'Neon Circuit runtime initialized', consoleErrors: errors }, null, 2));
   } finally {
     await browser.close();

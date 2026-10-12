@@ -6,10 +6,11 @@ const cfg = require('./config');
 const ach = require('./achievements');
 const R = require('./results');
 const boards = require('./boards');
+const EV = require('./events');
 
 module.exports = function v4(app, A, h) {
   const { now, bad, currentUser, str, logActivity, sendCsv, iso, giveawayPublic } = h;
-  const getG = (id, pub) => { const g = db.prepare(`SELECT * FROM giveaways WHERE id=?${pub ? ' AND active=1' : ''}`).get(id); return g ? R.ready(g) : null; };
+  const getG = (id, pub) => { const g = db.prepare(`SELECT * FROM giveaways WHERE id=?${pub ? ' AND active=1' : ''}`).get(id); return g && (!pub || EV.bookingPaymentCleared(g)) ? R.ready(g) : null; };
   const gInfo = (g) => ({ id: g.id, title: g.title, host: g.host, prize: g.prize, status: boards.giveawayStatus(g), start_at: g.start_at, end_at: g.end_at,
     win_method: g.win_method || 'score', winner_count: R.winnerCount(g), min_score: g.min_score || 0, finalized_at: g.finalized_at || null,
     draw_commit: g.draw_commit || null, entrants_hash: g.entrants_hash || null, demo: !!g.is_demo,

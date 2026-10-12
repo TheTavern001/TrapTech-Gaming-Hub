@@ -15,6 +15,7 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
 // v7: no tiers. What a giveaway shows (outbound links, featured row, hero, game skin) comes from the placements the
 // sponsor's accepted quote included (giveaways.placements; legacy giveaways map their old tier, see src/sponsor.js).
 const SP = require('./sponsor');
+const EV = require('./events');
 const LINK_PLACEMENTS = SP.PLACES;
 const allows = (g, placement) => SP.placementsOf(g).includes(placement);
 const B = require('./brands');
@@ -33,7 +34,7 @@ module.exports = function v5(app, A, h) {
 
   // v7: the public brand-channel pages (/api/channels, follow) are gone; brands are joined via invite links (src/brands.js)
   // ---------- eligibility + entries ----------
-  const pubG = (id) => { const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(id); return g ? R.ready(g) : null; };
+  const pubG = (id) => { const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(id); return g && EV.bookingPaymentCleared(g) ? R.ready(g) : null; };
   app.get('/api/giveaways/:id/eligibility', (req, res) => {
     const g = pubG(req.params.id); if (!g) return bad(res, 404, 'Giveaway not found');
     const me = currentUser(req); const c = h.channelOf(g);
@@ -62,7 +63,8 @@ module.exports = function v5(app, A, h) {
     res.json(r);
   });
   app.post('/api/giveaways/:id/leave', requireUser, limiter('gjoin', 30, 60e3), (req, res) => {
-    const g = pubG(req.params.id); if (!g) return bad(res, 404, 'Giveaway not found');
+    // Leaving remains allowed if a sponsor booking becomes unpaid after a player joined.
+    const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(req.params.id); if (!g) return bad(res, 404, 'Giveaway not found');
     const r = E.leave(req.user, g); if (!r.ok) return bad(res, 400, r.error); res.json(r);
   });
   app.get('/api/me/entries', requireUser, (req, res) => res.json({ ok: true, entries: E.activeEntries(req.user.id), max: E.DEFAULTS.elig_max_active }));
@@ -78,7 +80,7 @@ module.exports = function v5(app, A, h) {
   app.get('/go/:kind/:id', (req, res) => {
     const placement = String(req.query.p || '');
     let url = null, ok = false; const refId = parseInt(req.params.id, 10) || 0;
-    if (req.params.kind === 'g') { const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(refId); const c = g && h.channelOf(g); if (g) { url = g.link_url || (c && c.link_url); ok = allows(g, placement); } }
+    if (req.params.kind === 'g') { const g = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(refId); const c = g && h.channelOf(g); if (g && EV.bookingPaymentCleared(g)) { url = g.link_url || (c && c.link_url); ok = allows(g, placement); } }
     if (!url || !URL_RE.test(url) || !ok) return res.redirect(302, '/');
     const u = currentUser(req);
     db.prepare('INSERT INTO link_clicks (kind, ref_id, placement, user_id, ip_hash, created_at) VALUES (?,?,?,?,?,?)').run(req.params.kind, refId, placement, u ? u.id : null, ipHash(req), now());
@@ -87,7 +89,7 @@ module.exports = function v5(app, A, h) {
   // sponsor link shown on a game page: the live giveaway linking this game whose quote included the game-page link
   app.get('/api/games/:id/sponsor', (req, res) => {
     const t = now();
-    const g = db.prepare(`SELECT g.* FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id WHERE gg.game_id=? AND g.active=1 AND g.start_at<=? AND g.end_at>? ORDER BY g.end_at`).all(String(req.params.id), t, t).find(x => allows(x, 'game'));
+    const g = db.prepare(`SELECT g.* FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id WHERE gg.game_id=? AND g.active=1 AND g.start_at<=? AND g.end_at>? ORDER BY g.end_at`).all(String(req.params.id), t, t).find(x => EV.bookingPaymentCleared(x) && allows(x, 'game'));
     if (!g) return res.json({ ok: true, sponsor: null });
     const c = h.channelOf(g); const url = g.link_url || (c && c.link_url);
     res.json({ ok: true, sponsor: { giveaway_id: g.id, title: g.title, host: g.host, logo: g.brand_logo || (c && c.logo) || '', color: g.brand_color || (c && c.color) || '', link: url ? { url: `/go/g/${g.id}?p=game`, label: g.link_label || `Visit ${g.host}` } : null } });

@@ -1,5 +1,5 @@
 'use strict';
-// v7 "Sponsor a Host": no tiers, no public prices.
+// v7 "Book a Giveaway": no tiers, no public prices.
 // A sponsor ticks the features they want from ONE combined list (everything the old Basic/Premium/Elite tiers and add-ons
 // offered), adds details, and sends a free quote request. Only admins see the price sheet (settings key "sponsor_prices",
 // seeded from the old v5 prices); the admin gets an auto-totalled draft quote per request, can adjust it (discounts,
@@ -146,19 +146,35 @@ function setStatus(id, status, by) {
   if (!['sent', 'accepted', 'declined', 'paid', 'draft'].includes(status)) return { ok: false, error: 'Unknown status.' };
   if (!quoteRow(id)) { const r = saveQuote(id, {}, by); if (!r.ok) return r; }
   const q = quoteRow(id); const t = Date.now();
-  if (status === 'paid' && q.status !== 'accepted') return { ok: false, error: 'Only an accepted quote can be marked paid.' };
+  // Acceptance is the sponsor's explicit consent on the private status page, never an admin shortcut.
+  if (status === 'accepted' && by !== 'sponsor') return { ok: false, error: 'Only the sponsor can accept a quote from its private status page.' };
+  // A paid quote is a settled record. Do not let a later status edit hide the sponsor link
+  // while leaving the linked public event marked paid/active.
+  if (q.status === 'paid' && status !== 'paid') return { ok: false, error: 'A paid quote is locked. Correct payment or event state through the audited reconciliation flow.' };
+  // Acceptance is a sponsor decision. Do not let a later admin status edit silently undo it
+  // or move the booking back to pending; payment reconciliation is the only forward transition.
+  if (q.status === 'accepted' && !['accepted', 'paid'].includes(status)) return { ok: false, error: 'An accepted quote is locked. Resolve changes through the audited reconciliation flow.' };
+  if (status === 'paid' && q.status !== 'accepted' && q.status !== 'paid') return { ok: false, error: 'Only an accepted quote can be marked paid.' };
   if (status === 'sent' && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'Already accepted.' };
-  db.prepare(`UPDATE sponsor_quotes SET status=?, updated_at=?, updated_by=?, sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END, responded_at=CASE WHEN ? IN ('accepted','declined') THEN ? ELSE responded_at END, paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END WHERE booking_id=?`)
-    .run(status, t, by || null, status, t, status, t, status, t, id);
   const bs = { sent: 'quoted', accepted: 'approved', declined: 'declined', paid: 'paid', draft: 'pending' }[status];
-  db.prepare('UPDATE bookings SET status=? WHERE id=?').run(bs, id);
+  // Quote, booking state and the linked event's payment gate change atomically. This also repairs
+  // pre-gate events which were created while accepted-but-unpaid and were later verified as paid.
+  db.transaction(() => {
+    db.prepare(`UPDATE sponsor_quotes SET status=?, updated_at=?, updated_by=?, sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END, responded_at=CASE WHEN ? IN ('accepted','declined') THEN ? ELSE responded_at END, paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END WHERE booking_id=?`)
+      .run(status, t, by || null, status, t, status, t, status, t, id);
+    db.prepare('UPDATE bookings SET status=? WHERE id=?').run(bs, id);
+    if (status === 'paid' && b.event_id) {
+      db.prepare(`UPDATE giveaways SET payment_status='paid', booking_status='booked', updated_at=? WHERE id=? AND booking_id=?`).run(t, b.event_id, id);
+    }
+  })();
   return { ok: true, request: adminView(db.prepare('SELECT * FROM bookings WHERE id=?').get(id)) };
 }
 // what the sponsor sees on the status page (prices only once a quote has been SENT)
 function sponsorView(b) {
   const q = quoteRow(b.id); const shown = q && ['sent', 'accepted', 'declined', 'paid'].includes(q.status);
   const pk = PK.getPackages();
-  const ev = b.event_id ? db.prepare('SELECT id, event_code, title, start_at, end_at FROM giveaways WHERE id=?').get(b.event_id) : null;
+  const evRow = b.event_id ? db.prepare('SELECT id, event_code, title, start_at, end_at, booking_id, payment_status FROM giveaways WHERE id=?').get(b.event_id) : null;
+  const ev = q && q.status === 'paid' && evRow && evRow.booking_id === b.id && ['paid', 'comped'].includes(String(evRow.payment_status || '').toLowerCase()) ? evRow : null;
   return { id: b.id, brand: b.brand, created_at: b.created_at, start_date: b.start_date, end_date: b.end_date, details: b.details, notes: b.notes, business_type: b.business_type,
     prize: b.prize || '', brand_color: b.brand_color || '', games: JSON.parse(b.game_ids || '[]'), competition: b.competition || 'best', length_days: b.length_days || 7,
     event: ev ? { code: ev.event_code, url: '/event/' + ev.event_code, qr_svg: require('./events').qrSvg((require('./public-url').PUBLIC_URL || '') + '/event/' + ev.event_code), start_at: ev.start_at, end_at: ev.end_at } : null,
@@ -231,19 +247,30 @@ module.exports = function sponsor(app, A, h) {
   A.get('/sponsor/requests', (req, res) => res.json({ ok: true, requests: db.prepare('SELECT b.*, u.username FROM bookings b LEFT JOIN users u ON u.id=b.user_id ORDER BY b.created_at DESC LIMIT 500').all().map(adminView) }));
   A.get('/sponsor/requests/:id', (req, res) => { const b = db.prepare('SELECT b.*, u.username, (SELECT event_code FROM giveaways WHERE id = b.event_id) AS event_code FROM bookings b LEFT JOIN users u ON u.id=b.user_id WHERE b.id=?').get(req.params.id); if (!b) return bad(res, 404, 'Not found'); res.json({ ok: true, request: adminView(b), placements: placementsFromFeatures(featuresOf(b)) }); });
   A.put('/sponsor/requests/:id/quote', (req, res) => { const r = saveQuote(+req.params.id, req.body || {}, req.admin && req.admin.username); r.ok ? res.json(r) : bad(res, 400, r.error); });
-  // v7 Phase 3: an ACCEPTED (or paid) quote becomes an official event in one click. Idempotent: a second click returns the same event.
+  // v7 Phase 3: a PAID quote becomes an official event. Idempotent: a second click returns the same event.
   A.post('/sponsor/requests/:id/create-event', (req, res) => {
     const b = db.prepare('SELECT * FROM bookings WHERE id=?').get(+req.params.id); if (!b) return bad(res, 404, 'Request not found.');
-    const q = quoteRow(b.id); if (!q || !['accepted', 'paid'].includes(q.status)) return bad(res, 409, 'The client must accept the quote first.');
+    const q = quoteRow(b.id);
+    if (!q || q.status !== 'paid') return bad(res, 409, 'Payment must be received and confirmed before an official giveaway event can be created.');
     const EV = require('./events');
-    if (b.event_id) { const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id); if (g) return res.json({ ok: true, existing: true, id: g.id, code: g.event_code, url: '/event/' + g.event_code }); }
+    if (b.event_id) {
+      const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id);
+      if (g) {
+        // The booking's event pointer is not enough: confirm the event is still bound to this booking.
+        if (g.booking_id !== b.id) return bad(res, 409, 'The existing event is not linked to this booking; reconcile the booking/event association before sharing.');
+        // Idempotency must not re-issue a share URL for an event whose payment gate is closed.
+        if (!EV.bookingPaymentCleared(g)) return bad(res, 409, 'The existing event is blocked until its booking payment is reconciled.');
+        return res.json({ ok: true, existing: true, id: g.id, code: g.event_code, url: '/event/' + g.event_code });
+      }
+    }
     const cfg = require('./config'); let games = JSON.parse(b.game_ids || '[]').filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway); if (!games.length) games = ['stack'];
     const day = 86400e3; const parse = (d) => { const t = Date.parse(String(d || '') + 'T12:00:00-04:00'); return Number.isFinite(t) ? t : null; };
     const start = Math.max(Date.now(), parse(b.start_date) || Date.now() + day); const end = parse(b.end_date) && parse(b.end_date) > start ? parse(b.end_date) : start + (b.length_days || 7) * day;
     const t = Date.now(); const comp = b.competition || 'best';
     const id = db.transaction(() => {
-      const info = db.prepare(`INSERT INTO giveaways (title, host, prize, image, start_at, end_at, entry_method, game_id, rules, active, created_at, updated_at, brand_color, win_method, winner_count)
-        VALUES (?,?,?,?,?,?,'play',?,?,1,?,?,?,?,1)`).run(`${b.brand} Official Giveaway`, b.brand, b.prize || 'Prize from ' + b.brand, '', start, end, games[0], String(b.details || '').slice(0, 2000), t, t, b.brand_color || '', comp === 'random' ? 'random' : 'score');
+      const scoreRule = comp === 'best' ? 'best' : 'sum_best'; // "total" in the booking form means sum of each game's best score.
+      const info = db.prepare(`INSERT INTO giveaways (title, host, prize, image, start_at, end_at, entry_method, game_id, rules, active, created_at, updated_at, brand_color, win_method, winner_count, v7, score_rule)
+        VALUES (?,?,?,?,?,?,'play',?,?,1,?,?,?,?,1,1,?)`).run(`${b.brand} Official Giveaway`, b.brand, b.prize || 'Prize from ' + b.brand, '', start, end, games[0], String(b.details || '').slice(0, 2000), t, t, b.brand_color || '', comp === 'random' ? 'random' : 'score', scoreRule);
       const gid = info.lastInsertRowid; for (const gm of games) db.prepare('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) VALUES (?,?)').run(gid, gm);
       db.prepare("UPDATE giveaways SET vendor=?, booking_id=?, booking_status='booked', payment_status=? WHERE id=?").run(b.brand, b.id, q.status === 'paid' ? 'paid' : 'unpaid', gid);
       db.prepare('UPDATE bookings SET event_id=? WHERE id=?').run(gid, b.id); return gid; })();

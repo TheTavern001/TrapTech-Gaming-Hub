@@ -217,7 +217,7 @@ app.get('/api/leaderboard', (req, res) => {
   let rows;
   if (req.query.giveaway || req.query.contest) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.query.giveaway || req.query.contest);
-    if (!g) return bad(res, 404, 'Giveaway not found');
+    if (!g || !EV.bookingPaymentCleared(g)) return bad(res, 404, 'Giveaway not found');
     rows = giveawayEntrants(R.ready(g));
   } else if (game === 'global') rows = ranked(globalBoard(periodStart(period)));
   else if (resolveGame(game)) rows = ranked(gameBoard(game, periodStart(period)));
@@ -270,7 +270,8 @@ app.post('/api/score', requireUser, (req, res) => {
   if (t - row.started_at > cfg.RUN_TOKEN_TTL_MS) return reject(400, 'Run token expired.');
   if ((tok.e || null) !== (row.event_id || null)) return reject(400, 'Event run token does not match this run.');
   const evOrig = row.event_id || null;
-  { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec && ec.demote) row.event_id = null; else if (ec) return reject(ec.status, ec.error); }
+  let paymentDemoted = false;
+  { const ec = EV.checkSubmit(req, req.user, row, tok, t); if (ec && ec.demote) { row.event_id = null; paymentDemoted = !!ec.paymentUnconfirmed; } else if (ec) return reject(ec.status, ec.error); }
   const game = resolveGame(row.game_id); if (!game || !game.playable) return reject(400, 'This game is no longer available for scoring.'); const ac = game.ac; const unit = game.unit === 'm' ? 'm' : ' ' + game.unit;
   const score = Number(req.body.score); const coins = Number(req.body.coins || 0);
   if (!Number.isInteger(score) || score < 0 || score > cfg.MAX_SCORE) return reject(400, 'Invalid score value.');
@@ -308,7 +309,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held,event_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
     .run(req.user.id, row.game_id, score, coins, durationMs, row.started_at, t, ipHash(req), uaHash(req), row.seed || '', verdict.verify || '', verdict.held || 0, row.event_id || null);
   AC.record(info.lastInsertRowid, req.user.id, row.game_id, score, verdict, t);
-  require('./games-lib-playoff').record(info.lastInsertRowid, req.user.id, row.game_id, score, row.started_at, t, req.body.ev, row.rid); // [games-lib hook] server-derived skill tie-break metrics
+  require('./games-lib-playoff').record(info.lastInsertRowid, req.user.id, row.game_id, score, row.started_at, t, req.body.ev, row.rid, verdict.verify || ''); // [games-lib hook] verified server-derived skill tie-break metrics
   for (const g of newEntries) logActivity('entry', `${req.user.username} entered "${g.title}"`, req.user.id, g.id);
   const isBest = prevBest === null || prevBest === undefined || score > prevBest;
   if (isBest && !verdict.held && score >= (game.tiers ? game.tiers[0] : 100)) logActivity('highscore', `New high score (${game.title}): ${req.user.username} - ${score.toLocaleString('en-US')}${unit}`, req.user.id, info.lastInsertRowid);
@@ -324,7 +325,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const gid = req.body.giveaway_id || req.body.contest;
   if (gid) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(gid);
-    giveawayStatusOut = !g ? 'not_found' : String(evOrig || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
+    giveawayStatusOut = paymentDemoted ? 'not_event_run' : !g ? 'not_found' : String(evOrig || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
       : !giveawayGameIds(g.id).includes(row.game_id) ? 'game_not_linked' : score < (g.min_score || 0) ? 'below_min_score' : 'counted');
   }
   // achievements are evaluated here, on the server, from the stored runs
@@ -367,15 +368,16 @@ function giveawayPublic(g, withWinners = true) {
 }
 app.get('/api/giveaways', (req, res) => {
   const status = req.query.status;
-  const all = db.prepare('SELECT * FROM giveaways WHERE active=1 ORDER BY start_at DESC').all();
+  const all = db.prepare('SELECT * FROM giveaways WHERE active=1 ORDER BY start_at DESC').all().filter(g => EV.bookingPaymentCleared(g));
   let list = all.map(g => giveawayPublic(R.ready(g)));
   if (['active', 'upcoming', 'past'].includes(status)) list = list.filter(g => g.status === status);
   list.sort((a, b) => a.status === 'past' ? b.end_at - a.end_at : (b.featured - a.featured) || (a.end_at - b.end_at));
   res.json({ ok: true, giveaways: list, now: now() });
 });
 app.get('/api/giveaways/:id', (req, res) => {
-  const g = R.ready(db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(req.params.id));
-  if (!g) return bad(res, 404, 'Giveaway not found');
+  const raw = db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(req.params.id);
+  if (!raw || !EV.bookingPaymentCleared(raw)) return bad(res, 404, 'Giveaway not found');
+  const g = R.ready(raw);
   const entrants = giveawayEntrants(g); const me = currentUser(req);
   const mine = me ? entrants.find(e => e.user_id === me.id) : null;
   const hidden = H.v7Hidden && H.v7Hidden(g); // v7: leaderboard hidden until the end
@@ -392,7 +394,7 @@ function profileFor(user) {
   const recent = db.prepare('SELECT game_id, score, coins, created_at FROM runs WHERE user_id=? ORDER BY created_at DESC LIMIT 10').all(user.id)
     .map(r => ({ ...r, game_title: cfg.gameInfo(r.game_id)?.title || r.game_id, unit: cfg.gameInfo(r.game_id)?.unit || 'pts' }));
   const gb = globalBoard(0); const grank = gb.findIndex(r => r.user_id === user.id) + 1;
-  const entries = db.prepare(`SELECT COUNT(DISTINCT g.id) AS c FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id JOIN runs r ON r.game_id=gg.game_id AND r.user_id=? AND r.started_at>=g.start_at AND r.created_at<=g.end_at AND r.created_at>=g.start_at AND r.score>=g.min_score`).get(user.id).c;
+  const entries = db.prepare(`SELECT COUNT(DISTINCT g.id) AS c FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id JOIN runs r ON r.game_id=gg.game_id AND r.user_id=? AND r.started_at>=g.start_at AND r.created_at<=g.end_at AND r.created_at>=g.start_at AND r.score>=g.min_score WHERE g.booking_id IS NULL OR LOWER(g.payment_status) IN ('paid','comped')`).get(user.id).c;
   const unl = ach.unlockedMap(user.id);
   const achievements = [...unl.entries()].sort((a, b) => b[1] - a[1]).map(([id, at]) => { const a = ach.BY_ID[id]; return a && { ...ach.publicAch(a, true), unlocked_at: at }; }).filter(Boolean);
   return { username: user.username, member_since: user.created_at, demo: !!user.is_demo, total_score: total, games_played: plays, coins,
@@ -483,7 +485,7 @@ const userCos = (id) => { const u = id && db.prepare('SELECT username, is_demo, 
 app.get('/api/community', (req, res) => {
   const tab = req.query.tab || 'all';
   const ann = db.prepare('SELECT id, title, body, created_at, is_demo FROM announcements ORDER BY created_at DESC LIMIT 30').all().map(a => ({ kind: 'announcement', key: `a:${a.id}`, ...a }));
-  const wins = db.prepare(`SELECT w.id, w.user_id, w.drawn_at AS created_at, u.username, g.title, w.method FROM winners w JOIN users u ON u.id=w.user_id JOIN giveaways g ON g.id=w.giveaway_id WHERE g.active=1 ORDER BY w.drawn_at DESC LIMIT 30`).all()
+  const wins = db.prepare(`SELECT w.id, w.user_id, w.drawn_at AS created_at, u.username, g.title, w.method FROM winners w JOIN users u ON u.id=w.user_id JOIN giveaways g ON g.id=w.giveaway_id WHERE g.active=1 AND (g.booking_id IS NULL OR LOWER(g.payment_status) IN ('paid','comped')) ORDER BY w.drawn_at DESC LIMIT 30`).all()
     .map(w => ({ kind: 'winner', key: `w:${w.id}`, uid: w.user_id, user: userCos(w.user_id), title: `${w.username} won "${w.title}"`, body: w.method === 'top' ? 'Winner by top score' : 'Winner by random draw', created_at: w.created_at }));
   const hs = db.prepare("SELECT id, user_id, type, message AS title, created_at, is_demo FROM activity WHERE type IN ('highscore','player','achievement','levelup','streak','tournament') ORDER BY created_at DESC LIMIT 40").all()
     .map(a => ({ kind: 'activity', key: `x:${a.id}`, user: userCos(a.user_id), ...a, uid: a.user_id, user_id: undefined }));
@@ -647,6 +649,7 @@ A.delete('/giveaways/:id', (req, res) => {
 });
 A.post('/giveaways/:id/draw', (req, res) => {
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
+  if (!EV.bookingPaymentCleared(g)) return bad(res, 409, 'This booking-backed giveaway cannot draw winners until payment is confirmed.');
   if (R.ready(g).finalized_at) return bad(res, 409, 'This giveaway has ended and its final standings are locked. Use the review queue to confirm or disqualify winners.');
   const method = req.body.method === 'top' ? 'top' : 'random';
   const entrants = giveawayEntrants(g);

@@ -52,6 +52,29 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [ ] Deployment URL is reachable and all intended new games can be launched from the Hub.
 - [ ] No merge or production deployment until the release gates above are reviewed.
 
+## Payment-gate regression added — 2026-10-12
+
+- [x] Source guard: booking-backed event metadata cannot newly mark a booking paid unless the linked sponsor quote is verified paid.
+- [x] Source guard: booking-backed event metadata cannot mark a booking comped; waiving payment must use the audited reconciliation workflow.
+- [x] Added E2E assertions that both metadata bypass attempts return HTTP 409 and the unpaid event remains hidden.
+- [x] Official admin share-kit endpoint also withholds the share URL while booking payment is blocked; regression assertion added.
+- [x] Sponsor status page only exposes the official event link when the event's `booking_id` matches that exact sponsor request and the payment gate is cleared; cross-booking regression assertion added.
+- [x] Idempotent event creation verifies the existing event belongs to that booking before returning its URL; cross-booking URL reuse is rejected and tested.
+- [x] Metadata cannot reactivate a refunded booking by setting it back to paid; recovery goes through sponsor-quote reconciliation, with an E2E regression assertion.
+- [x] Result finalization now refuses unpaid booking-backed events, including admin force-finalization; the periodic finalization sweep skips unpaid bookings.
+- [x] v7 giveaway lifecycle actions now refuse republishing or force-ending an unpaid booking-backed event; scheduled publishing skips unpaid bookings.
+- [x] Added an E2E assertion that the v7 admin force-end action is rejected before payment confirmation.
+- [x] Added a regression assertion that an admin read cannot cause an expired unpaid booking to lock results.
+- [ ] Execute the updated sponsor E2E test against the exact candidate. The current GitHub Actions runs fail before test steps and provide no step logs; do not mark this runtime validation as passed.
+- [x] Independently parsed the six changed JavaScript source/test files for syntax errors; this is syntax-only validation and does not replace Node execution or E2E/browser tests.
+
+## Skill tie-break integrity review — 2026-10-12
+
+- [x] Secondary skill metrics now require the anti-cheat pipeline to mark the run's event log/replay verified. Unverified client-submitted event logs and coin totals no longer decide skill tie-breaks; server-measured elapsed time remains available, with unresolved ties sent to playoff.
+- [x] Startup cleanup nulls previously stored secondary metrics for historical runs without an accepted anti-cheat verification marker, so old unverified values cannot continue deciding ties.
+- [x] Added regression assertions for unverified versus verified library-game event metrics and coin metrics.
+- [ ] Execute the Games Library E2E suite and test forged logs against the exact release candidate; syntax parsing alone is insufficient.
+
 ## Current boundary
 
 This branch is based on `v7-wip` and preserves its Hub application files. The current edits add to the Hub navigation/library experience; they do not replace the rest of the Hub. Static checks cannot substitute for the browser, mobile, booking-permission, or anti-cheat checks above.
@@ -80,3 +103,35 @@ This repository's current `main` contains the Hub v7 work, the Games Library int
 - [ ] Back up production data, deploy the latest `main` SHA once, and verify health, persistence, player flows, event controls, and admin access on the live URL.
 
 **Do not interpret “100 catalog entries” as “100 verified giveaway-ready games.”** The user-facing requirement is one consolidated release; the responsible release gate still requires documenting unresolved verification items rather than hiding them. The vendor control boundary is official Hub-managed events and score records: public casual game links can be shared, but a link alone must never authorize a Hub giveaway, paid booking, official entrant list, or winner selection.
+
+
+## Draft PR #8 — payment gate, scoring integrity, and avatar QA — 2026-10-12
+
+- [x] Payment-gate source changes block official event creation/share surfaces and finalization while a booking-backed event is unpaid; dedicated regression coverage is wired into the launch workflow.
+- [x] Scoring tie-break secondary metrics are restricted to runs whose anti-cheat verification marker is accepted.
+- [x] Avatar editor source restored to its complete 8 KB implementation after an accidental truncation; zoom, reset, randomize, saved-look controls, and the body-type label are present in the restored file.
+- [x] Avatar ownership/saved-look API regression suite is wired into the V1 launch workflow.
+- [x] Parser-only V8 syntax compilation passed for 14 changed source/test JavaScript files at the current source snapshot, including the restored avatar editor. ES-module import/export syntax was stripped for this check; this is not the repository's full `node --check`/CI run and does not execute any tests. Re-run the native checks on the final release SHA once Actions can provision a runner.
+- [ ] Run API, payment-gate, scoring, avatar, and browser E2E suites against the exact candidate. GitHub Actions jobs are currently failing before any steps execute; investigate Actions runner provisioning/account limits before interpreting those failures as code-test results.
+- [ ] Inspect all changed files and resolve any regressions found by actual execution. Do not merge or deploy while tests have not executed.
+- [ ] Complete the official booking-to-event-to-score-to-winner flow on a disposable test database, including unpaid/refunded bookings, stale tokens, invalid event IDs, and forged/unverified metrics.
+- [ ] Complete phone and desktop browser review and physical-device performance/accessibility checks.
+- [ ] Verify asset licenses/attribution and curate the shipped game catalog. Catalog count is not a quality certification.
+- [ ] Verify deployment environment, persistent database storage, secret values, backup/restore, rollback, and live health/persistence checks before production release.
+
+**Status at this revision:** not deployment-ready. No production deployment or live payment configuration change has been made.
+
+
+## AAA graphics/gameplay and full Hub acceptance — 2026-10-12
+
+- [x] Added a comprehensive audit/evidence ledger at [`docs/AAA-GRAPHICS-GAMEPLAY-AND-HUB-AUDIT.md`](AAA-GRAPHICS-GAMEPLAY-AND-HUB-AUDIT.md), covering graphics/art direction, gameplay/control loops, mobile/desktop UX, scoring/anti-cheat, booking/payment/giveaway boundaries, accessibility, performance, security, asset licensing, and per-game evidence.
+- [ ] **Do not mark the AAA audit complete yet.** The ledger records the current verdict as NOT READY FOR PUBLIC USE because the current candidate has not received full runtime tests or human visual/gameplay inspection. All 100 games remain unsigned-off; historical smoke tests are not current release proof.
+- [ ] Run every relevant API/security/payment/avatar/library/browser test against the exact candidate SHA in local Node/Docker or a private preview, and retain logs.
+- [ ] Human-playtest each game intended for launch on Android and desktop; capture screenshots/video, record defects, and individually ship/fix/disable/replace each game.
+- [ ] Inspect all core Hub pages and workflows at phone and desktop sizes; verify accessibility, score integrity, booking/event permissions, persistence, backup/restore, and rollback.
+- [ ] Verify source/license/attribution rights for all assets and third-party dependencies before public use.
+
+## Branch integration gate — 2026-10-12
+
+- [ ] Resolve release target before merge: PR #8 currently targets `games/deep-distinctness-audit`, not `main`. The candidate is currently 192 commits ahead of `main` (0 behind) and includes the integration branch's 90 commits not present on `main`. Although the ancestry is linear, retargeting the PR to `main` would bring that entire 192-commit range into the production diff; review the complete tree/catalog and all intermediate changes before deciding. Do not merge this PR into the integration branch and then assume production `main` was updated.
+- [ ] After CI and runtime checks are available, review the complete candidate diff and integration ancestry, then explicitly prepare and validate the intended release commit/PR against `main`. Do not retarget/merge solely to make the PR appear current.

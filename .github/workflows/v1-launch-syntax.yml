@@ -41,12 +41,33 @@ jobs:
           SECRET: v1-check-secret-for-tests-only
           DATA_DIR: /tmp/gaming-hub-v1-economy-test
         run: node tools/e2e-cosmetic-economy.js
+
+      - name: Test sponsor booking payment gate and brand affiliation
+        env:
+          NODE_ENV: test
+          ADMIN_PASSWORD: ci-only-admin-password-do-not-use-in-production
+          SECRET: ci-only-secret-do-not-use-in-production
+          ADMIN_PATH: ci-hidden-admin-path
+          DATA_DIR: /tmp/gaming-hub-ci-sponsor-payment
+        run: SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js
+      - name: Test avatar ownership and saved-look lifecycle
+        env:
+          NODE_ENV: test
+          ADMIN_PASSWORD: ci-only-admin-password-do-not-use-in-production
+          SECRET: ci-only-secret-do-not-use-in-production
+          ADMIN_PATH: ci-hidden-admin-path
+          DATA_DIR: /tmp/gaming-hub-ci-avatars
+        run: tools/fresh-api.sh tools/e2e-avatars.js
       - name: Check server-side JavaScript
         run: |
           bash -n tools/run-all.sh
           node --check tools/e2e-stripe.js
+          node --check tools/e2e-sponsor-brands.js
           node --check tools/e2e-cloudflare-r2.js
           node --check src/db.js
+          node --check src/events.js
+          node --check src/sponsor.js
+          node --check src/v4.js
           node --check src/server.js
           node --check src/monetize.js
           node --check src/admin-media.js
@@ -63,5 +84,6 @@ jobs:
           node --input-type=module --check < public/js/avatar-editor.js
           node --input-type=module --check < public/js/avatar-3d.js
           node --input-type=module --check < public/js/hub-store.js
+          node --input-type=module --check < src/admin-ui/admin.js
       - name: Build Deplexo Docker image (no push or deployment)
         run: docker build --tag gaming-hub-pr:${{ github.sha }} .
