@@ -53,7 +53,7 @@ Every existing registry slug must have a fresh browser result, a mobile result, 
 
 - **Neon Circuit**: new original Canvas arcade racer added; browser and physical-device testing still required.
 - **Rift Survival**: new original arena-survival game added; browser and physical-device testing still required.
-- **Registry/catalog/docs**: reconciled to 100 entries. This is a metadata consistency fix, not a claim that all 100 games are polished.
+- **Registry/catalog/docs**: reconciled to 80 active Games Library entries. This is a metadata consistency fix, not a claim that all 80 games are polished; the 500-game launch goal remains gated on per-title QA.
 - **Known reported defects**: Desert Dash FPS instrumentation; low-FPS reports for Rail Rush, Lane Racer and Moto Lanes. These are still open until a fresh run identifies the cause and validates a fix.
 
 ## Required evidence before calling a game AAA-ready
