@@ -127,6 +127,7 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     } catch (e) { fail('Core game module ' + g.id, e.message); }
   });
 
+  const localAssets = new Map();
   await bounded(games, 8, async g => {
     const p = '/games-lib/' + g.slug + '/index.html';
     try {
@@ -134,7 +135,26 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
       const ok = r.res.status === 200 && /<html|<!doctype html/i.test(r.text);
       check('Library entry ' + g.slug, ok, { status: r.res.status, bytes: r.body.length });
       if (!ok) failures.push('Library entry ' + g.slug);
+      if (!ok) return;
+      for (const m of r.text.matchAll(/(?:src|href)=["']([^"']+)["']/gi)) {
+        const ref = m[1].trim();
+        if (!ref || /^(?:https?:|\/\/|data:|#|javascript:|mailto:|tel:)/i.test(ref)) continue;
+        let u;
+        try { u = new URL(ref, BASE + p); } catch { continue; }
+        if (u.origin !== new URL(BASE).origin) continue;
+        if (!/\.(?:js|mjs|css|json|wasm|png|jpe?g|webp|svg|woff2?|mp3|ogg|wav|ttf|ico)$/i.test(u.pathname)) continue;
+        localAssets.set(u.pathname, (localAssets.get(u.pathname) || new Set()).add(g.slug));
+      }
     } catch (e) { fail('Library entry ' + g.slug, e.message); }
+  });
+  // Validate local dependencies used by the catalog, not just its HTML shell. This catches
+  // missing scripts, styles, atlases, textures and fonts that static entry checks can miss.
+  await bounded([...localAssets.entries()], 12, async ([asset, slugsForAsset]) => {
+    try {
+      const r = await get(BASE + asset);
+      const ok = r.res.status === 200 && r.body.length > 0;
+      check('Library dependency ' + asset, ok, { status: r.res.status, bytes: r.body.length, referencedBy: [...slugsForAsset].slice(0, 5), gameCount: slugsForAsset.size });
+    } catch (e) { fail('Library dependency ' + asset, e.message); }
   });
 
   const uniqueFailures = [...new Set(failures)];
