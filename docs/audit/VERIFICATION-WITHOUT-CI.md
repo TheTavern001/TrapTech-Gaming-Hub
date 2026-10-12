@@ -13,7 +13,9 @@ npm run verify:prelaunch
 
 The command syntax-checks JavaScript across server, tools, core games, and Games Library files; validates package/manifest JSON; verifies that all core game registrations point to files; checks every library entry and its referenced local assets; and validates the Trap Tech app-icon route and manifest declarations. It then writes `docs/audit/prelaunch-structural-audit.json`.
 
-A structural pass is not a visual/gameplay pass.
+The Docker build also starts the actual server with disposable test-only credentials and a temporary database, then runs the read-only HTTP verifier against it before the image can finish building. This catches startup, health, build-fingerprint, icon route, stylesheet, core-module and all 100 library-page failures inside the build itself.
+
+A structural/runtime HTTP pass is not a visual/gameplay pass.
 
 ## 2. Server/API checks
 
