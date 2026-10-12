@@ -249,7 +249,7 @@ try {
   testDb.close();
 } catch (e) { fail('prestige_original_one_owner', 'SQLite one-of-one constraint test failed: ' + e.message); }
 
-if (!prestigeSource.includes("process.env.PRESTIGE_SALES_ENABLED === '1'") || !prestigeSource.includes('prestige_sales_enabled: prestigeSalesEnabled()')) fail('src/monetize.js', 'Prestige sales must remain explicitly gated until wearable variations are approved');
+if (!prestigeSource.includes("process.env.PRESTIGE_SALES_ENABLED === '1'") || !prestigeSource.includes("process.env.PRESTIGE_COMPATIBILITY_APPROVED === '1'") || !prestigeSource.includes('prestige_sales_enabled: prestigeSalesEnabled()')) fail('src/monetize.js', 'Prestige sales must require both explicit sales enablement and compatibility approval');
 if (!storeUi.includes('!r.prestige_sales_enabled') || !storeUi.includes('Preview only')) fail('public/js/hub-store.js', 'Store UI must visibly prevent purchases while Prestige originals are preview-only');
 
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/manifest.webmanifest'), 'utf8'));
