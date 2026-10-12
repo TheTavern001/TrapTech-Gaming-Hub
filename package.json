@@ -12,7 +12,8 @@
     "verify:prelaunch": "node tools/verify-prelaunch.js && node tools/prelaunch-deep-audit.js",
     "test:games-lib-batches": "node tools/e2e-games-lib-batches.js",
     "test:mobile": "node tools/e2e-mobile.js",
-    "verify:live": "node tools/verify-live-deployment.js"
+    "verify:live": "node tools/verify-live-deployment.js",
+    "test:rotating-quests": "node tools/test-rotating-quests.js"
   },
   "keywords": [],
   "author": "",
