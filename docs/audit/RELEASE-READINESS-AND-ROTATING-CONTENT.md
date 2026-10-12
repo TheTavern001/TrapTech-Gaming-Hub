@@ -75,3 +75,10 @@ Public launch remains blocked while any security/payment/event-integrity P0/P1, 
 ## Evidence ledger
 
 For each run, attach: commit SHA, command or manual test, environment, timestamp, result, pass/fail count, log/report path, defect links, and reviewer. Record source/static checks separately from runtime/API/browser/device/human-art-review results.
+
+## Branch work recorded on 2026-10-12
+
+- Added a deterministic generated SVG thumbnail renderer for all six generated cosmetic types: banner, frame, color, title, badge, and effect.
+- Expanded `/shop/art/:id.svg` from banner/badge-only responses to all generated cosmetic types, with an SVG content type and `nosniff`.
+- Added API regression assertions that each type can be discovered and its art endpoint returns SVG.
+- These changes are committed on `audit/release-readiness-and-assets`; the API suite and browser/device checks have **not** been executed against this branch in this session. Treat the new route as implemented but not yet runtime-verified until the tests run and the shop thumbnails are visually inspected.
