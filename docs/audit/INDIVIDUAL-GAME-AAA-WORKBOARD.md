@@ -9,6 +9,8 @@ Status: **in progress; not launch-approved**. This is the implementation workboa
 - **Legacy prestige:** the former three multi-supply items are retired from new sales without overwriting their historic ownership or current avatar unlocks.
 - **Prestige visuals:** original SVG assets and per-item store art mappings are present; the 2D avatar renderer and 3D preview now include distinct environments for the new collection. Prestige purchases remain disabled unless `PRESTIGE_SALES_ENABLED=1` is explicitly configured after wearable/compatibility review.
 - **Prelaunch gates:** expanded source checks for all 12 IDs, unique effects, one-of-one supply, minimum price, original art/CSS mappings, 3D environment mappings, database uniqueness, and catalog UI/API wiring.
+- **API acceptance coverage added:** `tools/e2e-api.js` now checks catalog size, first/tail-page completeness, ID uniqueness, rotation metadata, type filtering, the prestige sales-gate response, 12 unique prestige IDs, one-of-one supply, and the $1,000–$5,000 price range. The test file passes source parsing; the live API suite has not yet been executed.
+- **Asset integrity check:** all 12 prestige SVGs are distinct file blobs, parse as SVG documents by structural inspection, and contain no remote image references or embedded script tags. This confirms asset distinctness, not final artistic/animation quality.
 
 ## Implemented fixes and verification hardening
 
