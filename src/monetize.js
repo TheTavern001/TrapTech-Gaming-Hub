@@ -89,6 +89,7 @@ const reserved = (id) => db.prepare("SELECT COUNT(*) c FROM store_orders WHERE p
 const setting = (k, d) => { const r = db.prepare('SELECT value FROM settings WHERE key=?').get(k); try { return r ? JSON.parse(r.value) : d; } catch { return d; } };
 const setSetting = (k, v) => db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at').run(k, JSON.stringify(v), Date.now());
 const ADDR = () => String(process.env.BTC_ADDRESS || '').trim();
+const prestigeSalesEnabled = () => process.env.PRESTIGE_SALES_ENABLED === '1';
 function checkoutState() {
   const a = ADDR(); const v = a ? BTC.validateAddress(a) : { ok: false, why: 'BTC_ADDRESS is not set' };
   const on = !!setting('checkout_enabled', true);
@@ -114,6 +115,7 @@ async function createOrder(user, productId, t = Date.now()) {
   const st = checkoutState(); if (!st.enabled) return { status: 503, error: st.reason };
   if (!st.providers.bitcoin.configured) return { status: 503, error: 'Bitcoin checkout is not configured.' };
   const p = prod(productId); if (!p || !p.active) return { status: 404, error: 'That item is not for sale.' };
+  if (p.kind === 'prestige' && !prestigeSalesEnabled()) return { status: 403, error: 'Prestige originals are preview-only until their wearable variations and compatibility review are approved.' };
   if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return { status: 409, error: 'Sold out (or the last ones are reserved by open orders).' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: 'You already have this season\'s pass.' };
   const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status='pending' AND expires_at > ?").get(user.id, t).c; if (open >= 3) return { status: 429, error: 'Finish or let your open orders expire first (max 3).' };
@@ -139,6 +141,7 @@ async function createStripeOrder(user, productId, t = Date.now()) {
   if (!st.enabled) return { status: 503, error: st.reason };
   if (!st.providers.stripe.configured) return { status: 503, error: 'Credit/debit card checkout is not configured.' };
   const p = prod(productId); if (!p || !p.active) return { status: 404, error: 'That item is not for sale.' };
+  if (p.kind === 'prestige' && !prestigeSalesEnabled()) return { status: 403, error: 'Prestige originals are preview-only until their wearable variations and compatibility review are approved.' };
   if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return { status: 409, error: 'Sold out (or the last ones are reserved by open orders).' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: "You already have this season's pass." };
   const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status IN ('pending','seen','confirming') AND expires_at > ?").get(user.id, t).c;
@@ -362,7 +365,7 @@ function routes(app, A, H) {
     res.json({ received: true });
   });
   app.get('/api/store', (req, res) => { const me = currentUser(req); const st = checkoutState();
-    res.json({ ok: true, currency: { name: 'Hub Crowns', short: 'Crowns' }, checkout: { enabled: st.enabled, reason: st.reason, methods: st.methods || [] },
+    res.json({ ok: true, currency: { name: 'Hub Crowns', short: 'Crowns' }, checkout: { enabled: st.enabled, reason: st.reason, methods: st.methods || [] }, prestige_sales_enabled: prestigeSalesEnabled(),
       packs: products().filter(p => p.kind === 'pack').map(p => ({ id: p.id, name: p.name, usd_cents: p.usd_cents, crowns: p.crowns, bonus: p.bonus })),
       pass: (() => { const p = prod('season-pass'); return p && p.active ? { id: p.id, name: p.name, usd_cents: p.usd_cents, ...p.data } : null; })(),
       prestige: prestigeWall().filter(p => p.active).map(p => ({ ...p, owners: undefined, owners_count: p.owners.length })),
@@ -415,4 +418,4 @@ function routes(app, A, H) {
     if (b.crowns) { addCrowns(u.id, Math.trunc(Number(b.crowns)), 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, crowns: crowns(u.id) }); }
     res.json(manualGrant(u.id, String(b.product_id || ''), (req.admin && req.admin.username) || 'admin', String(b.note || ''))); });
 }
-module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, _stripeSignatureOk: stripeSignatureOk };
+module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, prestigeSalesEnabled, _stripeSignatureOk: stripeSignatureOk };
