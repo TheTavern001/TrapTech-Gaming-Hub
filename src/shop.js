@@ -399,8 +399,8 @@ function catalog({ limit = 500, type = '', q = '' } = {}) {
 const CATALOG_UNIVERSE_SIZE = 1200;
 function catalogUniverse({ limit = 50, offset = 0, type = '', q = '', user = null, t = Date.now() } = {}) {
   const safeLimit = Math.max(1, Math.min(100, Math.floor(Number(limit) || 50)));
-  const safeOffset = Math.max(0, Math.floor(Number(offset) || 0));
-  const needle = String(q || '').trim().toLowerCase();
+  const safeOffset = Math.max(0, Math.min(CATALOG_UNIVERSE_SIZE, Math.floor(Number(offset) || 0)));
+  const needle = String(q || '').trim().slice(0, 80).toLowerCase();
   const rot = module.exports.rotation(t);
   const onSale = new Set(module.exports.allOnSale(rot).map(it => it.id));
   const own = user ? owned(user.id) : new Set();
