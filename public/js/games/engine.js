@@ -192,7 +192,7 @@ export class Game {
     this.c = canvas; this.ctx = canvas.getContext('2d');
     this.onEnd = opts.onEnd || (() => {}); this.onState = opts.onState || (() => {});
     this.best = opts.best || 0; this.sfx = new Synth(); this.tel = new Telemetry(); this.seed = opts.seed || ''; this.r = seeded(this.seed); this.log = [];
-    this.state = 'ready'; this.t = 0; this.parts = []; this.pops = []; this.running = false;
+    this.state = 'ready'; this.t = 0; this.parts = []; this.pops = []; this.running = false; this._activePointers = new Set(); this._activeKeys = new Set();
     this._bind(); this.resize(); this.reset(); this.layout(); this._inited = true;
     this.ready = Promise.resolve(this.load ? this.load() : null).then(() => (this.amb && this.amb.ready)).then(() => this.draw());
   }
@@ -208,16 +208,16 @@ export class Game {
     this._h = {
       pd: (e) => { e.preventDefault(); try { this.c.setPointerCapture(e.pointerId); } catch {} const [x, y] = pos(e); this.sfx._ctx();
         if (this.state === 'ready') { this.begin(); if (this.startOnTapOnly) return; }
-        if (this.state === 'play') { this.tel.hit(); this.onDown(x, y, e); } },
+        if (this.state === 'play') { this._activePointers.add(e.pointerId); this.tel.hit(); this.onDown(x, y, e); } },
       pm: (e) => { if (this.state === 'play') { const [x, y] = pos(e); this.onMove(x, y, e); } },
-      pu: (e) => { if (this.state === 'play') { const [x, y] = pos(e); this.onUp(x, y, e); } },
+      pu: (e) => { this._activePointers.delete(e.pointerId); if (this.state === 'play') { const [x, y] = pos(e); this.onUp(x, y, e); } },
       kd: (e) => {
         if (e.code === 'KeyP' || e.code === 'Escape') { this.togglePause(); return; }
         if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
         if (this.state === 'ready' && !e.repeat && (e.code === 'Space' || e.code === 'Enter')) { this.sfx._ctx(); this.begin(); if (this.startOnTapOnly) return; }
-        if (this.state === 'play') { if (!e.repeat) this.tel.hit(); this.onKey(e.code, true, e); }
+        if (this.state === 'play') { this._activeKeys.add(e.code); if (!e.repeat) this.tel.hit(); this.onKey(e.code, true, e); }
       },
-      ku: (e) => { if (this.state === 'play') this.onKey(e.code, false, e); },
+      ku: (e) => { this._activeKeys.delete(e.code); if (this.state === 'play') this.onKey(e.code, false, e); },
       vis: () => { if (document.hidden && this.state === 'play') this.pause(true); },
       rs: () => this.resize(),
     };
@@ -257,7 +257,7 @@ export class Game {
     this.draw();
   }
   begin() { if (this.state !== 'ready') return; this._ev = null; this.state = 'play'; this.startedAt = performance.now(); this.playT = 0; this.onState('play'); }
-  pause(v = true) { if (this.state !== 'play' && this.state !== 'paused') return; this.state = v ? 'paused' : 'play'; this.last = performance.now(); this.onState(this.state); this.draw(); }
+  pause(v = true) { if (this.state !== 'play' && this.state !== 'paused') return; if (v && this.state === 'play') { for (const id of this._activePointers) this.onUp(0, 0, { pointerId: id, pointerType: 'touch' }); this._activePointers.clear(); for (const code of this._activeKeys) this.onKey(code, false, { code }); this._activeKeys.clear(); } this.state = v ? 'paused' : 'play'; this.last = performance.now(); this.onState(this.state); this.draw(); }
   togglePause() { if (this.state === 'play') this.pause(true); else if (this.state === 'paused') this.pause(false); }
   // v5: server seed for this run (from /api/run/start). Re-deals the board if the run has not started yet.
   setSeed(s) { this.seed = s || ''; this.r = seeded(this.seed); if (this.state === 'ready') { this.log = []; this._ev = null; this.reset(); this.layout(); this.draw(); } }
