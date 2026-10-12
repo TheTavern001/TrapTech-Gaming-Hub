@@ -82,9 +82,20 @@ async function detailSheet(id, onBought) {
 // ---------- /shop ----------
 async function shopPage() {
   const { shell, api, icon, esc, fmt } = C;
+  let catalogOffset = 0, catalogType = '', catalogQuery = '', catalogResults = [];
   const draw = async () => {
     const r = await api('/api/shop'); if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is unavailable', esc(r.error || '')));
     const bal = r.balance; const ev = r.events || [];
+    const catUrl = '/api/shop/catalog?limit=24&offset=' + catalogOffset + '&type=' + encodeURIComponent(catalogType) + '&q=' + encodeURIComponent(catalogQuery);
+    const cat = await api(catUrl);
+    if (cat.ok) {
+      const page = cat.items || [];
+      if (catalogOffset === 0) catalogResults = page;
+      else { const byId = new Map(catalogResults.map(x => [x.id, x])); page.forEach(x => byId.set(x.id, x)); catalogResults = [...byId.values()]; }
+      let style = document.getElementById('shop-catalog-css');
+      if (!style) { style = document.createElement('style'); style.id = 'shop-catalog-css'; document.head.appendChild(style); }
+      style.textContent = cat.css || '';
+    }
     shell('/shop', `<div class="narrow wide ec">
       <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Points Shop</h1><a class="ec-how small" href="/shop/how-it-works">${icon('circle-help')} How it works</a></div>
       ${r.signed_in ? `<div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><div class="tiny muted orb">HUB POINTS</div><b class="sb-n" id="pts-bal">${fmt(bal)}</b><div class="tiny muted">${fmt(r.earned)} earned all-time${r.perks && r.perks.discount ? ` • ${r.perks.discount}% season discount` : ''}</div></div><a class="btn sm ghost" href="#earn">How to earn</a></div>`
@@ -99,6 +110,22 @@ async function shopPage() {
       ${grid('shop-season', r.season.items, bal)}
       ${r.peek ? `<div class="section-h"><h2>${icon('eye')} Tomorrow's daily picks</h2><span class="small muted">Season perk: early peek</span></div><div class="ec-peek">${r.peek.map(i => `<button class="ec-peek-i" data-item="${esc(i.id)}">${preview(i, 'sm')}<span>${esc(i.name)}</span></button>`).join('')}</div>` : ''}
       ${r.vault_radar ? `<div class="section-h"><h2>${icon('history')} Vault radar</h2><span class="small muted">Season perk</span></div>${r.vault_radar.length ? `<div class="card pad ec-radar">${r.vault_radar.map(v => `<div class="mini-row" data-item="${esc(v.item.id)}"><b>${esc(v.item.name)}</b><span class="small muted">${dateOf(v.at)}</span></div>`).join('')}</div>` : `<p class="small muted">No Vault returns in the next 7 days.</p>`}` : ''}
+      <section class="shop-catalog-section" id="catalogue">
+        <div class="section-h"><h2>${icon('shopping-bag')} Full Cosmetic Catalogue</h2><span class="small muted">${cat.ok ? fmt(cat.total) + ' items' : '1,000+ items'}</span></div>
+        <p class="small muted">Browse 1,000 permanent original cosmetics plus the rotating shop: banners, frames, nameplates, titles, badges and animated profile effects. All items are cosmetic only—no score, XP leaderboard or giveaway advantage.</p>
+        <form class="catalog-filter card pad" id="catalog-filter">
+          <label for="catalog-search">Search cosmetics</label><input id="catalog-search" name="q" type="search" maxlength="80" value="${esc(catalogQuery)}" placeholder="Search names, styles, colors…">
+          <label for="catalog-type">Category</label><select id="catalog-type" name="type">
+            <option value="" ${!catalogType ? 'selected' : ''}>All cosmetics</option><option value="banner" ${catalogType === 'banner' ? 'selected' : ''}>Banners</option>
+            <option value="frame" ${catalogType === 'frame' ? 'selected' : ''}>Avatar frames</option><option value="color" ${catalogType === 'color' ? 'selected' : ''}>Nameplates &amp; colors</option>
+            <option value="title" ${catalogType === 'title' ? 'selected' : ''}>Titles</option><option value="badge" ${catalogType === 'badge' ? 'selected' : ''}>Badges &amp; accessories</option>
+            <option value="effect" ${catalogType === 'effect' ? 'selected' : ''}>Animated effects</option>
+          </select><button class="btn sm" type="submit">${icon('search')} Search</button><button class="btn sm ghost" type="button" id="catalog-clear">Clear</button>
+        </form>
+        <p class="tiny muted" id="catalog-count">${cat.ok ? 'Showing ' + fmt(catalogResults.length) + ' of ' + fmt(cat.total) + ' items' : 'Catalogue temporarily unavailable.'}</p>
+        ${catalogResults.length ? grid('shop-catalog', catalogResults, bal) : '<div class="card pad">No cosmetics match this search. Try another name or category.</div>'}
+        ${cat.ok && cat.has_more ? '<div class="catalog-more"><button class="btn" id="catalog-more">' + icon('chevrons-down') + ' Load more cosmetics</button></div>' : ''}
+      </section>
       <div class="section-h" id="earned"><h2>${icon('target')} Earned, not bought</h2><span class="small muted">Unlock by score or weekly rank</span></div>
       <div class="ec-earned">${r.earned_items.map(i => { const pct = i.need ? Math.min(100, Math.round((i.best || 0) / i.need * 100)) : 0;
         return `<div class="card ec-earn ${i.owned ? 'owned' : ''}" data-item="${esc(i.id)}" tabindex="0" role="button">${preview(i, 'sm')}<div class="ec-earn-b"><b>${esc(i.name)}</b><div class="tiny muted">${esc(i.requirement)}</div>
@@ -112,6 +139,13 @@ async function shopPage() {
     </div>`);
     C.tickInline && C.tickInline();
     document.querySelectorAll('main [data-item]').forEach(el => { const open = (e) => { e.preventDefault(); detailSheet(el.dataset.item, draw); }; el.addEventListener('click', open); el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }); });
+    const filter = document.getElementById('catalog-filter');
+    if (filter) filter.onsubmit = (e) => { e.preventDefault(); const fd = new FormData(filter); catalogQuery = String(fd.get('q') || '').trim(); catalogType = String(fd.get('type') || ''); catalogOffset = 0; catalogResults = []; draw(); };
+    const clear = document.getElementById('catalog-clear');
+    if (clear) clear.onclick = () => { catalogQuery = ''; catalogType = ''; catalogOffset = 0; catalogResults = []; draw(); };
+    const more = document.getElementById('catalog-more');
+    if (more) more.onclick = () => { catalogOffset += 24; draw(); };
+
   };
   await draw();
 }

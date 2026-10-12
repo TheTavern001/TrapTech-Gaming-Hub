@@ -248,3 +248,12 @@ button,.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .av-opt{min-width:0;overflow:hidden}
 @media(max-width:760px){.store-cosmetics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.av-ed{grid-template-columns:1fr}.av-prev{position:relative;top:auto}.avatar-stage{height:min(54vh,420px);min-height:300px}.av-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:390px){.store-cosmetics-grid{gap:8px}.store-cosmetic-card{padding:8px}.store-cosmetic-card .ec-prev.store-preview{height:100px;min-height:100px}.av-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Permanent 1,000+ item cosmetic catalogue */
+.shop-catalog-section{margin-top:30px}
+.catalog-filter{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.7fr) auto auto;align-items:end;gap:10px;margin:12px 0 14px}
+.catalog-filter label{font-size:.76rem;color:var(--muted,#a7b0d4);font-weight:750}
+.catalog-filter input,.catalog-filter select{width:100%;min-width:0}
+.catalog-more{display:flex;justify-content:center;padding:18px}
+#catalog-count{margin:8px 0}
+@media(max-width:650px){.catalog-filter{grid-template-columns:1fr 1fr}.catalog-filter label:nth-of-type(1),.catalog-filter input{grid-column:1/-1}.catalog-filter button{width:100%}}

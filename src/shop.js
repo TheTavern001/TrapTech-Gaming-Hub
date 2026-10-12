@@ -182,7 +182,7 @@ function adminEvents(t) {
       items: [...[0, 1].map(s => ({ it: resolve(G.make('e', 900000 + e.id, s, G.parse.contexts.e(900000 + e.id, s)).id), tag: 'event' })), ...picked.map(resolve).filter(Boolean).map(it => ({ it, tag: 'event' }))] }; });
 }
 const allOnSale = (rot) => [...rot.daily, ...rot.weekly, ...(rot.season ? rot.season.items : []), ...(rot.events || []).flatMap(e => e.items)];
-const inRotation = (rot, it) => allOnSale(rot).some(x => x && it && x.id === it.id);
+const inRotation = (rot, it) => !!(it && ((it.src === 'c' && it.num === 1 && it.slot >= 0 && it.slot < 1000) || (HANDMADE_BY[it.id] && it.src !== 'k' && it.src !== 'b'))) || allOnSale(rot).some(x => x && it && x.id === it.id);
 
 // ---------- earned (score / leaderboard gated) items: never sold ----------
 let RANGES = {}; try { RANGES = require('../docs/score-ranges.json').games || {}; } catch {}
@@ -199,6 +199,20 @@ G.parse.contexts.b = (num, slot) => {
   if (num === PODIUM) return slot === 0 ? { type: 'badge', rarity: 'epic', palette: 'gold', theme: 'gaming', name: 'Weekly Podium', icon: 'trophy' } : slot === 1 ? { type: 'title', rarity: 'rare', palette: 'chrome', theme: 'gaming', name: 'Weekly Top 10' } : null;
   const g = GATE_BY.get(num); if (!g || slot > 1) return null; const pal = G.PAL_KEYS[G.hash('gp', g.id) % G.PAL_KEYS.length];
   return slot === 0 ? { type: 'banner', rarity: 'epic', palette: pal, theme: 'gaming', name: `${g.title} Pro` } : { type: 'frame', rarity: 'legendary', palette: pal, theme: 'gaming', name: `${g.title} Elite` };
+};
+G.parse.contexts.c = (num, slot) => {
+  if (num !== 1 || !Number.isInteger(slot) || slot < 0 || slot >= 1000) return null;
+  const type = G.TYPES[slot % G.TYPES.length];
+  const theme = ['gaming', 'culture', 'money'][Math.floor(slot / 2) % 3];
+  const rarity = slot % 100 < 48 ? 'common' : slot % 100 < 78 ? 'rare' : slot % 100 < 95 ? 'epic' : 'legendary';
+  const paletteSets = { gaming: ['neon', 'arcade', 'galaxy', 'toxic', 'chrome', 'ocean'], culture: ['kush', 'haze', 'terp', 'sunset', 'mint', 'dab'], money: ['gold', 'chrome', 'ice', 'royal', 'mint', 'rose'] };
+  const palette = paletteSets[theme][(slot * 7 + Math.floor(slot / 6)) % paletteSets[theme].length];
+  const r = G.rng(G.hash('catalog-name', num, slot)); const words = G.WORDS[theme];
+  const pick = (xs) => xs[Math.floor(r() * xs.length)];
+  const nouns = { banner: words.noun, frame: ['Frame', 'Orbit', 'Rim', 'Halo', 'Border'], color: ['Glow', 'Ink', 'Shine', 'Script', 'Tone'], title: words.title, badge: ['Badge', 'Medallion', 'Insignia', 'Emblem', 'Crest'], effect: ['Aura', 'Trail', 'Particles', 'Pulse', 'Atmosphere'] };
+  const kind = { banner: 'Banner', frame: 'Frame', color: 'Nameplate', title: 'Title', badge: 'Badge', effect: 'Effect' }[type];
+  const stem = type === 'title' ? pick(words.title) : pick(words.adj) + ' ' + pick(nouns[type]);
+  return { type, rarity, theme, palette, name: stem + ' ' + kind + ' ' + String(slot + 1).padStart(4, '0') };
 };
 const gateItem = (gt) => resolve(G.make('b', gt.num, gt.slot, G.parse.contexts.b(gt.num, gt.slot)).id);
 const gateText = (gt) => gt.kind === 'weekly' ? (gt.need === 3 ? 'Finish top 3 on any game\'s weekly leaderboard' : 'Finish top 10 on any game\'s weekly leaderboard')
@@ -385,7 +399,7 @@ function detail(user, id, t = Date.now()) {
     : rot.season.items.some(x => x.id === it.id) ? { section: 'season', ends_at: rot.season_ends } : (() => { const e = rot.events.find(e => e.items.some(x => x.id === it.id)); return e ? { section: 'event', event: e.name, ends_at: e.ends_at } : null; })();
   const gate = GATES.find(g => gateItem(g).id === it.id);
   const owners = db.prepare('SELECT COUNT(*) AS n FROM user_items WHERE item_id=?').get(it.id).n;
-  return { item: { ...o, tag, tag_label: TAG_LABEL[tag] }, on_sale: on, where, source: it.src === 'k' ? `Season ${it.num} free track (${it.label || 'level reward'})` : it.src === 'b' ? 'Earned, not sold' : it.src === 's' ? `Season ${it.num} shop` : it.src === 'e' ? 'Event item' : it.src === 'w' ? 'Weekly featured drop' : it.src === 'd' ? 'Daily drop' : 'Original v5 collection',
+  return { item: { ...o, tag, tag_label: TAG_LABEL[tag] }, on_sale: on, where, source: it.src === 'k' ? `Season ${it.num} free track (${it.label || 'level reward'})` : it.src === 'b' ? 'Earned, not sold' : it.src === 's' ? `Season ${it.num} shop` : it.src === 'e' ? 'Event item' : it.src === 'w' ? 'Weekly featured drop' : it.src === 'd' ? 'Daily drop' : it.src === 'c' ? 'Permanent 1,000-item cosmetic catalogue' : 'Original v5 collection',
     sold: it.src !== 'k' && it.src !== 'b', requirement: gate ? gateText(gate) : null, price: on ? priceParts(it, t) : null, your_price: on && user ? module.exports.priceFor(it, user, t) : null, history: history(it.id), owners };
 }
 // for the admin panel (src/admin-ops.js) and tests: the catalog that has appeared so far, newest first
@@ -393,6 +407,26 @@ function catalog({ limit = 500, type = '', q = '' } = {}) {
   syncGen(); const today = realToday();
   const list = [...HANDMADE, ...[...GEN.values()].filter(i => (SIM.seen.get(i.id) || {}).first <= today).reverse()];
   return list.filter(i => (!type || i.type === type) && (!q || i.name.toLowerCase().includes(String(q).toLowerCase()))).slice(0, limit).map(i => ({ ...pub(i, false), src: i.generated ? i.src : 'v5', history: history(i.id) }));
+}
+// Permanent, searchable catalogue: 1,000 stable original cosmetics plus the handmade legacy collection.
+function catalogItems({ limit = 24, offset = 0, type = '', q = '', user = null, t = Date.now() } = {}) {
+  const lim = Math.max(1, Math.min(60, Number.parseInt(limit, 10) || 24));
+  const off = Math.max(0, Math.min(5000, Number.parseInt(offset, 10) || 0));
+  const query = String(q || '').trim().toLowerCase().slice(0, 80);
+  const allowed = new Set([...G.TYPES, '']); const filterType = allowed.has(String(type)) ? String(type) : '';
+  const own = user ? owned(user.id) : new Set();
+  const generated = Array.from({ length: 1000 }, (_, slot) => resolve(G.make('c', 1, slot, G.parse.contexts.c(1, slot)).id));
+  const all = [...HANDMADE, ...generated].filter(it => it && (!filterType || it.type === filterType) && (!query || it.name.toLowerCase().includes(query)));
+  const page = all.slice(off, off + lim);
+  const items = page.map(it => {
+    const item = { ...pub(it, own.has(it.id)), src: it.generated ? it.src : 'v5', on_sale: true, current_price: module.exports.listPrice(it, t), tag: it.src === 'c' ? 'catalog' : null, tag_label: it.src === 'c' ? 'Always available' : undefined };
+    if (user && !item.owned) item.your_price = module.exports.priceFor(it, user, t);
+    return item;
+  });
+  const css = [G.KEYFRAMES, ...page.filter(it => it.generated).map(it => it.type === 'banner'
+    ? '.bn-' + it.id + '{background:url(/shop/art/' + it.id + '.svg) center/cover no-repeat;background-color:' + (G.PALETTES[it.palette] || G.PALETTES.neon)[0] + '}'
+    : G.itemCss(it)).filter(Boolean)].join('\n');
+  return { ok: true, total: all.length, catalogue_count: 1000, limit: lim, offset: off, has_more: off + lim < all.length, items, css };
 }
 function schedule(days = 14, t = Date.now()) { const d0 = Math.max(EPOCH_DAY, dayNum(t)); const out = []; for (let d = d0; d < d0 + days; d++) { const r = module.exports.rotation(PR().dayStart(d) + 3600e3); out.push({ day: d, at: PR().dayStart(d), daily: r.daily.map(i => ({ id: i.id, name: i.name, tag: r.tags[i.id] || null })), weekly: r.weekly.map(i => i.id), events: r.events.map(e => e.name) }); } return out; }
 function stats() { syncGen(); return { generated_so_far: GEN.size, handmade: HANDMADE.length, vaulted: [...SIM.vaulted.values()].filter(v => v <= realToday()).length, simulated_to: SIM.day }; }
@@ -407,6 +441,7 @@ function listFor(own, type) {
 let ICONS = null;
 function icons() { if (!ICONS) { try { ICONS = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'public', 'js', 'icons.js'), 'utf8').match(/export const ICONS=(\{.*?\});/s)[1]); } catch { ICONS = {}; } } return ICONS; }
 function routes(app, A, H) {
+  app.get('/api/shop/catalog', (req, res) => { const me = H.currentUser(req); const result = catalogItems({ limit: req.query.limit, offset: req.query.offset, type: req.query.type, q: req.query.q, user: me }); res.setHeader('Cache-Control', 'no-store'); res.json(result); });
   app.get('/api/shop', (req, res) => {
     const me = H.currentUser(req);
     const balanceNow = me ? module.exports.sync(me.id) : 0;
@@ -436,5 +471,5 @@ function upcomingEvents(t = Date.now()) { const d0 = dayNum(t); const out = []; 
 
 module.exports = { ITEMS, BY_ID, RARITY, THEMES, EARN, sync, balance, earned, owned, rotation, buy, pub, css, cssKey, attach,
   // v7 engine (docs/ECONOMY.md)
-  EPOCH_DAY, EVENTS, GATES, CAP, COOL, TYPE_MULT, RULES, DISCLAIMER, resolve, listPrice, priceParts, priceFor, inRotation, allOnSale, view, detail, history, catalog, schedule, stats, listFor,
+  EPOCH_DAY, EVENTS, GATES, CAP, COOL, TYPE_MULT, RULES, DISCLAIMER, resolve, listPrice, priceParts, priceFor, inRotation, allOnSale, view, detail, history, catalog, catalogItems, schedule, stats, listFor,
   grantGates, grantWeekly, eventsOn, upcomingEvents, routes, gateItem, _sim: SIM };
