@@ -187,8 +187,8 @@ function grant(o, how = 'auto', t = Date.now()) {
     if (p.kind === 'pack') addCrowns(o.user_id, p.crowns + p.bonus, 'purchase', o.ref, t);
     else if (p.kind === 'pass') db.prepare('INSERT OR IGNORE INTO pass_owned (user_id, season, source, order_id, created_at) VALUES (?,?,?,?,?)').run(o.user_id, o.season || curSeason(t), 'purchase', o.id, t);
     else if (p.kind === 'prestige') {
-      const active = db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=? AND revoked_at IS NULL').get(p.id).c;
-      if (active >= p.supply) {
+      const issuedEver = db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=?').get(p.id).c;
+      if (issuedEver >= p.supply) {
         db.prepare("UPDATE store_orders SET status='sold_out_refund', note=? WHERE id=?").run('One-of-one original already awarded: refund manually', o.id);
         return { ok: false, error: 'sold out' };
       }
