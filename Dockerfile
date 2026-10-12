@@ -19,6 +19,7 @@ COPY public ./public
 COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
 COPY tools/prelaunch-deep-audit.js ./tools/prelaunch-deep-audit.js
 COPY tools/verify-prelaunch.js ./tools/verify-prelaunch.js
+COPY tools/e2e-mobile.js ./tools/e2e-mobile.js
 # Pre-gzip static text assets, pre-scale OG card art, pre-render the default share image (-> /app/build).
 # Runs without secrets (env vars are not available at build time on Deplexo).
 RUN mkdir -p docs/audit \
