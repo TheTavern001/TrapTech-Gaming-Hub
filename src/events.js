@@ -127,8 +127,16 @@ function routes(app, A, H) {
   A.put('/events/:id/meta', (req, res) => {
     const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });
     const b = req.body || {}; const pick = (v, ok, d) => ok.includes(v) ? v : d;
+    const nextPayment = pick(b.payment_status, ['n/a', 'unpaid', 'paid', 'refunded', 'comped'], g.payment_status);
+    // For booking-backed events the sponsor quote is the payment source of truth. The legacy
+    // event-metadata editor must not bypass the quote's verified-paid transition and unhide an
+    // unpaid event. Payment can still be revoked here to block an event immediately.
+    if (g.booking_id && nextPayment === 'paid' && String(g.payment_status || '').toLowerCase() !== 'paid') {
+      const quote = db.prepare('SELECT status FROM sponsor_quotes WHERE booking_id=?').get(g.booking_id);
+      if (!quote || quote.status !== 'paid') return res.status(409).json({ ok: false, error: 'Booking payment can only be confirmed after its sponsor quote is verified as paid.' });
+    }
     db.prepare('UPDATE giveaways SET vendor=?, booking_status=?, payment_status=?, updated_at=? WHERE id=?').run(String(b.vendor ?? g.vendor).slice(0, 80),
-      pick(b.booking_status, ['none', 'requested', 'quoted', 'accepted', 'booked'], g.booking_status), pick(b.payment_status, ['n/a', 'unpaid', 'paid', 'refunded', 'comped'], g.payment_status), Date.now(), g.id);
+      pick(b.booking_status, ['none', 'requested', 'quoted', 'accepted', 'booked'], g.booking_status), nextPayment, Date.now(), g.id);
     res.json({ ok: true, event: eventPublic(find(g.id)) });
   });
   // sudden-death playoff for an exact skill tie on a winning place (src/games-lib-playoff.js; admin page /games-lib/admin-playoffs.html)
