@@ -69,7 +69,16 @@ export class BrickBreaker extends Game {
         }
         for (const k of this.bricks) { if (k.dead) continue;
           if (b.x + r > k.x && b.x - r < k.x + k.w && b.y + r > k.y && b.y - r < k.y + k.h) {
-            const ox = Math.min(b.x + r - k.x, k.x + k.w - (b.x - r)), oy = Math.min(b.y + r - k.y, k.y + k.h - (b.y - r)); if (ox < oy) b.vx = -b.vx; else b.vy = -b.vy;
+            const ox = Math.min(b.x + r - k.x, k.x + k.w - (b.x - r)), oy = Math.min(b.y + r - k.y, k.y + k.h - (b.y - r));
+            // Resolve penetration as well as velocity; otherwise a fast ball can damage a steel brick on several
+            // substeps during one contact, or get trapped flipping direction while still inside the rectangle.
+            if (ox < oy) {
+              if (b.x < k.x + k.w / 2) { b.x = k.x - r; b.vx = -Math.abs(b.vx); }
+              else { b.x = k.x + k.w + r; b.vx = Math.abs(b.vx); }
+            } else {
+              if (b.y < k.y + k.h / 2) { b.y = k.y - r; b.vy = -Math.abs(b.vy); }
+              else { b.y = k.y + k.h + r; b.vy = Math.abs(b.vy); }
+            }
             this.hitBrick(k, b); break; } }
         // keep the speed in step with the ramp (and the slow power-up)
         const v = Math.hypot(b.vx, b.vy), tv = this.speed(); if (Math.abs(v - tv) > 4) { b.vx *= tv / v; b.vy *= tv / v; }
