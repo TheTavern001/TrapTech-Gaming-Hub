@@ -394,7 +394,7 @@ function profileFor(user) {
   const recent = db.prepare('SELECT game_id, score, coins, created_at FROM runs WHERE user_id=? ORDER BY created_at DESC LIMIT 10').all(user.id)
     .map(r => ({ ...r, game_title: cfg.gameInfo(r.game_id)?.title || r.game_id, unit: cfg.gameInfo(r.game_id)?.unit || 'pts' }));
   const gb = globalBoard(0); const grank = gb.findIndex(r => r.user_id === user.id) + 1;
-  const entries = db.prepare(`SELECT COUNT(DISTINCT g.id) AS c FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id JOIN runs r ON r.game_id=gg.game_id AND r.user_id=? AND r.started_at>=g.start_at AND r.created_at<=g.end_at AND r.created_at>=g.start_at AND r.score>=g.min_score`).get(user.id).c;
+  const entries = db.prepare(`SELECT COUNT(DISTINCT g.id) AS c FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id JOIN runs r ON r.game_id=gg.game_id AND r.user_id=? AND r.started_at>=g.start_at AND r.created_at<=g.end_at AND r.created_at>=g.start_at AND r.score>=g.min_score WHERE g.booking_id IS NULL OR LOWER(g.payment_status) IN ('paid','comped')`).get(user.id).c;
   const unl = ach.unlockedMap(user.id);
   const achievements = [...unl.entries()].sort((a, b) => b[1] - a[1]).map(([id, at]) => { const a = ach.BY_ID[id]; return a && { ...ach.publicAch(a, true), unlocked_at: at }; }).filter(Boolean);
   return { username: user.username, member_since: user.created_at, demo: !!user.is_demo, total_score: total, games_played: plays, coins,
@@ -485,7 +485,7 @@ const userCos = (id) => { const u = id && db.prepare('SELECT username, is_demo, 
 app.get('/api/community', (req, res) => {
   const tab = req.query.tab || 'all';
   const ann = db.prepare('SELECT id, title, body, created_at, is_demo FROM announcements ORDER BY created_at DESC LIMIT 30').all().map(a => ({ kind: 'announcement', key: `a:${a.id}`, ...a }));
-  const wins = db.prepare(`SELECT w.id, w.user_id, w.drawn_at AS created_at, u.username, g.title, w.method FROM winners w JOIN users u ON u.id=w.user_id JOIN giveaways g ON g.id=w.giveaway_id WHERE g.active=1 ORDER BY w.drawn_at DESC LIMIT 30`).all()
+  const wins = db.prepare(`SELECT w.id, w.user_id, w.drawn_at AS created_at, u.username, g.title, w.method FROM winners w JOIN users u ON u.id=w.user_id JOIN giveaways g ON g.id=w.giveaway_id WHERE g.active=1 AND (g.booking_id IS NULL OR LOWER(g.payment_status) IN ('paid','comped')) ORDER BY w.drawn_at DESC LIMIT 30`).all()
     .map(w => ({ kind: 'winner', key: `w:${w.id}`, uid: w.user_id, user: userCos(w.user_id), title: `${w.username} won "${w.title}"`, body: w.method === 'top' ? 'Winner by top score' : 'Winner by random draw', created_at: w.created_at }));
   const hs = db.prepare("SELECT id, user_id, type, message AS title, created_at, is_demo FROM activity WHERE type IN ('highscore','player','achievement','levelup','streak','tournament') ORDER BY created_at DESC LIMIT 40").all()
     .map(a => ({ kind: 'activity', key: `x:${a.id}`, user: userCos(a.user_id), ...a, uid: a.user_id, user_id: undefined }));
