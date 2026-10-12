@@ -13,9 +13,11 @@ try {
   const M = require('../src/monetize');
   const prices = [150, 400, 900, 2000].map(price => M.crownPrice({ price }));
   assert.deepStrictEqual(prices, [50, 100, 225, 500], 'Crown prices must follow the published cosmetic tiers');
-  assert.strictEqual(M.prod('season-pass').data.xp_boost_pct, 0, 'Season Pass must not grant an XP boost');
-  assert.strictEqual(M.passState(null).xp_boost_pct, 0, 'public pass state must never advertise a paid XP boost');
-  assert.match(M.NON_ADVANTAGE, /does not boost XP/, 'store disclosure must explicitly rule out a paid XP boost');
+  assert.strictEqual(M.prod('season-pass').data.xp_boost_pct, 10, 'Season Pass must grant exactly a 10% premium-cosmetic unlock boost');
+  assert.strictEqual(M.passState(null).xp_boost_pct, 0, 'a player without the pass receives no premium-track boost');
+  assert.match(M.NON_ADVANTAGE, /10% boost only to unlocking its own premium cosmetic rewards/, 'store disclosure must limit the boost to premium cosmetic unlocks');
+  assert.match(M.NON_ADVANTAGE, /raw XP earned, public season standings or winners/, 'raw XP, public rankings and winners must never be affected');
+  assert.match(M.NON_ADVANTAGE, /does not boost free-track levels, public rankings or giveaway performance/, 'no paid competitive advantage is allowed');
   const ACH = require('../src/achievements');
   assert(!ACH.ADMIN_BADGES.some(b => ['founder', 'traptech-team'].includes(b.id)), 'no player-facing Founder or creator/team badge exists');
   const COS = require('../src/cosmetics');
