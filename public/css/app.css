@@ -1020,6 +1020,7 @@ input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):n
 .px-art::after { inset:7%; border:1px solid rgba(255,255,255,.14); border-radius:17px; }
 .px-art .px-glow { position:absolute; inset:12%; border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,.22),transparent 68%); filter:blur(2px); z-index:1; }
 .px-art > svg { position:relative; z-index:3; width:42%; height:42%; color:var(--px-ink,#fff7dc); filter:drop-shadow(0 0 8px currentColor) drop-shadow(0 5px 5px rgba(0,0,0,.5)); }
+.px-art .px-artwork { position:relative; z-index:3; display:block; width:86%; height:86%; object-fit:contain; filter:drop-shadow(0 4px 8px rgba(0,0,0,.42)); }
 .px-art > i { position:absolute; display:block; pointer-events:none; z-index:2; }
 .px-art > i:nth-of-type(1) { inset:10%; border:1px solid rgba(255,255,255,.4); border-radius:50%; transform:rotate(-24deg) scaleX(.72); }
 .px-art > i:nth-of-type(2) { inset:17%; border:1px dashed rgba(255,255,255,.3); border-radius:50%; transform:rotate(35deg) scaleX(.6); }
