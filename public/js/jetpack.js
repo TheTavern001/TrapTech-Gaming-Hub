@@ -44,6 +44,11 @@ class Sfx {
 }
 
 const rnd = (a, b) => a + Math.random() * (b - a);
+function seededRng(seed) {
+  let h = 2166136261;
+  for (const ch of String(seed)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function distToSeg(px, py, ax, ay, bx, by) {
   const dx = bx - ax, dy = by - ay; const l2 = dx * dx + dy * dy || 1;
@@ -58,6 +63,7 @@ export class JetpackDash {
     this.onEnd = opts.onEnd || (() => {});
     this.onState = opts.onState || (() => {});
     this.best = opts.best || 0;
+    this.seed = ''; this.fallbackSeed = `${Date.now()}-${Math.random()}`; this.rng = seededRng(this.fallbackSeed);
     this.sfx = new Sfx(this.base); this.tel = new Telemetry();
     this.input = false; this.running = false; this.paused = false; this.destroyed = false;
     this._bind();
@@ -108,6 +114,7 @@ export class JetpackDash {
     this.cityFar = mk(0, 120, 260, 40, 90); this.cityNear = mk(0, 160, 330, 60, 120);
   }
   reset() {
+    this.rng = seededRng(this.seed || this.fallbackSeed);
     this.state = 'ready';
     this.t = 0; this.dist = 0; this.mps = START_MPS; this.coins = 0;
     this.p = { x: 170, y: H - FLOOR - 40, vy: 0, r: 22, onFloor: true, anim: 0, shield: false, inv: 0 };
@@ -127,7 +134,9 @@ export class JetpackDash {
   pause(v = true) { if (this.state !== 'play' && this.state !== 'paused') return; this.state = v ? 'paused' : 'play'; this.input = false; this.last = performance.now(); this.onState(this.state); this.draw(); }
   togglePause() { if (this.state === 'play') this.pause(true); else if (this.state === 'paused') this.pause(false); }
   restart() { this.tel.reset(); this.reset(); this.draw(); }
-  setSeed() {}
+  random() { return this.rng(); }
+  range(min, max) { return min + this.random() * (max - min); }
+  setSeed(seed) { this.seed = String(seed || ''); if (this.state === 'ready') { this.reset(); this.draw(); } }
   get score() { return Math.floor(this.dist); }
 
   frame(now) {
@@ -163,7 +172,7 @@ export class JetpackDash {
     if (this.state === 'play') {
       if (this.dist >= this.nextSpawnAt) this._spawnObstacle();
       if (this.dist >= this.nextCoinAt) this._spawnCoins();
-      if (this.dist >= this.nextShieldAt) { this.pickups.push({ x: this.W + 40, y: rnd(CEIL + 80, H - FLOOR - 80), t: 0 }); this.nextShieldAt += rnd(700, 1100); }
+      if (this.dist >= this.nextShieldAt) { this.pickups.push({ x: this.W + 40, y: this.range(CEIL + 80, H - FLOOR - 80), t: 0 }); this.nextShieldAt += this.range(700, 1100); }
     }
 
     // obstacles
@@ -243,34 +252,34 @@ export class JetpackDash {
   _spawnObstacle() {
     const d = this.dist; const x = this.W + 120;
     const top = CEIL + 40, bot = H - FLOOR - 40;
-    const roll = Math.random();
+    const roll = this.random();
     const diff = Math.min(1, d / 2500);
     if (d > 180 && roll < 0.16 + diff * 0.1) {
       // missile (1 or 2)
-      const n = d > 900 && Math.random() < 0.35 ? 2 : 1;
-      for (let i = 0; i < n; i++) this.missiles.push({ phase: 'warn', t: -i * 0.5, warn: 1.25, x: this.W - 30, y: this.p.y + (i ? rnd(-120, 120) : 0) });
+      const n = d > 900 && this.random() < 0.35 ? 2 : 1;
+      for (let i = 0; i < n; i++) this.missiles.push({ phase: 'warn', t: -i * 0.5, warn: 1.25, x: this.W - 30, y: this.p.y + (i ? this.range(-120, 120) : 0) });
     } else if (roll < 0.45) {
-      const n = d > 600 && Math.random() < 0.4 ? 2 : 1;
+      const n = d > 600 && this.random() < 0.4 ? 2 : 1;
       for (let i = 0; i < n; i++) {
-        const rr = rnd(30, 42); const y = rnd(top + rr, bot - rr);
-        this.obs.push({ type: 'saw', x: x + i * 170, y, y0: y, r: rr, rot: 0, t: 0, bob: d > 400 && Math.random() < 0.5 ? rnd(40, 110) : 0, bobSpeed: rnd(1.5, 3) });
+        const rr = this.range(30, 42); const y = this.range(top + rr, bot - rr);
+        this.obs.push({ type: 'saw', x: x + i * 170, y, y0: y, r: rr, rot: 0, t: 0, bob: d > 400 && this.random() < 0.5 ? this.range(40, 110) : 0, bobSpeed: this.range(1.5, 3) });
       }
     } else {
-      const len = rnd(130, 120 + diff * 150);
+      const len = this.range(130, 120 + diff * 150);
       const kinds = ['v', 'h', 'd1', 'd2']; if (d > 350) kinds.push('spin');
-      const k = kinds[Math.floor(Math.random() * kinds.length)];
-      const ang = { v: Math.PI / 2, h: 0, d1: Math.PI / 4, d2: -Math.PI / 4, spin: rnd(0, Math.PI) }[k];
+      const k = kinds[Math.floor(this.random() * kinds.length)];
+      const ang = { v: Math.PI / 2, h: 0, d1: Math.PI / 4, d2: -Math.PI / 4, spin: this.range(0, Math.PI) }[k];
       const ext = Math.abs(Math.sin(ang)) * len / 2 + 20;
-      const y = k === 'spin' ? rnd(top + len / 2, bot - len / 2) : rnd(top + ext, bot - ext);
-      this.obs.push({ type: 'zap', x, y: clamp(y, top + 20, bot - 20), len, ang, spin: k === 'spin' ? (Math.random() < 0.5 ? -1 : 1) * rnd(1.2, 2.2) : 0, t: 0 });
+      const y = k === 'spin' ? this.range(top + len / 2, bot - len / 2) : this.range(top + ext, bot - ext);
+      this.obs.push({ type: 'zap', x, y: clamp(y, top + 20, bot - 20), len, ang, spin: k === 'spin' ? (this.random() < 0.5 ? -1 : 1) * this.range(1.2, 2.2) : 0, t: 0 });
     }
     // distance until next obstacle shrinks with difficulty
-    this.nextSpawnAt = d + rnd(17, 26) - diff * 6;
+    this.nextSpawnAt = d + this.range(17, 26) - diff * 6;
   }
   _spawnCoins() {
     const x0 = this.W + 60; const top = CEIL + 50, bot = H - FLOOR - 50;
-    const shape = Math.floor(Math.random() * 3);
-    const y0 = rnd(top + 40, bot - 40); const out = [];
+    const shape = Math.floor(this.random() * 3);
+    const y0 = this.range(top + 40, bot - 40); const out = [];
     if (shape === 0) { for (let i = 0; i < 4; i++) for (let j = 0; j < 8; j++) out.push([x0 + j * 30, y0 - 45 + i * 30]); }
     else if (shape === 1) { for (let j = 0; j < 14; j++) out.push([x0 + j * 30, y0 + Math.sin(j / 2) * 60]); }
     else { for (let j = 0; j < 7; j++) { out.push([x0 + j * 30, y0 - j * 18]); out.push([x0 + j * 30, y0 + j * 18]); } }
@@ -278,9 +287,9 @@ export class JetpackDash {
     for (const [x, y] of out) {
       const yy = clamp(y, top, bot);
       if (this.obs.some(o => o.type === 'saw' ? Math.hypot(o.x - x, o.y - yy) < o.r + 30 : (() => { const [a, b] = this._zapEnds(o); return distToSeg(x, yy, a[0], a[1], b[0], b[1]) < 34; })())) continue;
-      this.coinsArr.push({ x, y: yy, ph: Math.random() * 6 });
+      this.coinsArr.push({ x, y: yy, ph: this.random() * 6 });
     }
-    this.nextCoinAt = this.dist + rnd(28, 55);
+    this.nextCoinAt = this.dist + this.range(28, 55);
   }
   _jetParticles() {
     const p = this.p; if (Math.random() < 0.7)
