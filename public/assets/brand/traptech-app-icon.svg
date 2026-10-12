@@ -1,17 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="The Gaming Hub">
-<title>The Gaming Hub</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Trap Tech double T crown app icon">
+<title>Trap Tech — Double T Crown</title>
 <defs>
- <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" offset="0"/><stop stop-color="#cbd5e1" offset=".48"/><stop stop-color="#eef2ff" offset=".7"/><stop stop-color="#64748b" offset="1"/></linearGradient>
- <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
- <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a855f7"/><stop offset="1" stop-color="#4f46e5"/></linearGradient>
- <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0a6"/><stop offset=".35" stop-color="#f8bd50"/><stop offset=".7" stop-color="#d88722"/><stop offset="1" stop-color="#ffe18a"/></linearGradient>
+<linearGradient id="white" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e8edf7"/></linearGradient>
 </defs>
-<rect width="512" height="512" rx="112" fill="#05091b"/>
-<path d="M72 192 130 126 201 126 256 66 311 126 382 126 440 192 402 334 338 391 256 450 174 391 110 334Z" fill="#080d24" stroke="#182344" stroke-width="8"/>
-<path d="M88 198 137 145 187 145 256 78 325 145 375 145 424 198 390 310 332 362 256 416 180 362 122 310Z" fill="none" stroke="url(#violet)" stroke-width="9" opacity=".8" filter="url(#glow)"/>
-<path d="M102 196 148 151 193 151 256 91 319 151 364 151 410 196 382 292 324 344 256 392 188 344 130 292Z" fill="none" stroke="url(#metal)" stroke-width="24" stroke-linejoin="bevel"/>
-<path d="M169 236 256 164 343 236 318 260 256 211 194 260Z" fill="url(#cyan)" stroke="#67e8f9" stroke-width="4" stroke-linejoin="bevel"/>
-<path d="M142 280H223V342L256 369 289 342V280H370L338 310H311V355L256 400 201 355V310H174Z" fill="url(#metal)" stroke="#f8fafc" stroke-width="3" stroke-linejoin="bevel"/>
-<path d="M229 278H283V327L256 349 229 327Z" fill="#070b20"/>
-<path d="M111 214 146 179 178 179 148 208Z" fill="url(#violet)"/><path d="M401 214 366 179 334 179 364 208Z" fill="url(#cyan)"/>
+<rect width="512" height="512" rx="112" fill="#030b27"/>
+<path d="M105 188 139 112 190 165 256 55 322 165 373 112 407 188 389 210 123 210Z" fill="url(#gold)" stroke="#f8c45f" stroke-width="3" stroke-linejoin="miter"/>
+<path d="M125 185 151 135 190 179 256 74 322 179 361 135 387 185 365 190 322 190 256 217 190 190 147 190Z" fill="#030b27"/>
+<path d="M111 201 Q256 169 401 201 L394 222 Q256 190 118 222Z" fill="url(#gold)"/>
+<path d="M58 235 H237 L273 274 H201 V423 L164 460 V313 H108Z" fill="url(#white)"/>
+<path d="M454 235 H275 L239 274 H311 V423 L348 460 V313 H404Z" fill="url(#white)"/>
 </svg>
