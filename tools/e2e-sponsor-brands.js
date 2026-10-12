@@ -71,6 +71,20 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.ok && /^TT-/.test(r.body.code) && r.body.active, 'paid quote -> official event', r.body); const evc = r.body.code; const evid = r.body.id;
     const createdEvent = db.prepare('SELECT v7, score_rule, win_method FROM giveaways WHERE id=?').get(evid);
     ok(createdEvent.v7 === 1 && createdEvent.score_rule === 'sum_best' && createdEvent.win_method === 'score', 'multi-game total mode uses sum of best score per linked game');
+    // Separate highest-single-score booking guards against accidentally mapping every non-random
+    // competition to the total-score rule.
+    r = await anon('/api/sponsor/requests', { body: { brand: 'E2E Best Score Co', email: 'best@example.com', business_type: BT, prize: 'Gift card', games: ['stack'], competition: 'best', length_days: 7 } });
+    const bestTok = r.body.token, bestRid = r.body.id;
+    ok(r.body.ok && bestTok, 'highest-score booking request created');
+    r = await ADM('/api/admin/sponsor/requests/' + bestRid + '/status', { body: { status: 'sent' } });
+    ok(r.body.ok, 'highest-score quote sent');
+    r = await anon('/api/sponsor/requests/' + bestTok + '/accept', { body: {} });
+    ok(r.body.ok && r.body.request.status === 'accepted', 'highest-score quote accepted by sponsor');
+    r = await ADM('/api/admin/sponsor/requests/' + bestRid + '/status', { body: { status: 'paid' } });
+    ok(r.body.ok, 'highest-score quote marked paid after acceptance');
+    r = await ADM('/api/admin/sponsor/requests/' + bestRid + '/create-event', { body: {} });
+    const bestEvent = db.prepare('SELECT v7, score_rule, win_method FROM giveaways WHERE id=?').get(r.body.id);
+    ok(r.body.ok && bestEvent.v7 === 1 && bestEvent.score_rule === 'best' && bestEvent.win_method === 'score', 'highest-single-score booking maps to best-score rule, not sum_best');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.existing && r.body.code === evc, 'second click returns the same event (idempotent)');
     r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.games.join() === 'stack,void-swarm' && r.body.event.vendor === 'E2E Sponsor Co' && r.body.event.label.includes('E2E SPONSOR CO x GAMING HUB'), 'event carries the vendor, games and label', r.body.event);
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.event && r.body.request.event.code === evc && /<svg/.test(r.body.request.event.qr_svg), 'vendor quote page shows the event link + QR code after payment');
