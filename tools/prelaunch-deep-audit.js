@@ -143,6 +143,31 @@ if (!avatar.testsCoverOwnership) avatar.warnings.push('Avatar E2E does not visib
 if (!avatar.supportsPresentationOptions) avatar.warnings.push('Check presentation choices (male/female/other) and inclusive part compatibility.');
 if (!avatar.usesWebGLRenderer) avatar.warnings.push('3D avatar renderer not detected; confirm fallback and target experience.');
 
+const serverSrc = read(path.join(ROOT, 'src', 'server.js')) || '';
+const indexHtml = read(path.join(ROOT, 'public', 'index.html')) || '';
+const manifestRaw = read(path.join(ROOT, 'public', 'manifest.webmanifest'));
+let manifest = null;
+try { manifest = manifestRaw ? JSON.parse(manifestRaw) : null; } catch { /* recorded below */ }
+const canonicalIconPath = path.join(ROOT, 'public', 'assets', 'brand', 'traptech-app-icon.svg');
+const brandIcons = {
+  canonicalSvgPresent: exists(canonicalIconPath),
+  faviconMatchesCanonical: (read(path.join(ROOT, 'public', 'assets', 'brand', 'favicon.svg')) || '').trim() === (read(canonicalIconPath) || '').trim(),
+  indexUsesCanonicalSvg: /assets\\/brand\\/traptech-app-icon\\.svg/.test(indexHtml),
+  dynamicRasterRoutePresent: /HUB_ICON_ROUTES/.test(serverSrc) && /@resvg\\/resvg-js/.test(serverSrc),
+  manifestValidJson: !!manifest,
+  manifestIcons: Array.isArray(manifest?.icons) ? manifest.icons.map(x => ({ src: x.src, sizes: x.sizes, type: x.type, purpose: x.purpose || 'any' })) : [],
+  missingManifestIconRoutes: []
+};
+if (!brandIcons.canonicalSvgPresent) issues.push({ severity: 'blocker', finding: 'Canonical Trap Tech app icon SVG is missing.' });
+if (!brandIcons.faviconMatchesCanonical) warnings.push({ severity: 'review', finding: 'favicon.svg differs from the canonical Trap Tech app icon.' });
+if (!brandIcons.indexUsesCanonicalSvg) warnings.push({ severity: 'review', finding: 'HTML does not reference the canonical Trap Tech app icon SVG.' });
+if (!brandIcons.dynamicRasterRoutePresent) issues.push({ severity: 'blocker', finding: 'Dynamic Trap Tech raster icon route is missing.' });
+if (!brandIcons.manifestValidJson) issues.push({ severity: 'blocker', finding: 'Web app manifest is missing or invalid JSON.' });
+for (const item of brandIcons.manifestIcons) {
+  if (!item.src || !serverSrc.includes(item.src.split('?')[0])) brandIcons.missingManifestIconRoutes.push(item.src || '(missing src)');
+}
+if (brandIcons.missingManifestIconRoutes.length) issues.push({ severity: 'blocker', finding: 'Manifest icons do not map to a declared server icon route or static asset.', paths: brandIcons.missingManifestIconRoutes });
+
 const itemIds = [];
 for (const m of shopSrc.matchAll(/^\s*\[['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]/gm)) {
   itemIds.push({ id: m[1], type: m[2], name: m[3], source: 'shop.js' });
@@ -176,7 +201,7 @@ const evidence = {
     avatar: { editorPresent: avatar.editorPresent, rendererPresent: avatar.rendererPresent, ownershipTestsDetected: avatar.testsCoverOwnership },
     shop: { staticItemsFound: shop.staticItemsFound, duplicateStaticIds: shop.staticItemIdDuplicates.length, generatorPresent: shop.generatorPresent }
   },
-  coreGames: coreRows, games: rows, issues, warnings, avatar, shop,
+  coreGames: coreRows, games: rows, issues, warnings, avatar, shop, brandIcons,
   requiredHumanGates: [
     'Fresh desktop and real Android device playthrough for every game',
     'Record controls, pause/resume, restart, scoring, score submission and invalid/forged-score rejection',
@@ -190,5 +215,5 @@ const evidence = {
 };
 fs.mkdirSync(REPORT_DIR, { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(evidence, null, 2) + '\n');
-console.log(JSON.stringify({ output: path.relative(ROOT, OUT), summary: evidence.summary, coreGamesAudited: coreRows.length, libraryGamesAudited: rows.length, blockers: issues.length, reviewNotes: warnings.length }, null, 2));
+console.log(JSON.stringify({ output: path.relative(ROOT, OUT), summary: evidence.summary, coreGamesAudited: coreRows.length, libraryGamesAudited: rows.length, brandIcons: { canonicalSvgPresent: brandIcons.canonicalSvgPresent, manifestValidJson: brandIcons.manifestValidJson, missingManifestIconRoutes: brandIcons.missingManifestIconRoutes.length }, blockers: issues.length, reviewNotes: warnings.length }, null, 2));
 if (issues.some(i => i.severity === 'blocker')) process.exitCode = 1;
