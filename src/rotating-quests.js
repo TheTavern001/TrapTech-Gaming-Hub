@@ -32,7 +32,7 @@ function buildTemplates(gameIds = GAME_IDS()) {
   const games = [...new Set(gameIds)].filter(id => typeof id === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(id)).sort();
   const out = [];
   for (const period of PERIODS) for (const objective of OBJECTIVES) for (const tier of TIERS) {
-    const variants = objective.id === 'distinct-games' || objective.id === 'play-days' || objective.id === 'streak' ? 8 : 12;
+    const variants = objective.id === 'distinct-games' || objective.id === 'play-days' || objective.id === 'streak' ? 30 : 40;
     for (let v = 0; v < variants; v++) {
       const game = objective.id === 'score' || objective.id === 'tier-medals' ? games[v % Math.max(1, games.length)] || null : null;
       const target = Math.min(objective.cap, objective.base * tier.multiplier * (v + 1) * PERIOD_MULTIPLIER[period]);
