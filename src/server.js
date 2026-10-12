@@ -649,6 +649,7 @@ A.delete('/giveaways/:id', (req, res) => {
 });
 A.post('/giveaways/:id/draw', (req, res) => {
   const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
+  if (!EV.bookingPaymentCleared(g)) return bad(res, 409, 'This booking-backed giveaway cannot draw winners until payment is confirmed.');
   if (R.ready(g).finalized_at) return bad(res, 409, 'This giveaway has ended and its final standings are locked. Use the review queue to confirm or disqualify winners.');
   const method = req.body.method === 'top' ? 'top' : 'random';
   const entrants = giveawayEntrants(g);
