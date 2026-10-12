@@ -88,6 +88,9 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.existing && r.body.code === evc, 'second click returns the same event (idempotent)');
     r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.games.join() === 'stack,void-swarm' && r.body.event.vendor === 'E2E Sponsor Co' && r.body.event.label.includes('E2E SPONSOR CO x GAMING HUB'), 'event carries the vendor, games and label', r.body.event);
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.event && r.body.request.event.code === evc && /<svg/.test(r.body.request.event.qr_svg), 'vendor quote page shows the event link + QR code after payment');
+    db.prepare('UPDATE giveaways SET booking_id=? WHERE id=?').run(rid + 999999, evid);
+    r = await anon('/api/sponsor/requests/' + tok); ok(!r.body.request.event, 'sponsor status page does not expose an event linked to a different booking');
+    db.prepare('UPDATE giveaways SET booking_id=? WHERE id=?').run(rid, evid);
     // Simulate a legacy event created before the payment gate, where the quote is accepted
     // and an event exists but its payment_status is still unpaid. Marking the verified quote paid
     // must update both records atomically so the sponsor does not remain permanently blocked.
