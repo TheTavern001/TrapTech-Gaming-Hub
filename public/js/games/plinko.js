@@ -35,7 +35,7 @@ export class Plinko extends Game {
     if (this.left > 0) { this.aiming = true; this.aimX = clamp(x, this.g.bx + this.g.r + 2, this.g.bx + this.g.bw - this.g.r - 2); }
   }
   onMove(x) { if (this.aiming) this.aimX = clamp(x, this.g.bx + this.g.r + 2, this.g.bx + this.g.bw - this.g.r - 2); }
-  onUp() { if (this.aiming) { this.aiming = false; this.drop(); } }
+  onUp(x, y, e) { if (e && e.cancelled) { this.aiming = false; return; } if (this.aiming) { this.aiming = false; this.drop(); } }
   onKey(code, down) {
     if (!down) return;
     if (code === 'ArrowLeft' || code === 'KeyA') { if (this.chip) this.nudge(this.chip.x - 1); else this.aimX = clamp(this.aimX - this.g.dx / 2, this.g.bx + this.g.r, this.g.bx + this.g.bw - this.g.r); }
