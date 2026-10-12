@@ -3,9 +3,40 @@
 // The server decides everything (prices, amounts, matching, grants); this file only shows it.
 let C = null;
 const usd = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
-const FX_CLASS = { sparkle: 'px-sparkle', cashrain: 'px-cash', goldsweep: 'px-gold' };
-const PX_ICON = { 'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair', 'prestige-crown': 'crown' };
-export function prestigeArt(id, fx, size = 120) { return `<div class="px-art ${FX_CLASS[fx] || ''}" style="--s:${size}px" aria-hidden="true"><span class="px-glow"></span>${C.icon(PX_ICON[id] || 'gem')}<i></i><i></i><i></i></div>`; }
+const FX_CLASS = {
+  sparkle: 'px-sparkle', cashrain: 'px-cash', goldsweep: 'px-gold',
+  'prism-cane': 'px-fx-prism', 'stack-throne': 'px-fx-stack', 'royal-crown': 'px-fx-royal',
+  'phoenix-mantle': 'px-fx-phoenix', 'singularity-orbit': 'px-fx-singularity', 'void-dragon': 'px-fx-void',
+  'nebula-wings': 'px-fx-nebula', 'titan-exoframe': 'px-fx-titan', 'holo-decree': 'px-fx-holo',
+  'storm-halo': 'px-fx-storm', 'chronos-mantle': 'px-fx-chronos', 'aurora-crown': 'px-fx-aurora'
+};
+const PX_ART = {
+  'prestige-original-cane': 'px-art-prism-cane',
+  'prestige-original-throne': 'px-art-stack-throne',
+  'prestige-original-crown': 'px-art-royal-crown',
+  'prestige-original-phoenix': 'px-art-phoenix-mantle',
+  'prestige-original-singularity': 'px-art-singularity',
+  'prestige-original-void-dragon': 'px-art-void-dragon',
+  'prestige-original-nebula-wings': 'px-art-nebula-wings',
+  'prestige-original-titan': 'px-art-titan-exoframe',
+  'prestige-original-holo-decree': 'px-art-holo-decree',
+  'prestige-original-storm-halo': 'px-art-storm-halo',
+  'prestige-original-chronos': 'px-art-chronos-mantle',
+  'prestige-original-aurora': 'px-art-aurora-crown',
+  'prestige-cane': 'px-art-prism-cane', 'prestige-throne': 'px-art-stack-throne', 'prestige-crown': 'px-art-royal-crown'
+};
+const PX_ICON = {
+  'prestige-original-cane': 'gem', 'prestige-original-throne': 'armchair', 'prestige-original-crown': 'crown',
+  'prestige-original-phoenix': 'flame', 'prestige-original-singularity': 'orbit', 'prestige-original-void-dragon': 'swords',
+  'prestige-original-nebula-wings': 'wind', 'prestige-original-titan': 'shield', 'prestige-original-holo-decree': 'scroll-text',
+  'prestige-original-storm-halo': 'zap', 'prestige-original-chronos': 'clock', 'prestige-original-aurora': 'sunrise',
+  'prestige-cane': 'wand-sparkles', 'prestige-throne': 'armchair', 'prestige-crown': 'crown'
+};
+export function prestigeArt(id, fx, size = 120) {
+  const art = PX_ART[id] || 'px-art-generic';
+  const effect = FX_CLASS[fx] || '';
+  return `<div class="px-art ${art} ${effect}" style="--s:${size}px" aria-hidden="true"><span class="px-glow"></span>${C.icon(PX_ICON[id] || 'gem')}<i></i><i></i><i></i></div>`;
+}
 async function storePage() {
   const { icon, esc, api, S } = C; const r = await api('/api/store'); if (!r.ok) return C.shell('/shop', C.emptyState('store', 'Store unavailable', 'Try again in a moment.'));
   const co = r.checkout; const pass = S.me ? await api('/api/pass') : null; let paymentProvider = (co.methods || []).includes('bitcoin') ? 'bitcoin' : 'stripe';
