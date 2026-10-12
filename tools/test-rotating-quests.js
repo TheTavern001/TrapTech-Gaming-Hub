@@ -1,4 +1,8 @@
 'use strict';
+// Config validates runtime secrets on import; isolated unit tests use throwaway values only.
+process.env.ADMIN_PASSWORD ||= 'unit-test-admin-password-not-for-deployment';
+process.env.SECRET ||= 'unit-test-secret-not-for-deployment-at-least-32-characters';
+process.env.NODE_ENV = 'test';
 const assert = require('node:assert/strict');
 const Q = require('../src/rotating-quests');
 
