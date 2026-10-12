@@ -24,6 +24,10 @@ RUN mkdir -p docs/audit \
  && node --check src/shop.js \
  && node --check src/shop-gen.js \
  && node --check src/avatars.js \
+ && node --check src/rotating-quests.js \
+ && node --check src/v3.js \
+ && node --check tools/test-rotating-quests.js \
+ && node tools/test-rotating-quests.js \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/verify-prelaunch.js \
  && node tools/verify-prelaunch.js \
