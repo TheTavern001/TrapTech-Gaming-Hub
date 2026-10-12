@@ -28,6 +28,8 @@ RUN mkdir -p docs/audit \
  && node --check src/v3.js \
  && node --check tools/test-rotating-quests.js \
  && node tools/test-rotating-quests.js \
+ && node --check tools/verify-game-syntax.js \
+ && node tools/verify-game-syntax.js \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/verify-prelaunch.js \
  && node tools/verify-prelaunch.js \
