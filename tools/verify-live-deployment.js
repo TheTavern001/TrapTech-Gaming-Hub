@@ -142,7 +142,7 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
         let u;
         try { u = new URL(ref, BASE + p); } catch { continue; }
         if (u.origin !== new URL(BASE).origin) continue;
-        if (!/\.(?:js|mjs|css|json|wasm|png|jpe?g|webp|svg|woff2?|mp3|ogg|wav|ttf|ico)$/i.test(u.pathname)) continue;
+        if (!/\.(?:js|mjs|css|json|wasm|png|jpe?g|webp|avif|gif|svg|woff2?|ttf|otf|mp3|ogg|wav|ico)$/i.test(u.pathname)) continue;
         localAssets.set(u.pathname, (localAssets.get(u.pathname) || new Set()).add(g.slug));
       }
     } catch (e) { fail('Library entry ' + g.slug, e.message); }
