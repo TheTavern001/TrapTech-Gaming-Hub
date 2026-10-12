@@ -9,7 +9,7 @@ The repository already contains a genuine WebGL avatar preview implementation:
 Therefore, it would be inaccurate to say that no 3D avatar implementation exists. The correct status is: **a prototype 3D viewer exists; parity with the requested fully customizable, polished avatar product is not yet verified.**
 
 ## Implementation update — 2026-10-12
-The avatar preview now has explicit zoom-in, zoom-out and reset-view controls, plus keyboard rotation (arrow keys or A/D), zoom (+/−) and reset (0). The WebGL canvas is keyboard-focusable and exposes the control instructions in its accessible label. Drag-start now synchronizes with the current auto-rotation to avoid a jump when the user begins rotating.
+The avatar preview now has explicit zoom-in, zoom-out and reset-view controls, plus keyboard rotation (arrow keys or A/D), zoom (+/−) and reset (0). The WebGL canvas is keyboard-focusable and exposes the control instructions in its accessible label. Drag-start now synchronizes with the current auto-rotation to avoid a jump when the user begins rotating. The editor also has a randomize-owned-parts shortcut and a reset-to-base action; neither grants ownership of locked items.
 
 This is source-level implementation only. The interactions still need real browser, touch, keyboard, reduced-motion and WebGL-fallback testing before the avatar acceptance gate can be marked complete.
 
