@@ -228,7 +228,7 @@ export class Game {
     this.c.style.touchAction = 'none';
   }
   clearInputs() {
-    for (const id of this._activePointers) this.onUp(0, 0, { pointerId: id, pointerType: 'touch' });
+    for (const id of this._activePointers) this.onUp(0, 0, { pointerId: id, pointerType: 'touch', cancelled: true });
     this._activePointers.clear();
     for (const code of this._activeKeys) this.onKey(code, false, { code });
     this._activeKeys.clear();
