@@ -106,6 +106,8 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/giveaways/' + evid);
     const unpaidLock = db.prepare('SELECT finalized_at FROM giveaways WHERE id=?').get(evid);
     ok(r.body.ok && unpaidLock.finalized_at == null, 'admin read / scheduled results sweep cannot lock an unpaid booking giveaway');
+    r = await ADM('/api/admin/v7/gw/' + evid + '/act/end', { body: { confirm: 'END' } });
+    ok(!r.body.ok && /cannot be ended or finalized until payment/i.test(r.body.error), 'v7 admin cannot force-end an unpaid booking giveaway');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} });
     ok(r.status === 409 && /payment is reconciled/i.test(r.body.error), 'idempotent create-event does not reissue a share URL while existing event payment is blocked');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'declined' } });
