@@ -26,11 +26,17 @@ const failures = [];
 for (const file of unique) {
   const source = fs.readFileSync(file, 'utf8');
   const isCoreModule = file.startsWith(coreRoot + path.sep);
-  const args = isCoreModule ? ['--input-type=module', '--check'] : ['--check'];
-  // For classic scripts, node --check needs the filename. For modules, stdin lets Node parse
-  // ES module syntax without changing package.json or requiring a browser runtime.
-  const checked = isCoreModule
-    ? spawnSync(process.execPath, args, { input: source, encoding: 'utf8', timeout: 15000 })
+  // Determine parser goal from syntax, not directory: library engines and individual titles can
+  // also be ES modules even though the package defaults to CommonJS.
+  const isModule = isCoreModule ||
+    /^\s*(?:import|export)\s/m.test(source) ||
+    /\bexport\s*[{\w]/.test(source) ||
+    file.endsWith('.module.min.js') ||
+    file.endsWith('.module.js');
+  // Parse modules via stdin so Node checks ESM grammar without resolving browser-only imports.
+  // Classic scripts are checked as files to preserve their ordinary script parsing rules.
+  const checked = isModule
+    ? spawnSync(process.execPath, ['--input-type=module', '--check', '-'], { input: source, encoding: 'utf8', timeout: 15000 })
     : spawnSync(process.execPath, ['--check', file], { encoding: 'utf8', timeout: 15000 });
   if (checked.error || checked.status !== 0) {
     const detail = checked.error ? checked.error.message : (checked.stderr || checked.stdout || 'unknown syntax-check failure');
