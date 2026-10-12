@@ -13,8 +13,10 @@ const ROOT = path.resolve(__dirname, '..');
 const failures = [];
 const results = [];
 const check = (name, ok, detail) => {
-  results.push({ name, ok: !!ok, ...(detail === undefined ? {} : { detail }) });
-  console.log((ok ? 'PASS ' : 'FAIL ') + name + (detail === undefined ? '' : ' — ' + (typeof detail === 'string' ? detail : JSON.stringify(detail))));
+  const passed = !!ok;
+  results.push({ name, ok: passed, ...(detail === undefined ? {} : { detail }) });
+  if (!passed) failures.push(name);
+  console.log((passed ? 'PASS ' : 'FAIL ') + name + (detail === undefined ? '' : ' — ' + (typeof detail === 'string' ? detail : JSON.stringify(detail))));
 };
 async function get(url) {
   const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15000), headers: { 'Cache-Control': 'no-cache' } });
@@ -132,7 +134,8 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     } catch (e) { fail('Library entry ' + g.slug, e.message); }
   });
 
-  const summary = { base: BASE, expectedFingerprint: expected, deployedFingerprint: buildJson?.build_fingerprint || null, checks: results.length, passed: results.filter(x => x.ok).length, failed: failures.length, failures };
+  const uniqueFailures = [...new Set(failures)];
+  const summary = { base: BASE, expectedFingerprint: expected, deployedFingerprint: buildJson?.build_fingerprint || null, checks: results.length, passed: results.filter(x => x.ok).length, failed: uniqueFailures.length, failures: uniqueFailures };
   console.log('\nLIVE VERIFICATION SUMMARY\n' + JSON.stringify(summary, null, 2));
   process.exitCode = failures.length ? 1 : 0;
 })().catch(e => { console.error('Live verification aborted:', e); process.exitCode = 2; });
