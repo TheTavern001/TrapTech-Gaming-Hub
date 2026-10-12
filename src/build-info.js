@@ -23,18 +23,18 @@ function buildFingerprint(root = path.resolve(__dirname, '..')) {
     'public/games-lib/kit.js',
     'public/games-lib/catalog.json'
   ]);
-  // Include all first-party source/metadata files so changes to avatar, shop, navigation,
-  // CSS, catalog metadata or a vendored game's JS/HTML change the live fingerprint too.
-  const sourceExt = new Set(['.js', '.html', '.css', '.json', '.webmanifest', '.svg']);
+  // Hash the complete shipped app and asset tree: a changed game, avatar, shop, stylesheet,
+  // sound, texture, thumbnail or catalog file must change the live fingerprint.
   const collect = (dir) => {
     if (!fs.existsSync(dir)) return;
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
       const abs = path.join(dir, ent.name);
       if (ent.isDirectory()) collect(abs);
-      else if (ent.isFile() && sourceExt.has(path.extname(ent.name).toLowerCase())) files.add(path.relative(root, abs).split(path.sep).join('/'));
+      else if (ent.isFile()) files.add(path.relative(root, abs).split(path.sep).join('/'));
     }
   };
-  for (const dir of ['src', 'public/js', 'public/css', 'public/games-lib', 'public/assets/brand']) collect(path.join(root, dir));
+  collect(path.join(root, 'src'));
+  collect(path.join(root, 'public'));
   const { games } = require('./games-lib');
   for (const game of games) {
     files.add('public/games-lib/' + game.slug + '/index.html');
