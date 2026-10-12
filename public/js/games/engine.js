@@ -227,8 +227,14 @@ export class Game {
     document.addEventListener('visibilitychange', this._h.vis); window.addEventListener('resize', this._h.rs);
     this.c.style.touchAction = 'none';
   }
+  clearInputs() {
+    for (const id of this._activePointers) this.onUp(0, 0, { pointerId: id, pointerType: 'touch' });
+    this._activePointers.clear();
+    for (const code of this._activeKeys) this.onKey(code, false, { code });
+    this._activeKeys.clear();
+  }
   destroy() {
-    this.running = false; cancelAnimationFrame(this.raf);
+    this.clearInputs(); this.running = false; cancelAnimationFrame(this.raf);
     this.c.removeEventListener('pointerdown', this._h.pd); this.c.removeEventListener('pointermove', this._h.pm);
     window.removeEventListener('pointerup', this._h.pu); window.removeEventListener('pointercancel', this._h.pu);
     window.removeEventListener('keydown', this._h.kd); window.removeEventListener('keyup', this._h.ku);
@@ -257,14 +263,14 @@ export class Game {
     this.draw();
   }
   begin() { if (this.state !== 'ready') return; this._ev = null; this.state = 'play'; this.startedAt = performance.now(); this.playT = 0; this.onState('play'); }
-  pause(v = true) { if (this.state !== 'play' && this.state !== 'paused') return; if (v && this.state === 'play') { for (const id of this._activePointers) this.onUp(0, 0, { pointerId: id, pointerType: 'touch' }); this._activePointers.clear(); for (const code of this._activeKeys) this.onKey(code, false, { code }); this._activeKeys.clear(); } this.state = v ? 'paused' : 'play'; this.last = performance.now(); this.onState(this.state); this.draw(); }
+  pause(v = true) { if (this.state !== 'play' && this.state !== 'paused') return; if (v && this.state === 'play') this.clearInputs(); this.state = v ? 'paused' : 'play'; this.last = performance.now(); this.onState(this.state); this.draw(); }
   togglePause() { if (this.state === 'play') this.pause(true); else if (this.state === 'paused') this.pause(false); }
   // v5: server seed for this run (from /api/run/start). Re-deals the board if the run has not started yet.
   setSeed(s) { this.seed = s || ''; this.r = seeded(this.seed); if (this.state === 'ready') { this.log = []; this._ev = null; this.reset(); this.layout(); this.draw(); } }
-  restart() { this.state = 'ready'; this.parts = []; this.pops = []; this.r = seeded(this.seed); this.log = []; this._ev = null; this.tel.reset(); this.reset(); this.layout(); this.onState('ready'); this.draw(); }
+  restart() { this.clearInputs(); this.state = 'ready'; this.parts = []; this.pops = []; this.r = seeded(this.seed); this.log = []; this._ev = null; this.tel.reset(); this.reset(); this.layout(); this.onState('ready'); this.draw(); }
   // End the run and submit the current score (used at game over and by "End run & save")
   finish() {
-    if (this.state === 'over') return; const wasReady = this.state === 'ready'; this.state = 'over';
+    if (this.state === 'over') return; const wasReady = this.state === 'ready'; this.clearInputs(); this.state = 'over';
     if (wasReady) return;
     const score = Math.max(0, Math.floor(this.score || 0)); if (score > this.best) this.best = score;
     this.onState('over'); this.onEnd({ score, coins: Math.floor(this.coins || 0), duration_ms: Math.round(performance.now() - this.startedAt), tel: this.tel.out(), log: this.log.length ? this.log.slice(0, 5000) : undefined, ev: this.evOut() });
