@@ -183,18 +183,20 @@ const shopSource = read(path.join(ROOT, 'src/shop.js')) || '';
 if (!/const CATALOG_UNIVERSE_SIZE = 1200/.test(shopSource) || !shopSource.includes("app.get('/api/shop/catalog'") || !shopSource.includes('catalog_only: !onSale.has(it.id)') || !shopSource.includes('if (!inRotation(rot, it))')) fail('src/shop.js', 'The 1,200-item catalog must be paginated, preview-only outside rotation, and protected by purchase-time rotation checks');
 try {
   const generator = require('../src/shop-gen');
-  const ids = new Set();
-  let invalid = 0, nondeterministic = 0;
+  const ids = new Set(), names = new Set();
+  let invalid = 0, nondeterministic = 0, duplicateNames = 0;
   for (let day = 0; day < 600; day++) for (let slot = 0; slot < 2; slot++) {
     const a = generator.make('d', 25000 + day, slot);
     const b = generator.make('d', 25000 + day, slot);
     if (!a || !a.id || !a.name || !generator.TYPES.includes(a.type) || !generator.RARITIES.includes(a.rarity)) invalid++;
     if (a && b && JSON.stringify(a) !== JSON.stringify(b)) nondeterministic++;
     if (a?.id) ids.add(a.id);
+    if (a?.name) { const key = a.type + ':' + a.name.toLowerCase(); if (names.has(key)) duplicateNames++; names.add(key); }
   }
   if (ids.size !== 1200) fail('src/shop-gen.js', 'Expected 1,200 unique generated item IDs, found ' + ids.size);
   if (invalid) fail('src/shop-gen.js', invalid + ' generated catalog items have invalid metadata');
   if (nondeterministic) fail('src/shop-gen.js', nondeterministic + ' generated catalog items are not deterministic');
+  if (duplicateNames) fail('src/shop-gen.js', duplicateNames + ' generated daily items share display names');
 } catch (e) { fail('src/shop-gen.js', 'Could not verify the 1,200-item generator: ' + e.message); }
 const avatar3dSource = read(path.join(ROOT, 'public/js/avatar-3d.js')) || '';
 const avatar3dBg = (avatar3dSource.match(/const backgrounds = \{([\s\S]*?)\n  \};/) || [])[1] || '';
