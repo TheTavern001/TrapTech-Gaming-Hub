@@ -144,6 +144,31 @@ try {
   const first = buildFingerprint(ROOT), second = buildFingerprint(ROOT);
   if (!/^[a-f0-9]{24}$/.test(first) || first !== second) fail('src/build-info.js', 'Build fingerprint is invalid or non-deterministic');
 } catch (e) { fail('src/build-info.js', 'Build fingerprint could not be computed: ' + e.message); }
+// Prestige store contract: exactly 12 new one-of-one originals, each >= $1,000 and bound to unique animated avatar art.
+const monetizeSource = fs.readFileSync(path.join(ROOT, 'src/monetize.js'), 'utf8');
+const prestigeBlock = (monetizeSource.match(/const PRESTIGE = \{([\s\S]*?)\n\};/) || [])[1] || '';
+const prestigeRows = [...prestigeBlock.matchAll(/'([^']+)'\s*:\s*\{[^}]*?supply:\s*(\d+)[^}]*?usd:\s*(\d+)[^}]*?fx:\s*'([^']+)'/g)];
+if (prestigeRows.length !== 12) fail('src/monetize.js', 'Expected exactly 12 new prestige originals, found ' + prestigeRows.length);
+const prestigeIds = new Set(), prestigeFx = new Set();
+for (const [, id, supply, usd, fx] of prestigeRows) {
+  if (prestigeIds.has(id)) fail('src/monetize.js', 'Duplicate prestige original id: ' + id);
+  if (prestigeFx.has(fx)) fail('src/monetize.js', 'Prestige originals must have unique signature effects: ' + fx);
+  if (Number(supply) !== 1) fail('src/monetize.js', id + ' must be one-of-one');
+  if (Number(usd) < 100000) fail('src/monetize.js', id + ' must be priced at $1,000 or more');
+  prestigeIds.add(id); prestigeFx.add(fx);
+}
+if (!monetizeSource.includes('const LEGACY_PRESTIGE') || !monetizeSource.includes('SET active=0') || !monetizeSource.includes('issued(p.id) + reserved(p.id) >= p.supply')) fail('src/monetize.js', 'Legacy ownership must be preserved and one-of-one supply/reservation enforced');
+if (!monetizeSource.includes('const insertOrder = db.transaction') || !monetizeSource.includes('One-of-one original already awarded')) fail('src/monetize.js', 'Prestige reservations and award checks must be transaction-protected');
+const avatarSource = fs.readFileSync(path.join(ROOT, 'src/avatars.js'), 'utf8');
+const prestigeBgBlock = (avatarSource.match(/const PRESTIGE_BG = \{([\s\S]*?)\n\};/) || [])[1] || '';
+for (const id of prestigeIds) {
+  if (!prestigeBgBlock.includes("'" + id + "'")) fail('src/avatars.js', 'Prestige original has no dedicated avatar background/effect: ' + id);
+}
+for (const visual of ['diamond-prism','stack-throne','royal-crown','phoenix-mantle','singularity-orbit','void-dragon','nebula-wings','titan-exoframe','holo-decree','storm-halo','chronos-mantle','aurora-crown']) {
+  if (!avatarSource.includes("c.bg === '" + visual + "'") || !avatarSource.includes('<animate')) fail('src/avatars.js', 'Missing animated prestige visual: ' + visual);
+}
+counts.prestigeOriginals = prestigeRows.length;
+
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/manifest.webmanifest'), 'utf8'));
 for (const icon of (manifest.icons || [])) {
   counts.manifestIcons++;
