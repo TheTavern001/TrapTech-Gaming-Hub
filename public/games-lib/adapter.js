@@ -2,6 +2,8 @@
 // starts a signed server run (/api/run/start), records scoring events (L3-style log, same format as src/ac-levels.js),
 // input telemetry (same shape as public/js/games/engine.js Telemetry), and submits at game over (/api/score).
 (function () {
+  // Responsive safety net for embedded/canvas games; game mechanics are unchanged.
+  try { const style = document.createElement('style'); style.textContent = 'html,body{max-width:100%;overflow-x:hidden}*,*::before,*::after{box-sizing:border-box}canvas,svg,video,img{max-width:100%}button,[role=button]{touch-action:manipulation}.touch-controls,.mobile-controls,.game-controls,[data-touch-controls]{box-sizing:border-box;max-width:100%;gap:clamp(6px,1.5vw,12px);flex-wrap:wrap}@media(max-width:700px){button,[role=button]{min-height:40px}}'; document.head.appendChild(style); } catch (_) {}
   const H = window.Hub = { token: null, seed: null, t0: 0, ev: [], last: 0, n: 0, tel: { n: 0, last: 0, sum: 0, sq: 0, k: 0, min: 0 }, guest: false, id: null };
   async function post(p, b) { const r = await fetch(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(b) }); let j = {}; try { j = await r.json(); } catch (e) {} j.status = r.status; return j; }
   H.start = async function (id) {

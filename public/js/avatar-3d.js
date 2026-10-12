@@ -6,7 +6,7 @@ export async function mountAvatar3D(stage, cfg) {
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const scene = new THREE.Scene();
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 0.82));
   renderer.setSize(Math.max(180, stage.clientWidth), Math.max(220, stage.clientHeight), false);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -16,7 +16,7 @@ export async function mountAvatar3D(stage, cfg) {
   renderer.domElement.setAttribute('aria-label', 'Interactive three-dimensional avatar preview. Drag to rotate. Focus the preview and use left/right arrows or A/D to rotate, plus or minus to zoom, and zero to reset.');
   renderer.domElement.setAttribute('role', 'img');
   renderer.domElement.tabIndex = 0;
-  renderer.domElement.style.cssText = 'width:100%;height:100%;display:block;touch-action:pan-y;outline:none';
+  renderer.domElement.style.cssText = 'width:100%;height:100%;display:block;touch-action:pan-y;outline:none;image-rendering:pixelated;image-rendering:crisp-edges';
   stage.replaceChildren(renderer.domElement);
 
   const backgrounds = {

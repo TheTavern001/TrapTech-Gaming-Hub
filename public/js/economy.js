@@ -130,7 +130,7 @@ async function seasonPage() {
           <div class="tiny">${fmt(s.xp)} season XP${s.head_start ? ` (incl. ${fmt(s.head_start)} head start)` : ''} • ${fmt(s.need - s.into)} XP to ${lvl >= s.levels ? 'the next Overdrive star' : 'level ' + (lvl + 1)}</div>`
           : `<a class="btn sm" href="/signup?next=/season">Sign up to start earning</a>`}
       </div></div>
-    <div class="nocash">${icon('shield')} <span><b>Free track only.</b> No paid pass. Every level is earned by playing; rewards are cosmetic with no cash value and never affect giveaways.</span></div>
+    <div class="nocash">${icon('shield')} <span><b>Free track for everyone.</b> All players earn raw season XP at the same rate and share the same public leaderboard. An optional pass adds a 10% boost only to premium cosmetic-track unlocks; it never changes game score or giveaway results.</span></div>
     <div class="section-h"><h2>${icon('zap')} Season perks</h2><a class="small" href="/shop/how-it-works#seasons">How seasons work</a></div>
     <div class="ec-perks">${s.perks.map(p => `<div class="card ec-perk ${p.active ? 'on' : ''}"><span class="ec-pl">Lv ${p.level}</span><b>${esc(p.name)}</b><span class="tiny muted">${esc(p.desc)}</span>${p.active ? `<span class="pill green">${icon('check')} Active</span>` : ''}</div>`).join('')}</div>
     <div class="section-h"><h2>${icon('list-checks')} Reward track</h2><span class="small muted">${s.levels} levels • ${fmt(s.max_xp)} XP</span></div>
