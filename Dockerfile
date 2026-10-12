@@ -33,6 +33,8 @@ RUN mkdir -p docs/audit \
  && node tools/verify-prelaunch.js \
  && node tools/prelaunch-deep-audit.js \
  && BUILD_DIR=/app/build node scripts/deplexo-prebuild.js \
+ && mkdir -p /app/build/audit \
+ && cp docs/audit/prelaunch-structural-audit.json /app/build/audit/prelaunch-structural-audit.json \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
 
 # Run the actual server in an isolated, disposable build-time database and verify its HTTP routes.
