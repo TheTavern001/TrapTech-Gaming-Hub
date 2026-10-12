@@ -204,6 +204,24 @@ const prestigeBackgrounds = ['diamond-prism','stack-throne','royal-crown','phoen
 for (const bg of prestigeBackgrounds) {
   if (!avatar3dBg.includes("'" + bg + "'") || !avatar3dSource.includes("cfg.bg === '" + bg + "'")) fail('public/js/avatar-3d.js', '3D avatar preview is missing prestige environment ' + bg);
 }
+const avatarSource = read(path.join(ROOT, 'src/avatars.js')) || '';
+const avatarWearables = [
+  ['held', 'cane', 'prestige-original-cane'], ['held', 'cash', 'prestige-original-throne'], ['hat', 'crown', 'prestige-original-crown'],
+  ['acc', 'phoenix-wings', 'prestige-original-phoenix'], ['acc', 'singularity-orbit', 'prestige-original-singularity'],
+  ['acc', 'void-dragon', 'prestige-original-dragon'], ['acc', 'nebula-wings', 'prestige-original-nebula'],
+  ['outfit', 'titan-exoframe', 'prestige-original-mech'], ['acc', 'holo-decree', 'prestige-original-holo'],
+  ['hat', 'storm-halo', 'prestige-original-storm'], ['acc', 'chronos-mantle', 'prestige-original-chronos'],
+  ['hat', 'aurora-crown', 'prestige-original-aurora']
+];
+for (const [kind, id, prestigeId] of avatarWearables) {
+  if (!avatarSource.includes("add('" + kind + "', '" + id + "'") || !avatarSource.includes("prestige: '" + prestigeId + "'")) fail('src/avatars.js', 'Missing wearable variation for ' + prestigeId + ' (' + kind + ':' + id + ')');
+}
+const avatar3dWearables = read(path.join(ROOT, 'public/js/avatar-3d.js')) || '';
+const avatarSvgSource = avatarSource;
+for (const id of ['phoenix-wings','singularity-orbit','void-dragon','nebula-wings','holo-decree','chronos-mantle','titan-exoframe','storm-halo','aurora-crown']) {
+  if (!avatar3dWearables.includes("cfg.acc === '" + id + "'") && !avatar3dWearables.includes("cfg.outfit === '" + id + "'") && !avatar3dWearables.includes("cfg.hat === '" + id + "'")) fail('public/js/avatar-3d.js', 'Missing 3D wearable geometry for ' + id);
+  if (!avatarSvgSource.includes("c.acc === '" + id + "'") && !avatarSvgSource.includes("c.outfit === '" + id + "'") && !avatarSvgSource.includes("c.hat === '" + id + "'")) fail('src/avatars.js', 'Missing SVG fallback art for ' + id);
+}
 const economyUi = read(path.join(ROOT, 'public/js/economy.js')) || '';
 if (!economyUi.includes('Browse 1,200+ items') || !economyUi.includes('/api/shop/catalog?limit=24') || !economyUi.includes('catalog-prev') || !economyUi.includes('catalog-next')) fail('public/js/economy.js', 'Points Shop must expose searchable paginated catalog browsing');
 const avatarPartsSource = read(path.join(ROOT, 'src/avatars.js')) || '';
