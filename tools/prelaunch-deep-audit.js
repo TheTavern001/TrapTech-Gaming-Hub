@@ -152,8 +152,8 @@ const canonicalIconPath = path.join(ROOT, 'public', 'assets', 'brand', 'traptech
 const brandIcons = {
   canonicalSvgPresent: exists(canonicalIconPath),
   faviconMatchesCanonical: (read(path.join(ROOT, 'public', 'assets', 'brand', 'favicon.svg')) || '').trim() === (read(canonicalIconPath) || '').trim(),
-  indexUsesCanonicalSvg: /assets\\/brand\\/traptech-app-icon\\.svg/.test(indexHtml),
-  dynamicRasterRoutePresent: /HUB_ICON_ROUTES/.test(serverSrc) && /@resvg\\/resvg-js/.test(serverSrc),
+  indexUsesCanonicalSvg: /assets\/brand\/traptech-app-icon\.svg/.test(indexHtml),
+  dynamicRasterRoutePresent: /HUB_ICON_ROUTES/.test(serverSrc) && /@resvg\/resvg-js/.test(serverSrc),
   manifestValidJson: !!manifest,
   manifestIcons: Array.isArray(manifest?.icons) ? manifest.icons.map(x => ({ src: x.src, sizes: x.sizes, type: x.type, purpose: x.purpose || 'any' })) : [],
   missingManifestIconRoutes: []
