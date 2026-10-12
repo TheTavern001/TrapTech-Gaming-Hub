@@ -5,6 +5,7 @@ const BASE = process.env.BASE || 'http://localhost:8787';
 const ENV_FILE = path.join(__dirname, '..', '.env');
 const env = { ...(fs.existsSync(ENV_FILE) ? Object.fromEntries(fs.readFileSync(ENV_FILE, 'utf8').split('\n').filter(Boolean).map(l => l.split(/=(.*)/s).slice(0, 2))) : {}), ...(process.env.ADMIN_PASSWORD ? { ADMIN_PASSWORD: process.env.ADMIN_PASSWORD } : {}) };
 const AP = '/' + (process.env.ADMIN_PATH || env.ADMIN_PATH); // v7 secret admin path
+const EXPECTED_LIBRARY_GAMES = require('../src/games-lib').games.length;
 let pass = 0, fail = 0;
 const ok = (cond, msg, extra) => { if (cond) { pass++; console.log('  PASS', msg); } else { fail++; console.log('  FAIL', msg, extra !== undefined ? JSON.stringify(extra).slice(0, 300) : ''); } };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -33,7 +34,7 @@ function client() {
   ok(/^TH-\d{6}$/.test(String(r.body.user && r.body.user.user_id)), '/api/me exposes stable-format public Hub ID', r.body.user);
   ok(typeof r.body.user.founder === 'boolean' && (r.body.user.founder ? r.body.user.identity_badge === 'FOUNDER' : r.body.user.identity_badge == null), 'Founder identity is server-derived and badge matches flag', r.body.user);
   r = await anon('/healthz'); ok(r.status === 200 && r.body.ok === true && r.body.version === 'V1', 'health check confirms DB query and V1 version', r.body);
-  r = await anon('/api/build'); ok(r.status === 200 && r.body.ok === true && r.body.version === 'V1' && Number(r.body.games_library) >= 100 && Number(r.body.core_games) > 0, 'build metadata reports V1 and game catalog counts', r.body);
+  r = await anon('/api/build'); ok(r.status === 200 && r.body.ok === true && r.body.version === 'V1' && Number(r.body.games_library) === EXPECTED_LIBRARY_GAMES && Number(r.body.core_games) > 0, 'build metadata reports V1 and exact game catalog counts', r.body);
   r = await anon('/api/run/start', { body: { game_id: 'jetpack-dash' } }); ok(r.status === 401, 'guest cannot start a scored run');
 
   console.log('# admin + giveaway');

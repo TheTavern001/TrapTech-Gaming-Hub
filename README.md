@@ -1,7 +1,7 @@
 # The Gaming Hub by Trap Tech Solutions
 
 Mobile-first game hub with accounts, leaderboards, giveaways, a booking request system and an admin dashboard, designed,
-built and operated by **Trap Tech Solutions**. 8 original HTML5 games, daily quests, login streaks, XP levels, a free season
+built and operated by **Trap Tech Solutions**. 16 core games and 80 curated Games Library titles (96 active game entries after duplicate-loop consolidation), daily quests, login streaks, XP levels, a free season
 track, tournaments (timed and bracket), friends, notifications, share cards and invite codes. Competitive outcomes remain
 server-validated and purchases are limited to cosmetic items, profile presentation, and season-track content—never gameplay
 power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-gap research and sources.
@@ -72,27 +72,30 @@ This works on Fly.io, Railway or any VPS. Always mount a volume at `/data`, or t
 Signed-in players' runs are scored automatically when the run ends (or from Pause > **End run & save score**). Guests can play
 practice runs, but those scores aren't saved.
 
-### Games (all 12 playable)
-Every game is an original HTML5 canvas game (touch + mouse + keyboard) built on `public/js/games/engine.js`, and every one uses the
-same signed run-token flow. Casino-style games use **free points only**: no real money, no purchases, no cash value.
+### Core games (all 16 playable)
 
-| Game | How it scores | Per-game cap (server) |
+All core games use the same signed run-token flow and accept only server-validated score submissions. For endless scores, the server checks elapsed time against a per-game scoring envelope: `perSec × elapsed + ramp × elapsed² / 2 + grace`, then hard-rejects results over twice that envelope. The global score ceiling is a sanity bound, not a per-game cap.
+
+| Game | Scoring loop | Server acceptance envelope |
 |---|---|---|
-| Jetpack Dash | meters flown | 30 m/s + 25 |
-| Drift Rush | meters driven + banked drift points (drift x chain up to x4; lost if you go off-road or hit a cone). 45 s timer, +10 s per 1,000 m, nitro orbs | 240/s + 200 |
-| Plinko | 10 free chips; slot values 200/50/20/5/100/5/20/50/200; aim + 3 nudges per chip; golden pegs x2 then x4 | 700/s + 900, max 8,000 |
-| Spin to Win | 5 free spins (BONUS adds one, max 8); hold-to-charge power meter, same power = same landing; x2 doubles the next spin; BUST = 0 | 700/s + 2,000, max 16,000 |
-| Memory Match | 100 x combo (up to x5) per pair + 10 per second left on clear; levels grow 4x3 to 6x5; time runs out = end | 1,100/s + 500 |
-| High Score | reflex targets: (10 + up to 15 accuracy) x combo multiplier (up to x5), gold = x2, bombs/misses cost 1 of 3 lives | 900/s + 300 |
-| Blazed Roulette | 1,000 free chips, 8 spins, max 100 per spin (10 on 0); timed DROP lands within 2 pockets of the marker; score = chips left | 120/s + 1,000, max 3,800 |
-| Terp Tapper | 4-lane rhythm: perfect 100 / great 60 / good 30 x combo multiplier (up to x4); 5 lives; tempo rises 96 to 168 BPM | 3,000/s + 500 |
-| Stack 2048 (v5) | slide-and-merge chips; score = value of every merge; run ends when no move is possible | 150/s + 400 |
-| Munchies Snake (v5) | 10 per bite (+5 per 10 segments), gold coin +50; wall/tail = end | 60/s + 150 |
-| Brick Breaker (v5) | 10 per brick (gold 50) x level x chain (up to x4) + level-clear bonus; 3 balls | 600/s + 600 |
-| Sky Hopper (v5) | towers passed; one hit ends the run | 1.6/s + 5, max 100,000 |
+| Jetpack Dash | Meters flown in one run | 30/s + 25 grace |
+| Drift Rush | Distance plus banked drift chains (up to x4) | 240/s + 200 grace |
+| Plinko | Slot points multiplied by golden pegs | 700/s + 900 grace |
+| Spin to Win | Total points from timed spins | 700/s + 2,000 grace |
+| Memory Match | Pair score, combo, remaining time and board-clear bonus; server replay-verified | 1,100/s + 500 grace |
+| High Score | Reflex targets, accuracy, combo, and gold-target bonus | 1,100/s + 300 grace |
+| Blazed Roulette | Points won on successful spins; no real-money value | 300/s + 40/s² ramp + 1,500 grace |
+| Terp Tapper | Rhythm timing: 100/60/30 per note, multiplied by combo | 4,000/s + 500 grace |
+| Neon Munchies | Pellets, snacks, golden pickups, and arena play | 400/s + 1,000 grace |
+| Brick Breaker | Bricks, wave multiplier, and hit-chain bonus | 1,200/s + 1,500 grace |
+| Sky Hopper | Towers passed; one collision ends the run | 1.6/s + 5 grace |
+| Void Swarm | Drone kills, dives, wave bonus, motherships and cleared waves | 700/s + 10/s² ramp + 3,000 grace |
+| Stack | Timed slab drops; tight landings maintain or grow the tower | 300/s + 200 grace |
+| Grow Guard | Pest eliminations and completed defense waves | 140/s + 1.2/s² ramp + 600 grace |
+| Sling Smash | Knock out Glitch Bots, destroy blocks and clear towers | 1,500/s + 3,000 grace |
+| Haze Defense | Pop layered orbs and clear defense waves | 160/s + 1.4/s² ramp + 600 grace |
 
-Caps live in `src/config.js` (`GAMES[].ac`) and are checked against **server-measured** run time; `tiers` are the
-Bronze/Silver/Gold thresholds used by achievements.
+The active Games Library adds 80 separately listed titles. Catalog uniqueness checks prevent the 20 retired duplicates from returning. `src/config.js` contains core scoring envelopes; `src/games-lib.js` contains the active library registry.
 
 ### Achievements & cosmetics (cosmetic only, no cash value)
 `src/achievements.js` defines **84 achievements** in 6 categories: game milestones (5 per game: bronze/silver/gold score, 10 runs,
