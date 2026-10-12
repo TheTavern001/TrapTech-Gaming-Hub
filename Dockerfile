@@ -34,6 +34,17 @@ RUN mkdir -p docs/audit \
  && BUILD_DIR=/app/build node scripts/deplexo-prebuild.js \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
 
+# Run the actual server in an isolated, disposable build-time database and verify its HTTP routes.
+# This catches runtime/icon/static-file regressions without relying on an external status service.
+RUN set -eu; \
+ mkdir -p /tmp/hub-build-smoke; \
+ ADMIN_PASSWORD='BuildOnlyPassword-123!' SECRET='BuildOnlySecret-OnlyForSmokeTest-NotProduction-42' DATA_DIR=/tmp/hub-build-smoke PORT=18787 NODE_ENV=production node src/server.js >/tmp/hub-build-smoke.log 2>&1 & \
+ server_pid=$!; \
+ trap 'kill "$server_pid" 2>/dev/null || true' EXIT; \
+ if ! node -e 'const t=Date.now(); (async()=>{while(Date.now()-t<30000){try{const r=await fetch("http://127.0.0.1:18787/healthz");if(r.ok)process.exit(0)}catch{};await new Promise(r=>setTimeout(r,250))}process.exit(1)})()'; then cat /tmp/hub-build-smoke.log; exit 1; fi; \
+ if ! BASE=http://127.0.0.1:18787 node tools/verify-live-deployment.js; then cat /tmp/hub-build-smoke.log; exit 1; fi; \
+ kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true
+
 # ---------- runtime stage ----------
 FROM node:20-bookworm-slim
 ENV NODE_ENV=production \
