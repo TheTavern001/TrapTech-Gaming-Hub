@@ -395,7 +395,7 @@ function routes(app, A, H) {
     if (o && req.body.action === 'payment.succeeded') { db.prepare("UPDATE store_orders SET provider='whop', status='paid', paid_at=? WHERE id=?").run(Date.now(), o.id); grant(o, 'whop'); }
     res.json({ ok: true }); });
   // ---- admin ----
-  A.get('/store', (req, res) => res.json({ ok: true, checkout: checkoutState(), products: products(true), prestige: prestigeWall(), non_advantage: NON_ADVANTAGE, terms: TERMS,
+  A.get('/store', (req, res) => res.json({ ok: true, checkout: checkoutState(), prestige_sales_enabled: prestigeSalesEnabled(), products: products(true), prestige: prestigeWall(), non_advantage: NON_ADVANTAGE, terms: TERMS,
     totals: db.prepare("SELECT product_id, COUNT(*) n, SUM(usd_cents) usd FROM store_orders WHERE status='granted' AND provider<>'manual' GROUP BY product_id").all() }));
   A.put('/store/checkout', (req, res) => { setSetting('checkout_enabled', !!(req.body && req.body.enabled)); res.json({ ok: true, checkout: checkoutState() }); });
   A.put('/store/products/:id', (req, res) => { const p = prod(req.params.id); const b = req.body || {}; const t = Date.now();
