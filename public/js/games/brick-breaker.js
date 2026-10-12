@@ -60,7 +60,7 @@ export class BrickBreaker extends Game {
     for (const b of this.balls) {
       if (b.stuck) { b.x = this.px; b.y = this.py - 20; continue; }
       b.trail.push([b.x, b.y]); if (b.trail.length > 7) b.trail.shift();
-      const steps = Math.ceil(Math.hypot(b.vx, b.vy) * dt / 6); const h = dt / steps; const r = this.br;
+      const steps = Math.max(1, Math.ceil(Math.hypot(b.vx, b.vy) * dt / 6)); const h = dt / steps; const r = this.br;
       for (let s = 0; s < steps; s++) {
         b.x += b.vx * h; b.y += b.vy * h;
         if (b.x < r) { b.x = r; b.vx = Math.abs(b.vx); } if (b.x > this.W - r) { b.x = this.W - r; b.vx = -Math.abs(b.vx); } if (b.y < 100 + r) { b.y = 100 + r; b.vy = Math.abs(b.vy); }
