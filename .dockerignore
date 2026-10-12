@@ -11,7 +11,7 @@ build
 screenshots
 mockups
 assets-src
-# Keep the build context lean while allowing only the verification scripts copied by Dockerfile.
+# Keep the build context lean while allowing verification and E2E JavaScript for build-time syntax checks.
 !tools/
 tools/*
 !tools/prelaunch-deep-audit.js
