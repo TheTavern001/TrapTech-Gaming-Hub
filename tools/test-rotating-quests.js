@@ -1,0 +1,22 @@
+'use strict';
+const assert = require('node:assert/strict');
+const Q = require('../src/rotating-quests');
+
+assert.ok(Q.TEMPLATES.length >= 3000, 'quest template library contains several thousand entries');
+assert.equal(new Set(Q.TEMPLATES.map(q => q.id)).size, Q.TEMPLATES.length, 'all template IDs are unique');
+assert.ok(Q.TEMPLATES.every(q => Q.BY_ID.get(q.id) === q), 'every template is addressable by stable ID');
+for (const period of Q.PERIODS) {
+  const a = Q.rotation({ userId: 42, period, now: Date.UTC(2026, 9, 12, 12), count: 5, secret: 'test-only-secret-which-is-longer-than-32-characters' });
+  const b = Q.rotation({ userId: 42, period, now: Date.UTC(2026, 9, 12, 12), count: 5, secret: 'test-only-secret-which-is-longer-than-32-characters' });
+  assert.deepEqual(a, b, period + ' rotation remains deterministic');
+  assert.equal(a.length, 5, period + ' rotation returns requested count');
+  assert.ok(Q.validateRotation(a), period + ' rotation passes schema validation');
+  assert.equal(new Set(a.map(q => q.id)).size, a.length, period + ' rotation has no duplicate template IDs');
+}
+const daily = Q.rotation({ userId: 42, period: 'daily', now: Date.UTC(2026, 9, 12, 12), count: 5, secret: 'test-only-secret-which-is-longer-than-32-characters' });
+const nextDay = Q.rotation({ userId: 42, period: 'daily', now: Date.UTC(2026, 9, 13, 12), count: 5, secret: 'test-only-secret-which-is-longer-than-32-characters' });
+assert.notDeepEqual(daily.map(q => q.assignment_id), nextDay.map(q => q.assignment_id), 'new period creates new assignment IDs');
+assert.throws(() => Q.rotation({ userId: 1, period: 'daily', count: 5, secret: 'short' }), /secret/, 'weak secrets are rejected');
+assert.throws(() => Q.rotation({ userId: 1, period: 'daily', count: 101, secret: 'test-only-secret-which-is-longer-than-32-characters' }), /size/, 'oversized rotations are rejected');
+assert.equal(Q.validateRotation([{ ...daily[0], id: 'forged-id' }]), false, 'unknown template IDs are rejected');
+console.log('Rotating quest engine checks passed:', Q.TEMPLATES.length, 'templates');
