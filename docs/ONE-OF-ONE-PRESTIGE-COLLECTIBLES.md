@@ -14,6 +14,8 @@ Still required before any prestige item can be represented as a complete, launch
 - Visual review at actual player-card and avatar scale, plus browser/device evidence.
 - A payment/refund/recovery review using the persistent production database and the final checkout configuration.
 
+Keep `PRESTIGE_SALES_ENABLED` unset until those release gates pass. The storefront and API now treat the 12 originals as preview-only by default, even if another payment method is configured.
+
 ## Core promise
 The $1,000+ prestige tier consists of genuinely unique, one-of-one collectibles. A prestige collectible is not just a recolor, material swap, glow change, renamed template, or inflated price. Each piece must have a distinct silhouette and authored design language, with bespoke geometry/artwork, signature animation/VFX, and an unmistakable identity.
 
