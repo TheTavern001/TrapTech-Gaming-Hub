@@ -111,7 +111,7 @@ This repository's current `main` contains the Hub v7 work, the Games Library int
 - [x] Scoring tie-break secondary metrics are restricted to runs whose anti-cheat verification marker is accepted.
 - [x] Avatar editor source restored to its complete 8 KB implementation after an accidental truncation; zoom, reset, randomize, saved-look controls, and the body-type label are present in the restored file.
 - [x] Avatar ownership/saved-look API regression suite is wired into the V1 launch workflow.
-- [ ] Re-run syntax checks against the current head SHA `5962baf149250c900eb72cf40132a0c61df5db50`; earlier syntax checks do not validate this exact head.
+- [ ] Re-run syntax checks against the exact final release SHA after all source edits; the avatar restore commit `5962baf149250c900eb72cf40132a0c61df5db50` is not by itself validation of later commits.
 - [ ] Run API, payment-gate, scoring, avatar, and browser E2E suites against the exact candidate. GitHub Actions jobs are currently failing before any steps execute; investigate Actions runner provisioning/account limits before interpreting those failures as code-test results.
 - [ ] Inspect all changed files and resolve any regressions found by actual execution. Do not merge or deploy while tests have not executed.
 - [ ] Complete the official booking-to-event-to-score-to-winner flow on a disposable test database, including unpaid/refunded bookings, stale tokens, invalid event IDs, and forged/unverified metrics.
