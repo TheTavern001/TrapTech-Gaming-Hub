@@ -90,6 +90,8 @@ const env0 = loadEnv();
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.event && r.body.request.event.code === evc && /<svg/.test(r.body.request.event.qr_svg), 'vendor quote page shows the event link + QR code after payment');
     db.prepare('UPDATE giveaways SET booking_id=? WHERE id=?').run(rid + 999999, evid);
     r = await anon('/api/sponsor/requests/' + tok); ok(!r.body.request.event, 'sponsor status page does not expose an event linked to a different booking');
+    r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} });
+    ok(r.status === 409 && /not linked to this booking/i.test(r.body.error), 'idempotent create-event cannot return another booking\'s event URL');
     db.prepare('UPDATE giveaways SET booking_id=? WHERE id=?').run(rid, evid);
     // Simulate a legacy event created before the payment gate, where the quote is accepted
     // and an event exists but its payment_status is still unpaid. Marking the verified quote paid
