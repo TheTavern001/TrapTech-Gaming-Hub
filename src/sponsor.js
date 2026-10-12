@@ -264,8 +264,9 @@ module.exports = function sponsor(app, A, h) {
     const start = Math.max(Date.now(), parse(b.start_date) || Date.now() + day); const end = parse(b.end_date) && parse(b.end_date) > start ? parse(b.end_date) : start + (b.length_days || 7) * day;
     const t = Date.now(); const comp = b.competition || 'best';
     const id = db.transaction(() => {
-      const info = db.prepare(`INSERT INTO giveaways (title, host, prize, image, start_at, end_at, entry_method, game_id, rules, active, created_at, updated_at, brand_color, win_method, winner_count)
-        VALUES (?,?,?,?,?,?,'play',?,?,1,?,?,?,?,1)`).run(`${b.brand} Official Giveaway`, b.brand, b.prize || 'Prize from ' + b.brand, '', start, end, games[0], String(b.details || '').slice(0, 2000), t, t, b.brand_color || '', comp === 'random' ? 'random' : 'score');
+      const scoreRule = comp === 'best' ? 'best' : 'sum_best'; // "total" in the booking form means sum of each game's best score.
+      const info = db.prepare(`INSERT INTO giveaways (title, host, prize, image, start_at, end_at, entry_method, game_id, rules, active, created_at, updated_at, brand_color, win_method, winner_count, v7, score_rule)
+        VALUES (?,?,?,?,?,?,'play',?,?,1,?,?,?,?,1,1,?)`).run(`${b.brand} Official Giveaway`, b.brand, b.prize || 'Prize from ' + b.brand, '', start, end, games[0], String(b.details || '').slice(0, 2000), t, t, b.brand_color || '', comp === 'random' ? 'random' : 'score', scoreRule);
       const gid = info.lastInsertRowid; for (const gm of games) db.prepare('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) VALUES (?,?)').run(gid, gm);
       db.prepare("UPDATE giveaways SET vendor=?, booking_id=?, booking_status='booked', payment_status=? WHERE id=?").run(b.brand, b.id, q.status === 'paid' ? 'paid' : 'unpaid', gid);
       db.prepare('UPDATE bookings SET event_id=? WHERE id=?').run(gid, b.id); return gid; })();
