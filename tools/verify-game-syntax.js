@@ -27,10 +27,11 @@ for (const file of unique) {
   const source = fs.readFileSync(file, 'utf8');
   const isCoreModule = file.startsWith(coreRoot + path.sep);
   const args = isCoreModule ? ['--input-type=module', '--check'] : ['--check'];
-  const result = spawnSync(process.execPath, args, { input: isCoreModule ? source : undefined, encoding: 'utf8', timeout: 15000 });
   // For classic scripts, node --check needs the filename. For modules, stdin lets Node parse
   // ES module syntax without changing package.json or requiring a browser runtime.
-  const checked = isCoreModule ? result : spawnSync(process.execPath, ['--check', file], { encoding: 'utf8', timeout: 15000 });
+  const checked = isCoreModule
+    ? spawnSync(process.execPath, args, { input: source, encoding: 'utf8', timeout: 15000 })
+    : spawnSync(process.execPath, ['--check', file], { encoding: 'utf8', timeout: 15000 });
   if (checked.error || checked.status !== 0) {
     const detail = checked.error ? checked.error.message : (checked.stderr || checked.stdout || 'unknown syntax-check failure');
     failures.push({ file: path.relative(ROOT, file).split(path.sep).join('/'), detail: String(detail).slice(0, 1200) });
