@@ -483,7 +483,7 @@ function featCard(g) {
 }
 function gameCard(g, tall = false) {
   const art = (tall && g.artTall) || g.art;
-  return `<a class="gcard ${tall ? '' : 'wide'}" href="/games/${g.id}" data-game="${g.id}">
+  return `<a class="gcard ${tall ? '' : 'wide'}" href="${g.lib ? g.url : `/games/${g.id}`}" data-game="${g.id}">
     <div class="art" style="background-image:url('${art}')"><span class="live">PLAY NOW</span>${g.id !== 'jetpack-dash' ? '<span class="new">NEW</span>' : ''}</div>
     <div class="meta"><div class="t">${esc(g.title)}</div><div class="c">${icon('gamepad-2')} ${esc(g.category)}</div></div></a>`;
 }
@@ -491,29 +491,31 @@ function gameCard(g, tall = false) {
 // ---------------- games ----------------
 route(/^\/games$/, (m, url) => {
   let cat = url.searchParams.get('cat') || 'All'; let q = '';
-  const cats = ['All', 'Arcade', 'Racing', 'Puzzle', 'Strategy', 'Physics', 'Just for fun'];
-  shell('/games', `<h1>Games <span class="pill green" style="vertical-align:middle">${S.games.length} playable</span></h1><a class="btn sm" style="margin:-6px 0 12px" href="/games-lib/index.html">Explore the Games Library <span id="lib-count" class="pill" style="margin-left:6px">new originals + full catalog</span></a><!-- [games-lib hook] -->
-    <div class="field ic">${icon('search')}<input class="input" id="q" placeholder="Search games..." autocomplete="off"></div>
-    <div class="chips" id="chips">${cats.map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('')}</div>
+  let catalog = [...S.games, ...S.libraryGames];
+  const categories = () => ['All', ...new Set(catalog.map(g => g.category).filter(Boolean))];
+  if (cat !== 'All' && !categories().includes(cat)) cat = 'All';
+  shell('/games', `<div class="games-heading"><h1>Games <span class="pill green" style="vertical-align:middle" id="games-count">${catalog.length} games</span></h1><p class="muted">The complete playable catalog. Search, filter, and jump straight into any game.</p></div>
+    <div class="field ic">${icon('search')}<input class="input" id="q" placeholder="Search all games..." autocomplete="off" aria-label="Search all games"></div>
+    <div class="chips" id="chips">${categories().map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <div class="grid2 games-grid" id="grid"></div>
-    <div class="section-h"><h2>Featured Games</h2><a href="/achievements">${icon('medal')} Achievements</a></div>
-    <div class="grid2 games-grid">${S.games.filter(g => g.featured && g.giveaway !== false).map(g => gameCard(g)).join('')}</div>
-    <p class="small dim center" style="margin-top:14px">All games are free to play. Casino-style games use points only: no real money, no purchases.</p>`);
+    <p class="small dim center" style="margin-top:14px">All games are free to play. Scores and cosmetic rewards do not provide paid gameplay advantages.</p>`);
   const draw = () => {
-    const match = (g) => (cat === 'All' || g.category === cat || (cat === 'Just for fun' && g.giveaway === false)) && g.title.toLowerCase().includes(q);
-    const list = S.games.filter(g => !g.featured && g.giveaway !== false && match(g));
-    const feat = (cat !== 'All' || q) ? S.games.filter(g => g.featured && g.giveaway !== false && match(g)) : [];
-    // v7: chance games live in their own "Just for fun" section (they never count for giveaways)
-    const fun = S.games.filter(g => g.giveaway === false && match(g));
-    document.getElementById('grid').innerHTML = ([...list, ...feat].map(g => gameCard(g)).join('')
-      + (fun.length ? `<div class="section-h fun-h" style="grid-column:1/-1"><h2>${icon('dices')} Just for fun</h2><span class="small muted">Chance games: points only, not eligible for giveaways</span></div>` + fun.map(g => gameCard(g)).join('') : ''))
-      || `<div class="empty" style="grid-column:1/-1">No games match.</div>`;
+    const filtered = catalog.filter(g => (cat === 'All' || g.category === cat) && String(g.title || '').toLowerCase().includes(q));
+    const grid = document.getElementById('grid');
+    const count = document.getElementById('games-count');
+    if (count) count.textContent = `${filtered.length} of ${catalog.length} games`;
+    if (grid) grid.innerHTML = filtered.map(g => gameCard(g)).join('') || `<div class="empty" style="grid-column:1/-1">No games match. Try another search or category.</div>`;
   };
   draw();
-  // Games Library catalog is served by the same registry as the dedicated library page.
+  // Merge the full library into the primary Games destination; no second discovery page.
   fetch('/api/games-lib', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(lib => {
-    const badge = document.getElementById('lib-count');
-    if (badge && lib && Array.isArray(lib.games)) badge.textContent = lib.games.length + ' library games';
+    if (lib && Array.isArray(lib.games)) {
+      S.libraryGames = lib.games;
+      catalog = [...S.games, ...S.libraryGames];
+      const chips = document.getElementById('chips');
+      if (chips) chips.innerHTML = categories().map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+      draw();
+    }
   }).catch(() => {});
   document.getElementById('q').addEventListener('input', (e) => { q = e.target.value.trim().toLowerCase(); draw(); });
   document.getElementById('chips').addEventListener('click', (e) => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; document.querySelectorAll('#chips .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
