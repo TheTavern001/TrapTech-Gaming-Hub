@@ -54,3 +54,40 @@ Use a server-controlled rotating shop schedule with featured slots, rarity weigh
 4. Expand wearable slots/catalog and rotating shop, keeping server-side ownership and payment validation.
 5. Upgrade games one at a time; prioritize the most-used games and require before/after screenshots, device testing and regression results.
 6. Verify deployment health, storage persistence, CDN headers, checkout/webhooks and backup/restore before public launch.
+
+## Cross-source integration contract (2026-10-12)
+Use all relevant, compatible asset sources in the research pool—not every file indiscriminately. The goal is a coherent game, not a collage of unrelated packs. Every source below is an approved discovery lane; each individual asset still needs a license, technical-fit and art-direction check before shipping.
+
+### Source roles
+| Source | Best-fit role | Integration rule |
+|---|---|---|
+| Kenney (kenney.nl/assets) | 2D sprites, tilesets, props, UI, effects, audio and selected 3D packs | Prefer cohesive packs; retain the pack's license file and use only required files. Official support states Kenney packs are CC0; verify the exact pack/archive. |
+| Quaternius (quaternius.com and official Quaternius itch.io pages) | Stylized 3D characters, modular outfits, environments, props and retargetable animation | Favor compatible base rigs and animation libraries; test GLTF/GLB materials, skeleton and clip retargeting in our actual Three.js runtime. |
+| Poly Haven (polyhaven.com) | PBR materials, HDRIs and selected environment models | Use as the realism/material/lighting layer, not as a substitute for authored level geometry. If using its live API, show a clear “Powered by Poly Haven” credit as required by the API terms; standalone CC0 assets do not themselves require attribution. |
+| ambientCG (ambientcg.com) | Additional PBR materials and HDRIs | Match texture scale/roughness/normal conventions; record exact asset and license in the manifest. |
+| Poly Pizza (poly.pizza) | Candidate stylized models and props | Per-model license and style review; reject anything that clashes with our chosen character proportions or has unclear rig/rights. |
+| Sketchfab (sketchfab.com) | Specific gap-fill models only | Downloadable is not the same as commercially usable; verify per-model license, author, attribution and redistribution terms. Reject unclear, NC, editorial or incompatible assets. |
+| OpenGameArt (opengameart.org) | Specific sprites, sound and effects | Check each file's license and attribution requirements; preserve required notices. |
+| KayKit (kaylousberg.com/game-assets) | Cohesive stylized environment/character kits where they fit | Check the specific pack terms, formats and technical compatibility. |
+| Mixamo (mixamo.com) | Candidate animation/rigging support | Confirm current terms and retargeting compatibility; do not assume animations map correctly across skeletons. |
+| Original Gaming Hub art/code | Brand, HUD, interface, bespoke prestige designs and anything that needs a distinctive identity | Preserve the owner's brand direction; do not replace bespoke work with generic third-party placeholders. |
+
+### Shared art direction and technical standards
+- **One hub identity:** deep charcoal/navy bases, deliberate purple sci-fi lighting, restrained gold accents for premium moments, clear readable UI, consistent typography and the existing purple-to-gold CTA. Game worlds may have their own palette, but menus, shop, account UI and rarity language must remain recognizably Gaming Hub.
+- **Choose a style per game:** do not mix realistic scanned props, flat 2D sprites and toy-like low-poly models in the same scene unless the combination is deliberately art-directed. Kenney assets can fit 2D/arcade games; Quaternius/KayKit/Poly Pizza candidates must pass silhouette/style review; Poly Haven/ambientCG generally supply materials and lighting rather than character style.
+- **Shared character pipeline:** one canonical avatar identity and cosmetic definition; map supported items to each game's rig/slots through adapters. Validate skeleton hierarchy, bind pose, scale, origin, bone names, animation retargeting, material slots, skinning and clipping. Unsupported games must show a clearly disclosed fallback, never a broken or misleading model.
+- **PBR compatibility:** standardize color space, texture maps, roughness/metalness, normal-map convention, UV scale, tone mapping and exposure. Avoid mixing HDRIs with conflicting white balance or lighting direction. Keep material/lighting presets per game and test in actual scenes.
+- **Performance budgets:** use GLB/glTF for web 3D where appropriate; lazy-load per game, compress textures and geometry where supported, atlas 2D sprites, avoid duplicate downloads, and retain mobile-friendly fallback assets. Do not load the entire 1,000+ cosmetic catalog's models into memory at once.
+- **Asset manifest:** every imported asset records stable ID, source URL, author, pack/model name, exact license/version, attribution text, date acquired, original filename/hash, optimized runtime path, file size, intended game/slot, rig/material dependencies and approval status. Do not publish assets until the record is complete.
+- **Shared visual QA:** preview on phone and desktop; check lighting, scale, clipping, transparency, texture seams, animation, audio level, frame time, memory and network failures. Capture before/after images and compare in-context, not only on the asset website.
+- **No blind bulk import:** a large pack may be used for discovery, but only curated, tested files ship. Respect source terms and do not rehost entire packs as a standalone asset library.
+
+### Acceptance gate for each asset integration
+1. Asset license and attribution verified.
+2. Asset imported into the intended runtime, not merely copied into the repository.
+3. Style and scale reviewed against neighboring assets.
+4. Interaction/gameplay connected (collision, animation, effects, feedback or UI behavior as applicable).
+5. Desktop and mobile smoke tests pass; performance and fallbacks checked.
+6. Credits/manifest updated; old version remains available for rollback until the new one passes.
+
+Status note: this section defines the integration standard. It does not claim every source has been downloaded, every asset has been integrated, or that the live site has passed these checks.
