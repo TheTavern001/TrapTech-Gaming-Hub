@@ -30,7 +30,7 @@ This checklist deliberately covers the main Hub application as well as the Games
 
 ## Games Library
 
-- [x] Registry, catalog, and documentation reconcile at 100 entries.
+- [x] Registry, catalog, and documentation reconcile at 80 active Games Library entries.
 - [x] No external game redirects are configured in the library registry.
 - [x] Add original Neon Circuit and Rift Survival implementations and SVG cover art.
 - [x] Apply L3 score-event validation to both new originals, including per-game point-value rules and progress-marker exclusion.
@@ -70,7 +70,7 @@ This repository's current `main` contains the Hub v7 work, the Games Library int
 
 - [x] Main Hub retained; the library is integrated rather than replacing the app.
 - [x] Homepage redesign committed on `main` (`c98dc18935232b8c71e6cc0fce1a6512d22608b9`).
-- [x] Catalog and registry reconcile at 100 entries; long-term catalog target remains 150+.
+- [x] Catalog and registry reconcile at 80 active Games Library entries; long-term release target is 500 distinct, launch-ready games, added only after the baseline passes.
 - [x] New library integration limits the new-game giveaway-picker additions to Neon Circuit and Rift Survival.
 - [ ] Confirm blocking CI workflows finish green on the exact finalization commit.
 - [ ] Full official-event flow for a library game, including invalid/expired/mismatched event references and replay/forged-score rejection.
