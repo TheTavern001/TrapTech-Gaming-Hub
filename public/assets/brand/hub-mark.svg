@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110" width="120" height="110" role="img" aria-label="Trap Tech crowned TT mark"><title>Trap Tech crowned TT mark</title><defs><linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe9ae"/><stop offset=".4" stop-color="#f0c46e"/><stop offset=".72" stop-color="#a86b24"/><stop offset="1" stop-color="#f4d28a"/></linearGradient></defs><g fill="none" stroke="url(#gold)" stroke-linejoin="miter"><path d="M24 28 32 45 43 35 54 48 60 16 66 48 77 35 88 45 96 28" stroke-width="3"/><path d="M32 48 Q60 40 88 48" stroke-width="4"/></g><g fill="#fff"><path d="M4 53 H53 L59 60 V106 L47 94 V69 H31 L38 76 H24 Z"/><path d="M116 53 H67 L61 60 V106 L73 94 V69 H89 L82 76 H96 Z"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512" role="img" aria-label="Trap Tech Solutions">
+  <title>Trap Tech Solutions</title>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9ae"/>
+      <stop offset=".45" stop-color="#f0c46e"/>
+      <stop offset="1" stop-color="#a86b24"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="#050b1d"/>
+  <g transform="translate(8 8) scale(.75)">
+    <path d="M12 21 18 32 25 26 31 34 32 13 39 34 45 26 52 32 56 21 M18 35 Q32 30 46 35" fill="none" stroke="url(#gold)" stroke-width="2.5" stroke-linejoin="miter"/>
+    <path d="M7 37 H29 L32 40 V59 L25 52 V44 H18 L22 48 H14 Z M57 37 H35 L32 40 V59 L39 52 V44 H46 L42 48 H50 Z" fill="#fff"/>
+  </g>
+</svg>
