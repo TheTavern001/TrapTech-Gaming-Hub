@@ -161,8 +161,8 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
           if (!ref || /^(?:data:|#|blob:|https?:|\/\/)/i.test(ref)) continue;
           let u; try { u = new URL(ref, BASE + asset); } catch { continue; }
           if (u.origin !== new URL(BASE).origin || !/\.(?:png|jpe?g|webp|avif|gif|svg|woff2?|ttf|otf|ico)$/i.test(u.pathname)) continue;
-          nestedCssAssets.set(u.pathname, (nestedCssAssets.get(u.pathname) || new Set()).union ? nestedCssAssets.get(u.pathname) : new Set());
-          const users = nestedCssAssets.get(u.pathname);
+          let users = nestedCssAssets.get(u.pathname);
+          if (!users) { users = new Set(); nestedCssAssets.set(u.pathname, users); }
           for (const slug of slugsForAsset) users.add(slug);
         }
       }
