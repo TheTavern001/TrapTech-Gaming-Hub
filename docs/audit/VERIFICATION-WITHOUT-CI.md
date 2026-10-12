@@ -23,7 +23,7 @@ Configure a local test `.env` using `.env.example` and test-only credentials. Do
 npm test
 ```
 
-## 3. Core games on phone-sized viewports
+## 3. Core games on desktop and mobile
 
 With the local server running and Chrome available:
 
@@ -31,7 +31,7 @@ With the local server running and Chrome available:
 npm run test:mobile
 ```
 
-The mobile regression list includes all 16 registered core games and exercises the supported emulated phone/in-app-browser profiles. Inspect the generated screenshots and JSON evidence; fix any failing game before marking it passed.
+The regression list includes all 16 registered core games at a desktop-sized viewport using mouse input and across the supported emulated phone/in-app-browser profiles. Inspect the generated screenshots and JSON evidence; fix any failing game before marking it passed.
 
 ## 4. All 100 Games Library titles
 
