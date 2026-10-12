@@ -15,6 +15,12 @@ const list = games.filter(g => !only.length || only.includes(g.slug));
 // skill-only tie-break metrics (src/games-lib-playoff.js). Any failure fails the whole run.
 { const PO = require('../src/games-lib-playoff'); const { EXTERNAL } = require('../src/games-lib'); const bad = [];
   for (const g of games) { const m = PO.metricsFor(g.id); if (!g.giveaway || g.just_for_fun || !g.endless_mode || !(g.acLevel >= 2) || !m || m.length < 1 || m.some(x => !x.id || !['asc', 'desc'].includes(x.dir))) bad.push(g.slug); }
+  const fakeLog = { e: [0, 'e', 10] };
+  const unverified = PO.derive('gl-neon-circuit', 10, 1200, fakeLog);
+  const verified = PO.derive('gl-neon-circuit', 10, 1200, fakeLog, null, true);
+  const unverifiedCoins = PO.derive('jetpack-dash', 10, 1200, fakeLog, 5);
+  const verifiedCoins = PO.derive('jetpack-dash', 10, 1200, fakeLog, 5, true);
+  if (unverified.m2 !== null || unverifiedCoins.m2 !== null || verified.m2 !== 1 || verifiedCoins.m2 !== 5) bad.push('unverified skill metrics gate');
   if (EXTERNAL.length) bad.push('external links present');
   const pct = Math.round((games.length - bad.length) / games.length * 1000) / 10; console.log(`eligibility: ${games.length - bad.length}/${games.length} (${pct}%) giveaway-eligible with skill tie-breaks`);
   if (bad.length) { console.log('FAIL eligibility gate:', bad.join(', ')); process.exitCode = 1; } }
