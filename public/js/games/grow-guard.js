@@ -49,7 +49,7 @@ export class GrowGuard extends Game {
       if (g.k === 'mister') { for (const p of ahead) { p.slow = 0.3; this.damage(p, 0.35 * dt, true); } }
       if (g.k === 'solar' && g.cd <= 0) { g.cd = 10; this.drops.push({ x: x + rnd(-12, 12), y: y - 30, ty: y - 10, v: 25, life: 9 }); }
     }
-    for (const s of this.shots) { s.x += s.vx * dt; const p = this.pests.find(p => p.r === s.r && !(PESTS[p.k].fly && Math.random() < 0) && Math.abs(p.x - s.x) < 18 && p.hp > 0); if (p) { s.dead = true; this.damage(p, 1); this.burst(s.x, this.cy(s.r), ['#ef4444', '#111'], 5, 90, 0.25, 3); } }
+    for (const s of this.shots) { s.x += s.vx * dt; const p = this.pests.find(p => p.r === s.r && Math.abs(p.x - s.x) < 18 && p.hp > 0); if (p) { s.dead = true; this.damage(p, 1); this.burst(s.x, this.cy(s.r), ['#ef4444', '#111'], 5, 90, 0.25, 3); } }
     this.shots = this.shots.filter(s => !s.dead && s.x < this.W + 20); for (const z of this.zaps) z.t -= dt; this.zaps = this.zaps.filter(z => z.t > 0);
     // pests: walk left, chew on any gadget they bump into
     for (const p of this.pests) { if (p.hp <= 0) continue; p.t += dt; if (p.hit > 0) p.hit -= dt; const P = PESTS[p.k]; const c = Math.floor((p.x - 26 - this.gx) / this.cw); const g = c >= 0 && c < COLS ? this.tiles[p.r][c] : null;
@@ -66,9 +66,9 @@ export class GrowGuard extends Game {
     this.pests = this.pests.filter(p => p.hp > 0);
   }
   damage(p, d, quiet) { if (p.hp <= 0) return; p.hp -= d; if (!quiet) p.hit = 0.1; if (p.hp <= 0 && !p.leak) { const pts = this.award(PESTS[p.k].pts, 'p'); const y = this.cy(p.r); this.burst(p.x, y, ['#a3e635', '#fef08a', '#57534e'], 10, 150, 0.45, 3); if (pts >= 30) this.pop(p.x, y - 20, `+${pts}`, '#fde047', 16); if (this.r() < 0.12) this.drops.push({ x: p.x, y: y - 20, ty: y, v: 25, life: 8 }); if (this.score >= (this.coins + 1) * 2500) this.coins++; } }
-  soil() { if (this._soil) return this._soil; const c = document.createElement('canvas'); c.width = Math.ceil(this.cw * COLS); c.height = Math.ceil(this.ch * ROWS); const g = c.getContext('2d');
+  soil() { if (this._soil) return this._soil; const c = document.createElement('canvas'); c.width = Math.ceil(this.cw * COLS); c.height = Math.ceil(this.ch * ROWS); const g = c.getContext('2d'); let noiseState = 0x6d2b79f5; const noise = () => { noiseState = Math.imul(noiseState ^ (noiseState >>> 15), noiseState | 1); noiseState ^= noiseState + Math.imul(noiseState ^ (noiseState >>> 7), noiseState | 61); return ((noiseState ^ (noiseState >>> 14)) >>> 0) / 4294967296; };
     for (let r = 0; r < ROWS; r++) { const y = r * this.ch; const gr = g.createLinearGradient(0, y, 0, y + this.ch); gr.addColorStop(0, '#3b2a1c'); gr.addColorStop(0.5, '#2a1d12'); gr.addColorStop(1, '#1b120b'); g.fillStyle = gr; g.fillRect(0, y + 3, c.width, this.ch - 6);
-      for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(${120 + Math.random() * 60},${90 + Math.random() * 40},${60 + Math.random() * 30},${0.15 + Math.random() * 0.25})`; g.fillRect(Math.random() * c.width, y + 4 + Math.random() * (this.ch - 8), 1 + Math.random() * 2.5, 1 + Math.random() * 2); }
+      for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(${120 + noise() * 60},${90 + noise() * 40},${60 + noise() * 30},${0.15 + noise() * 0.25})`; g.fillRect(noise() * c.width, y + 4 + noise() * (this.ch - 8), 1 + noise() * 2.5, 1 + noise() * 2); }
       g.strokeStyle = 'rgba(255,220,170,0.08)'; for (let cc = 1; cc < COLS; cc++) { g.beginPath(); g.moveTo(cc * this.cw, y + 6); g.lineTo(cc * this.cw, y + this.ch - 6); g.stroke(); } }
     return (this._soil = c); }
   render(ctx) {
