@@ -184,7 +184,13 @@ if (!brandIcons.indexUsesCanonicalSvg || !brandIcons.splashUsesCanonicalSvg) war
 if (!brandIcons.dynamicRasterRoutePresent) issues.push({ severity: 'blocker', finding: 'Dynamic Trap Tech raster icon route is missing.' });
 if (!brandIcons.manifestValidJson) issues.push({ severity: 'blocker', finding: 'Web app manifest is missing or invalid JSON.' });
 for (const item of brandIcons.manifestIcons) {
-  if (!item.src || !serverSrc.includes(item.src.split('?')[0])) brandIcons.missingManifestIconRoutes.push(item.src || '(missing src)');
+  const route = String(item.src || '').split('?')[0];
+  // Manifest icons may be served either by an explicit server route or by the public static-file middleware.
+  // Do not flag a valid static asset merely because its URL is not hard-coded in src/server.js.
+  const staticPath = route.startsWith('/') ? path.join(ROOT, 'public', route.slice(1)) : '';
+  if (!route || (!serverSrc.includes(route) && !(staticPath && exists(staticPath)))) {
+    brandIcons.missingManifestIconRoutes.push(item.src || '(missing src)');
+  }
 }
 if (brandIcons.missingManifestIconRoutes.length) issues.push({ severity: 'blocker', finding: 'Manifest icons do not map to a declared server icon route or static asset.', paths: brandIcons.missingManifestIconRoutes });
 
