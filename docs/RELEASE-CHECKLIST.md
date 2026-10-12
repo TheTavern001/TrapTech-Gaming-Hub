@@ -103,3 +103,20 @@ This repository's current `main` contains the Hub v7 work, the Games Library int
 - [ ] Back up production data, deploy the latest `main` SHA once, and verify health, persistence, player flows, event controls, and admin access on the live URL.
 
 **Do not interpret “100 catalog entries” as “100 verified giveaway-ready games.”** The user-facing requirement is one consolidated release; the responsible release gate still requires documenting unresolved verification items rather than hiding them. The vendor control boundary is official Hub-managed events and score records: public casual game links can be shared, but a link alone must never authorize a Hub giveaway, paid booking, official entrant list, or winner selection.
+
+
+## Draft PR #8 — payment gate, scoring integrity, and avatar QA — 2026-10-12
+
+- [x] Payment-gate source changes block official event creation/share surfaces and finalization while a booking-backed event is unpaid; dedicated regression coverage is wired into the launch workflow.
+- [x] Scoring tie-break secondary metrics are restricted to runs whose anti-cheat verification marker is accepted.
+- [x] Avatar editor source restored to its complete 8 KB implementation after an accidental truncation; zoom, reset, randomize, saved-look controls, and the body-type label are present in the restored file.
+- [x] Avatar ownership/saved-look API regression suite is wired into the V1 launch workflow.
+- [ ] Re-run syntax checks against the current head SHA `5962baf149250c900eb72cf40132a0c61df5db50`; earlier syntax checks do not validate this exact head.
+- [ ] Run API, payment-gate, scoring, avatar, and browser E2E suites against the exact candidate. GitHub Actions jobs are currently failing before any steps execute; investigate Actions runner provisioning/account limits before interpreting those failures as code-test results.
+- [ ] Inspect all changed files and resolve any regressions found by actual execution. Do not merge or deploy while tests have not executed.
+- [ ] Complete the official booking-to-event-to-score-to-winner flow on a disposable test database, including unpaid/refunded bookings, stale tokens, invalid event IDs, and forged/unverified metrics.
+- [ ] Complete phone and desktop browser review and physical-device performance/accessibility checks.
+- [ ] Verify asset licenses/attribution and curate the shipped game catalog. Catalog count is not a quality certification.
+- [ ] Verify deployment environment, persistent database storage, secret values, backup/restore, rollback, and live health/persistence checks before production release.
+
+**Status at this revision:** not deployment-ready. No production deployment or live payment configuration change has been made.
