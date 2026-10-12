@@ -30,7 +30,7 @@ function buildFingerprint(root = path.resolve(__dirname, '..')) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
       const abs = path.join(dir, ent.name);
       if (ent.isDirectory()) collect(abs);
-      else if (ent.isFile()) files.add(path.relative(root, abs).split(path.sep).join('/'));
+      else if (ent.isFile() && path.extname(ent.name).toLowerCase() !== '.md') files.add(path.relative(root, abs).split(path.sep).join('/'));
     }
   };
   collect(path.join(root, 'src'));
