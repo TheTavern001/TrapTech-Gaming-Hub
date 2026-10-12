@@ -405,16 +405,15 @@ function catalogUniverse({ limit = 50, offset = 0, type = '', q = '', user = nul
   const onSale = new Set(module.exports.allOnSale(rot).map(it => it.id));
   const own = user ? owned(user.id) : new Set();
   const matches = [];
-  for (let n = 0; n < 600 && matches.length < safeOffset + safeLimit; n++) {
+  for (let n = 0; n < 600; n++) {
     const day = EPOCH_DAY + n;
     for (let slot = 0; slot < 2; slot++) {
       const it = resolve(G.make('d', day, slot).id);
       if (!it || (type && it.type !== type) || (needle && !it.name.toLowerCase().includes(needle))) continue;
       matches.push({ ...module.exports.pub(it, own.has(it.id)), catalog_only: !onSale.has(it.id), on_sale: onSale.has(it.id), scheduled_day: day });
-      if (matches.length >= safeOffset + safeLimit) break;
     }
   }
-  return { total: matches.length < safeOffset + safeLimit ? matches.length : CATALOG_UNIVERSE_SIZE, offset: safeOffset, limit: safeLimit,
+  return { total: matches.length, offset: safeOffset, limit: safeLimit,
     items: matches.slice(safeOffset, safeOffset + safeLimit) };
 }
 function schedule(days = 14, t = Date.now()) { const d0 = Math.max(EPOCH_DAY, dayNum(t)); const out = []; for (let d = d0; d < d0 + days; d++) { const r = module.exports.rotation(PR().dayStart(d) + 3600e3); out.push({ day: d, at: PR().dayStart(d), daily: r.daily.map(i => ({ id: i.id, name: i.name, tag: r.tags[i.id] || null })), weekly: r.weekly.map(i => i.id), events: r.events.map(e => e.name) }); } return out; }
