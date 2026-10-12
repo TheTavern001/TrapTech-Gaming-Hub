@@ -25,3 +25,4 @@ licenses
 render.yaml
 Dockerfile
 .dockerignore
+!tools/verify-live-deployment.js
