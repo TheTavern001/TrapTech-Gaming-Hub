@@ -212,11 +212,11 @@ export class Game {
       pm: (e) => { if (this.state === 'play') { const [x, y] = pos(e); this.onMove(x, y, e); } },
       pu: (e) => { this._activePointers.delete(e.pointerId); if (this.state === 'play') { const [x, y] = pos(e); this.onUp(x, y, e); } },
       kd: (e) => {
+        if (e.code === 'KeyP' || e.code === 'Escape') { this.togglePause(); return; }
         const target = e.target;
         const uiTarget = target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(target.tagName || ''));
         // Do not let game-wide shortcuts steal Space/Enter or arrows from focused controls.
         if (uiTarget) return;
-        if (e.code === 'KeyP' || e.code === 'Escape') { this.togglePause(); return; }
         if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
         if (this.state === 'ready' && !e.repeat && (e.code === 'Space' || e.code === 'Enter')) { this.sfx._ctx(); this.begin(); if (this.startOnTapOnly) return; }
         if (this.state === 'play') { this._activeKeys.add(e.code); if (!e.repeat) this.tel.hit(); this.onKey(e.code, true, e); }
