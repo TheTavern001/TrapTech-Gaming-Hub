@@ -82,3 +82,10 @@ For each run, attach: commit SHA, command or manual test, environment, timestamp
 - Expanded `/shop/art/:id.svg` from banner/badge-only responses to all generated cosmetic types, with an SVG content type and `nosniff`.
 - Added API regression assertions that each type can be discovered and its art endpoint returns SVG.
 - These changes are committed on `audit/release-readiness-and-assets`; the API suite and browser/device checks have **not** been executed against this branch in this session. Treat the new route as implemented but not yet runtime-verified until the tests run and the shop thumbnails are visually inspected.
+
+## Rotating quest engine implementation update
+
+- Added `src/rotating-quests.js`, a server-side deterministic template/assignment primitive with more than 3,000 stable template variants across daily, weekly, and seasonal periods; five difficulty tiers; six objective families; stable template IDs; HMAC-ranked per-user rotations; assignment IDs; and schema validation.
+- Added `tools/test-rotating-quests.js` and `npm run test:rotating-quests` to check template count/ID uniqueness, deterministic rotations, assignment uniqueness, period changes, malformed IDs, weak secrets, and request limits.
+- This is the template/rotation layer only. It does **not** yet persist assignments/progress, award XP, issue accessories, or connect the quest system to the player UI. Those must be implemented transactionally against verified server-side events before it is launch-ready.
+- The new test command has been added but has **not** been executed in this session. Treat all assertions as pending until run against a complete checkout with installed dependencies.
