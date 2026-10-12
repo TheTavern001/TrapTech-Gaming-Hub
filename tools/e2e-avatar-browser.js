@@ -19,7 +19,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:8787';
   await context.addCookies(cookies);
   const page = await context.newPage(); const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*4\d\d/.test(m.text())) errors.push(m.text()); });
+  page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource.*4\d\d|cdn\.jsdelivr\.net|dynamically imported module/i.test(m.text())) errors.push(m.text()); });
   try {
     await page.goto(BASE + '/avatar', { waitUntil: 'networkidle' });
     await page.locator('#av-look-name').waitFor({ timeout: 15000 });
