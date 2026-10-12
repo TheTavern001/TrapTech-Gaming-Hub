@@ -149,6 +149,9 @@ function setStatus(id, status, by) {
   // A paid quote is a settled record. Do not let a later status edit hide the sponsor link
   // while leaving the linked public event marked paid/active.
   if (q.status === 'paid' && status !== 'paid') return { ok: false, error: 'A paid quote is locked. Correct payment or event state through the audited reconciliation flow.' };
+  // Acceptance is a sponsor decision. Do not let a later admin status edit silently undo it
+  // or move the booking back to pending; payment reconciliation is the only forward transition.
+  if (q.status === 'accepted' && !['accepted', 'paid'].includes(status)) return { ok: false, error: 'An accepted quote is locked. Resolve changes through the audited reconciliation flow.' };
   if (status === 'paid' && q.status !== 'accepted' && q.status !== 'paid') return { ok: false, error: 'Only an accepted quote can be marked paid.' };
   if (status === 'sent' && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'Already accepted.' };
   const bs = { sent: 'quoted', accepted: 'approved', declined: 'declined', paid: 'paid', draft: 'pending' }[status];
