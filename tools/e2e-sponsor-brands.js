@@ -68,6 +68,8 @@ const env0 = loadEnv();
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'declined' } }); ok(r.status === 400 && /accepted quote is locked/i.test(r.body.error), 'accepted quote cannot be downgraded to declined');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'paid' } }); ok(r.body.ok && r.body.request.quote.status === 'paid', 'admin marks the accepted quote paid');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.ok && /^TT-/.test(r.body.code) && r.body.active, 'paid quote -> official event', r.body); const evc = r.body.code; const evid = r.body.id;
+    const createdEvent = db.prepare('SELECT v7, score_rule, win_method FROM giveaways WHERE id=?').get(evid);
+    ok(createdEvent.v7 === 1 && createdEvent.score_rule === 'sum_best' && createdEvent.win_method === 'score', 'multi-game total mode uses sum of best score per linked game');
     r = await ADM('/api/admin/sponsor/requests/' + rid + '/create-event', { body: {} }); ok(r.body.existing && r.body.code === evc, 'second click returns the same event (idempotent)');
     r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.games.join() === 'stack,void-swarm' && r.body.event.vendor === 'E2E Sponsor Co' && r.body.event.label.includes('E2E SPONSOR CO x GAMING HUB'), 'event carries the vendor, games and label', r.body.event);
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.event && r.body.request.event.code === evc && /<svg/.test(r.body.request.event.qr_svg), 'vendor quote page shows the event link + QR code after payment');
