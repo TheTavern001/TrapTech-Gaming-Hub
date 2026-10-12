@@ -1001,3 +1001,64 @@ input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):n
 @media(min-width:900px){.page{max-width:1180px;padding-left:24px;padding-right:24px}.page:not(.full){max-width:1180px}}
 @media(max-width:600px){.page{padding-left:14px;padding-right:14px}.card.pad{padding:14px}.section-h{margin-top:20px}.btn{letter-spacing:.035em}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+
+/* Prestige originals: each one-of-one collectible has its own art language and restrained motion. */
+.px-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.px-card { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.px-card .px-art { align-self: center; margin: 4px auto 10px; }
+.px-art {
+  position: relative; display: grid; place-items: center; width: var(--s,120px); height: var(--s,120px);
+  flex: 0 0 auto; overflow: hidden; isolation: isolate; border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: radial-gradient(circle at 50% 42%, #26375d 0, #11172b 55%, #080b15 100%);
+  color: var(--px-ink,#fff7dc);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 -16px 26px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.24);
+}
+.px-art::before,.px-art::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:0; }
+.px-art::before { opacity:.6; background:repeating-linear-gradient(135deg,transparent 0 11px,rgba(255,255,255,.035) 11px 12px); }
+.px-art::after { inset:7%; border:1px solid rgba(255,255,255,.14); border-radius:17px; }
+.px-art .px-glow { position:absolute; inset:12%; border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,.22),transparent 68%); filter:blur(2px); z-index:1; }
+.px-art > svg { position:relative; z-index:3; width:42%; height:42%; color:var(--px-ink,#fff7dc); filter:drop-shadow(0 0 8px currentColor) drop-shadow(0 5px 5px rgba(0,0,0,.5)); }
+.px-art > i { position:absolute; display:block; pointer-events:none; z-index:2; }
+.px-art > i:nth-of-type(1) { inset:10%; border:1px solid rgba(255,255,255,.4); border-radius:50%; transform:rotate(-24deg) scaleX(.72); }
+.px-art > i:nth-of-type(2) { inset:17%; border:1px dashed rgba(255,255,255,.3); border-radius:50%; transform:rotate(35deg) scaleX(.6); }
+.px-art > i:nth-of-type(3) { width:5px; height:5px; border-radius:50%; background:currentColor; top:19%; right:24%; box-shadow:0 0 12px currentColor; }
+.px-art.px-art-prism-cane { --px-ink:#fff7d6; background:conic-gradient(from 20deg,#13314a,#573b8c,#b54c86,#237c8a,#13314a); }
+.px-art.px-art-prism-cane .px-glow { background:conic-gradient(#6ee7f9,#f0abfc,#fde68a,#6ee7f9); opacity:.6; animation:px-prism-spin 7s linear infinite; }
+.px-art.px-art-stack-throne { --px-ink:#d9f99d; background:linear-gradient(145deg,#173b2d,#10251f 52%,#07130f); }
+.px-art.px-art-stack-throne::before { background:repeating-linear-gradient(0deg,transparent 0 8px,rgba(163,230,53,.15) 8px 10px),repeating-linear-gradient(90deg,transparent 0 13px,rgba(250,204,21,.08) 13px 15px); }
+.px-art.px-art-royal-crown { --px-ink:#fde68a; background:radial-gradient(circle at 50% 35%,#76521b,#20170e 54%,#08090e); }
+.px-art.px-art-royal-crown .px-glow { inset:19%; border:2px solid rgba(253,230,138,.45); box-shadow:0 0 22px rgba(250,204,21,.45),inset 0 0 22px rgba(250,204,21,.2); }
+.px-art.px-art-phoenix-mantle { --px-ink:#ffdfaa; background:radial-gradient(ellipse at 50% 85%,#f97316 0,#7c2d12 35%,#170b13 76%); }
+.px-art.px-art-phoenix-mantle .px-glow { background:radial-gradient(ellipse at 50% 85%,rgba(251,146,60,.9),rgba(239,68,68,.25) 45%,transparent 70%); animation:px-flare 2.8s ease-in-out infinite alternate; }
+.px-art.px-art-singularity { --px-ink:#e9d5ff; background:radial-gradient(circle,#6d28d9 0,#26114d 36%,#070613 76%); }
+.px-art.px-art-singularity .px-glow { inset:24%; border:3px solid rgba(216,180,254,.7); box-shadow:0 0 0 7px rgba(168,85,247,.15),0 0 28px #a855f7; animation:px-singularity 5s linear infinite; }
+.px-art.px-art-void-dragon { --px-ink:#a7f3d0; background:radial-gradient(circle at 50% 45%,#064e3b,#071b1a 54%,#03080b); }
+.px-art.px-art-void-dragon .px-glow { background:radial-gradient(circle,rgba(16,185,129,.5),transparent 65%); animation:px-void-pulse 3s ease-in-out infinite; }
+.px-art.px-art-nebula-wings { --px-ink:#f5d0fe; background:linear-gradient(135deg,#20105c,#4c1d95 42%,#172554 80%,#080b18); }
+.px-art.px-art-nebula-wings::before { background:radial-gradient(2px 2px at 18% 23%,#fff,transparent 3px),radial-gradient(2px 2px at 72% 18%,#f0abfc,transparent 3px),radial-gradient(2px 2px at 82% 74%,#fff,transparent 3px),radial-gradient(2px 2px at 28% 78%,#c4b5fd,transparent 3px); }
+.px-art.px-art-titan-exoframe { --px-ink:#bfdbfe; background:linear-gradient(145deg,#334155,#0f172a 58%,#030712); }
+.px-art.px-art-titan-exoframe .px-glow { inset:16%; border:2px solid rgba(96,165,250,.65); border-radius:12px; box-shadow:inset 0 0 20px rgba(59,130,246,.35),0 0 18px rgba(59,130,246,.35); }
+.px-art.px-art-holo-decree { --px-ink:#a5f3fc; background:linear-gradient(135deg,#083344,#164e63 48%,#0f172a); }
+.px-art.px-art-holo-decree::before { background:repeating-linear-gradient(0deg,transparent 0 5px,rgba(103,232,249,.13) 5px 6px); }
+.px-art.px-art-storm-halo { --px-ink:#e0f2fe; background:radial-gradient(circle at 50% 30%,#475569,#111827 56%,#05070b); }
+.px-art.px-art-storm-halo .px-glow { inset:22%; border:2px solid rgba(125,211,252,.8); box-shadow:0 0 14px rgba(56,189,248,.7); animation:px-storm 2.4s steps(2,end) infinite; }
+.px-art.px-art-chronos-mantle { --px-ink:#fef3c7; background:radial-gradient(circle,#78350f 0,#292014 45%,#070707 80%); }
+.px-art.px-art-chronos-mantle .px-glow { inset:21%; border:2px solid rgba(253,230,138,.65); border-radius:50%; box-shadow:0 0 16px rgba(251,191,36,.35); }
+.px-art.px-art-aurora-crown { --px-ink:#ccfbf1; background:linear-gradient(145deg,#064e3b,#164e63 40%,#312e81 75%,#080b18); }
+.px-art.px-art-aurora-crown .px-glow { background:linear-gradient(125deg,rgba(45,212,191,.5),rgba(167,139,250,.35),rgba(244,114,182,.3)); filter:blur(8px); animation:px-aurora 5s ease-in-out infinite alternate; }
+.px-fx-prism > i:nth-of-type(1),.px-fx-singularity > i:nth-of-type(1),.px-fx-nebula > i:nth-of-type(1) { animation:px-prism-spin 8s linear infinite; }
+.px-fx-stack > i:nth-of-type(2),.px-fx-holo > i:nth-of-type(2) { animation:px-float 3s ease-in-out infinite alternate; }
+.px-fx-royal > i:nth-of-type(1),.px-fx-chronos > i:nth-of-type(1) { animation:px-prism-spin 12s linear infinite; }
+.px-fx-phoenix > i:nth-of-type(3),.px-fx-void > i:nth-of-type(3),.px-fx-storm > i:nth-of-type(3) { animation:px-spark 1.7s ease-in-out infinite alternate; }
+.px-fx-titan > i:nth-of-type(1),.px-fx-aurora > i:nth-of-type(1) { animation:px-float 4s ease-in-out infinite alternate; }
+@keyframes px-prism-spin { to { transform:rotate(336deg) scaleX(.72); } }
+@keyframes px-flare { from { opacity:.45; transform:scale(.88); } to { opacity:.95; transform:scale(1.08); } }
+@keyframes px-singularity { to { transform:rotate(360deg) scaleX(.62); } }
+@keyframes px-void-pulse { 50% { opacity:.35; transform:scale(.88); } }
+@keyframes px-storm { 50% { opacity:.4; filter:blur(2px); } }
+@keyframes px-aurora { to { transform:translateX(8%) rotate(8deg); opacity:.55; } }
+@keyframes px-float { to { transform:translateY(-7px) rotate(10deg); } }
+@keyframes px-spark { to { transform:translateY(-9px) scale(1.5); opacity:.2; } }
+@media (prefers-reduced-motion: reduce) { .px-art *, .px-art::before, .px-art::after { animation:none !important; transition:none !important; } }
