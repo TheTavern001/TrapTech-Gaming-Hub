@@ -430,9 +430,13 @@ let ICONS = null;
 function icons() { if (!ICONS) { try { ICONS = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'public', 'js', 'icons.js'), 'utf8').match(/export const ICONS=(\{.*?\});/s)[1]); } catch { ICONS = {}; } } return ICONS; }
 function routes(app, A, H) {
   app.get('/shop/art/:id.svg', (req, res) => {
-    const it = resolve(req.params.id); if (!it || !it.generated || (it.type !== 'banner' && it.type !== 'badge')) return res.status(404).end();
-    const svg = it.type === 'banner' ? G.bannerSvg(it.art.seed, it.palette, it.art.motif, it.rarity) : G.badgeArt(it, icons()[it.art.icon] || '');
-    res.setHeader('Content-Type', 'image/svg+xml'); res.setHeader('Cache-Control', 'public, max-age=2592000, immutable'); res.send(svg);
+    const it = resolve(req.params.id); if (!it || !it.generated) return res.status(404).end();
+    const svg = G.itemThumbSvg(it, icons());
+    if (!svg) return res.status(404).end();
+    res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+    res.send(svg);
   });
   app.get('/api/shop/catalog', (req, res) => {
     const me = H.currentUser(req);
