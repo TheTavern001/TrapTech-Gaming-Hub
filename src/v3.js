@@ -7,6 +7,7 @@ const db = require('./db');
 const cfg = require('./config');
 const ach = require('./achievements');
 const PR = require('./progress');
+const RQ = require('./rotating-quests');
 const TN = require('./tournaments');
 const N = require('./notify');
 const og = require('./og');
@@ -72,6 +73,18 @@ module.exports = function v3(app, A, h) {
     if (!r.ok) return bad(res, 400, r.error);
     const unlocked = ach.evaluate(req.user.id, { games: [] }).fresh;
     res.json({ ok: true, xp: r.xp, level: levelOf(req.user.id), unlocked, ...PR.questProgress(req.user.id) });
+  });
+
+  // ---------- rotating quest board (preview only; claims require server-side progress integration) ----------
+  app.get('/api/rotating-quests', requireUser, limiter('rotating-quests', 60, 60e3), (req, res) => {
+    try {
+      const secret = cfg.RUN_SECRET || cfg.SESSION_SECRET;
+      const count = Math.max(1, Math.min(20, Number.parseInt(req.query.count, 10) || 5));
+      const rotations = Object.fromEntries(RQ.PERIODS.map(period => [period, RQ.rotation({ userId: req.user.id, period, now: now(), count, secret })]));
+      return res.json({ ok: true, mode: 'preview', claim_enabled: false, message: 'Quest completion and rewards are not enabled until verified progress and persistent claims are integrated.', rotations, now: now() });
+    } catch (err) {
+      return bad(res, 500, 'Rotating quests are temporarily unavailable.');
+    }
   });
 
   // ---------- seasons ----------
