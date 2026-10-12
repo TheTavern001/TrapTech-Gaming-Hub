@@ -33,8 +33,11 @@ for (const root of SCAN_ROOTS) {
   for (const file of walk(abs).filter(p => p.endsWith('.js'))) {
     counts.javascriptFiles++;
     const source = fs.readFileSync(file, 'utf8');
-    // Parse as an ES module so browser modules and CommonJS syntax are both syntax-checked.
-    const result = spawnSync(process.execPath, ['--input-type=module', '--check'], {
+    // Use the correct parser goal: ESM for files with static imports/exports, script mode otherwise.
+    // This also keeps legacy vendored browser scripts (which may use script-only syntax) testable.
+    const isModule = /^\\s*(?:import|export)\\s/m.test(source);
+    const args = isModule ? ['--input-type=module', '--check'] : ['--check'];
+    const result = spawnSync(process.execPath, args, {
       input: source, encoding: 'utf8', timeout: 15000
     });
     if (result.status !== 0) fail(rel(file), (result.stderr || result.stdout || 'JavaScript syntax check failed').trim().slice(0, 1400));
