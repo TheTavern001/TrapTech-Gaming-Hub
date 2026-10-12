@@ -57,6 +57,9 @@ jobs:
           node --check tools/e2e-sponsor-brands.js
           node --check tools/e2e-cloudflare-r2.js
           node --check src/db.js
+          node --check src/events.js
+          node --check src/sponsor.js
+          node --check src/v4.js
           node --check src/server.js
           node --check src/monetize.js
           node --check src/admin-media.js
@@ -73,5 +76,6 @@ jobs:
           node --input-type=module --check < public/js/avatar-editor.js
           node --input-type=module --check < public/js/avatar-3d.js
           node --input-type=module --check < public/js/hub-store.js
+          node --input-type=module --check < src/admin-ui/admin.js
       - name: Build Deplexo Docker image (no push or deployment)
         run: docker build --tag gaming-hub-pr:${{ github.sha }} .
