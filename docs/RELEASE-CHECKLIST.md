@@ -52,6 +52,13 @@ This checklist deliberately covers the main Hub application as well as the Games
 - [ ] Deployment URL is reachable and all intended new games can be launched from the Hub.
 - [ ] No merge or production deployment until the release gates above are reviewed.
 
+## Payment-gate regression added — 2026-10-12
+
+- [x] Source guard: booking-backed event metadata cannot newly mark a booking paid unless the linked sponsor quote is verified paid.
+- [x] Source guard: booking-backed event metadata cannot mark a booking comped; waiving payment must use the audited reconciliation workflow.
+- [x] Added E2E assertions that both metadata bypass attempts return HTTP 409 and the unpaid event remains hidden.
+- [ ] Execute the updated sponsor E2E test against the exact candidate. The current GitHub Actions runs fail before test steps and provide no step logs; do not mark this runtime validation as passed.
+
 ## Current boundary
 
 This branch is based on `v7-wip` and preserves its Hub application files. The current edits add to the Hub navigation/library experience; they do not replace the rest of the Hub. Static checks cannot substitute for the browser, mobile, booking-permission, or anti-cheat checks above.
