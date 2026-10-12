@@ -36,7 +36,7 @@ function card(it, balance) {
     ${it.tag_label ? `<span class="ec-tag t-${esc(it.tag)}">${esc(it.tag_label)}</span>` : ''}${preview(it)}
     <div class="si-body"><div class="si-top"><b>${esc(it.name)}</b><span class="rar-chip r-${esc(it.rarity)}">${esc(it.rarity_label)}</span></div>
       <div class="tiny muted">${icon(TYPE_IC[it.type])} ${esc(TYPE[it.type])}${it.theme ? ' • ' + esc(it.theme) : ''}</div>
-      ${it.owned ? `<span class="btn sm ghost block ec-owned">${icon('check')} Owned</span>` : `<span class="btn sm block ec-price ${short ? 'ghost' : ''}">${icon('coins')} ${it.your_price != null && it.your_price !== it.price ? `<s>${fmt(it.price)}</s> ` : ''}${fmt(price)}</span>`}</div></div>`;
+      ${it.owned ? `<span class='btn sm ghost block ec-owned'>${icon('check')} Owned</span>` : it.catalog_only ? `<span class='btn sm ghost block ec-price'>Preview only</span>` : `<span class='btn sm block ec-price ${short ? 'ghost' : ''}'>${icon('coins')} ${it.your_price != null && it.your_price !== it.price ? `<s>${fmt(it.price)}</s> ` : ''}${fmt(price)}</span>`}</div></div>`;
 }
 const grid = (id, items, bal) => `<div class="shop-grid ec-grid" id="${id}">${items.map(i => card(i, bal)).join('')}</div>`;
 
@@ -83,8 +83,22 @@ async function detailSheet(id, onBought) {
 let catalogOpen = false, catalogOffset = 0, catalogType = '', catalogQuery = '';
 async function shopPage() {
   const { shell, api, icon, esc, fmt } = C;
+  const catalog = { items: null, offset: 0, total: 1200, q: '', type: '' };
+  async function loadCatalog(reset = false) {
+    const offset = reset ? 0 : catalog.offset;
+    const qs = new URLSearchParams({ limit: '24', offset: String(offset) });
+    if (catalog.q) qs.set('q', catalog.q);
+    if (catalog.type) qs.set('type', catalog.type);
+    const response = await api('/api/shop/catalog?' + qs.toString());
+    if (!response.ok) return false;
+    catalog.total = response.total || 0;
+    catalog.items = reset || !catalog.items ? response.items : catalog.items.concat(response.items);
+    catalog.offset = offset + response.items.length;
+    return true;
+  }
   const draw = async () => {
-    const r = await api('/api/shop'); if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is unavailable', esc(r.error || '')));
+    const r = await api('/api/shop');
+    if (catalog.items === null) await loadCatalog(true); if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is unavailable', esc(r.error || '')));
     const catalog = catalogOpen ? await api('/api/shop/catalog?limit=24&offset=' + catalogOffset + '&type=' + encodeURIComponent(catalogType) + '&q=' + encodeURIComponent(catalogQuery)) : null;
     const bal = r.balance; const ev = r.events || [];
     shell('/shop', `<div class="narrow wide ec">
@@ -97,6 +111,10 @@ async function shopPage() {
       ${grid('shop-weekly', r.weekly, bal)}
       <div class="section-h"><h2>${icon('clock')} Daily picks</h2><span class="small muted">New in ${cdi(r.daily_ends)} <span class="ec-at">(${localAt(r.daily_ends, { hour: 'numeric', minute: '2-digit' })} your time)</span></span></div>
       ${grid('shop-daily', r.daily, bal)}
+      <div class='section-h' id='cosmetic-catalog'><h2>${icon('layers')} Full Cosmetic Catalog</h2><span class='small muted'>${catalog.total.toLocaleString()} generated items • rotating shop</span></div>
+      <div class='card pad' style='margin-bottom:12px'><form id='catalog-search' class='catalog-search' role='search'><label for='catalog-q'>Search cosmetics</label><input id='catalog-q' type='search' value='${esc(catalog.q)}' placeholder='Search names...'><label for='catalog-type'>Type</label><select id='catalog-type'><option value=''>All types</option>${Object.entries(TYPE).map(([k,v])=>`<option value='${k}' ${catalog.type===k?'selected':''}>${esc(v)}</option>`).join('')}</select><button class='btn sm' type='submit'>${icon('search')} Search</button></form><p class='tiny muted'>Preview the full catalog. Items marked “Preview only” cannot be purchased until they enter the live rotation.</p></div>
+      ${catalog.items && catalog.items.length ? grid('shop-catalog', catalog.items, bal) : '<div class="card pad muted">No cosmetics match that search. Try another name or type.</div>'}
+      ${catalog.offset < catalog.total ? `<div class='center' style='margin:14px 0'><button class='btn ghost' id='catalog-more'>Load more cosmetics (${Math.min(24,catalog.total-catalog.offset)} of ${catalog.total-catalog.offset} remaining)</button></div>` : '<p class="small muted center">You reached the end of this catalog search.</p>'}
       <div class="section-h"><h2>${icon('calendar-range')} Season ${r.season.number} shop: ${esc(r.season.name)}</h2><span class="small muted">Leaves in ${cdi(r.season_ends)}</span></div>
       ${grid('shop-season', r.season.items, bal)}
       ${r.peek ? `<div class="section-h"><h2>${icon('eye')} Tomorrow's daily picks</h2><span class="small muted">Season perk: early peek</span></div><div class="ec-peek">${r.peek.map(i => `<button class="ec-peek-i" data-item="${esc(i.id)}">${preview(i, 'sm')}<span>${esc(i.name)}</span></button>`).join('')}</div>` : ''}
@@ -127,6 +145,10 @@ async function shopPage() {
         <p class="tiny muted">Prices move with demand, scarcity and appearances, so there are no fixed price tiers. <a href="/shop/how-it-works">How prices and rotations work</a>. Points can't be bought and are never used for giveaway entries.</p></div>
     </div>`);
     C.tickInline && C.tickInline();
+    const catalogForm = document.getElementById('catalog-search');
+    if (catalogForm) catalogForm.onsubmit = async (e) => { e.preventDefault(); catalog.q = document.getElementById('catalog-q').value.trim(); catalog.type = document.getElementById('catalog-type').value; await loadCatalog(true); await draw(); };
+    const more = document.getElementById('catalog-more');
+    if (more) more.onclick = async () => { more.disabled = true; more.textContent = 'Loading…'; const ok = await loadCatalog(false); if (ok) await draw(); else { more.disabled = false; more.textContent = 'Retry loading cosmetics'; } };
     document.querySelectorAll('main [data-item]').forEach(el => { const open = (e) => { e.preventDefault(); detailSheet(el.dataset.item, draw); }; el.addEventListener('click', open); el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }); });
     document.querySelectorAll('main [data-act="catalog-toggle"]').forEach(el => el.addEventListener('click', () => { catalogOpen = !catalogOpen; catalogOffset = 0; draw(); }));
     document.querySelectorAll('main [data-act="catalog-prev"]').forEach(el => el.addEventListener('click', () => { catalogOffset = Math.max(0, catalogOffset - 24); draw(); }));
