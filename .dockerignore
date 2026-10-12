@@ -17,6 +17,7 @@ tools/*
 !tools/prelaunch-deep-audit.js
 !tools/verify-prelaunch.js
 !tools/test-rotating-quests.js
+!tools/verify-game-syntax.js
 !tools/e2e-*.js
 licenses
 *.db
