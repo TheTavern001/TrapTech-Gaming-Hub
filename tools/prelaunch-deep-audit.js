@@ -103,8 +103,8 @@ for (const g of games) {
     if (/innerHTML\s*=\s*[^;]*(?:username|title|message|error)/i.test(js)) notes.push('review dynamic HTML writes for escaping/XSS');
   }
   const record = {
-    slug, id: g.id, title: g.title, category: g.category, build: g.build,
-    htmlHash: html ? hash(html) : null, gameJsHash: js ? hash(js) : null,
+    slug, id: g.id, title: g.title, category: g.category, source: g.src || 'unknown',
+    implementationPresent: !!js, htmlHash: html ? hash(html) : null, gameJsHash: js ? hash(js) : null,
     hasCanvas: /<canvas\b/i.test(html || '') || /createElement\(['"]canvas['"]\)/i.test(js || ''),
     hasWebGL: /webgl|three\.module|WebGLRenderer/i.test((html || '') + (js || '')),
     hasTouchControlsToken: /touchstart|pointerdown|touch-action|ontouch/i.test((html || '') + (js || '')),
