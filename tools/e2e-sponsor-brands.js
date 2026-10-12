@@ -1,4 +1,4 @@
-// v7 Sponsor a Host (feature picker, admin-only prices, quote flow) + brand affiliation (invite links, one brand per
+// v7 Book a Giveaway (feature picker, admin-only prices, quote flow) + brand affiliation (invite links, one brand per
 // player, 30-day switch cooldown, brand-only vs open giveaways) end to end. Starts its OWN server on a copy of the DB
 // (port 8798), so nothing touches the dev server. Usage: node tools/e2e-sponsor-brands.js
 const fs = require('fs'); const path = require('path'); const { spawn } = require('child_process');
@@ -27,7 +27,7 @@ const env0 = loadEnv();
   try {
     const ADM = adminClient(BASE, env); let r = await ADM.login(); ok(r.body.ok, 'admin signs in (password + TOTP)', r.body);
     const anon = client();
-    console.log('# Sponsor a Host: public side has no tiers and no prices');
+    console.log('# Book a Giveaway: public side has no tiers and no prices');
     r = await anon('/api/sponsor/catalog'); const cat = r.body;
     ok(cat.ok && cat.features.length >= 20 && cat.groups.length >= 5, `one combined feature list (${cat.features && cat.features.length} features in ${cat.groups && cat.groups.length} groups)`);
     const catTxt = JSON.stringify(cat); ok(!/price|_cents|\$\d/i.test(catTxt.replace(/"faq":.*$/, '')) && !/\b(basic|premium|elite)\b/i.test(catTxt), 'catalog shows no prices and no tier names', (catTxt.replace(/"faq":.*$/, '').match(/.{0,60}(price|_cents|\$\d|\b(basic|premium|elite)\b).{0,30}/i) || [''])[0]);
