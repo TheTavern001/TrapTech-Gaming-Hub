@@ -34,8 +34,8 @@ function duplicates(entries, keyFn) {
 // Core Hub games live in public/js and are registered in src/config.js. Parse the source
 // instead of requiring config.js because production secrets are intentionally mandatory there.
 const configSource = read(path.join(ROOT, 'src', 'config.js')) || '';
-const coreRegistryBlock = (configSource.match(/const GAMES = \\[([\\s\\S]*?)\\n\\];/) || [])[1] || '';
-const coreGames = [...coreRegistryBlock.matchAll(/\\{\\s*id:\\s*'([^']+)',\\s*title:\\s*'([^']+)'[\\s\\S]*?module:\\s*'([^']+)'/g)]
+const coreRegistryBlock = (configSource.match(/const GAMES = \[([\s\S]*?)\n\];/) || [])[1] || '';
+const coreGames = [...coreRegistryBlock.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)]
   .map(m => ({ id: m[1], title: m[2], module: m[3] }));
 const coreRows = [];
 for (const g of coreGames) {
@@ -46,12 +46,12 @@ for (const g of coreGames) {
   const notes = [];
   if (!source) problems.push('core game module missing/unreadable: ' + g.module);
   if (source && !/(?:requestAnimationFrame|setInterval|setTimeout)/.test(source)) notes.push('no obvious game-loop/timer token; inspect interaction model');
-  if (source && !/(?:pointerdown|pointerup|touchstart|touchend|addEventListener\\(['"]key|onKey|pointer|touch)/i.test(source)) notes.push('no obvious pointer/touch/keyboard input token');
-  if (source && /Math\\.random\\(\\)/.test(source) && /score|submit/i.test(source)) notes.push('randomness appears in scoring-related code; review deterministic scoring and server validation');
+  if (source && !/(?:pointerdown|pointerup|touchstart|touchend|addEventListener\(['"]key|onKey|pointer|touch)/i.test(source)) notes.push('no obvious pointer/touch/keyboard input token');
+  if (source && /Math\.random\(\)/.test(source) && /score|submit/i.test(source)) notes.push('randomness appears in scoring-related code; review deterministic scoring and server validation');
   const row = {
     id: g.id, title: g.title, module: g.module, moduleHash: source ? hash(source) : null,
-    hasCanvasToken: /canvas|\\.ctx\\b|getContext\\(/i.test(source || ''),
-    hasWebGLToken: /WebGLRenderer|THREE\\.|webgl/i.test(source || ''),
+    hasCanvasToken: /canvas|\.ctx\b|getContext\(/i.test(source || ''),
+    hasWebGLToken: /WebGLRenderer|THREE\.|webgl/i.test(source || ''),
     hasPointerOrTouchToken: /pointerdown|pointerup|touchstart|touchend|ontouch/i.test(source || ''),
     hasKeyboardToken: /keydown|keyup|KeyboardEvent/i.test(source || ''),
     problems, notes
@@ -167,6 +167,9 @@ const evidence = {
   mode: 'read-only structural audit of core Hub games and Games Library; not a visual/gameplay/physical-device pass',
   summary: {
     registryGames: games.length,
+    coreGamesRegistered: coreGames.length,
+    coreGamesWithBlockers: coreRows.filter(r => r.problems.length).length,
+    coreGamesWithReviewNotes: coreRows.filter(r => r.notes.length).length,
     gamesWithBlockers: rows.filter(r => r.problems.length).length,
     gamesWithReviewNotes: rows.filter(r => r.notes.length).length,
     duplicateReviewFindings: issues.filter(i => i.severity === 'duplicate-review').length,
