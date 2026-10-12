@@ -82,12 +82,26 @@ function rotation({ userId, period, now = Date.now(), count = 5, secret }) {
 }
 function validateRotation(items) {
   if (!Array.isArray(items) || items.length === 0) return false;
-  const ids = new Set();
-  for (const q of items) {
-    if (!q || !BY_ID.has(q.id) || ids.has(q.id) || !Number.isInteger(q.target) || q.target < 1 ||
-        !Number.isInteger(q.xp) || q.xp < 0 || !PERIODS.includes(q.period) ||
-        !TIERS.some(t => t.id === q.tier) || !OBJECTIVES.some(o => o.id === q.objective)) return false;
-    ids.add(q.id);
+  const ids = new Set(), assignments = new Set();
+  let userId = null, periodKeyValue = null, periodValue = null;
+  for (let index = 0; index < items.length; index++) {
+    const q = items[index];
+    if (!q || typeof q !== 'object' || !BY_ID.has(q.id) || ids.has(q.id)) return false;
+    const canonical = BY_ID.get(q.id);
+    // Never accept client-modified targets, XP, reward tracks, or game/objective metadata.
+    for (const key of ['period', 'objective', 'tier', 'game', 'variant', 'title', 'target', 'xp', 'reward', 'definition_version']) {
+      if (q[key] !== canonical[key]) return false;
+    }
+    if (!Number.isInteger(q.slot) || q.slot !== index ||
+        typeof q.user_id !== 'string' || !q.user_id || q.user_id.length > 128 ||
+        typeof q.period_key !== 'string' || !q.period_key ||
+        typeof q.assignment_id !== 'string' || !/^[a-f0-9]{32}$/.test(q.assignment_id)) return false;
+    if (userId !== null && q.user_id !== userId) return false;
+    if (periodKeyValue !== null && q.period_key !== periodKeyValue) return false;
+    if (periodValue !== null && q.period !== periodValue) return false;
+    if (assignments.has(q.assignment_id)) return false;
+    userId = q.user_id; periodKeyValue = q.period_key; periodValue = q.period;
+    ids.add(q.id); assignments.add(q.assignment_id);
   }
   return true;
 }
