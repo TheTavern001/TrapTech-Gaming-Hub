@@ -14,6 +14,7 @@ const P7 = devices['Pixel 7'], I14 = devices['iPhone 14'];
 const AND_WV = 'Mozilla/5.0 (Linux; Android 14; Pixel 7 Build/UQ1A.240205.004; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0.6668.100 Mobile Safari/537.36';
 const IOS_INAPP = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Potato/6.2';
 const PROFILES = [
+  { id: 'desktop-chrome', dev: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, isMobile: false, hasTouch: true } },
   { id: 'pixel7-chrome', dev: P7 },
   { id: 'iphone14-safari', dev: I14 },
   { id: 'android-webview', dev: { ...P7, userAgent: AND_WV } },
@@ -36,6 +37,7 @@ setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: 
     const p = await ctx.newPage(); const tag = pf.id; let bytes = 0, reqs = 0;
     // locked webviews keep gate/session only in memory, so navigate in-app (SPA) instead of reloading
     const nav = async (u) => { if (pf.locked) { await p.evaluate((u) => window.__go(u), u); await sleep(150); } else await p.goto(BASE + u); };
+    const tapGame = async (x, y) => { if (pf.id === 'desktop-chrome') await p.mouse.click(x, y); else await p.touchscreen.tap(x, y); };
     p.on('pageerror', e => errors.push(`[${tag}] ${e.message}`));
     p.on('console', m => { if (m.type() === 'error' && !/favicon|status of 4\d\d/.test(m.text())) errors.push(`[${tag}] console: ${m.text()}`); });
     p.on('popup', () => errors.push(`[${tag}] a popup window was opened`));
@@ -86,8 +88,8 @@ setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: 
       await nav('/play/' + g); await p.waitForSelector('#game'); await p.waitForFunction(() => window.__game && window.__game.running, null, { timeout: 15000 });
       const box = await p.locator('#game').boundingBox();
       ok(box.width >= 300 && box.height >= 300, `${g}: canvas fills the portrait screen (${Math.round(box.width)}x${Math.round(box.height)})`);
-      await p.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.45); await sleep(600);
-      if (g === 'spin-to-win' || g === 'drift-rush') { await p.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.5); }
+      await tapGame(box.x + box.width / 2, box.y + box.height * 0.45); await sleep(600);
+      if (g === 'spin-to-win' || g === 'drift-rush') { await tapGame(box.x + box.width / 2, box.y + box.height * 0.5); }
       const st = await p.evaluate(() => window.__game.state);
       ok(st === 'play' || st === 'over', `${g}: touch starts the run (state ${st})`);
       if (pf.id === 'pixel7-chrome') await p.screenshot({ path: path.join(SHOTS, `m-play-${g}.png`) });
