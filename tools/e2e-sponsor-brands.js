@@ -116,6 +116,15 @@ const env0 = loadEnv();
     ok(r.body.ok && r.body.request.quote.status === 'paid', 'admin verifies receipt and marks legacy quote paid');
     r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.status === 'active', 'verified payment atomically restores the pre-existing event');
     r = await anon('/api/sponsor/requests/' + tok); ok(r.body.request.event && r.body.request.event.code === evc, 'vendor status page regains its event link after verified payment');
+    r = await ADM('/api/admin/events/' + evid + '/meta', { method: 'PUT', body: { payment_status: 'refunded' } });
+    ok(r.body.ok, 'refund state blocks the booking-backed event');
+    r = await anon('/api/event/' + evc); ok(r.status === 404, 'refunded booking event is hidden');
+    r = await ADM('/api/admin/events/' + evid + '/meta', { method: 'PUT', body: { payment_status: 'paid' } });
+    ok(r.status === 409 && /refunded booking cannot be reactivated/i.test(r.body.error), 'metadata editor cannot reverse a refund into paid state');
+    r = await anon('/api/event/' + evc); ok(r.status === 404, 'refunded event remains hidden after rejected metadata reactivation');
+    r = await ADM('/api/admin/sponsor/requests/' + rid + '/status', { body: { status: 'paid' } });
+    ok(r.body.ok, 'audited quote reconciliation restores a refunded event after payment is verified');
+    r = await anon('/api/event/' + evc); ok(r.body.ok && r.body.event.status === 'active', 'event becomes available only after quote reconciliation');
 
     const payGuardName = 'paygate_' + Date.now().toString(36).slice(-6);
     const payGuard = client();
