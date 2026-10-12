@@ -82,6 +82,29 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   check('Store UI loads the Prestige preview-only gate', storeUi.res.status === 200 && storeUi.text.includes('Preview only') && storeUi.text.includes('/assets/prestige/'), { status: storeUi.res.status });
   if (!(storeUi.res.status === 200 && storeUi.text.includes('Preview only') && storeUi.text.includes('/assets/prestige/'))) failures.push('Store UI loads the Prestige preview-only gate');
 
+  // Exercise the generated 1,200-item rotating cosmetics catalog and its public pagination before release.
+  const cosmeticFirstResult = await get(BASE + '/api/shop/catalog?limit=24&offset=0');
+  let cosmeticFirst = null; try { cosmeticFirst = JSON.parse(cosmeticFirstResult.text); } catch {}
+  const firstItems = Array.isArray(cosmeticFirst?.items) ? cosmeticFirst.items : [];
+  const firstIds = firstItems.map(i => i && i.id).filter(Boolean);
+  const cosmeticFirstReady = cosmeticFirstResult.res.status === 200 && cosmeticFirst?.ok === true && cosmeticFirst.catalog_size === 1200 && cosmeticFirst.total === 1200 && cosmeticFirst.limit === 24 && cosmeticFirst.offset === 0 && firstItems.length === 24 && firstIds.length === 24 && new Set(firstIds).size === 24 && firstItems.every(i => i && typeof i.name === 'string' && i.name.length > 0);
+  check('Rotating cosmetics catalog returns 1,200 items and a valid first page', cosmeticFirstReady, { status: cosmeticFirstResult.res.status, catalogSize: cosmeticFirst?.catalog_size, total: cosmeticFirst?.total, pageItems: firstItems.length, uniqueIds: new Set(firstIds).size });
+  if (!cosmeticFirstReady) failures.push('Rotating cosmetics catalog returns 1,200 items and a valid first page');
+  const [cosmeticNextResult, cosmeticTailResult] = await Promise.all([
+    get(BASE + '/api/shop/catalog?limit=24&offset=24'),
+    get(BASE + '/api/shop/catalog?limit=24&offset=1176')
+  ]);
+  let cosmeticNext = null, cosmeticTail = null;
+  try { cosmeticNext = JSON.parse(cosmeticNextResult.text); } catch {}
+  try { cosmeticTail = JSON.parse(cosmeticTailResult.text); } catch {}
+  const nextItems = Array.isArray(cosmeticNext?.items) ? cosmeticNext.items : [];
+  const tailItems = Array.isArray(cosmeticTail?.items) ? cosmeticTail.items : [];
+  const nextIds = nextItems.map(i => i && i.id).filter(Boolean);
+  const tailIds = tailItems.map(i => i && i.id).filter(Boolean);
+  const pageSetsValid = cosmeticNextResult.res.status === 200 && cosmeticNext?.ok === true && cosmeticNext.total === 1200 && cosmeticNext.offset === 24 && nextItems.length === 24 && nextIds.length === 24 && new Set(nextIds).size === 24 && !nextIds.some(id => firstIds.includes(id)) && cosmeticTailResult.res.status === 200 && cosmeticTail?.ok === true && cosmeticTail.total === 1200 && cosmeticTail.offset === 1176 && tailItems.length === 24 && tailIds.length === 24 && new Set(tailIds).size === 24 && !tailIds.some(id => firstIds.includes(id) || nextIds.includes(id));
+  check('Cosmetic pagination returns non-overlapping middle and final pages', pageSetsValid, { middleStatus: cosmeticNextResult.res.status, middleItems: nextItems.length, finalStatus: cosmeticTailResult.res.status, finalItems: tailItems.length, crossPageOverlaps: tailIds.filter(id => firstIds.includes(id) || nextIds.includes(id)).length });
+  if (!pageSetsValid) failures.push('Cosmetic pagination returns non-overlapping middle and final pages');
+
   const manifestResult = await get(BASE + '/manifest.webmanifest');
   let manifest = null; try { manifest = JSON.parse(manifestResult.text); } catch {}
   check('PWA manifest responds with valid JSON', manifestResult.res.status === 200 && !!manifest && Array.isArray(manifest.icons), { status: manifestResult.res.status, icons: manifest?.icons?.length || 0 });
