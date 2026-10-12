@@ -196,6 +196,14 @@ try {
   if (invalid) fail('src/shop-gen.js', invalid + ' generated catalog items have invalid metadata');
   if (nondeterministic) fail('src/shop-gen.js', nondeterministic + ' generated catalog items are not deterministic');
 } catch (e) { fail('src/shop-gen.js', 'Could not verify the 1,200-item generator: ' + e.message); }
+const avatar3dSource = read(path.join(ROOT, 'public/js/avatar-3d.js')) || '';
+const avatar3dBg = (avatar3dSource.match(/const backgrounds = \{([\s\S]*?)\n  \};/) || [])[1] || '';
+const prestigeBackgrounds = ['diamond-prism','stack-throne','royal-crown','phoenix-mantle','singularity-orbit','void-dragon','nebula-wings','titan-exoframe','holo-decree','storm-halo','chronos-mantle','aurora-crown'];
+for (const bg of prestigeBackgrounds) {
+  if (!avatar3dBg.includes("'" + bg + "'") || !avatar3dSource.includes("cfg.bg === '" + bg + "'")) fail('public/js/avatar-3d.js', '3D avatar preview is missing prestige environment ' + bg);
+}
+const economyUi = read(path.join(ROOT, 'public/js/economy.js')) || '';
+if (!economyUi.includes('Browse 1,200+ items') || !economyUi.includes('/api/shop/catalog?limit=24') || !economyUi.includes('catalog-prev') || !economyUi.includes('catalog-next')) fail('public/js/economy.js', 'Points Shop must expose searchable paginated catalog browsing');
 const prestigePriceRows = [...prestigeBlock.matchAll(/'([^']+)': \{[^\n]*?usd: (\d+)/gm)];
 if (prestigePriceRows.length !== 12 || prestigePriceRows.some(m => Number(m[2]) < 100000)) fail('src/monetize.js', 'All 12 prestige originals must cost at least $1,000');
 try {
