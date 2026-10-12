@@ -92,6 +92,7 @@ setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: 
       if (g === 'spin-to-win' || g === 'drift-rush') { await tapGame(box.x + box.width / 2, box.y + box.height * 0.5); }
       const st = await p.evaluate(() => window.__game.state);
       ok(st === 'play' || st === 'over', `${g}: touch starts the run (state ${st})`);
+      if (pf.id === 'desktop-chrome') await p.screenshot({ path: path.join(SHOTS, `d-play-${g}.png`) });
       if (pf.id === 'pixel7-chrome') await p.screenshot({ path: path.join(SHOTS, `m-play-${g}.png`) });
       await sleep(900);
       const st2 = await p.evaluate(() => window.__game.state);
