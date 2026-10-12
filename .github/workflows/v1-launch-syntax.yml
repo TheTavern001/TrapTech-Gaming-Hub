@@ -50,6 +50,14 @@ jobs:
           ADMIN_PATH: ci-hidden-admin-path
           DATA_DIR: /tmp/gaming-hub-ci-sponsor-payment
         run: SEED=1 tools/fresh-api.sh tools/e2e-sponsor-brands.js
+      - name: Test avatar ownership and saved-look lifecycle
+        env:
+          NODE_ENV: test
+          ADMIN_PASSWORD: ci-only-admin-password-do-not-use-in-production
+          SECRET: ci-only-secret-do-not-use-in-production
+          ADMIN_PATH: ci-hidden-admin-path
+          DATA_DIR: /tmp/gaming-hub-ci-avatars
+        run: tools/fresh-api.sh tools/e2e-avatars.js
       - name: Check server-side JavaScript
         run: |
           bash -n tools/run-all.sh
