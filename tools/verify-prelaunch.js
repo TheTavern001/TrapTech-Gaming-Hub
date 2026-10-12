@@ -181,6 +181,21 @@ if (!prestigeSource.includes('prestige_original_one_owner')) fail('src/monetize.
 
 const shopSource = read(path.join(ROOT, 'src/shop.js')) || '';
 if (!/const CATALOG_UNIVERSE_SIZE = 1200/.test(shopSource) || !shopSource.includes("app.get('/api/shop/catalog'") || !shopSource.includes('catalog_only: !onSale.has(it.id)')) fail('src/shop.js', 'The 1,200-item catalog must be paginated and mark unscheduled items preview-only');
+try {
+  const generator = require('../src/shop-gen');
+  const ids = new Set();
+  let invalid = 0, nondeterministic = 0;
+  for (let day = 0; day < 600; day++) for (let slot = 0; slot < 2; slot++) {
+    const a = generator.make('d', 25000 + day, slot);
+    const b = generator.make('d', 25000 + day, slot);
+    if (!a || !a.id || !a.name || !generator.TYPES.includes(a.type) || !generator.RARITIES.includes(a.rarity)) invalid++;
+    if (a && b && JSON.stringify(a) !== JSON.stringify(b)) nondeterministic++;
+    if (a?.id) ids.add(a.id);
+  }
+  if (ids.size !== 1200) fail('src/shop-gen.js', 'Expected 1,200 unique generated item IDs, found ' + ids.size);
+  if (invalid) fail('src/shop-gen.js', invalid + ' generated catalog items have invalid metadata');
+  if (nondeterministic) fail('src/shop-gen.js', nondeterministic + ' generated catalog items are not deterministic');
+} catch (e) { fail('src/shop-gen.js', 'Could not verify the 1,200-item generator: ' + e.message); }
 const prestigePriceRows = [...prestigeBlock.matchAll(/'([^']+)': \{[^\n]*?usd: (\d+)/gm)];
 if (prestigePriceRows.length !== 12 || prestigePriceRows.some(m => Number(m[2]) < 100000)) fail('src/monetize.js', 'All 12 prestige originals must cost at least $1,000');
 try {
