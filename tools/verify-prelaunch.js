@@ -70,8 +70,21 @@ for (const g of slugs) {
   if (slugSet.has(g.slug)) fail(g.slug, 'Duplicate Games Library slug');
   slugSet.add(g.slug);
   const dir = path.join(ROOT, 'public/games-lib', g.slug);
-  if (!fs.existsSync(path.join(dir, 'index.html'))) fail(g.slug, 'Missing game entry HTML');
-  if (!fs.existsSync(path.join(dir, 'game.js'))) fail(g.slug, 'Missing game.js');
+  const entry = path.join(dir, 'index.html');
+  if (!fs.existsSync(entry)) fail(g.slug, 'Missing game entry HTML');
+  else {
+    const html = fs.readFileSync(entry, 'utf8');
+    for (const m of html.matchAll(/(?:src|href)=["']([^"']+)["']/gi)) {
+      const ref = m[1];
+      if (!ref || /^(?:https?:|\/\/|data:|#|javascript:|mailto:)/i.test(ref)) continue;
+      const clean = ref.split(/[?#]/)[0];
+      if (!/\.(?:js|css|json|wasm|png|jpe?g|webp|svg|woff2?|mp3|ogg|wav)$/i.test(clean)) continue;
+      const target = path.resolve(dir, clean.startsWith('/') ? path.join(ROOT, 'public', clean.slice(1)) : clean);
+      const safe = [path.resolve(dir) + path.sep, path.resolve(ROOT, 'public') + path.sep];
+      if (!safe.some(root => target.startsWith(root))) fail(g.slug, 'Asset path escapes game roots: ' + ref);
+      else if (!fs.existsSync(target)) fail(g.slug, 'Missing referenced local asset: ' + ref);
+    }
+  }
 }
 
 const canonical = fs.readFileSync(path.join(ROOT, 'public/assets/brand/traptech-app-icon.svg'), 'utf8').trim();
