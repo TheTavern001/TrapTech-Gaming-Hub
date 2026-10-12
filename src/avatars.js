@@ -11,17 +11,17 @@ const SKIN = ['#f9d7b9', '#f1c19b', '#e0a679', '#c98a5b', '#a8693f', '#8a5232', 
 const HAIRC = ['#1b1b1f', '#4a2f1d', '#7b4a24', '#c58b3c', '#e8c46a', '#d9d4cc', '#c2410c', '#7c3aed', '#22d3ee', '#16a34a'];
 const BG = { violet: ['#7c3aed', '#22d3ee'], night: ['#0f172a', '#4338ca'], kush: ['#14532d', '#84cc16'], sunset: ['#f97316', '#db2777'], ocean: ['#0369a1', '#22d3ee'], haze: ['#6b21a8', '#f0abfc'], mono: ['#27272a', '#71717a'], toxic: ['#166534', '#facc15'],
   'gold-rays': ['#78350f', '#facc15'], 'cash-rain': ['#052e16', '#22c55e'], 'grow-room': ['#052e16', '#15803d'], 'night-club': ['#1e1b4b', '#db2777'], 'hospital': ['#e0f2fe', '#38bdf8'], 'workshop': ['#292524', '#f59e0b'], 'farm': ['#14532d', '#a3e635'], 'studio': ['#111827', '#7c3aed'], 'city-lights': ['#020617', '#475569'],
-  'diamond-prism': ['#172554', '#a5f3fc'], 'phoenix-mantle': ['#450a0a', '#fb923c'], 'singularity-orbit': ['#020617', '#7c3aed'], 'void-dragon': ['#082f49', '#a78bfa'],
+  'diamond-prism': ['#172554', '#a5f3fc'], 'stack-throne': ['#052e16', '#facc15'], 'royal-crown': ['#422006', '#fbbf24'], 'phoenix-mantle': ['#450a0a', '#fb923c'], 'singularity-orbit': ['#020617', '#7c3aed'], 'void-dragon': ['#082f49', '#a78bfa'],
   'nebula-wings': ['#312e81', '#ec4899'], 'titan-exoframe': ['#111827', '#22d3ee'], 'holo-decree': ['#164e63', '#e879f9'],
   'storm-halo': ['#0f172a', '#60a5fa'], 'chronos-mantle': ['#422006', '#fbbf24'], 'aurora-crown': ['#052e16', '#c084fc'] };
 // part catalog: [kind, id, label, unlock]  unlock: 'free' | { crowns: n } | { ach: n } | { prestige: itemId }
 const P = [];
 const add = (kind, id, label, unlock = 'free') => P.push({ kind, id, label, unlock });
 const PRESTIGE_BG = {
-  'diamond-prism': 'prestige-cane', 'cash-rain': 'prestige-throne', 'gold-rays': 'prestige-crown',
-  'phoenix-mantle': 'prestige-phoenix', 'singularity-orbit': 'prestige-singularity', 'void-dragon': 'prestige-dragon',
-  'nebula-wings': 'prestige-nebula', 'titan-exoframe': 'prestige-mech', 'holo-decree': 'prestige-holo',
-  'storm-halo': 'prestige-storm', 'chronos-mantle': 'prestige-chronos', 'aurora-crown': 'prestige-aurora'
+  'diamond-prism': 'prestige-original-cane', 'stack-throne': 'prestige-original-throne', 'royal-crown': 'prestige-original-crown',
+  'phoenix-mantle': 'prestige-original-phoenix', 'singularity-orbit': 'prestige-original-singularity', 'void-dragon': 'prestige-original-dragon',
+  'nebula-wings': 'prestige-original-nebula', 'titan-exoframe': 'prestige-original-mech', 'holo-decree': 'prestige-original-holo',
+  'storm-halo': 'prestige-original-storm', 'chronos-mantle': 'prestige-original-chronos', 'aurora-crown': 'prestige-original-aurora'
 };
 Object.keys(BG).forEach(k => add('bg', k, k.replace(/-/g, ' '), PRESTIGE_BG[k] ? { prestige: PRESTIGE_BG[k] } : k === 'toxic' ? { ach: 25 } : 'free'));
 SKIN.forEach((c, i) => add('skin', 's' + i, 'Tone ' + (i + 1)));
@@ -64,6 +64,8 @@ function svg(c) {
   o.push(`<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${b1}"/><stop offset="1" stop-color="${b2}"/></linearGradient><linearGradient id="au" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#f59e0b"/><stop offset="1" stop-color="#fef3c7"/></linearGradient></defs><rect width="120" height="120" rx="24" fill="url(#g)"/>`);
   if (c.bg === 'gold-rays') o.push('<g opacity=".35" fill="#fef3c7">' + [0, 30, 60, 90, 120, 150].map(a => `<path d="M60 60 L${60 + 90 * Math.cos(a * Math.PI / 180)} ${60 + 90 * Math.sin(a * Math.PI / 180)} L${60 + 90 * Math.cos((a + 10) * Math.PI / 180)} ${60 + 90 * Math.sin((a + 10) * Math.PI / 180)}Z"/>`).join('') + '<animateTransform attributeName="transform" type="rotate" from="0 60 60" to="360 60 60" dur="24s" repeatCount="indefinite"/></g>');
   if (c.bg === 'cash-rain') o.push('<g fill="#86efac" opacity=".55">' + [12, 34, 58, 82, 104].map((x, i) => `<rect x="${x}" y="-12" width="12" height="7" rx="1"><animate attributeName="y" from="-12" to="124" dur="${3 + i * 0.6}s" repeatCount="indefinite"/></rect>`).join('') + '</g>');
+  if (c.bg === 'stack-throne') o.push('<g opacity=".65"><path d="M22 82 L28 45 L43 59 L60 32 L77 59 L92 45 L98 82Z" fill="#facc15" fill-opacity=".25" stroke="#fde68a" stroke-width="2"/><path d="M25 86 H95 M30 92 H90" stroke="#86efac" stroke-width="3"/><g fill="#86efac">' + [18, 43, 72, 97].map((x,i)=>`<rect x="${x}" y="-10" width="8" height="5" rx="1"><animate attributeName="y" from="-10" to="120" dur="${2.5+i*.5}s" repeatCount="indefinite"/></rect>`).join('') + '</g></g>');
+  if (c.bg === 'royal-crown') o.push('<g fill="none" stroke="#fde68a" stroke-width="2.5" opacity=".85"><path d="M23 42 L32 17 L46 32 L60 9 L74 32 L88 17 L97 42Z" fill="#fbbf24" fill-opacity=".35"/><path d="M25 47 H95"><animate attributeName="stroke-width" values="2;4;2" dur="2s" repeatCount="indefinite"/></path><circle cx="60" cy="29" r="27" stroke-dasharray="3 6"><animateTransform attributeName="transform" type="rotate" from="0 60 29" to="360 60 29" dur="20s" repeatCount="indefinite"/></circle></g>');
   // Distinct animated silhouettes for the one-of-one prestige originals. These are profile-only SVG effects.
   if (c.bg === 'diamond-prism') o.push('<g fill="none" stroke="#e0f2fe" stroke-width="1.5" opacity=".75"><path d="M60 5 L73 24 L60 38 L47 24Z"/><path d="M10 18 L28 28 L18 44 M110 18 L92 28 L102 44"><animate attributeName="opacity" values=".25;1;.25" dur="2s" repeatCount="indefinite"/></path><circle cx="60" cy="22" r="19" stroke="#fef3c7" stroke-dasharray="2 5"><animateTransform attributeName="transform" type="rotate" from="0 60 22" to="360 60 22" dur="12s" repeatCount="indefinite"/></circle></g>');
   if (c.bg === 'phoenix-mantle') o.push('<g fill="none" stroke="#fdba74" stroke-width="3" opacity=".7"><path d="M48 66 Q23 45 14 22 Q34 29 47 47 Q36 20 42 10 Q57 29 60 47 Q68 24 82 13 Q83 36 72 50 Q92 31 106 28 Q97 54 72 68"><animate attributeName="opacity" values=".35;.9;.35" dur="2.8s" repeatCount="indefinite"/></path><g fill="#fb923c" stroke="none"><circle cx="20" cy="74" r="2"><animate attributeName="cy" values="80;60;80" dur="2.2s" repeatCount="indefinite"/></circle><circle cx="98" cy="80" r="2"><animate attributeName="cy" values="86;65;86" dur="2.7s" repeatCount="indefinite"/></circle></g></g>');
