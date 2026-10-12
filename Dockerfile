@@ -55,7 +55,10 @@ RUN set -eu; \
  server_pid=$!; \
  trap 'kill "$server_pid" 2>/dev/null || true' EXIT; \
  if ! node -e 'const t=Date.now(); (async()=>{while(Date.now()-t<30000){try{const r=await fetch("http://127.0.0.1:18787/healthz");if(r.ok)process.exit(0)}catch{};await new Promise(r=>setTimeout(r,250))}process.exit(1)})()'; then cat /tmp/hub-build-smoke.log; exit 1; fi; \
- if ! BASE=http://127.0.0.1:18787 node tools/verify-live-deployment.js; then cat /tmp/hub-build-smoke.log; exit 1; fi; \
+ set +e; \
+ BASE=http://127.0.0.1:18787 node tools/verify-live-deployment.js > /tmp/hub-build-smoke-verification.log 2>&1; verify_status=$?; \
+ set -e; \
+ if [ "$verify_status" -ne 0 ]; then echo "LIVE VERIFICATION FAILED (exit $verify_status):"; cat /tmp/hub-build-smoke-verification.log; echo "SERVER LOG:"; cat /tmp/hub-build-smoke.log; exit "$verify_status"; fi; \
  kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true
 
 # ---------- runtime stage ----------
