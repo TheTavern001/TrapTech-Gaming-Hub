@@ -39,8 +39,11 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   const core = [...block.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)].map(m => ({ id: m[1], title: m[2], module: m[3] }));
   const index = await get(BASE + '/');
   check('Homepage responds 200', index.res.status === 200, { status: index.res.status, type: index.type });
-  if (index.res.status === 200) check('Homepage references canonical Trap Tech icon', index.text.includes('/assets/brand/traptech-app-icon.svg'));
-  else failures.push('Homepage responds 200');
+  if (index.res.status === 200) {
+    check('Homepage references canonical Trap Tech icon', index.text.includes('/assets/brand/traptech-app-icon.svg'));
+    check('Homepage loads launch redesign stylesheet', index.text.includes('/css/launch-redesign.css'));
+    check('Homepage links the PWA manifest', index.text.includes('/manifest.webmanifest'));
+  } else failures.push('Homepage responds 200');
 
   const health = await get(BASE + '/healthz');
   let healthJson = null; try { healthJson = JSON.parse(health.text); } catch {}
