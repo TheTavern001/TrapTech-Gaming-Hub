@@ -39,10 +39,20 @@ for (const [name, type] of [['provider_ref','TEXT'], ['checkout_url','TEXT'], ['
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS store_orders_provider_ref ON store_orders(provider, provider_ref) WHERE provider_ref IS NOT NULL');
 
 // ---------- catalog (prices are PUBLIC for player items; booking prices are not) ----------
+// Exactly 12 prestige originals. Each is a one-of-one digital cosmetic; never duplicate, recolor, or replenish.
 const PRESTIGE = {
-  'prestige-cane': { name: 'Diamond Don Cane', blurb: 'Hand-set diamond pave on a solid-gold shaft, topped with a cut-crystal crown. Sparkle trail and a slow gold shimmer.', fx: 'sparkle', supply: 25, usd: 250000, confs: 6 },
-  'prestige-throne': { name: 'Stack Throne Aura', blurb: 'A towering throne of banded cash stacks with a drifting bill rain and a green-gold aura behind your avatar.', fx: 'cashrain', supply: 10, usd: 350000, confs: 6 },
-  'prestige-crown': { name: 'Solid Gold Crown & Chain', blurb: 'A heavy solid-gold crown with an emerald inlay and a matching link chain. Animated light sweep and a crown-glow halo.', fx: 'goldsweep', supply: 5, usd: 500000, confs: 6 },
+  'prestige-cane': { name: 'Diamond Don Cane', blurb: 'A cut-crystal crown tops a hand-set diamond cane; prismatic sparkle trail, gold reflections, and a slow ceremonial reveal.', fx: 'prism-cane', supply: 1, usd: 100000, confs: 6 },
+  'prestige-throne': { name: 'Stack Throne Aura', blurb: 'A towering cash-stack throne with individually drifting bills, emerald-gold backlight, and a slow orbiting crown crest.', fx: 'stack-throne', supply: 1, usd: 125000, confs: 6 },
+  'prestige-crown': { name: 'Solid Gold Crown & Chain', blurb: 'A sculpted gold crown with emerald inlay, a separate link-chain silhouette, and a sweeping metallic highlight.', fx: 'royal-crown', supply: 1, usd: 150000, confs: 6 },
+  'prestige-phoenix': { name: 'Phoenix Rebirth Mantle', blurb: 'An original feathered mantle with ember wings, rising ash motes, and a one-time phoenix flare on profile reveal.', fx: 'phoenix-mantle', supply: 1, usd: 175000, confs: 6 },
+  'prestige-singularity': { name: 'Singularity Orbit', blurb: 'A dark matter core surrounded by offset orbital rings, lensing distortion, and a restrained violet event horizon.', fx: 'singularity-orbit', supply: 1, usd: 200000, confs: 6 },
+  'prestige-dragon': { name: 'Void Dragon Familiar', blurb: 'A bespoke spectral dragon curls around the player card, with articulated head motion, scale shimmer, and a cyan-violet wake.', fx: 'void-dragon', supply: 1, usd: 225000, confs: 6 },
+  'prestige-nebula': { name: 'Nebula Sovereign Wings', blurb: 'A broad, asymmetric pair of nebula wings with starfield depth, drifting particles, and layered cosmic gradients.', fx: 'nebula-wings', supply: 1, usd: 250000, confs: 6 },
+  'prestige-mech': { name: 'Titanfall Exo Frame', blurb: 'A custom angular exo-frame with shoulder plates, illuminated seams, servo glints, and a restrained mechanical idle loop.', fx: 'titan-exoframe', supply: 1, usd: 275000, confs: 6 },
+  'prestige-holo': { name: 'Holographic Royal Decree', blurb: 'A floating holographic crest with scanline refraction, chromatic edges, and an animated seal unlike any standard badge.', fx: 'holo-decree', supply: 1, usd: 300000, confs: 6 },
+  'prestige-storm': { name: 'Stormforged Halo', blurb: 'A broken-ring halo forged from stormglass, with branching contained lightning and a slow electric-blue corona.', fx: 'storm-halo', supply: 1, usd: 350000, confs: 6 },
+  'prestige-chronos': { name: 'Chronos Clockwork Mantle', blurb: 'A precision clockwork backpiece with independently moving gold rings, engraved markers, and a subtle time-fracture shimmer.', fx: 'chronos-mantle', supply: 1, usd: 400000, confs: 6 },
+  'prestige-aurora': { name: 'Aurora Crown of Worlds', blurb: 'A singular crown silhouette with suspended crystal fins, flowing aurora ribbons, and a multi-layered spectrum glow.', fx: 'aurora-crown', supply: 1, usd: 500000, confs: 6 },
 };
 const SEED = [
   { id: 'crowns-500', kind: 'pack', name: '500 Hub Crowns', usd_cents: 499, crowns: 500, bonus: 0, sort: 1 },
@@ -53,7 +63,13 @@ const SEED = [
   ...Object.entries(PRESTIGE).map(([id, p], i) => ({ id, kind: 'prestige', name: p.name, usd_cents: p.usd, crowns: 0, bonus: 0, supply: p.supply, sort: 20 + i, data: { blurb: p.blurb, fx: p.fx, confs: p.confs } })),
 ];
 { const ins = db.prepare('INSERT OR IGNORE INTO store_products (id, kind, name, usd_cents, crowns, bonus, supply, data, active, sort, updated_at) VALUES (?,?,?,?,?,?,?,?,1,?,?)');
-  for (const p of SEED) ins.run(p.id, p.kind, p.name, p.usd_cents, p.crowns, p.bonus, p.supply ?? null, JSON.stringify(p.data || {}), p.sort, Date.now()); }
+  const updPrestige = db.prepare("UPDATE store_products SET name=?, usd_cents=?, supply=1, data=?, sort=?, updated_at=? WHERE id=? AND kind='prestige'");
+  for (const p of SEED) {
+    ins.run(p.id, p.kind, p.name, p.usd_cents, p.crowns, p.bonus, p.supply ?? null, JSON.stringify(p.data || {}), p.sort, Date.now());
+    // Keep the database's existing product row aligned with the canonical one-of-one catalog.
+    if (p.kind === 'prestige') updPrestige.run(p.name, p.usd_cents, JSON.stringify(p.data || {}), p.sort, Date.now(), p.id);
+  }
+}
 const prod = (id) => { const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = JSON.parse(p.data || '{}'); return p; };
 const products = (all = false) => db.prepare(`SELECT * FROM store_products ${all ? '' : 'WHERE active=1'} ORDER BY sort, id`).all().map(p => ({ ...p, data: JSON.parse(p.data || '{}') }));
 const issued = (id) => db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=? AND revoked_at IS NULL').get(id).c;
@@ -96,8 +112,15 @@ async function createOrder(user, productId, t = Date.now()) {
   const taken = new Set(db.prepare("SELECT sats FROM store_orders WHERE status IN ('pending','seen','confirming') OR (status='expired' AND expires_at > ?)").all(t - LATE_MS).map(r => r.sats));
   let sats = 0; for (let i = 0; i < 2000; i++) { const s = base + 1 + crypto.randomInt(999); if (!taken.has(s)) { sats = s; break; } } if (!sats) return { status: 503, error: 'Too many open orders right now, try again shortly.' };
   const ref = 'O' + crypto.randomBytes(6).toString('hex').toUpperCase();
-  const id = db.prepare('INSERT INTO store_orders (ref, user_id, product_id, usd_cents, provider, btc_usd, sats, address, need_confs, created_at, expires_at, season) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
-    .run(ref, user.id, p.id, p.usd_cents, 'bitcoin', usd, sats, ADDR(), needConfs(p, p.usd_cents), t, t + ORDER_TTL_MS, p.kind === 'pass' ? curSeason(t) : null).lastInsertRowid;
+  const insertOrder = db.transaction(() => {
+    // Reservation and capacity check share one SQLite transaction, so two simultaneous requests cannot reserve
+    // the same one-of-one original.
+    if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return null;
+    return db.prepare('INSERT INTO store_orders (ref, user_id, product_id, usd_cents, provider, btc_usd, sats, address, need_confs, created_at, expires_at, season) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+      .run(ref, user.id, p.id, p.usd_cents, 'bitcoin', usd, sats, ADDR(), needConfs(p, p.usd_cents), t, t + ORDER_TTL_MS, p.kind === 'pass' ? curSeason(t) : null).lastInsertRowid;
+  });
+  const id = insertOrder();
+  if (!id) return { status: 409, error: 'This one-of-one original has just been reserved or sold.' };
   return { ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(id)) };
 }
 const curSeason = (t = Date.now()) => require('./seasons').seasonAt(t).number;
@@ -112,8 +135,13 @@ async function createStripeOrder(user, productId, t = Date.now()) {
   if (open >= 3) return { status: 429, error: 'Finish or let your open orders expire first (max 3).' };
   const ref = 'O' + crypto.randomBytes(6).toString('hex').toUpperCase();
   const expires = t + ORDER_TTL_MS;
-  const id = db.prepare("INSERT INTO store_orders (ref,user_id,product_id,usd_cents,provider,status,created_at,expires_at,season) VALUES (?,?,?,?,'stripe','pending',?,?,?)")
-    .run(ref, user.id, p.id, p.usd_cents, t, expires, p.kind === 'pass' ? curSeason(t) : null).lastInsertRowid;
+  const insertOrder = db.transaction(() => {
+    if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return null;
+    return db.prepare("INSERT INTO store_orders (ref,user_id,product_id,usd_cents,provider,status,created_at,expires_at,season) VALUES (?,?,?,?,'stripe','pending',?,?,?)")
+      .run(ref, user.id, p.id, p.usd_cents, t, expires, p.kind === 'pass' ? curSeason(t) : null).lastInsertRowid;
+  });
+  const id = insertOrder();
+  if (!id) return { status: 409, error: 'This one-of-one original has just been reserved or sold.' };
   try {
     const form = new URLSearchParams();
     form.set('mode', 'payment');
@@ -149,8 +177,14 @@ function grant(o, how = 'auto', t = Date.now()) {
     if (p.kind === 'pack') addCrowns(o.user_id, p.crowns + p.bonus, 'purchase', o.ref, t);
     else if (p.kind === 'pass') db.prepare('INSERT OR IGNORE INTO pass_owned (user_id, season, source, order_id, created_at) VALUES (?,?,?,?,?)').run(o.user_id, o.season || curSeason(t), 'purchase', o.id, t);
     else if (p.kind === 'prestige') {
-      const n = db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=?').get(p.id).c; if (n >= p.supply) { db.prepare("UPDATE store_orders SET status='sold_out_refund', note=? WHERE id=?").run('Sold out at confirmation: refund manually', o.id); return { ok: false, error: 'sold out' }; }
-      db.prepare('INSERT INTO prestige_owned (item_id, serial, user_id, order_id, created_at) VALUES (?,?,?,?,?)').run(p.id, n + 1, o.user_id, o.id, t);
+      const active = db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=? AND revoked_at IS NULL').get(p.id).c;
+      if (active >= p.supply) {
+        db.prepare("UPDATE store_orders SET status='sold_out_refund', note=? WHERE id=?").run('One-of-one original already awarded: refund manually', o.id);
+        return { ok: false, error: 'sold out' };
+      }
+      // Count every historical serial so a refunded/revoked original is never silently reissued as a "new" original.
+      const serial = db.prepare('SELECT COALESCE(MAX(serial),0)+1 n FROM prestige_owned WHERE item_id=?').get(p.id).n;
+      db.prepare('INSERT INTO prestige_owned (item_id, serial, user_id, order_id, created_at) VALUES (?,?,?,?,?)').run(p.id, serial, o.user_id, o.id, t);
     }
     db.prepare("UPDATE store_orders SET status='granted', granted_at=?, note=CASE WHEN note='' THEN ? ELSE note END WHERE id=?").run(t, how === 'auto' ? '' : 'granted by ' + how, o.id);
     return { ok: true };
