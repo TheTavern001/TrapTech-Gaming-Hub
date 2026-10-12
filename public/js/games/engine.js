@@ -325,6 +325,15 @@ export class Game {
     ctx.setTransform(this.scale, 0, 0, this.scale, this.ox, this.oy);
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, this.W, this.H); ctx.clip();
     this.render(ctx);
+    // Consistent in-game finishing pass across the original core titles: restrained cinematic
+    // vignette, ambient accent bloom and safe-area frame. No gameplay pixels or scoring are changed.
+    const edge = ctx.createRadialGradient(this.W / 2, this.H / 2, Math.min(this.W, this.H) * .20, this.W / 2, this.H / 2, Math.max(this.W, this.H) * .76);
+    edge.addColorStop(0, 'rgba(3,5,18,0)'); edge.addColorStop(.72, 'rgba(3,5,18,.025)'); edge.addColorStop(1, 'rgba(3,5,18,.30)');
+    ctx.fillStyle = edge; ctx.fillRect(0, 0, this.W, this.H);
+    const bloom = ctx.createLinearGradient(0, 0, this.W, this.H);
+    bloom.addColorStop(0, 'rgba(128,91,255,.055)'); bloom.addColorStop(.48, 'rgba(128,91,255,0)'); bloom.addColorStop(1, 'rgba(63,219,255,.045)');
+    ctx.fillStyle = bloom; ctx.fillRect(0, 0, this.W, this.H);
+    ctx.strokeStyle = 'rgba(142,126,255,.18)'; ctx.lineWidth = 1.25; ctx.strokeRect(2, 2, this.W - 4, this.H - 4);
     for (const p of this.parts) { ctx.globalAlpha = Math.max(0, p.life / p.max); ctx.fillStyle = p.c; ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s); }
     ctx.globalAlpha = 1;
     for (const p of this.pops) { ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 2)); this.text(ctx, p.text, p.x, p.y, { size: p.size, color: p.color, align: 'center', glow: p.color }); }
