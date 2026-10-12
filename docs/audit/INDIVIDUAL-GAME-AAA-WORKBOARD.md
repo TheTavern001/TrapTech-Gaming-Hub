@@ -2,6 +2,14 @@
 
 Status: **in progress; not launch-approved**. This is the implementation workboard, not a claim that visual/gameplay QA has passed.
 
+## Shop and avatar implementation progress
+
+- **Rotating cosmetic universe:** added a deterministic 1,200-item catalog scheduled across 600 daily rotations, with a paginated catalog API and searchable Points Shop browser. Items outside the active rotation are preview-only; purchase still validates the active shop rotation.
+- **Prestige originals:** the new collection contains 12 individually identified originals, each priced at $1,000–$5,000 with supply 1 and distinct effect metadata. A partial unique SQLite index blocks multiple active owners, order reservation checks run transactionally, and a refunded original is not silently reissued.
+- **Legacy prestige:** the former three multi-supply items are retired from new sales without overwriting their historic ownership or current avatar unlocks.
+- **Prestige visuals:** original SVG assets and per-item store art mappings are present; the 2D avatar renderer and 3D preview now include distinct environments for the new collection. Prestige purchases remain disabled unless `PRESTIGE_SALES_ENABLED=1` is explicitly configured after wearable/compatibility review.
+- **Prelaunch gates:** expanded source checks for all 12 IDs, unique effects, one-of-one supply, minimum price, original art/CSS mappings, 3D environment mappings, database uniqueness, and catalog UI/API wiring.
+
 ## Implemented fixes and verification hardening
 
 - **Sky Hopper:** bounded successive obstacle-gap shifts to reduce unfair/unreachable mobile layouts. Source-level syntax was checked after the change; full gameplay remains unverified.
