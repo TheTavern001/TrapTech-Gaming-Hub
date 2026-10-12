@@ -146,6 +146,8 @@ function setStatus(id, status, by) {
   if (!['sent', 'accepted', 'declined', 'paid', 'draft'].includes(status)) return { ok: false, error: 'Unknown status.' };
   if (!quoteRow(id)) { const r = saveQuote(id, {}, by); if (!r.ok) return r; }
   const q = quoteRow(id); const t = Date.now();
+  // Acceptance is the sponsor's explicit consent on the private status page, never an admin shortcut.
+  if (status === 'accepted' && by !== 'sponsor') return { ok: false, error: 'Only the sponsor can accept a quote from its private status page.' };
   // A paid quote is a settled record. Do not let a later status edit hide the sponsor link
   // while leaving the linked public event marked paid/active.
   if (q.status === 'paid' && status !== 'paid') return { ok: false, error: 'A paid quote is locked. Correct payment or event state through the audited reconciliation flow.' };
