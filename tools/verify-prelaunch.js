@@ -132,6 +132,8 @@ if (!html.includes('/assets/brand/traptech-app-icon.svg')) fail('public/index.ht
 if (!/<img[^>]+src=["']\/assets\/brand\/traptech-app-icon\.svg["']/.test(html)) fail('public/index.html', 'Startup splash does not use the canonical Trap Tech icon');
 const engine = fs.readFileSync(path.join(ROOT, 'public/js/games/engine.js'), 'utf8');
 if (!engine.includes('clearInputs()') || !/destroy\(\)\s*\{\s*this\.clearInputs\(\)/.test(engine) || !/restart\(\)\s*\{\s*this\.clearInputs\(\)/.test(engine) || !/finish\(\)\s*\{[^}]*this\.clearInputs\(\)/s.test(engine)) fail('public/js/games/engine.js', 'Input cleanup is not wired to destroy/restart/finish lifecycle');
+if (!engine.includes('const uiTarget = target &&') || !engine.includes('if (!this._activeKeys.has(e.code)) return;')) fail('public/js/games/engine.js', 'Keyboard input must not steal focused UI controls or release uncaptured keys');
+if (!(engine.indexOf("if (e.code === 'KeyP' || e.code === 'Escape')") < engine.indexOf('const uiTarget = target &&'))) fail('public/js/games/engine.js', 'Escape/pause shortcuts must remain available while focused controls are protected');
 for (const [file, token] of [['public/js/games/plinko.js', 'e.cancelled'], ['public/js/games/spin-to-win.js', 'e.cancelled'], ['public/js/games/sling-smash.js', 'e.cancelled']]) {
   if (!(read(path.join(ROOT, file)) || '').includes(token)) fail(file, 'Forced input cancellation must not trigger a gameplay release action');
 }
