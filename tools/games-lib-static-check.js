@@ -77,8 +77,8 @@ for (const g of games) {
       if (/^(?:https?:)?\/\//i.test(src) || /^(?:data:|blob:|javascript:)/i.test(src) || src.startsWith('/api/')) continue;
       const clean = src.split(/[?#]/, 1)[0];
       const resolved = clean.startsWith('/') ? path.resolve(PUBLIC, clean.slice(1)) : path.resolve(path.dirname(entry), clean);
-      if (!resolved.startsWith(GAME_ROOT + path.sep) || !exists(resolved) || !fs.statSync(resolved).isFile()) {
-        fail(where, 'Broken or unsafe local script reference: ' + src);
+      if (!resolved.startsWith(PUBLIC + path.sep) || !exists(resolved) || !fs.statSync(resolved).isFile()) {
+        fail(where, 'Broken or unsafe local script reference (must stay within public/): ' + src);
       } else counts.localScriptRefs++;
     }
   }
