@@ -509,7 +509,7 @@ function client() {
   ok((r.body.items || []).every(i => Number.isInteger(i.scheduled_day) && typeof i.on_sale === 'boolean' && typeof i.catalog_only === 'boolean'), 'catalog entries include rotation availability metadata');
   const catalogTail = await anon('/api/shop/catalog?limit=24&offset=1176');
   ok(catalogTail.status === 200 && catalogTail.body.total === 1200 && catalogTail.body.items.length === 24, 'catalog final page contains entries 1,177–1,200');
-  ok(!((r.body.items || []).some(i => i.on_sale) && (r.body.items || []).some(i => i.catalog_only && i.on_sale)), 'catalog-only items are not simultaneously marked as active offers');
+  ok((r.body.items || []).every(i => i.catalog_only === !i.on_sale), 'catalog-only and active-rotation flags are exact opposites');
   const catalogFiltered = await anon('/api/shop/catalog?limit=10&type=frame');
   ok(catalogFiltered.status === 200 && catalogFiltered.body.total > 0 && catalogFiltered.body.items.every(i => i.type === 'frame'), 'catalog type filter returns matching cosmetics only');
 
