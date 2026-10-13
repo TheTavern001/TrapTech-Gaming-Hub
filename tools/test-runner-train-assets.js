@@ -23,4 +23,11 @@ assert.ok(src.includes("Math.floor(g.score).toLocaleString('en-US')"));
 assert.ok(src.includes("const portrait=cam.aspect<0.72"));
 assert.ok(src.includes("g.mult = (1 + Math.min(4, Math.floor(g.coins / 50)))"));
 assert.ok(src.includes("if (it.kind === 'train' && iz + it.len / 2"));
+
+assert.ok(src.includes("function saloon(g,x,z,s)"),'Source-built saloon facade missing');
+for(const mesh of ['ot-wall-door','ot-wall-wood-window-glass','ot-wall-wood-window-small','ot-roof-flat','ot-lantern']){
+ assert.ok(src.includes("place('"+mesh+"'")||src.includes("'"+mesh+"'"),'Original licensed storefront mesh not used '+mesh);
+}
+assert.ok(src.includes("new THREE.TubeGeometry(c, 20, 0.018, 8)"),'Thin smooth overhead wires missing');
+assert.ok(src.includes("s < 0 && j === 2"),'Near-camera overhead clutter not removed');
 console.log(JSON.stringify({passed:true,trainModels:assets.length,visualOnly:true,AAAApproved:false}));

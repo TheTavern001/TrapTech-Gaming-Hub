@@ -143,14 +143,44 @@ export default async function RailRunner(cfg) {
       (key === 'desert' ? desertRow : key === 'jungle' ? jungleRow : oldRow)(g, k, th); const b = bake(g); b.traverse(o => { if (o.isMesh) { o.receiveShadow = true; o.castShadow = false; } }); b.userData.z0 = -k * ROW; b.visible = false; world.add(b); return b; });
     T[key] = { rows, th, sky: S.skyTex(th.sky[0], th.sky[1]) }; }
   function signBoard(text, w, pal) { const m = new THREE.Mesh(new RoundedBoxGeometry(w, 0.9, 0.14, 3, 0.05), [MAT.wood, MAT.wood, MAT.wood, MAT.wood, toonMat({ map: signTex(text, pal[0], pal[1]) }), MAT.wood]); return m; }
-  function wires(g, z, x0, x1, y0, y1, sag) { const c = new THREE.CatmullRomCurve3([new THREE.Vector3(x0, y0, z), new THREE.Vector3((x0 + x1) / 2, (y0 + y1) / 2 - sag, z + 0.4), new THREE.Vector3(x1, y1, z)]); g.add(new THREE.Mesh(new THREE.TubeGeometry(c, 10, 0.025, 4), MAT.wire)); }
-  function saloon(g, x, z, s) { const f = new THREE.Group(); const W = 12, H = 10; const tex = canvasTex(512, 512, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#e9a95f'); gr.addColorStop(1, '#b8713c'); c.fillStyle = gr; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(90,45,15,.45)'; c.lineWidth = 3; for (let y = 0; y < h; y += 22) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
-      c.fillStyle = '#5a2a14'; K.rr(c, 60, 40, 392, 110, 18); c.fill(); c.fillStyle = '#ffd76a'; c.font = '900 64px Georgia'; c.textAlign = 'center'; c.fillText('THE DRY GULCH', 256, 118);
-      for (const wx of [70, 300]) { c.fillStyle = '#3a1f12'; c.fillRect(wx, 200, 140, 120); const wg = c.createLinearGradient(0, 200, 0, 320); wg.addColorStop(0, '#ffe7a8'); wg.addColorStop(1, '#e09a4a'); c.fillStyle = wg; c.fillRect(wx + 8, 208, 124, 104); c.fillStyle = '#3a1f12'; c.fillRect(wx + 66, 208, 8, 104); }
-      c.fillStyle = '#3a1f12'; c.fillRect(196, 360, 120, 152); c.fillStyle = '#c8823f'; c.fillRect(204, 380, 50, 90); c.fillRect(258, 380, 50, 90); });
-    const face = new THREE.Mesh(new RoundedBoxGeometry(0.5, H, W, 3, 0.15), [toonMat({ map: tex }), toonMat({ map: tex }), MAT.wood, MAT.wood, MAT.wood, MAT.wood]); face.position.set(0, H / 2, 0); f.add(face);
-    const bal = new THREE.Mesh(new RoundedBoxGeometry(2.2, 0.3, W + 0.4, 2, 0.08), MAT.wood); bal.position.set(-1.1, H * 0.45, 0); f.add(bal); for (let i = 0; i < 5; i++) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, H * 0.45, 10), MAT.wood); p.position.set(-2.0, H * 0.225, -W / 2 + 0.5 + i * (W - 1) / 4); f.add(p); }
-    const top = new THREE.Mesh(new RoundedBoxGeometry(0.6, 0.5, W + 0.6, 2, 0.12), toonMat({ color: '#7a3d1e' })); top.position.set(0, H + 0.2, 0); f.add(top); f.position.set(x, 0, z); if (s > 0) f.rotation.y = Math.PI; g.add(f); }
+  function wires(g, z, x0, x1, y0, y1, sag) { const c = new THREE.CatmullRomCurve3([new THREE.Vector3(x0, y0, z), new THREE.Vector3((x0 + x1) / 2, (y0 + y1) / 2 - sag, z + 0.4), new THREE.Vector3(x1, y1, z)]); g.add(new THREE.Mesh(new THREE.TubeGeometry(c, 20, 0.018, 8), MAT.wire)); }
+  // Licensed modular street-front instead of an oversized flat procedural box.
+  // Decorative scenery only; no score, physics or track collision interaction.
+  function saloon(g,x,z,s){
+    const facade=new THREE.Group(),tint='#c98757';
+    const width=4,floors=2;
+    for(let col=0;col<width;col++){
+      for(let level=0;level<floors;level++){
+        const part=level===0?(col===1?'ot-wall-door':'ot-wall-wood-window-glass')
+          :(col%2===0?'ot-wall-wood-window-small':'ot-wall-window-shutters');
+        const mesh=place(part,U,level===0?tint:'#e6b276');
+        mesh.position.set(0,level*U,0);
+        mesh.position.z=-col*U-width*0.07;
+        facade.add(mesh);
+      }
+    }
+    const roof=place('ot-roof-flat',U*1.4,'#7b4c33');
+    roof.scale.z*=width;roof.position.set(0,floors*U+.45,-width*U/2);
+    facade.add(roof);
+    const sign=signBoard('THE DRY GULCH',width*U*.82,[['#713a20','#3d221c'],'#ffd79b']);
+    sign.position.set(-.2,floors*U+.4,-width*U/2);
+    sign.rotation.y=-Math.PI/2;facade.add(sign);
+    const balcony=place('ot-balcony-wall',U*1.1,'#865132');
+    balcony.position.set(-.8,U*1.12,-width*U/2);balcony.rotation.y=-Math.PI/2;
+    facade.add(balcony);
+    for(const col of [0,width-1]){
+      const lantern=place('ot-lantern',1,'#ffe0a3');
+      lantern.position.set(-.85,U*1.3,-(col+.5)*U);
+      facade.add(lantern);
+    }
+    const awning=place('ru-detail-awning-wide',1,'#9a4138');
+    awning.scale.set(U*.82,U*1.1,width*U*.75);
+    awning.position.set(-1.4,U*.88,-width*U/2);
+    facade.add(awning);
+    facade.position.set(x,0,z);
+    facade.rotation.y=s>0?Math.PI:0;
+    g.add(facade);
+  }
   function clockTower(g, x, z) { const t = new THREE.Group(); const stone = toonMat({ color: '#e8d9c4' }); const sh = new THREE.Mesh(new RoundedBoxGeometry(4.2, 18, 4.2, 3, 0.25), stone); sh.position.y = 9; t.add(sh); const band = new THREE.Mesh(new RoundedBoxGeometry(4.6, 0.5, 4.6, 2, 0.15), toonMat({ color: '#b98f6a' })); band.position.y = 14.2; t.add(band);
     const face = toonMat({ map: canvasTex(256, 256, (c) => { c.fillStyle = '#2a3f6b'; c.fillRect(0, 0, 256, 256); c.fillStyle = '#fff8e8'; c.beginPath(); c.arc(128, 128, 110, 0, 7); c.fill(); c.strokeStyle = '#c9a24a'; c.lineWidth = 10; c.stroke(); c.fillStyle = '#222'; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.fillRect(128 + Math.cos(a) * 88 - 4, 128 + Math.sin(a) * 88 - 4, 8, 8); } c.lineWidth = 8; c.strokeStyle = '#222'; c.beginPath(); c.moveTo(128, 128); c.lineTo(128, 50); c.moveTo(128, 128); c.lineTo(180, 140); c.stroke(); }) });
     for (const r of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) { const f = new THREE.Mesh(new THREE.CircleGeometry(1.7, 32), face); f.position.set(Math.sin(r) * 2.12, 16.2, Math.cos(r) * 2.12); f.rotation.y = r; t.add(f); }
@@ -170,7 +200,7 @@ export default async function RailRunner(cfg) {
         z -= w * U + 1.8; i++; }
       if ((k === 0) === (s < 0)) saloon(g, s * (X - 0.2), -30, s); if ((k === 1) === (s < 0)) { const big = place('ds-cliff_large_rock', 46, '#e8835c'); big.position.set(s * (X + 14), 0, -40); big.rotation.y = -Math.PI / 2; g.add(big); }
       for (let j = 0; j < 4; j++) { const cl = place('ds-cliff_large_rock', 14 + (j % 3) * 4, '#e07a55'); cl.position.set(s * (X + 12 + (j % 2) * 6), 0, -j * 22 - k * 9); cl.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(cl); }
-      for (let j = 0; j < 3; j++) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 7, 8), MAT.wood); p.position.set(s * (LANE * 1.5 + 1.1), 3.5, -j * 26 - 6); g.add(p); const bar = new THREE.Mesh(new RoundedBoxGeometry(1.4, 0.12, 0.12, 2, 0.04), MAT.wood); bar.position.set(s * (LANE * 1.5 + 1.1), 6.6, -j * 26 - 6); g.add(bar); if (s < 0) for (const d of [-0.5, 0.5]) wires(g, -j * 26 - 6, -(LANE * 1.5 + 1.1) + d, LANE * 1.5 + 1.1 + d, 6.65, 6.65, 0.7); } } }
+      for (let j = 0; j < 3; j++) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 7, 8), MAT.wood); p.position.set(s * (LANE * 1.5 + 1.1), 3.5, -j * 26 - 6); g.add(p); const bar = new THREE.Mesh(new RoundedBoxGeometry(1.4, 0.12, 0.12, 2, 0.04), MAT.wood); bar.position.set(s * (LANE * 1.5 + 1.1), 6.6, -j * 26 - 6); g.add(bar); if (s < 0 && j === 2) for (const d of [-0.5, 0.5]) wires(g, -j * 26 - 6, -(LANE * 1.5 + 1.1) + d, LANE * 1.5 + 1.1 + d, 6.65, 6.65, 0.7); } } }
   function jungleRow(g, k, th) { const X = LANE * 1.5 + 2.0; const stone = JST;
     for (const s of [-1, 1]) { const wall = new THREE.Mesh(new RoundedBoxGeometry(1.4, 1.1, ROW, 2, 0.15), JWALL); wall.position.set(s * (LANE * 1.5 + 1.0), 0.55, -ROW / 2); g.add(wall);
       for (let z = -4 - k * 3; z > -ROW + 4; z -= 9) { const col = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.9, 7 + (z % 3), 12), stone); col.position.set(s * (X + 0.4), 3.5, z); g.add(col); const cap = new THREE.Mesh(new RoundedBoxGeometry(2.2, 0.6, 2.2, 2, 0.12), stone); cap.position.set(s * (X + 0.4), 7.3 + (z % 3), z); g.add(cap); }
