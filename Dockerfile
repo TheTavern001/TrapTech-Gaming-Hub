@@ -36,6 +36,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check src/v3.js \
  && node --check tools/test-rotating-quests.js \
  && node tools/test-rotating-quests.js \
+ && test -s tools/test-avatar-free-face.js \
+ && node --check tools/test-avatar-free-face.js \
+ && node tools/test-avatar-free-face.js \
  && node --check tools/verify-game-syntax.js \
  && node tools/verify-game-syntax.js \
  && node --check tools/test-endless-buffers.js \

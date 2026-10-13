@@ -98,3 +98,6 @@ Additional Deplexo failures visible in owner's screenshot: `b5c9783` 202s, `1a2b
 
 ## 2026-10-13 recovery
 Owner confirms Deplexo `3dfd391` READY, removing the missing Docker tool blocker. Live /api/build not reachable from this environment; runtime functionality and AAA certification remain unverified. Following source changes are not yet confirmed READY. Historical ERROR records remain intact.
+
+## Owner verified live API and corrected facial entitlement — 2026-10-13 12:57 EDT
+Android browser screenshot of `/api/build` shows `ok:true`, 80 library + 13 core games, and 24-digit build fingerprint. This hash is a content digest, not a git commit SHA. Current default avatar `outfit:base` can never match `supportsRiggedAvatar()` requiring `outfit:adventurer`: owner's blob-like screen confirms the bad fallback. Do not cover the issue by equipping free clothing or relabeling the Adventurer model. The permanent replacement requires original Mickel-Captain-inspired neutral modular characters, actual assets, PBR, 3D source preview and owner acceptance. Owner explicitly changed rule: all skin/face/eyes/mouth/beard character-building choices FREE. Special hair and emotes remain unlockable. New isolated Docker build test enforces free faces. See authoritative issue #18.

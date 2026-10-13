@@ -23,7 +23,6 @@ const add = (kind, id, label, unlock = 'free') => {
   if (unlock === 'free' && (
     (['outfit','hat','acc','held'].includes(kind) && id !== 'none' && id !== 'base') ||
     (kind === 'hair' && !FREE_HAIR.has(id)) ||
-    (kind === 'face' && !['round','oval'].includes(id)) ||
     (kind === 'bg' && id !== 'night')
   )) unlock = { crowns: ['outfit','hat','acc','held'].includes(kind) ? 150 : 100 };
   P.push({ kind, id, label, unlock });
@@ -39,7 +38,7 @@ SKIN.forEach((c, i) => add('skin', 's' + i, 'Tone ' + (i + 1)));
 ['round','oval','square','heart','angular','soft','chiseled'].forEach(f=>add('face',f,f));
 ['none', 'buzz', 'curly', 'afro', 'long', 'bun', 'mohawk', 'braids', 'waves', 'spiky'].forEach(h => add('hair', h, h));
 HAIRC.forEach((c, i) => add('hairc', 'c' + i, 'Color ' + (i + 1), i >= 7 ? { crowns: 150 } : 'free'));
-['dot', 'happy', 'sleepy', 'wink', 'wide'].forEach(e => add('eyes', e, e)); add('eyes', 'star', 'star eyes', { ach: 15 });
+['dot', 'happy', 'sleepy', 'wink', 'wide'].forEach(e => add('eyes', e, e)); add('eyes', 'star', 'star eyes');
 ['smile', 'grin', 'flat', 'open', 'smirk'].forEach(m => add('mouth', m, m));
 ['none', 'mustache', 'goatee', 'beard'].forEach(b => add('beard', b, b));
 for (const [id, label] of [['average','Average build'],['slim','Slim build'],['athletic','Athletic build'],['stocky','Stocky build'],['curvy','Curvy build'],['tall','Tall build'],['short','Short build']]) add('build', id, label, 'free');
@@ -101,8 +100,9 @@ function owns(userId, part, ctx) {
 // Cosmetic-only Points pricing: all non-Prestige locked avatar items are achievable by
 // playing games, quests and achievements; an optional Crowns purchase remains available.
 // Prestige is one-of-one and must be won in an authorized event or purchased as a collectible.
-const POINT_COSTS = { bg: 250, skin: 100, face: 120, hair: 230, hairc: 210,
-  eyes: 170, mouth: 120, beard: 150, build: 180, outfit: 650, hat: 360, acc: 420, held: 440, emote: 350 };
+// Natural facial customization is completely free, including special face shapes.
+const POINT_COSTS = { bg: 250, skin: 0, face: 0, hair: 230, hairc: 210,
+  eyes: 0, mouth: 0, beard: 0, build: 180, outfit: 650, hat: 360, acc: 420, held: 440, emote: 350 };
 function pointsPrice(part) {
   const u = part.unlock;
   if (u === 'free') return 0;

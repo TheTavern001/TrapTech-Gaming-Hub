@@ -25,16 +25,18 @@ function client() { const jar = {}; return async (p, o = {}) => {
      && P.filter(p=>p.kind==='emote'&&!p.owned).length===5
      && P.filter(p=>['outfit','hat','acc','held'].includes(p.kind)&&p.owned&&!['none','base'].includes(p.id)).length===0,
      'seven free hairstyles, five locked emotes, no free collectible starter outfit or gear');
+  ok(['skin','face','eyes','mouth','beard'].every(k=>P.filter(p=>p.kind===k).every(p=>p.owned&&p.crowns===0&&p.points===0)), 'every natural face and facial-feature option is FREE');
   const cfg = { ...r.body.avatar, face: 'round', hair: 'curly', hairc: 'c3', skin: 's4' };
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: cfg } }); ok(r.body.ok && r.body.avatar.hair === 'curly', 'free face/skin/hair customization saves');
   r = await client()(`/avatar/${ua}.svg`); ok(r.body !== def, 'the public avatar changes after saving');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur' } } }); ok(r.status === 403, 'a Crowns part cannot be worn before it is bought');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, hat: 'crown' } } }); ok(r.status === 403, 'the gold crown is Prestige-only');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, face: 'heart' } } });
-  ok(r.status === 403, 'locked premium face cannot be equipped without entitlement');
+  ok(r.body.ok&&r.body.avatar.face==='heart','all face shapes are free to equip');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, emote: 'wave' } } });
   ok(r.status === 403, 'locked emote cannot be equipped without entitlement');
-  r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, eyes: 'star' } } }); ok(r.status === 403, 'star eyes need 15 achievements');
+  r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, face: 'chiseled', eyes: 'star', mouth: 'grin', beard: 'goatee' } } }); ok(r.body.ok&&r.body.avatar.eyes==='star'&&r.body.avatar.face==='chiseled','facial features save without a purchase');
+  r = await A('/api/avatar/buy', { body: { part: 'face:heart' } }); ok(r.status===400,'buy endpoint rejects charging for free faces');
   r = await A('/api/avatar/buy', { body: { part: 'outfit:fur' } }); ok(r.status === 400 && /more Hub Crowns/.test(r.body.error), 'buying without Crowns is refused');
   r = await A('/api/avatar/buy-points', { body: { part: 'outfit:fur' } }); ok(r.status === 400 && /Earn .*more Hub Points/.test(r.body.error), 'cannot buy with insufficient gameplay Points');
   r = await A('/api/avatar/buy-points', { body: { part: 'hat:crown' } }); ok(r.status === 400, 'one-of-one Prestige cannot be purchased with farmed Points');

@@ -2,7 +2,7 @@
 import { mountAvatar3D, supportsRiggedAvatar } from './avatar-3d.js';
 let avatarCleanup = null;
 let C = null;
-const KL = { bg: 'Background', skin: 'Skin', face: 'Face', hair: 'Hair', hairc: 'Hair color', eyes: 'Eyes', mouth: 'Mouth', beard: 'Facial hair', build: 'Body build', outfit: 'Outfit', hat: 'Hat', acc: 'Accessory', held: 'Held item', emote: 'Emotes' };
+const KL = { bg: 'Background', skin: 'Skin · free', face: 'Face · free', hair: 'Hair', hairc: 'Hair color', eyes: 'Eyes · free', mouth: 'Mouth · free', beard: 'Facial hair · free', build: 'Body build', outfit: 'Outfit', hat: 'Hat', acc: 'Accessory', held: 'Held item', emote: 'Emotes' };
 const lockText = (p) => p.owned ? '' : p.unlock.prestige ? 'One-of-one Prestige: win or collect' : p.unlock.ach ? `${p.unlock.ach} achievements or ${p.points} Points` : `Earn ${p.points} Points${p.crowns ? ` or spend ${p.crowns} Crowns` : ''}`;
 // The selection grid must spotlight the ITEM, not reproduce an almost-identical smiley
 // head 150 times. Reuse licensed first-party game artwork for suitable props, then

@@ -195,6 +195,16 @@
       "rootCause": null,
       "fixCommit": null,
       "verifiedAfterFix": true
+    },
+    {
+      "commit": "7a52026312a4c771ebc83a0aad00bfee16ca6817",
+      "status": "READY",
+      "evidence": "Owner Deplexo READY and live Android /api/build screenshot ~12:57 EDT, 80 library+13 core and build fingerprint",
+      "firstError": null,
+      "rootCause": null,
+      "fixCommit": null,
+      "verifiedAfterFix": true,
+      "qualification": "Source digest has not been independently mapped to exact Git commit; performance/security/AAA pending."
     }
   ],
   "sourceVerification": [
@@ -214,12 +224,11 @@
     }
   ],
   "pendingEvidence": [
-    "After correcting root .dockerignore, verify next branch deployment is Deplexo READY and first-error build script passes with test-endless-buffers.js inside /app/tools. Record exact SHA and log.",
-    "User-supplied d5de300 Docker failure was conclusively missing /app/tools/test-endless-buffers.js because .dockerignore tools/* allowlist omitted it. No need to request this same log again.",
-    "Any new failed builds require their actual FIRST error before attribution; do not assume all are the same cause.",
-    "Verify live /api/build matches READY SHA and /healthz; private Android and desktop smoke test after host becomes READY.",
-    "Stripe test-mode webhook exists, but signed delivery, checkout, refunds, entitlement issuance not validated; live payments must remain disabled.",
-    "Complete 93-game baseline audits, distinct licensed additions, avatar/emote renderer tests, storage restore and 10k concurrent-population staging before public launch."
+    "Live Android /api/build ok:true, games_library:80, core_games:13. 24-char fingerprint is content digest, not Git SHA, compare on next update.",
+    "User rejects current procedural blob avatar; base outfit is excluded by supportsRiggedAvatar => fallback guaranteed. Need original neutral male/female/other rig, real modular PBR assets, no forced dressed Adventurer placeholder.",
+    "FREE all natural skin/face/eyes/mouth/beard traits; E2E and Docker build check now staged. Verify next Deplexo READY before claiming live.",
+    "No verified Stripe sandbox checkout/refund/entitlement, official giveaway scores are not replay-verifiable; do not enable real money or paid prize events.",
+    "93 catalog games registered; 0 individually AAA certified. No 500-game public launch until genuine visual/gameplay/security QA."
   ],
   "releaseStages": [
     {
@@ -289,5 +298,5 @@
       "host": "UNKNOWN; source branch auto-deploy possible"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 ~11:57 EDT owner reported 3dfd391 READY"
+  "lastEvidenceReconciliation": "2026-10-13 12:57 EDT owner supplied Android live /api/build screenshot"
 }
