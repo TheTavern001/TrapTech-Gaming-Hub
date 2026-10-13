@@ -205,6 +205,16 @@
       "fixCommit": null,
       "verifiedAfterFix": true,
       "qualification": "Source digest has not been independently mapped to exact Git commit; performance/security/AAA pending."
+    },
+    {
+      "commit": "0b7e3a6c75e979386c1c35c1d7116031d0daff2d",
+      "status": "READY",
+      "evidence": "Owner confirms Deplexo READY for 0b7e3a6 on 2026-10-13 after prior live /api/build verification",
+      "firstError": null,
+      "rootCause": null,
+      "fixCommit": null,
+      "verifiedAfterFix": true,
+      "qualification": "Git commit build READY confirmed by owner; source fingerprint/live facial API not independently matched"
     }
   ],
   "sourceVerification": [
@@ -224,11 +234,10 @@
     }
   ],
   "pendingEvidence": [
-    "Live Android /api/build ok:true, games_library:80, core_games:13. 24-char fingerprint is content digest, not Git SHA, compare on next update.",
-    "User rejects current procedural blob avatar; base outfit is excluded by supportsRiggedAvatar => fallback guaranteed. Need original neutral male/female/other rig, real modular PBR assets, no forced dressed Adventurer placeholder.",
-    "FREE all natural skin/face/eyes/mouth/beard traits; E2E and Docker build check now staged. Verify next Deplexo READY before claiming live.",
-    "No verified Stripe sandbox checkout/refund/entitlement, official giveaway scores are not replay-verifiable; do not enable real money or paid prize events.",
-    "93 catalog games registered; 0 individually AAA certified. No 500-game public launch until genuine visual/gameplay/security QA."
+    "0b7e3a6 READY owner-confirmed. New candidate game-source-mechanics scanning and compact Android avatar editor must pass full Deplexo build and user physical visual testing.",
+    "Public /api/audit/game-source should report 93 titles with source files, 0 quality-approved. This report cannot certify graphics, gameplay, frame rate or score replay.",
+    "CC0 Quaternius Universal Base Characters 6 bodies + 20 hairstyles, compatible Modular Outfits 12 sets / 62 parts: source identified, binary meshes NOT installed in repo, original premium Mickel-Captain-inspired neutral asset not yet integrated. Do not mislabel older blob or clothed Adventurer as completed.",
+    "Official giveaway anti-cheat is incomplete (issue #17), real checkout/refund untested, 10k staging not performed; payment/admin giveaways remain blocked for full public launch."
   ],
   "releaseStages": [
     {
@@ -298,5 +307,5 @@
       "host": "UNKNOWN; source branch auto-deploy possible"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 12:57 EDT owner supplied Android live /api/build screenshot"
+  "lastEvidenceReconciliation": "2026-10-13 owner-confirmed 0b7e3a6 READY"
 }

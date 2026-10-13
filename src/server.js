@@ -67,6 +67,13 @@ app.get('/api/audit/report', (req, res) => {
   }
 });
 
+// Read-only, source-level per-game audit; does not grant AAA approval.
+app.get('/api/audit/game-source', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const file=path.join(process.env.BUILD_DIR || path.join(__dirname,'..','build'),'audit','game-source-mechanics.json');
+  try { res.json({ok:true,report:JSON.parse(fs.readFileSync(file,'utf8'))}); }
+  catch { res.status(503).json({ok:false,error:'Game source audit unavailable in this build.'}); }
+});
 // ---------- helpers ----------
 const now = () => Date.now();
 const b64u = (s) => Buffer.from(s).toString('base64url');

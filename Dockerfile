@@ -45,6 +45,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-endless-buffers.js \
  && node --check tools/games-lib-static-check.js \
  && node tools/games-lib-static-check.js \
+ && test -s tools/game-source-mechanics.js \
+ && node --check tools/game-source-mechanics.js \
+ && node tools/game-source-mechanics.js \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/verify-prelaunch.js \
  && node tools/verify-prelaunch.js \
@@ -52,6 +55,7 @@ RUN test -s tools/games-lib-static-check.js \
  && BUILD_DIR=/app/build node scripts/deplexo-prebuild.js \
  && mkdir -p /app/build/audit \
  && cp docs/audit/prelaunch-structural-audit.json /app/build/audit/prelaunch-structural-audit.json \
+ && cp docs/audit/game-source-mechanics.json /app/build/audit/game-source-mechanics.json \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
 
 # Run the actual server in an isolated, disposable build-time database and verify its HTTP routes.
