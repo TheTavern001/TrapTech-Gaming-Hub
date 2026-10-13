@@ -96,14 +96,18 @@ function checkoutState() {
   // Credentials alone must not turn on live checkout. Existing explicit admin
   // switches are preserved; new installs start with purchases disabled.
   const on = !!setting('checkout_enabled', false);
-  const btc = { configured: !!a && v.ok, address: v.ok ? a : null, type: v.ok ? v.type : null, why: v.ok ? null : v.why };
+  // Bitcoin always transfers real funds, even in local test builds. Guard this
+  // independently of a configured receiving address and prior admin setting.
+  const liveApproval = process.env.PAYMENTS_LIVE_APPROVED === '1';
+  const btc = { configured: !!a && v.ok && v.network === 'mainnet' && liveApproval,
+    address: v.ok && v.network === 'mainnet' ? a : null, type: v.ok ? v.type : null,
+    why: !v.ok ? v.why : v.network !== 'mainnet' ? 'Bitcoin network must be mainnet' : !liveApproval ? 'Requires explicit live-payment approval' : null };
   const publicUrl = String(process.env.PUBLIC_URL || '').trim();
   const stripe = { configured: /^sk_(?:test|live)_/.test(String(process.env.STRIPE_SECRET_KEY || '')) && /^whsec_/.test(String(process.env.STRIPE_WEBHOOK_SECRET || '')) && /^https:\/\//i.test(publicUrl),
     mode: 'hosted Stripe Checkout for credit/debit cards' };
   // Stripe test-mode is always eligible for admin-authorized testing.
   // Production live card charging also requires a separate operator flag.
   const stripeLive = String(process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live_');
-  const liveApproval = process.env.PAYMENTS_LIVE_APPROVED === '1';
   if (stripeLive && !liveApproval) stripe.configured = false;
   const enabled = on && (btc.configured || stripe.configured);
   return { enabled, admin_switch: on, methods: enabled ? [...(btc.configured ? ['bitcoin'] : []), ...(stripe.configured ? ['stripe'] : [])] : [],

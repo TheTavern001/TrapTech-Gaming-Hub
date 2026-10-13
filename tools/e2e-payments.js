@@ -1,5 +1,5 @@
 // v7 Phase 4: cosmetic-only store + Bitcoin checkout against a MOCKED block explorer (no real transactions, ever).
-// Run: BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 tools/fresh-api.sh tools/e2e-payments.js
+// Run (disposable DB / mocked explorer ONLY): BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 PAYMENTS_LIVE_APPROVED=1 tools/fresh-api.sh tools/e2e-payments.js
 const http = require('http'); const crypto = require('crypto');
 const BASE = process.env.BASE || 'http://localhost:8787';
 let pass = 0, fail = 0; const ok = (c, m, x) => { if (c) { pass++; console.log('  PASS', m); } else { fail++; console.log('  FAIL', m, x !== undefined ? JSON.stringify(x).slice(0, 400) : ''); } };
