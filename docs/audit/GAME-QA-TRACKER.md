@@ -129,3 +129,7 @@ A game needs an actual fresh playthrough showing launch/start, touch and keyboar
 - No Brakes: speed cap at 640 units/s, faster traffic interval escalation and six challenge tiers.
 - Avatar test: correct insufficient Crowns before emote purchase; no full live payment or real device E2E performed.
 - Owner requires games to offer **genuine distinct characters and vehicles** where appropriate, equippable through progression and optional cosmetic purchase without competitive stat changes. Current models/skins are not yet approved; mere recolors don't meet owner's AAA reference. Gameplay difficulty must scale with progress and remain fair/controllable.
+
+## Hex Stack (`gl-hex-stack`) targeted regression — 2026-10-13
+
+**Status remains BLOCKED / NOT AAA-APPROVED.** Source bug fixes for native settings pause debounce, menu/title tap isolation and paused keyboard/fast-drop are staged on `fix/hex-stack-settings-pause-20261013`. They are documented in [Hex Stack settings regression](HEX-STACK-SETTINGS-REGRESSION-2026-10-13.md). Seven targeted V8 source interactions passed; the new repeatable Node regression is inserted into the Docker-run player-settings suite but full Node/Docker and mobile/browser scoring/playback have **not** been executed. Required visual and gameplay proof: Android 360px and desktop gear/title/start, close/reopen within 400ms, already-paused state, held key through pause, resume FPS, restart, event score integrity, no console errors and owner visual signoff. Do not increment approval counts.
