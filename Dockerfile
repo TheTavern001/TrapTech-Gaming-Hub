@@ -58,6 +58,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check tools/test-vehicle-lab-assets.js \
  && node --check public/games-lib/labs/garage/garage.mjs \
  && node tools/test-vehicle-lab-assets.js \
+ && test -s tools/test-runner-train-assets.js \
+ && node --check tools/test-runner-train-assets.js \
+ && node tools/test-runner-train-assets.js \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/verify-prelaunch.js \
  && node tools/verify-prelaunch.js \
