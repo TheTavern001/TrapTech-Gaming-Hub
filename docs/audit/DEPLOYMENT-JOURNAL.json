@@ -254,13 +254,11 @@
     }
   ],
   "pendingEvidence": [
-    "Vehicle QA pilot: /games-lib/labs/garage/index.html previews 6 distinct original CC0 GLB meshes; docker tests Git blob hashes, glTF header and bytes. Not a catalog game/shop item or AAA certification. Physical Android visual/rotation still PENDING.",
-    "9f9a03d user-confirmed Deplexo READY; fatal scan for HTML-listed local JavaScript files included in Docker, with negative missing dependency regression. Report /api/audit/game-source not remotely retrievable.",
-    "Six-week season migration isolated commit 63818e7: Season 1 Oct 1-Nov 25 remains 56 days, later seasons 42 days. Verified 56/42/42 boundary, override and Docker referenced tools against committed source. This checkpoint authorizes moving onto Deplexo QA branch for build verification only, NOT public launch.",
-    "After moving development branch, check next exact Git SHA Deplexo READY/ERROR, first failure line if any; then physical Android /api/seasons must show current 56 days and next season 42 days without resetting season XP.",
-    "Five current core game card artworks remain missing (Void Swarm, Stack, Grow Guard, Sling Smash, Haze Defense), physical mobile visual approval pending.",
-    "Source-licensed neutral Quaternius Universal Base Characters/Outfits assets have not been transferred into repository; Mickel-Captain-inspired premium modular avatar remains rejected procedural fallback.",
-    "Official contest score replay issue #17; Stripe checkout/refund test, 10k staging and 93 gameplay/AAA audits still block public release. No real-money checkout or certified game claims."
+    "Deplexo last owner-confirmed READY: d14555c (feature/season-42-day-forward-only-20261013). Current QA/feature branch d71a54e contains private 6-car GLB model lab; no direct Deplexo READY/ERROR evidence at this checkpoint.",
+    "Owner mobile Rail Rush screenshot (2026-10-13 ~16:20 ET): huge procedural box train, distant track/chunky town, HUD numerals cropped at right. Confirmed root cause: shared runner3x loaded five real Kenney CC0 train GLBs but constructed and displayed procedural rounded-box train prototypes.",
+    "Draft PR #20 377d2f8 → 00489544 → ccedb2a → 4976384: replace train display with genuine assets, readable mobile chase camera, text-fitted/clipped score, actual modular town storefront facade, fewer smoother overhead wires; tests pin GLB git blobs, parse mesh primitives and checksum original unchanged physics/spawn/animation source. No real-Android/Deplexo result yet; DO NOT promote to AAA.",
+    "High-priority outstanding: hub starter avatar still falls back to disliked primitive render; neutral modular rig unavailable; shop has generic generated non-3D cosmetics; all 93 game assets/performance/replay not accepted. 500/game and 10k load unachieved.",
+    "Paid official giveaways must remain disabled: issue #17 documents plausible forged L2 scores accepted by leaderboard SQL; no score-replay proof for all prize games. Stripe checkout/refund/entitlements not independently E2E verified."
   ],
   "releaseStages": [
     {
@@ -334,7 +332,13 @@
       "reason": "Preserve inaugural 56-day season while applying owner-required 42-day seasons from Season 2 onward; no DB rewrites",
       "validation": "Committed test-season-future-calendar.js passed using V8 stubbed DB and verified 56/42/42 contiguous boundaries, exact dates, override propagation; all 11 Docker tool refs tracked",
       "host": "not yet deployed; next Deplexo QA branch rollout"
+    },
+    {
+      "commit": "49763846bc36985e0232f56308a94752964ef1ed",
+      "reason": "Owner Rail Rush mobile defect remediation: source 3D train GLBs, modular saloon facade, camera/HUD and overhead rendering; visual-only, no score changes",
+      "validation": "No Docker or physical test claimed. JS source/test syntax parsed; 5 exact known GLB file records pinned; pure railTrainVisualFit checked; original update/spawn/animation source bytes compared and FNV fingerprints locked in Docker script",
+      "host": "UNVERIFIED — isolated PR #20, not promoted"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 15:45 EDT owner confirms d14555c READY; next vehicle 3D pilot awaiting deployment"
+  "lastEvidenceReconciliation": "2026-10-13 ~16:55 EDT: owner physical Rail Rush gameplay screenshot and source-level visual pilot QA; Deplexo READY for latest garage candidate d71a54e not independently confirmed."
 }
