@@ -863,6 +863,8 @@ app.get(Object.keys(HUB_ICON_ROUTES), (req, res) => {
     res.status(500).type('text').send('App icon unavailable');
   }
 });
+// Public, read-only release review. Uses the same generated report as /api/audit/report.
+app.get(['/audit', '/audit/'], (req, res) => res.sendFile(path.join(PUB, 'audit', 'index.html')));
 app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
 // Per-page <title> / description / Open Graph + Twitter card tags for share links (crawlers don't run JS).
 const INDEX_FILE = path.join(PUB, 'index.html');

@@ -77,6 +77,11 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     { systems: auditReport?.systemChecks?.length, passed: auditReport?.summary?.releaseSystemContractsPassed,
       total: auditReport?.summary?.releaseSystemContractsTotal, grade: auditReport?.releaseGrade });
 
+  const reviewPage = await get(BASE + '/audit');
+  check('Mobile release-control dashboard is served from the same revision',
+    reviewPage.res.status === 200 && reviewPage.text.includes('Release Control') && reviewPage.text.includes('/api/audit/report'),
+    { status: reviewPage.res.status, bytes: reviewPage.body.length });
+
   const storeResult = await get(BASE + '/api/store');
   let storeJson = null; try { storeJson = JSON.parse(storeResult.text); } catch {}
   const prestigeItems = storeJson?.prestige || [];

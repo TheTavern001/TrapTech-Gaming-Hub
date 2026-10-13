@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b101b">
+<title>Release Control · The Gaming Hub · Trap Tech Solutions</title>
+<meta name="description" content="Structural release audit for games, gameplay, achievements, avatar, store and giveaways.">
+<link rel="icon" href="/assets/brand/traptech-app-icon.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:dark;--bg:#0b101b;--panel:#131c2c;--panel2:#19263a;--line:#30445c;--text:#edf6ff;--muted:#a4b6ca;--cyan:#58e4ec;--lime:#a9f19d;--amber:#ffcd80;--red:#ff929d}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 80% 48% at 50% -10%,#19334b 0%,transparent 70%),var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}main{max-width:1140px;margin:auto;padding:24px 18px 80px}.mast{display:flex;gap:13px;align-items:center;padding:15px 0 18px;border-bottom:1px solid var(--line)}.mast img{width:49px;height:49px;object-fit:contain}.brand{font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.24em;color:var(--cyan)}.brand-sub{font-size:12px;color:var(--muted);letter-spacing:.09em;text-transform:uppercase}.mast .back{margin-left:auto;font-size:13px;white-space:nowrap}.eyebrow{margin:32px 0 4px;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);font-size:12px;font-weight:700}h1{font-size:clamp(32px,6vw,58px);line-height:1.04;margin:6px 0 12px;letter-spacing:-.045em}h2{font-size:23px;letter-spacing:-.02em;margin:34px 0 6px}h3{margin:0;font-size:17px}.muted{color:var(--muted)}.lede{max-width:750px;color:#c8d6e5;margin:0 0 20px}.alert{background:#342a1e;border:1px solid #766443;border-radius:13px;padding:13px 15px;color:#f9dbaa;margin:16px 0 26px}.pills{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}.pill{border:1px solid var(--line);padding:8px 13px;border-radius:20px;background:#122032;color:#c6daec;font-size:13px}.pill a{font-weight:700}.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.tile,.system,.game,.detail,.gate{border:1px solid var(--line);background:linear-gradient(150deg,var(--panel),#101827);border-radius:15px}.tile{padding:18px}.tile b{font-size:31px;font-weight:800;display:block;line-height:1.1}.tile span{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:9px}.tile i{font-style:normal;color:var(--amber)}.meta{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 0;color:var(--muted);font-size:12px}.meta code{color:#b9e9f1;overflow-wrap:anywhere}.systems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:19px 0}.system{padding:19px}.syshead{display:flex;justify-content:space-between;gap:10px}.status{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--lime)}.status.warn{color:var(--amber)}.ticks{padding:0;margin:13px 0 0;list-style:none}.ticks li{font-size:13px;padding:6px 0;border-top:1px solid #28374a}.ticks strong{color:var(--lime);margin-right:7px}.ticks .bad{color:var(--red)}.hold{color:var(--amber);font-size:12px;margin-top:12px;border-top:1px dashed #4b5260;padding-top:9px}.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap}.controls{display:flex;gap:9px;flex-wrap:wrap;margin:17px 0}.controls button,.controls input{background:#152135;border:1px solid #425773;color:var(--text);border-radius:10px;padding:10px 12px;min-height:44px}.controls button[aria-pressed=true]{background:#17434d;color:#d2fcff;border-color:#5aabb6}.controls input{min-width:180px;flex:1}.game-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.game{padding:14px 16px;min-width:0}.gametop{display:flex;align-items:start;justify-content:space-between;gap:12px}.game strong{font-size:15px}.flag{display:inline-block;padding:2px 7px;border-radius:6px;background:#493519;color:#ffdcab;letter-spacing:.06em;font-size:10px;font-weight:800;white-space:nowrap}.flag.bad{background:#522631;color:#ffb9c1}.line{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted);margin-top:7px}.game p{margin:8px 0 0;font-size:12px;color:#cbd7e5}.game .go{display:inline-flex;min-height:32px;align-items:center;margin-top:10px;font-weight:700;font-size:12px}.gate{padding:13px 16px;margin:9px 0;color:#d4e0ed}.gate::before{content:'○';color:var(--amber);padding-right:10px}.detail{padding:18px;margin:16px 0}.detail h3{margin-bottom:10px}.error{border:1px solid #944655;background:#311d29;color:#ffd8de;padding:14px;border-radius:12px}.empty{color:var(--muted);padding:20px;border:1px dashed var(--line);border-radius:12px}.foot{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin-top:38px;padding-top:20px}.chip{display:inline-block;font-size:11px;padding:2px 8px;border:1px solid var(--line);border-radius:20px;white-space:nowrap}.hidden{display:none!important}
+@media(max-width:720px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.systems,.game-list{grid-template-columns:1fr}.mast .back{display:none}main{padding:18px 14px 60px}.tile{padding:14px}.tile b{font-size:26px}.pill{padding:7px 10px}.controls button{flex:1}.lede{font-size:14px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main>
+<header class="mast"><img src="/assets/brand/traptech-app-icon.svg" alt="Trap Tech Solutions crowned TT logo"><div><div class="brand">Trap Tech Solutions</div><div class="brand-sub">The Gaming Hub / Release Control</div></div><a class="back" href="/games">← Return to games</a></header>
+<p class="eyebrow">Pre-public launch · Structural audit</p>
+<h1>Release Control</h1>
+<p class="lede">Review the current deployed game registry, achievement contracts, quests, avatars, shop, giveaways and outstanding QA work. This page reports what the automated source audit actually checked.</p>
+<div class="alert"><strong>Not AAA-certified yet.</strong> A successful build verifies structural contracts, not 60 FPS gameplay, visual quality, ownership security at runtime or Android touch controls. Every title remains in manual QA until tested.</div>
+<nav class="pills" aria-label="Explore Hub features"><span class="pill"><a href="/games">Games</a></span><span class="pill"><a href="/achievements">Achievements</a></span><span class="pill"><a href="/quests">Quests</a></span><span class="pill"><a href="/avatar">Avatar</a></span><span class="pill"><a href="/shop">Shop</a></span><span class="pill"><a href="/giveaways">Giveaways</a></span></nav>
+<div id="state" class="muted" role="status">Loading deployment audit…</div>
+<div id="dashboard" hidden>
+<section class="tiles" aria-label="Audit statistics">
+<div class="tile"><b id="countLibrary">—</b><span>Library games audited</span></div>
+<div class="tile"><b id="countCore">—</b><span>Active core games</span></div>
+<div class="tile"><b id="countContracts">—</b><span>System contracts present</span></div>
+<div class="tile"><b id="countIssues">—</b><span>Structural findings</span></div>
+</section>
+<div class="meta"><span>Commit fingerprint: <code id="buildVersion">—</code></span><span>Report built: <time id="auditTime">—</time></span><span>Runtime: <span id="runtimeStatus">unverified</span></span></div>
+<section aria-labelledby="systemsHeading"><div class="sectionhead"><div><h2 id="systemsHeading">Systems audit</h2><p class="muted">Checks for required source, registry consistency, and test harness availability. Not executed E2E tests.</p></div></div><div class="systems" id="systemCards"></div></section>
+<section aria-labelledby="gamesHeading"><div class="sectionhead"><div><h2 id="gamesHeading">All games · individual review</h2><p id="resultCount" class="muted">Game findings from this exact structural report.</p></div></div>
+<div class="controls" role="group" aria-label="Filter game audit"><button type="button" id="allGames" aria-pressed="true">All titles</button><button type="button" id="libraryGames" aria-pressed="false">Games Library</button><button type="button" id="coreGames" aria-pressed="false">Core Hub</button><button type="button" id="flaggedGames" aria-pressed="false">Flagged only</button><input id="gameSearch" type="search" placeholder="Find game by name, slug or genre" aria-label="Search audited games"></div><div class="game-list" id="gameList"></div></section>
+<section aria-labelledby="findingsHeading"><h2 id="findingsHeading">Release findings</h2><div id="issues" class="detail"></div></section>
+<section aria-labelledby="gateHeading"><h2 id="gateHeading">Required hands-on release gates</h2><p class="muted">These are outstanding—not passed by the automated audit.</p><div id="gates"></div></section>
+<footer class="foot">Generated from <a href="/api/audit/report">the immutable build-time structural report</a>. No account or payment credentials are exposed. Game screenshots, test results and physical Android metrics must be recorded before any title receives final approval.</footer>
+</div>
+</main>
+<script>
+(function () {
+'use strict';
+var byId = function (id) { return document.getElementById(id); };
+var escapeHtml = function (s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); };
+var state = byId('state'), report = null, filter = 'all', all = [];
+function el(tag, cls, text) { var x = document.createElement(tag); if(cls)x.className=cls;if(text!==undefined)x.textContent=text;return x; }
+function set(id,v){byId(id).textContent=v;}
+function totals(x) { return typeof x === 'number' ? x.toLocaleString('en-US') : '—'; }
+function renderSystems(r) {
+ var host=byId('systemCards'); host.replaceChildren();
+ (r.systemChecks||[]).forEach(function(group){
+  var card=el('article','system'), head=el('div','syshead');
+  head.appendChild(el('h3','',group.label||group.id));
+  var status=el('span','status'+(group.passed===group.total?'':' warn'),String(group.passed)+'/'+String(group.total)+' source checks');head.appendChild(status);card.appendChild(head);
+  var ul=el('ul','ticks');(group.checks||[]).forEach(function(check){
+   var li=el('li');var mark=el('strong',check.pass?'':'bad',check.pass?'✓':'×');li.appendChild(mark);li.appendChild(document.createTextNode(check.name));ul.appendChild(li);
+  });card.appendChild(ul);card.appendChild(el('div','hold','Runtime E2E, visual quality and physical Android QA: pending'));host.appendChild(card);
+ });
+}
+function renderGames() {
+ var q=byId('gameSearch').value.trim().toLowerCase(), list=byId('gameList');list.replaceChildren();
+ var visible=all.filter(function(g){
+  if(filter==='core'&&!g.core)return false;if(filter==='library'&&g.core)return false;
+  if(filter==='flagged'&&!(g.problems.length||g.notes.length))return false;
+  return !q||[g.id,g.slug,g.title,g.category].join(' ').toLowerCase().includes(q);
+ });
+ set('resultCount',visible.length+' of '+all.length+' audited titles shown · all require live gameplay and visual QA');
+ if(!visible.length){list.appendChild(el('div','empty','No games match this filter.'));return;}
+ visible.forEach(function(g){
+  var card=el('article','game'),top=el('div','gametop'),name=el('strong','',g.title||g.slug||g.id);
+  top.appendChild(name);top.appendChild(el('span','flag'+(g.problems.length?' bad':''),g.problems.length?'SOURCE BLOCKER':g.notes.length?'REVIEW NOTE':'MANUAL QA'));card.appendChild(top);
+  card.appendChild(el('div','line',(g.core?'Core Hub · ':'Library · ')+(g.category||'Arcade')+' · '+(g.slug||g.id)));
+  if(g.problems.length||g.notes.length){var details=el('p');details.textContent=g.problems.concat(g.notes).slice(0,3).join(' • ');card.appendChild(details);}
+  else card.appendChild(el('p','','No structural findings. Controls, visuals and score submission still unverified.'));
+  var a=el('a','go',g.core?'Open Hub games →':'Play and review →');
+  a.href=g.core?'/games':'/games-lib/'+encodeURIComponent(g.slug)+'/index.html';card.appendChild(a);list.appendChild(card);
+ });
+}
+function renderFindings(r) {
+ var host=byId('issues');host.replaceChildren();
+ var combined=(r.issues||[]).map(function(x){return {type:'Finding',text:x.finding||JSON.stringify(x)};})
+  .concat((r.warnings||[]).map(function(x){return {type:'Review note',text:(x.slug||x.id?x.slug||x.id+': ':'')+(x.finding||JSON.stringify(x))};}));
+ if(!combined.length){host.appendChild(el('p','muted','No structural findings. This is not a visual or playtest pass.'));return;}
+ combined.slice(0,100).forEach(function(x){var line=el('p','');line.appendChild(el('span','chip',x.type));line.appendChild(document.createTextNode(' '+x.text));host.appendChild(line);});
+ if(combined.length>100)host.appendChild(el('p','muted','Additional findings are available in the complete JSON report.'));
+}
+function init(r,build,healthy) {
+ report=r;set('countLibrary',totals(r.summary&&r.summary.registryGames));set('countCore',totals(r.summary&&r.summary.coreGamesRegistered));
+ set('countContracts',totals(r.summary&&r.summary.releaseSystemContractsPassed)+' / '+totals(r.summary&&r.summary.releaseSystemContractsTotal));
+ set('countIssues',totals((r.issues||[]).length+(r.warnings||[]).length));
+ set('buildVersion',build&&build.build_fingerprint?build.build_fingerprint:'not confirmed');
+ set('runtimeStatus',healthy&&healthy.ok?'healthy':'not confirmed');
+ var date=r.generatedAt?new Date(r.generatedAt):null;set('auditTime',date&&!isNaN(date)?date.toLocaleString():'unknown');
+ renderSystems(r);
+ all=(r.coreGames||[]).filter(function(g){return !['plinko','spin-to-win','blazed-roulette'].includes(g.id);}).map(function(g){return Object.assign({core:true,category:'Core Hub'},g);})
+ .concat((r.games||[]).map(function(g){return Object.assign({core:false},g);}));
+ renderGames();renderFindings(r);
+ var gates=byId('gates');gates.replaceChildren();(r.requiredHumanGates||[]).forEach(function(g){gates.appendChild(el('div','gate',g));});
+ byId('dashboard').hidden=false;state.hidden=true;
+}
+['allGames','libraryGames','coreGames','flaggedGames'].forEach(function(id){
+ byId(id).addEventListener('click',function(){filter={allGames:'all',libraryGames:'library',coreGames:'core',flaggedGames:'flagged'}[id];
+ ['allGames','libraryGames','coreGames','flaggedGames'].forEach(function(x){byId(x).setAttribute('aria-pressed',String(x===id));});renderGames();});
+});
+byId('gameSearch').addEventListener('input',renderGames);
+Promise.all([
+ fetch('/api/audit/report',{cache:'no-store'}).then(function(x){if(!x.ok)throw Error('Audit endpoint returned '+x.status);return x.json();}),
+ fetch('/api/build',{cache:'no-store'}).then(function(x){return x.ok?x.json():null;}).catch(function(){return null;}),
+ fetch('/healthz',{cache:'no-store'}).then(function(x){return x.ok?x.json():null;}).catch(function(){return null;})
+]).then(function(v){
+ if(!v[0]||!v[0].ok||!v[0].report)throw Error('Audit report unavailable in this deployment');
+ init(v[0].report,v[1],v[2]);
+}).catch(function(err){
+ state.className='error';state.textContent='Release report could not load: '+err.message+'. Confirm this page belongs to the latest deployment, then try again.';
+});
+})();
+</script>
+</body>
+</html>
