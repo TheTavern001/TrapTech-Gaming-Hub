@@ -15,7 +15,7 @@ export function saveGame(id,changes){const p=gameOverrides(id);for(const k of ['
 export function effective(id){return {...globalPrefs(),...gameOverrides(id)}}
 export function qualityCap(mode,dpr=1){const n=Math.max(1,Math.min(3,Number(dpr)||1));return mode==='battery'?1:mode==='sharp'?Math.min(2.5,n):Math.min(2,n)}
 export function openGameSettings(opts){
- const {id,title,host=document.body,trigger,onOpen=()=>{},onClose=()=>{},onChange=()=>{},fps}=opts;
+ const {id,title,host=document.body,trigger,onOpen=()=>{},onClose=()=>{},onChange=()=>{},fps,supportsSound=true,supportsQuality=true}=opts;
  applyDocument();
  if(!document.querySelector('link[data-ttgs]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/css/player-prefs.css';l.dataset.ttgs='1';document.head.appendChild(l)}
  const root=document.createElement('div');root.className='ttgs-root';host.appendChild(root);
@@ -29,6 +29,8 @@ export function openGameSettings(opts){
  '<p class="ttgs-disclaimer">Device-local display/audio only. No gameplay, score, difficulty or prize advantages.</p>'+
  '<div class="ttgs-actions"><button type="button" data-action="reset">Reset game</button><button type="button" data-action="close">Resume</button></div></div>';
  root.appendChild(modal);modal.querySelector('.ttgs-game').textContent=title||'Current game';
+ if(!supportsSound)modal.querySelector('[data-key="sound"]').closest('label').remove();
+ if(!supportsQuality)modal.querySelector('[data-key="quality"]').closest('label').remove();
  let visible=false,prior=null,badge=null;
  function update(){
    const p=effective(id);onChange(p);
@@ -38,6 +40,13 @@ export function openGameSettings(opts){
  function sync(){const v=gameOverrides(id);modal.querySelectorAll('select[data-key]').forEach(e=>e.value=Object.prototype.hasOwnProperty.call(v,e.dataset.key)?String(v[e.dataset.key]):'default')}
  function open(){if(visible)return;prior=document.activeElement;onOpen();sync();modal.hidden=false;visible=true;modal.querySelector('select')?.focus()}
  function close(){if(!visible)return;modal.hidden=true;visible=false;onClose();if(prior?.isConnected)prior.focus()}
+ // Consume UI pointer/key presses after target handlers but before any game
+ // bridge/window scoring telemetry. Keep native select behavior intact.
+ button.addEventListener('pointerdown',e=>e.stopPropagation());
+ button.addEventListener('keydown',e=>e.stopPropagation());
+ modal.addEventListener('pointerdown',e=>e.stopPropagation());
+ modal.addEventListener('touchstart',e=>e.stopPropagation());
+ modal.addEventListener('keydown',e=>e.stopPropagation());
  button.addEventListener('click',open);
  modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('[data-action="close"]'))close();if(e.target.closest('[data-action="reset"]')){saveGame(id,{sound:null,quality:null,showFps:null});sync();update()}});
  modal.addEventListener('change',e=>{const c=e.target.closest('[data-key]');if(!c)return;const v=c.value;saveGame(id,{[c.dataset.key]:v==='default'?null:c.dataset.key==='quality'?v:v==='true'});update()});
