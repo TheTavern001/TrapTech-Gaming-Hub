@@ -2,7 +2,7 @@
 // server; each clear is logged (events sum to the score); game over submits. Endless by design. window.__GL for e2e.
 (function () { let st = 'title', frames = 0, fps = 60, fT = performance.now(), inputs = 0, resumeTimer = null;
   const GL = window.__GL = { errors: [], lastSubmit: null, get state() { return st; }, get score() { return window.score || 0; }, get fps() { return fps; },
-    g: { get inputs() { return inputs; }, end: () => { if (st === 'play') { window.gameState = 2; hubOver(); } }, get paused() { return window.gameState === -1; }, set paused(v) {
+    g: { get inputs() { return inputs; }, end: () => { if (st === 'play') { window.gameState = 2; hubOver(); } }, get paused() { return window.gameState === -1; }, get resumePending() { return resumeTimer !== null; }, set paused(v) {
       // Hextris rejects native pause() toggles during its 400ms UI transition.
       // Queue a quick settings close until the transition completes.
       if (v) {
