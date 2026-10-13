@@ -42,6 +42,9 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s tools/test-avatar-free-face.js \
  && node --check tools/test-avatar-free-face.js \
  && node tools/test-avatar-free-face.js \
+ && test -s tools/test-prize-score-proof.js \
+ && node --check tools/test-prize-score-proof.js \
+ && node tools/test-prize-score-proof.js \
  && node --check tools/verify-game-syntax.js \
  && node tools/verify-game-syntax.js \
  && node --check tools/test-endless-buffers.js \

@@ -117,3 +117,6 @@ Owner confirms Deplexo **`9f9a03d` READY**, including Docker fatal on any missin
 
 ## 2026-10-13 15:45 EDT — d14555c READY / vehicle lab pilot
 Owner confirms Deplexo READY for d14555c on feature branch, same SHA as QA branch. Future 42-day seasons staged with Season 1 grandfathered. Next pilot adds a 3D preview at /games-lib/labs/garage/index.html with six distinct existing Blender CC0 meshes and Docker byte-hash verification. **This does not add games, purchasable cosmetics or competitive advantages.** Mobile device visual approval, server-side score replay, neutral avatar and 500-game QA remain outstanding.
+
+## 2026-10-13 ~17:06 ET — owner confirmed three Deplexo READY builds; prize-score safety separate
+The owner supplied a Deplexo screenshot confirming `d71a54e` READY (six-vehicle lab), `0048954` READY (runner-model Docker audit) and `ccedb2a` READY/CURRENT (licensed storefront and wire/portrait improvements). Later visual source `4976384`, ledger `08d2aa6`, status not proven. The current work is an **independent NON-DEPLOYING SECURITY DRAFT** to require authoritative replay PLUS explicit owner-reviewed per-game admission for competitive prize scores, default 0 approved. All private-test events must be reviewed for migration/user impact before deployment. Other catalog gameplay still free. No claim of 93 AAA certifications or public launch.
