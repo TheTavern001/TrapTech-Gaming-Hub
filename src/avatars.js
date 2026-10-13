@@ -16,7 +16,18 @@ const BG = { violet: ['#7c3aed', '#22d3ee'], night: ['#0f172a', '#4338ca'], kush
   'storm-halo': ['#0f172a', '#60a5fa'], 'chronos-mantle': ['#422006', '#fbbf24'], 'aurora-crown': ['#052e16', '#c084fc'] };
 // part catalog: [kind, id, label, unlock]  unlock: 'free' | { crowns: n } | { ach: n } | { prestige: itemId }
 const P = [];
-const add = (kind, id, label, unlock = 'free') => P.push({ kind, id, label, unlock });
+const FREE_HAIR = new Set(['none','buzz','curly','afro','long','bun','waves']);
+const add = (kind, id, label, unlock = 'free') => {
+  // A non-collectible neutral base is provided for modesty. No other gear is
+  // automatically owned by a new player; all cosmetics remain earnable.
+  if (unlock === 'free' && (
+    (['outfit','hat','acc','held'].includes(kind) && id !== 'none' && id !== 'base') ||
+    (kind === 'hair' && !FREE_HAIR.has(id)) ||
+    (kind === 'face' && !['round','oval'].includes(id)) ||
+    (kind === 'bg' && id !== 'night')
+  )) unlock = { crowns: ['outfit','hat','acc','held'].includes(kind) ? 150 : 100 };
+  P.push({ kind, id, label, unlock });
+};
 const PRESTIGE_BG = {
   'diamond-prism': 'prestige-original-cane', 'cash-rain': 'prestige-throne', 'gold-rays': 'prestige-crown', 'stack-throne': 'prestige-original-throne', 'royal-crown': 'prestige-original-crown',
   'phoenix-mantle': 'prestige-original-phoenix', 'singularity-orbit': 'prestige-original-singularity', 'void-dragon': 'prestige-original-dragon',
@@ -25,14 +36,14 @@ const PRESTIGE_BG = {
 };
 Object.keys(BG).forEach(k => add('bg', k, k.replace(/-/g, ' '), PRESTIGE_BG[k] ? { prestige: PRESTIGE_BG[k] } : k === 'toxic' ? { ach: 25 } : 'free'));
 SKIN.forEach((c, i) => add('skin', 's' + i, 'Tone ' + (i + 1)));
-['round', 'oval', 'square'].forEach(f => add('face', f, f));
+['round','oval','square','heart','angular','soft','chiseled'].forEach(f=>add('face',f,f));
 ['none', 'buzz', 'curly', 'afro', 'long', 'bun', 'mohawk', 'braids', 'waves', 'spiky'].forEach(h => add('hair', h, h));
 HAIRC.forEach((c, i) => add('hairc', 'c' + i, 'Color ' + (i + 1), i >= 7 ? { crowns: 150 } : 'free'));
 ['dot', 'happy', 'sleepy', 'wink', 'wide'].forEach(e => add('eyes', e, e)); add('eyes', 'star', 'star eyes', { ach: 15 });
 ['smile', 'grin', 'flat', 'open', 'smirk'].forEach(m => add('mouth', m, m));
 ['none', 'mustache', 'goatee', 'beard'].forEach(b => add('beard', b, b));
 for (const [id, label] of [['average','Average build'],['slim','Slim build'],['athletic','Athletic build'],['stocky','Stocky build'],['curvy','Curvy build'],['tall','Tall build'],['short','Short build']]) add('build', id, label, 'free');
-add('outfit', 'adventurer', 'Adventure Captain', 'free'); add('outfit', 'tee', 'tee'); add('outfit', 'titan-exoframe', 'Titan Exo Frame', { prestige: 'prestige-original-mech' }); add('outfit', 'hoodie', 'hoodie'); add('outfit', 'jersey', 'jersey'); add('outfit', 'tracksuit', 'tracksuit', { crowns: 300 }); add('outfit', 'chain-tee', 'tee + gold chain', { crowns: 600 }); add('outfit', 'fur', 'fur coat', { crowns: 900 });
+add('outfit','base','Neutral starter covering'); add('outfit', 'adventurer', 'Adventure Captain', 'free'); add('outfit', 'tee', 'tee'); add('outfit', 'titan-exoframe', 'Titan Exo Frame', { prestige: 'prestige-original-mech' }); add('outfit', 'hoodie', 'hoodie'); add('outfit', 'jersey', 'jersey'); add('outfit', 'tracksuit', 'tracksuit', { crowns: 300 }); add('outfit', 'chain-tee', 'tee + gold chain', { crowns: 600 }); add('outfit', 'fur', 'fur coat', { crowns: 900 });
 for (const [id, label] of [['cannabis-hoodie','Cannabis streetwear hoodie'],['dj','DJ performance fit'],['scrubs','Medical scrubs'],['labcoat','Lab coat'],['mechanic','Mechanic coveralls'],['hardhat','Blue-collar workwear'],['farmer','Farm workwear'],['suit','Executive suit'],['tactical','Tactical streetwear'],['chef','Chef jacket'],['firefighter','Firefighter turnout gear'],['varsity','Varsity jacket'],['denim','Denim jacket'],['ranch','Ranch workwear'],['hype','Hype streetwear']]) add('outfit', id, label, ['cannabis-hoodie','dj','labcoat','mechanic','farmer','suit','tactical','firefighter','hype'].includes(id) ? { crowns: 450 } : 'free');
 add('hat', 'none', 'none'); add('hat', 'beanie', 'beanie'); add('hat', 'snapback', 'snapback'); add('hat', 'bucket', 'bucket hat', { crowns: 250 }); add('hat', 'halo', 'halo', { ach: 30 }); add('hat', 'crown', 'solid gold crown', { prestige: 'prestige-original-crown' });
 add('hat', 'hardhat', 'Construction hardhat'); add('hat', 'storm-halo', 'Stormforged Halo', { prestige: 'prestige-original-storm' }); add('hat', 'aurora-crown', 'Aurora Crown of Worlds', { prestige: 'prestige-original-aurora' }); add('hat', 'cowboy', 'Ranch cowboy hat'); add('hat', 'chef-hat', 'Chef toque'); add('hat', 'scrub-cap', 'Medical scrub cap'); add('hat', 'dj-cap', 'DJ cap');
@@ -41,15 +52,37 @@ add('acc', 'bandana', 'Bandana'); add('acc', 'phoenix-wings', 'Phoenix Rebirth M
 add('held', 'none', 'none'); add('held', 'controller', 'controller'); add('held', 'cane', 'diamond cane', { prestige: 'prestige-original-cane' }); add('held', 'cash', 'cash stack', { prestige: 'prestige-original-throne' });
 add('held', 'microphone', 'DJ microphone'); add('held', 'wrench', 'Mechanic wrench'); add('held', 'sprout', 'Seedling'); add('held', 'stethoscope', 'Stethoscope'); add('held', 'pitchfork', 'Pitchfork'); add('held', 'syringe', 'Medical syringe'); add('held', 'headphones', 'DJ headphones'); add('held', 'toolbox', 'Toolbox');
 add('held', 'laptop', 'DJ laptop'); add('held', 'briefcase', 'Business briefcase'); add('held', 'medical-bag', 'Medical bag'); add('held', 'camera', 'Camera'); add('held', 'paintbrush', 'Paintbrush'); add('held', 'spray-can', 'Graffiti spray can'); add('held', 'cash-bag', 'Money bag', { crowns: 900 }); add('held', 'flower', 'Farm flower bundle');
-const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 'build', 'outfit', 'hat', 'acc', 'held'];
+add('emote','none','No emote');
+for (const [id,label] of [['wave','Wave'],['cheer','Cheer'],['salute','Salute'],['laugh','Laugh'],['victory','Victory']])
+  add('emote',id,label,{crowns:200});
+const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 'build', 'outfit', 'hat', 'acc', 'held', 'emote'];
 const BYK = {}; for (const p of P) (BYK[p.kind] = BYK[p.kind] || {})[p.id] = p;
 const key = (p) => p.kind + ':' + p.id;
+// One-time, idempotent migration. Players who had already saved a formerly free
+// costume, prop or premium trait retain that entitlement. No XP or balances reset.
+db.exec('CREATE TABLE IF NOT EXISTS avatar_migrations (key TEXT PRIMARY KEY)');
+const migrationKey = 'starter-v2-saved-cosmetics';
+if (!db.prepare('SELECT 1 FROM avatar_migrations WHERE key=?').get(migrationKey)) {
+  db.transaction(() => {
+    const insert = db.prepare('INSERT OR IGNORE INTO avatar_parts_owned (user_id, part, created_at) VALUES (?,?,?)');
+    for (const u of db.prepare("SELECT id, avatar FROM users WHERE avatar <> ''").all()) {
+      let cfg; try { cfg = JSON.parse(u.avatar); } catch { continue; }
+      if (!cfg || typeof cfg !== 'object') continue;
+      for (const kind of ['bg','face','hair','outfit','hat','acc','held']) {
+        const part = BYK[kind] && BYK[kind][cfg[kind]];
+        if (part && part.unlock !== 'free' && !part.unlock.prestige)
+          insert.run(u.id, key(part), Date.now());
+      }
+    }
+    db.prepare('INSERT OR IGNORE INTO avatar_migrations (key) VALUES (?)').run(migrationKey);
+  })();
+}
 // One deliberate starter look for every new/unsaved profile. No random appearance, no paid items.
 // Presentation is chosen separately; existing saved avatars and purchases are never overwritten.
 const STARTER_AVATAR = Object.freeze({
   gender: 'other', bg: 'night', skin: 's2', face: 'oval', hair: 'waves',
   hairc: 'c1', eyes: 'wide', mouth: 'smile', beard: 'none', build: 'average',
-  outfit: 'adventurer', hat: 'none', acc: 'none', held: 'none'
+  outfit: 'base', hat: 'none', acc: 'none', held: 'none', emote: 'none'
 });
 function defaultFor() { return { ...STARTER_AVATAR }; }
 function clean(cfg, base) { const out = { ...base }; if (cfg && ['male', 'female', 'other'].includes(cfg.gender)) out.gender = cfg.gender; for (const k of KINDS) if (cfg && BYK[k][cfg[k]]) out[k] = cfg[k]; return out; }
@@ -69,7 +102,7 @@ function owns(userId, part, ctx) {
 // playing games, quests and achievements; an optional Crowns purchase remains available.
 // Prestige is one-of-one and must be won in an authorized event or purchased as a collectible.
 const POINT_COSTS = { bg: 250, skin: 100, face: 120, hair: 230, hairc: 210,
-  eyes: 170, mouth: 120, beard: 150, build: 180, outfit: 650, hat: 360, acc: 420, held: 440 };
+  eyes: 170, mouth: 120, beard: 150, build: 180, outfit: 650, hat: 360, acc: 420, held: 440, emote: 350 };
 function pointsPrice(part) {
   const u = part.unlock;
   if (u === 'free') return 0;
@@ -97,7 +130,7 @@ function svg(c) {
   if (c.bg === 'storm-halo') o.push('<g fill="none" stroke="#bfdbfe" stroke-width="2.5" opacity=".85"><ellipse cx="60" cy="27" rx="29" ry="9" transform="rotate(-15 60 27)"><animateTransform attributeName="transform" type="rotate" from="-15 60 27" to="345 60 27" dur="16s" repeatCount="indefinite"/></ellipse><path d="M31 22 L40 27 L34 34 L47 37 M82 17 L76 26 L87 30 L78 38"><animate attributeName="opacity" values=".2;1;.2" dur="1.1s" repeatCount="indefinite"/></path></g>');
   if (c.bg === 'chronos-mantle') o.push('<g fill="none" stroke="#fcd34d" opacity=".8"><circle cx="60" cy="59" r="46" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="60" cy="59" r="36" stroke-width="2"><animateTransform attributeName="transform" type="rotate" from="0 60 59" to="360 60 59" dur="30s" repeatCount="indefinite"/></circle><path d="M60 18 V34 M60 84 V100 M19 59 H35 M85 59 H101" stroke-width="3"/><circle cx="60" cy="59" r="3" fill="#fef3c7"/></g>');
   if (c.bg === 'aurora-crown') o.push('<g fill="none" stroke-width="3" opacity=".75"><path d="M7 28 Q26 4 43 26 T80 24 T113 26" stroke="#86efac"><animate attributeName="d" values="M7 28 Q26 4 43 26 T80 24 T113 26;M7 32 Q26 16 43 30 T80 18 T113 32;M7 28 Q26 4 43 26 T80 24 T113 26" dur="5s" repeatCount="indefinite"/></path><path d="M7 38 Q26 18 43 37 T80 35 T113 38" stroke="#e9d5ff"/><path d="M38 18 L43 8 L48 18 L60 3 L72 18 L77 8 L82 18 L82 26 L38 26Z" stroke="#fde68a" fill="#fbbf24" fill-opacity=".25"/></g>');
-  const shirt = { tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207', 'cannabis-hoodie':'#166534', dj:'#312e81', scrubs:'#0e7490', labcoat:'#f8fafc', mechanic:'#292524', hardhat:'#f59e0b', farmer:'#365314', suit:'#111827', tactical:'#374151', chef:'#f8fafc', firefighter:'#991b1b', varsity:'#7f1d1d', adventurer:'#3b493b', denim:'#1d4ed8', ranch:'#92400e', hype:'#db2777', 'titan-exoframe':'#334155' }[c.outfit] || '#3b82f6';
+  const shirt = { base:'#475569', tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207', 'cannabis-hoodie':'#166534', dj:'#312e81', scrubs:'#0e7490', labcoat:'#f8fafc', mechanic:'#292524', hardhat:'#f59e0b', farmer:'#365314', suit:'#111827', tactical:'#374151', chef:'#f8fafc', firefighter:'#991b1b', varsity:'#7f1d1d', adventurer:'#3b493b', denim:'#1d4ed8', ranch:'#92400e', hype:'#db2777', 'titan-exoframe':'#334155' }[c.outfit] || '#3b82f6';
   o.push(`<path d="M18 120 C22 92 40 84 60 84 C80 84 98 92 102 120Z" fill="${shirt}"/>`);
   if (c.outfit === 'adventurer') o.push('<path d="M24 117 L42 89 L51 93 L48 120 L25 120Z M96 117 L78 89 L69 93 L72 120 L95 120Z" fill="#233c33" stroke="#c49b65" stroke-width="1.4"/><path d="M46 87 L61 112 L75 87 M51 107 H69" stroke="#d1aa66" stroke-width="3" fill="none"/>');
   if (c.outfit === 'hoodie') o.push('<path d="M42 88 C48 100 72 100 78 88" fill="none" stroke="#1e293b" stroke-width="4"/>');
@@ -107,7 +140,7 @@ function svg(c) {
   if (c.outfit === 'chain-tee') o.push('<path d="M44 88 Q60 108 76 88" fill="none" stroke="url(#au)" stroke-width="3.5" stroke-dasharray="4 2"/><circle cx="60" cy="102" r="5" fill="url(#au)"/>');
   o.push(`<rect x="52" y="72" width="16" height="16" rx="6" fill="${s}"/>`);
   const faceW = c.gender === 'female' ? 24 : c.gender === 'male' ? 27 : 25;
-  const face = c.face === 'square' ? `<rect x="${60-faceW}" y="28" width="${faceW*2}" height="54" rx="16" fill="${s}"/>` : c.face === 'oval' ? `<ellipse cx="60" cy="54" rx="${faceW}" ry="29" fill="${s}"/>` : `<ellipse cx="60" cy="55" rx="${faceW+1}" ry="27" fill="${s}"/>`;
+  const face = ['square','angular','chiseled'].includes(c.face) ? `<rect x="${60-faceW}" y="28" width="${faceW*2}" height="54" rx="16" fill="${s}"/>` : c.face === 'oval' ? `<ellipse cx="60" cy="54" rx="${faceW}" ry="29" fill="${s}"/>` : `<ellipse cx="60" cy="55" rx="${faceW+1}" ry="27" fill="${s}"/>`;
   if (c.hair === 'long' || c.hair === 'braids') o.push(`<path d="M32 50 C30 30 44 22 60 22 C76 22 90 30 88 50 L92 92 L76 90 L74 60 L46 60 L44 90 L28 92Z" fill="${hc}"/>`);
   if (c.hair === 'afro') o.push(`<circle cx="60" cy="42" r="34" fill="${hc}"/>`);
   if (c.hair === 'bun') o.push(`<circle cx="60" cy="20" r="10" fill="${hc}"/>`);
@@ -154,6 +187,11 @@ function svg(c) {
   if (c.acc === 'holo-decree') o.push('<g fill="none" stroke="#67e8f9" stroke-width="1.6" opacity=".85"><path d="M60 12 L77 22 L77 42 L60 52 L43 42 L43 22Z"/><path d="M60 17 L71 24 L71 39 L60 46 L49 39 L49 24Z" stroke="#f0abfc" stroke-dasharray="3 3"><animateTransform attributeName="transform" type="rotate" from="0 60 32" to="360 60 32" dur="18s" repeatCount="indefinite"/></path></g>');
   if (c.acc === 'chronos-mantle') o.push('<g fill="none" stroke="#fcd34d" opacity=".85"><circle cx="60" cy="67" r="43" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="60" cy="67" r="33" stroke-width="2"><animateTransform attributeName="transform" type="rotate" from="0 60 67" to="360 60 67" dur="24s" repeatCount="indefinite"/></circle><path d="M60 25 V39 M60 95 V109 M18 67 H32 M88 67 H102" stroke-width="3"/></g>');
   if (c.outfit === 'titan-exoframe') o.push('<g fill="none" stroke="#67e8f9" stroke-width="3"><path d="M25 74 L34 63 L45 70 L42 89 L29 94Z M95 74 L86 63 L75 70 L78 89 L91 94Z"/><path d="M40 84 L43 104 L77 104 L80 84 M43 91 H77" stroke="#94a3b8" stroke-width="2"/><path d="M34 70 L41 76 M86 70 L79 76"><animate attributeName="opacity" values=".2;1;.2" dur="1.5s" repeatCount="indefinite"/></path></g>');
+  // Profile-SVG emote preview. Rigged full-body animations require sourced clips.
+  if (c.emote === 'wave') o.push('<g><path d="M101 108 L99 84 Q101 70 106 80 L110 100Z" fill="#f1c19b"><animateTransform attributeName="transform" type="rotate" values="-12 104 94;18 104 94;-12 104 94" dur="1.1s" repeatCount="indefinite"/></path></g>');
+  if (c.emote === 'cheer' || c.emote === 'victory') o.push('<g fill="#facc15"><path d="M12 25 L16 16 L20 25 L30 29 L20 32 L16 42 L12 32 L3 29Z"><animate attributeName="opacity" values=".2;1;.2" dur="1.2s" repeatCount="indefinite"/></path><path d="M102 13 L106 5 L110 13 L118 17 L110 21 L106 30 L102 21 L94 17Z"/></g>');
+  if (c.emote === 'salute') o.push('<path d="M78 46 Q91 32 105 38" fill="none" stroke="#f1c19b" stroke-width="7" stroke-linecap="round"><animate attributeName="opacity" values=".4;1;.4" dur="1.2s" repeatCount="indefinite"/></path>');
+  if (c.emote === 'laugh') o.push('<g fill="#fbbf24"><circle cx="16" cy="60" r="3"/><circle cx="104" cy="60" r="3"><animate attributeName="cy" values="60;71;60" dur="1.3s" repeatCount="indefinite"/></circle></g>');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">${o.join('')}</svg>`;
 }
 function partsFor(userId) { const ctx = {}; return P.map(p => ({ kind: p.kind, id: p.id, label: p.label, unlock: p.unlock, owned: userId ? owns(userId, p, ctx) : p.unlock === 'free',
