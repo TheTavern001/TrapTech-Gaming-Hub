@@ -100,6 +100,16 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   check('Library Kit game settings pause integration is served',libKit.res.status===200 &&
     libKit.text.includes("import('/js/player-prefs.js')") &&
     libKit.text.includes('wasPaused=g.paused;g.paused=true'));
+  const vendorSettings = await get(BASE + '/games-lib/vendor-settings.mjs');
+  check('Three independent licensed games share a source settings adapter',
+    vendorSettings.res.status===200 &&
+    vendorSettings.text.includes("gl-bud-merge") &&
+    vendorSettings.text.includes("gl-hex-stack") &&
+    vendorSettings.text.includes("gl-dino-dash"));
+  const vendorPages = await Promise.all(['bud-merge','hex-stack','dino-dash'].map(id=>
+    get(BASE+'/games-lib/'+id+'/index.html')));
+  check('All three vendor game pages link their settings adapter',
+    vendorPages.every(p=>p.res.status===200&&p.text.includes('../vendor-settings.mjs')));
   const lab = await get(BASE + '/games-lib/labs/garage/index.html');
   check('Vehicle 3D QA page HTTP 200',lab.res.status===200&&lab.text.includes('PRIVATE QA'));
   const cfgLab = await get(BASE + '/games-lib/labs/garage/vehicles.json');

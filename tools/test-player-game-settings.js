@@ -29,4 +29,28 @@ assert.ok(kit.includes('wasPaused=g.paused;g.paused=true'));
 for(const key of ['gp-sound','gp-contrast','gp-quality','gp-fps'])assert.ok(app.includes(key));
 assert.ok(fs.existsSync(path.join(__dirname,'../public/css/player-prefs.css')));
 assert.ok(!prefs.includes('/api/score'));
+// Verify every registry entry has a supported settings implementation, including
+// licensed engines that bypass Kit. Fail for newly added unintegrated engines.
+const catalog=require('../src/games-lib').games;
+assert.equal(catalog.length,80,'Existing library inventory should remain intact');
+const vendored=new Set(['bud-merge','hex-stack','dino-dash']);
+assert.equal(catalog.filter(g=>g.build==='built').length,77);
+assert.equal(catalog.filter(g=>g.build==='vendored').length,3);
+for(const item of catalog){
+ const html=read('public/games-lib/'+item.slug+'/index.html');
+ if(item.build==='vendored'){
+   assert.ok(vendored.has(item.slug),'New independent game engine has no settings adapter: '+item.slug);
+   assert.ok(html.includes('../vendor-settings.mjs'),'Vendored game missing settings UI: '+item.slug);
+ }else{
+   assert.ok(html.includes('../kit.js'),'Built game lost Kit settings bridge: '+item.slug);
+ }
+}
+const independent=read('public/games-lib/vendor-settings.mjs');
+new Function(independent.replace(/^import .*$/gm,''));
+for(const id of ['gl-bud-merge','gl-hex-stack','gl-dino-dash'])assert.ok(independent.includes(id));
+assert.ok(independent.includes('r.stop()')&&independent.includes('r.play()'),'Runner pause/resume required');
+assert.ok(independent.includes('window.__GL.g.paused'),'Hextris native pause required');
+assert.ok(read('public/games-lib/bud-merge/js/hub-bridge.js').includes('window.__ttVendorSettingsPaused'),'2048 movement must freeze while menu open');
+assert.ok(prefs.includes("modal.addEventListener('keydown',e=>e.stopPropagation())"),'Settings must not report gameplay keyboard events');
+assert.ok(read('public/index.html').includes('/css/player-prefs.css'),'App needs live high-contrast theme');
 console.log(JSON.stringify({passed:true,globalOptions:5,gameOverrides:3,scope:'visual and sound only'}));
