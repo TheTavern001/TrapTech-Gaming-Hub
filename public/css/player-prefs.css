@@ -10,3 +10,16 @@
 .ttgs-fps{position:fixed;right:8px;bottom:max(65px,calc(env(safe-area-inset-bottom) + 52px));z-index:1100;border:1px solid #79eaff;border-radius:8px;padding:6px 9px;background:#070d1fd9;color:#9ff5ff;font:700 12px monospace;pointer-events:none}
 .tt-high-contrast .ttgs-box{background:#050505;border-color:white}.tt-high-contrast .ttgs-box select{background:#050505;border-color:white}
 @media(max-width:360px){.ttgs-box{padding:15px}.ttgs-box label{grid-template-columns:1fr 125px}}
+
+/* High-contrast theme must affect the whole Hub, not just its settings dialog. */
+html.tt-high-contrast {
+  --bg:#000;--bg2:#050505;--card:#101010;--card2:#191919;
+  --text:#fff;--muted:#ebebeb;--dim:#d0d0d0;--line:#fff;
+  --purple:#d6b4ff;--cyan:#99faff;--gold:#ffe691;--green:#aaffd7;
+}
+html.tt-high-contrast body{background:#000}
+html.tt-high-contrast :focus-visible{outline:3px solid #fff;outline-offset:3px}
+html.tt-high-contrast .card,
+html.tt-high-contrast .input,
+html.tt-high-contrast .bottomnav,
+html.tt-high-contrast .topbar{border-color:#bfc5d3}

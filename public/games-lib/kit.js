@@ -46,7 +46,7 @@
     // Start crisp on high-DPR phones, then dynamically lower only backing-store pixels
     // if rendering stays slow. World coordinates, input accuracy and gameplay are unchanged.
     const initialDpr = Math.min(2, devicePixelRatio || 1);
-    let renderDpr = initialDpr, slowFrames = 0, p95Ms = 0; let cameraShakeAllowed=true;
+    let renderDpr = initialDpr, slowFrames = 0, p95Ms = 0; let cameraShakeAllowed=true;let gamePrefs=null;
     const frameSamples = [];
     function resize() { const vw = innerWidth, vh = innerHeight, d = renderDpr; scale = Math.min(vw / W, vh / Hh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - cw) / 2; oy = (vh - ch) / 2; cv.style.cssText = `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`; cv.width = Math.max(1,Math.floor(cw * d)); cv.height = Math.max(1,Math.floor(ch * d)); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
     addEventListener('resize', resize); resize();
@@ -69,6 +69,7 @@
     window.__GL = { g, get state() { return g.state; }, get score() { return g.score; }, get fps() { return g.fps; }, get jsMs() { return Math.round((g.jsMs || 0) * 100) / 100; }, get frameMsP95() { return p95Ms; }, get renderDpr() { return renderDpr; }, lastSubmit: null, errors: [] };
     // Shared device-only settings: pause game physics without scoring any menu taps.
     import('/js/player-prefs.js').then(P=>{
+      gamePrefs=P;
       let wasPaused=false;
       P.openGameSettings({id:def.id,title:def.title,host:document.body,
         onOpen:()=>{wasPaused=g.paused;g.paused=true;g.ptr.down=false;g.keys={};},
@@ -93,7 +94,7 @@
     function onUp(e) { const t = touches.get(e.pointerId); touches.delete(e.pointerId); if (t && t.k === 'btn') { g.btn[t.b.id] = false; if (t.b.key) g.keys[t.b.key] = false; return; } if (t && t.k === 'stick') { g.stick.on = false; g.stick.x = g.stick.y = 0; if (!def.stickAlsoPtr) return; } g.ptr.down = false; g.ptr.released = true; }
     cv.addEventListener('pointerdown', onDown); addEventListener('pointermove', onMove); addEventListener('pointerup', onUp); addEventListener('pointercancel', onUp);
     cv.addEventListener('contextmenu', e => e.preventDefault());
-    addEventListener('keydown', e => { if(document.querySelector('.ttgs-modal:not([hidden])'))return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted = !muted; safeStore.set('gl_mute', muted ? '1' : '0'); }
+    addEventListener('keydown', e => { if(document.querySelector('.ttgs-modal:not([hidden])'))return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted=!muted; if(gamePrefs)gamePrefs.saveGame(def.id,{sound:!muted}); else safeStore.set('gl_mute',muted?'1':'0'); return; }
       if (!g.keys[e.key]) { g._kp = true; g.kp = g.kp || {}; g.kp[e.key] = true; g.inputs++; window.Hub && Hub.input(); ac(); } g.keys[e.key] = true; if (e.key === 'p' || e.key === 'Escape') g.paused = !g.paused && g.state === 'play'; });
     addEventListener('keyup', e => { g.keys[e.key] = false; });
     document.addEventListener('visibilitychange', () => { if (document.hidden && g.state === 'play') g.paused = true; });

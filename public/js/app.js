@@ -608,7 +608,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
     fps:()=>game.fps});
   const setMute = () => { document.getElementById('mute').innerHTML = icon(game.sfx.muted ? 'volume-x' : 'volume-2'); };
   setMute();
-  document.getElementById('mute').onclick = () => { game.sfx.toggle(); setMute(); };
+  document.getElementById('mute').onclick = () => { game.sfx.toggle(); GP.saveGame(g.id,{sound:!game.sfx.muted}); setMute(); };
   document.getElementById('pause').onclick = () => game.togglePause();
   document.getElementById('exit').onclick = () => go('/games/' + g.id);
   if (g.id === 'jetpack-dash') { const rot = document.getElementById('rot'); let shown = 0; const checkRot = () => { if (!document.body.contains(rot)) return removeEventListener('resize', checkRot); const p = innerHeight > innerWidth && innerWidth < 700 && shown < 1; rot.classList.toggle('hidden', !p); if (p) { shown++; setTimeout(() => rot.classList.add('hidden'), 5000); } }; checkRot(); addEventListener('resize', checkRot); }
