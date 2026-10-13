@@ -1,6 +1,6 @@
 'use strict';
 // v7 season engine (docs/ECONOMY.md). Seasons auto-roll forever: Season 1 started Thu Oct 1 2026 00:00 (hub time) and
-// every season lasts 8 weeks (56 days) unless an admin ends it early or extends it (overrides shift the seasons after it).
+// Season 1 keeps its original 8-week schedule; later seasons last 6 weeks unless an admin ends or extends them.
 // Each season has a free 60-level track (no paid pass): Hub Points on most levels, 13 season-exclusive cosmetics,
 // six perks, then endless "Overdrive" stars past level 60. Soft reset: season XP starts again at 0, but everyone gets a
 // head start of 10% of last season's XP (max 2,000). When a season ends its results are archived (season_results),
@@ -11,7 +11,7 @@ const cfg = require('./config');
 const G = require('./shop-gen');
 const D = 864e5;
 const PR = () => require('./progress');
-const LEN_DAYS = 56, LEVELS = 60;
+const LEN_DAYS = 42, LEGACY_FIRST_SEASON_DAYS = 56, LEVELS = 60;
 const EPOCH_DAY = 20727; // hub day number of 2026-10-01
 const NAMES = ['Neon Genesis', 'Purple Haze', 'Chrome Summer', 'Afterglow', 'Static Bloom', 'Night Shift', 'Hyperdrive', 'Low Orbit', 'Golden Hour', 'Frostbyte',
   'Terp Tide', 'Pixel Rain', 'Cloud Nine', 'Overdrive', 'Midnight Garden', 'Solar Flare', 'Glass House', 'Aurora', 'Retrograde', 'High Tide'];
@@ -66,7 +66,7 @@ function info(n) {
   while (bounds.length < n) {
     const k = bounds.length + 1; const prev = bounds[k - 2];
     const start = k === 1 ? PR().dayStart(EPOCH_DAY) : prev.end_at + 1;
-    const o = OV.get(k) || {}; const nominal = PR().dayStart(PR().dayNum(start + 3600e3) + LEN_DAYS) - 1;
+    const o = OV.get(k) || {}; const nominal = PR().dayStart(PR().dayNum(start + 3600e3) + (k === 1 ? LEGACY_FIRST_SEASON_DAYS : LEN_DAYS)) - 1;
     const end = o.ends_at && o.ends_at > start ? o.ends_at : nominal;
     const pal = (o.theme && G.PALETTES[o.theme]) ? o.theme : PALS[(k - 1) % PALS.length];
     bounds.push({ number: k, name: o.name || nameOf(k), palette: pal, theme: THEMES[(k - 1) % THEMES.length], start_at: start, end_at: end, notes: o.notes || '', overridden: !!o.number, ended_early: !!(o.ends_at && o.ends_at < nominal) });
@@ -174,7 +174,7 @@ function adminList() {
   for (let n = Math.max(1, cur.number - 3); n <= cur.number + 3; n++) { const s = info(n); list.push({ ...s, tiers: LEVELS, levels: LEVELS, state: n < cur.number ? 'ended' : n === cur.number ? 'live' : 'upcoming', track: Object.fromEntries(trackFor(n, 0).filter(x => x.item).map(x => [x.level, x.reward])) }); }
   const c = info(cur.number);
   return { engine: 'src/seasons.js', current: { ...c, tiers: LEVELS, levels: LEVELS, players: boardFor(cur.number, 1e6).length, top: boardFor(cur.number, 10) }, seasons: list, hall_of_fame: hallOfFame(),
-    reward_types: ['Title', 'Banner', 'Frame', 'Badge', 'Color', 'Effect', 'Points'], rules: RULES, palettes: G.PAL_KEYS, perks: PERKS, length_days: LEN_DAYS, levels: LEVELS };
+    reward_types: ['Title', 'Banner', 'Frame', 'Badge', 'Color', 'Effect', 'Points'], rules: RULES, palettes: G.PAL_KEYS, perks: PERKS, length_days: cur.length_days, standard_future_length_days: LEN_DAYS, levels: LEVELS };
 }
 function adminUpdate(n, b = {}, who = {}) {
   n = parseInt(n, 10); const cur = seasonAt().number; if (!(n >= cur)) return { ok: false, error: 'Past seasons are locked (their results are in the hall of fame).' };
@@ -199,7 +199,7 @@ function adminEnd(who = {}, confirm) {
   try { require('./notify').notify(null, 'system', `Season ${cur.number}: ${cur.name} has ended`, `Season ${next.number}: ${next.name} starts now. The top players are in the hall of fame.`, '/season', 'trophy'); } catch {}
   return { ok: true, ended: cur.number, next, archived: n };
 }
-const RULES = [`Seasons last ${LEN_DAYS / 7} weeks and roll over automatically at midnight (hub time), forever.`, `The free track has ${LEVELS} levels (${CUM[LEVELS].toLocaleString('en-US')} XP). Past level ${LEVELS}, every ${OVERDRIVE_XP.toLocaleString('en-US')} XP is an Overdrive star worth ${OVERDRIVE_POINTS} Hub Points (up to ${OVERDRIVE_MAX} a season).`,
+const RULES = [`Season 1 retains its original 8-week dates. Starting with Season 2, seasons last ${LEN_DAYS / 7} weeks and roll over automatically at midnight (hub time), except where an admin sets an override.`, `The free track has ${LEVELS} levels (${CUM[LEVELS].toLocaleString('en-US')} XP). Past level ${LEVELS}, every ${OVERDRIVE_XP.toLocaleString('en-US')} XP is an Overdrive star worth ${OVERDRIVE_POINTS} Hub Points (up to ${OVERDRIVE_MAX} a season).`,
   'Season XP comes from the same play as your level: finished runs, daily quests, check-ins and achievements.', 'Soft reset: season XP starts at 0 each season, plus a head start of 10% of last season\'s XP (max 2,000).',
   'Track cosmetics are season-exclusive: they are never sold and never come back. Perks last until the season ends.', 'When a season ends, results are archived, the top 10 enter the hall of fame and get a Top 10 title, and #1 gets the Champion title.',
   'Nothing on the track affects giveaways, scores or entries.'];
@@ -208,7 +208,7 @@ setInterval(() => { try { sweep(); } catch (e) { console.error('season sweep', e
 function routes(app, A, H) {
   app.get('/api/seasons', (req, res) => { try { sweep(); } catch {} const me = H.currentUser(req); const cur = seasonAt();
     res.json({ ok: true, current: cur, upcoming: [info(cur.number + 1), info(cur.number + 2)].map(s => ({ number: s.number, name: s.name, start_at: s.start_at, end_at: s.end_at })), rules: RULES, perks: PERKS,
-      levels: LEVELS, length_days: LEN_DAYS, max_xp: CUM[LEVELS], hall_of_fame: hallOfFame(), mine: me ? history(me.id) : [] }); });
+      levels: LEVELS, length_days: cur.length_days, standard_future_length_days: LEN_DAYS, max_xp: CUM[LEVELS], hall_of_fame: hallOfFame(), mine: me ? history(me.id) : [] }); });
   app.get('/api/seasons/:n(\\d+)', (req, res) => { const n = +req.params.n; const cur = seasonAt().number; if (n < 1 || n > cur + 2) return res.status(404).json({ ok: false, error: 'No such season.' });
     const s = info(n); res.json({ ok: true, season: { ...s, state: n < cur ? 'ended' : n === cur ? 'live' : 'upcoming' }, track: trackFor(n, 0), board: n <= cur ? boardFor(n, 50).map(r => ({ rank: r.rank, username: r.username, score: r.score, level: r.level })) : [] }); });
 }

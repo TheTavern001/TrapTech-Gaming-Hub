@@ -36,6 +36,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check src/v3.js \
  && node --check tools/test-rotating-quests.js \
  && node tools/test-rotating-quests.js \
+ && test -s tools/test-season-future-calendar.js \
+ && node --check tools/test-season-future-calendar.js \
+ && node tools/test-season-future-calendar.js \
  && test -s tools/test-avatar-free-face.js \
  && node --check tools/test-avatar-free-face.js \
  && node tools/test-avatar-free-face.js \
