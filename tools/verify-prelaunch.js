@@ -273,6 +273,10 @@ const homeHtml = read(path.join(ROOT, 'public/index.html')) || '';
 if (!homeHtml.includes('type="importmap"') || !homeHtml.includes('/games-lib/vendor/three.module.min.js'))
   fail('public/index.html', 'Local Three.js import map for rigged character loading is missing');
 const avatarRig = read(path.join(ROOT, 'public/js/avatar-rig.js')) || '';
+if (!avatarRig.includes("name==='hair_brown'") || !avatarRig.includes("stage.classList.contains('avatar-profile-stage')"))
+  fail('public/js/avatar-rig.js', 'Female hair material must be colorable and profile camera must use portrait framing');
+if (!(read(path.join(ROOT,'public/js/app.js')) || '').includes('ach-license-art'))
+  fail('public/js/app.js', 'Achievement rows must use licensed medal artwork for non-game categories');
 if (!avatarRig.includes('GLTFLoader') || !avatarRig.includes('SkeletonUtils') || !avatarRig.includes('AnimationMixer'))
   fail('public/js/avatar-rig.js', 'Rigged character renderer must use local loading and idle animation');
 const rigLicense = read(path.join(ROOT, 'public/assets/avatars/rigged/LICENSE-Quaternius-CC0.txt')) || '';
@@ -285,6 +289,11 @@ for (const gender of ['male', 'female']) {
       !m.buffers?.[0]?.uri?.startsWith('data:application/octet-stream;base64,'))
       fail(file, 'Expected self-contained rigged model with Idle animation');
     if (m.images?.some(i => i.uri && !i.uri.startsWith('data:'))) fail(file, 'Remote textures not allowed');
+    const names = new Set((m.materials || []).map(x => String(x.name || '').toLowerCase()));
+    if (!names.has('skin') || !names.has(gender === 'female' ? 'hair_brown' : 'hair'))
+      fail(file, 'Source mesh lacks colorable skin/hair material names');
+    if ((m.skins?.[0]?.joints?.length || 0) < 30 || !m.animations?.some(a=>a.name==='Walk'))
+      fail(file, 'Source model lacks the expected rig skeleton or movement clips');
   } catch (e) { fail(file,'Invalid or missing Quaternius rigged model: '+e.message); }
 }
 for (let n=1;n<=9;n++) {

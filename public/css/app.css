@@ -1097,3 +1097,21 @@ input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):n
 /* Source-asset achievement rewards, using Kenney CC0 medals and per-game artwork. */
 .ach-game-art .ach-medal{position:absolute;z-index:2;right:7px;top:7px;width:33px;height:33px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
 .ach-game-art>.ico{background:rgba(6,9,24,.72);padding:3px;border-radius:6px}
+
+/* Genuine CC0 Kenney medal artwork in non-game achievement rows. */
+.ach-license-art{--lic:#c8d8f9;flex:none;position:relative;display:grid;place-items:center;width:82px;height:96px;overflow:hidden;border:2px solid var(--lic);border-radius:16px;background:radial-gradient(circle at 28% 16%,rgba(160,150,255,.35),transparent 50%),linear-gradient(135deg,#182b4d,#070b1d);box-shadow:0 10px 24px rgba(0,0,0,.28)}
+.ach-license-art:before{content:"";position:absolute;inset:-25%;background:repeating-conic-gradient(from 20deg,transparent 0 18deg,rgba(255,255,255,.07) 18deg 22deg,transparent 22deg 45deg)}
+.ach-license-art img{position:relative;z-index:1;width:66px;height:66px;object-fit:contain;filter:drop-shadow(0 4px 5px #030814)}
+.ach-license-sigil{position:absolute;z-index:2;left:8px;bottom:10px;width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:rgba(3,8,23,.9);color:#f8fafc;border:1px solid #64748b}
+.ach-license-sigil .ico,.ach-license-sigil svg{width:19px;height:19px}
+.ach-license-tier{position:absolute;z-index:2;right:5px;bottom:10px;color:var(--lic);font-size:8px;letter-spacing:.06em;text-transform:uppercase;font-weight:900;text-shadow:0 2px 4px #000}
+.ach-license-art.tier-bronze{--lic:#d6a16e}.ach-license-art.tier-silver{--lic:#d4e0ee}.ach-license-art.tier-gold{--lic:#ffd76e}.ach-license-art.tier-epic{--lic:#d7a7ff}.ach-license-art.tier-legendary{--lic:#ffe597;box-shadow:0 0 22px rgba(255,207,84,.22)}
+.ach-license-art.cat-progress{background:radial-gradient(circle at 28% 16%,rgba(57,218,175,.31),transparent 50%),linear-gradient(135deg,#0b3b3f,#090e21)}
+.ach-license-art.cat-giveaways{background:radial-gradient(circle at 28% 16%,rgba(241,177,90,.29),transparent 50%),linear-gradient(135deg,#40311f,#101125)}
+.ach-license-art.cat-community,.ach-license-art.cat-social{background:radial-gradient(circle at 28% 16%,rgba(235,124,192,.31),transparent 50%),linear-gradient(135deg,#3b2248,#101125)}
+.ach-license-art.cat-secret{background:radial-gradient(circle at 28% 16%,rgba(119,79,215,.33),transparent 50%),linear-gradient(135deg,#19143f,#06081b)}
+.ach.off .ach-license-art>img{filter:grayscale(.4) brightness(.7);opacity:.85}
+.av-model-status{display:block;width:100%;padding:5px 9px;border-radius:9px;font-size:11px;font-weight:750;text-align:center}
+.av-model-status.source{color:#bdf5e3;background:rgba(13,95,86,.17);border:1px solid rgba(67,220,165,.26)}
+.av-model-status.compat{color:#ffd69b;background:rgba(126,74,12,.13);border:1px solid rgba(233,165,64,.25)}
+@media(max-width:460px){.ach-license-art{width:70px;height:83px}.ach-license-art img{width:54px;height:54px}}

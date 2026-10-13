@@ -50,7 +50,7 @@ export async function mountRiggedAvatar(stage,cfg) {
       const skin=SKIN[Number(String(cfg.skin||'s2').slice(1))]||SKIN[2];
       const hair=HAIR[Number(String(cfg.hairc||'c1').slice(1))]||HAIR[1];
       if(name==='skin')m.color.set(skin);
-      if(name==='hair'||name==='eyebrows')m.color.set(hair);
+      if(name==='hair'||name==='hair_brown'||name==='eyebrows')m.color.set(hair);
       return m;
     };
     o.material=Array.isArray(o.material)?o.material.map(colorize):colorize(o.material);
@@ -68,8 +68,11 @@ export async function mountRiggedAvatar(stage,cfg) {
     new THREE.MeshStandardMaterial({color:0x192447,roughness:.45,metalness:.22}));
   ground.rotation.x=-Math.PI/2;ground.position.set(0,-.025,0);
   ground.receiveShadow=true;scene.add(ground);
-  const camera=new THREE.PerspectiveCamera(35,1,.1,50);
-  camera.position.set(0,2.0,6.7);camera.lookAt(0,1.5,0);
+  // Use a face-forward portrait on the profile, full body in the wardrobe editor.
+  const isPortrait=stage.classList.contains('avatar-profile-stage');
+  const camera=new THREE.PerspectiveCamera(isPortrait?38:35,1,.1,50);
+  if(isPortrait){camera.position.set(0,2.62,3.65);camera.lookAt(0,2.52,0);}
+  else {camera.position.set(0,2.0,6.7);camera.lookAt(0,1.5,0);}
   const mixer=new THREE.AnimationMixer(character);
   const idle=THREE.AnimationClip.findByName(gltf.animations,'Idle')||
     THREE.AnimationClip.findByName(gltf.animations,'Idle_Neutral')||gltf.animations[0];
@@ -86,10 +89,10 @@ export async function mountRiggedAvatar(stage,cfg) {
   const down=e=>{pointer.down=true;pointer.x=e.clientX;renderer.domElement.setPointerCapture?.(e.pointerId);};
   const move=e=>{if(!pointer.down)return;root.rotation.y+=(e.clientX-pointer.x)*.011;pointer.x=e.clientX;};
   const up=()=>{pointer.down=false;};
-  renderer.domElement.addEventListener('pointerdown',down);
-  renderer.domElement.addEventListener('pointermove',move);
-  renderer.domElement.addEventListener('pointerup',up);
-  renderer.domElement.addEventListener('pointercancel',up);
+  if(!isPortrait) renderer.domElement.addEventListener('pointerdown',down);
+  if(!isPortrait) renderer.domElement.addEventListener('pointermove',move);
+  if(!isPortrait) renderer.domElement.addEventListener('pointerup',up);
+  if(!isPortrait) renderer.domElement.addEventListener('pointercancel',up);
   const cleanup=()=>{
     if(!alive)return;
     alive=false;cancelAnimationFrame(raf);
