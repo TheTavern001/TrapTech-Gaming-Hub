@@ -105,3 +105,6 @@ Android browser screenshot of `/api/build` shows `ok:true`, 80 library + 13 core
 
 ## 2026-10-13 owner-confirmed 0b7e3a6 READY; next technical inventory
 Build `0b7e3a6` is owner-confirmed READY, facial traits free in source (30). Next candidate includes per-title source scan for all 93 currently registered games, output `/api/audit/game-source` with all quality signoffs false and source hashes, and smaller mobile avatar preview layout for easier selection. This is not a substitute for premium neutral rig and layered outfits, score replay, licensed assets, actual play QA or 500-game public launch. Base asset research: Quaternius Universal Base Characters (six bodies, 20 hairstyles, CC0) + Modular Character Outfits Fantasy (12 outfits, 62 parts, CC0); the binaries must still be acquired and vetted. Historical failed builds preserved.
+
+## 2026-10-13 missing card art finding
+Seven core games point at non-existent /assets/cards/v7/*.webp: munchies-snake, brick-breaker, void-swarm, stack, grow-guard, sling-smash, haze-defense. These are image defects, not gameplay source failures. The source inventory reports each under missingArtwork without auto-approving title. Source art corrections must use appropriate owned/licensed title-specific assets, not reuse unrelated thumbnails.

@@ -9,9 +9,9 @@ const catalog=JSON.parse(read('public/games-lib/catalog.json')).games;
 const baseline=JSON.parse(read('docs/audit/GAME-INTAKE-BASELINE.json'));
 const config=read('src/config.js');
 const core=[...config.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)]
- .map(m=>({id:m[1],title:m[2],module:m[3]}))
+ .map(m=>{const a=config.slice(m.index,m.index+700).match(/\bart:\s*'([^']+)'/);return {id:m[1],title:m[2],module:m[3],art:a?a[1]:null};})
  .filter(g=>baseline.activeCoreIds.includes(g.id));
-const errors=[],rows=[],same=new Map(),ids=new Set();
+const errors=[],artDefects=[],rows=[],same=new Map(),ids=new Set();
 function filesFor(g){
  const main='public/games-lib/'+g.slug+'/game.js';
  if(exists(main))return [main];
@@ -28,7 +28,7 @@ function inspect(id,title,type,sources,entry,image){
  if(ids.has(id))errors.push('Duplicate identifier '+id);
  ids.add(id);
  if(!entry||!exists(entry))errors.push(id+' missing HTML entry');
- if(!image||!exists(image))errors.push(id+' missing thumbnail');
+ if(!image||!exists(image))artDefects.push({game:id,missing:image||'(unregistered)'});
  if(!sources.length||sources.some(s=>!exists(s)))errors.push(id+' missing executable source');
  const js=sources.filter(exists).map(read).join('\n');
  const exact=hash(js),normalized=hash(js.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/[^\n]*/g,'').replace(/\s+/g,''));
@@ -39,25 +39,25 @@ function inspect(id,title,type,sources,entry,image){
    completionHint:/(restart|reset|gameover|\.end\(|finish|won|lose|death)/i.test(js)};
  rows.push({id,title,type,files:sources,sourceSha256:exact,
    staticChecks:checks,requiresHumanGameplay:true,
-   certifiedVisuals:false,certifiedAndroid:false,certifiedControls:false,
+   referencedArt:image,artExists:!!image&&exists(image),certifiedVisuals:false,certifiedAndroid:false,certifiedControls:false,
    certifiedLicense:false,certifiedServerScoreReplay:false,certifiedAAA:false,
    comment:'Static heuristic only; sources and metadata are not visual/playtesting evidence.'});
 }
 for(const g of core)inspect('core:'+g.id,g.title,'core',
- ['public/js/'+g.module],'public/index.html','public'+(g.art||'/assets/cards/v5/'+g.id+'.webp'));
+ ['public/js/'+g.module],'public/index.html',g.art&&'public'+g.art);
 for(const g of catalog)inspect('library:'+g.slug,g.title,'library',filesFor(g),'public'+g.url,'public'+g.art);
 for(const id of baseline.activeCoreIds)if(!core.some(g=>g.id===id))errors.push('Missing active core '+id);
 for(const slug of baseline.baselineLibrarySlugs)if(!catalog.some(g=>g.slug===slug))errors.push('Missing baseline library '+slug);
 const duplicates=[...same.values()].filter(a=>a.length>1);
 const report={schemaVersion:1,audit:'static source inventory, not AAA certification',
  registered:rows.length,core:core.length,library:catalog.length,qualityApproved:0,
- errors,possibleIdenticalGameSources:duplicates,
+ errors,missingArtwork:artDefects,possibleIdenticalGameSources:duplicates,
  criteriaNotTested:['Mobile/desktop gameplay','Distinct core game loops','Graphic quality',
    'Gameplay latency and frame time','Real assets and rights','Score replay security','Owner art approval'],games:rows};
 const file=path.join(ROOT,'docs/audit/game-source-mechanics.json');
 fs.mkdirSync(path.dirname(file),{recursive:true});
 fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({audit:'game-source-mechanics',registered:rows.length,
- core:core.length,library:catalog.length,errors:errors.length,
+ core:core.length,library:catalog.length,errors:errors.length,missingArtwork:artDefects.length,
  identicalSourceCandidates:duplicates.length,AAAApproved:0}));
 if(errors.length)process.exitCode=1;

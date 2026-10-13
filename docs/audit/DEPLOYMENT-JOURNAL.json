@@ -234,6 +234,7 @@
     }
   ],
   "pendingEvidence": [
+    "Seven core-game art URLs refer to absent v7 files: munchies-snake, brick-breaker, void-swarm, stack, grow-guard, sling-smash, haze-defense. Render QA defects, not missing executable modules; report under missingArtwork.",
     "0b7e3a6 READY owner-confirmed. New candidate game-source-mechanics scanning and compact Android avatar editor must pass full Deplexo build and user physical visual testing.",
     "Public /api/audit/game-source should report 93 titles with source files, 0 quality-approved. This report cannot certify graphics, gameplay, frame rate or score replay.",
     "CC0 Quaternius Universal Base Characters 6 bodies + 20 hairstyles, compatible Modular Outfits 12 sets / 62 parts: source identified, binary meshes NOT installed in repo, original premium Mickel-Captain-inspired neutral asset not yet integrated. Do not mislabel older blob or clothed Adventurer as completed.",
