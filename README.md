@@ -1,13 +1,21 @@
 # The Gaming Hub by Trap Tech Solutions
 
 Mobile-first game hub with accounts, leaderboards, giveaways, a booking request system and an admin dashboard, designed,
-built and operated by **Trap Tech Solutions**. 16 core games and 80 curated Games Library titles (96 active game entries after duplicate-loop consolidation), daily quests, login streaks, XP levels, a free season
+built and operated by **Trap Tech Solutions**. 13 active core games and 80 curated Games Library titles (93 active entries, with three retired historical core-game IDs excluded), daily quests, login streaks, XP levels, a free season
 track, tournaments (timed and bracket), friends, notifications, share cards and invite codes. Competitive outcomes remain
 server-validated and purchases are limited to cosmetic items, profile presentation, and season-track content—never gameplay
 power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-gap research and sources.
 
 - Local URL: http://localhost:8787 (port is set by `PORT` in `.env` or the environment)
 - Public leaderboard: `/leaderboard` · Giveaways: `/giveaways` · Admin: disabled unless `ADMIN_PATH` is configured; the dashboard uses a non-public random path, password + authenticator-based 2FA, CSRF protection, and role permissions. `/admin` is not the dashboard.
+
+## Current deployment state and 500-game expansion (read first)
+
+**Operational source of truth:** [Deployment and audit journal](docs/DEPLOYMENT-JOURNAL.md) → `docs/audit/DEPLOYMENT-JOURNAL.json`; [master workboard](docs/HUB-MASTER-CHECKLIST.md) and [game intake protocol](docs/audit/GAME-IMPORT-PROTOCOL.md). Record the exact GitHub SHA and observed Deplexo outcome for **every** attempt, including failure, in the journal. A screenshot of BUILDING is not proof of READY.
+
+Run `node tools/release-status.js` for current-source and last-observed-host status; run `node tools/verify-game-intake.js` for 500-title progress. The baseline is **93 active games**, target **500** (407 further distinct accepted titles). The research candidate list is not a live game list. Docker prelaunch now derives library counts from the registry rather than refusing a valid 81st game. All new titles still need rights, gameplay, score and Android QA before public release.
+
+**Last Deplexo status documented by owner screenshot:** `8489b41` READY, `58a9f52` failed, `b7be1ec` was BUILDING; a later screenshot/build log is required to determine the current READY SHA. This README does not claim the present `main` is live.
 
 ## Run / restart
 ```bash

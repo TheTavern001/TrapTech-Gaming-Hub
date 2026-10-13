@@ -114,5 +114,25 @@
       "entry": "staging DB backup/recovery, 10k+ user simulation and staged concurrent load",
       "exit": "release checklist signed off, no P0/P1 issues, manual public launch"
     }
+  ],
+  "sourceChanges": [
+    {
+      "commit": "4ad48e9b7bf2e930cb0f52fca35bb3590da0cbe2",
+      "reason": "Created durable deployment evidence ledger and release-status tool; prevented game import builder overwriting credited assets; restored zoom in generated game pages",
+      "validation": "JavaScript source syntax of status script and builder",
+      "host": "not verified"
+    },
+    {
+      "commit": "be049c923d01d4785d0783aa7b4a3e945482f97f",
+      "reason": "Corrected escaped regex in release-status script",
+      "validation": "Evaluated pattern against src/config.js and matched 16 historical core IDs/13 active",
+      "host": "not verified"
+    },
+    {
+      "commit": "71a07b4c1fb6f9bf97543fbfe5cacb85fd973b37",
+      "reason": "Replaced exactly-80 library release checks with dynamic registry and baseline protections; added 500-game admission ledger, protocol and source-quality gate",
+      "validation": "Syntax-checked changed audit/intake JavaScript; read-only script emulation calculated 93 active games and 407 remaining; full Docker build not run",
+      "host": "not verified"
+    }
   ]
 }

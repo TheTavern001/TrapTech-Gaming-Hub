@@ -45,3 +45,13 @@ Use `docs/UNIVERSAL-GAME-INTEGRATION.md`, `docs/GAME-CANDIDATES.md`, and `docs/a
 ## 2026-10-13 intake preparation update
 
 The original build audits required **exactly 80 library games**, which would have rejected the first new game regardless of quality. This hard-coded release blocker has been corrected in the same batch as the admission ledger. Full Docker build remains to be verified after Deplexo redeploys the new commit. See `docs/audit/GAME-INTAKE-BASELINE.json`, `docs/audit/GAME-INTAKE-ACCEPTANCE.json`, and `docs/audit/GAME-IMPORT-PROTOCOL.md`.
+
+## Source changes after the last Deplexo screenshot (not host-confirmed)
+
+| Source SHA | Change | Verified evidence |
+|---|---|---|
+| `4ad48e9` | Deploy/audit ledger, read-only reporter and non-destructive asset-credit builder. | Source JS syntax checked. Deplexo unknown. |
+| `be049c9` | Fixed release reporter escaped registry regex. | Canonical parser matched 16 historical core / 13 active games. Deplexo unknown. |
+| `71a07b4` | Removed exact-80 blocker from both prelaunch audits; introduced 500-game admission protocol. | Source checks and registry-based report exercised; Docker/Deplexo outcome unknown. |
+
+The next source branch head can advance beyond this table. Read `git log` and `node tools/release-status.js` to reconcile work since this note, then append to the machine-readable journal. The last observed Deplexo READY SHA remains `8489b41` until a later deployment is independently confirmed.
