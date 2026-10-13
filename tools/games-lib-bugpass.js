@@ -1,9 +1,13 @@
 // Games Library bug pass (Reese, Oct 10): per game - seeded play-throughs, keyboard + touch input, pause/resume,
 // tab hide/show, resize + rotate, low-FPS (4x CPU throttle), long-run memory growth. Usage: node tools/games-lib-bugpass.js slug [slug...]
-const { chromium, devices } = require('/usr/local/lib/pnpm/5/.pnpm/playwright-core@1.59.1/node_modules/playwright-core');
+const { chromium, devices } = require('playwright-core');
+const fs = require('node:fs'), path = require('node:path');
 const BASE = process.env.BASE || 'http://localhost:8795', LONG = +(process.env.LONG_MS || 45000);
 const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'];
-(async () => { const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--enable-precise-memory-info'] }); const out = [];
+(async () => {
+  const chromeBin = process.env.CHROME_BIN || ['/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(f=>fs.existsSync(f));
+  if(!chromeBin) throw Error('Chromium/Chrome not installed; set CHROME_BIN');
+  const b = await chromium.launch({ executablePath: chromeBin, args: ['--no-sandbox', '--enable-precise-memory-info'] }); const out = [];
   for (const slug of process.argv.slice(2)) { const R = { slug, errors: [], checks: {} };
     const ctx = await b.newContext({ ...devices['iPhone 13'] }); const p = await ctx.newPage(); const cdp = await ctx.newCDPSession(p);
     p.on('pageerror', e => R.errors.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|favicon/.test(m.text())) R.errors.push(m.text()); });
@@ -32,4 +36,9 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'];
     } catch (e) { R.errors.push('harness: ' + e.message.split('\n')[0]); }
     R.pass = !R.errors.length && Object.values(R.checks).every(v => /^ok|^n\/a|^keys/.test(v)) && Object.keys(R.checks).length >= 6;
     console.log((R.pass ? 'PASS ' : 'FAIL ') + slug.padEnd(16) + Object.entries(R.checks).map(([k, v]) => k + '=' + v).join(' | ') + (R.errors.length ? ' ERR ' + R.errors.slice(0, 2).join(' / ') : '')); out.push(R); await ctx.close(); }
-  require('fs').writeFileSync('/tmp/bugpass.json', JSON.stringify(out, null, 1)); await b.close(); })();
+  const output = path.join(__dirname,'..','docs','audit','games-lib-bugpass-results.json');
+  fs.mkdirSync(path.dirname(output),{recursive:true});
+  fs.writeFileSync(output,JSON.stringify({ testEnvironment:'headless mobile emulation; physical-device approval pending', games:out },null,2)+'\n');
+  await b.close();
+  if(out.some(x=>!x.pass)) process.exitCode=1;
+})().catch(e=>{console.error('Game bugpass failed:',e);process.exitCode=1;});

@@ -297,6 +297,29 @@ if (!homeHtml.includes('type="importmap"') || !homeHtml.includes('/games-lib/ven
       fail('paper-toss/game.js','Paper Toss physically impossible trajectory / rim collision');
   } catch(e){fail('paper-toss/game.js','Could not execute isolated physics smoke test: '+e.message);}
 }
+// Isolated Skee Roll tuning: a normal Space hold must yield viable scores
+// over more than a 50ms-wide window. No server, RNG, or player accounts touched.
+{
+  const vm = require('node:vm');
+  let game = null;
+  try {
+    vm.runInNewContext(read(path.join(ROOT,'public/games-lib/skee-roll/game.js')) || '',
+      {Kit:{run:g=>{game=g;},clamp:(v,a,b)=>Math.max(a,Math.min(b,v))}},
+      {timeout:1000,filename:'skee-roll/game.js'});
+    if(!game || !game.init || !game.update)throw Error('missing Kit game');
+    const roll=(hold)=>{
+      const g={W:400,H:700,t:0,ptr:{pressed:false,released:false},keys:{},score:0,
+        sfx(){},float(){},burst(){},mark(){},add(v){this.score+=v;},end(x){this.reason=x;},ax(){return 0;}};
+      game.init(g);g.keys[' ']=true;
+      for(let i=0;i<hold*60;i++){g.t+=1/60;game.update(g,1/60);}
+      g.keys[' ']=false;
+      for(let i=0;i<160;i++){g.t+=1/60;game.update(g,1/60);if(!g.ball)break;}
+      return g.score;
+    };
+    if(!(roll(.45)>0&&roll(.75)>0&&roll(.15)===0))
+      fail('skee-roll/game.js','Skee Roll score target only reachable within too narrow a power window');
+  } catch(e){fail('skee-roll/game.js','Skee Roll physics regression could not run: '+e.message);}
+}
 const avatarRig = read(path.join(ROOT, 'public/js/avatar-rig.js')) || '';
 if (!avatarRig.includes("name==='hair_brown'") || !avatarRig.includes("stage.classList.contains('avatar-profile-stage')"))
   fail('public/js/avatar-rig.js', 'Female hair material must be colorable and profile camera must use portrait framing');
