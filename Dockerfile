@@ -42,6 +42,12 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s tools/test-avatar-free-face.js \
  && node --check tools/test-avatar-free-face.js \
  && node tools/test-avatar-free-face.js \
+ && test -s tools/audit-avatar-renderability.js \
+ && node --check tools/audit-avatar-renderability.js \
+ && node tools/audit-avatar-renderability.js \
+ && test -s tools/test-avatar-renderability.js \
+ && node --check tools/test-avatar-renderability.js \
+ && node tools/test-avatar-renderability.js \
  && node --check tools/verify-game-syntax.js \
  && node tools/verify-game-syntax.js \
  && node --check tools/test-endless-buffers.js \
@@ -66,6 +72,7 @@ RUN test -s tools/games-lib-static-check.js \
  && mkdir -p /app/build/audit \
  && cp docs/audit/prelaunch-structural-audit.json /app/build/audit/prelaunch-structural-audit.json \
  && cp docs/audit/game-source-mechanics.json /app/build/audit/game-source-mechanics.json \
+ && cp docs/audit/avatar-renderability.json /app/build/audit/avatar-renderability.json \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
 
 # Run the actual server in an isolated, disposable build-time database and verify its HTTP routes.
