@@ -88,7 +88,8 @@ function svg(c) {
   if (c.outfit === 'fur') o.push('<path d="M22 118 C26 96 40 88 50 88 L56 120Z M98 118 C94 96 80 88 70 88 L64 120Z" fill="#fde68a" opacity=".85"/>');
   if (c.outfit === 'chain-tee') o.push('<path d="M44 88 Q60 108 76 88" fill="none" stroke="url(#au)" stroke-width="3.5" stroke-dasharray="4 2"/><circle cx="60" cy="102" r="5" fill="url(#au)"/>');
   o.push(`<rect x="52" y="72" width="16" height="16" rx="6" fill="${s}"/>`);
-  const face = c.face === 'square' ? `<rect x="34" y="28" width="52" height="54" rx="16" fill="${s}"/>` : c.face === 'oval' ? `<ellipse cx="60" cy="54" rx="25" ry="29" fill="${s}"/>` : `<circle cx="60" cy="55" r="27" fill="${s}"/>`;
+  const faceW = c.gender === 'female' ? 24 : c.gender === 'male' ? 27 : 25;
+  const face = c.face === 'square' ? `<rect x="${60-faceW}" y="28" width="${faceW*2}" height="54" rx="16" fill="${s}"/>` : c.face === 'oval' ? `<ellipse cx="60" cy="54" rx="${faceW}" ry="29" fill="${s}"/>` : `<ellipse cx="60" cy="55" rx="${faceW+1}" ry="27" fill="${s}"/>`;
   if (c.hair === 'long' || c.hair === 'braids') o.push(`<path d="M32 50 C30 30 44 22 60 22 C76 22 90 30 88 50 L92 92 L76 90 L74 60 L46 60 L44 90 L28 92Z" fill="${hc}"/>`);
   if (c.hair === 'afro') o.push(`<circle cx="60" cy="42" r="34" fill="${hc}"/>`);
   if (c.hair === 'bun') o.push(`<circle cx="60" cy="20" r="10" fill="${hc}"/>`);

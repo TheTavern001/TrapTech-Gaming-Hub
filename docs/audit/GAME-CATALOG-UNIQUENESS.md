@@ -5,7 +5,7 @@
 
 ## Active inventory
 
-The active catalog after this consolidation is **16 core games + 80 Games Library games = 96 listed games**. The 20 retired titles are removed from the registry, static fallback catalog, and public game-file tree, so they cannot reappear as active cards or be launched as direct public game pages.
+The source registry includes 16 historical core IDs, but three chance-based games are retired. The active baseline is **13 core games + 80 Games Library games = 93 playable titles**, pending hands-on release review. The 20 retired titles are removed from the registry, static fallback catalog, and public game-file tree, so they cannot reappear as active cards or be launched as direct public game pages.
 
 ## Canonical choices
 
@@ -38,6 +38,16 @@ The active catalog after this consolidation is **16 core games + 80 Games Librar
 
 ## Expansion math
 
-The target is **500 total active games**, including the 16 core games. From the consolidated baseline of 96, that means **404 additional distinct games**. The first 20 additions should replace the catalog capacity removed here; the remaining 384 grow the catalog beyond its former size. A candidate is not counted toward the target until its gameplay loop is distinct, the controls and scoring work, its assets load locally, its source/licence is recorded, and its score path passes the shared verification gates.
+The target is **500 total active games**, including the 13 active core games. From the consolidated baseline of 93, that means **407 additional distinct games**. The first additions should be tested as carefully as the originals, not filler or same-loop reskins. A candidate is not counted toward the target until its gameplay loop is distinct, the controls and scoring work, its assets load locally, its source/licence is recorded, and its score path passes the shared verification gates.
 
 This is a catalog uniqueness and structural-source pass. It does not claim the 80 retained games have completed hands-on desktop/Android gameplay, visual-quality, sustained-frame-time, or licensing review.
+
+## Second-pass source evidence (current catalog)
+
+The active Games Library has 77 original `game.js` files with distinct Git blob hashes and 3 independently vendored games. No pair of original game entry JavaScript files is byte-identical. This is **not** proof of unique mechanics: short `game.js` entrypoints often configure larger shared engines. The following uses are expected and must be assessed by actual mechanics:
+
+- `cab-rush` and `derby-smash`: shared `topcar.js`, different taxi versus arena-demolition objectives.
+- `egg-roll`, `monster-crush` and `dune-glide`: shared `hillcar.js` physics, different balancing, destruction and sandboarding objectives.
+- `rail-rush` and `throttle-rider`: distinct 3D lane-runner versus first-person motorcycle highway engines.
+
+Do not remove a title solely because it shares rendering/physics code. Remove or consolidate only when scoring, controls, progression and player decision loops are materially identical based on actual playtests. The separate QA tracker remains BLOCKED pending those tests.

@@ -56,7 +56,7 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
         else { const x = box.x + box.w * (0.15 + Math.random() * 0.7), y = box.y + box.h * (0.3 + Math.random() * 0.6); await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + (Math.random() - 0.5) * 80, y + (Math.random() - 0.5) * 80, { steps: 3 }); await page.waitForTimeout(40 + Math.random() * 200); await page.mouse.up(); }
         if (!shot && Date.now() > end - PLAY_MS + 900) { shot = true; const st2 = await page.evaluate(() => window.__GL.state); if (st2 === 'play') if (WRITE_THUMB(g.slug)) await page.locator('#gl, canvas').first().screenshot({ path: path.join(PUB, g.slug, 'thumb.jpg'), type: 'jpeg', quality: 72 }); }
       }
-      R.desktop.performance = await page.evaluate(() => { const gl = window.__GL; return { fps: Number.isFinite(gl.fps) ? gl.fps : null, jsMs: Number.isFinite(gl.jsMs) ? gl.jsMs : null, stateAtSample: gl.state, measuredAfterMs: Math.round(performance.now()) }; });
+      R.desktop.performance = await page.evaluate(() => { const gl = window.__GL; return { fps: Number.isFinite(gl.fps) ? gl.fps : null, jsMs: Number.isFinite(gl.jsMs) ? gl.jsMs : null, frameMsP95: Number.isFinite(gl.frameMsP95) ? gl.frameMsP95 : null, renderDpr: Number.isFinite(gl.renderDpr) ? gl.renderDpr : null, stateAtSample: gl.state, measuredAfterMs: Math.round(performance.now()) }; });
       R.desktop.fps = R.desktop.performance.fps;
       if (R.desktop.fps === null) R.errors.push('desktop: FPS metric unavailable; no finite frame-rate sample');
       // no fallback thumbnail: a frame taken after the run ended would be a game-over screen (use tools/games-lib-thumb.js)
@@ -77,12 +77,18 @@ const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'Arro
       const vp = mp.viewportSize(); await mp.touchscreen.tap(vp.width / 2, vp.height / 2); await mp.waitForTimeout(900);
       R.mobile.started = await mp.evaluate(() => window.__GL && window.__GL.state);
       const mend = Date.now() + 3000; while (Date.now() < mend) { await mp.touchscreen.tap(vp.width * (0.2 + Math.random() * 0.7), vp.height * (0.35 + Math.random() * 0.55)); await mp.waitForTimeout(80 + Math.random() * 150); }
-      R.mobile.fps = await mp.evaluate(() => window.__GL.fps); R.mobile.inputs = await mp.evaluate(() => window.__GL.g.inputs); R.gpu = await mp.evaluate(() => window.__R ? { calls: __R.info.render.calls, tris: __R.info.render.triangles, dpr: __R.getPixelRatio() } : null);
+      R.mobile.performance = await mp.evaluate(() => ({ fps: __GL.fps, frameMsP95: __GL.frameMsP95 ?? null, renderDpr: __GL.renderDpr ?? null, jsMs: __GL.jsMs ?? null })); R.mobile.fps = R.mobile.performance.fps; R.mobile.inputs = await mp.evaluate(() => window.__GL.g.inputs); R.gpu = await mp.evaluate(() => window.__R ? { calls: __R.info.render.calls, tris: __R.info.render.triangles, dpr: __R.getPixelRatio() } : null);
       await mp.screenshot({ path: path.join(SHOTS, g.slug + '-iphone.png') });
       await mctx.close();
     } catch (e) { R.errors.push('harness: ' + e.message.split('\n')[0]); }
     const ok = !R.errors.length && ['play', 'over'].includes(R.desktop.started) && R.desktop.submit === 'accepted' && R.desktop.forged === 'rejected' && ['play', 'over'].includes(R.mobile.started) && (R.gpu ? (R.gpu.calls < 150 && R.gpu.tris < 150000 && R.gpu.dpr <= 2) : R.desktop.fps >= 20) && R.mobile.inputs > 3;
-    R.pass = ok; ok ? pass++ : fail++; R.ms = Date.now() - t0; results.push(R);
+    R.pass = ok;
+    R.performanceReview = { headlessOnly: true, mobileDevicePass: false,
+      note: 'Headless Chrome/WebGL FPS is not physical-phone evidence. Confirm p95 frame time <=16.7ms for 60 FPS-capable devices before release.',
+      desktopP95Ms: R.desktop.performance?.frameMsP95 ?? null,
+      mobileP95Ms: R.mobile.performance?.frameMsP95 ?? null
+    };
+    ok ? pass++ : fail++; R.ms = Date.now() - t0; results.push(R);
     console.log(`${ok ? 'PASS' : 'FAIL'} ${g.slug.padEnd(18)} start=${R.desktop.started}/${R.mobile.started} ${R.gpu ? `fps=needs-GPU(headless ${R.desktop.fps}) budget calls=${R.gpu.calls} tris=${R.gpu.tris} dpr=${R.gpu.dpr}` : `fps=${R.desktop.fps}/${R.mobile.fps}`} score=${R.desktop.score} submit=${R.desktop.submit} forged=${R.desktop.forged} ${R.errors.length ? 'ERR ' + R.errors.slice(0, 2).join(' | ') : ''}`);
   }
   await browser.close();

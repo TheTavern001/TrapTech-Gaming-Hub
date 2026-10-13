@@ -193,6 +193,9 @@ export class Game {
     this.onEnd = opts.onEnd || (() => {}); this.onState = opts.onState || (() => {});
     this.best = opts.best || 0; this.sfx = new Synth(); this.tel = new Telemetry(); this.seed = opts.seed || ''; this.r = seeded(this.seed); this.log = [];
     this.state = 'ready'; this.t = 0; this.parts = []; this.pops = []; this.running = false; this._activePointers = new Set(); this._activeKeys = new Set();
+    // One adaptive 2D renderer shared by every original core game. Never scale game logic or inputs.
+    this.renderDpr = Math.min(window.devicePixelRatio || 1, 2); this.frameMsP95 = 0; this.fps = 60;
+    this._frameSamples = []; this._fpsTime = 0; this._fpsCount = 0; this._slowFrames = 0; this._qualityDrops = 0;
     this._bind(); this.resize(); this.reset(); this.layout(); this._inited = true;
     this.ready = Promise.resolve(this.load ? this.load() : null).then(() => (this.amb && this.amb.ready)).then(() => this.draw());
   }
@@ -250,19 +253,48 @@ export class Game {
     document.removeEventListener('visibilitychange', this._h.vis); window.removeEventListener('resize', this._h.rs);
     try { this.sfx.ac && !this.sfx.shared && this.sfx.ac.close(); } catch {}
   }
-  resize() {
-    const r = this.c.getBoundingClientRect(); const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  resize(qualityOnly = false) {
+    const r = this.c.getBoundingClientRect(), dpr = this.renderDpr;
     this.c.width = Math.max(1, Math.round(r.width * dpr)); this.c.height = Math.max(1, Math.round(r.height * dpr));
     const cw = this.c.width, ch = this.c.height; const B = 540;
-    if (cw >= ch) { this.H = B; this.W = clamp(B * cw / ch, 720, 1200); } else { this.W = B; this.H = clamp(B * ch / cw, 700, 1200); }
-    this.portrait = ch > cw;
+    if (!qualityOnly) {
+      if (cw >= ch) { this.H = B; this.W = clamp(B * cw / ch, 720, 1200); } else { this.W = B; this.H = clamp(B * ch / cw, 700, 1200); }
+      this.portrait = ch > cw;
+    }
     this.scale = Math.min(cw / this.W, ch / this.H); this.ox = (cw - this.W * this.scale) / 2; this.oy = (ch - this.H * this.scale) / 2;
-    this.layout();
-    if (this._inited && this.state !== 'play') this.draw();
+    // A DPR adjustment must NOT call layout(): many games use it to position live actors.
+    if (!qualityOnly) this.layout();
+    if (this._inited && this.state !== 'play' && !qualityOnly) this.draw();
+  }
+  _trackFrame(elapsedMs) {
+    if (elapsedMs <= 0 || elapsedMs > 1000) { this._slowFrames = 0; return; }
+    const samples = this._frameSamples; samples.push(elapsedMs); if (samples.length > 120) samples.shift();
+    this._fpsTime += elapsedMs; this._fpsCount++;
+    if (this._fpsTime >= 1000) {
+      this.fps = Math.round(this._fpsCount * 1000 / this._fpsTime);
+      const sorted = [...samples].sort((a,b)=>a-b);
+      this.frameMsP95 = Math.round(sorted[Math.min(sorted.length-1,Math.floor(sorted.length*0.95))]*10)/10;
+      this._fpsCount = 0; this._fpsTime = 0;
+    }
+    if (this.state !== 'play') { this._slowFrames = 0; return; }
+    this._slowFrames = elapsedMs > 25 ? this._slowFrames + 1 : 0;
+    if (this._slowFrames >= 45 && this.renderDpr > 1) {
+      this.renderDpr = Math.max(1, Math.round((this.renderDpr - 0.25)*100)/100);
+      this._qualityDrops++; this._slowFrames = 0; this.resize(true);
+    }
+  }
+  performanceMetrics() {
+    return { fps: this.fps, frameMsP95: this.frameMsP95, renderDpr: this.renderDpr, qualityDrops: this._qualityDrops };
   }
   start() {
     if (this.running) return; this.running = true; this.last = performance.now();
-    const loop = (now) => { if (!this.running) return; this.raf = requestAnimationFrame(loop); const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now; this.frame(dt); };
+    const loop = (now) => {
+      if (!this.running) return;
+      this.raf = requestAnimationFrame(loop);
+      const elapsedMs = Math.max(0,now-this.last); this.last = now;
+      if (document.hidden) return;
+      this._trackFrame(elapsedMs); this.frame(Math.min(0.05,elapsedMs/1000));
+    };
     this.raf = requestAnimationFrame(loop);
   }
   frame(dt) {

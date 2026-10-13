@@ -4,10 +4,19 @@
 // Each virtual user sends its own CF-Connecting-IP so the per-IP rate limits behave like real traffic.
 'use strict';
 const BASE = process.env.BASE || 'http://127.0.0.1:8801';
-const USERS = +process.env.USERS || 50;
-const DURATION = (+process.env.DURATION || 60) * 1000;
+// This tool creates actual accounts and writes scores. Never point at a production URL.
+// 10k+ population testing must use an isolated disposable local database, NOT Deplexo live storage.
+const url = new URL(BASE);
+if (url.protocol !== 'http:' || !['127.0.0.1','localhost','[::1]'].includes(url.hostname)) {
+  throw new Error('Refusing load test against a non-local URL. Run on an isolated disposable localhost database.');
+}
+const USERS = Number(process.env.USERS || 50);
+if (!Number.isSafeInteger(USERS) || USERS < 1 || USERS > 10000) throw new Error('USERS must be an integer between 1 and 10000.');
+if (USERS > 250 && process.env.ISOLATED_TEST_DB !== '1') throw new Error('Set ISOLATED_TEST_DB=1 only after verifying a disposable test database; production data must remain untouched.');
+const DURATION = Number(process.env.DURATION || 60) * 1000;
+if (!Number.isFinite(DURATION) || DURATION < 1000 || DURATION > 3600000) throw new Error('DURATION must be 1 to 3600 seconds.');
 const OG = process.env.OG !== '0'; // OG=0 skips share-image requests (to isolate API memory)
-const GAMES = ['jetpack-dash', 'drift-rush', 'plinko', 'memory-match', 'high-score', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
+const GAMES = ['jetpack-dash', 'drift-rush', 'memory-match', 'high-score', 'terp-tapper', 'stack', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'void-swarm'];
 const stats = { req: 0, err: 0, s429: 0, s5xx: 0, lat: [], byKind: {} };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 async function call(ip, jar, p, body, kind) {
