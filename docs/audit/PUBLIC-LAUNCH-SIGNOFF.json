@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "publicLaunchApproved": false,
+  "required": {
+    "deplexoReadyAtExactMainSha": {
+      "pass": false,
+      "evidence": ""
+    },
+    "full500QualityCertifications": {
+      "pass": false,
+      "evidence": ""
+    },
+    "avatarProfileMobileAndDesktop": {
+      "pass": false,
+      "evidence": ""
+    },
+    "storeTestCheckoutSignedWebhookRefund": {
+      "pass": false,
+      "evidence": ""
+    },
+    "liveMerchantAndTermsCompliance": {
+      "pass": false,
+      "evidence": ""
+    },
+    "persistentBackupsAndRestore": {
+      "pass": false,
+      "evidence": ""
+    },
+    "gameplayAuthAntiCheatGiveaway": {
+      "pass": false,
+      "evidence": ""
+    },
+    "sustained10kPopulationStagingLoad": {
+      "pass": false,
+      "evidence": ""
+    },
+    "ownerFinalVisualAcceptance": {
+      "pass": false,
+      "evidence": ""
+    }
+  },
+  "note": "No automatic status inference. No human signoff can be replaced by screenshotless source audit. An explicit owner-approved public release follows all checks, not a mere Deplexo READY."
+}

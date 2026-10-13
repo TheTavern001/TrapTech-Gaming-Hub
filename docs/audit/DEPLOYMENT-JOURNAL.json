@@ -140,6 +140,25 @@
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
       "verifiedAfterFix": false
+    },
+    {
+      "commit": "55ebf1cce17139c0c177a91d5f2146311c0b020f",
+      "status": "READY",
+      "evidence": "owner Deplexo screenshot at 2026-10-13 ~10:29 EDT: audit-branch revision READY after 415s; actual served /api/build SHA unavailable",
+      "firstError": null,
+      "rootCause": null,
+      "fixCommit": null,
+      "verifiedAfterFix": false,
+      "qualification": "Host READY only: no gameplay, payments, 500/10k QA."
+    },
+    {
+      "commit": "d5de30038259e8125b260868e4cdbfacb23e3dae",
+      "status": "FAILED",
+      "evidence": "owner Deplexo screenshot at 2026-10-13 ~10:29 EDT: draft branch revision ERROR after 104s",
+      "firstError": "UNKNOWN — build log not supplied",
+      "rootCause": "UNKNOWN — cannot attribute failure to new endurance test without first failing Docker line",
+      "fixCommit": null,
+      "verifiedAfterFix": false
     }
   ],
   "sourceVerification": [
@@ -159,13 +178,12 @@
     }
   ],
   "pendingEvidence": [
-    "Confirm the first Deplexo failing Docker command and error for 58a9f52 and latest branch candidate; source-level probable blockers are already reproduced",
-    "Check Deplexo dashboard auto-deploy policy: branch pushes were observed to trigger builds. Deliberately coordinate further pushes.",
-    "Observe final Deplexo build outcome of the new targeted verifier patch commit; until then treat as SOURCE-ONLY",
-    "Confirm /healthz, /api/build, /api/audit/report with deployed fingerprint; endpoints not reachable from current assistant environment",
-    "Real physical Android + desktop visual, frame-rate, score/security and licensing QA for 93 registered baseline games",
-    "Avatar rig/cosmetic shop/economy purchase/persistence and backup/restore full integration tests",
-    "Isolated staging population 10000+ with representative concurrency before public launch"
+    "Get Deplexo build log for failed d5de300: exact first failing Docker command, stack, and exit code; compare to READY 55ebf1c.",
+    "Reconcile live /api/build build_fingerprint with currently served revision; site /healthz and /api/build inaccessible via external check.",
+    "Verify draft branch b5c9783 starter-avatar source changes on actual physical Android, full 3D blank rig, face shape and emote animation quality. No AAA approval.",
+    "Test Stripe sandbox webhook signature, test-mode checkout success/failure/refund, persistent entitlement grant/reversal; connected sandbox currently has no webhooks or Checkout Sessions.",
+    "Payment go-live requires valid external business/compliance terms, reviewed checkout credentials, admin enablement, and PAYMENTS_LIVE_APPROVED=1 if Stripe live key used.",
+    "Complete 93 existing-game AAA human/physical-device audit, curated licensed source additions, 500 quality approvals and isolated 10k-user load test."
   ],
   "releaseStages": [
     {
@@ -227,7 +245,13 @@
       "reason": "Isolated draft-PR revision: mobile header changes from controller logo to self-hosted Trap Tech badge; corrects owner screenshot failure chronology; adds quality vs registered separate QA gate.",
       "validation": "On fetched branch, V8 source execution with stubbed Node dependencies: 93 registered/0 quality-approved, 93 baseline pending, expansion closed; deliberately invalid approval rejected with nonzero exit. JSON parsed. Full Node, browser, Deplexo tests NOT RUN.",
       "host": "not deployed (draft PR branch)"
+    },
+    {
+      "commit": "b5c9783fd198b6ac67799a6849b87605a5bd1c7d",
+      "reason": "starter-avatar v2 policy and saved-item grandfathering",
+      "validation": "Source syntax and stubbed in-memory test: zero free gear, 7 free hair, 5 locked faces, 5 locked emotes and migration; NOT real DB/Android/host",
+      "host": "UNKNOWN; source branch auto-deploy possible"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13T06:44:00Z (owner screenshot)"
+  "lastEvidenceReconciliation": "2026-10-13 ~10:29 EDT, user screenshots + Stripe sandbox read-only check"
 }

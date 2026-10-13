@@ -14,7 +14,8 @@
     "test:mobile": "node tools/e2e-mobile.js",
     "verify:live": "node tools/verify-live-deployment.js",
     "test:rotating-quests": "node tools/test-rotating-quests.js",
-    "audit:quality": "node tools/quality-readiness.js"
+    "audit:quality": "node tools/quality-readiness.js",
+    "audit:public-launch": "node tools/public-release-gate.js"
   },
   "keywords": [],
   "author": "",

@@ -93,15 +93,22 @@ const ADDR = () => String(process.env.BTC_ADDRESS || '').trim();
 const prestigeSalesEnabled = () => process.env.PRESTIGE_SALES_ENABLED === '1' && process.env.PRESTIGE_COMPATIBILITY_APPROVED === '1';
 function checkoutState() {
   const a = ADDR(); const v = a ? BTC.validateAddress(a) : { ok: false, why: 'BTC_ADDRESS is not set' };
-  const on = !!setting('checkout_enabled', true);
+  // Credentials alone must not turn on live checkout. Existing explicit admin
+  // switches are preserved; new installs start with purchases disabled.
+  const on = !!setting('checkout_enabled', false);
   const btc = { configured: !!a && v.ok, address: v.ok ? a : null, type: v.ok ? v.type : null, why: v.ok ? null : v.why };
   const publicUrl = String(process.env.PUBLIC_URL || '').trim();
   const stripe = { configured: /^sk_(?:test|live)_/.test(String(process.env.STRIPE_SECRET_KEY || '')) && /^whsec_/.test(String(process.env.STRIPE_WEBHOOK_SECRET || '')) && /^https:\/\//i.test(publicUrl),
     mode: 'hosted Stripe Checkout for credit/debit cards' };
+  // Stripe test-mode is always eligible for admin-authorized testing.
+  // Production live card charging also requires a separate operator flag.
+  const stripeLive = String(process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live_');
+  const liveApproval = process.env.PAYMENTS_LIVE_APPROVED === '1';
+  if (stripeLive && !liveApproval) stripe.configured = false;
   const enabled = on && (btc.configured || stripe.configured);
   return { enabled, admin_switch: on, methods: enabled ? [...(btc.configured ? ['bitcoin'] : []), ...(stripe.configured ? ['stripe'] : [])] : [],
     providers: { bitcoin: btc, stripe, whop: { configured: false, mode: 'not integrated' } },
-    reason: !on ? 'Checkout is switched off by the admin.' : !btc.configured && !stripe.configured ? 'Configure a valid BTC_ADDRESS or Stripe keys plus an HTTPS PUBLIC_URL to enable checkout.' : null };
+    reason: !on ? 'Checkout is switched off by the admin.' : stripeLive && !liveApproval && !btc.configured ? 'Live Stripe checkout requires operator payment approval.' : !btc.configured && !stripe.configured ? 'Configure a valid BTC_ADDRESS or Stripe keys plus an HTTPS PUBLIC_URL to enable checkout.' : null };
 }
 const ORDER_TTL_MS = 45 * 60e3, LATE_MS = 24 * 3600e3;
 const needConfs = (p, usd) => p.kind === 'prestige' ? Math.max(6, (p.data && p.data.confs) || 6) : usd >= 20000 ? 3 : 1;
