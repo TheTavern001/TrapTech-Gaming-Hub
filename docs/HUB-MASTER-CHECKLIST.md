@@ -223,3 +223,11 @@ Add each subsequent deployment here, including successful deployments. Do not ov
 
 ## October 13 source build recovery checkpoint
 The same-commit `58a9f52` mobile suite/verifier disagreement is confirmed in the GitHub files; `b7be1ec` then adds an unconditional build-time import of secret-dependent `src/config.js`. The next candidate corrects the latter with source-only parsing while preserving audit checks. The owner documented failed Deplexo runs for `570a9fe` 113s, `eaaca78` 309s, `12446a1` 156s and `3623d72` 317s. Working-branch ref updates were visibly auto-built: do NOT assume a draft PR is a deployment-free sandbox. Use issue #11 for the full timeline and first-log request. Real build/host/gameplay/owner verification remains outstanding.
+
+### 2026-10-13 — Hex Stack vendor-engine pause fix (source only)
+
+- [x] SOURCE: isolate native Hextris 400ms pause-debounce regression, title-screen capture-through-settings, keyboard rotation/speed while paused, and pending-resume reopen race; stage fixes on isolated `fix/hex-stack-settings-pause-20261013` branch.
+- [x] SOURCE: add in-memory interaction regression to existing `tools/test-player-game-settings.js` Docker gate; direct V8 simulation against fetched edited source reported seven passing checks.
+- [ ] NEEDS TEST: execute complete Node/Docker build and browser/physical Android pause/reopen/resume and score validation; confirm deployed SHA before changing live state.
+- [ ] OWNER REVIEW: check graphic/performance quality; Hex Stack and all other titles remain unapproved.
+- Detailed evidence: [Hex Stack QA report](audit/HEX-STACK-SETTINGS-REGRESSION-2026-10-13.md). This change is neither a deployment nor additional game intake.
