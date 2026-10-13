@@ -16,13 +16,32 @@ for (const id of baseline.activeCoreIds) map.set('core:' + id, {type:'core', bas
 const old = new Set(baseline.baselineLibrarySlugs);
 for (const g of games) map.set('library:' + g.slug, {type:'library', baseline:old.has(g.slug)});
 const errors = [], passed = [], pending = [];
+// Do not silently keep a retired/replaced baseline game in the quality denominator.
+const configSource = fs.readFileSync(path.join(ROOT, 'src/config.js'), 'utf8');
+const coreIds = [...configSource.matchAll(/\\{\\s*id:\\s*'([^']+)',\\s*title:\\s*'([^']+)'[\\s\\S]*?module:\\s*'([^']+)'/g)]
+  .map(m=>m[1]).filter(id=>!['plinko','spin-to-win','blazed-roulette'].includes(id));
+if (coreIds.length !== baseline.activeCoreIds.length ||
+    coreIds.some(id=>!baseline.activeCoreIds.includes(id)))
+  errors.push('Core registry drift: update/approve retired and new baseline IDs before quality certification');
+if (new Set(games.map(g=>g.slug)).size !== games.length)
+  errors.push('Duplicate active Games Library slugs');
+if (old.size !== baseline.baselineLibrarySlugs.length || old.size !== 80)
+  errors.push('Frozen Games Library baseline is corrupt');
+for (const slug of old) if (!games.some(g=>g.slug===slug))
+  errors.push('Baseline title removed without approved replacement: ' + slug);
 const seen = new Set();
 const intakeMap = new Map(admissions.gameRecords.map(x=>[x.slug,x]));
 if (!Array.isArray(quality.records) || !Array.isArray(required) || !required.length) {
   console.error('Invalid quality admission ledger'); process.exit(1);
 }
-const approvedCheck = check => check && check.passed === true &&
-  typeof check.evidence === 'string' && check.evidence.trim().length >= 8;
+const approvedCheck = check => {
+  if (!check || check.passed !== true || typeof check.evidence !== 'string') return false;
+  const ref = check.evidence.trim();
+  // Documented evidence must be an existing repository audit artifact or an HTTPS review URL.
+  if (/^https:\/\/[^\\s/]+\\/\\S+$/i.test(ref)) return true;
+  if (!/^docs\/audit\/[a-z0-9_./-]+$/i.test(ref) || ref.includes('..')) return false;
+  return fs.existsSync(path.join(ROOT, ref));
+};
 for (const record of quality.records) {
   if (!record || typeof record.id !== 'string' || !map.has(record.id)) {
     errors.push('Quality approval for unknown game ' + String(record && record.id)); continue;
@@ -35,12 +54,19 @@ for (const record of quality.records) {
     record.metrics.androidP95FrameMs > 0 && record.metrics.androidP95FrameMs <= 16.7 &&
     Number.isFinite(record.metrics.minimumVerifiedRenderHeightPx) &&
     record.metrics.minimumVerifiedRenderHeightPx >= 720;
+  const reviewTime = Date.parse(record.reviewedAtUTC);
   const owner = typeof record.reviewer === 'string' && record.reviewer.trim().length >= 2 &&
-    typeof record.reviewedAtUTC === 'string' && !Number.isNaN(Date.parse(record.reviewedAtUTC));
-  const intake = entry.baseline || (record.id.startsWith('library:') &&
-    intakeMap.get(record.id.slice(8))?.status === 'APPROVED' &&
-    intakeMap.get(record.id.slice(8))?.assetRightsReviewed === true &&
-    intakeMap.get(record.id.slice(8))?.mobileQa?.androidPhysical === true);
+    typeof record.reviewedAtUTC === 'string' && !Number.isNaN(reviewTime) &&
+    reviewTime > 0 && reviewTime <= Date.now();
+  const rec = record.id.startsWith('library:') ? intakeMap.get(record.id.slice(8)) : null;
+  const intake = entry.baseline || (rec?.status === 'APPROVED' &&
+    typeof rec.sourceUrl === 'string' && /^https:\/\//.test(rec.sourceUrl) &&
+    rec.assetRightsReviewed === true &&
+    rec.mechanicsDiffersFromExisting === true &&
+    typeof rec.mechanicsReviewNotes === 'string' && rec.mechanicsReviewNotes.length > 12 &&
+    rec.scoreValidation?.legitimateAccepted === true &&
+    rec.scoreValidation?.forgedRejected === true &&
+    rec.mobileQa?.androidPhysical === true && rec.mobileQa?.desktop === true);
   const ok = record.status === 'APPROVED' && checks && android && owner && intake;
   if (record.status === 'APPROVED' && !ok)
     errors.push('Approval without complete evidence or performance/intake gates: ' + record.id);

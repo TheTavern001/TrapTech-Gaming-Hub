@@ -62,3 +62,7 @@ The earlier last-known READY entry `8489b41` remains valid, but a **newer READY 
 **Resumption after interruption:** obtain the error excerpt for `71a07b4`; reproduce that exact failed check without paid GitHub Actions; fix the root cause on the working branch, run checks, then merge once for a controlled Deplexo deployment. Until then, the source and the last known READY deployment are different revisions. If the screenshot is updated, append rather than rewriting past events.
 
 **User's quality-count rule:** registered titles are **not** equivalent to AAA-approved titles. Audit all 93 current titles before expansion; `node tools/quality-readiness.js` reads the separate evidence-backed per-game acceptance file. Empty approvals mean **0 independently quality-approved** (not zero games registered). Only approved games advance the 500-game launch-quality target.
+
+
+## Isolated QA implementation checkpoint — `eaaca78` (not deployed)
+Branch: `audit/phase1-brand-qa-ledger-20261013`; draft PR #10. Its browser header changes and per-game acceptance reporter are source-only pending actual Android/desktop QA. Read-only reporter was exercised in a dependency-stubbed JS harness: correct 93 registered/0 approved; fake incomplete approval was rejected. This **is not** a passing Deplexo build or visual signoff. The pending exact build log for `71a07b4` remains the deployment blocker. Additional edits on this branch should append their own SHA when known.

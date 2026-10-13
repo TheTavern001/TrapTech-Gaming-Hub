@@ -170,6 +170,12 @@
       "reason": "README links master operational ledger; source-level journal reconciliation",
       "validation": "GitHub commit metadata retrieved 2026-10-13; no app test claimed",
       "host": "no Deplexo outcome observed"
+    },
+    {
+      "commit": "eaaca780ef334396ea9277581e977c84b9a021c3",
+      "reason": "Isolated draft-PR revision: mobile header changes from controller logo to self-hosted Trap Tech badge; corrects owner screenshot failure chronology; adds quality vs registered separate QA gate.",
+      "validation": "On fetched branch, V8 source execution with stubbed Node dependencies: 93 registered/0 quality-approved, 93 baseline pending, expansion closed; deliberately invalid approval rejected with nonzero exit. JSON parsed. Full Node, browser, Deplexo tests NOT RUN.",
+      "host": "not deployed (draft PR branch)"
     }
   ],
   "lastEvidenceReconciliation": "2026-10-13T06:44:00Z (owner screenshot)"
