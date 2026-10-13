@@ -8,18 +8,14 @@ const lockText = (p) => p.owned ? '' : p.unlock.prestige ? 'One-of-one Prestige:
 // head 150 times. Reuse licensed first-party game artwork for suitable props, then
 // show a clearly labeled slot icon/material; the live 3D stage remains the actual preview.
 const ITEM_ART = {
+  // Only exact object matches from the Hub's existing approved game art library.
   'held:controller': '/assets/v5/mm-controller.webp',
-  'held:headphones': '/assets/v5/mm-headphones.webp',
-  'held:cash': '/assets/v5/mm-chips.webp',
-  'held:microphone': '/assets/v5/mm-boombox.webp',
-  'held:laptop': '/assets/v5/mm-controller.webp',
-  'held:camera': '/assets/v5/mm-target.webp',
-  'acc:glasses': '/assets/v5/mm-headphones.webp'
+  'held:headphones': '/assets/v5/mm-headphones.webp'
 };
 const SLOT_ICONS = { bg:'image',skin:'palette',face:'user',hair:'sparkles',hairc:'palette',
-  eyes:'eye',mouth:'smile',beard:'user',build:'users',outfit:'shirt',hat:'crown',acc:'gem',held:'package' };
+  eyes:'eye',mouth:'user',beard:'user',build:'users',outfit:'user',hat:'crown',acc:'gem',held:'package' };
 const PROP_ICONS = { none:'circle-slash',controller:'gamepad-2',cane:'wand-sparkles',cash:'banknote',
- microphone:'music',wrench:'wrench',sprout:'leaf',stethoscope:'heart-pulse',pitchfork:'leaf',
+ microphone:'music',wrench:'cog',sprout:'leaf',stethoscope:'heart-pulse',pitchfork:'leaf',
  syringe:'heart-pulse',headphones:'music',toolbox:'briefcase',laptop:'monitor-smartphone',
  briefcase:'briefcase',camera:'image',paintbrush:'paintbrush','spray-can':'paintbrush',
  'cash-bag':'wallet',flower:'leaf' };
