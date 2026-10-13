@@ -83,6 +83,23 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     { status: reviewPage.res.status, bytes: reviewPage.body.length });
 
   // Private source-model visual lab: the page, module and an actual GLB must serve.
+  // Both registered game engines must load the same settings module and CSS.
+  // These are HTTP asset checks, not an AAA/mobile quality certification.
+  const prefModule = await get(BASE + '/js/player-prefs.js');
+  check('Shared game settings ESM serves valid source',prefModule.res.status===200 &&
+    prefModule.text.includes('export function openGameSettings') &&
+    prefModule.text.includes('saveGlobal'));
+  const prefCSS = await get(BASE + '/css/player-prefs.css');
+  check('Responsive game settings CSS loads',prefCSS.res.status===200 &&
+    prefCSS.text.includes('.ttgs-modal') && prefCSS.text.includes('max-width:360px'));
+  const hubApp = await get(BASE + '/js/app.js');
+  check('Hub Settings and 13 core games import shared preferences',hubApp.res.status===200 &&
+    hubApp.text.includes("import * as GP from './player-prefs.js'") &&
+    hubApp.text.includes('GP.openGameSettings('));
+  const libKit = await get(BASE + '/games-lib/kit.js');
+  check('Library Kit game settings pause integration is served',libKit.res.status===200 &&
+    libKit.text.includes("import('/js/player-prefs.js')") &&
+    libKit.text.includes('wasPaused=g.paused;g.paused=true'));
   const lab = await get(BASE + '/games-lib/labs/garage/index.html');
   check('Vehicle 3D QA page HTTP 200',lab.res.status===200&&lab.text.includes('PRIVATE QA'));
   const cfgLab = await get(BASE + '/games-lib/labs/garage/vehicles.json');
