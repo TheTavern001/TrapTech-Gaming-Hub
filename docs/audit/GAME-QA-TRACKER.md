@@ -1,140 +1,118 @@
 # Gaming Hub — Per-Game QA Tracker
 
-**Release status: all entries BLOCKED pending actual gameplay and visual evidence.** Repository structure and code presence are not proof of a playable, AAA-quality game. Update a row only after recording the test run, fixes and commit.
+**Release state: NOT AAA-APPROVED.** The active catalog is structurally audited, but real desktop and Android playthrough, controls, frame-time, gameplay scoring and rights review have not been completed.
 
-Required evidence for every title: launch/start/restart/end, controls, scoring integrity, pause/resume and return-to-Hub, desktop mouse/keyboard, Android touch, 360px viewport, console/network errors, performance, visual review, asset/license review, and reviewer/date.
+**Current baseline:** 80 Games Library titles + 13 active core Hub titles. Three retired chance games are excluded from active totals. **Expansion goal:** ~500 distinct, reviewed games.
 
-## Core games
+## Active core Hub games
 
-| ID | Title | Module | Visual review | Gameplay/control QA | Score/security QA | Desktop + mobile evidence | Status |
+| ID | Title | Achievement definitions | Visual/gameplay | Score/security | Android + desktop evidence | Status |
+|---|---|---|---|---|---|---|
+| `jetpack-dash` | Jetpack Dash | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `drift-rush` | Drift Rush | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `memory-match` | Memory Match | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `high-score` | High Score | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `terp-tapper` | Terp Tapper | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `munchies-snake` | Neon Munchies | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `brick-breaker` | Brick Breaker | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `sky-hopper` | Sky Hopper | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `void-swarm` | Void Swarm | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `stack` | Stack | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `grow-guard` | Grow Guard | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `sling-smash` | Sling Smash | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| `haze-defense` | Haze Defense | 5 configured (requires live validation) | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+
+## Games Library — batches of ten
+
+| Batch | Game | Category | Visual/gameplay | Score/tie-break | Android + desktop | Asset rights | Status |
 |---|---|---|---|---|---|---|---|
-| `jetpack-dash` | Jetpack Dash | `jetpack.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `drift-rush` | Drift Rush | `games/drift-rush.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `plinko` | Plinko | `games/plinko.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `spin-to-win` | Spin to Win | `games/spin-to-win.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `memory-match` | Memory Match | `games/memory-match.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `high-score` | High Score | `games/high-score.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `blazed-roulette` | Blazed Roulette | `games/blazed-roulette.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `terp-tapper` | Terp Tapper | `games/terp-tapper.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `munchies-snake` | Neon Munchies | `games/munchies-snake.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `brick-breaker` | Brick Breaker | `games/brick-breaker.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `sky-hopper` | Sky Hopper | `games/sky-hopper.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `void-swarm` | Void Swarm | `games/void-swarm.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `stack` | Stack | `games/stack.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `grow-guard` | Grow Guard | `games/grow-guard.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `sling-smash` | Sling Smash | `games/sling-smash.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| `haze-defense` | Haze Defense | `games/haze-defense.js` | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `block-drop` — Block Drop | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `maze-muncher` — Maze Muncher | Specialty | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `alien-rows` — Alien Rows | Arcade Shooters | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `cloud-hopper` — Cloud Hopper | Endless Runners | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `road-hopper` — Road Hopper | Endless Runners | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `bud-merge` — Bud Merge | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `hex-stack` — Hex Stack | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `dino-dash` — Desert Dash | Endless Runners | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `rock-buster` — Rock Buster | Arcade Shooters | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| A | `star-swarm` — Star Swarm | Arcade Shooters | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `rail-rush` — Rail Rush | Endless Runners | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `hill-hauler` — Hill Hauler | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `wanted-run` — Most Wanted Run | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `pop-defense` — Pop Defense | Tower Defense | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `cube-horde` — Cube Horde | Survival & Horde | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `arrow-hero` — Arrow Hero | Survival & Horde | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `grid-wars` — Grid Wars | Survival & Horde | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `moon-swarm` — Moon Swarm | Survival & Horde | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `throttle-rider` — Throttle Rider | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| B | `wreck-ride` — Wreck Ride | Physics & Destruction | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `rig-rally` — Rig Rally | Physics & Destruction | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `goo-tower` — Goo Tower | Physics & Destruction | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `keep-guard` — Keep Guard | Tower Defense | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `node-siege` — Node Siege | Tower Defense | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `orb-coil` — Orb Coil | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `neon-flipper` — Neon Flipper | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `light-cycle` — Light Cycle | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `roof-runner` — Roof Runner | Endless Runners | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `helix-drop` — Helix Drop | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| C | `hex-spin` — Hex Spin | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `color-hop` — Color Hop | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `zig-path` — Zig Path | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `drift-king` — Drift King | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `missile-guard` — Missile Guard | Arcade Shooters | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `bug-blaster` — Bug Blaster | Arcade Shooters | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `bubble-pop` — Bubble Pop | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `mine-sweep` — Mine Sweep | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `knife-toss` — Knife Toss | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `mole-whack` — Mole Whack | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| D | `grow-op` — Grow Op | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `trim-rush` — Trim Rush | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `strain-crush` — Strain Crush | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `bud-bar` — Bud Bar | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `green-dash` — Green Dash | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `roll-up` — Roll Up | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `smoke-rings` — Smoke Rings | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `bud-sort` — Bud Sort | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `pest-patrol` — Pest Patrol | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `cup-toss` — Cup Toss | Cannabis | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| E | `beat-tiles` — Beat Tiles | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `moon-lander` — Moon Lander | Specialty | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `pin-strike` — Pin Strike | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `bullseye` — Bullseye | Combat | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `spot-kick` — Spot Kick | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `glow-echo` — Glow Echo | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `knockout` — Knockout Ring | Combat | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `putt-party` — Putt Party | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `cue-club` — Cue Club | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `long-ball` — Long Ball | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| F | `rally-court` — Rally Court | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `ice-snipe` — Ice Snipe | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `reel-deal` — Reel Deal | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `hoop-streak` — Hoop Streak | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `kickflip-city` — Kickflip City | Sports | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `tile-twin` — Tile Twin | Puzzle & Brain | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `tunnel-hop` — Tunnel Hop | Endless Runners | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `dune-glide` — Dune Glide | Endless Runners | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `egg-roll` — Egg Roll | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `monster-crush` — Monster Crush | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| G | `no-brakes` — No Brakes | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `cab-rush` — Cab Rush | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `dirt-dash` — Dirt Dash | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `road-brawl` — Road Brawl | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `derby-smash` — Derby Smash | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `dunk-flick` — Dunk Flick | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `duck-shot` — Duck Shot | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `paper-toss` — Paper Toss | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `skee-roll` — Skee Roll | Reflex & Skill | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `neon-circuit` — Neon Circuit | Driving | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+| H | `rift-survival` — Rift Survival | Survival & Horde | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
 
-## Games Library — 10-title batches
+## Archived chance games (not active)
 
-| Batch | Slug | Title | Visual review | Gameplay/control QA | Score/security QA | Desktop + mobile evidence | Asset/license review | Status |
-|---|---|---|---|---|---|---|---|---|
-| A (1–10) | `sky-flap` | Sky Flap | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `block-drop` | Block Drop | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `maze-muncher` | Maze Muncher | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `alien-rows` | Alien Rows | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `cloud-hopper` | Cloud Hopper | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `road-hopper` | Road Hopper | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `bud-merge` | Bud Merge | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `hex-stack` | Hex Stack | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `dino-dash` | Desert Dash | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| A (1–10) | `neon-snake` | Neon Serpent | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `brick-blitz` | Brick Blitz | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `rock-buster` | Rock Buster | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `star-swarm` | Star Swarm | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `rail-rush` | Rail Rush | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `ruin-runner` | Ruin Runner | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `hill-hauler` | Hill Hauler | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `wanted-run` | Most Wanted Run | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `sling-siege` | Sling Siege | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `lawn-guard` | Lawn Guard | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| B (11–20) | `pop-defense` | Pop Defense | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `cube-horde` | Cube Horde | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `arrow-hero` | Arrow Hero | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `night-shift` | Night Shift | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `grid-wars` | Grid Wars | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `jet-blaster` | Jet Blaster | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `moon-swarm` | Moon Swarm | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `throttle-rider` | Throttle Rider | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `wreck-ride` | Wreck Ride | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `rig-rally` | Rig Rally | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| C (21–30) | `goo-tower` | Goo Tower | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `keep-guard` | Keep Guard | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `node-siege` | Node Siege | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `orb-coil` | Orb Coil | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `gem-rush` | Gem Rush | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `slab-stack` | Slab Stack | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `neon-flipper` | Neon Flipper | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `light-cycle` | Light Cycle | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `toad-cross` | Toad Cross | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `roof-runner` | Roof Runner | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| D (31–40) | `helix-drop` | Helix Drop | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `hex-spin` | Hex Spin | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `color-hop` | Color Hop | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `zig-path` | Zig Path | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `lane-racer` | Lane Racer | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `drift-king` | Drift King | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `missile-guard` | Missile Guard | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `bug-blaster` | Bug Blaster | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `bubble-pop` | Bubble Pop | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `mine-sweep` | Mine Sweep | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| E (41–50) | `knife-toss` | Knife Toss | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `mole-whack` | Mole Whack | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `grow-op` | Grow Op | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `trim-rush` | Trim Rush | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `strain-crush` | Strain Crush | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `bud-bar` | Bud Bar | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `green-dash` | Green Dash | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `roll-up` | Roll Up | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `smoke-rings` | Smoke Rings | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `bud-sort` | Bud Sort | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| F (51–60) | `pest-patrol` | Pest Patrol | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `cup-toss` | Cup Toss | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `beat-tiles` | Beat Tiles | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `moon-lander` | Moon Lander | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `pin-strike` | Pin Strike | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `bullseye` | Bullseye | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `spot-kick` | Spot Kick | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `glow-echo` | Glow Echo | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `knockout` | Knockout Ring | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `putt-party` | Putt Party | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| G (61–70) | `cue-club` | Cue Club | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `long-ball` | Long Ball | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `rally-court` | Rally Court | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `ice-snipe` | Ice Snipe | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `reel-deal` | Reel Deal | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `hoop-streak` | Hoop Streak | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `kickflip-city` | Kickflip City | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `tile-twin` | Tile Twin | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `tunnel-hop` | Tunnel Hop | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `hill-glider` | Hill Glider | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| H (71–80) | `dune-glide` | Dune Glide | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `moto-lanes` | Moto Lanes | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `egg-roll` | Egg Roll | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `monster-crush` | Monster Crush | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `park-getaway` | Park Getaway | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `highway-heist` | Highway Heist | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `no-brakes` | No Brakes | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `cab-rush` | Cab Rush | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `dirt-dash` | Dirt Dash | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `road-brawl` | Road Brawl | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| I (81–90) | `derby-smash` | Derby Smash | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `dunk-flick` | Dunk Flick | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `hoop-flap` | Hoop Flap | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `bat-boy` | Bat Boy | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `pen-throw` | Pen Throw | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `duck-shot` | Duck Shot | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `paper-toss` | Paper Toss | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `skee-roll` | Skee Roll | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `castle-crush` | Castle Crush | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `neon-circuit` | Neon Circuit | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
-| J (91–100) | `rift-survival` | Rift Survival | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **BLOCKED** |
+- `plinko` — Plinko. Preserve historical scores and earned achievements, but do not count as an active skill-game title.
+- `spin-to-win` — Spin to Win. Preserve historical scores and earned achievements, but do not count as an active skill-game title.
+- `blazed-roulette` — Blazed Roulette. Preserve historical scores and earned achievements, but do not count as an active skill-game title.
 
-## Acceptance rule
+## Release verification contract
 
-- **PASS:** all required evidence recorded; no known P0/P1 gameplay, scoring, security, accessibility or rendering defect.
-- **FIX:** a defect is reproducible and has a tracked corrective commit; re-run the affected checks.
-- **REPLACE:** the title cannot meet the quality target without disproportionate rework or is too similar to another game.
-- **BLOCKED:** any required test is missing, any critical defect remains, or the deployed build does not match the audited source.
-
-No title is launch-ready based solely on a static syntax check, the presence of an HTML page, or a successful HTTP response.
+A game needs an actual fresh playthrough showing launch/start, touch and keyboard, resume/restart, collision/game-over, signed score submission and invalid-score rejection, leaderboard result, achievements and earned cosmetics, plus screenshots and frame-time measurements on Android and desktop. Separately verify avatar clipping/ownership, shop purchase atomicity/rotation, giveaway booking/entry, and restored accounts and scores after deployment. The structural report is available under `/api/audit/report`; do not mark these gates passed just because a Docker build succeeds.

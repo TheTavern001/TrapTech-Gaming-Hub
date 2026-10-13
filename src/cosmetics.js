@@ -62,6 +62,14 @@ const BANNERS = [
   ['grow-room', 'Grow Room', 'radial-gradient(70% 50% at 50% 0%,rgba(255,196,110,.6),transparent 70%),repeating-linear-gradient(90deg,rgba(163,230,53,.25) 0 6px,transparent 6px 26px),linear-gradient(180deg,#2b1a05,#0b2610)'],
   ['sling-arc', 'Sling Arc', 'radial-gradient(140% 90% at 0% 100%,transparent 58%,rgba(253,224,71,.8) 59% 60%,transparent 61%),linear-gradient(160deg,#1e293b,#7c2d12 70%,#f59e0b)'],
   ['haze-track', 'Haze Track', 'radial-gradient(30% 40% at 25% 60%,rgba(226,232,240,.45),transparent 70%),radial-gradient(30% 40% at 70% 35%,rgba(196,181,253,.45),transparent 70%),linear-gradient(90deg,transparent 46%,rgba(34,211,238,.7) 47% 49%,transparent 50%),#0b0820'],
+  ['neon-bites','Neon Bites','radial-gradient(circle at 20% 35%,#facc15 0 6%,transparent 7%),radial-gradient(circle at 72% 65%,#a3e635 0 7%,transparent 8%),repeating-linear-gradient(110deg,transparent 0 19px,rgba(34,211,238,.35) 20px 23px,transparent 24px 42px),linear-gradient(130deg,#030712,#164e63 65%,#14532d)'],
+  ['midnight-munchies','Midnight Munchies','radial-gradient(circle at 80% 15%,#fb7185 0 7%,transparent 8%),repeating-radial-gradient(circle at 35% 60%,rgba(196,181,253,.24) 0 3px,transparent 4px 25px),linear-gradient(140deg,#120b31,#312e81 65%,#0f766e)'],
+  ['prism-bricks','Prism Bricks','repeating-linear-gradient(0deg,transparent 0 19px,rgba(255,255,255,.32) 19px 21px),repeating-linear-gradient(90deg,#22d3ee 0 26px,#a78bfa 26px 52px,#fb7185 52px 78px,#facc15 78px 104px)'],
+  ['shard-storm','Shard Storm','repeating-conic-gradient(from 18deg at 35% 58%,rgba(255,255,255,.24) 0 9deg,transparent 9deg 29deg),radial-gradient(circle at 35% 58%,#f97316,#7c3aed 45%,#020617 85%)'],
+  ['cloud-runway','Cloud Runway','radial-gradient(ellipse at 18% 85%,#f1f5f9 0 15%,transparent 16%),radial-gradient(ellipse at 64% 105%,#cbd5e1 0 29%,transparent 30%),linear-gradient(180deg,#172554,#2563eb 55%,#67e8f9)'],
+  ['sunrise-launch','Sunrise Launch','radial-gradient(circle at 72% 55%,#fef08a 0 16%,#fb923c 17% 23%,transparent 24%),linear-gradient(0deg,rgba(255,255,255,.28) 0 7%,transparent 8% 100%),linear-gradient(180deg,#312e81,#db2777 64%,#fb923c)'],
+  ['void-plasma','Void Plasma','repeating-radial-gradient(circle at 42% 44%,transparent 0 18px,rgba(34,211,238,.4) 19px 22px,transparent 23px 43px),linear-gradient(125deg,#020617,#312e81,#581c87)'],
+  ['rift-shock','Rift Shock','repeating-conic-gradient(from 4deg at 68% 40%,transparent 0 16deg,rgba(192,132,252,.35) 16deg 21deg,transparent 21deg 45deg),radial-gradient(circle at 68% 40%,#22d3ee 0 4%,#6d28d9 27%,#020617 80%)'],
 ].map(([id, name, css]) => ({ id, name, css }));
 
 // Avatar frames: ring background (+ optional animation class defined in app.css)
@@ -100,6 +108,10 @@ const FRAMES = [
   ['ladybug', 'Ladybug', 'repeating-conic-gradient(#dc2626 0 40deg,#111827 40deg 50deg)', 'glow'],
   ['steel-ball', 'Steel Ball', 'conic-gradient(#f8fafc,#64748b,#e2e8f0,#334155,#f8fafc)', 'spin'],
   ['prism-laser', 'Prism Laser', 'conic-gradient(#22d3ee,#a3e635,#fde047,#f472b6,#22d3ee)', 'pulse'],
+  ['arcade-orbit','Arcade Orbit','conic-gradient(#a3e635,#22d3ee,#f472b6,#a3e635)','spin'],
+  ['paddle-pulse','Paddle Pulse','repeating-conic-gradient(#facc15 0 21deg,#f472b6 21deg 42deg,#22d3ee 42deg 63deg)','pulse'],
+  ['skyline-ring','Skyline Ring','conic-gradient(#7dd3fc,#fef08a,#fb923c,#7dd3fc)','glow'],
+  ['swarm-core','Swarm Core','conic-gradient(#312e81,#a78bfa,#22d3ee,#312e81)','spin'],
 ].map(([id, name, bg, anim]) => ({ id, name, bg, anim }));
 
 const TITLES = ['Rookie', 'Hub Regular', 'Hub Legend', 'Explorer', 'Daily Driver', 'Unstoppable', 'Contender', 'Giveaway Hunter', 'Lucky Charm',
@@ -111,7 +123,8 @@ const TITLES = ['Rookie', 'Hub Regular', 'Hub Legend', 'Explorer', 'Daily Driver
   // v5 legendary
   'One Percenter', 'Centurion', 'Grandmaster', 'Iron Thumbs', 'Dynasty',
   // v7 endless games
-  'Sky Builder', 'Perfect Drop', 'Pest Patrol', 'Head Grower', 'Tower Toppler', 'Bot Buster', 'Haze Buster', 'Orb Popper']
+  'Sky Builder', 'Perfect Drop', 'Pest Patrol', 'Head Grower', 'Tower Toppler', 'Bot Buster', 'Haze Buster', 'Orb Popper',
+  'Serpent Master', 'Endless Coil', 'Brick Architect', 'Perfect Ricochet', 'Cloud Strider', 'Airwalker', 'Swarm Survivor', 'Void Commander']
   .map(name => ({ id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name }));
 
 const DEFAULTS = { banner: 'midnight', frame: 'none', title: 'rookie' };

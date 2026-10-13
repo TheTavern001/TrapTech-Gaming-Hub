@@ -107,7 +107,7 @@ const games = LIST.map(x => {
     // rate ceiling: normal = perSec*t + grace (flagged above), hard reject at 2x (src/anticheat.js + cfg.capOf)
     ac: { perSec: x.rate, ramp: 0, grace: Math.max(50, x.rate * 20), max: 1e12, coinsPerSec: 1 },
     tiers: [x.rate * 20, x.rate * 90, x.rate * 240].map(Math.round),
-    source: s.source, licence: s.licence, build: s.kind, attempts: 'unlimited', leaderboard: 'best run', winner_rule: 'highest single-run score in endless mode (uncapped); exactly one winner', tiebreak: ['first to reach the winning score (best-run timestamp)', 'fewer attempts in the window', 'earlier final submission timestamp', 'lower run id (unique)'],
+    source: s.source, licence: s.licence, build: s.kind, attempts: 'unlimited', leaderboard: 'best run', winner_rule: 'highest single-run score in endless mode (uncapped); exactly one winner', tiebreak: ["skill: faster server-timed completion of the same score","skill: stronger server-derived scoring-event efficiency or game metric","exact tie: seeded sudden-death playoff (same game and seed for tied players)"],
   };
 });
 const EXTERNAL = []; // dropped per Reese (Oct 10 2026): 100% of listed games must be giveaway-eligible, no external 'just for fun' links

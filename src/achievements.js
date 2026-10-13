@@ -39,6 +39,14 @@ const PER_GAME = {
     rw: [R('banner', 'sling-arc'), R('frame', 'steel-ball'), R('title', 'tower-toppler'), R('banner', 'sling-arc'), R('title', 'bot-buster')] },
   'haze-defense': { names: ['Clear Air', 'Orb Popper', 'Haze Buster'], reg: 'Track Warden', streak: 'Smoke Screen', icon: 'shield',
     rw: [R('banner', 'haze-track'), R('frame', 'prism-laser'), R('title', 'haze-buster'), R('banner', 'haze-track'), R('title', 'orb-popper')] },
+  'munchies-snake': { names: ['First Bite', 'Snack Circuit', 'Neon Serpent'], reg: 'Midnight Muncher', streak: 'Infinite Appetite', icon: 'spline',
+    rw: [R('banner', 'neon-bites'), R('frame', 'arcade-orbit'), R('title', 'serpent-master'), R('banner', 'midnight-munchies'), R('title', 'endless-coil')] },
+  'brick-breaker': { names: ['First Shatter', 'Ricochet Artist', 'Brick Breaker Supreme'], reg: 'Paddle Regular', streak: 'Perfect Angles', icon: 'brick-wall',
+    rw: [R('banner', 'prism-bricks'), R('frame', 'paddle-pulse'), R('title', 'brick-architect'), R('banner', 'shard-storm'), R('title', 'perfect-ricochet')] },
+  'sky-hopper': { names: ['First Leap', 'Cloud Runner', 'Sky Hopper Legend'], reg: 'Frequent Jumper', streak: 'Above the Clouds', icon: 'cloud-sun',
+    rw: [R('banner', 'cloud-runway'), R('frame', 'skyline-ring'), R('title', 'cloud-strider'), R('banner', 'sunrise-launch'), R('title', 'airwalker')] },
+  'void-swarm': { names: ['First Wave', 'Survival Instinct', 'Swarm Survivor'], reg: 'Void Veteran', streak: 'Last One Standing', icon: 'orbit',
+    rw: [R('banner', 'void-plasma'), R('frame', 'swarm-core'), R('title', 'swarm-survivor'), R('banner', 'rift-shock'), R('title', 'void-commander')] },
 };
 for (const g of cfg.GAMES) {
   const P = PER_GAME[g.id]; if (!P) continue;
