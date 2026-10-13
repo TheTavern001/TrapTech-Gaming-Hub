@@ -55,11 +55,28 @@ function defaultFor() { return { ...STARTER_AVATAR }; }
 function clean(cfg, base) { const out = { ...base }; if (cfg && ['male', 'female', 'other'].includes(cfg.gender)) out.gender = cfg.gender; for (const k of KINDS) if (cfg && BYK[k][cfg[k]]) out[k] = cfg[k]; return out; }
 function configOf(user) { let c = {}; try { c = JSON.parse(user.avatar || '{}'); } catch {} return clean(c, defaultFor(user.username)); }
 // ownership
-function owns(userId, part, ctx) { const u = part.unlock; if (u === 'free') return true;
-  if (u.crowns) return !!db.prepare('SELECT 1 FROM avatar_parts_owned WHERE user_id=? AND part=?').get(userId, key(part));
+function owns(userId, part, ctx) {
+  const u = part.unlock;
+  if (u === 'free') return true;
+  // An earned Points unlock and a Crowns purchase produce the same permanent entitlement.
+  // Always check saved ownership before checking a distinct eligibility rule.
+  if (db.prepare('SELECT 1 FROM avatar_parts_owned WHERE user_id=? AND part=?').get(userId, key(part))) return true;
   if (u.ach) return (ctx.ach ?? (ctx.ach = achCount(userId))) >= u.ach;
   if (u.prestige) return (ctx.px ?? (ctx.px = new Set(require('./monetize').prestigeOf(userId).map(r => r.item_id)))).has(u.prestige);
-  return false; }
+  return false;
+}
+// Cosmetic-only Points pricing: all non-Prestige locked avatar items are achievable by
+// playing games, quests and achievements; an optional Crowns purchase remains available.
+// Prestige is one-of-one and must be won in an authorized event or purchased as a collectible.
+const POINT_COSTS = { bg: 250, skin: 100, face: 120, hair: 230, hairc: 210,
+  eyes: 170, mouth: 120, beard: 150, build: 180, outfit: 650, hat: 360, acc: 420, held: 440 };
+function pointsPrice(part) {
+  const u = part.unlock;
+  if (u === 'free') return 0;
+  if (u.prestige) return null;
+  const base = POINT_COSTS[part.kind] || 250;
+  return Math.max(base, u.crowns ? u.crowns * 3 : u.ach ? u.ach * 48 : base);
+}
 function achCount(userId) { try { return db.prepare('SELECT COUNT(*) c FROM user_achievements WHERE user_id=?').get(userId).c; } catch { return 0; } }
 // ---- SVG ----
 function svg(c) {
@@ -138,7 +155,8 @@ function svg(c) {
   if (c.outfit === 'titan-exoframe') o.push('<g fill="none" stroke="#67e8f9" stroke-width="3"><path d="M25 74 L34 63 L45 70 L42 89 L29 94Z M95 74 L86 63 L75 70 L78 89 L91 94Z"/><path d="M40 84 L43 104 L77 104 L80 84 M43 91 H77" stroke="#94a3b8" stroke-width="2"/><path d="M34 70 L41 76 M86 70 L79 76"><animate attributeName="opacity" values=".2;1;.2" dur="1.5s" repeatCount="indefinite"/></path></g>');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">${o.join('')}</svg>`;
 }
-function partsFor(userId) { const ctx = {}; return P.map(p => ({ kind: p.kind, id: p.id, label: p.label, unlock: p.unlock, owned: userId ? owns(userId, p, ctx) : p.unlock === 'free', crowns: p.unlock.crowns || 0 })); }
+function partsFor(userId) { const ctx = {}; return P.map(p => ({ kind: p.kind, id: p.id, label: p.label, unlock: p.unlock, owned: userId ? owns(userId, p, ctx) : p.unlock === 'free',
+  crowns: p.unlock.crowns || 0, points: pointsPrice(p) })); }
 function routes(app, H) {
   const { requireUser, currentUser, bad } = H; const cache = new Map();
   app.get('/avatar/:u.svg', (req, res) => { const u = db.prepare('SELECT id, username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u));
@@ -146,15 +164,40 @@ function routes(app, H) {
     res.set({ 'Cache-Control': 'public, max-age=300', ETag: et, 'Content-Type': 'image/svg+xml' }); if (req.headers['if-none-match'] === et) return res.status(304).end(); res.send(body); });
   app.get('/api/avatar/:u', (req, res) => { const u = db.prepare('SELECT username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u).slice(0, 32)); if (!u) return bad(res, 404, 'Avatar not found'); res.set('Cache-Control', 'public, max-age=60').json({ ok: true, avatar: configOf(u) }); });
   app.get('/avatar-preview.svg', (req, res) => { let c = {}; try { c = JSON.parse(String(req.query.c || '{}')); } catch {} res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(svg(clean(c, defaultFor('preview')))); });
-  app.get('/api/avatar', requireUser, (req, res) => res.json({ ok: true, avatar: configOf(req.user), kinds: KINDS, parts: partsFor(req.user.id), bg: BG, skin: SKIN, hair_colors: HAIRC, crowns: require('./monetize').crowns(req.user.id) }));
+  app.get('/api/avatar', requireUser, (req, res) => { const shop = require('./shop');
+    const points = shop.sync(req.user.id);
+    res.json({ ok: true, avatar: configOf(req.user), kinds: KINDS, parts: partsFor(req.user.id),
+      bg: BG, skin: SKIN, hair_colors: HAIRC, points, crowns: require('./monetize').crowns(req.user.id) });
+  });
   app.put('/api/avatar', requireUser, (req, res) => { const want = clean(req.body && req.body.avatar, configOf(req.user)); const ctx = {};
     for (const k of KINDS) { const p = BYK[k][want[k]]; if (!owns(req.user.id, p, ctx)) return bad(res, 403, `Unlock "${p.label}" first.`); }
     db.prepare('UPDATE users SET avatar=? WHERE id=?').run(JSON.stringify(want), req.user.id); res.json({ ok: true, avatar: want }); });
   app.post('/api/avatar/buy', requireUser, (req, res) => { const [k, id] = String((req.body || {}).part || '').split(':'); const p = BYK[k] && BYK[k][id]; if (!p || !p.unlock.crowns) return bad(res, 400, 'That part is not sold for Crowns.');
     const M = require('./monetize'); const t = Date.now();
-    const r = db.transaction(() => { if (db.prepare('SELECT 1 FROM avatar_parts_owned WHERE user_id=? AND part=?').get(req.user.id, key(p))) return { error: 'You already own it.' };
+    const r = db.transaction(() => { if (owns(req.user.id, p, {})) return { error: 'You already own it.' };
       if (M.crowns(req.user.id) < p.unlock.crowns) return { error: `You need ${p.unlock.crowns - M.crowns(req.user.id)} more Hub Crowns.` };
       M.addCrowns(req.user.id, -p.unlock.crowns, 'spend', 'avatar:' + key(p), t); db.prepare('INSERT INTO avatar_parts_owned (user_id, part, created_at) VALUES (?,?,?)').run(req.user.id, key(p), t); return { ok: true }; })();
     if (r.error) return bad(res, 400, r.error); res.json({ ok: true, crowns: M.crowns(req.user.id) }); });
+  app.post('/api/avatar/buy-points', requireUser, (req, res) => {
+    const [k, id] = String((req.body || {}).part || '').split(':');
+    const p = BYK[k] && BYK[k][id];
+    if (!p || p.unlock === 'free' || p.unlock.prestige) return bad(res, 400, 'That item is not sold for Hub Points.');
+    const price = pointsPrice(p), t = Date.now(), shop = require('./shop');
+    // Pull in server-validated runs/achievements before the purchase; the player cannot mint Points from the browser.
+    shop.sync(req.user.id);
+    const result = db.transaction(() => {
+      if (owns(req.user.id, p, {})) return { error: 'You already own this part.' };
+      const balance = shop.balance(req.user.id);
+      if (balance < price) return { error: `Earn ${price - balance} more Hub Points by playing or completing quests.` };
+      const purchased = db.prepare('INSERT OR IGNORE INTO avatar_parts_owned (user_id, part, created_at) VALUES (?,?,?)').run(req.user.id, key(p), t);
+      if (!purchased.changes) return { error: 'You already own this part.' };
+      db.prepare('INSERT INTO points_ledger (user_id, amount, reason, ref, created_at) VALUES (?,?,?,?,?)')
+        .run(req.user.id, -price, 'avatar-purchase', key(p), t);
+      return { ok: true };
+    })();
+    if (result.error) return bad(res, 400, result.error);
+    res.json({ ok: true, item: key(p), price_points: price, points: shop.balance(req.user.id) });
+  });
 }
+
 module.exports = { routes, svg, configOf, defaultFor, partsFor, KINDS, P };

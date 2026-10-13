@@ -1080,3 +1080,16 @@ input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):n
   .shop-catalog-filters button { grid-column:1 / -1; }
   .shop-catalog .shop-owned { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+/* Per-game achievement plaques use the game's actual source artwork, not a repeated
+   generic avatar portrait. Tier rim and icon identify the specific milestone. */
+.ach-game-art{--ach-light:#8d9ed1;display:block;position:relative;width:82px;height:96px;flex:none;border:2px solid var(--ach-light);border-radius:15px;background:#080d1d;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 10px 24px rgba(0,0,0,.27)}
+.ach-game-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;filter:saturate(.94)}
+.ach-game-art::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 15%,rgba(3,7,22,.25) 45%,rgba(3,7,22,.95) 100%)}
+.ach-game-art>.ico{position:absolute;left:7px;bottom:11px;z-index:2;width:25px;height:25px;color:var(--ach-light);filter:drop-shadow(0 2px 4px #000)}
+.ach-game-grade{position:absolute;right:4px;bottom:13px;z-index:2;text-transform:uppercase;font-size:8px;font-weight:900;color:#fff;letter-spacing:.035em;text-shadow:0 2px 4px #000}
+.ach-game-art.tier-bronze{--ach-light:#d6a16e}.ach-game-art.tier-silver{--ach-light:#d4e0ee}
+.ach-game-art.tier-gold{--ach-light:#ffd76e}.ach-game-art.tier-epic{--ach-light:#d7a7ff}
+.ach-game-art.tier-legendary{--ach-light:#ffee97;box-shadow:0 0 18px rgba(255,208,85,.24)}
+.ach.off .ach-game-art img{filter:saturate(.55) brightness(.68)}
+@media(max-width:460px){.ach-game-art{width:70px;height:83px}.ach-game-grade{font-size:7px;right:3px}}

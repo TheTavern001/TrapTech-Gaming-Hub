@@ -27,6 +27,10 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, hat: 'crown' } } }); ok(r.status === 403, 'the gold crown is Prestige-only');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, eyes: 'star' } } }); ok(r.status === 403, 'star eyes need 15 achievements');
   r = await A('/api/avatar/buy', { body: { part: 'outfit:fur' } }); ok(r.status === 400 && /more Hub Crowns/.test(r.body.error), 'buying without Crowns is refused');
+  r = await A('/api/avatar/buy-points', { body: { part: 'outfit:fur' } }); ok(r.status === 400 && /Earn .*more Hub Points/.test(r.body.error), 'cannot buy with insufficient gameplay Points');
+  r = await A('/api/avatar/buy-points', { body: { part: 'hat:crown' } }); ok(r.status === 400, 'one-of-one Prestige cannot be purchased with farmed Points');
+  r = await A('/api/avatar/buy-points', { body: { part: 'hair:waves' } }); ok(r.status === 400, 'already-free starter item is not chargeable');
+  ok(P.find(p => p.kind === 'outfit' && p.id === 'fur').points > 0, 'every Crown outfit has an earnable Points price');
   await ADM('/api/admin/store/grant', { body: { username: ua, crowns: 1000 } });
   r = await A('/api/avatar/buy', { body: { part: 'outfit:fur' } }); ok(r.body.ok && r.body.crowns === 100, 'buy the fur coat for 900 Crowns');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur' } } }); ok(r.body.ok, 'bought part can be worn');

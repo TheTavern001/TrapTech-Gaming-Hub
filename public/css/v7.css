@@ -228,3 +228,21 @@
 .av-opt.locked img{filter:saturate(.65) brightness(.85)}
 .av-opt .tiny{font-size:.69rem;line-height:1.15}
 @media(max-width:720px){.av-prev{position:static}.av-prev .avatar-stage{height:clamp(285px,75vw,370px)}.av-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Game-asset-led avatar inventory. Never render 150 nearly identical portrait heads in item cards. */
+.av-item-visual{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;width:100%;height:93px;min-height:93px;border:1px solid rgba(169,156,255,.24);border-radius:14px;background:radial-gradient(circle at 50% 15%,rgba(139,92,246,.24),transparent 68%),#10172a;color:#d6c6ff;position:relative;overflow:hidden}
+.av-item-visual .ico{width:34px;height:34px;stroke-width:1.6}
+.av-item-visual small{font-size:10px;text-transform:uppercase;letter-spacing:.09em;max-width:92%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-weight:700}
+.av-item-asset img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 7px 10px rgba(0,0,0,.55))}
+.av-item-asset{background:radial-gradient(circle at 50% 35%,rgba(74,94,185,.45),transparent 73%),#0d1226}
+.av-item-swatch i{display:block;width:48px;height:48px;border:3px solid rgba(255,255,255,.3);border-radius:50%;background:var(--sample);box-shadow:inset 0 6px 12px rgba(255,255,255,.2),0 6px 14px rgba(0,0,0,.3)}
+.av-item-swatch .ico{width:17px;height:17px}
+.av-item-bg .ico{width:29px;height:29px;color:#fff;filter:drop-shadow(0 2px 10px rgba(0,0,0,.7))}
+.av-opt{justify-content:initial;min-height:155px;padding:8px;gap:6px;text-align:center}
+.av-opt>.small{line-height:1.15;font-size:.82rem}
+.av-opt .tiny{max-width:100%;overflow-wrap:anywhere}
+.av-balances{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;color:#aebad2;font-size:.76rem}
+.av-balances b{color:#e6efff;font-weight:900;margin-left:5px}
+.av-buy-points{width:100%;min-height:45px;background:linear-gradient(115deg,#0e7490,#2563eb 56%,#7c3aed);border-color:rgba(137,238,255,.55);font-weight:800}
+.av-buy-points:focus-visible{outline:2px solid white;outline-offset:3px}
+@media(max-width:720px){.av-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.av-item-visual{height:105px}}

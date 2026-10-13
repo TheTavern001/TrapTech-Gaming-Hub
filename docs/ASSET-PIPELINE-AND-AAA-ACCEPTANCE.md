@@ -113,3 +113,13 @@ Plan *roughly five candidate deployment batches*, with a successful Deplexo buil
 - Kenney [Animated Characters](https://kenney.nl/assets?series=Animated+Characters): CC0 smaller rigged fallback. Do not replace the premium visual reference with generic low-poly meshes to satisfy a checklist.
 
 These are researched candidates, NOT downloaded or integrated yet. Preserve author/license/URL/hash in the asset manifest, vet all styles against the reference, and do not reset existing player cosmetic ownership when migrating to a rigged avatar.
+
+## Asset-led QA feedback — October 13, 2026
+
+**Confirmed desired art direction:** character models and interchangeable clothes from Quaternius [Ultimate Modular Men](https://quaternius.com/packs/ultimatemodularcharacters.html) and [Ultimate Modular Women](https://quaternius.com/packs/ultimatemodularwomen.html), with Universal Base Characters as a compatibility candidate. Official Quaternius sites list these packs as CC0 with modular parts and animation. In this phase the repository's existing licensed game card/prop art is reused for avatar item inventory art and per-game achievement plaques, rather than promising newly imported Quaternius rigs that are not yet staged. **No external model archive has been successfully downloaded in this phase.** A release candidate needs optimized glTF/GLB, rig/retarget QA, attachment compatibility, proof of licensing, working mobile rendering and fallback before being called AAA.
+
+**Achievement art:** when an achievement belongs to a game, its real game-card art is used as the primary motif and rarity silhouette/icon is layered on top; non-game achievements retain a badge glyph. Avoid repeating a generic profile face as artwork for every different achievement or accessory.
+
+**Avatar earning:** all normal paid/achievement-locked avatar items support Hub Points obtained by playing in addition to their existing Crowns or achievement route. Strictly unique one-of-one Prestige keeps inventory exclusivity; event prizes are a separate approved earning route, never a repeatable Points purchase. New accounts still receive identical starter config; saved avatars and purchased rights are not overwritten.
+
+**External free assets not yet imported:** Quaternius Men/Women, Kenney UI Pack Sci-fi, Kenney Game Icons, Kenney Medals, Poly Haven lighting/materials, ambientCG PBR. For imported assets, include exact original pack/version/license and optimized manifests, rather than assuming the word 'free' alone grants redistribution rights.
