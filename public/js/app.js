@@ -1071,7 +1071,7 @@ route(/^\/achievements$/, async (m, url) => {
     document.getElementById('alist').innerHTML = list.map(a => {
       const pct = a.progress == null ? (a.unlocked ? 100 : 0) : Math.min(100, Math.round(a.progress / a.target * 100));
       const g = a.game && gameById(a.game);
-      const art = g && g.art && !a.hidden ? `<span class="ach-game-art tier-${esc(a.tier)}" aria-hidden="true"><img src="${esc(g.art)}" alt="" loading="lazy" decoding="async">${icon(a.icon)}<span class="ach-game-grade">${esc(a.tier)}</span></span>` : null;
+      const art = g && g.art && !a.hidden ? `<span class="ach-game-art tier-${esc(a.tier)}" aria-hidden="true"><img src="${esc(g.art)}" alt="" loading="lazy" decoding="async"><img class="ach-medal" src="/assets/vendor/kenney/medals/shaded_medal${([...a.id].reduce((n,c)=>n+c.charCodeAt(0),0)%9)+1}.png" alt="" loading="lazy" decoding="async">${icon(a.icon)}<span class="ach-game-grade">${esc(a.tier)}</span></span>` : null;
       return `<div class="ach ${a.unlocked ? 'on' : 'off'} t-${a.tier}" data-ach="${a.id}">
         ${art || `<span class="ai art">${a.hidden && !a.unlocked ? icon('circle-help') : badgeArt(a.id, a.unlocked ? '' : 'locked')}</span>`}
         <div class="ab"><div class="at"><b>${esc(a.name)}</b><span class="tier ${a.tier}">${a.tier}</span>${a.hidden ? `<span class="tier secret">secret</span>` : ''}</div>

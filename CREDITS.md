@@ -131,3 +131,9 @@ illustrations with a baked-in checkerboard. Kenney 2D hero/saw/flame sprites are
 - playwright-core (Apache-2.0) driving the system Google Chrome for tests/screenshots
 - tunnelmole (MIT) - tried as a tunnel fallback; did not work from this box (see README)
 - opencv-contrib-python-headless (Apache-2.0), Pillow (HPND)
+
+## 2026-10-13 licensed avatar and achievement art
+
+- Quaternius (@Quaternius), **Ultimate Modular Men Adventurer**, CC0 1.0 Universal. Canonical pack https://quaternius.com/packs/ultimatemodularcharacters.html ; source mirror https://github.com/agentkaerf/FreeModels ; original Git blob a6743e9b397efb7ee3e3175459d503783e39ef4c. Self-contained optimized minified glTF under `public/assets/avatars/rigged/male-adventurer.gltf`.
+- Quaternius (@Quaternius), **Ultimate Modular Women Adventurer**, CC0 1.0 Universal. Canonical pack https://quaternius.com/packs/ultimatemodularwomen.html ; source mirror https://github.com/agentkaerf/FreeModels ; original Git blob 360f7653a875945f97818aa60416f0ddb7ec2c42. Self-contained optimized minified glTF under `public/assets/avatars/rigged/female-adventurer.gltf`.
+- Kenney, **Medals shaded_medal1–9.png**, CC0 1.0 Universal. https://kenney.nl/assets/medals ; source mirror https://github.com/shorepine/kenney/tree/main/2d/Medals ; files under `public/assets/vendor/kenney/medals/`. Used on achievement artwork.

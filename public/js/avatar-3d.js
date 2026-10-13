@@ -1,7 +1,18 @@
 // Genuine WebGL avatar viewport. The saved avatar schema stays compatible with the server SVG fallback.
-// Three.js is loaded lazily from a pinned public CDN; if WebGL/CDN is unavailable, the editor falls back to the SVG.
+// Use self-hosted CC0 Quaternius rigs for the shared starter; preserve the older compatible renderer for unported cosmetic combinations.
 export async function mountAvatar3D(stage, cfg) {
-  const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js');
+  // The rigged model is accurate for the canonical starter. Unported attachment
+  // combinations deliberately use the older preview, never pretend to be attached.
+  const useRig = cfg.outfit === 'adventurer' &&
+    (!cfg.hat || cfg.hat === 'none') && (!cfg.acc || cfg.acc === 'none') &&
+    (!cfg.held || cfg.held === 'none') && (cfg.hair === 'waves' || !cfg.hair) &&
+    (cfg.face === 'oval' || !cfg.face) && (cfg.eyes === 'wide' || !cfg.eyes) &&
+    (cfg.mouth === 'smile' || !cfg.mouth) && (cfg.beard === 'none' || !cfg.beard);
+  if (useRig) {
+    try { const { mountRiggedAvatar } = await import('./avatar-rig.js'); return await mountRiggedAvatar(stage, cfg); }
+    catch (err) { console.warn('Rigged avatar unavailable; using basic renderer.', err); }
+  }
+  const THREE = await import('/games-lib/vendor/three.module.min.js');
   if (!stage || !stage.isConnected) return () => {};
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const scene = new THREE.Scene();

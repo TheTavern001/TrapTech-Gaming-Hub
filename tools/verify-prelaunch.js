@@ -268,6 +268,30 @@ try {
   if (nondeterministic) fail('src/shop-gen.js', nondeterministic + ' generated catalog items are not deterministic');
   if (duplicateNames) fail('src/shop-gen.js', duplicateNames + ' generated daily items share display names');
 } catch (e) { fail('src/shop-gen.js', 'Could not verify the 1,200-item generator: ' + e.message); }
+// Actual CC0 game and avatar artwork must be present and loadable at deployment.
+const homeHtml = read(path.join(ROOT, 'public/index.html')) || '';
+if (!homeHtml.includes('type="importmap"') || !homeHtml.includes('/games-lib/vendor/three.module.min.js'))
+  fail('public/index.html', 'Local Three.js import map for rigged character loading is missing');
+const avatarRig = read(path.join(ROOT, 'public/js/avatar-rig.js')) || '';
+if (!avatarRig.includes('GLTFLoader') || !avatarRig.includes('SkeletonUtils') || !avatarRig.includes('AnimationMixer'))
+  fail('public/js/avatar-rig.js', 'Rigged character renderer must use local loading and idle animation');
+const rigLicense = read(path.join(ROOT, 'public/assets/avatars/rigged/LICENSE-Quaternius-CC0.txt')) || '';
+if (!rigLicense.includes('CC0 1.0')) fail('avatars/rigged', 'CC0 license provenance is missing');
+for (const gender of ['male', 'female']) {
+  const file = path.join(ROOT,'public/assets/avatars/rigged',gender+'-adventurer.gltf');
+  try {
+    const m = JSON.parse(fs.readFileSync(file,'utf8'));
+    if (!m.skins?.length || !m.animations?.some(a => a.name === 'Idle') ||
+      !m.buffers?.[0]?.uri?.startsWith('data:application/octet-stream;base64,'))
+      fail(file, 'Expected self-contained rigged model with Idle animation');
+    if (m.images?.some(i => i.uri && !i.uri.startsWith('data:'))) fail(file, 'Remote textures not allowed');
+  } catch (e) { fail(file,'Invalid or missing Quaternius rigged model: '+e.message); }
+}
+for (let n=1;n<=9;n++) {
+  const file = path.join(ROOT,'public/assets/vendor/kenney/medals','shaded_medal'+n+'.png');
+  if (!fs.existsSync(file) || fs.readFileSync(file).subarray(0,8).toString('hex')!=='89504e470d0a1a0a')
+    fail(file,'Kenney CC0 medal asset missing or invalid');
+}
 const avatar3dSource = read(path.join(ROOT, 'public/js/avatar-3d.js')) || '';
 const avatar3dBg = (avatar3dSource.match(/const backgrounds = \{([\s\S]*?)\n  \};/) || [])[1] || '';
 const prestigeBackgrounds = ['diamond-prism','stack-throne','royal-crown','phoenix-mantle','singularity-orbit','void-dragon','nebula-wings','titan-exoframe','holo-decree','storm-halo','chronos-mantle','aurora-crown'];

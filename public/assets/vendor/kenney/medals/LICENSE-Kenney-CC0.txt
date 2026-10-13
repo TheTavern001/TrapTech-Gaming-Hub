@@ -1,0 +1,5 @@
+Kenney — Medals (shaded_medal1.png through shaded_medal9.png).
+Source: https://kenney.nl/assets/medals
+Public-source mirror: https://github.com/shorepine/kenney/tree/main/2d/Medals
+License: CC0 1.0 Universal (Public Domain Dedication): https://creativecommons.org/publicdomain/zero/1.0/
+Only the original nine shaded medal bitmap files are included.

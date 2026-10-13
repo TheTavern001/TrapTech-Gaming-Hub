@@ -32,7 +32,7 @@ HAIRC.forEach((c, i) => add('hairc', 'c' + i, 'Color ' + (i + 1), i >= 7 ? { cro
 ['smile', 'grin', 'flat', 'open', 'smirk'].forEach(m => add('mouth', m, m));
 ['none', 'mustache', 'goatee', 'beard'].forEach(b => add('beard', b, b));
 for (const [id, label] of [['average','Average build'],['slim','Slim build'],['athletic','Athletic build'],['stocky','Stocky build'],['curvy','Curvy build'],['tall','Tall build'],['short','Short build']]) add('build', id, label, 'free');
-add('outfit', 'tee', 'tee'); add('outfit', 'titan-exoframe', 'Titan Exo Frame', { prestige: 'prestige-original-mech' }); add('outfit', 'hoodie', 'hoodie'); add('outfit', 'jersey', 'jersey'); add('outfit', 'tracksuit', 'tracksuit', { crowns: 300 }); add('outfit', 'chain-tee', 'tee + gold chain', { crowns: 600 }); add('outfit', 'fur', 'fur coat', { crowns: 900 });
+add('outfit', 'adventurer', 'Adventure Captain', 'free'); add('outfit', 'tee', 'tee'); add('outfit', 'titan-exoframe', 'Titan Exo Frame', { prestige: 'prestige-original-mech' }); add('outfit', 'hoodie', 'hoodie'); add('outfit', 'jersey', 'jersey'); add('outfit', 'tracksuit', 'tracksuit', { crowns: 300 }); add('outfit', 'chain-tee', 'tee + gold chain', { crowns: 600 }); add('outfit', 'fur', 'fur coat', { crowns: 900 });
 for (const [id, label] of [['cannabis-hoodie','Cannabis streetwear hoodie'],['dj','DJ performance fit'],['scrubs','Medical scrubs'],['labcoat','Lab coat'],['mechanic','Mechanic coveralls'],['hardhat','Blue-collar workwear'],['farmer','Farm workwear'],['suit','Executive suit'],['tactical','Tactical streetwear'],['chef','Chef jacket'],['firefighter','Firefighter turnout gear'],['varsity','Varsity jacket'],['denim','Denim jacket'],['ranch','Ranch workwear'],['hype','Hype streetwear']]) add('outfit', id, label, ['cannabis-hoodie','dj','labcoat','mechanic','farmer','suit','tactical','firefighter','hype'].includes(id) ? { crowns: 450 } : 'free');
 add('hat', 'none', 'none'); add('hat', 'beanie', 'beanie'); add('hat', 'snapback', 'snapback'); add('hat', 'bucket', 'bucket hat', { crowns: 250 }); add('hat', 'halo', 'halo', { ach: 30 }); add('hat', 'crown', 'solid gold crown', { prestige: 'prestige-original-crown' });
 add('hat', 'hardhat', 'Construction hardhat'); add('hat', 'storm-halo', 'Stormforged Halo', { prestige: 'prestige-original-storm' }); add('hat', 'aurora-crown', 'Aurora Crown of Worlds', { prestige: 'prestige-original-aurora' }); add('hat', 'cowboy', 'Ranch cowboy hat'); add('hat', 'chef-hat', 'Chef toque'); add('hat', 'scrub-cap', 'Medical scrub cap'); add('hat', 'dj-cap', 'DJ cap');
@@ -49,7 +49,7 @@ const key = (p) => p.kind + ':' + p.id;
 const STARTER_AVATAR = Object.freeze({
   gender: 'other', bg: 'night', skin: 's2', face: 'oval', hair: 'waves',
   hairc: 'c1', eyes: 'wide', mouth: 'smile', beard: 'none', build: 'average',
-  outfit: 'varsity', hat: 'none', acc: 'none', held: 'none'
+  outfit: 'adventurer', hat: 'none', acc: 'none', held: 'none'
 });
 function defaultFor() { return { ...STARTER_AVATAR }; }
 function clean(cfg, base) { const out = { ...base }; if (cfg && ['male', 'female', 'other'].includes(cfg.gender)) out.gender = cfg.gender; for (const k of KINDS) if (cfg && BYK[k][cfg[k]]) out[k] = cfg[k]; return out; }
@@ -97,8 +97,9 @@ function svg(c) {
   if (c.bg === 'storm-halo') o.push('<g fill="none" stroke="#bfdbfe" stroke-width="2.5" opacity=".85"><ellipse cx="60" cy="27" rx="29" ry="9" transform="rotate(-15 60 27)"><animateTransform attributeName="transform" type="rotate" from="-15 60 27" to="345 60 27" dur="16s" repeatCount="indefinite"/></ellipse><path d="M31 22 L40 27 L34 34 L47 37 M82 17 L76 26 L87 30 L78 38"><animate attributeName="opacity" values=".2;1;.2" dur="1.1s" repeatCount="indefinite"/></path></g>');
   if (c.bg === 'chronos-mantle') o.push('<g fill="none" stroke="#fcd34d" opacity=".8"><circle cx="60" cy="59" r="46" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="60" cy="59" r="36" stroke-width="2"><animateTransform attributeName="transform" type="rotate" from="0 60 59" to="360 60 59" dur="30s" repeatCount="indefinite"/></circle><path d="M60 18 V34 M60 84 V100 M19 59 H35 M85 59 H101" stroke-width="3"/><circle cx="60" cy="59" r="3" fill="#fef3c7"/></g>');
   if (c.bg === 'aurora-crown') o.push('<g fill="none" stroke-width="3" opacity=".75"><path d="M7 28 Q26 4 43 26 T80 24 T113 26" stroke="#86efac"><animate attributeName="d" values="M7 28 Q26 4 43 26 T80 24 T113 26;M7 32 Q26 16 43 30 T80 18 T113 32;M7 28 Q26 4 43 26 T80 24 T113 26" dur="5s" repeatCount="indefinite"/></path><path d="M7 38 Q26 18 43 37 T80 35 T113 38" stroke="#e9d5ff"/><path d="M38 18 L43 8 L48 18 L60 3 L72 18 L77 8 L82 18 L82 26 L38 26Z" stroke="#fde68a" fill="#fbbf24" fill-opacity=".25"/></g>');
-  const shirt = { tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207', 'cannabis-hoodie':'#166534', dj:'#312e81', scrubs:'#0e7490', labcoat:'#f8fafc', mechanic:'#292524', hardhat:'#f59e0b', farmer:'#365314', suit:'#111827', tactical:'#374151', chef:'#f8fafc', firefighter:'#991b1b', varsity:'#7f1d1d', denim:'#1d4ed8', ranch:'#92400e', hype:'#db2777', 'titan-exoframe':'#334155' }[c.outfit] || '#3b82f6';
+  const shirt = { tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207', 'cannabis-hoodie':'#166534', dj:'#312e81', scrubs:'#0e7490', labcoat:'#f8fafc', mechanic:'#292524', hardhat:'#f59e0b', farmer:'#365314', suit:'#111827', tactical:'#374151', chef:'#f8fafc', firefighter:'#991b1b', varsity:'#7f1d1d', adventurer:'#3b493b', denim:'#1d4ed8', ranch:'#92400e', hype:'#db2777', 'titan-exoframe':'#334155' }[c.outfit] || '#3b82f6';
   o.push(`<path d="M18 120 C22 92 40 84 60 84 C80 84 98 92 102 120Z" fill="${shirt}"/>`);
+  if (c.outfit === 'adventurer') o.push('<path d="M24 117 L42 89 L51 93 L48 120 L25 120Z M96 117 L78 89 L69 93 L72 120 L95 120Z" fill="#233c33" stroke="#c49b65" stroke-width="1.4"/><path d="M46 87 L61 112 L75 87 M51 107 H69" stroke="#d1aa66" stroke-width="3" fill="none"/>');
   if (c.outfit === 'hoodie') o.push('<path d="M42 88 C48 100 72 100 78 88" fill="none" stroke="#1e293b" stroke-width="4"/>');
   if (c.outfit === 'jersey') o.push('<text x="60" y="112" font-size="16" font-family="Arial" font-weight="700" fill="#fff" text-anchor="middle">7</text>');
   if (c.outfit === 'tracksuit') o.push('<path d="M34 120 L40 90 M86 120 L80 90" stroke="#22d3ee" stroke-width="3"/>');
@@ -167,7 +168,7 @@ function routes(app, H) {
   app.get('/api/avatar', requireUser, (req, res) => { const shop = require('./shop');
     const points = shop.sync(req.user.id);
     res.json({ ok: true, avatar: configOf(req.user), kinds: KINDS, parts: partsFor(req.user.id),
-      bg: BG, skin: SKIN, hair_colors: HAIRC, points, crowns: require('./monetize').crowns(req.user.id) });
+      bg: BG, skin: SKIN, hair_colors: HAIRC, starter: defaultFor(), points, crowns: require('./monetize').crowns(req.user.id) });
   });
   app.put('/api/avatar', requireUser, (req, res) => { const want = clean(req.body && req.body.avatar, configOf(req.user)); const ctx = {};
     for (const k of KINDS) { const p = BYK[k][want[k]]; if (!owns(req.user.id, p, ctx)) return bad(res, 403, `Unlock "${p.label}" first.`); }

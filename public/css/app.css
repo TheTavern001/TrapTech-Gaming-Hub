@@ -1093,3 +1093,7 @@ input,select,textarea{border-color:var(--v1-border)}input:not([type=checkbox]):n
 .ach-game-art.tier-legendary{--ach-light:#ffee97;box-shadow:0 0 18px rgba(255,208,85,.24)}
 .ach.off .ach-game-art img{filter:saturate(.55) brightness(.68)}
 @media(max-width:460px){.ach-game-art{width:70px;height:83px}.ach-game-grade{font-size:7px;right:3px}}
+
+/* Source-asset achievement rewards, using Kenney CC0 medals and per-game artwork. */
+.ach-game-art .ach-medal{position:absolute;z-index:2;right:7px;top:7px;width:33px;height:33px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
+.ach-game-art>.ico{background:rgba(6,9,24,.72);padding:3px;border-radius:6px}

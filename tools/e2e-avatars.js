@@ -14,12 +14,13 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const P = r.body.parts;
   const starter = r.body.avatar;
   const starterKinds = r.body.kinds.map(kind => P.find(p => p.kind === kind && p.id === starter[kind]));
-  ok(starter.gender === 'other' && starter.outfit === 'varsity' && starter.hair === 'waves' && starterKinds.every(p => p && p.owned),
+  ok(starter.gender === 'other' && starter.outfit === 'adventurer' && starter.hair === 'waves' && starterKinds.every(p => p && p.owned),
     'unified starter appearance consists entirely of unlocked cosmetic parts', starter);
   const fresh = client(); const ub = 'av2_' + Math.random().toString(36).slice(2, 8);
   await fresh('/api/auth/signup', { body: { username: ub, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } });
   const second = await fresh('/api/avatar');
   ok(second.body.ok && JSON.stringify(starter) === JSON.stringify(second.body.avatar), 'separate new accounts receive identical starter appearance');
+  ok(P.find(p => p.kind === 'outfit' && p.id === 'adventurer')?.owned, 'adventure starter outfit exists and is free');
   const cfg = { ...r.body.avatar, hair: 'mohawk', hairc: 'c3', outfit: 'hoodie', hat: 'beanie', held: 'controller' };
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: cfg } }); ok(r.body.ok && r.body.avatar.hair === 'mohawk', 'save free parts');
   r = await client()(`/avatar/${ua}.svg`); ok(r.body !== def, 'the public avatar changes after saving');
