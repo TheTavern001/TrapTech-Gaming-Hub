@@ -272,6 +272,31 @@ try {
 const homeHtml = read(path.join(ROOT, 'public/index.html')) || '';
 if (!homeHtml.includes('type="importmap"') || !homeHtml.includes('/games-lib/vendor/three.module.min.js'))
   fail('public/index.html', 'Local Three.js import map for rigged character loading is missing');
+// Read-only deterministic gameplay regression: the Paper Toss keyboard throw
+// must physically cross the scoring rim. The original 560 px/s impulse could
+// never reach y=300 with 1400 px/s^2 gravity; all Space throws were doomed.
+{
+  const vm = require('node:vm');
+  const code = read(path.join(ROOT,'public/games-lib/paper-toss/game.js')) || '';
+  let game = null;
+  try {
+    vm.runInNewContext(code,{Kit:{run:g=>{game=g;}}},{timeout:1000,filename:'paper-toss/game.js'});
+    if(!game || typeof game.init!=='function' || typeof game.update!=='function')throw Error('invalid game entry');
+    const make=(wind,weak=false)=>{
+      const g={ptr:{released:false,pressed:false,x:200,y:600,sx:200,sy:600},keys:{},
+        R:(a,b)=>(a+b)/2,sfx:()=>{},float:()=>{},burst:()=>{},score:0,
+        add(v){this.score+=v;},kd(k){return !!this.keys[k];},end(x){this.reason=x;}};
+      game.init(g);g.wind=wind;
+      if(weak){g.ptr.released=true;g.ptr.sy=600;g.ptr.y=550;}else g.keys[' ']=true;
+      game.update(g,.016);g.keys[' ']=false;g.ptr.released=false;
+      for(let n=0;n<130;n++)game.update(g,.016);
+      return g;
+    };
+    const calm=make(0),wind=make(20),weak=make(0,true);
+    if(calm.made!==1||wind.made!==1||weak.misses!==1)
+      fail('paper-toss/game.js','Paper Toss physically impossible trajectory / rim collision');
+  } catch(e){fail('paper-toss/game.js','Could not execute isolated physics smoke test: '+e.message);}
+}
 const avatarRig = read(path.join(ROOT, 'public/js/avatar-rig.js')) || '';
 if (!avatarRig.includes("name==='hair_brown'") || !avatarRig.includes("stage.classList.contains('avatar-profile-stage')"))
   fail('public/js/avatar-rig.js', 'Female hair material must be colorable and profile camera must use portrait framing');
