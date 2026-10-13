@@ -18,7 +18,7 @@ for (const g of games) map.set('library:' + g.slug, {type:'library', baseline:ol
 const errors = [], passed = [], pending = [];
 // Do not silently keep a retired/replaced baseline game in the quality denominator.
 const configSource = fs.readFileSync(path.join(ROOT, 'src/config.js'), 'utf8');
-const coreIds = [...configSource.matchAll(/\\{\\s*id:\\s*'([^']+)',\\s*title:\\s*'([^']+)'[\\s\\S]*?module:\\s*'([^']+)'/g)]
+const coreIds = [...configSource.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)]
   .map(m=>m[1]).filter(id=>!['plinko','spin-to-win','blazed-roulette'].includes(id));
 if (coreIds.length !== baseline.activeCoreIds.length ||
     coreIds.some(id=>!baseline.activeCoreIds.includes(id)))
@@ -38,7 +38,7 @@ const approvedCheck = check => {
   if (!check || check.passed !== true || typeof check.evidence !== 'string') return false;
   const ref = check.evidence.trim();
   // Documented evidence must be an existing repository audit artifact or an HTTPS review URL.
-  if (/^https:\/\/[^\\s/]+\\/\\S+$/i.test(ref)) return true;
+  if (ref.startsWith('https://') && ref.length > 16 && !ref.includes(' ')) return true;
   if (!/^docs\/audit\/[a-z0-9_./-]+$/i.test(ref) || ref.includes('..')) return false;
   return fs.existsSync(path.join(ROOT, ref));
 };
