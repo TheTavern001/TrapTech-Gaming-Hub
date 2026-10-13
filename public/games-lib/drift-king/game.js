@@ -10,6 +10,14 @@ Kit.run({ id: 'gl-drift-king', title: 'DRIFT KING', help: 'Hold to turn right, r
     if (best > 36) { g.sfx('die'); g.burst(g.W / 2, g.H * 0.65, '#a16207', 30); return g.end('Off the road'); }
     const m = Math.floor(-c0.y / 20); if (m > g.lastM) { g.add(m - g.lastM, 'm'); g.lastM = m; }
     for (const p of g.parts) if (p.sk) { p.x = p.wx - c0.x + g.W / 2; p.y = p.wy - c0.y + g.H * 0.65; }
+    // Discard obsolete road segments, retaining the preceding eight for
+    // collision and the future generated road for forward visibility.
+    // This bounds both memory and Canvas lineTo work per rendered frame.
+    if (g.last > 12) {
+      const discard = g.last - 8;
+      g.pts.splice(0, discard);
+      g.last -= discard;
+    }
   },
   draw(g, c) {
     const ox = g.W / 2 - g.car.x, oy = g.H * 0.65 - g.car.y; c.lineCap = 'round'; c.lineJoin = 'round';

@@ -36,6 +36,8 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-rotating-quests.js \
  && node --check tools/verify-game-syntax.js \
  && node tools/verify-game-syntax.js \
+ && node --check tools/test-endless-buffers.js \
+ && node tools/test-endless-buffers.js \
  && node --check tools/games-lib-static-check.js \
  && node tools/games-lib-static-check.js \
  && node --check tools/prelaunch-deep-audit.js \

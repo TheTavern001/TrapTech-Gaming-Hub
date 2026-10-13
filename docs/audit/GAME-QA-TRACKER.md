@@ -116,3 +116,9 @@
 ## Release verification contract
 
 A game needs an actual fresh playthrough showing launch/start, touch and keyboard, resume/restart, collision/game-over, signed score submission and invalid-score rejection, leaderboard result, achievements and earned cosmetics, plus screenshots and frame-time measurements on Android and desktop. Separately verify avatar clipping/ownership, shop purchase atomicity/rotation, giveaway booking/entry, and restored accounts and scores after deployment. The structural report is available under `/api/audit/report`; do not mark these gates passed just because a Docker build succeeds.
+
+
+### Source-level endurance regressions (not AAA passes) — 2026-10-13
+- `tunnel-hop` **REWORK (code change staged)**: rolling 64-row buffer for collision and rendering replaces unbounded persistent history. Isolated deterministic 2-hour source simulation: 64 rows, valid forward collision lookup, same tile-generation sequence. Physical Android FPS, visuals, game fairness and scoring still NOT RUN.
+- `drift-king` **REWORK (code change staged)**: old road points trimmed behind the car after nearest-polyline collision checks. Isolated 4,000-segment source simulation: peak 42 points vs previous 4,022, path rendering approximately 64 nodes vs 8,044, unchanged score (13,659) and seeded RNG state (982989590). Real-device playthrough still NOT RUN.
+- These are deliberately **not** quality approvals. Docker now calls `tools/test-endless-buffers.js` to catch regressions without production secrets.
