@@ -157,8 +157,8 @@
       "evidence": "owner Deplexo screenshot at 2026-10-13 ~10:29 EDT: draft branch revision ERROR after 104s; full first-error Docker log supplied by owner 2026-10-13 ~11:11 EDT in chat.",
       "firstError": "Error: Cannot find module '/app/tools/test-endless-buffers.js' (Node.js v20.20.2; Docker [1/2] STEP 11/12; exit status 1)",
       "rootCause": "CONFIRMED by owner-provided complete Deplexo build log: .dockerignore has 'tools/*' but no '!tools/test-endless-buffers.js'; Dockerfile COPY tools ./tools omits the file. Docker STEP 11/12 passes 96 game syntax files and then fails at 'node --check tools/test-endless-buffers.js' with MODULE_NOT_FOUND.",
-      "fixCommit": "PENDING — current draft branch fixes Docker context, not yet confirmed READY",
-      "verifiedAfterFix": false
+      "fixCommit": "3dfd3913ec1cd182bc836f90488f4910999f3a5e",
+      "verifiedAfterFix": true
     },
     {
       "commit": "b5c9783fd198b6ac67799a6849b87605a5bd1c7d",
@@ -186,6 +186,15 @@
       "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
       "fixCommit": null,
       "verifiedAfterFix": false
+    },
+    {
+      "commit": "3dfd3913ec1cd182bc836f90488f4910999f3a5e",
+      "status": "READY",
+      "evidence": "User-confirmed Deplexo READY at ~11:57 EDT on 2026-10-13; live runtime SHA not verified",
+      "firstError": null,
+      "rootCause": null,
+      "fixCommit": null,
+      "verifiedAfterFix": true
     }
   ],
   "sourceVerification": [
@@ -280,5 +289,5 @@
       "host": "UNKNOWN; source branch auto-deploy possible"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 ~11:11 EDT screenshot and full d5de300 Docker build log"
+  "lastEvidenceReconciliation": "2026-10-13 ~11:57 EDT owner reported 3dfd391 READY"
 }

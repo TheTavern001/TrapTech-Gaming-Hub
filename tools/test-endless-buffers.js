@@ -72,5 +72,22 @@ function drift() {
   assert.ok(canvas.lines<=128,'Canvas road redraw grew unbounded: '+canvas.lines);
   return {steps:4000,maxRoadPoints:maxPoints,drawNodes:canvas.lines,score:g.points};
 }
-const a = tunnel(), b = drift();
-console.log(JSON.stringify({test:'source physics/memory regression only',tunnel:a,drift:b,passed:true},null,2));
+
+function dirtEndurance(){
+ const {definition}=load('dirt-dash'),g={W:400,H:700,t:0,frames:0,keys:{ArrowRight:true},btnP:{},btn:{},ptr:{down:false},rnd:()=>.73,R:(a,b)=>a+(b-a)*.43,RI:()=>2,kd:()=>false,add(){},sfx(){},float(){},burst(){},shake(){},end(){}};
+ definition.init(g);g.lane=-1;let max=0;
+ for(let i=0;i<14400;i++){g.frames++;g.t+=.5;definition.update(g,.5);max=Math.max(max,g.obs.length);assert.ok(g.obs.length<=40&&g.obs.some(o=>o.x>g.x+1000),'Dirt Dash ongoing hazards '+i);}
+ assert.ok(g.x>200000&&g.nextHazardX>g.x,'Dirt Dash crosses original horizon');
+ return {distance:Math.floor(g.x),maxBuffered:max};
+}
+function hillEndurance(){
+ const src=fs.readFileSync(path.join(ROOT,'public/games-lib/hill-hauler/game.js'),'utf8');
+ const m=src.match(/  function refillItems\(g,cx\)\{[\s\S]*?\n  \}/);assert.ok(m,'Missing Hill Hauler refill generator');
+ const fn=vm.runInNewContext('('+m[0].trim()+')',{},{timeout:1500});
+ const g={items:[],nextItemX:600,rnd:()=>.4,R:(a,b)=>a+(b-a)*.43};let max=0,fuel=0;
+ for(let x=160;x<360000;x+=150){fn(g,x);max=Math.max(max,g.items.length);fuel+=g.items.filter(v=>v.x>60000&&v.x>x+1000&&v.k==='f').length;assert.ok(g.items.length<=35,'Unbounded Hill Hauler pickups');}
+ assert.ok(g.nextItemX>360000&&fuel>0,'Fuel stops after 60000');
+ return {spawnThrough:Math.floor(g.nextItemX),maxBuffered:max,fuelPast60000:fuel};
+}
+const a=tunnel(),b=drift(),c=dirtEndurance(),d=hillEndurance();
+console.log(JSON.stringify({test:'source physics/memory regression only',tunnel:a,drift:b,dirt:c,hill:d,passed:true},null,2));

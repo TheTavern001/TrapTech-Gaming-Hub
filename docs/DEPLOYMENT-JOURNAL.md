@@ -95,3 +95,6 @@ Error: building at STEP "RUN ... node --check tools/test-endless-buffers.js ..."
 **Systemic fix staged:** include the **entire tools directory** in the Docker context (still excluding secrets and nested node_modules) rather than manually allowlisting each JS file. Put explicit file-existence guards at the beginning of Docker prelaunch. The source-only endurance simulation was rerun against actual fetched game scripts: Tunnel Hop 7,200 seconds with max 64 rows and Drift King 4,000 steps with max 42 road points, scores unchanged; PASSED. **This does not yet certify a Docker build or Deplexo READY**.
 
 Additional Deplexo failures visible in owner's screenshot: `b5c9783` 202s, `1a2b775` 124s, `61c1b9d` 65s, all ERROR. Their individual logs weren't provided, so the same inherited ignore rule is a plausible but **not confirmed** cause. These are separate documented attempts. Next: observe READY of the fixed commit before claiming host recovery.
+
+## 2026-10-13 recovery
+Owner confirms Deplexo `3dfd391` READY, removing the missing Docker tool blocker. Live /api/build not reachable from this environment; runtime functionality and AAA certification remain unverified. Following source changes are not yet confirmed READY. Historical ERROR records remain intact.

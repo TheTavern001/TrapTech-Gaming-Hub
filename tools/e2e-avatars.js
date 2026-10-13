@@ -43,8 +43,10 @@ function client() { const jar = {}; return async (p, o = {}) => {
   await ADM('/api/admin/store/grant', { body: { username: ua, crowns: 1000 } });
   r = await A('/api/avatar/buy', { body: { part: 'outfit:fur' } }); ok(r.body.ok && r.body.crowns === 100, 'buy the fur coat for 900 Crowns');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur' } } }); ok(r.body.ok, 'bought part can be worn');
+  const emoteGrant=await ADM('/api/admin/store/grant',{body:{username:ua,crowns:200}});
+  ok(emoteGrant.body?.ok===true,'admin grants test emote budget');
   r = await A('/api/avatar/buy', { body: { part: 'emote:wave' } });
-  ok(r.body.ok, 'emote can be unlocked with Crowns; owned persistently');
+  ok(r.body.ok&&r.body.crowns===100,'emote unlock leaves expected Crowns balance');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur', emote: 'wave' } } });
   ok(r.body.ok && r.body.avatar.emote==='wave', 'unlocked emote can be saved on profile');
   const emotePreview = await client()('/avatar-preview.svg?c='+encodeURIComponent(JSON.stringify({emote:'wave'})));

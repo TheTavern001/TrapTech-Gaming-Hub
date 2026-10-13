@@ -122,3 +122,10 @@ A game needs an actual fresh playthrough showing launch/start, touch and keyboar
 - `tunnel-hop` **REWORK (code change staged)**: rolling 64-row buffer for collision and rendering replaces unbounded persistent history. Isolated deterministic 2-hour source simulation: 64 rows, valid forward collision lookup, same tile-generation sequence. Physical Android FPS, visuals, game fairness and scoring still NOT RUN.
 - `drift-king` **REWORK (code change staged)**: old road points trimmed behind the car after nearest-polyline collision checks. Isolated 4,000-segment source simulation: peak 42 points vs previous 4,022, path rendering approximately 64 nodes vs 8,044, unchanged score (13,659) and seeded RNG state (982989590). Real-device playthrough still NOT RUN.
 - These are deliberately **not** quality approvals. Docker now calls `tools/test-endless-buffers.js` to catch regressions without production secrets.
+
+### 2026-10-13 source gameplay improvements (not AAA-certified)
+- Dirt Dash: indefinitely generated bounded hazard queue and faster challenge escalation across six progress tiers, isolated 2h simulation beyond former limit.
+- Hill Hauler: indefinite fuel/coin replenishment with bounded items; generator-only long-distance simulation beyond 360000 world units.
+- No Brakes: speed cap at 640 units/s, faster traffic interval escalation and six challenge tiers.
+- Avatar test: correct insufficient Crowns before emote purchase; no full live payment or real device E2E performed.
+- Owner requires games to offer **genuine distinct characters and vehicles** where appropriate, equippable through progression and optional cosmetic purchase without competitive stat changes. Current models/skins are not yet approved; mere recolors don't meet owner's AAA reference. Gameplay difficulty must scale with progress and remain fair/controllable.

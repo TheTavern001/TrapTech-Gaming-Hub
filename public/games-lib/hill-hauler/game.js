@@ -15,9 +15,17 @@
   function terrain(g, cx) { while (g.segHi < cx + 1400) { const a = g.segHi, b = a + SEG; const ya = hgt(a), yb = hgt(b); const v = [{ x: a, y: ya }, { x: b, y: yb }, { x: b, y: Math.max(ya, yb) + 140 }, { x: a, y: Math.max(ya, yb) + 140 }];
       const body = M.Bodies.fromVertices((a + b) / 2, 0, [v], { isStatic: true, friction: 1.2 }); M.Body.setPosition(body, { x: body.position.x + (a - body.bounds.min.x), y: body.position.y + (Math.min(ya, yb) - body.bounds.min.y) }); M.Composite.add(g.eng.world, body); g.segs.set(a, body); g.segHi = b; }
     for (const [a, body] of g.segs) if (a < cx - 700) { M.Composite.remove(g.eng.world, body); g.segs.delete(a); } }
+  function refillItems(g,cx){
+    while(g.nextItemX<cx+2400){
+      const x=g.nextItemX;
+      g.items.push({x,k:(x%2400<520&&x>1500)||g.rnd()<.12?'f':'c'});
+      g.nextItemX+=g.R(300,520);
+    }
+    while(g.items.length && g.items[0].x<cx-800)g.items.shift();
+  }
   Kit.run({ id: 'gl-hill-hauler', title: 'HILL HAULER', orient: 'l', help: 'Hold right side / Right arrow = gas, left side / Left = brake\nGrab fuel cans, land flips for bonus, don\'t land on your head', bg: '#8fd3f4',
     buttons: [{ id: 'B', key: 'ArrowLeft', label: 'BRAKE' }, { id: 'G', key: 'ArrowRight', label: 'GAS' }],
-    init(g) { build(g); g.fuel = 1; g.cam = 0; g.camY = 0; g.dist = 0; g.items = []; for (let x = 600; x < 60000; x += g.R(300, 520)) g.items.push({ x, k: (x % 2400 < 520 && x > 1500) || g.rnd() < 0.12 ? 'f' : 'c' }); g.rot = 0; g.air = 0; g.acc = 0; g.prev = null; g.dust = []; g.ground = 2; },
+    init(g) { build(g); g.fuel = 1; g.cam = 0; g.camY = 0; g.dist = 0; g.items=[];g.nextItemX=600;refillItems(g,160); g.rot = 0; g.air = 0; g.acc = 0; g.prev = null; g.dust = []; g.ground = 2; },
     update(g, dt) {
       let gas = (g.keys.ArrowRight || g.keys.d ? 1 : 0), brake = (g.keys.ArrowLeft || g.keys.a ? 1 : 0); if (g.ptr.down) { if (g.ptr.x > g.W / 2) gas = 1; else brake = 1; } if (g.fuel <= 0) gas = 0;
       g.acc += Math.min(dt, 0.1); g.prev = { x: g.ch.position.x, y: g.ch.position.y, a: g.ch.angle, w: g.wh.map(w => ({ x: w.position.x, y: w.position.y, a: w.angle })) };
@@ -31,12 +39,12 @@
       if (!g.ground) { g.air += dt; g.rot += ang - (g.lastA == null ? ang : g.lastA); } else { if (Math.abs(g.rot) > Math.PI * 1.7) { const n = Math.round(Math.abs(g.rot) / (Math.PI * 2)) || 1; g.add(100 * n, 'f'); g.float(g.W / 2, 120, (n > 1 ? n + 'x ' : '') + 'FLIP +' + 100 * n, '#ffd23f', 26); g.sfx('power'); } else if (g.air > 1.2) { g.add(20, 'a'); g.float(g.W / 2, 140, 'AIR +20', '#7df9ff'); } g.rot = 0; g.air = 0; } g.lastA = ang;
       const hx = cx + Math.cos(ang) * 6 + Math.sin(ang) * 40, hy = cy + Math.sin(ang) * 6 - Math.cos(ang) * 40; if (hy + 9 > hgt(hx)) { g.shake(12, 0.4); g.burst(hx - g.cam, hy - g.camY, ['#ff5a4a', '#ffd23f', '#fff'], 34, 220); g.sfx('boom'); return g.end('Landed on your head'); }
       g.fuel -= dt * (0.04 + gas * 0.028); const spd = Math.hypot(g.ch.velocity.x, g.ch.velocity.y); if (g.fuel <= 0 && spd < 0.15 && g.ground) return g.end('Out of fuel');
-      terrain(g, cx); g.cam = Kit.lerp(g.cam, cx - 280 - Math.min(120, g.ch.velocity.x * 12), Math.min(1, dt * 4)); g.camY = Kit.lerp(g.camY, cy - 250, Math.min(1, dt * 3));
+      terrain(g, cx); refillItems(g,cx); g.cam = Kit.lerp(g.cam, cx - 280 - Math.min(120, g.ch.velocity.x * 12), Math.min(1, dt * 4)); g.camY = Kit.lerp(g.camY, cy - 250, Math.min(1, dt * 3));
       const m = Math.floor((cx - 160) / 10); if (m > g.dist) { g.add(m - g.dist, 'm'); g.dist = m; }
       for (const it of g.items) if (!it.got && Math.abs(it.x - cx) < 50 && Math.abs(hgt(it.x) - 40 - cy) < 70) { it.got = true; if (it.k === 'f') { g.fuel = 1; g.sfx('power'); g.float(it.x - g.cam, hgt(it.x) - 60 - g.camY, 'FUEL', '#ff5a4a'); } else { g.add(5, 'c'); g.sfx('coin'); g.burst(it.x - g.cam, hgt(it.x) - 40 - g.camY, ['#ffd23f', '#fff'], 8, 120, 0.4); } }
       if (gas) for (const w of g.wh) if (w.gnd && g.rnd() < 0.5) g.dust.push({ x: w.position.x - 14, y: w.position.y + 16, vx: -40 - g.rnd() * 60, vy: -20 - g.rnd() * 40, l: 0.6 }); for (const d of g.dust) { d.x += d.vx * dt; d.y += d.vy * dt; d.l -= dt; } g.dust = g.dust.filter(d => d.l > 0);
       if (gas && g.frames % 6 === 0) Kit.sfx('engine', Math.min(1, spd / 12));
-      g.hud = g.dist + ' m';
+      g.hud = g.dist+' m · TERRAIN '+(1+Math.min(5,Math.floor(g.dist/150)))+'/6';
     },
     draw(g, c) { const W = g.W, H = g.H, cam = g.cam, cy0 = g.camY;
       const sky = c.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#4aa8e8'); sky.addColorStop(0.7, '#bfe6f7'); sky.addColorStop(1, '#f4f0d8'); c.fillStyle = sky; c.fillRect(0, 0, W, H);
