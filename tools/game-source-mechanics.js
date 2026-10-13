@@ -3,7 +3,7 @@
 // SOURCE-ONLY technical inventory: passing this is NOT gameplay or AAA approval.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const ROOT=path.resolve(__dirname,'..');
-const exists=p=>fs.existsSync(path.join(ROOT,p));
+const exists=p=>p!==process.env.GAME_SOURCE_AUDIT_SIMULATE_MISSING&&fs.existsSync(path.join(ROOT,p));
 const read=p=>fs.readFileSync(path.join(ROOT,p),'utf8');
 const catalog=JSON.parse(read('public/games-lib/catalog.json')).games;
 const baseline=JSON.parse(read('docs/audit/GAME-INTAKE-BASELINE.json'));
@@ -22,6 +22,14 @@ function filesFor(g){
    .filter(p=>p.endsWith('.js')&&!p.includes('/vendor/')&&!p.includes('kit.js')&&!p.includes('adapter.js')&&!p.startsWith('http'))
    .map(p=>p.startsWith('/')?'public'+p:path.posix.normalize('public/games-lib/'+g.slug+'/'+p));
  return [...new Set(sources)].filter(p=>p.startsWith('public/')&&!p.includes('..')&&exists(p));
+}
+function linkedLocalScripts(g){
+ const html='public/games-lib/'+g.slug+'/index.html';
+ if(!exists(html))return [];
+ return [...read(html).matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/gi)]
+   .map(m=>m[1].split(/[?#]/)[0])
+   .filter(p=>p.endsWith('.js')&&!/^(?:https?:)?\/\//i.test(p))
+   .map(p=>p.startsWith('/')?'public'+p:path.posix.normalize('public/games-lib/'+g.slug+'/'+p));
 }
 function hash(s){return crypto.createHash('sha256').update(s).digest('hex');}
 function inspect(id,title,type,sources,entry,image,tallImage){
@@ -46,7 +54,15 @@ function inspect(id,title,type,sources,entry,image,tallImage){
 }
 for(const g of core)inspect('core:'+g.id,g.title,'core',
  ['public/js/'+g.module],'public/index.html',g.art&&'public'+g.art,g.artTall&&'public'+g.artTall);
-for(const g of catalog)inspect('library:'+g.slug,g.title,'library',filesFor(g),'public'+g.url,'public'+g.art);
+for(const g of catalog){
+ // Every local script is a runtime dependency, including adapter and vendor
+ // files. A missing script must FAIL the build, not disappear from filesFor().
+ for(const script of linkedLocalScripts(g)){
+  if(!script.startsWith('public/')||script.includes('..'))errors.push(g.slug+' unsafe script path '+script);
+  else if(!exists(script))errors.push(g.slug+' missing HTML script '+script);
+ }
+ inspect('library:'+g.slug,g.title,'library',filesFor(g),'public'+g.url,'public'+g.art);
+}
 for(const id of baseline.activeCoreIds)if(!core.some(g=>g.id===id))errors.push('Missing active core '+id);
 for(const slug of baseline.baselineLibrarySlugs)if(!catalog.some(g=>g.slug===slug))errors.push('Missing baseline library '+slug);
 const duplicates=[...same.values()].filter(a=>a.length>1);
@@ -55,7 +71,7 @@ const report={schemaVersion:1,audit:'static source inventory, not AAA certificat
  errors,missingArtwork:artDefects,possibleIdenticalGameSources:duplicates,
  criteriaNotTested:['Mobile/desktop gameplay','Distinct core game loops','Graphic quality',
    'Gameplay latency and frame time','Real assets and rights','Score replay security','Owner art approval'],games:rows};
-const file=path.join(ROOT,'docs/audit/game-source-mechanics.json');
+const file=process.env.GAME_SOURCE_AUDIT_REPORT||path.join(ROOT,'docs/audit/game-source-mechanics.json');
 fs.mkdirSync(path.dirname(file),{recursive:true});
 fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({audit:'game-source-mechanics',registered:rows.length,

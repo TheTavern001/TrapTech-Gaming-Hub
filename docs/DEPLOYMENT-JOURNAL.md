@@ -108,3 +108,6 @@ Build `0b7e3a6` is owner-confirmed READY, facial traits free in source (30). Nex
 
 ## 2026-10-13 missing card art finding
 Seven core games point at non-existent /assets/cards/v7/*.webp: munchies-snake, brick-breaker, void-swarm, stack, grow-guard, sling-smash, haze-defense. These are image defects, not gameplay source failures. The source inventory reports each under missingArtwork without auto-approving title. Source art corrections must use appropriate owned/licensed title-specific assets, not reuse unrelated thumbnails.
+
+## 2026-10-13 audit hardening: missing HTML dependencies
+Source scanner originally filtered non-existent JS filenames from nonstandard multi-file games. New full reference validation checks every local script tag, including bundled/vendor and Hub bridges. A new disposable negative-path test hides `bud-merge/js/game_manager.js` from the scanner and must receive exit 1 with exact missing dependency. This prevents silent acceptance of incompletely packaged games and doesn't change player data or gameplay. Deplexo result pending; historical failed releases preserved.

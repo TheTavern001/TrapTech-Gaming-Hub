@@ -234,6 +234,7 @@
     }
   ],
   "pendingEvidence": [
+    "Latest source mechanics scanner now checks every locally referenced <script> including shared and vendor scripts. Docker self-test artificially excludes Bud Merge game_manager.js and asserts the scanner fails with the exact missing file.",
     "Seven core-game art URLs refer to absent v7 files: munchies-snake, brick-breaker, void-swarm, stack, grow-guard, sling-smash, haze-defense. Render QA defects, not missing executable modules; report under missingArtwork.",
     "0b7e3a6 READY owner-confirmed. New candidate game-source-mechanics scanning and compact Android avatar editor must pass full Deplexo build and user physical visual testing.",
     "Public /api/audit/game-source should report 93 titles with source files, 0 quality-approved. This report cannot certify graphics, gameplay, frame rate or score replay.",
@@ -308,5 +309,5 @@
       "host": "UNKNOWN; source branch auto-deploy possible"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 owner-confirmed 0b7e3a6 READY"
+  "lastEvidenceReconciliation": "2026-10-13 source audit negative-path hardening, pending Deplexo READY for new commit"
 }

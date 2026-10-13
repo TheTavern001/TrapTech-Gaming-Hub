@@ -48,6 +48,9 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s tools/game-source-mechanics.js \
  && node --check tools/game-source-mechanics.js \
  && node tools/game-source-mechanics.js \
+ && test -s tools/test-game-source-mechanics.js \
+ && node --check tools/test-game-source-mechanics.js \
+ && node tools/test-game-source-mechanics.js \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/verify-prelaunch.js \
  && node tools/verify-prelaunch.js \
