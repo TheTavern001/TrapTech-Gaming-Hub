@@ -68,6 +68,15 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   check('Audit explicitly retains human visual/gameplay gates', auditReady && Array.isArray(auditReport.requiredHumanGates) && auditReport.requiredHumanGates.some(x => /real Android device playthrough/i.test(x)) && auditReport.requiredHumanGates.some(x => /avatar slot/i.test(x)), { gateCount: auditReport?.requiredHumanGates?.length || 0 });
   if (!(auditReady && Array.isArray(auditReport.requiredHumanGates) && auditReport.requiredHumanGates.some(x => /real Android device playthrough/i.test(x)) && auditReport.requiredHumanGates.some(x => /avatar slot/i.test(x)))) failures.push('Audit explicitly retains human visual/gameplay gates');
 
+  check('Full-system source audit retains the manual AAA release gate',
+    auditReady && auditReport.releaseGrade === 'STRUCTURAL_ONLY' && auditReport.fullAAAReviewComplete === false &&
+    Array.isArray(auditReport.systemChecks) && auditReport.systemChecks.length === 6 &&
+    auditReport.systemChecks.every(g => g.passed === g.total && g.e2eExecuted === false && g.physicalDeviceQaComplete === false) &&
+    auditReport.summary.releaseSystemContractsPassed === auditReport.summary.releaseSystemContractsTotal &&
+    auditReport.summary.missingAchievementGameCount === 0 && auditReport.summary.unresolvedAchievementRewardCount === 0,
+    { systems: auditReport?.systemChecks?.length, passed: auditReport?.summary?.releaseSystemContractsPassed,
+      total: auditReport?.summary?.releaseSystemContractsTotal, grade: auditReport?.releaseGrade });
+
   const storeResult = await get(BASE + '/api/store');
   let storeJson = null; try { storeJson = JSON.parse(storeResult.text); } catch {}
   const prestigeItems = storeJson?.prestige || [];

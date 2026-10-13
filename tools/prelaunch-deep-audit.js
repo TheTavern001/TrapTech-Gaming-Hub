@@ -213,11 +213,86 @@ if (!shop.hasStableGeneratedIdRule) shop.warnings.push('Stable generated cosmeti
 if (!shop.hasRarityModel) shop.warnings.push('Rarity tiers were not detected.');
 if (shop.staticItemIdDuplicates.length) issues.push({ severity: 'duplicate-review', finding: 'Duplicate static shop item IDs', duplicates: shop.staticItemIdDuplicates });
 
+
+// Cross-system release contracts: structural presence and registry consistency only.
+// Test script presence is NOT evidence that any E2E test has been executed.
+const achievementSrc = read(path.join(ROOT, 'src', 'achievements.js')) || '';
+const cosmeticSrc = read(path.join(ROOT, 'src', 'cosmetics.js')) || '';
+const questsSrc = read(path.join(ROOT, 'src', 'rotating-quests.js')) || '';
+const anticheatSrc = read(path.join(ROOT, 'src', 'anticheat.js')) || '';
+const monetizationSrc = read(path.join(ROOT, 'src', 'monetize.js')) || '';
+const playoffSrc = read(path.join(ROOT, 'src', 'games-lib-playoff.js')) || '';
+const perGameDefs = (achievementSrc.match(/const PER_GAME = \{([\s\S]*?)\n\};/) || [])[1] || '';
+const perGameIds = [...perGameDefs.matchAll(/^\s*(?:'([^']+)'|([a-z][a-z0-9-]*)):\s*\{/gm)].map(m => m[1] || m[2]);
+const missingGameAchievements = coreGames.filter(g => !perGameIds.includes(g.id)).map(g => g.id);
+const duplicateGameAchievements = duplicates(perGameIds, id => id).map(g => g.key);
+const cosmeticDefinitions = {
+  banner: (cosmeticSrc.match(/const BANNERS = \[([\s\S]*?)\]\.map\(/) || [])[1] || '',
+  frame: (cosmeticSrc.match(/const FRAMES = \[([\s\S]*?)\]\.map\(/) || [])[1] || '',
+  title: (cosmeticSrc.match(/const TITLES = \[([\s\S]*?)\]\s*\.map\(/) || [])[1] || ''
+};
+const cosmeticIds = {
+  banner: new Set([...cosmeticDefinitions.banner.matchAll(/^\s*\['([^']+)'/gm)].map(m => m[1])),
+  frame: new Set([...cosmeticDefinitions.frame.matchAll(/^\s*\['([^']+)'/gm)].map(m => m[1])),
+  title: new Set([...cosmeticDefinitions.title.matchAll(/'([^']+)'/g)].map(m => normalized(m[1]).replace(/\s+/g, '-')))
+};
+for (const m of shopSrc.matchAll(/^\s*\['([^']+)',\s*'([^']+)'/gm)) {
+  if (cosmeticIds[m[2]]) cosmeticIds[m[2]].add(m[1]);
+}
+const achievementRewards = [...achievementSrc.matchAll(/R\(['"]([^'"]+)['"],\s*['"]([^'"]+)['"]\)/g)].map(m => ({ type: m[1], id: m[2] }));
+const unresolvableRewards = achievementRewards.filter(r => !cosmeticIds[r.type]?.has(r.id));
+const skillTieBreakMetadata = games.every(g => Array.isArray(g.tiebreak) && g.tiebreak.some(t => /skill:/.test(t)) &&
+  g.tiebreak.some(t => /sudden-death/i.test(t)) && !g.tiebreak.some(t => /timestamp|fewer attempts|submission time/i.test(t)));
+const systemChecks = [
+  { id: 'games', label: 'Games and scored gameplay', checks: [
+    { name: 'Every core game has a local module', pass: coreRows.every(r => r.problems.length === 0) },
+    { name: '80 current library entries have HTML and expected game implementation', pass: games.length === 80 && rows.every(r => r.problems.length === 0) },
+    { name: 'Signed-run route and anti-cheat implementation exist', pass: serverSrc.includes('/api/run/start') && serverSrc.includes('/api/score') && /validate|reject|rate/i.test(anticheatSrc) },
+    { name: 'Browser, Android and forged-score test harnesses present', pass: ['e2e-games-lib.js','e2e-mobile.js','e2e-anticheat.js'].every(p => exists(path.join(ROOT, 'tools', p))) }
+  ] },
+  { id: 'achievements', label: 'Achievements and earned rewards', checks: [
+    { name: 'All 16 configured core games define five milestones', pass: missingGameAchievements.length === 0 && duplicateGameAchievements.length === 0 },
+    { name: 'All achievement cosmetic rewards resolve to actual IDs', pass: unresolvableRewards.length === 0 },
+    { name: 'Server-side achievement evaluation source present', pass: /function evaluate\(|const evaluate\s*=/.test(achievementSrc) }
+  ], metrics: { coreGamesCovered: perGameIds.length, rewardReferences: achievementRewards.length, missingGameAchievements, unresolvableRewards } },
+  { id: 'quests', label: 'Quests, XP and player progression', checks: [
+    { name: 'Server quest objectives and tiers defined', pass: questsSrc.includes('const OBJECTIVES') && questsSrc.includes('const TIERS') },
+    { name: 'Client quest reward metadata is rejected', pass: questsSrc.includes('Never accept client-modified') },
+    { name: 'Quest progression regression harness present', pass: exists(path.join(ROOT, 'tools', 'test-rotating-quests.js')) }
+  ] },
+  { id: 'avatar', label: 'Avatars and profile customization', checks: [
+    { name: 'Avatar server, editor and 3D renderer sources present', pass: avatar.serverModulePresent && avatar.editorPresent && avatar.rendererPresent },
+    { name: 'Ownership restrictions and negative API tests present', pass: avatar.serverChecksOwnership && avatar.testsCoverOwnership },
+    { name: 'Avatar SVG fallback present', pass: /avatar-preview\.svg/.test(avatarEditor) && /<svg/.test(avatarSrc) }
+  ] },
+  { id: 'shop', label: 'Shop, cosmetics, seasons and payments', checks: [
+    { name: 'Procedural catalog and rarity model defined', pass: shop.generatorPresent && shop.hasRarityModel },
+    { name: 'Economy and payment regression harnesses present', pass: exists(path.join(ROOT, 'tools', 'e2e-economy.js')) && exists(path.join(ROOT, 'tools', 'e2e-payments.js')) },
+    { name: 'Prestige originality uniqueness database constraint', pass: monetizationSrc.includes('prestige_original_one_owner') },
+    { name: 'Achievement reward cosmetics exist', pass: unresolvableRewards.length === 0 }
+  ] },
+  { id: 'giveaways', label: 'Giveaways and competition integrity', checks: [
+    { name: 'Public game catalog declares skill-only tie-breaking', pass: skillTieBreakMetadata },
+    { name: 'Server-derived metrics and equal-seed playoff source present', pass: playoffSrc.includes('function derive(') && playoffSrc.includes('lib_playoffs') },
+    { name: 'Giveaway and tie-break test harnesses present', pass: exists(path.join(ROOT, 'tools', 'e2e-events.js')) && exists(path.join(ROOT, 'tools', 'e2e-tiebreak.js')) }
+  ] }
+].map(group => ({ ...group, passed: group.checks.filter(c => c.pass).length, total: group.checks.length, e2eExecuted: false, physicalDeviceQaComplete: false }));
+const failedSystemContracts = systemChecks.flatMap(group => group.checks.filter(c => !c.pass).map(c => ({ system: group.id, check: c.name })));
+if (missingGameAchievements.length) issues.push({ severity: 'blocker', finding: 'Core games lack per-game achievement milestones', ids: missingGameAchievements });
+if (duplicateGameAchievements.length) issues.push({ severity: 'blocker', finding: 'Duplicate per-game achievement definition', ids: duplicateGameAchievements });
+if (unresolvableRewards.length) issues.push({ severity: 'blocker', finding: 'Achievement rewards reference unknown cosmetic IDs', rewards: unresolvableRewards });
+if (!skillTieBreakMetadata) issues.push({ severity: 'blocker', finding: 'Catalog describes non-skill tie-breaking despite seeded playoff requirement' });
+if (failedSystemContracts.length) issues.push({ severity: 'blocker', finding: 'Required structural release contracts missing', checks: failedSystemContracts });
+
 const evidence = {
   generatedAt: new Date().toISOString(),
   mode: 'read-only structural audit of core Hub games and Games Library; not a visual/gameplay/physical-device pass',
   summary: {
     registryGames: games.length,
+    releaseSystemContractsPassed: systemChecks.reduce((sum,g) => sum + g.passed, 0),
+    releaseSystemContractsTotal: systemChecks.reduce((sum,g) => sum + g.total, 0),
+    missingAchievementGameCount: missingGameAchievements.length,
+    unresolvedAchievementRewardCount: unresolvableRewards.length,
     // Match the public runtime registry: archived chance games are audited below but are not active core titles.
     coreGamesRegistered: coreGames.filter(g => !new Set(['plinko', 'spin-to-win', 'blazed-roulette']).has(g.id)).length,
     coreGamesWithBlockers: coreRows.filter(r => r.problems.length).length,
@@ -229,7 +304,8 @@ const evidence = {
     avatar: { editorPresent: avatar.editorPresent, rendererPresent: avatar.rendererPresent, ownershipTestsDetected: avatar.testsCoverOwnership },
     shop: { staticItemsFound: shop.staticItemsFound, duplicateStaticIds: shop.staticItemIdDuplicates.length, generatorPresent: shop.generatorPresent }
   },
-  coreGames: coreRows, games: rows, issues, warnings, avatar, shop, brandIcons,
+  coreGames: coreRows, games: rows, issues, warnings, avatar, shop, brandIcons, systemChecks,
+  releaseGrade: 'STRUCTURAL_ONLY', fullAAAReviewComplete: false,
   requiredHumanGates: [
     'Fresh desktop and real Android device playthrough for every game',
     'Record controls, pause/resume, restart, scoring, score submission and invalid/forged-score rejection',
