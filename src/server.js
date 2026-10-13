@@ -302,8 +302,8 @@ app.post('/api/score', requireUser, (req, res) => {
   const durationMs = Math.max(0, Math.min(rawDur, t - row.started_at + 5000));
   // v5 anti-cheat (src/anticheat.js): only physically impossible runs are rejected; suspicious ones are kept + flagged
   const tel = req.body.tel && typeof req.body.tel === 'object' ? req.body.tel : null;
-  const verdict = AC.assess({ userId: req.user.id, game: { ...game, id: row.game_id }, score, elapsedS, durationMs: rawDur, tel, seed: row.seed, log: Array.isArray(req.body.log) ? req.body.log : null, ev: req.body.ev && typeof req.body.ev === 'object' ? req.body.ev : null,
-    recent: db.prepare('SELECT COUNT(*) c FROM runs WHERE user_id=? AND created_at>?').get(req.user.id, t - 60e3).c });
+  const verdict = require('./prize-score-proof').admit(row.event_id, row.game_id, AC.assess({ userId: req.user.id, game: { ...game, id: row.game_id }, score, elapsedS, durationMs: rawDur, tel, seed: row.seed, log: Array.isArray(req.body.log) ? req.body.log : null, ev: req.body.ev && typeof req.body.ev === 'object' ? req.body.ev : null,
+    recent: db.prepare('SELECT COUNT(*) c FROM runs WHERE user_id=? AND created_at>?').get(req.user.id, t - 60e3).c }));
   if (verdict.reject && verdict.why) return reject(422, verdict.why);
   if (verdict.reject) return reject(422, `Score rejected: ${score}${unit} in ${elapsedS.toFixed(1)}s is not possible in ${game.title} (max ${verdict.cap}${unit}).`);
   if (coins > 2 * ac.coinsPerSec * elapsedS + 20) return reject(422, 'Coin count rejected as implausible.');
@@ -321,9 +321,9 @@ app.post('/api/score', requireUser, (req, res) => {
   const joinToCount = gwsAll.filter(g => g.require_join && !gws.includes(g)).map(g => ({ id: g.id, title: g.title }));
   const newEntries = [];
   for (const g of gws) {
-    if (score < (g.min_score || 0)) continue;
+    if (verdict.held || score < (g.min_score || 0)) continue;
     const games = giveawayGameIds(g.id); const ph = games.map(() => '?').join(',');
-    const had = db.prepare(`SELECT 1 FROM runs WHERE event_id=${+g.id} AND user_id=? AND game_id IN (${ph}) AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
+    const had = db.prepare(`SELECT 1 FROM runs WHERE event_id=${+g.id} AND user_id=? AND game_id IN (${ph}) AND held=0 AND verify='replay-ok' AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
     if (!had) newEntries.push(g);
   }
   const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held,event_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
@@ -338,7 +338,7 @@ app.post('/api/score', requireUser, (req, res) => {
   const rank = board.findIndex(r => r.user_id === req.user.id) + 1;
   const counted = gws.map(g => {
     const entrants = giveawayEntrants(g); const me = entrants.find(e => e.user_id === req.user.id);
-    return { id: g.id, title: g.title, rank: me ? me.rank : null, entrants: entrants.length, min_score: g.min_score || 0, qualified: score >= (g.min_score || 0) };
+    return { id: g.id, title: g.title, rank: me ? me.rank : null, entrants: entrants.length, min_score: g.min_score || 0, qualified: !verdict.held && verdict.verify === 'replay-ok' && score >= (g.min_score || 0) };
   });
   // explicit giveaway param (legacy "contest") => tell the client if it ended
   let giveawayStatusOut = null;
@@ -346,7 +346,7 @@ app.post('/api/score', requireUser, (req, res) => {
   if (gid) {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(gid);
     giveawayStatusOut = !g ? 'not_found' : String(evOrig || '') !== String(g.id) ? 'not_event_run' : (t > g.end_at ? 'ended_not_counted' : t < g.start_at ? 'not_started_not_counted' : !g.active ? 'inactive'
-      : !giveawayGameIds(g.id).includes(row.game_id) ? 'game_not_linked' : score < (g.min_score || 0) ? 'below_min_score' : 'counted');
+      : !giveawayGameIds(g.id).includes(row.game_id) ? 'game_not_linked' : score < (g.min_score || 0) ? 'below_min_score' : verdict.held ? 'held_pending_independent_replay' : 'counted');
   }
   // achievements are evaluated here, on the server, from the stored runs
   const unlocked = ach.evaluate(req.user.id, { games: [row.game_id] }).fresh;
@@ -355,7 +355,7 @@ app.post('/api/score', requireUser, (req, res) => {
   if (H.settleChallenges) H.settleChallenges(req.user.id);
   const first = board[0]; const toFirst = first && first.user_id !== req.user.id ? first.score - Math.max(score, prevBest || 0) + 1 : 0;
   let points = null; try { const before = require('./shop').balance(req.user.id); const after = require('./shop').sync(req.user.id); points = { balance: after, gained: after - before }; } catch (e) { console.error('points sync', e.message); }
-  res.json({ ok: true, held: !!verdict.held, verified: verdict.verify === 'replay-ok', held_reason: verdict.held ? 'Huge score! It is in a quick fair-play review and will appear on the leaderboards and giveaways as soon as a Trap Tech admin verifies it. Your score is saved and nothing is deleted.' : null,
+  res.json({ ok: true, held: !!verdict.held, verified: verdict.verify === 'replay-ok', held_reason: verdict.held ? (verdict.prizeProofHeld ? 'Play saved. This game is not yet independently certified for official prize scoring. Your run cannot affect giveaway winners; free-play remains available.' : 'Score saved for fair-play review; competitive ranking is paused.') : null,
     to_first: toFirst > 0 ? toFirst : 0, is_first: !!(first && first.user_id === req.user.id), points, run_id: info.lastInsertRowid, share_url: `/s/${info.lastInsertRowid}`, level: extra.level, level_up: extra.level_up || null, xp_gained: extra.level.xp - levelBefore.xp, game_id: row.game_id, score, coins, personal_best: isBest, best: Math.max(score, prevBest || 0), rank, players: board.length, giveaways: counted, join_to_count: joinToCount, giveaway_status: giveawayStatusOut, unlocked });
 });
 

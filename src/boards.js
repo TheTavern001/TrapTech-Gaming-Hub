@@ -42,9 +42,9 @@ function giveawayEntrants(g) {
 function giveawayStats(g) {
   const games = giveawayGameIds(g.id); if (!games.length) return { plays: 0, players: 0, qualifying_runs: 0 };
   const ph = games.map(() => '?').join(',');
-  const r = db.prepare(`SELECT COUNT(*) AS plays, COUNT(DISTINCT user_id) AS players, SUM(CASE WHEN score >= ? THEN 1 ELSE 0 END) AS q
+  const r = db.prepare(`SELECT COUNT(*) AS plays, COUNT(DISTINCT user_id) AS players, SUM(CASE WHEN score >= ? AND held=0 AND verify='replay-ok' THEN 1 ELSE 0 END) AS q
     FROM runs WHERE event_id = ${+g.id} AND game_id IN (${ph}) AND started_at >= ? AND created_at >= ? AND created_at <= ?`).get(g.min_score || 0, ...games, g.start_at, g.start_at, g.end_at);
-  const per = db.prepare(`SELECT game_id, COUNT(*) AS plays, COUNT(DISTINCT user_id) AS players, MAX(score) AS best FROM runs
+  const per = db.prepare(`SELECT game_id, COUNT(*) AS plays, COUNT(DISTINCT user_id) AS players, MAX(CASE WHEN held=0 AND verify='replay-ok' THEN score END) AS best FROM runs
     WHERE event_id = ${+g.id} AND game_id IN (${ph}) AND started_at >= ? AND created_at >= ? AND created_at <= ? GROUP BY game_id`).all(...games, g.start_at, g.start_at, g.end_at);
   return { plays: r.plays || 0, players: r.players || 0, qualifying_runs: r.q || 0, per_game: per };
 }

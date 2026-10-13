@@ -254,6 +254,7 @@
     }
   ],
   "pendingEvidence": [
+    "PRIZE SECURITY source-only branch: independent per-title proof allowlist defaults EMPTY; official scores held, no replay-qualified prize winners; legacy/custom standings and stats exclude non-replayed scores; free-play untouched. This is NOT live or approved until full DB/E2E and operator release decision.",
     "Vehicle QA pilot: /games-lib/labs/garage/index.html previews 6 distinct original CC0 GLB meshes; docker tests Git blob hashes, glTF header and bytes. Not a catalog game/shop item or AAA certification. Physical Android visual/rotation still PENDING.",
     "9f9a03d user-confirmed Deplexo READY; fatal scan for HTML-listed local JavaScript files included in Docker, with negative missing dependency regression. Report /api/audit/game-source not remotely retrievable.",
     "Six-week season migration isolated commit 63818e7: Season 1 Oct 1-Nov 25 remains 56 days, later seasons 42 days. Verified 56/42/42 boundary, override and Docker referenced tools against committed source. This checkpoint authorizes moving onto Deplexo QA branch for build verification only, NOT public launch.",

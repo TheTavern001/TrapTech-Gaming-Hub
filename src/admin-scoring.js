@@ -40,7 +40,7 @@ function standings(g, games, capSql, E) {
   const lvlSql = lvl ? ` AND r.level BETWEEN ${Math.max(0, parseInt(comp.level_from, 10) || 1)} AND ${Math.max(1, parseInt(comp.level_to, 10) || 999)}` : '';
   const base = `w0 AS (SELECT r.id, r.user_id, r.game_id, r.score, ${wExpr} AS ws, r.created_at, r.duration_ms AS dur, (r.created_at - r.started_at) AS sdur, (SELECT m.m2 FROM lib_run_metrics m WHERE m.run_id = r.id) AS sk${lvl ? ', r.level AS lv' : ''},
         ROW_NUMBER() OVER (PARTITION BY r.user_id, r.game_id ORDER BY r.created_at ASC, r.id ASC) AS an FROM runs r
-      WHERE r.event_id = ${+g.id} AND r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql} OR r.verify = 'cleared')${pauseSql}${lvlSql}),
+      WHERE r.event_id = ${+g.id} AND r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND r.verify = 'replay-ok' AND r.score <= ${capSql}${pauseSql}${lvlSql}),
     w AS (SELECT * FROM w0 WHERE 1=1${attempts ? ` AND an <= ${attempts}` : ''}${capS ? ` AND sdur <= ${capS * 1000 + 5000}` : ''}), -- an over-cap run still uses up an attempt, it just doesn't score
     att AS (SELECT user_id, COUNT(*) AS attempts FROM w GROUP BY user_id),
     q AS (SELECT * FROM w WHERE score >= @min)`;

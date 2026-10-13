@@ -1,0 +1,10 @@
+# Official-prize scoring: conservative fail-closed design (NOT DEPLOYED)
+Context: official results currently accept any non-held score beneath a plausibility ceiling, and manually cleared scores bypass the limit. Client event logs can produce 'events-ok' even when there is no server-replayed physics. This is insufficient for monetary/prize leaderboards.
+
+This draft creates a **separate prize admission layer**: a run from official event remains stored, but gets an administrative hold if the game has not received explicit per-title security and gameplay certification or its result was not deterministically replayed on the server. Currently zero of the 93 titles is certified, so this **intentionally makes prize leaderboards ineligible** while normal free play and cosmetic progression remain unchanged. Human approval must never be an arbitrary runtime UI toggle. Score proof must remain independent of any client-submitted score log totals. Manual admin clearance does not make a result authoritative.
+
+Source integration: gate is invoked before token claim/score persistence, stores held + auditable flag; standard and V7 custom official standings require held=0 and replay-ok; giveaway stats count only replay-qualified runs; clients receive an accurate held reason. Security unit regression included in Docker. No production schema changes and no player data deletion.
+
+**Important blocker before actual rollout:** Private-test events may be running with L2 games; changing the official board policy retroactively could remove previously ranked runs from *dynamic* results. Preserve finalized historical results snapshots; test via copy of real SQLite schema and sample/private event data. Do not enable paid public competitions or promote this branch until explicitly reviewed. All 500 individually verified games require a replay adapter with rules, seed-binding, skill fair-play assessment, anti-bot abuse testing and quality signoff.
+
+Related issue #17. Builds passing Docker do not demonstrate resistance to scripted optimal inputs or bot farms.
