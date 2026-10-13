@@ -120,3 +120,6 @@ Owner confirms Deplexo READY for d14555c on feature branch, same SHA as QA branc
 
 ## 2026-10-13 settings checkpoint
 New shared game settings and five app-level controls (sound, render detail, FPS, motion, contrast), no scores or hitboxes changed. Docker test added, deployment unconfirmed.
+
+## 2026-10-13 — completed registered game settings source-coverage audit
+Confirmed via GitHub source at `075e467`: 77 built library game pages load `../kit.js`; Bud Merge, Hex Stack and Desert Dash link `../vendor-settings.mjs`. In total 80/80 library entrypoints have a settings path, plus shared SPA settings for the 13 core games. Input suppression, vendor-specific native pause, sound override persistence and high-contrast site styling are coded. Regression scripts pass isolated V8 tests; full Docker and owner physical mobile verification remain pending. No new AAA-certified games.

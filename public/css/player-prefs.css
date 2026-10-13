@@ -23,3 +23,6 @@ html.tt-high-contrast .card,
 html.tt-high-contrast .input,
 html.tt-high-contrast .bottomnav,
 html.tt-high-contrast .topbar{border-color:#bfc5d3}
+
+/* HUD-safe placement: keep the score/multiplier cards on the right unobstructed. */
+.ttgs-gear{left:max(10px,env(safe-area-inset-left));right:auto;top:max(76px,calc(env(safe-area-inset-top) + 58px))}
