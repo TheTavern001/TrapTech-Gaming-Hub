@@ -134,7 +134,9 @@ const slugs = [...lib.matchAll(/T\('([^']+)'\s*,\s*'([^']+)'/g)].map(m => ({ slu
 const libraryBySlug = new Map(require('../src/games-lib').games.map(g => [g.slug, g]));
 counts.libraryGames = slugs.length;
 if (!slugs.length) fail('src/games-lib.js', 'No Games Library entries were parsed');
-if (slugs.length !== 80) fail('src/games-lib.js', 'Expected the current 80-title curated Games Library, found ' + slugs.length);
+if (slugs.length < 80) fail('src/games-lib.js', 'Games Library shrank below the 80-game curated baseline; document and approve any retirement, found ' + slugs.length);
+if (new Set(slugs.map(g => g.slug)).size !== slugs.length) fail('src/games-lib.js','Duplicate library slug registrations');
+if (slugs.length !== libraryBySlug.size) fail('src/games-lib.js','Source registry and runtime library game count disagree: parsed ' + slugs.length + ', runtime ' + libraryBySlug.size);
 const RETIRED_DUPLICATE_SLUGS = Object.freeze(["jet-blaster","sky-flap","hoop-flap","slab-stack","neon-snake","brick-blitz","sling-siege","castle-crush","moto-lanes","lane-racer","ruin-runner","gem-rush","toad-cross","bat-boy","highway-heist","park-getaway","night-shift","hill-glider","pen-throw","lawn-guard"]);
 for (const retiredSlug of RETIRED_DUPLICATE_SLUGS) {
   if (slugs.some(g => g.slug === retiredSlug)) fail('src/games-lib.js', 'Retired duplicate is still registered: ' + retiredSlug);
@@ -145,7 +147,7 @@ try {
   const staticSlugs = Array.isArray(staticCatalog?.games) ? staticCatalog.games.map(g => g && g.slug).filter(Boolean) : [];
   const registeredSlugs = new Set(slugs.map(g => g.slug));
   if (staticSlugs.length !== slugs.length || new Set(staticSlugs).size !== staticSlugs.length || staticSlugs.some(slug => !registeredSlugs.has(slug))) {
-    fail('public/games-lib/catalog.json', 'Static fallback catalog must exactly match the 80-title active registry');
+    fail('public/games-lib/catalog.json', 'Static fallback catalog must exactly match the current active Games Library registry');
   }
 } catch (e) { fail('public/games-lib/catalog.json', 'Static fallback catalog is invalid JSON: ' + e.message); }
 for (const shared of ['adapter.js', 'kit.js', 'lib.css']) if (!fs.existsSync(path.join(ROOT, 'public/games-lib', shared))) fail('public/games-lib/' + shared, 'Required shared Games Library runtime asset is missing');

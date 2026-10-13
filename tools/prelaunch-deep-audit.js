@@ -65,7 +65,8 @@ const sharedLibraryFiles = ['adapter.js', 'kit.js', 'lib.css'];
 for (const name of sharedLibraryFiles) if (!exists(path.join(GAME_ROOT, name))) issues.push({ severity: 'blocker', finding: 'Games Library shared runtime asset missing: ' + name });
 
 const RETIRED_DUPLICATE_SLUGS = Object.freeze(["jet-blaster","sky-flap","hoop-flap","slab-stack","neon-snake","brick-blitz","sling-siege","castle-crush","moto-lanes","lane-racer","ruin-runner","gem-rush","toad-cross","bat-boy","highway-heist","park-getaway","night-shift","hill-glider","pen-throw","lawn-guard"]);
-if (games.length !== 80) issues.push({ severity: 'blocker', finding: 'Curated Games Library must contain exactly 80 active titles before expansion; found ' + games.length });
+if (games.length < 80) issues.push({ severity: 'blocker', finding: 'Curated Games Library has fewer than its 80-game baseline; review retired game decisions: ' + games.length });
+if (new Set(games.map(g => g.slug)).size !== games.length) issues.push({ severity: 'blocker', finding: 'Duplicate Games Library slugs in active registry' });
 for (const slug of RETIRED_DUPLICATE_SLUGS) {
   if (games.some(g => g.slug === slug)) issues.push({ severity: 'blocker', finding: 'Retired duplicate still registered: ' + slug });
   if (exists(path.join(GAME_ROOT, slug))) issues.push({ severity: 'blocker', finding: 'Retired duplicate game folder still ships: ' + slug });
@@ -246,7 +247,7 @@ const skillTieBreakMetadata = games.every(g => Array.isArray(g.tiebreak) && g.ti
 const systemChecks = [
   { id: 'games', label: 'Games and scored gameplay', checks: [
     { name: 'Every core game has a local module', pass: coreRows.every(r => r.problems.length === 0) },
-    { name: '80 current library entries have HTML and expected game implementation', pass: games.length === 80 && rows.every(r => r.problems.length === 0) },
+    { name: 'Every current library entry has HTML and expected game implementation', pass: games.length >= 80 && rows.length === games.length && rows.every(r => r.problems.length === 0) },
     { name: 'Signed-run route and anti-cheat implementation exist', pass: serverSrc.includes('/api/run/start') && serverSrc.includes('/api/score') && /validate|reject|rate/i.test(anticheatSrc) },
     { name: 'Browser, Android and forged-score test harnesses present', pass: ['e2e-games-lib.js','e2e-mobile.js','e2e-anticheat.js'].every(p => exists(path.join(ROOT, 'tools', p))) }
   ] },
