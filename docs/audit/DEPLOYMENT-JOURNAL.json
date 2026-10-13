@@ -6,7 +6,7 @@
   "productionUrl": "https://glassy-drifter-9532.de.deplexo.com",
   "canonicalBranch": "main",
   "publicLaunchApproved": false,
-  "note": "Screenshot-derived statuses are historical observations, not real-time deployment status. Source-level verification and actual successful Deplexo deployment are separate evidence types.",
+  "note": "Owner-supplied Deplexo status history including working-branch auto-builds. Failed/READY refer to historical host attempts, not current live build. Source-level code defects and host log confirmed root causes must remain distinct.",
   "releaseHistory": [
     {
       "commit": "bb2346e51ab91ee34a4293e969a40c801f27ec3a",
@@ -56,10 +56,11 @@
       "status": "FAILED",
       "evidence": "user Deplexo screenshot: ERROR after 83s; build log not supplied",
       "firstError": "unknown; screenshot only reports build failed",
-      "rootCause": "unconfirmed; follow-up b7be1ec modifies the prelaunch mobile-test registry audit to accept the new dynamic mobile suite",
+      "rootCause": "SOURCE-LEVEL DEFINITE: tools/e2e-mobile.js dynamically enumerates registry, but same commit tools/verify-prelaunch.js expects a static GAMES array: 0 parsed vs 16 historical core IDs. Deplexo's first error line not supplied.",
       "fixCommit": "b7be1ec2c0098689dedb7512112738fd21990266",
       "verifiedAfterFix": false,
-      "relatedSource": "public/games-lib/skee-roll/game.js; tools/e2e-mobile.js; tools/verify-prelaunch.js"
+      "relatedSource": "public/games-lib/skee-roll/game.js; tools/e2e-mobile.js; tools/verify-prelaunch.js",
+      "buildDurationSeconds": 83
     },
     {
       "commit": "b7be1ec2c0098689dedb7512112738fd21990266",
@@ -67,9 +68,10 @@
       "status": "FAILED",
       "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: Deplexo ERROR/build failed after 108s",
       "firstError": "first failing Docker command and log text unavailable; screenshot only shows generic build failed",
-      "rootCause": "UNKNOWN — registry-audit patch cannot be credited as a fix without the actual log",
+      "rootCause": "SOURCE-LEVEL DEFINITE: verify-prelaunch.js unconditionally requires src/config.js during Docker build without runtime secret env; config rejects missing secrets. First Deplexo error line still not supplied.",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "buildDurationSeconds": 108
     },
     {
       "commit": "4ad48e9b7bf2e930cb0f52fca35bb3590da0cbe2",
@@ -77,7 +79,7 @@
       "status": "FAILED",
       "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: Deplexo ERROR/build failed after 164s (deployment-journal and asset-credit-builder change)",
       "firstError": "UNKNOWN — Docker build log not available",
-      "rootCause": "UNKNOWN — do not infer from earlier audit failures",
+      "rootCause": "inherits source-level Docker build guard runtime-config import from b7be1ec; exact Deplexo first failing command not supplied",
       "fixCommit": null,
       "verifiedAfterFix": false
     },
@@ -87,7 +89,55 @@
       "status": "FAILED",
       "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: Deplexo ERROR/build failed after 218s (scalable registry count and game-admissions change)",
       "firstError": "UNKNOWN — Docker build log not available",
-      "rootCause": "UNKNOWN — do not infer from earlier audit failures",
+      "rootCause": "inherits source-level Docker build guard runtime-config import from b7be1ec; exact Deplexo first failing command not supplied",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+      "sourceCommittedAtUTC": "2026-10-13T06:43:35Z",
+      "status": "FAILED",
+      "buildDurationSeconds": 113,
+      "branchReportedByHost": "audit/phase1-brand-qa-ledger-20261013",
+      "evidence": "owner Deplexo deployment list supplied 2026-10-13 morning EDT: ERROR after 113s",
+      "firstError": "UNKNOWN — first failing Docker command/log not provided",
+      "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "eaaca780ef334396ea9277581e977c84b9a021c3",
+      "sourceCommittedAtUTC": "2026-10-13T06:57:38Z",
+      "status": "FAILED",
+      "buildDurationSeconds": 309,
+      "branchReportedByHost": "audit/phase1-brand-qa-ledger-20261013",
+      "evidence": "owner Deplexo deployment list supplied 2026-10-13 morning EDT: ERROR after 309s",
+      "firstError": "UNKNOWN — first failing Docker command/log not provided",
+      "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "12446a14d69de0dad8a547ac6d4f1b9280103364",
+      "sourceCommittedAtUTC": "2026-10-13T07:03:43Z",
+      "status": "FAILED",
+      "buildDurationSeconds": 156,
+      "branchReportedByHost": "audit/phase1-brand-qa-ledger-20261013",
+      "evidence": "owner Deplexo deployment list supplied 2026-10-13 morning EDT: ERROR after 156s",
+      "firstError": "UNKNOWN — first failing Docker command/log not provided",
+      "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "3623d72353e82ae1a42261712755f362341584f3",
+      "sourceCommittedAtUTC": "2026-10-13T07:08:35Z",
+      "status": "FAILED",
+      "buildDurationSeconds": 317,
+      "branchReportedByHost": "audit/phase1-brand-qa-ledger-20261013",
+      "evidence": "owner Deplexo deployment list supplied 2026-10-13 morning EDT: ERROR after 317s",
+      "firstError": "UNKNOWN — first failing Docker command/log not provided",
+      "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
       "verifiedAfterFix": false
     }
@@ -109,12 +159,13 @@
     }
   ],
   "pendingEvidence": [
-    "FIRST PRIORITY: obtain the first failing Docker command + following exception from the latest Deplexo failed build (71a07b4, 218s); also logs of 4ad48e9, b7be1ec and 58a9f52",
-    "Confirm whether commit 570a9fe or a newer SHA has been deployed; GitHub source alone does not prove host outcome",
-    "Live /healthz, /api/build and /api/audit/report matching the exact host SHA (external tool currently cannot access Deplexo URL)",
-    "Real Android and desktop gameplay, brand/mobile header rendering, FPS, scoring, anti-cheat, achievement and asset-rights signoff for each of the 93 registered titles",
-    "Avatar rig/cosmetic completeness, inventory/payment/persistence and backup/restore tests",
-    "Isolated staging 10k+ identities with representative sustained concurrency and no live data risk"
+    "Confirm the first Deplexo failing Docker command and error for 58a9f52 and latest branch candidate; source-level probable blockers are already reproduced",
+    "Check Deplexo dashboard auto-deploy policy: branch pushes were observed to trigger builds. Deliberately coordinate further pushes.",
+    "Observe final Deplexo build outcome of the new targeted verifier patch commit; until then treat as SOURCE-ONLY",
+    "Confirm /healthz, /api/build, /api/audit/report with deployed fingerprint; endpoints not reachable from current assistant environment",
+    "Real physical Android + desktop visual, frame-rate, score/security and licensing QA for 93 registered baseline games",
+    "Avatar rig/cosmetic shop/economy purchase/persistence and backup/restore full integration tests",
+    "Isolated staging population 10000+ with representative concurrency before public launch"
   ],
   "releaseStages": [
     {

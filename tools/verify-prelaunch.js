@@ -82,12 +82,17 @@ for (const [, id, title, module] of core) {
 }
 
 const mobileTest = fs.readFileSync(path.join(ROOT, 'tools/e2e-mobile.js'), 'utf8');
-// The mobile regression suite dynamically reads the canonical runtime registry,
-// rather than hard-coding IDs that inevitably drift when games are retired.
-// Check both its derivation contract AND the actual evaluated 13-game set.
-const runtimeCore = require('../src/config').GAMES
-  .filter(g => !g.retired && g.playable !== false)
-  .map(g => g.id);
+// Analyze the canonical registry as source: Docker build stage does not have production
+// runtime secrets, so requiring src/config.js here would abort the image build.
+const retiredBlock = (config.match(/const CHANCE_RETIRED = \[([^\]]*)\]/) || [])[1];
+if (retiredBlock === undefined)
+  fail('src/config.js', 'Missing canonical CHANCE_RETIRED list; cannot verify active core game coverage');
+const retiredIds = new Set([...(retiredBlock || '').matchAll(/'([^']+)'/g)].map(m => m[1]));
+if (!retiredIds.size)
+  fail('src/config.js', 'Cannot verify retired chance titles from the source registry');
+for (const retiredId of retiredIds)
+  if (!ids.has(retiredId)) fail('src/config.js', 'Retirement list references unknown core game: ' + retiredId);
+const runtimeCore = [...ids].filter(id => !retiredIds.has(id));
 const legacyMobileBlock = (mobileTest.match(/const GAMES = \[([^\]]*)\]/) || [])[1] || '';
 const legacyMobileIds = [...legacyMobileBlock.matchAll(/'([^']+)'/g)].map(m => m[1]);
 const usesRegistry = mobileTest.includes("require('../src/config').GAMES.filter(") &&
@@ -97,7 +102,7 @@ const usesRegistry = mobileTest.includes("require('../src/config').GAMES.filter(
 if (!usesRegistry && !legacyMobileBlock)
   fail('tools/e2e-mobile.js', 'Mobile suite does not enumerate core games from the canonical active registry');
 const mobileIds = usesRegistry ? runtimeCore : legacyMobileIds;
-const expectedMobileIds = [...ids].filter(id => !new Set(['plinko','spin-to-win','blazed-roulette']).has(id));
+const expectedMobileIds = [...ids].filter(id => !retiredIds.has(id));
 if (new Set(mobileIds).size !== mobileIds.length) fail('tools/e2e-mobile.js', 'Duplicate IDs in mobile regression list');
 if (mobileIds.length !== expectedMobileIds.length)
   fail('tools/e2e-mobile.js', 'Mobile regression must cover all and only ' + expectedMobileIds.length + ' active core games, got ' + mobileIds.length);

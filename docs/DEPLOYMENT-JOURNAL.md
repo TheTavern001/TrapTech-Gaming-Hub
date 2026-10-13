@@ -66,3 +66,11 @@ The earlier last-known READY entry `8489b41` remains valid, but a **newer READY 
 
 ## Isolated QA implementation checkpoint — `eaaca78` (not deployed)
 Branch: `audit/phase1-brand-qa-ledger-20261013`; draft PR #10. Its browser header changes and per-game acceptance reporter are source-only pending actual Android/desktop QA. Read-only reporter was exercised in a dependency-stubbed JS harness: correct 93 registered/0 approved; fake incomplete approval was rejected. This **is not** a passing Deplexo build or visual signoff. The pending exact build log for `71a07b4` remains the deployment blocker. Additional edits on this branch should append their own SHA when known.
+
+## 2026-10-13 ~09:28 Eastern — additional host failures and verified build-guard regression
+
+The owner provided a new Deplexo deployment list. It shows **working-branch commits also triggered Deplexo builds**: `570a9fe` ERROR 113s, `eaaca78` ERROR 309s, `12446a1` ERROR 156s, `3623d72` ERROR 317s. The service dashboard reports running; the most recent screenshot-confirmed READY revision is `420bab1` (436s), not evidence that later source passed. `2fc38b3` has no host outcome shown. Earlier READY revisions remain recorded separately.
+
+**Regression chain (source-confirmed, exact Docker log not yet available):** `58a9f52` changed `tools/e2e-mobile.js` to a dynamic active-game list but left `tools/verify-prelaunch.js` expecting the old literal array: a static evaluation reads 0 mobile IDs and flags 16 core IDs missing. `b7be1ec` attempted to align the registry audit but added `require('../src/config')` during Docker build. `src/config.js` requires runtime secrets and cannot safely be loaded from the build prelaunch audit (the Docker build stage has no runtime secret values).
+
+**Targeted candidate:** replace the runtime config import with source-only parsing of the canonical `CHANCE_RETIRED` list; preserve dynamic mobile harness contract and reject unknown retirements. Candidate syntax parsed in V8 and core derivation checked **16 historical = 13 active + 3 retired**. A small-context patch applied and parsed locally; full Docker/Deplexo pass **not yet confirmed**. Do not treat the source-level diagnosis as proof of the host's first error line. See <https://github.com/TheTavern001/gaming-hub-2/issues/11>.

@@ -220,3 +220,6 @@ Add each subsequent deployment here, including successful deployments. Do not ov
 5. Staging 10k-user population plus meaningful concurrent-session tests before any public launch. `main` commits and Deplexo READY alone do not certify release quality.
 
 **Next blocker:** actual Deplexo log for `71a07b4`, then non-GitHub-Actions reproduction and root-cause fix. Latest source work goes to an isolated working branch to avoid repeated failed auto-deploys.
+
+## October 13 source build recovery checkpoint
+The same-commit `58a9f52` mobile suite/verifier disagreement is confirmed in the GitHub files; `b7be1ec` then adds an unconditional build-time import of secret-dependent `src/config.js`. The next candidate corrects the latter with source-only parsing while preserving audit checks. The owner documented failed Deplexo runs for `570a9fe` 113s, `eaaca78` 309s, `12446a1` 156s and `3623d72` 317s. Working-branch ref updates were visibly auto-built: do NOT assume a draft PR is a deployment-free sandbox. Use issue #11 for the full timeline and first-log request. Real build/host/gameplay/owner verification remains outstanding.
