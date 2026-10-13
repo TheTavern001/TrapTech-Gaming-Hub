@@ -215,6 +215,16 @@
       "fixCommit": null,
       "verifiedAfterFix": true,
       "qualification": "Git commit build READY confirmed by owner; source fingerprint/live facial API not independently matched"
+    },
+    {
+      "commit": "9f9a03dce482aedd6199f5a1a561d0444ac575f2",
+      "status": "READY",
+      "evidence": "User reports Deplexo deployment 9f9a03d as READY on October 13, 2026 ~14:34 EDT; includes fatal HTML script-tag dependency audit and missing-file negative regression",
+      "firstError": null,
+      "rootCause": null,
+      "fixCommit": null,
+      "verifiedAfterFix": true,
+      "qualification": "Build READY only; no remote physical game-by-game/AAA verification, score replay, payment QA or source audit API read-back"
     }
   ],
   "sourceVerification": [
@@ -234,12 +244,12 @@
     }
   ],
   "pendingEvidence": [
-    "Latest source mechanics scanner now checks every locally referenced <script> including shared and vendor scripts. Docker self-test artificially excludes Bud Merge game_manager.js and asserts the scanner fails with the exact missing file.",
-    "Seven core-game art URLs refer to absent v7 files: munchies-snake, brick-breaker, void-swarm, stack, grow-guard, sling-smash, haze-defense. Render QA defects, not missing executable modules; report under missingArtwork.",
-    "0b7e3a6 READY owner-confirmed. New candidate game-source-mechanics scanning and compact Android avatar editor must pass full Deplexo build and user physical visual testing.",
-    "Public /api/audit/game-source should report 93 titles with source files, 0 quality-approved. This report cannot certify graphics, gameplay, frame rate or score replay.",
-    "CC0 Quaternius Universal Base Characters 6 bodies + 20 hairstyles, compatible Modular Outfits 12 sets / 62 parts: source identified, binary meshes NOT installed in repo, original premium Mickel-Captain-inspired neutral asset not yet integrated. Do not mislabel older blob or clothed Adventurer as completed.",
-    "Official giveaway anti-cheat is incomplete (issue #17), real checkout/refund untested, 10k staging not performed; payment/admin giveaways remain blocked for full public launch."
+    "9f9a03d user-confirmed Deplexo READY; fatal scan for HTML-listed local JavaScript files included in Docker, with negative missing dependency regression. Report /api/audit/game-source not remotely retrievable.",
+    "Six-week season migration isolated commit 63818e7: Season 1 Oct 1-Nov 25 remains 56 days, later seasons 42 days. Verified 56/42/42 boundary, override and Docker referenced tools against committed source. This checkpoint authorizes moving onto Deplexo QA branch for build verification only, NOT public launch.",
+    "After moving development branch, check next exact Git SHA Deplexo READY/ERROR, first failure line if any; then physical Android /api/seasons must show current 56 days and next season 42 days without resetting season XP.",
+    "Five current core game card artworks remain missing (Void Swarm, Stack, Grow Guard, Sling Smash, Haze Defense), physical mobile visual approval pending.",
+    "Source-licensed neutral Quaternius Universal Base Characters/Outfits assets have not been transferred into repository; Mickel-Captain-inspired premium modular avatar remains rejected procedural fallback.",
+    "Official contest score replay issue #17; Stripe checkout/refund test, 10k staging and 93 gameplay/AAA audits still block public release. No real-money checkout or certified game claims."
   ],
   "releaseStages": [
     {
@@ -307,7 +317,13 @@
       "reason": "starter-avatar v2 policy and saved-item grandfathering",
       "validation": "Source syntax and stubbed in-memory test: zero free gear, 7 free hair, 5 locked faces, 5 locked emotes and migration; NOT real DB/Android/host",
       "host": "UNKNOWN; source branch auto-deploy possible"
+    },
+    {
+      "commit": "63818e73f267a775b934f8232f4931454eefcdf5",
+      "reason": "Preserve inaugural 56-day season while applying owner-required 42-day seasons from Season 2 onward; no DB rewrites",
+      "validation": "Committed test-season-future-calendar.js passed using V8 stubbed DB and verified 56/42/42 contiguous boundaries, exact dates, override propagation; all 11 Docker tool refs tracked",
+      "host": "not yet deployed; next Deplexo QA branch rollout"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 source audit negative-path hardening, pending Deplexo READY for new commit"
+  "lastEvidenceReconciliation": "2026-10-13 ~14:34 EDT owner confirms 9f9a03d READY; six-week migration prepared next"
 }
