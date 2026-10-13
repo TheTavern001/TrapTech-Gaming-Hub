@@ -6,6 +6,14 @@
 const APPROVED=Object.freeze([]);
 const certified=new Set(APPROVED);
 const isCertified=id=>certified.has(String(id));
+// A second barrier at winner-query time prevents manual unholding
+// from making scores from unapproved games eligible.
+function sqlCertified(alias='r'){
+  if(APPROVED.length===0)return '(0=1)';
+  const safePrefix=/^[a-z][a-z0-9_]*$/i.test(alias)?alias+'.':'';
+  const values=APPROVED.map(id=>"'"+String(id).replaceAll("'","''")+"'").join(',');
+  return '('+safePrefix+'game_id IN ('+values+'))';
+}
 const independentlyVerified=(id,verify)=>isCertified(id)&&verify==='replay-ok';
 function admit(eventId,gameId,verdict){
   if(!eventId||!verdict||verdict.reject)return verdict;
@@ -16,4 +24,4 @@ function admit(eventId,gameId,verdict){
       text:'No approved independent gameplay replay: saved run cannot qualify for an official prize.'});
   return {...verdict,flags,held:1,prizeProofHeld:true};
 }
-module.exports={admit,isCertified,independentlyVerified,approvedGames:()=>[...APPROVED]};
+module.exports={admit,isCertified,independentlyVerified,approvedGames:()=>[...APPROVED],sqlCertified};

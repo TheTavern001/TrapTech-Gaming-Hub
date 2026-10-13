@@ -4,6 +4,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const root=path.resolve(__dirname,'..'),P=require('../src/prize-score-proof');
 assert.deepEqual(P.approvedGames(),[],'Not one of 93 games has human competitive acceptance');
 assert.equal(P.isCertified('stack'),false);
+assert.equal(P.sqlCertified('r'),'(0=1)');
 assert.equal(P.independentlyVerified('stack','replay-ok'),false);
 const free={reject:false,flags:[],held:0,verify:'events-ok'};
 assert.equal(P.admit(null,'rail-rush',free),free,'Free-play event logging remains untouched');
@@ -20,12 +21,12 @@ for(const file of ['src/server.js','src/results.js','src/admin-scoring.js','src/
  if(file==='src/server.js'){
   assert.ok(text.includes("require('./prize-score-proof').admit(row.event_id, row.game_id, AC.assess("));
   assert.ok(text.includes('held_pending_independent_replay'));
-  assert.ok(text.includes("held=0 AND verify='replay-ok'"));
+  assert.ok(text.includes("held=0 AND verify='replay-ok' AND ${require('./prize-score-proof').sqlCertified('runs')}"));
  }
  if(file==='src/results.js'||file==='src/admin-scoring.js'){
-  assert.ok(text.includes("AND r.held = 0 AND r.verify = 'replay-ok' AND r.score <="));
+  assert.ok(text.includes("AND r.held = 0 AND r.verify = 'replay-ok' AND ${PRIZE_PROOF.sqlCertified('r')} AND r.score <="));
   assert.ok(!text.includes("OR r.verify = 'cleared'"));
  }
- if(file==='src/boards.js')assert.ok(text.includes("score >= ? AND held=0 AND verify='replay-ok'"));
+ if(file==='src/boards.js')assert.ok(text.includes("score >= ? AND held=0 AND verify='replay-ok' AND ${PRIZE_PROOF.sqlCertified('runs')}"));
 }
 console.log(JSON.stringify({ok:true,freePlayUnaffected:true,prizeApprovedGames:0,officialRunsHeld:true,manualClearanceNotProof:true}));

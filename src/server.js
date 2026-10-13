@@ -323,7 +323,7 @@ app.post('/api/score', requireUser, (req, res) => {
   for (const g of gws) {
     if (verdict.held || score < (g.min_score || 0)) continue;
     const games = giveawayGameIds(g.id); const ph = games.map(() => '?').join(',');
-    const had = db.prepare(`SELECT 1 FROM runs WHERE event_id=${+g.id} AND user_id=? AND game_id IN (${ph}) AND held=0 AND verify='replay-ok' AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
+    const had = db.prepare(`SELECT 1 FROM runs WHERE event_id=${+g.id} AND user_id=? AND game_id IN (${ph}) AND held=0 AND verify='replay-ok' AND ${require('./prize-score-proof').sqlCertified('runs')} AND started_at>=? AND created_at<=? AND score>=? LIMIT 1`).get(req.user.id, ...games, g.start_at, g.end_at, g.min_score || 0);
     if (!had) newEntries.push(g);
   }
   const info = db.prepare('INSERT INTO runs (user_id,game_id,score,coins,duration_ms,started_at,created_at,ip_hash,ua_hash,seed,verify,held,event_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
