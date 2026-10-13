@@ -9,7 +9,7 @@ const catalog=JSON.parse(read('public/games-lib/catalog.json')).games;
 const baseline=JSON.parse(read('docs/audit/GAME-INTAKE-BASELINE.json'));
 const config=read('src/config.js');
 const core=[...config.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)]
- .map(m=>{const a=config.slice(m.index,m.index+700).match(/\bart:\s*'([^']+)'/);return {id:m[1],title:m[2],module:m[3],art:a?a[1]:null};})
+ .map(m=>{const a=config.slice(m.index,m.index+700).match(/\bart:\s*'([^']+)'/);return {id:m[1],title:m[2],module:m[3],art:a?a[1]:null,artTall:(config.slice(m.index,m.index+800).match(/\bartTall:\s*'([^']+)'/)||[])[1]||null};})
  .filter(g=>baseline.activeCoreIds.includes(g.id));
 const errors=[],artDefects=[],rows=[],same=new Map(),ids=new Set();
 function filesFor(g){
@@ -24,11 +24,12 @@ function filesFor(g){
  return [...new Set(sources)].filter(p=>p.startsWith('public/')&&!p.includes('..')&&exists(p));
 }
 function hash(s){return crypto.createHash('sha256').update(s).digest('hex');}
-function inspect(id,title,type,sources,entry,image){
+function inspect(id,title,type,sources,entry,image,tallImage){
  if(ids.has(id))errors.push('Duplicate identifier '+id);
  ids.add(id);
  if(!entry||!exists(entry))errors.push(id+' missing HTML entry');
- if(!image||!exists(image))artDefects.push({game:id,missing:image||'(unregistered)'});
+ if(!image||!exists(image))artDefects.push({game:id,missing:image||'(unregistered)',kind:'square'});
+ if(tallImage&&!exists(tallImage))artDefects.push({game:id,missing:tallImage,kind:'tall'});
  if(!sources.length||sources.some(s=>!exists(s)))errors.push(id+' missing executable source');
  const js=sources.filter(exists).map(read).join('\n');
  const exact=hash(js),normalized=hash(js.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/[^\n]*/g,'').replace(/\s+/g,''));
@@ -39,12 +40,12 @@ function inspect(id,title,type,sources,entry,image){
    completionHint:/(restart|reset|gameover|\.end\(|finish|won|lose|death)/i.test(js)};
  rows.push({id,title,type,files:sources,sourceSha256:exact,
    staticChecks:checks,requiresHumanGameplay:true,
-   referencedArt:image,artExists:!!image&&exists(image),certifiedVisuals:false,certifiedAndroid:false,certifiedControls:false,
+   referencedArt:image,artExists:!!image&&exists(image),tallArt:tallImage||null,tallArtExists:tallImage?exists(tallImage):null,certifiedVisuals:false,certifiedAndroid:false,certifiedControls:false,
    certifiedLicense:false,certifiedServerScoreReplay:false,certifiedAAA:false,
    comment:'Static heuristic only; sources and metadata are not visual/playtesting evidence.'});
 }
 for(const g of core)inspect('core:'+g.id,g.title,'core',
- ['public/js/'+g.module],'public/index.html',g.art&&'public'+g.art);
+ ['public/js/'+g.module],'public/index.html',g.art&&'public'+g.art,g.artTall&&'public'+g.artTall);
 for(const g of catalog)inspect('library:'+g.slug,g.title,'library',filesFor(g),'public'+g.url,'public'+g.art);
 for(const id of baseline.activeCoreIds)if(!core.some(g=>g.id===id))errors.push('Missing active core '+id);
 for(const slug of baseline.baselineLibrarySlugs)if(!catalog.some(g=>g.slug===slug))errors.push('Missing baseline library '+slug);
