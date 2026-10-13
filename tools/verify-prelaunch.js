@@ -82,10 +82,29 @@ for (const [, id, title, module] of core) {
 }
 
 const mobileTest = fs.readFileSync(path.join(ROOT, 'tools/e2e-mobile.js'), 'utf8');
-const mobileBlock = (mobileTest.match(/const GAMES = \[([^\]]*)\]/) || [])[1] || '';
-const mobileIds = [...mobileBlock.matchAll(/'([^']+)'/g)].map(m => m[1]);
-for (const id of ids) if (!mobileIds.includes(id)) fail('tools/e2e-mobile.js', 'Core game missing from mobile regression suite: ' + id);
-for (const id of mobileIds) if (!ids.has(id)) fail('tools/e2e-mobile.js', 'Mobile suite references an unregistered core game: ' + id);
+// The mobile regression suite dynamically reads the canonical runtime registry,
+// rather than hard-coding IDs that inevitably drift when games are retired.
+// Check both its derivation contract AND the actual evaluated 13-game set.
+const runtimeCore = require('../src/config').GAMES
+  .filter(g => !g.retired && g.playable !== false)
+  .map(g => g.id);
+const legacyMobileBlock = (mobileTest.match(/const GAMES = \[([^\]]*)\]/) || [])[1] || '';
+const legacyMobileIds = [...legacyMobileBlock.matchAll(/'([^']+)'/g)].map(m => m[1]);
+const usesRegistry = mobileTest.includes("require('../src/config').GAMES.filter(") &&
+  mobileTest.includes("!g.retired && g.playable !== false") &&
+  mobileTest.includes(".map(g => g.id)") &&
+  mobileTest.includes('for (const g of GAMES)');
+if (!usesRegistry && !legacyMobileBlock)
+  fail('tools/e2e-mobile.js', 'Mobile suite does not enumerate core games from the canonical active registry');
+const mobileIds = usesRegistry ? runtimeCore : legacyMobileIds;
+const expectedMobileIds = [...ids].filter(id => !new Set(['plinko','spin-to-win','blazed-roulette']).has(id));
+if (new Set(mobileIds).size !== mobileIds.length) fail('tools/e2e-mobile.js', 'Duplicate IDs in mobile regression list');
+if (mobileIds.length !== expectedMobileIds.length)
+  fail('tools/e2e-mobile.js', 'Mobile regression must cover all and only ' + expectedMobileIds.length + ' active core games, got ' + mobileIds.length);
+for (const id of expectedMobileIds) if (!mobileIds.includes(id))
+  fail('tools/e2e-mobile.js', 'Active core game missing from mobile suite: ' + id);
+for (const id of mobileIds) if (!expectedMobileIds.includes(id))
+  fail('tools/e2e-mobile.js', 'Mobile suite includes retired or unregistered game: ' + id);
 const seededSource = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const highScoreSource = seededSource('public/js/games/high-score.js');
 if (!highScoreSource.includes('range(min, max)') || !highScoreSource.includes('this.r()') || /Math\.random\(\)|\brnd\(/.test(highScoreSource)) fail('public/js/games/high-score.js', 'Score-affecting target placement and spawn timing must use the server-seeded RNG');
