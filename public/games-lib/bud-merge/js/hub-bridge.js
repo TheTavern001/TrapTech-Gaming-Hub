@@ -18,7 +18,7 @@
     _setup.call(this); this.grid = new Grid(this.size); this.score = 0; this.over = false; this.won = false; this.keepPlaying = true;
     Hub.start('gl-bud-merge').then((seed) => { Math.random = rng(seed); self.grid = new Grid(self.size); self.score = 0; self.addStartTiles(); self.actuate(); state = 'play'; msg('Merge buds - how far can you grow?'); }); };
   const _move = GameManager.prototype.move;
-  GameManager.prototype.move = function (dir) { if (state !== 'play') return; const before = this.score; _move.call(this, dir); const d = this.score - before;
+  GameManager.prototype.move = function (dir) { if (window.__ttVendorSettingsPaused || state !== 'play') return; const before = this.score; _move.call(this, dir); const d = this.score - before;
     if (d > 0) { merges++; Hub.event('m', d); }
     if (this.over) finish(); };
   function finish() { if (state !== 'play') return; state = 'over'; const s = gm.score; msg('Saving ' + s + '...'); Hub.submit(s).then(r => { GL.lastSubmit = r; msg(r.ok ? 'Saved ' + s + '!' : (r.error || 'Not saved')); }); }
