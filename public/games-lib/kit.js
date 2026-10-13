@@ -68,12 +68,13 @@
     g.ay = () => (g.keys.ArrowDown || g.keys.s || g.keys.S ? 1 : 0) - (g.keys.ArrowUp || g.keys.w || g.keys.W ? 1 : 0) + g.stick.y;
     window.__GL = { g, get state() { return g.state; }, get score() { return g.score; }, get fps() { return g.fps; }, get jsMs() { return Math.round((g.jsMs || 0) * 100) / 100; }, get frameMsP95() { return p95Ms; }, get renderDpr() { return renderDpr; }, lastSubmit: null, errors: [] };
     // Shared device-only settings: pause game physics without scoring any menu taps.
+    let gameSettingsOpen=false;
     import('/js/player-prefs.js').then(P=>{
       gamePrefs=P;
       let wasPaused=false;
       P.openGameSettings({id:def.id,title:def.title,host:document.body,
-        onOpen:()=>{wasPaused=g.paused;g.paused=true;g.ptr.down=false;g.keys={};},
-        onClose:()=>{g.paused=wasPaused;},
+        onOpen:()=>{wasPaused=g.paused;gameSettingsOpen=true;g.paused=true;g.ptr.down=false;g.ptr.pressed=false;g.ptr.released=false;g._kp=false;g.kp={};g.keys={};g.btn={};g.btnP={};g.stick.on=false;g.stick.x=0;g.stick.y=0;},
+        onClose:()=>{g.ptr.down=false;g.ptr.pressed=false;g.ptr.released=false;g._kp=false;g.kp={};g.paused=wasPaused;gameSettingsOpen=false;},
         onChange:pref=>{
           muted=!pref.sound;cameraShakeAllowed=!pref.reducedMotion;
           const cap=P.qualityCap(pref.quality,devicePixelRatio||1);
@@ -85,18 +86,18 @@
     const btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
     const toL = (e) => [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
     const touches = new Map();
-    function onDown(e) { e.preventDefault(); ac(); const [x, y] = toL(e); g.inputs++; window.Hub && Hub.input();
+    function onDown(e) { e.preventDefault(); if(gameSettingsOpen)return; ac(); const [x, y] = toL(e); g.inputs++; window.Hub && Hub.input();
       if (g.state !== 'play') { g.ptr.pressed = true; g.ptr.x = x; g.ptr.y = y; touches.set(e.pointerId, { k: 'ptr' }); return; }
       for (const b of btns) if (Math.hypot(x - b.x, y - b.y) < b.r + 10) { g.btn[b.id] = true; g.btnP = g.btnP || {}; g.btnP[b.id] = true; if (b.key) g.keys[b.key] = true; touches.set(e.pointerId, { k: 'btn', b }); return; }
       if (def.stick && (e.pointerType === 'touch' || def.stick === 'always') && (!def.stickZone || def.stickZone(x, y))) { g.stick.on = true; g.stick.cx = x; g.stick.cy = y; g.stick.x = g.stick.y = 0; touches.set(e.pointerId, { k: 'stick' }); if (!def.stickAlsoPtr) return; }
       touches.set(e.pointerId, { k: 'ptr' }); g.ptr.down = true; g.ptr.pressed = true; g.ptr.x = g.ptr.sx = x; g.ptr.y = g.ptr.sy = y; }
-    function onMove(e) { const [x, y] = toL(e); const t = touches.get(e.pointerId); if (t && t.k === 'stick') { const dx = x - g.stick.cx, dy = y - g.stick.cy, m = Math.hypot(dx, dy), R = 50; g.stick.x = K.clamp(dx / R, -1, 1); g.stick.y = K.clamp(dy / R, -1, 1); if (m > R) { g.stick.cx = x - dx / m * R; g.stick.cy = y - dy / m * R; } if (!def.stickAlsoPtr) return; } if (!t || t.k === 'ptr' || e.pointerType === 'mouse') { g.ptr.x = x; g.ptr.y = y; } }
-    function onUp(e) { const t = touches.get(e.pointerId); touches.delete(e.pointerId); if (t && t.k === 'btn') { g.btn[t.b.id] = false; if (t.b.key) g.keys[t.b.key] = false; return; } if (t && t.k === 'stick') { g.stick.on = false; g.stick.x = g.stick.y = 0; if (!def.stickAlsoPtr) return; } g.ptr.down = false; g.ptr.released = true; }
+    function onMove(e) { if(gameSettingsOpen)return; const [x, y] = toL(e); const t = touches.get(e.pointerId); if (t && t.k === 'stick') { const dx = x - g.stick.cx, dy = y - g.stick.cy, m = Math.hypot(dx, dy), R = 50; g.stick.x = K.clamp(dx / R, -1, 1); g.stick.y = K.clamp(dy / R, -1, 1); if (m > R) { g.stick.cx = x - dx / m * R; g.stick.cy = y - dy / m * R; } if (!def.stickAlsoPtr) return; } if (!t || t.k === 'ptr' || e.pointerType === 'mouse') { g.ptr.x = x; g.ptr.y = y; } }
+    function onUp(e) { if(gameSettingsOpen){touches.delete(e.pointerId);return;} const t = touches.get(e.pointerId); touches.delete(e.pointerId); if (t && t.k === 'btn') { g.btn[t.b.id] = false; if (t.b.key) g.keys[t.b.key] = false; return; } if (t && t.k === 'stick') { g.stick.on = false; g.stick.x = g.stick.y = 0; if (!def.stickAlsoPtr) return; } g.ptr.down = false; g.ptr.released = true; }
     cv.addEventListener('pointerdown', onDown); addEventListener('pointermove', onMove); addEventListener('pointerup', onUp); addEventListener('pointercancel', onUp);
     cv.addEventListener('contextmenu', e => e.preventDefault());
-    addEventListener('keydown', e => { if(document.querySelector('.ttgs-modal:not([hidden])'))return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted=!muted; if(gamePrefs)gamePrefs.saveGame(def.id,{sound:!muted}); else safeStore.set('gl_mute',muted?'1':'0'); return; }
+    addEventListener('keydown', e => { if(gameSettingsOpen)return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted=!muted; if(gamePrefs)gamePrefs.saveGame(def.id,{sound:!muted}); else safeStore.set('gl_mute',muted?'1':'0'); return; }
       if (!g.keys[e.key]) { g._kp = true; g.kp = g.kp || {}; g.kp[e.key] = true; g.inputs++; window.Hub && Hub.input(); ac(); } g.keys[e.key] = true; if (e.key === 'p' || e.key === 'Escape') g.paused = !g.paused && g.state === 'play'; });
-    addEventListener('keyup', e => { g.keys[e.key] = false; });
+    addEventListener('keyup', e => { if(!gameSettingsOpen)g.keys[e.key] = false; });
     document.addEventListener('visibilitychange', () => { if (document.hidden && g.state === 'play') g.paused = true; });
     g.kd = (k) => !!(g.kp && g.kp[k]);
     async function begin() { g.state = 'starting'; const seed = window.Hub ? await Hub.start(def.id) : null; g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = false; def.init(g); g.state = 'play'; K.sfx('power'); }
@@ -122,7 +123,7 @@
         if (frameSamples.length) { const sorted=[...frameSamples].sort((a,b)=>a-b); p95Ms=Math.round(sorted[Math.min(sorted.length-1,Math.floor(sorted.length*0.95))]*10)/10; }
         fpsT = 0; fpsN = 0;
       }
-      if (g.state === 'title' || (g.state === 'over' && g.overT > 0.8)) { if (g.tap()) begin(); }
+      if (!gameSettingsOpen && (g.state === 'title' || (g.state === 'over' && g.overT > 0.8))) { if (g.tap()) begin(); }
       if (g.state === 'over') g.overT += dt;
       if (g.state === 'play' && !g.paused) { g.t += dt; def.update(g, dt); }
       else if (g.state === 'title' && def.attract) { g.t += dt; def.attract(g, dt); }
