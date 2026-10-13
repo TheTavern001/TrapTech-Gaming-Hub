@@ -23,6 +23,8 @@ COPY tools ./tools
 # Pre-gzip static text assets, pre-scale OG card art, pre-render the default share image (-> /app/build).
 # Runs without secrets (env vars are not available at build time on Deplexo).
 RUN test -s tools/games-lib-static-check.js \
+ && test -s tools/test-endless-buffers.js \
+ && test -s tools/verify-prelaunch.js \
  && test -s docs/GAMES-LIB.md \
  && test -s docs/score-ranges.json \
  && echo 'Required prelaunch audit inputs present' \

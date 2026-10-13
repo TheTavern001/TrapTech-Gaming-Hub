@@ -11,14 +11,9 @@ build
 screenshots
 mockups
 assets-src
-# Keep the build context lean while allowing verification, regression tests, and E2E JavaScript for build-time checks.
-!tools/
-tools/*
-!tools/prelaunch-deep-audit.js
-!tools/verify-prelaunch.js
-!tools/test-rotating-quests.js
-!tools/verify-game-syntax.js
-!tools/e2e-*.js
+# Dockerfile uses COPY tools ./tools. Keep the complete tools directory in the
+# build context: an allowlist silently removed newly added regression scripts.
+# Secret files and nested node_modules are still excluded by the rules above.
 licenses
 *.db
 *.db-*
@@ -27,7 +22,5 @@ licenses
 render.yaml
 Dockerfile
 .dockerignore
-!tools/verify-live-deployment.js
 # Required by Dockerfile prelaunch audits; otherwise these files vanish from the build context.
-!tools/games-lib-static-check.js
 !docs/GAMES-LIB.md

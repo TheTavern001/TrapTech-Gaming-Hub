@@ -154,9 +154,36 @@
     {
       "commit": "d5de30038259e8125b260868e4cdbfacb23e3dae",
       "status": "FAILED",
-      "evidence": "owner Deplexo screenshot at 2026-10-13 ~10:29 EDT: draft branch revision ERROR after 104s",
-      "firstError": "UNKNOWN — build log not supplied",
-      "rootCause": "UNKNOWN — cannot attribute failure to new endurance test without first failing Docker line",
+      "evidence": "owner Deplexo screenshot at 2026-10-13 ~10:29 EDT: draft branch revision ERROR after 104s; full first-error Docker log supplied by owner 2026-10-13 ~11:11 EDT in chat.",
+      "firstError": "Error: Cannot find module '/app/tools/test-endless-buffers.js' (Node.js v20.20.2; Docker [1/2] STEP 11/12; exit status 1)",
+      "rootCause": "CONFIRMED by owner-provided complete Deplexo build log: .dockerignore has 'tools/*' but no '!tools/test-endless-buffers.js'; Dockerfile COPY tools ./tools omits the file. Docker STEP 11/12 passes 96 game syntax files and then fails at 'node --check tools/test-endless-buffers.js' with MODULE_NOT_FOUND.",
+      "fixCommit": "PENDING — current draft branch fixes Docker context, not yet confirmed READY",
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "b5c9783fd198b6ac67799a6849b87605a5bd1c7d",
+      "status": "FAILED",
+      "evidence": "owner screenshot ~11:11 EDT: Deplexo ERROR after 202s (starter avatar source branch). First-error logs not supplied for this individual commit.",
+      "firstError": "UNKNOWN — error log not supplied for this commit",
+      "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "1a2b7753c694f1cf4589ddf05231672d50c91a3b",
+      "status": "FAILED",
+      "evidence": "owner screenshot ~11:11 EDT: Deplexo ERROR after 124s (payment safe-off source branch). First-error logs not supplied for this individual commit.",
+      "firstError": "UNKNOWN — error log not supplied for this commit",
+      "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "61c1b9d38d0d0e9e73a89754910fb92bec8c19d5",
+      "status": "FAILED",
+      "evidence": "owner screenshot ~11:11 EDT: Deplexo ERROR after 65s (bitcoin live-payment approval branch). First-error logs not supplied for this individual commit.",
+      "firstError": "UNKNOWN — error log not supplied for this commit",
+      "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
       "fixCommit": null,
       "verifiedAfterFix": false
     }
@@ -178,12 +205,12 @@
     }
   ],
   "pendingEvidence": [
-    "Get Deplexo build log for failed d5de300: exact first failing Docker command, stack, and exit code; compare to READY 55ebf1c.",
-    "Reconcile live /api/build build_fingerprint with currently served revision; site /healthz and /api/build inaccessible via external check.",
-    "Verify draft branch b5c9783 starter-avatar source changes on actual physical Android, full 3D blank rig, face shape and emote animation quality. No AAA approval.",
-    "Test Stripe sandbox webhook signature, test-mode checkout success/failure/refund, persistent entitlement grant/reversal; connected sandbox currently has no webhooks or Checkout Sessions.",
-    "Payment go-live requires valid external business/compliance terms, reviewed checkout credentials, admin enablement, and PAYMENTS_LIVE_APPROVED=1 if Stripe live key used.",
-    "Complete 93 existing-game AAA human/physical-device audit, curated licensed source additions, 500 quality approvals and isolated 10k-user load test."
+    "After correcting root .dockerignore, verify next branch deployment is Deplexo READY and first-error build script passes with test-endless-buffers.js inside /app/tools. Record exact SHA and log.",
+    "User-supplied d5de300 Docker failure was conclusively missing /app/tools/test-endless-buffers.js because .dockerignore tools/* allowlist omitted it. No need to request this same log again.",
+    "Any new failed builds require their actual FIRST error before attribution; do not assume all are the same cause.",
+    "Verify live /api/build matches READY SHA and /healthz; private Android and desktop smoke test after host becomes READY.",
+    "Stripe test-mode webhook exists, but signed delivery, checkout, refunds, entitlement issuance not validated; live payments must remain disabled.",
+    "Complete 93-game baseline audits, distinct licensed additions, avatar/emote renderer tests, storage restore and 10k concurrent-population staging before public launch."
   ],
   "releaseStages": [
     {
@@ -253,5 +280,5 @@
       "host": "UNKNOWN; source branch auto-deploy possible"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 ~10:29 EDT, user screenshots + Stripe sandbox read-only check"
+  "lastEvidenceReconciliation": "2026-10-13 ~11:11 EDT screenshot and full d5de300 Docker build log"
 }

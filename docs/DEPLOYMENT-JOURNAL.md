@@ -80,3 +80,18 @@ The owner provided a new Deplexo deployment list. It shows **working-branch comm
 Owner screenshots confirm Deplexo `55ebf1c` **READY** (415s; working audit branch), superseding last-known READY `420bab1`; `d5de300` **ERROR** (104s) and build root cause remains **UNKNOWN** without the Docker log. A READY host image is not evidence of which revision `/api/build` currently serves. The 93-game source registry has zero individually AAA-certified titles; neither the latest avatar source commit nor staged game optimizations are certified public-ready.
 
 **Payments evidence:** Stripe connected sandbox exists in **test mode**, with no webhook endpoints and no Checkout Sessions at observation. No live payment is tested. Default checkout for an unset admin flag must be OFF; Stripe live key requires explicit `PAYMENTS_LIVE_APPROVED=1` as well as webhook, URL and enabled admin state. Set approval only AFTER sandbox end-to-end checkout, signed webhooks, refund handling and legal review.
+
+
+## Deplexo root-cause breakthrough — 2026-10-13 11:11 Eastern
+Owner supplied the **full failed `d5de300` Docker log**. Image build reached `[1/2] STEP 11/12`. `npm ci` PASSED, rotating-quests tests PASSED (3,150 templates), and `tools/verify-game-syntax.js` PASSED **all 96 files**. The first error was:
+```
+Error: Cannot find module '/app/tools/test-endless-buffers.js'
+    at Module._resolveFilename ...
+Node.js v20.20.2
+Error: building at STEP "RUN ... node --check tools/test-endless-buffers.js ..." exit status 1
+```
+**CONFIRMED cause:** `.dockerignore` excluded the new script with `tools/*`; the hard-coded exemptions only enumerated older scripts. The file **exists in GitHub** but was absent in the Docker build context. A repetitive whitelist design caused the failure, not a broken gameplay script.
+
+**Systemic fix staged:** include the **entire tools directory** in the Docker context (still excluding secrets and nested node_modules) rather than manually allowlisting each JS file. Put explicit file-existence guards at the beginning of Docker prelaunch. The source-only endurance simulation was rerun against actual fetched game scripts: Tunnel Hop 7,200 seconds with max 64 rows and Drift King 4,000 steps with max 42 road points, scores unchanged; PASSED. **This does not yet certify a Docker build or Deplexo READY**.
+
+Additional Deplexo failures visible in owner's screenshot: `b5c9783` 202s, `1a2b775` 124s, `61c1b9d` 65s, all ERROR. Their individual logs weren't provided, so the same inherited ignore rule is a plausible but **not confirmed** cause. These are separate documented attempts. Next: observe READY of the fixed commit before claiming host recovery.
