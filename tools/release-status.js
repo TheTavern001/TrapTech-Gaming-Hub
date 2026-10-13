@@ -21,7 +21,7 @@ for (const entry of history) {
   if (entry.fixCommit && !isSha(entry.fixCommit)) errs.push('Invalid fix SHA for ' + entry.commit);
 }
 if (ledger.publicLaunchApproved === true) errs.push('Public launch status requires fresh manual signoff; tracker may not auto-certify it.');
-const ids = [...config.matchAll(/\\{\\s*id:\\s*'([^']+)',\\s*title:\\s*'([^']+)'[\\s\\S]*?module:\\s*'([^']+)'/g)].map(x=>x[1]);
+const ids = [...config.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)].map(x=>x[1]);
 const retired = new Set(['plinko','spin-to-win','blazed-roulette']);
 const activeCore = ids.filter(x=>!retired.has(x));
 if (!Array.isArray(catalog.games)) errs.push('Missing catalog games array');
