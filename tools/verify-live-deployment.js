@@ -82,6 +82,18 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     reviewPage.res.status === 200 && reviewPage.text.includes('Release Control') && reviewPage.text.includes('/api/audit/report'),
     { status: reviewPage.res.status, bytes: reviewPage.body.length });
 
+  // Private source-model visual lab: the page, module and an actual GLB must serve.
+  const lab = await get(BASE + '/games-lib/labs/garage/index.html');
+  check('Vehicle 3D QA page HTTP 200',lab.res.status===200&&lab.text.includes('PRIVATE QA'));
+  const cfgLab = await get(BASE + '/games-lib/labs/garage/vehicles.json');
+  let labModels;try{labModels=JSON.parse(cfgLab.text)}catch{}
+  check('Vehicle QA manifest has six original models',
+    cfgLab.res.status===200&&labModels?.previewOnly===true&&labModels?.models?.length===6);
+  const labScript = await get(BASE + '/games-lib/labs/garage/garage.mjs');
+  check('Vehicle viewer ESM is served',labScript.res.status===200&&labScript.text.includes('GLTFLoader'));
+  const labGlb = await get(BASE + '/games-lib/assets3d/rc-sedan.glb');
+  check('Vehicle source GLB loads through Express',
+    labGlb.res.status===200&&labGlb.body.length>20000&&labGlb.body.subarray(0,4).toString('ascii')==='glTF');
   const storeResult = await get(BASE + '/api/store');
   let storeJson = null; try { storeJson = JSON.parse(storeResult.text); } catch {}
   const prestigeItems = storeJson?.prestige || [];

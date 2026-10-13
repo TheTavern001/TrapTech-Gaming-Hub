@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "previewOnly": true,
+  "scoreEffects": false,
+  "models": [
+    {
+      "id": "rc-sedan",
+      "label": "Sedan",
+      "path": "../../assets3d/rc-sedan.glb",
+      "sha": "8fc8812ac45c10520dfd10b213fcc11a1587e9c0",
+      "bytes": 89940,
+      "license": "CC0"
+    },
+    {
+      "id": "rc-hatch",
+      "label": "Hatch",
+      "path": "../../assets3d/rc-hatch.glb",
+      "sha": "27e0febad960ebd60382e840ce8e7abe478e9a47",
+      "bytes": 89528,
+      "license": "CC0"
+    },
+    {
+      "id": "rc-suv",
+      "label": "Suv",
+      "path": "../../assets3d/rc-suv.glb",
+      "sha": "858d7753aa328cf8710ef0032b31d5e47e4401bb",
+      "bytes": 88900,
+      "license": "CC0"
+    },
+    {
+      "id": "rc-van",
+      "label": "Van",
+      "path": "../../assets3d/rc-van.glb",
+      "sha": "85590de939c9c04f1950e335c888d67b9c3a8a14",
+      "bytes": 88916,
+      "license": "CC0"
+    },
+    {
+      "id": "rc-pickup",
+      "label": "Pickup",
+      "path": "../../assets3d/rc-pickup.glb",
+      "sha": "eaee05a5bf7feb8af6d0ca872fa28871b01d7a78",
+      "bytes": 89992,
+      "license": "CC0"
+    },
+    {
+      "id": "rc-boxtruck",
+      "label": "Box Truck",
+      "path": "../../assets3d/rc-boxtruck.glb",
+      "sha": "d88fe57d31e8543a7d9181d16c846a654c916a4b",
+      "bytes": 94508,
+      "license": "CC0"
+    }
+  ]
+}
