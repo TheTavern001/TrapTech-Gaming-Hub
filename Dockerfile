@@ -67,6 +67,9 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s tools/test-player-game-settings.js \
  && node --check tools/test-player-game-settings.js \
  && node tools/test-player-game-settings.js \
+ && test -s tools/test-runner-train-assets.js \
+ && node --check tools/test-runner-train-assets.js \
+ && node tools/test-runner-train-assets.js \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/verify-prelaunch.js \
  && node tools/verify-prelaunch.js \

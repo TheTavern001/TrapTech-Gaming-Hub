@@ -110,6 +110,11 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     get(BASE+'/games-lib/'+id+'/index.html')));
   check('All three vendor game pages link their settings adapter',
     vendorPages.every(p=>p.res.status===200&&p.text.includes('../vendor-settings.mjs')));
+  const runnerScript=await get(BASE+'/games-lib/runner3x.js');
+  check('Rail Rush uses real GLB trains and modular saloon',runnerScript.res.status===200 &&
+    runnerScript.text.includes('originalTrain(id)') &&
+    runnerScript.text.includes('ot-wall-wood-window-glass') &&
+    runnerScript.text.includes('const portrait=cam.aspect<0.72'));
   const lab = await get(BASE + '/games-lib/labs/garage/index.html');
   check('Vehicle 3D QA page HTTP 200',lab.res.status===200&&lab.text.includes('PRIVATE QA'));
   const cfgLab = await get(BASE + '/games-lib/labs/garage/vehicles.json');

@@ -254,6 +254,7 @@
     }
   ],
   "pendingEvidence": [
+    "Combined settings and previously Deplexo READY Rail Rush visual build: source of ccedb2a (licensed GLB saloon) + 0048954 (model test) restored on current branch. Combined host READY NOT YET VERIFIED.",
     "Settings candidate 075e467: 80/80 registered library entrypoints personally inspected by source, 77 share Kit and 3 vendor pages import pause-aware bridge. 13 original core game shell has settings. V8 preferences behavioral checks passed; Docker end-to-end and physical Android still pending. Cosmetics/avatar/shop AAA status unchanged.",
     "Private source branch includes expanded device Settings and per-game UI. Source parsed. Docker test must pass before deployment. Not AAA, no asset redesign.",
     "Vehicle QA pilot: /games-lib/labs/garage/index.html previews 6 distinct original CC0 GLB meshes; docker tests Git blob hashes, glTF header and bytes. Not a catalog game/shop item or AAA certification. Physical Android visual/rotation still PENDING.",
@@ -338,5 +339,5 @@
       "host": "not yet deployed; next Deplexo QA branch rollout"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13: settings source candidate 075e467 staged. Registered library coverage verified 80/80 source pages (77 Kit + 3 independently licensed). Deplexo host result not yet confirmed; d71a54e last owner-confirmed READY on active avatar-renderability branch."
+  "lastEvidenceReconciliation": "2026-10-13 source deployment candidate settings+Rail Rush awaiting combined Deplexo build"
 }

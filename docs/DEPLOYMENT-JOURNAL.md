@@ -123,3 +123,6 @@ New shared game settings and five app-level controls (sound, render detail, FPS,
 
 ## 2026-10-13 — completed registered game settings source-coverage audit
 Confirmed via GitHub source at `075e467`: 77 built library game pages load `../kit.js`; Bud Merge, Hex Stack and Desert Dash link `../vendor-settings.mjs`. In total 80/80 library entrypoints have a settings path, plus shared SPA settings for the 13 core games. Input suppression, vendor-specific native pause, sound override persistence and high-contrast site styling are coded. Regression scripts pass isolated V8 tests; full Docker and owner physical mobile verification remain pending. No new AAA-certified games.
+
+## 2026-10-13 — no regression to older box trains
+Visual files restored verbatim from Deplexo READY ccedb2a, original train model integrity test from READY 0048954, with Docker/HTTP checks on settings candidate. Combined deployment still pending; AAA and public launch not certified.
