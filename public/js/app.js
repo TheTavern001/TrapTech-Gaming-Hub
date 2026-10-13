@@ -572,7 +572,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
       <span class="title">${esc(g.title.toUpperCase())}</span>
       <span class="who-chip">${S.me ? `Playing as <b style="color:var(--text)">${esc(S.me.username)}</b>` : 'Guest (practice)'}</span>
       <button class="iconbtn" id="mute" aria-label="Sound"></button>
-      <button class="iconbtn" id="pause" aria-label="Pause">${icon('pause')}</button>
+      <button class="iconbtn" id="pause" aria-label="Pause">${icon('pause')}</button><button class="iconbtn" id="game-settings" aria-label="Game settings">${icon('settings')}</button>
     </div>
     <div style="position:relative;flex:1;display:flex;min-height:0">
       <canvas id="game" data-game="${g.id}"></canvas>
@@ -594,6 +594,18 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   const canvas = document.getElementById('game');
   const game = new Cls(canvas, { best, onEnd: (res) => finish(res), onState: (s) => { const pb = document.getElementById('pause'); if (pb) pb.innerHTML = icon(s === 'paused' ? 'play' : 'pause'); if (s === 'paused') showPause(); else if (s === 'play') ov.classList.add('hidden'); } });
   S.game = game; window.__game = game; window.__lastResult = null;
+  // Core games share exactly the same device-only visual preferences.
+  let resumeAfterOptions = false;
+  GP.openGameSettings({id:g.id,title:g.title,host:document.querySelector('.play-wrap'),
+    trigger:document.getElementById('game-settings'),
+    onOpen:()=>{resumeAfterOptions=game.state==='play';if(resumeAfterOptions)game.pause(true);},
+    onClose:()=>{if(resumeAfterOptions&&game.state==='paused')game.pause(false);resumeAfterOptions=false;},
+    onChange:p=>{
+      if(game.sfx.muted===p.sound)game.sfx.toggle();
+      const cap=GP.qualityCap(p.quality,window.devicePixelRatio||1);
+      if(game.renderDpr!==cap){game.renderDpr=cap;game.resize(true);}
+    },
+    fps:()=>game.fps});
   const setMute = () => { document.getElementById('mute').innerHTML = icon(game.sfx.muted ? 'volume-x' : 'volume-2'); };
   setMute();
   document.getElementById('mute').onclick = () => { game.sfx.toggle(); setMute(); };
