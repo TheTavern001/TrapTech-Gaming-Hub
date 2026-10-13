@@ -254,6 +254,7 @@
     }
   ],
   "pendingEvidence": [
+    "PR26 c2e6e9f, 70c018b: registry-driven expansion and options/menu input guard isolated and not Deplexo-deployed; 93 registered, 0 quality certified.",
     "Registry-driven game intake candidate can scan 94..500 games without weakening frozen 93-title baseline, but actual gameplay-quality certification remains 0; full Docker result and host READY pending.",
     "Combined settings and previously Deplexo READY Rail Rush visual build: source of ccedb2a (licensed GLB saloon) + 0048954 (model test) restored on current branch. Combined host READY NOT YET VERIFIED.",
     "Settings candidate 075e467: 80/80 registered library entrypoints personally inspected by source, 77 share Kit and 3 vendor pages import pause-aware bridge. 13 original core game shell has settings. V8 preferences behavioral checks passed; Docker end-to-end and physical Android still pending. Cosmetics/avatar/shop AAA status unchanged.",
@@ -340,11 +341,17 @@
       "host": "not yet deployed; next Deplexo QA branch rollout"
     },
     {
-      "commit": "PENDING_SHA",
+      "commit": "c2e6e9fbdd12b64f0a4b56bec16274b2640a8abf",
       "reason": "Remove fixed 93/80 game-count assertions that prevent legitimate growth; preserve baseline, require per-title source report and engine-specific settings adapter",
-      "validation": "JavaScript source syntax and calculated 93-title baseline invariants prechecked; full Node/Docker and Deplexo deployment pending",
+      "validation": "Registry/test JavaScript parsed and 13+80 baseline checked; full Docker/Android testing not yet done.",
       "host": "NOT DEPLOYED — isolated feature branch"
+    },
+    {
+      "commit": "70c018b9389edfc1d15183905861fa015cb55bf7",
+      "reason": "Pause-safe Kit game settings: block title/restart taps while overlay open and clear pending inputs",
+      "validation": "Source parsed and automated source-level regression added; Docker and mobile pending",
+      "host": "NOT DEPLOYED — isolated PR26"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 source deployment candidate settings+Rail Rush awaiting combined Deplexo build"
+  "lastEvidenceReconciliation": "2026-10-13 19:06 EDT source review; last owner-confirmed READY is d71a54e, 15 newer settings source commits unconfirmed."
 }
