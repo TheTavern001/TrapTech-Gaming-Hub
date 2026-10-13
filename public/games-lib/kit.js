@@ -43,7 +43,12 @@
     const L = def.orient === 'l' ? [800, 450] : [400, 700]; const W = def.w || L[0], Hh = def.h || L[1];
     const cv = document.createElement('canvas'); cv.id = 'gl'; document.body.appendChild(cv); const c = cv.getContext('2d');
     let scale = 1, ox = 0, oy = 0;
-    function resize() { const vw = innerWidth, vh = innerHeight, d = Math.min(2, devicePixelRatio || 1); scale = Math.min(vw / W, vh / Hh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - cw) / 2; oy = (vh - ch) / 2; cv.style.cssText = `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`; cv.width = Math.floor(cw * d); cv.height = Math.floor(ch * d); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
+    // Start crisp on high-DPR phones, then dynamically lower only backing-store pixels
+    // if rendering stays slow. World coordinates, input accuracy and gameplay are unchanged.
+    const initialDpr = Math.min(2, devicePixelRatio || 1);
+    let renderDpr = initialDpr, slowFrames = 0, p95Ms = 0;
+    const frameSamples = [];
+    function resize() { const vw = innerWidth, vh = innerHeight, d = renderDpr; scale = Math.min(vw / W, vh / Hh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - cw) / 2; oy = (vh - ch) / 2; cv.style.cssText = `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`; cv.width = Math.max(1,Math.floor(cw * d)); cv.height = Math.max(1,Math.floor(ch * d)); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
     addEventListener('resize', resize); resize();
     const g = { W, H: Hh, c, t: 0, score: 0, best: +(safeStore.get('gl_best_' + def.id) || 0), state: 'title', rnd: Math.random, keys: {}, hud: '', parts: [], texts: [], shakeT: 0, shakeM: 0, flashT: 0, flashC: '#fff', frames: 0, fps: 60, inputs: 0,
       ptr: { x: W / 2, y: Hh / 2, down: false, pressed: false, released: false, sx: 0, sy: 0 }, stick: { x: 0, y: 0, on: false, cx: 0, cy: 0 }, btn: {}, def, sub: null };
@@ -61,7 +66,7 @@
     g.tap = () => g.ptr.pressed || g._kp;
     g.ax = () => (g.keys.ArrowRight || g.keys.d || g.keys.D ? 1 : 0) - (g.keys.ArrowLeft || g.keys.a || g.keys.A ? 1 : 0) + g.stick.x;
     g.ay = () => (g.keys.ArrowDown || g.keys.s || g.keys.S ? 1 : 0) - (g.keys.ArrowUp || g.keys.w || g.keys.W ? 1 : 0) + g.stick.y;
-    window.__GL = { g, get state() { return g.state; }, get score() { return g.score; }, get fps() { return g.fps; }, get jsMs() { return Math.round((g.jsMs || 0) * 100) / 100; }, lastSubmit: null, errors: [] };
+    window.__GL = { g, get state() { return g.state; }, get score() { return g.score; }, get fps() { return g.fps; }, get jsMs() { return Math.round((g.jsMs || 0) * 100) / 100; }, get frameMsP95() { return p95Ms; }, get renderDpr() { return renderDpr; }, lastSubmit: null, errors: [] };
     // buttons: def.buttons = [{id:'A', key:' ', label:'JUMP'}]
     const btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
     const toL = (e) => [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
@@ -84,7 +89,25 @@
     g.rnd = mulberry(); def.init(g);
     let last = performance.now(), acc = 0, fpsT = 0, fpsN = 0;
     function frame(now) {
-      requestAnimationFrame(frame); const js0 = performance.now(); let dt = Math.min(0.05, (now - last) / 1000); last = now; fpsT += dt; fpsN++; if (fpsT >= 1) { g.fps = Math.round(fpsN / fpsT); fpsT = 0; fpsN = 0; }
+      requestAnimationFrame(frame); const js0 = performance.now();
+      const realDt = Math.max(0, (now - last) / 1000); let dt = Math.min(0.05, realDt); last = now;
+      if (document.hidden) { fpsT=0; fpsN=0; slowFrames=0; return; }
+      // Frame statistics use real wall-clock duration, not the clamped physics delta.
+      if (realDt > 0 && realDt < 1) {
+        frameSamples.push(realDt * 1000); if (frameSamples.length > 120) frameSamples.shift();
+        const frameSlow = realDt > 0.025 && (g.state === 'play' || g.state === 'title');
+        slowFrames = frameSlow ? slowFrames + 1 : 0;
+        if (slowFrames >= 45 && renderDpr > 1) {
+          renderDpr = Math.max(1,Math.round((renderDpr-0.25)*100)/100);
+          resize(); slowFrames = 0;
+        }
+      }
+      fpsT += realDt; fpsN++;
+      if (fpsT >= 1) {
+        g.fps = Math.round(fpsN / fpsT);
+        if (frameSamples.length) { const sorted=[...frameSamples].sort((a,b)=>a-b); p95Ms=Math.round(sorted[Math.min(sorted.length-1,Math.floor(sorted.length*0.95))]*10)/10; }
+        fpsT = 0; fpsN = 0;
+      }
       if (g.state === 'title' || (g.state === 'over' && g.overT > 0.8)) { if (g.tap()) begin(); }
       if (g.state === 'over') g.overT += dt;
       if (g.state === 'play' && !g.paused) { g.t += dt; def.update(g, dt); }

@@ -44,11 +44,14 @@ add('held', 'laptop', 'DJ laptop'); add('held', 'briefcase', 'Business briefcase
 const KINDS = ['bg', 'skin', 'face', 'hair', 'hairc', 'eyes', 'mouth', 'beard', 'build', 'outfit', 'hat', 'acc', 'held'];
 const BYK = {}; for (const p of P) (BYK[p.kind] = BYK[p.kind] || {})[p.id] = p;
 const key = (p) => p.kind + ':' + p.id;
-function defaultFor() {
-  const pick = (kind) => Object.keys(BYK[kind] || {}).find(id => BYK[kind][id].unlock === 'free') || Object.keys(BYK[kind] || {})[0];
-  return { gender: 'other', bg: pick('bg'), skin: pick('skin'), face: pick('face'), hair: pick('hair'), hairc: pick('hairc'),
-    eyes: pick('eyes'), mouth: pick('mouth'), beard: 'none', build: pick('build'), outfit: pick('outfit'), hat: 'none', acc: 'none', held: 'none' };
-}
+// One deliberate starter look for every new/unsaved profile. No random appearance, no paid items.
+// Presentation is chosen separately; existing saved avatars and purchases are never overwritten.
+const STARTER_AVATAR = Object.freeze({
+  gender: 'other', bg: 'night', skin: 's2', face: 'oval', hair: 'waves',
+  hairc: 'c1', eyes: 'wide', mouth: 'smile', beard: 'none', build: 'average',
+  outfit: 'varsity', hat: 'none', acc: 'none', held: 'none'
+});
+function defaultFor() { return { ...STARTER_AVATAR }; }
 function clean(cfg, base) { const out = { ...base }; if (cfg && ['male', 'female', 'other'].includes(cfg.gender)) out.gender = cfg.gender; for (const k of KINDS) if (cfg && BYK[k][cfg[k]]) out[k] = cfg[k]; return out; }
 function configOf(user) { let c = {}; try { c = JSON.parse(user.avatar || '{}'); } catch {} return clean(c, defaultFor(user.username)); }
 // ownership

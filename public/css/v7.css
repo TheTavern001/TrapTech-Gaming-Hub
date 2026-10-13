@@ -213,3 +213,18 @@
 .avatar-gender{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
 .avatar-gender>span{flex:1 1 100%}
 .avatar-gender .btn.on{outline:2px solid var(--accent,#a78bfa);outline-offset:1px}
+
+/* Shared starter-avatar storefront: preview is free, purchase and equip are separate actions. */
+.av-prev{z-index:1;background:linear-gradient(165deg,rgba(22,29,57,.96),rgba(10,13,28,.99));border:1px solid rgba(183,158,255,.28);box-shadow:0 22px 50px rgba(0,0,0,.27)}
+.av-prev .avatar-stage{width:min(100%,360px);height:clamp(275px,47vh,385px);aspect-ratio:auto;border-color:rgba(200,188,255,.26);background:#0c1428}
+.av-selection{width:100%;display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;font-size:.86rem}
+.av-selection .lock{color:#ffcd80}
+.av-buy{background:linear-gradient(110deg,#8b5cf6,#c084fc 53%,#f5bb75);border-color:transparent;color:#100c25;font-weight:800;width:100%;min-height:46px}
+#av-save{width:100%;min-height:44px}
+#av-save:disabled{opacity:.48;cursor:not-allowed}
+.av-opt{min-height:116px;justify-content:center;transition:transform .12s ease,border-color .12s ease,background-color .12s ease}
+.av-opt:focus-visible{outline:2px solid #70e8ff;outline-offset:2px}
+.av-opt.on{background:rgba(105,83,189,.23);border-color:#c5a7ff}
+.av-opt.locked img{filter:saturate(.65) brightness(.85)}
+.av-opt .tiny{font-size:.69rem;line-height:1.15}
+@media(max-width:720px){.av-prev{position:static}.av-prev .avatar-stage{height:clamp(285px,75vw,370px)}.av-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

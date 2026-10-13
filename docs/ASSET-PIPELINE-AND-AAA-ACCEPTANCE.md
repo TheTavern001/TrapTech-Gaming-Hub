@@ -91,3 +91,17 @@ Use all relevant, compatible asset sources in the research pool—not every file
 6. Credits/manifest updated; old version remains available for rollback until the new one passes.
 
 Status note: this section defines the integration standard. It does not claim every source has been downloaded, every asset has been integrated, or that the live site has passed these checks.
+
+## Five-deployment release batching and frame-rate acceptance (October 2026)
+
+Plan *roughly five candidate deployment batches*, with a successful Deplexo build and stable runtime verified after each. This is a release-management target, **not** a claim that hundreds of games can become AAA through five automated builds without device/playthrough evidence.
+
+1. Shared visual foundation: uncropped official header brand, deterministic starter avatar with male/female/other presentation, preview-before-buy, reusable 3D geometry, adaptive frame budgets.
+2. All active core games and the existing Games Library: visual/playability/duplicate review; shared-engine optimizations first, per-title fixes based on measured failures.
+3. Economy, achievement, shop, avatar inventory, quests, giveaways, account and payment/persistence regressions, with 10k-user workload scripts on isolated test data.
+4. Distinct vetted games to approximately 500 in reviewable batches; run automated scans for missing assets, invalid scores, rights and mechanical duplicates.
+5. Complete deployment and load-validation gate, phone and desktop playthrough evidence, backup/restore rehearsal, payment-provider approval and **only then** public launch.
+
+**Visual performance contract:** target 60 FPS at native display refresh where feasible; target p95 frame time <= 16.7 ms on capable test devices. Sustained <45 FPS or p95 >25 ms during active gameplay requires a performance fix or a documented device-tier quality setting. No gameplay speed changes when graphics scale. Keep full-resolution source art of at least 1280x720 for appropriate backgrounds and up to 4K where useful; runtime resolution should adapt to the device instead of forcing 4K rasterization on phones. Canvas backing-store DPR is allowed to lower to preserve frame pacing; preserve touch/score coordinates and never tie scoring to rendered frame count.
+
+**Evidence required per title:** 120-second run with first 20 seconds warmup and event-heavy segment, render resolution/DPR, FPS median/5th percentile, p95 frame time, JS frame cost, paused/resumed state, signed score submission/replay rejection, and Android touch screenshots. The existing Kit exposes `window.__GL.fps`, `frameMsP95`, `renderDpr` and `jsMs` for automated browser collection; 3D games must log GPU draw calls and triangles where supported. A headless WebGL emulator does not substitute for physical Android measurements.

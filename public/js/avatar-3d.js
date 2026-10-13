@@ -6,7 +6,8 @@ export async function mountAvatar3D(stage, cfg) {
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const scene = new THREE.Scene();
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  let renderRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+  renderer.setPixelRatio(renderRatio);
   renderer.setSize(Math.max(180, stage.clientWidth), Math.max(220, stage.clientHeight), false);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -35,7 +36,7 @@ export async function mountAvatar3D(stage, cfg) {
   scene.background = null;
   const portrait = stage.clientWidth < 150;
   const camera = new THREE.PerspectiveCamera(portrait ? 30 : 32, stage.clientWidth / Math.max(1, stage.clientHeight), 0.1, 50);
-  camera.position.set(0, portrait ? 2.45 : 1.9, portrait ? 4.8 : 7.5);
+  camera.position.set(0, portrait ? 2.45 : 1.9, portrait ? 4.8 : 6.65);
   camera.lookAt(0, portrait ? 2.2 : 1.55, 0);
   scene.add(new THREE.HemisphereLight(0xdce8ff, 0x202034, 2.0));
   const key = new THREE.DirectionalLight(0xfff0d8, 3.1); key.position.set(-3, 6, 5); key.castShadow = true; scene.add(key);
@@ -46,6 +47,7 @@ export async function mountAvatar3D(stage, cfg) {
   const builds = { average:[1,1,1], slim:[0.86,1.02,0.92], athletic:[1.06,1.04,1.02], stocky:[1.16,0.95,1.08], curvy:[1.08,1,1], tall:[0.96,1.14,0.96], short:[1.04,0.88,1.02] };
   root.scale.set(...(builds[cfg.build] || builds.average));
   const materials = new Set();
+  const sphereGeometry = new THREE.SphereGeometry(1, 28, 20); // shared smooth mesh; avoid hundreds of redundant GPU buffers
   function mat(color, roughness = 0.48, metalness = 0.02) {
     const m = new THREE.MeshStandardMaterial({ color, roughness, metalness }); materials.add(m); return m;
   }
@@ -62,7 +64,7 @@ export async function mountAvatar3D(stage, cfg) {
     m.castShadow = true; m.receiveShadow = true; target.add(m); return m;
   }
   function ball(x,y,z,sx,sy,sz,color,target=root,roughness=0.48,metalness=0.02) {
-    return mesh(new THREE.SphereGeometry(1, 32, 24), mat(color,roughness,metalness), x,y,z,sx,sy,sz,target);
+    return mesh(sphereGeometry, mat(color,roughness,metalness), x,y,z,sx,sy,sz,target);
   }
   // Theme-specific 3D set dressing keeps backgrounds distinct without external art dependencies.
   const backdrop = new THREE.Group(); scene.add(backdrop);
@@ -89,7 +91,8 @@ export async function mountAvatar3D(stage, cfg) {
   if (cfg.bg === 'aurora-crown') { for(let i=0;i<3;i++){ const ribbon=neon(0,1.85,-1.35+i*0.05,0.82+i*0.15,['#34d399','#a78bfa','#f0abfc'][i]); ribbon.scale.y=0.35; ribbon.rotation.x=0.25+i*0.2; } mesh(new THREE.CylinderGeometry(0.35,0.43,0.17,8),mat('#fbbf24',0.2,0.9),0,2.28,-1.1,1,1,1,backdrop); for(let i=0;i<5;i++) mesh(new THREE.ConeGeometry(0.075,0.24,5),mat('#fde68a',0.15,0.85),-0.27+i*0.135,2.47+(i===2?0.08:0),-1.1,1,1,1,backdrop); }
   const floor = mesh(new THREE.CircleGeometry(2.3, 64), mat('#111827',0.8,0), 0,0.02,0,1,1,1,scene);
   floor.rotation.x = -Math.PI / 2;
-  ball(-0.24,0.66,0,0.20,0.68,0.22,shirt); ball(0.24,0.66,0,0.20,0.68,0.22,shirt);
+  const trousers = ['suit','mechanic','scrubs','farmer','firefighter','tracksuit'].includes(cfg.outfit) ? shirt : '#27364b';
+  ball(-0.24,0.66,0,0.20,0.68,0.22,trousers); ball(0.24,0.66,0,0.20,0.68,0.22,trousers);
   ball(-0.24,0.16,0.02,0.19,0.14,0.25,'#111827'); ball(0.24,0.16,0.02,0.19,0.14,0.25,'#111827');
   // Layered footwear adds a grounded silhouette instead of floating block-like feet.
   for (const x of [-0.24,0.24]) {
@@ -97,8 +100,22 @@ export async function mountAvatar3D(stage, cfg) {
     ball(x,0.20,0.035,0.17,0.11,0.235,cfg.outfit === 'suit' ? '#0b0f19' : '#202735');
     ball(x,0.15,0.22,0.13,0.018,0.035,cfg.outfit === 'hype' ? '#f472b6' : '#94a3b8');
   }
-  const torso = ball(0,1.45,0,presentation === 'male' ? 0.66 : presentation === 'female' ? 0.54 : 0.60,0.75,0.34,shirt);
-  ball(0,1.00,0,presentation === 'female' ? 0.43 : 0.36,0.30,0.29,shirt); // pelvis/waist silhouette
+  const torso = ball(0,1.45,0,presentation === 'male' ? 0.63 : presentation === 'female' ? 0.54 : 0.58,0.72,0.34,shirt);
+  ball(0,1.00,0,presentation === 'female' ? 0.43 : 0.38,0.30,0.29,trousers);
+  // Starter jacket adds a tailored silhouette and genuinely layered materials, rather than a colored sphere.
+  if (cfg.outfit === 'varsity' || cfg.outfit === 'hoodie' || cfg.outfit === 'denim') {
+    const trim = cfg.outfit === 'varsity' ? '#ffe6bb' : cfg.outfit === 'hoodie' ? '#cad5e7' : '#b7d7f5';
+    const panel = mat(cfg.outfit === 'varsity' ? '#182845' : cfg.outfit === 'hoodie' ? '#1c2639' : '#1e4290',0.64,0.02);
+    for (const side of [-1,1]) {
+      const front = mesh(new THREE.BoxGeometry(0.24,0.88,0.12),panel,side*0.20,1.50,0.31,1,1,1);
+      front.rotation.z = side*0.085;
+      const lapel = mesh(new THREE.BoxGeometry(0.13,0.36,0.07),mat(trim,0.60,0),side*0.13,1.90,0.41,1,1,1);
+      lapel.rotation.z = side*0.34;
+      ball(side*0.20,1.02,0.33,0.17,0.055,0.04,trim);
+    }
+    mesh(new THREE.BoxGeometry(0.045,0.82,0.14),mat('#c9a56b',0.4,0.4),0,1.49,0.385,1,1,1);
+    for(let i=0;i<3;i++) ball(0,1.23+i*0.25,0.46,0.025,0.025,0.012,'#e9dbc0');
+  } // pelvis/waist silhouette
   if (presentation === 'female') { ball(-0.19,1.62,0.28,0.22,0.20,0.10,shirt); ball(0.19,1.62,0.28,0.22,0.20,0.10,shirt); }
   // Neck, collar and layered arms give the character more coherent anatomy and tailored clothing.
   mesh(new THREE.CylinderGeometry(0.13,0.16,0.34,24),mat(skin,0.56,0),0,2.12,0.015,1,1,1);
@@ -116,22 +133,24 @@ export async function mountAvatar3D(stage, cfg) {
     ball(side*0.73,1.08,0.015,0.145,0.045,0.15,cuffColor);
   }
   const head = new THREE.Group(); root.add(head); head.position.set(0,2.62,0);
-  const faceScale = cfg.face === 'square' || (presentation === 'male' && cfg.face !== 'round') ? [0.56,0.60,0.48] : cfg.face === 'round' ? [0.54,0.53,0.46] : presentation === 'female' ? [0.48,0.62,0.42] : [0.50,0.61,0.44];
+  const faceScale = cfg.face === 'square' ? [0.53,0.57,0.46] : cfg.face === 'round' ? [0.52,0.54,0.45] : presentation === 'female' ? [0.49,0.58,0.45] : [0.50,0.57,0.46];
   ball(0,0,0,...faceScale,skin,head);
   ball(-0.51,-0.02,0,0.10,0.16,0.12,skin,head); ball(0.51,-0.02,0,0.10,0.16,0.12,skin,head);
   // Ear inset, nose bridge/tip and brows provide stronger facial read at profile-card scale.
   ball(-0.52,-0.035,0.075,0.045,0.085,0.055,'#b87559',head);
   ball(0.52,-0.035,0.075,0.045,0.085,0.055,'#b87559',head);
   ball(0,-0.035,0.425,0.055,0.105,0.075,skin,head);
-  ball(0,-0.105,0.445,0.07,0.055,0.07,skin,head);
+  ball(0,-0.105,0.47,0.07,0.055,0.07,skin,head);
+  // Jaw and lower cheek planes make the starter read as a stylized character, not a bald baby.
+  ball(0,-0.35,0.12,0.35,0.20,0.33,skin,head);
   ball(-0.19,0.205,0.405,0.135,0.035,0.045,hair,head);
   ball(0.19,0.205,0.405,0.135,0.035,0.045,hair,head);
   const eyeWhite = mat('#f8fafc',0.25,0); const pupil = mat('#10131d',0.18,0);
   for (const x of [-0.19,0.19]) {
-    ball(x,0.06,0.394,0.095,0.075,0.045,'#f8fafc',head,0.28);
-    ball(x,-0.005,0.432,0.039,0.046,0.024,'#111827',head,0.2);
-    ball(x-0.012,0.012,0.45,0.012,0.014,0.008,'#ffffff',head,0.2);
-    ball(x,0.19,0.37,0.12,0.025,0.035,hair,head);
+    ball(x,0.065,0.448,0.103,0.082,0.045,'#f8fafc',head,0.28);
+    ball(x,-0.001,0.491,0.045,0.052,0.024,'#152136',head,0.2);
+    ball(x-0.016,0.019,0.513,0.016,0.018,0.009,'#ffffff',head,0.2);
+    ball(x,0.205,0.423,0.125,0.035,0.042,hair,head);
   }
   if (cfg.eyes === 'sleepy') { for (const x of [-0.19,0.19]) ball(x,0.055,0.44,0.09,0.018,0.012,hair,head); }
   if (cfg.eyes === 'wink') ball(0.19,0.06,0.44,0.09,0.018,0.012,hair,head);
@@ -146,7 +165,7 @@ export async function mountAvatar3D(stage, cfg) {
     const mouth = mesh(new THREE.TorusGeometry(cfg.mouth === 'grin' ? 0.13 : 0.09,0.018,8,24,Math.PI),mouthMat,0,-0.22,0.405,1,1,1,head);
     mouth.rotation.z = Math.PI;
   }
-  const hairStyle = cfg.hair || 'short';
+  const hairStyle = cfg.hair || 'waves';
   if (hairStyle !== 'none') {
     if (['buzz','waves'].includes(hairStyle)) ball(0,0.34,0,0.51,0.24,0.44,hair,head);
     else if (hairStyle === 'afro') ball(0,0.38,0,0.62,0.40,0.55,hair,head);
@@ -241,13 +260,27 @@ export async function mountAvatar3D(stage, cfg) {
   renderer.domElement.addEventListener('pointercancel',up);
   const resize = () => { if(!stage.isConnected) return; const w=Math.max(180,stage.clientWidth), h=Math.max(220,stage.clientHeight); renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
   const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null; if(observer) observer.observe(stage); else window.addEventListener('resize',resize);
-  let frame=0, alive=true, cleanup=null;
-  const animate = (t) => { if(!alive) return; if(!stage.isConnected && cleanup) { cleanup(); return; } frame=requestAnimationFrame(animate); if(!pointer.down && !reduced) { root.rotation.y += 0.0012; backdrop.rotation.y += 0.0008; } torso.scale.y=0.75+(reduced?0:Math.sin(t*0.0015)*0.008); renderer.render(scene,camera); };
+  let frame=0, alive=true, cleanup=null, previousFrame=0, slowStreak=0;
+  const animate = (t) => {
+    if(!alive) return;
+    if(!stage.isConnected && cleanup) { cleanup(); return; }
+    frame=requestAnimationFrame(animate);
+    if(document.hidden) { previousFrame=0; return; }
+    if(previousFrame && t-previousFrame>24) slowStreak++; else slowStreak=0;
+    previousFrame=t;
+    if(slowStreak>=45 && renderRatio>1) {
+      renderRatio=Math.max(1,Math.round((renderRatio-0.25)*100)/100);
+      renderer.setPixelRatio(renderRatio); slowStreak=0;
+    }
+    if(!pointer.down && !reduced) { root.rotation.y += 0.0012; backdrop.rotation.y += 0.0008; }
+    torso.scale.y=0.75+(reduced?0:Math.sin(t*0.0015)*0.008);
+    renderer.render(scene,camera);
+  };
   frame=requestAnimationFrame(animate);
   cleanup = () => {
     if(!alive) return; alive=false; cancelAnimationFrame(frame); if(observer) observer.disconnect(); else window.removeEventListener('resize',resize);
     renderer.domElement.removeEventListener('pointerdown',down); renderer.domElement.removeEventListener('pointermove',move); renderer.domElement.removeEventListener('pointerup',up); renderer.domElement.removeEventListener('pointercancel',up);
-    scene.traverse(o=>{if(o.geometry)o.geometry.dispose();}); materials.forEach(m=>m.dispose()); renderer.dispose(); renderer.domElement.remove();
+    const geometryResources = new Set(); scene.traverse(o=>{if(o.geometry)geometryResources.add(o.geometry);}); geometryResources.forEach(g=>g.dispose()); materials.forEach(m=>m.dispose()); renderer.dispose(); renderer.domElement.remove();
   };
   return cleanup;
 }
