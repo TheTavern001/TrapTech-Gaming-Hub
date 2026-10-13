@@ -13,9 +13,9 @@ power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-
 
 **Operational source of truth:** [Deployment and audit journal](docs/DEPLOYMENT-JOURNAL.md) → `docs/audit/DEPLOYMENT-JOURNAL.json`; [master workboard](docs/HUB-MASTER-CHECKLIST.md) and [game intake protocol](docs/audit/GAME-IMPORT-PROTOCOL.md). Record the exact GitHub SHA and observed Deplexo outcome for **every** attempt, including failure, in the journal. A screenshot of BUILDING is not proof of READY.
 
-Run `node tools/release-status.js` for current-source and last-observed-host status; run `node tools/verify-game-intake.js` for 500-title progress. The baseline is **93 active games**, target **500** (407 further distinct accepted titles). The research candidate list is not a live game list. Docker prelaunch now derives library counts from the registry rather than refusing a valid 81st game. All new titles still need rights, gameplay, score and Android QA before public release.
+Run `node tools/release-status.js` for current-source and last-observed-host status; run `node tools/verify-game-intake.js` for registered intake and `node tools/quality-readiness.js` for **evidence-backed AAA quality approval**, counted separately. The baseline is **93 active games**, target **500** (407 further distinct accepted titles). The research candidate list is not a live game list. Docker prelaunch now derives library counts from the registry rather than refusing a valid 81st game. All new titles still need rights, gameplay, score and Android QA before public release.
 
-**Last Deplexo status documented by owner screenshot:** `8489b41` READY, `58a9f52` failed, `b7be1ec` was BUILDING; a later screenshot/build log is required to determine the current READY SHA. This README does not claim the present `main` is live.
+**Last Deplexo screenshot reconciliation:** historical READY at `420bab1`; later `58a9f52`, `b7be1ec`, `4ad48e9`, and `71a07b4` each FAILED (root causes unconfirmed until logs obtained). Source `570a9fe` is not host-confirmed. See the journal for exact evidence and resume point. This README does not claim the present `main` is live.
 
 ## Run / restart
 ```bash

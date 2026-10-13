@@ -124,7 +124,7 @@ function topbar(path) {
   const act = navActive(path);
   return `<header class="topbar">
     <button class="iconbtn menu-btn" data-act="menu" aria-label="Open menu">${icon('menu')}</button>
-    <a href="/" aria-label="The Gaming Hub home"><img class="logo" src="/assets/brand/hub-logo.svg" alt="The Gaming Hub" width="150" height="28"></a><a class="hd-tt" href="/about" aria-label="By Trap Tech Solutions"><span>by</span>${TT('mono', 30, 'only-ph')}${TT('horizontal', 30, 'only-wide')}</a>
+    <a href="/" class="hub-home-link" aria-label="The Gaming Hub by Trap Tech Solutions home"><img class="logo hub-brand-mark" src="/assets/brand/traptech-app-icon.svg" alt="" width="40" height="40" decoding="async"><span class="hub-brand-name">GAMING HUB</span></a><a class="hd-tt" href="/about" aria-label="By Trap Tech Solutions"><span>by</span>${TT('mono', 30, 'only-ph')}${TT('horizontal', 30, 'only-wide')}</a>
     <nav class="desk-nav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}${l}</a>`).join('')}<a href="/tournaments" class="${path.startsWith('/tournaments') ? 'on' : ''}">${icon('swords')}Tournaments</a><a href="/sponsor" class="${path.startsWith('/sponsor') ? 'on' : ''}">${icon('gift')}Book a Giveaway</a></nav>
     <span class="spacer"></span>
     ${S.me && S.me.streak && S.me.streak.current ? `<a class="streak-chip" href="/quests" aria-label="${S.me.streak.current}-day streak - daily quests">${icon('flame')}<b>${S.me.streak.current}</b></a>` : ''}

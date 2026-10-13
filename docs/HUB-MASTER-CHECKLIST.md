@@ -11,7 +11,7 @@
 
 ## Current evidence checkpoint — 2026-10-13
 
-**Read [the deployment journal](DEPLOYMENT-JOURNAL.md) and run `node tools/release-status.js` before starting another deployment.** The earlier October 12 table below is historical, not the latest live state. Observed Deplexo READY at `8489b41`; a newer Skee Roll candidate `58a9f52` failed and `b7be1ec` was last seen BUILDING 35%. Final Deplexo outcome is **unknown** at this checkpoint. This status is screenshot-evidenced; it must be updated against the next build log and exact current `/api/build` SHA.
+**Read [the deployment journal](DEPLOYMENT-JOURNAL.md) and run `node tools/release-status.js` before starting another deployment.** The earlier October 12 table below is historical, not the latest live state. Observed later Deplexo READY at `420bab1` (after READY `8489b41`); subsequent screenshots show four failed builds: `58a9f52`, `b7be1ec`, `4ad48e9` and `71a07b4`. Their first failed commands are still **UNKNOWN**; source `570a9fe` has no host result. This status is screenshot-evidenced; it must be updated against the next build log and exact current `/api/build` SHA.
 
 **Active baseline:** 13 core + 80 library = 93 titles. To reach 500 active titles requires **407 accepted distinct additions**; research candidates do not count. Import changes must never overwrite license/credits, regress accessibility, or count untested titles as AAA. The canonical machine-readable event history is `docs/audit/DEPLOYMENT-JOURNAL.json`.
 
@@ -210,3 +210,13 @@ Add each subsequent deployment here, including successful deployments. Do not ov
 
 - 2026-10-12: created consolidated source-of-truth checklist and recorded the Deplexo failure from build output.
 - 2026-10-12: fixed manifest-icon audit logic to accept existing static public assets as well as explicit server routes; commit `ea454f93a05ecf715d880d880e42228327f0a7b6`.
+
+
+## Owner-locked rollout priority (2026-10-13)
+1. Fix mobile header icon cropping using the self-hosted Trap Tech mark; verify 320/360/390/768px viewport with screenshots.
+2. Rework avatar previews using licensed, accurately mapped 3D rigs; keep one shared starter with male/female/other presentation choices. Preserve saved existing purchases. The procedural fallback is still a QA defect for unsupported cosmetics; never claim it matches source rigs.
+3. Play/audit all 93 registered games, reject duplicates and visually weak loops, then audit achievements, inventory, shop, payments and persistence.
+4. Expand ONLY after baseline approval, in rights-reviewed batches; treat `node tools/quality-readiness.js` count as the quality-approved total toward 500.
+5. Staging 10k-user population plus meaningful concurrent-session tests before any public launch. `main` commits and Deplexo READY alone do not certify release quality.
+
+**Next blocker:** actual Deplexo log for `71a07b4`, then non-GitHub-Actions reproduction and root-cause fix. Latest source work goes to an isolated working branch to avoid repeated failed auto-deploys.

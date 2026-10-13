@@ -40,6 +40,17 @@
       "qualification": "only Deplexo READY observed, not all game/visual/physical-device QA"
     },
     {
+      "commit": "420bab1d8eaee2a817576aa142395800511033cc",
+      "sourceCommittedAtUTC": "2026-10-13T06:09:20Z",
+      "status": "READY",
+      "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: green READY at bottom of Deplexo list; exact duration and current-serving state not shown",
+      "firstError": null,
+      "rootCause": null,
+      "fixCommit": null,
+      "verifiedAfterFix": false,
+      "qualification": "Deplexo marked this historical revision READY; this is not proof of AAA acceptance, current URL serving revision, or payment/performance QA"
+    },
+    {
       "commit": "58a9f52d584ee3bd6423000a83504d10b4527c4e",
       "sourceCommittedAtUTC": "2026-10-13T06:20:07Z",
       "status": "FAILED",
@@ -53,13 +64,32 @@
     {
       "commit": "b7be1ec2c0098689dedb7512112738fd21990266",
       "sourceCommittedAtUTC": "2026-10-13T06:24:41Z",
-      "status": "BUILDING_OBSERVED",
-      "evidence": "user Deplexo screenshot: clone completed, image build at 35%/RESTART at approx 02:25 ET",
-      "firstError": null,
-      "rootCause": null,
+      "status": "FAILED",
+      "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: Deplexo ERROR/build failed after 108s",
+      "firstError": "first failing Docker command and log text unavailable; screenshot only shows generic build failed",
+      "rootCause": "UNKNOWN — registry-audit patch cannot be credited as a fix without the actual log",
       "fixCommit": null,
-      "verifiedAfterFix": false,
-      "qualification": "not a failure and not a READY confirmation: must inspect latest Deplexo attempt"
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "4ad48e9b7bf2e930cb0f52fca35bb3590da0cbe2",
+      "sourceCommittedAtUTC": "2026-10-13T06:34:58Z",
+      "status": "FAILED",
+      "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: Deplexo ERROR/build failed after 164s (deployment-journal and asset-credit-builder change)",
+      "firstError": "UNKNOWN — Docker build log not available",
+      "rootCause": "UNKNOWN — do not infer from earlier audit failures",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "71a07b4c1fb6f9bf97543fbfe5cacb85fd973b37",
+      "sourceCommittedAtUTC": "2026-10-13T06:40:24Z",
+      "status": "FAILED",
+      "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: Deplexo ERROR/build failed after 218s (scalable registry count and game-admissions change)",
+      "firstError": "UNKNOWN — Docker build log not available",
+      "rootCause": "UNKNOWN — do not infer from earlier audit failures",
+      "fixCommit": null,
+      "verifiedAfterFix": false
     }
   ],
   "sourceVerification": [
@@ -79,11 +109,12 @@
     }
   ],
   "pendingEvidence": [
-    "Deplexo final state and error/READY log for b7be1ec (user screenshot last showed BUILDING)",
-    "Live /healthz, /api/build and /api/audit/report from the exact current Deplexo commit",
-    "Complete desktop, Samsung/Android, anti-cheat, licensing and 60 FPS QA for all 93 currently active titles",
-    "Avatar/model rig, achievements art, shop purchases, persistence, payment provider and backup/restore tests",
-    "10,000-identity isolated load test, then sustained staged concurrency testing"
+    "FIRST PRIORITY: obtain the first failing Docker command + following exception from the latest Deplexo failed build (71a07b4, 218s); also logs of 4ad48e9, b7be1ec and 58a9f52",
+    "Confirm whether commit 570a9fe or a newer SHA has been deployed; GitHub source alone does not prove host outcome",
+    "Live /healthz, /api/build and /api/audit/report matching the exact host SHA (external tool currently cannot access Deplexo URL)",
+    "Real Android and desktop gameplay, brand/mobile header rendering, FPS, scoring, anti-cheat, achievement and asset-rights signoff for each of the 93 registered titles",
+    "Avatar rig/cosmetic completeness, inventory/payment/persistence and backup/restore tests",
+    "Isolated staging 10k+ identities with representative sustained concurrency and no live data risk"
   ],
   "releaseStages": [
     {
@@ -133,6 +164,13 @@
       "reason": "Replaced exactly-80 library release checks with dynamic registry and baseline protections; added 500-game admission ledger, protocol and source-quality gate",
       "validation": "Syntax-checked changed audit/intake JavaScript; read-only script emulation calculated 93 active games and 407 remaining; full Docker build not run",
       "host": "not verified"
+    },
+    {
+      "commit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+      "reason": "README links master operational ledger; source-level journal reconciliation",
+      "validation": "GitHub commit metadata retrieved 2026-10-13; no app test claimed",
+      "host": "no Deplexo outcome observed"
     }
-  ]
+  ],
+  "lastEvidenceReconciliation": "2026-10-13T06:44:00Z (owner screenshot)"
 }

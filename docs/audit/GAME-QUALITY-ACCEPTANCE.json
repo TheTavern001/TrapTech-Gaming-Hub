@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "goal": 500,
+  "policy": "A title counts toward 500 only after evidence-backed pass for all categories below plus owner visual approval. Keep approvals empty until reviews actually occur. Registered games do not count as quality-approved.",
+  "recordKey": "core:<active-core-id> or library:<slug>",
+  "requiredChecks": [
+    "visuals",
+    "uniqueMechanics",
+    "gameplayLoop",
+    "androidControls",
+    "desktopControls",
+    "pauseRestart",
+    "scoreAntiCheat",
+    "assetsAndLicense",
+    "performanceAndroid",
+    "ownerApproval"
+  ],
+  "recordTemplate": {
+    "id": "core:example-id",
+    "status": "PENDING",
+    "reviewer": "",
+    "reviewedAtUTC": "",
+    "metrics": {
+      "androidP95FrameMs": null,
+      "minimumVerifiedRenderHeightPx": null
+    },
+    "checks": {
+      "visuals": {
+        "passed": false,
+        "evidence": ""
+      },
+      "uniqueMechanics": {
+        "passed": false,
+        "evidence": ""
+      },
+      "gameplayLoop": {
+        "passed": false,
+        "evidence": ""
+      },
+      "androidControls": {
+        "passed": false,
+        "evidence": ""
+      },
+      "desktopControls": {
+        "passed": false,
+        "evidence": ""
+      },
+      "pauseRestart": {
+        "passed": false,
+        "evidence": ""
+      },
+      "scoreAntiCheat": {
+        "passed": false,
+        "evidence": ""
+      },
+      "assetsAndLicense": {
+        "passed": false,
+        "evidence": ""
+      },
+      "performanceAndroid": {
+        "passed": false,
+        "evidence": ""
+      },
+      "ownerApproval": {
+        "passed": false,
+        "evidence": ""
+      }
+    }
+  },
+  "records": []
+}

@@ -158,3 +158,23 @@ a { transition:color .18s ease, border-color .18s ease, transform .18s ease, fil
 @media (prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important; }
 }
+
+/* Phase 1: a contained, uncropped Trap Tech mark in the mobile/desktop shell.
+   Never crop the icon with line-height or an overflow-hidden link. */
+.topbar > .hub-home-link { display:inline-flex;align-items:center;gap:9px;min-width:0;flex:none;line-height:1;text-decoration:none;overflow:visible; }
+.topbar .hub-brand-mark { width:40px;height:40px;max-width:40px;min-width:40px;object-fit:contain;object-position:center;box-sizing:border-box;padding:2px;flex:none;display:block;filter:drop-shadow(0 0 9px rgba(191,157,255,.2)); }
+.topbar .hub-brand-name { font-family:Orbitron,system-ui,sans-serif;color:#f7f5ff;font-size:.86rem;font-weight:800;line-height:1.1;letter-spacing:.09em;white-space:nowrap; }
+.topbar > .spacer { min-width:0; }
+@media (max-width:899px) {
+  .topbar .hd-tt { display:none; }
+  .topbar > .hub-home-link { gap:7px; }
+  .topbar .hub-brand-mark { width:35px;height:35px;max-width:35px;min-width:35px; }
+  .topbar .hub-brand-name { font-size:.78rem;letter-spacing:.045em; }
+}
+@media (max-width:390px) {
+  .topbar { gap:5px;padding-left:8px;padding-right:8px; }
+  .topbar > .hub-home-link { gap:4px; }
+  .topbar .hub-brand-mark { width:31px;height:31px;max-width:31px;min-width:31px; }
+  .topbar .hub-brand-name { font-size:.68rem;letter-spacing:0; }
+  .topbar .iconbtn { width:36px;height:40px; }
+}

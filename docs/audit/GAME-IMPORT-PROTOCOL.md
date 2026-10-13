@@ -18,3 +18,5 @@ A new game admission requires a distinct named scoring/control loop, permissible
 6. Accept only passing games into release totals. Repeat until 500; do not advertise all 500 as AAA before every game passes its own criteria.
 
 **Build-time count audit fix:** the historical 80-game equality in `tools/verify-prelaunch.js` and `tools/prelaunch-deep-audit.js` now uses registry-derived counts and a minimum baseline guard. A valid 81st or 100th title no longer causes a false static blocker merely because the number increased. The full catalog, docs and actual game files must still match.
+
+**Quality-first admission, updated 2026-10-13:** Registry size and 500-game launch-quality total are different metrics. `node tools/quality-readiness.js` reports approvals from `docs/audit/GAME-QUALITY-ACCEPTANCE.json`. No baseline game is quality-approved without complete desktop, physical Android, source rights, duplicate/visual, anti-cheat, p95 <=16.7ms at >=720px render-height, and explicit owner signoff evidence. Baseline quality approval gates expansion. Source-only checks cannot certify 60 FPS or an AAA visual standard.

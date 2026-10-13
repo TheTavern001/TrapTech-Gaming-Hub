@@ -55,3 +55,10 @@ The original build audits required **exactly 80 library games**, which would hav
 | `71a07b4` | Removed exact-80 blocker from both prelaunch audits; introduced 500-game admission protocol. | Source checks and registry-based report exercised; Docker/Deplexo outcome unknown. |
 
 The next source branch head can advance beyond this table. Read `git log` and `node tools/release-status.js` to reconcile work since this note, then append to the machine-readable journal. The last observed Deplexo READY SHA remains `8489b41` until a later deployment is independently confirmed.
+
+## Reconciled from owner Deplexo screenshot — 2026-10-13 ~02:44 Eastern
+The earlier last-known READY entry `8489b41` remains valid, but a **newer READY screenshot confirms `420bab1`**. Later failed builds are **`58a9f52` (83s), `b7be1ec` (108s), `4ad48e9` (164s), and `71a07b4` (218s)**. All failures are marked **cause UNKNOWN** until the actual Deplexo build logs show the first failing command. The latest source commit visible to GitHub at this checkpoint is `570a9fe` (06:43:35 UTC), **not host-confirmed**. An older screenshot of BUILDING for `b7be1ec` has been superseded by the later screenshot showing ERROR.
+
+**Resumption after interruption:** obtain the error excerpt for `71a07b4`; reproduce that exact failed check without paid GitHub Actions; fix the root cause on the working branch, run checks, then merge once for a controlled Deplexo deployment. Until then, the source and the last known READY deployment are different revisions. If the screenshot is updated, append rather than rewriting past events.
+
+**User's quality-count rule:** registered titles are **not** equivalent to AAA-approved titles. Audit all 93 current titles before expansion; `node tools/quality-readiness.js` reads the separate evidence-backed per-game acceptance file. Empty approvals mean **0 independently quality-approved** (not zero games registered). Only approved games advance the 500-game launch-quality target.
