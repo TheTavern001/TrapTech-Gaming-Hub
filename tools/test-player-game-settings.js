@@ -32,15 +32,26 @@ assert.ok(!prefs.includes('/api/score'));
 // Verify every registry entry has a supported settings implementation, including
 // licensed engines that bypass Kit. Fail for newly added unintegrated engines.
 const catalog=require('../src/games-lib').games;
-assert.equal(catalog.length,80,'Existing library inventory should remain intact');
-const vendored=new Set(['bud-merge','hex-stack','dino-dash']);
-assert.equal(catalog.filter(g=>g.build==='built').length,77);
-assert.equal(catalog.filter(g=>g.build==='vendored').length,3);
+// New games are allowed only if the existing baseline is retained and
+// each new engine is wired to a functioning game-settings bridge.
+const frozen=require('../docs/audit/GAME-INTAKE-BASELINE.json');
+assert.ok(catalog.length>=frozen.baselineLibrarySlugs.length,'Game catalog unexpectedly shrank');
+const ids=new Set(catalog.map(g=>g.slug));
+assert.equal(ids.size,catalog.length,'Duplicate library slug');
+for(const slug of frozen.baselineLibrarySlugs)
+ assert.ok(ids.has(slug),'Baseline library game removed without replacement: '+slug);
+const built=catalog.filter(g=>g.build==='built');
+const vendored=catalog.filter(g=>g.build==='vendored');
+assert.equal(built.length+vendored.length,catalog.length,
+ 'Unrecognized game engine; add a tested pause/settings adapter first');
+for(const slug of ['bud-merge','hex-stack','dino-dash'])
+ assert.ok(vendored.some(g=>g.slug===slug),'Original independent engine omitted: '+slug);
 for(const item of catalog){
  const html=read('public/games-lib/'+item.slug+'/index.html');
  if(item.build==='vendored'){
-   assert.ok(vendored.has(item.slug),'New independent game engine has no settings adapter: '+item.slug);
    assert.ok(html.includes('../vendor-settings.mjs'),'Vendored game missing settings UI: '+item.slug);
+   assert.ok(read('public/games-lib/vendor-settings.mjs').includes("'"+item.slug+"'"),
+     'New independent engine missing explicit adapter mapping and pause support: '+item.slug);
  }else{
    assert.ok(html.includes('../kit.js'),'Built game lost Kit settings bridge: '+item.slug);
  }
@@ -53,4 +64,4 @@ assert.ok(independent.includes('window.__GL.g.paused'),'Hextris native pause req
 assert.ok(read('public/games-lib/bud-merge/js/hub-bridge.js').includes('window.__ttVendorSettingsPaused'),'2048 movement must freeze while menu open');
 assert.ok(prefs.includes("modal.addEventListener('keydown',e=>e.stopPropagation())"),'Settings must not report gameplay keyboard events');
 assert.ok(read('public/index.html').includes('/css/player-prefs.css'),'App needs live high-contrast theme');
-console.log(JSON.stringify({passed:true,globalOptions:5,gameOverrides:3,scope:'visual and sound only'}));
+console.log(JSON.stringify({passed:true,libraryGamesChecked:catalog.length,built:built.length,vendored:vendored.length,globalOptions:5,gameOverrides:3,scope:'visual and sound only'}));

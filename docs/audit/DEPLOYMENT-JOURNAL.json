@@ -254,6 +254,7 @@
     }
   ],
   "pendingEvidence": [
+    "Registry-driven game intake candidate can scan 94..500 games without weakening frozen 93-title baseline, but actual gameplay-quality certification remains 0; full Docker result and host READY pending.",
     "Combined settings and previously Deplexo READY Rail Rush visual build: source of ccedb2a (licensed GLB saloon) + 0048954 (model test) restored on current branch. Combined host READY NOT YET VERIFIED.",
     "Settings candidate 075e467: 80/80 registered library entrypoints personally inspected by source, 77 share Kit and 3 vendor pages import pause-aware bridge. 13 original core game shell has settings. V8 preferences behavioral checks passed; Docker end-to-end and physical Android still pending. Cosmetics/avatar/shop AAA status unchanged.",
     "Private source branch includes expanded device Settings and per-game UI. Source parsed. Docker test must pass before deployment. Not AAA, no asset redesign.",
@@ -337,6 +338,12 @@
       "reason": "Preserve inaugural 56-day season while applying owner-required 42-day seasons from Season 2 onward; no DB rewrites",
       "validation": "Committed test-season-future-calendar.js passed using V8 stubbed DB and verified 56/42/42 contiguous boundaries, exact dates, override propagation; all 11 Docker tool refs tracked",
       "host": "not yet deployed; next Deplexo QA branch rollout"
+    },
+    {
+      "commit": "PENDING_SHA",
+      "reason": "Remove fixed 93/80 game-count assertions that prevent legitimate growth; preserve baseline, require per-title source report and engine-specific settings adapter",
+      "validation": "JavaScript source syntax and calculated 93-title baseline invariants prechecked; full Node/Docker and Deplexo deployment pending",
+      "host": "NOT DEPLOYED — isolated feature branch"
     }
   ],
   "lastEvidenceReconciliation": "2026-10-13 source deployment candidate settings+Rail Rush awaiting combined Deplexo build"

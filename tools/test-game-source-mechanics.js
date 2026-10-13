@@ -4,8 +4,26 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),cp=require('node:child_process'),assert=require('node:assert/strict');
 const ROOT=path.resolve(__dirname,'..'),current=path.join(ROOT,'docs/audit/game-source-mechanics.json');
 const baseline=JSON.parse(fs.readFileSync(current,'utf8'));
-assert.equal(baseline.registered,93,'Expected the frozen 93-title baseline');
-assert.equal(baseline.core,13);assert.equal(baseline.library,80);
+// The immutable 93-title baseline is the minimum, never a maximum. New
+// registered games must immediately appear in the report and retain the
+// exact same missing-script negative test.
+const frozen=require('../docs/audit/GAME-INTAKE-BASELINE.json');
+const registered=require('../src/games-lib').games;
+const slugs=new Set(registered.map(g=>g.slug));
+assert.equal(slugs.size,registered.length,'Duplicate registered library slugs');
+for(const slug of frozen.baselineLibrarySlugs)
+ assert.ok(slugs.has(slug),'Frozen baseline title silently disappeared: '+slug);
+assert.equal(baseline.core,frozen.activeCoreIds.length,'Core baseline drift');
+assert.equal(baseline.library,registered.length,'Scanner must include every registered library game');
+assert.equal(baseline.registered,baseline.core+baseline.library,'Missing or extra scan records');
+assert.ok(baseline.registered>=frozen.activeCoreIds.length+frozen.baselineLibrarySlugs.length,
+  'Catalog must not shrink the 93-title baseline');
+assert.equal(baseline.games.length,baseline.registered,'Each registered title needs a source record');
+const auditedIds=new Set(baseline.games.map(g=>g.id));
+assert.equal(auditedIds.size,baseline.registered,'Duplicate scan IDs');
+for(const id of frozen.activeCoreIds)assert.ok(auditedIds.has('core:'+id),'Core scan missing '+id);
+for(const game of registered)assert.ok(auditedIds.has('library:'+game.slug),
+  'New library game lacks a source-audit record: '+game.slug);
 assert.equal(baseline.qualityApproved,0,'Static audits do not certify games');
 assert.deepEqual(baseline.errors,[],'No executable source may be missing');
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'hub-audit-negative-'));

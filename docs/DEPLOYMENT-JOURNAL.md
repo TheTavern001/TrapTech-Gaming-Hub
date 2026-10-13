@@ -126,3 +126,6 @@ Confirmed via GitHub source at `075e467`: 77 built library game pages load `../k
 
 ## 2026-10-13 — no regression to older box trains
 Visual files restored verbatim from Deplexo READY ccedb2a, original train model integrity test from READY 0048954, with Docker/HTTP checks on settings candidate. Combined deployment still pending; AAA and public launch not certified.
+
+## 2026-10-13 ~19:05 EDT — expansion readiness source test fixes
+Source audit `tools/test-game-source-mechanics.js` and player/game-settings QA no longer reject game 94 solely because 93/80 totals are hard-coded. The immutable 13 core + 80 library list is still enforced as a baseline and every new title must appear in the source audit and implement a verified settings adapter; any new engine kind fails closed. Original missing-script negative regression remains. This is source-level preparation for 500, **not approval of one new game**. Latest branch `audit/avatar-renderability-ledger-20261013` source commit `1d08431` with device settings across all games has NOT yet been confirmed Deplexo READY. No auto-deploy of this isolated feature until reviewed.
