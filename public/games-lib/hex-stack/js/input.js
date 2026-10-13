@@ -2,7 +2,7 @@ function addKeyListeners() {
 	keypress.register_combo({
 		keys: "left",
 		on_keydown: function() {
-			if (MainHex && gameState !== 0) {
+			if (MainHex && gameState === 1) {
 				MainHex.rotate(1);
 			}
 		}
@@ -11,7 +11,7 @@ function addKeyListeners() {
 	keypress.register_combo({
 		keys: "right",
 		on_keydown: function() {
-			if (MainHex && gameState !== 0){
+			if (MainHex && gameState === 1){
 				MainHex.rotate(-1);
 			}
 		}
@@ -20,7 +20,7 @@ function addKeyListeners() {
 		keys: "down",
 		on_keydown: function() {
 			var tempSpeed = settings.speedModifier;
-			if (MainHex && gameState !== 0){
+			if (MainHex && gameState === 1){
 				//speed up block temporarily
 				if(settings.speedUpKeyHeld == false){
 					settings.speedUpKeyHeld = true;
@@ -30,7 +30,7 @@ function addKeyListeners() {
 			//settings.speedModifier = tempSpeed;
 		},
 		on_keyup:function(){
-			if (MainHex && gameState !== 0){
+			if (MainHex && settings.speedUpKeyHeld){
 				//speed up block temporarily
 				
 				window.rush /=4;
@@ -42,7 +42,7 @@ function addKeyListeners() {
 	keypress.register_combo({
 		keys: "a",
 		on_keydown: function() {
-			if (MainHex && gameState !== 0) {
+			if (MainHex && gameState === 1) {
 				MainHex.rotate(1);
 			}
 		}
@@ -51,7 +51,7 @@ function addKeyListeners() {
 	keypress.register_combo({
 		keys: "d",
 		on_keydown: function() {
-			if (MainHex && gameState !== 0){
+			if (MainHex && gameState === 1){
 				MainHex.rotate(-1);
 			}
 		}
@@ -61,7 +61,7 @@ function addKeyListeners() {
 		keys: "s",
 		on_keydown: function() {
 			var tempSpeed = settings.speedModifier;
-			if (MainHex && gameState !== 0){
+			if (MainHex && gameState === 1){
 				//speed up block temporarily
 				if(settings.speedUpKeyHeld == false){
 					settings.speedUpKeyHeld = true;
@@ -71,7 +71,7 @@ function addKeyListeners() {
 			//settings.speedModifier = tempSpeed;
 		},
 		on_keyup:function(){
-			if (MainHex && gameState !== 0){
+			if (MainHex && settings.speedUpKeyHeld){
 				//speed up block temporarily
 				
 				window.rush /=4;
