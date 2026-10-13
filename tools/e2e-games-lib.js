@@ -32,7 +32,9 @@ async function signup(xff) {
 const KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', ' ', 'ArrowLeft', 'ArrowRight'];
 (async () => {
   fs.mkdirSync(SHOTS, { recursive: true });
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
+  const chromeBin = process.env.CHROME_BIN || ['/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(f => fs.existsSync(f));
+  if (!chromeBin) throw new Error('Chromium/Chrome not found; set CHROME_BIN');
+  const browser = await chromium.launch({ executablePath: chromeBin, args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const results = []; let pass = 0, fail = 0;
   for (const g of list) {
     const R = { slug: g.slug, title: g.title, errors: [], desktop: {}, mobile: {} }; const t0 = Date.now();
