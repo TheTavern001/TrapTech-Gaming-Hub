@@ -27,7 +27,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const ADM = require('./admin-auth').adminClient(BASE); await ADM.login();
   const mk = async () => { const c = client(); c.u = 'pay_' + Math.random().toString(36).slice(2, 8); await c('/api/auth/signup', { body: { username: c.u, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); return c; };
   const [P1, P2, F] = [await mk(), await mk(), await mk()];
-  let r = await client()('/api/store'); ok(r.body.ok && r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 3 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage), 'store: packs, pass, 3 prestige items, non-advantage statement, checkout on (BTC_ADDRESS set)', r.body.checkout);
+  let r = await client()('/api/store'); ok(r.body.ok && !r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 12 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage), 'store: 4 packs, season pass, 12 one-of-one items; checkout safely OFF by default', r.body.checkout);
   r = await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: false } }); r = await P1('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 503, 'admin switch off -> checkout refused');
   await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: true } });
   r = await client()('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 401, 'checkout needs an account');
@@ -57,11 +57,13 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await F(`/api/store/orders/${o4.ref}/check`, { body: {} }); ok(r.body.order.status === 'expired', 'unpaid quote expires after 45 minutes');
   const t4 = txid(); M.txs.push({ txid: t4, sats: o4.sats, height: M.tip }); r = await F(`/api/store/orders/${o4.ref}/check`, { body: {} });
   ok(r.body.order.status === 'granted' && r.body.order.flags.includes('late'), 'exact payment after expiry (within 24 h) is still matched, flagged "late"', r.body.order);
-  // prestige: 6 confirmations
-  r = await P1('/api/store/orders', { body: { product_id: 'prestige-crown' } }); const o5 = r.body.order; ok(o5.need_confs === 6 && o5.sats > 8e6, 'prestige order needs 6 confirmations ($5,000 at $60k = 8.3M sats)', o5);
-  const t5 = txid(); M.txs.push({ txid: t5, sats: o5.sats, height: M.tip - 2 }); r = await P1(`/api/store/orders/${o5.ref}/check`, { body: {} }); ok(r.body.order.status === 'confirming' && r.body.order.confs === 3, '3 of 6 confirmations -> confirming');
-  M.tip += 3; r = await P1(`/api/store/orders/${o5.ref}/check`, { body: {} }); ok(r.body.order.status === 'granted', '6 confirmations -> granted');
-  r = await client()('/api/store/prestige'); const pc = r.body.items.find(i => i.id === 'prestige-crown'); ok(pc.owners.length === 1 && pc.owners[0].serial === 1 && pc.owners[0].username === P1.u && pc.supply === 5, 'prestige: serial #1 of 5 on the global "owned by" wall');
+  // Prestige stays preview-only until real model compatibility and owner rights QA.
+  r = await client()('/api/store/prestige');
+  ok(r.body.items.filter(i=>i.id.startsWith('prestige-original-')).length===12
+    && r.body.items.filter(i=>i.id.startsWith('prestige-original-')).every(i=>i.supply===1),
+    '12 individually numbered one-of-one original prestige cosmetics');
+  r = await P1('/api/store/orders', { body: { product_id: 'prestige-original-crown' } });
+  ok(r.status >= 400, 'prestige checkout refuses orders while compatibility approval is off');
   // pass + crowns spend
   r = await ADM('/api/admin/store/grant', { body: { username: P1.u, product_id: 'season-pass' } }); ok(r.ok !== false && r.body.ok, 'admin can grant a Season Pass manually');
   r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 15, 'premium track: 20 reward steps, 15% premium-track XP boost');
@@ -69,7 +71,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await client()('/api/shop'); const any = r.body && (r.body.daily || (r.body.sections && r.body.sections.daily) || []).find(Boolean);
   if (any) { r = await P1('/api/crowns/buy', { body: { item_id: any.id } }); ok(r.body.ok && r.body.price_crowns >= 50, 'Crowns buy a cosmetic from the current shop', r.body); }
   r = await P1('/api/crowns/buy', { body: { item_id: 'v7p1s3' } }); ok(r.status === 400, 'premium-track items cannot be bought with Crowns');
-  // NO ADVANTAGE: paid (P1: crowns, pass, prestige) vs free (F) on identical runs
+  // NO ADVANTAGE: paid (P1: crowns and pass) vs free (F) on identical runs
   console.log('# paid vs free: identical treatment');
   const t0 = Date.now(); r = await ADM('/api/admin/giveaways', { body: { title: 'Pay-to-win check', host: 'T', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true } }); const gid = r.body.id;
   const [eP, eF] = await Promise.all([P1(`/api/giveaways/${gid}/eligibility`), F(`/api/giveaways/${gid}/eligibility`)]);
