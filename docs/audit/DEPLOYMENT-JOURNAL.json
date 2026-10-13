@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "application": "The Gaming Hub by Trap Tech Solutions",
+  "repository": "TheTavern001/gaming-hub-2",
+  "host": "Deplexo",
+  "productionUrl": "https://glassy-drifter-9532.de.deplexo.com",
+  "canonicalBranch": "main",
+  "publicLaunchApproved": false,
+  "note": "Screenshot-derived statuses are historical observations, not real-time deployment status. Source-level verification and actual successful Deplexo deployment are separate evidence types.",
+  "releaseHistory": [
+    {
+      "commit": "bb2346e51ab91ee34a4293e969a40c801f27ec3a",
+      "sourceCommittedAtUTC": "2026-10-12T22:24:26Z",
+      "status": "FAILED",
+      "evidence": "build-log reported in prior troubleshooting; recorded docs/HUB-MASTER-CHECKLIST.md",
+      "firstError": "prelaunch-deep-audit.js missingManifestIconRoutes: 1, blocker count 1",
+      "rootCause": "audit incorrectly assumed static manifest icon required an explicit src/server.js route",
+      "fixCommit": "ea454f93a05ecf715d880d880e42228327f0a7b6",
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "229c3672e3e8d5e67f8d81b953bd910ccf1f888b",
+      "sourceCommittedAtUTC": "2026-10-12T22:55:01Z",
+      "status": "FAILED",
+      "evidence": "user Deplexo screenshot: build failed after ~2m16s",
+      "firstError": "docker temporary-server HTTP verification build step; underlying verifier result not visible in screenshot",
+      "rootCause": "unconfirmed",
+      "fixCommit": "649e2ab39e3de4c4595f037b01668a988adb7a06",
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "8489b41f3d091f5645f86a3bc95c381c65d18111",
+      "sourceCommittedAtUTC": "2026-10-13T03:06:56Z",
+      "status": "READY",
+      "evidence": "user Deplexo screenshots: deployment DEPLOYED and CURRENT/READY, duration 4m55s",
+      "firstError": null,
+      "rootCause": null,
+      "fixCommit": null,
+      "verifiedAfterFix": true,
+      "qualification": "only Deplexo READY observed, not all game/visual/physical-device QA"
+    },
+    {
+      "commit": "58a9f52d584ee3bd6423000a83504d10b4527c4e",
+      "sourceCommittedAtUTC": "2026-10-13T06:20:07Z",
+      "status": "FAILED",
+      "evidence": "user Deplexo screenshot: ERROR after 83s; build log not supplied",
+      "firstError": "unknown; screenshot only reports build failed",
+      "rootCause": "unconfirmed; follow-up b7be1ec modifies the prelaunch mobile-test registry audit to accept the new dynamic mobile suite",
+      "fixCommit": "b7be1ec2c0098689dedb7512112738fd21990266",
+      "verifiedAfterFix": false,
+      "relatedSource": "public/games-lib/skee-roll/game.js; tools/e2e-mobile.js; tools/verify-prelaunch.js"
+    },
+    {
+      "commit": "b7be1ec2c0098689dedb7512112738fd21990266",
+      "sourceCommittedAtUTC": "2026-10-13T06:24:41Z",
+      "status": "BUILDING_OBSERVED",
+      "evidence": "user Deplexo screenshot: clone completed, image build at 35%/RESTART at approx 02:25 ET",
+      "firstError": null,
+      "rootCause": null,
+      "fixCommit": null,
+      "verifiedAfterFix": false,
+      "qualification": "not a failure and not a READY confirmation: must inspect latest Deplexo attempt"
+    }
+  ],
+  "sourceVerification": [
+    {
+      "commit": "b7be1ec2c0098689dedb7512112738fd21990266",
+      "scope": "skee-roll isolated charging/score physics",
+      "method": "execute Kit.run descriptor in an isolated JS sandbox and simulate 60 Hz holds",
+      "result": "PASS",
+      "details": "0.15s -> 0, 0.45s -> 30, 0.75s -> 50; score range widened compared to prior game"
+    },
+    {
+      "commit": "b7be1ec2c0098689dedb7512112738fd21990266",
+      "scope": "mobile registry-derived audit preflight",
+      "method": "inspect src/config.js 16 IDs, exclude 3 retired, compare tools/e2e-mobile.js derivation and verifier source",
+      "result": "SOURCE_CONTRACT_INSPECTED",
+      "details": "13 active core games derived from canonical list; full Node Docker audit not run in this session"
+    }
+  ],
+  "pendingEvidence": [
+    "Deplexo final state and error/READY log for b7be1ec (user screenshot last showed BUILDING)",
+    "Live /healthz, /api/build and /api/audit/report from the exact current Deplexo commit",
+    "Complete desktop, Samsung/Android, anti-cheat, licensing and 60 FPS QA for all 93 currently active titles",
+    "Avatar/model rig, achievements art, shop purchases, persistence, payment provider and backup/restore tests",
+    "10,000-identity isolated load test, then sustained staged concurrency testing"
+  ],
+  "releaseStages": [
+    {
+      "id": "01",
+      "name": "Stable audited baseline",
+      "status": "IN_PROGRESS",
+      "entry": "existing 13 active core games + 80 library titles",
+      "exit": "Deplexo READY exact SHA, structural audit zero blockers; owner mobile walkthrough and release tracker"
+    },
+    {
+      "id": "02",
+      "name": "Core/game UI and economy QA",
+      "status": "IN_PROGRESS",
+      "entry": "baseline source and revised QA scripts",
+      "exit": "game-by-game gameplay/uniqueness/visual/score/fps signoff; avatar and shop ownership and payment persistence"
+    },
+    {
+      "id": "03",
+      "name": "500-game intake",
+      "status": "NOT_APPROVED_YET",
+      "entry": "every candidate licensed, mechanically distinct, adapter-compatible and has credits",
+      "exit": "500 playable signed-run titles with per-batch evidence and no placeholders"
+    },
+    {
+      "id": "04",
+      "name": "Scale and public launch",
+      "status": "BLOCKED",
+      "entry": "staging DB backup/recovery, 10k+ user simulation and staged concurrent load",
+      "exit": "release checklist signed off, no P0/P1 issues, manual public launch"
+    }
+  ]
+}

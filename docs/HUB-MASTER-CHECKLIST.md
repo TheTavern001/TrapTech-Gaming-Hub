@@ -5,9 +5,15 @@
 **Production candidate:** `main` (the exact deployed commit must be verified from `/api/build`)  
 **Primary goal:** Make the existing Hub fully reviewable and testable before public release; then expand toward 500 distinct, launch-ready games.  
 **Cost constraint:** $0 additions unless the owner explicitly approves a cost.  
-**Last reconciled:** 2026-10-12
+**Last reconciled:** 2026-10-13 (see live release journal; historic sections may be stale)
 
 > This file is the navigation index and durable requirements ledger. It is not proof that a feature works. A checked box means source work or a named check is present; it does not replace live, browser, device, security, legal, or owner acceptance evidence. Update this file and the detailed tracker in the same commit whenever scope or status changes.
+
+## Current evidence checkpoint — 2026-10-13
+
+**Read [the deployment journal](DEPLOYMENT-JOURNAL.md) and run `node tools/release-status.js` before starting another deployment.** The earlier October 12 table below is historical, not the latest live state. Observed Deplexo READY at `8489b41`; a newer Skee Roll candidate `58a9f52` failed and `b7be1ec` was last seen BUILDING 35%. Final Deplexo outcome is **unknown** at this checkpoint. This status is screenshot-evidenced; it must be updated against the next build log and exact current `/api/build` SHA.
+
+**Active baseline:** 13 core + 80 library = 93 titles. To reach 500 active titles requires **407 accepted distinct additions**; research candidates do not count. Import changes must never overwrite license/credits, regress accessibility, or count untested titles as AAA. The canonical machine-readable event history is `docs/audit/DEPLOYMENT-JOURNAL.json`.
 
 ## 1. Status vocabulary
 
