@@ -4,6 +4,7 @@ import * as V7 from './v7.js';
 import * as I18N from './i18n.js'; // v7: multi-language layer (public/i18n/*.json)
 import * as GV7 from './gw-v7.js'; // v7 admin overhaul: builder giveaway extras + admin site settings
 import { mountAvatar3D } from './avatar-3d.js';
+import * as GP from './player-prefs.js';
 
 // ---------------- core ----------------
 const $app = document.getElementById('app');
@@ -1459,7 +1460,7 @@ route(/^\/friends$/, async (m, url) => {
 });
 route(/^\/settings$/, () => {
   const standalone = matchMedia('(display-mode: standalone)').matches;
-  const rm = ls.getItem('gh_reduce_motion') === '1';
+  const prefs = GP.globalPrefs();
   shell('/settings', `<div class="narrow">${pageHead('Settings')}
     <div class="card pad" id="set-lang" style="margin-bottom:12px"></div>
     ${S.me ? `<a class="card pad" href="/avatar" id="set-avatar" style="display:flex;gap:12px;align-items:center;margin-bottom:12px">${avatar(S.me.username, false, 'lg')}<div><b>Your avatar</b><div class="small muted">Change your look: hair, outfit, hats, held items and more.</div></div></a>` : ''}
@@ -1472,18 +1473,27 @@ route(/^\/settings$/, () => {
     <div class="card pad"><h2 style="margin-bottom:10px">App</h2>
       <div class="set-row"><div><b>${icon('smartphone')} Install the app</b><div class="small muted">${standalone ? 'Installed - you are using the app.' : 'Add The Gaming Hub to your home screen. Works offline for the app shell.'}</div></div><button class="btn sm" id="install" ${installEvt ? '' : 'disabled'}>${standalone ? 'Installed' : 'Install'}</button></div>
       ${!standalone ? '<p class="tiny muted" style="margin:0 0 8px">On iPhone: tap Share, then "Add to Home Screen".</p>' : ''}
-      <div class="set-row"><div><b>${icon('accessibility')} Reduce motion</b><div class="small muted">Turns off decorative animations.</div></div><label class="toggle"><input type="checkbox" id="rm" ${rm ? 'checked' : ''}><span></span></label></div>
+      <div class="set-row"><div><b>${icon('accessibility')} Reduce motion</b><div class="small muted">Minimize decorative animation without changing game mechanics.</div></div><label class="toggle"><input type="checkbox" id="rm" ${prefs.reducedMotion ? 'checked' : ''}><span></span></label></div>
+      <div class="set-row"><div><b>${icon('volume-2')} Sound effects</b><div class="small muted">Default sound for every game on this device.</div></div><label class="toggle"><input type="checkbox" id="gp-sound" ${prefs.sound ? 'checked' : ''}><span></span></label></div>
+      <div class="set-row"><div><b>${icon('eye')} High contrast</b><div class="small muted">Increase readability across the hub's interface.</div></div><label class="toggle"><input type="checkbox" id="gp-contrast" ${prefs.highContrast ? 'checked' : ''}><span></span></label></div>
+      <div class="set-row"><div><b>${icon('monitor')} Rendering quality</b><div class="small muted">Changes pixel detail only. Games may automatically reduce rendering resolution when slow.</div></div><select class="input" id="gp-quality" aria-label="Default visual quality"><option value="auto" ${prefs.quality === 'auto' ? 'selected' : ''}>Balanced</option><option value="sharp" ${prefs.quality === 'sharp' ? 'selected' : ''}>Sharper</option><option value="battery" ${prefs.quality === 'battery' ? 'selected' : ''}>Battery saver</option></select></div>
+      <div class="set-row"><div><b>${icon('activity')} Frame rate</b><div class="small muted">Show live FPS while playing. Useful for reporting performance problems.</div></div><label class="toggle"><input type="checkbox" id="gp-fps" ${prefs.showFps ? 'checked' : ''}><span></span></label></div>
+      <p class="small muted">Settings are stored on this device. Each game also has its own small settings button, allowing sound, render quality and FPS overrides. No purchased or selected option changes scoring, speed, difficulty or prize eligibility.</p>
     </div>
     <div class="card pad about-mini">${TT('mono', 56)}<div><b>The Gaming Hub v7</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
     <div class="card legal-links">${[['/terms', 'file-text', 'Terms of Service'], ['/privacy', 'shield', 'Privacy Policy'], ['/rules', 'scale', 'Official Giveaway Rules'], ['/responsible-play', 'heart-pulse', 'Responsible play']].map(([h, ic, l]) => `<a class="act-row" href="${h}">${icon(ic)}<span class="g">${l}</span>${icon('chevron-right')}</a>`).join('')}</div>
   </div>`);
-  document.getElementById('rm').onchange = (e) => { ls.setItem('gh_reduce_motion', e.target.checked ? '1' : '0'); document.documentElement.classList.toggle('reduce-motion', e.target.checked); };
+  document.getElementById('rm').onchange=e=>GP.saveGlobal({reducedMotion:e.target.checked});
+  document.getElementById('gp-sound').onchange=e=>GP.saveGlobal({sound:e.target.checked});
+  document.getElementById('gp-contrast').onchange=e=>GP.saveGlobal({highContrast:e.target.checked});
+  document.getElementById('gp-quality').onchange=e=>GP.saveGlobal({quality:e.target.value});
+  document.getElementById('gp-fps').onchange=e=>GP.saveGlobal({showFps:e.target.checked});
   const ib = document.getElementById('install'); ib.onclick = async () => { if (!installEvt) return toast('Use your browser menu: "Install app" / "Add to Home Screen"'); installEvt.prompt(); await installEvt.userChoice; installEvt = null; ib.disabled = true; };
   const potf = document.getElementById('potf'); if (potf) potf.onsubmit = async (e) => { e.preventDefault(); const r = await api('/api/me/potato', { method: 'PUT', body: { potato: document.getElementById('pot').value } }); toast(r.ok ? 'Potato username saved' : r.error); if (r.ok) S.me.potato = r.potato; };
   const pf = document.getElementById('pwf2');
   if (pf) pf.addEventListener('submit', async (e) => { e.preventDefault(); const out = document.getElementById('pwmsg2'); const r = await api('/api/auth/password', { method: 'POST', body: { current: document.getElementById('cur2').value, password: document.getElementById('np2').value } }); out.innerHTML = r.ok ? '<div class="ok-msg">Password changed.</div>' : `<div class="err">${esc(r.error)}</div>`; });
 });
-document.documentElement.classList.toggle('reduce-motion', ls.getItem('gh_reduce_motion') === '1');
+GP.applyDocument();
 // offline banner + service worker (PWA)
 function netBanner() { let b = document.getElementById('offline'); if (navigator.onLine) { if (b) b.remove(); return; } if (!b) { b = document.createElement('div'); b.id = 'offline'; b.className = 'offline-bar'; b.setAttribute('role', 'status'); b.innerHTML = `${icon('wifi-off')} You're offline. Scores will save when you reconnect.`; document.body.appendChild(b); } }
 addEventListener('online', netBanner); addEventListener('offline', netBanner);
