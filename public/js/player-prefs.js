@@ -16,6 +16,7 @@ export function effective(id){return {...globalPrefs(),...gameOverrides(id)}}
 export function qualityCap(mode,dpr=1){const n=Math.max(1,Math.min(3,Number(dpr)||1));return mode==='battery'?1:mode==='sharp'?Math.min(2.5,n):Math.min(2,n)}
 export function openGameSettings(opts){
  const {id,title,host=document.body,trigger,onOpen=()=>{},onClose=()=>{},onChange=()=>{},fps}=opts;
+ if(!document.querySelector('link[data-ttgs]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/css/player-prefs.css';l.dataset.ttgs='1';document.head.appendChild(l)}
  const root=document.createElement('div');root.className='ttgs-root';host.appendChild(root);
  const button=trigger||document.createElement('button');
  if(!trigger){button.type='button';button.className='ttgs-gear';button.textContent='⚙';button.setAttribute('aria-label','Game settings');root.appendChild(button)}
