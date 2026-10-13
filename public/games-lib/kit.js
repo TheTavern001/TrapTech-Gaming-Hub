@@ -46,7 +46,7 @@
     // Start crisp on high-DPR phones, then dynamically lower only backing-store pixels
     // if rendering stays slow. World coordinates, input accuracy and gameplay are unchanged.
     const initialDpr = Math.min(2, devicePixelRatio || 1);
-    let renderDpr = initialDpr, slowFrames = 0, p95Ms = 0;
+    let renderDpr = initialDpr, slowFrames = 0, p95Ms = 0; let cameraShakeAllowed=true;let gamePrefs=null;
     const frameSamples = [];
     function resize() { const vw = innerWidth, vh = innerHeight, d = renderDpr; scale = Math.min(vw / W, vh / Hh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - cw) / 2; oy = (vh - ch) / 2; cv.style.cssText = `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`; cv.width = Math.max(1,Math.floor(cw * d)); cv.height = Math.max(1,Math.floor(ch * d)); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
     addEventListener('resize', resize); resize();
@@ -57,7 +57,7 @@
     g.mark = (k, v) => { window.Hub && Hub.event('#' + k, v); }; // '#' = progress marker, not points (ignored by score sums)
     g.burst = (x, y, col, n, sp, life, sz) => { n = n || 12; for (let i = 0; i < n && g.parts.length < 600; i++) { const a = Math.random() * TAU, s = (sp || 160) * (0.3 + Math.random()); g.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, l: (life || 0.6) * (0.5 + Math.random() * 0.7), m: 0, c: Array.isArray(col) ? col[i % col.length] : col, s: (sz || 3) * (0.6 + Math.random() * 0.8), gr: def.partGrav || 0 }); } };
     g.float = (x, y, s, col, size) => g.texts.push({ x, y, s: String(s), c: col || '#fff', l: 0.9, size: size || 18 });
-    g.shake = (m, t) => { g.shakeM = Math.max(g.shakeM, m); g.shakeT = Math.max(g.shakeT, t || 0.25); };
+    g.shake = (m, t) => { if(!cameraShakeAllowed)return; g.shakeM = Math.max(g.shakeM, m); g.shakeT = Math.max(g.shakeT, t || 0.25); };
     g.flash = (col, t) => { g.flashC = col || '#fff'; g.flashT = t || 0.12; };
     g.sfx = K.sfx;
     g.end = (why) => { if (g.state !== 'play') return; g.state = 'over'; g.overT = 0; g.why = why || ''; K.sfx('die'); g.shake(8, 0.4); if (g.score > g.best) { g.best = g.score; safeStore.set('gl_best_' + def.id, g.best); g.newBest = true; } else g.newBest = false;
@@ -67,6 +67,20 @@
     g.ax = () => (g.keys.ArrowRight || g.keys.d || g.keys.D ? 1 : 0) - (g.keys.ArrowLeft || g.keys.a || g.keys.A ? 1 : 0) + g.stick.x;
     g.ay = () => (g.keys.ArrowDown || g.keys.s || g.keys.S ? 1 : 0) - (g.keys.ArrowUp || g.keys.w || g.keys.W ? 1 : 0) + g.stick.y;
     window.__GL = { g, get state() { return g.state; }, get score() { return g.score; }, get fps() { return g.fps; }, get jsMs() { return Math.round((g.jsMs || 0) * 100) / 100; }, get frameMsP95() { return p95Ms; }, get renderDpr() { return renderDpr; }, lastSubmit: null, errors: [] };
+    // Shared device-only settings: pause game physics without scoring any menu taps.
+    import('/js/player-prefs.js').then(P=>{
+      gamePrefs=P;
+      let wasPaused=false;
+      P.openGameSettings({id:def.id,title:def.title,host:document.body,
+        onOpen:()=>{wasPaused=g.paused;g.paused=true;g.ptr.down=false;g.keys={};},
+        onClose:()=>{g.paused=wasPaused;},
+        onChange:pref=>{
+          muted=!pref.sound;cameraShakeAllowed=!pref.reducedMotion;
+          const cap=P.qualityCap(pref.quality,devicePixelRatio||1);
+          if(renderDpr!==cap){renderDpr=cap;resize();}
+          if(!cameraShakeAllowed)g.shakeT=0;
+        },fps:()=>g.fps});
+    }).catch(e=>console.error('Game settings failed to load',e));
     // buttons: def.buttons = [{id:'A', key:' ', label:'JUMP'}]
     const btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
     const toL = (e) => [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
@@ -80,7 +94,7 @@
     function onUp(e) { const t = touches.get(e.pointerId); touches.delete(e.pointerId); if (t && t.k === 'btn') { g.btn[t.b.id] = false; if (t.b.key) g.keys[t.b.key] = false; return; } if (t && t.k === 'stick') { g.stick.on = false; g.stick.x = g.stick.y = 0; if (!def.stickAlsoPtr) return; } g.ptr.down = false; g.ptr.released = true; }
     cv.addEventListener('pointerdown', onDown); addEventListener('pointermove', onMove); addEventListener('pointerup', onUp); addEventListener('pointercancel', onUp);
     cv.addEventListener('contextmenu', e => e.preventDefault());
-    addEventListener('keydown', e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted = !muted; safeStore.set('gl_mute', muted ? '1' : '0'); }
+    addEventListener('keydown', e => { if(document.querySelector('.ttgs-modal:not([hidden])'))return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted=!muted; if(gamePrefs)gamePrefs.saveGame(def.id,{sound:!muted}); else safeStore.set('gl_mute',muted?'1':'0'); return; }
       if (!g.keys[e.key]) { g._kp = true; g.kp = g.kp || {}; g.kp[e.key] = true; g.inputs++; window.Hub && Hub.input(); ac(); } g.keys[e.key] = true; if (e.key === 'p' || e.key === 'Escape') g.paused = !g.paused && g.state === 'play'; });
     addEventListener('keyup', e => { g.keys[e.key] = false; });
     document.addEventListener('visibilitychange', () => { if (document.hidden && g.state === 'play') g.paused = true; });
