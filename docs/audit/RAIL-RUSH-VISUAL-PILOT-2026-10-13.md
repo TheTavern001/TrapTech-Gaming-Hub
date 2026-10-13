@@ -5,3 +5,6 @@ This is a graphical PILOT, not AAA art/animation acceptance or proof of 60fps on
 
 ## Source-model storefront and overhead readability pass
 A large box-geometry desert saloon (procedural 512×512 flat texture) is replaced with already-loaded licensed modular wall/window/door, roof, lantern, balcony and awning pieces. The desert track and game collisions remain unchanged. Near-camera overhead cross-wires move to the furthest decorative segment and gain smoother/thinner mesh tubes; static tests assert source asset use. This is still a visual ART PILOT, not a 2026 AAA pass: many environment pieces remain low-poly and have not been reviewed on a phone.
+
+## Source-integrity follow-up
+The runner Docker test now decodes each pinned GLB JSON chunk and confirms at least one mesh with primitives, in addition to byte-exact Git blob SHA, magic and version. It compares stable FNV fingerprints of the original shipped physics/update, seeded spawn, and animation state-machine source sections to prevent cosmetic work from accidentally modifying gameplay. This does **not** constitute gameplay anti-cheat or authoritative replay verification; no AAA certification.
