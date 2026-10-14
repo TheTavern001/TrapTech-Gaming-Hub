@@ -390,3 +390,11 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `b699918183f76fcf4337fb638ed4ae93cd06c10d`: canonical full rehearsal now probes `docker info` (working daemon), not just `docker --version` (CLI existence). This avoids misleading readiness where Docker is installed but the engine is unavailable.
 - Local container environment inspected in this continuation: Node v22.16.0 and git 2.47.3 exist; **Docker binary absent**; private GitHub repository cannot be cloned through public HTTPS due unavailable DNS/network in local runtime. GitHub app connector edits are confirmed but do not furnish a local checkout. Therefore **Docker image build, integrated HTTP tests, and physical iOS/Android QA NOT RUN**. Do not mark those gates green or authorize production deployment.
 - Exact resume: obtain an executable checkout and Docker daemon, run `npm run verify:offline:full` for the full candidate SHA; triage failures, verify mobile/security/payment and owner acceptance, then explicitly authorize a controlled private Deplexo deployment. No expansion candidates certified. Auto deploy remains OFF.
+
+## 2026-10-14 — Grow Op pest frame-spike birth order fix
+
+- `cabf5679fbe39ff203b84314a49ac48b57375a1b`: active pests are aged/removed before overdue pest waves are born, preventing newly generated pests from immediately aging out in a long phone frame. The path also bounds lateral pest movement across frame spikes.
+- `33c3971e35e37284ec7ac415f9f183cde2cebcb3`: regression ensures spawned pests start age 0 after a 10-second simulated gap and contribute to plant pest pressure.
+- `f8d7ff731c942ec48c927a082974cfa090d661e3`, `ebaab7a0e90e519d341f232c7c33579934c59e46`, `962e1682b495b074f9cace13c78671010912e0b5`: added regression to canonical rehearsal, shell release gate and Docker image prelaunch.
+- **Executed isolated V8 callback test on fetched committed source:** with healthy plants after simulated 10-second frame gap, 3 spawned pests persist with age 0 and no game-over. Native Node, entire Docker, physical devices and hosted rollout NOT RUN. This does not certify AAA visuals or entire-game fairness.
+- Deplexo auto-deploy remains OFF. Resume with a runnable checkout for complete `npm run verify:offline:full` and Android/iOS verification; game intake and public launch require separate acceptance.
