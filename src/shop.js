@@ -344,7 +344,7 @@ function sync(userId) {
   return balance(userId);
 }
 const balance = (userId) => WALLET.balance(userId);
-const earned = (userId) => db.prepare("SELECT COALESCE(SUM(amount),0) AS b FROM points_ledger WHERE user_id=? AND amount > 0 AND reason<>'legacy-crown'").get(userId).b;
+const earned = (userId) => db.prepare("SELECT COALESCE(SUM(amount),0) AS b FROM points_ledger WHERE user_id=? AND amount > 0 AND reason NOT IN ('legacy-crown','run-integrity')").get(userId).b;
 const owned = (userId) => new Set(db.prepare('SELECT item_id FROM user_items WHERE user_id=?').all(userId).map(r => r.item_id));
 
 function buy(user, itemId, t = Date.now()) {
