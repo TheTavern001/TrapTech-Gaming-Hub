@@ -29,6 +29,9 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s docs/score-ranges.json \
  && echo 'Required prelaunch audit inputs present' \
  && mkdir -p docs/audit \
+ && node --check tools/test-session-revocation.js \
+ && node tools/test-session-revocation.js \
+ && node --check tools/test-auth-session-live.js \
  && node --check src/unified-wallet.js \
  && node --check tools/test-unified-wallet.js \
  && node tools/test-unified-wallet.js \
@@ -129,6 +132,7 @@ RUN set -eu; \
  BASE=http://127.0.0.1:18787 BUILD_SMOKE=1 node tools/verify-live-deployment.js > /tmp/hub-build-smoke-verification.log 2>&1; verify_status=$?; \
  set -e; \
  if [ "$verify_status" -ne 0 ]; then echo "LIVE VERIFICATION FAILED (exit $verify_status):"; cat /tmp/hub-build-smoke-verification.log; echo "SERVER LOG:"; cat /tmp/hub-build-smoke.log; exit "$verify_status"; fi; \
+ if ! BASE=http://127.0.0.1:18787 BUILD_SMOKE=1 node tools/test-auth-session-live.js >/tmp/hub-build-smoke-auth.log 2>&1; then echo 'LOCAL AUTH REVOCATION HTTP SMOKE FAILED:'; cat /tmp/hub-build-smoke-auth.log; echo 'SERVER LOG:'; cat /tmp/hub-build-smoke.log; exit 1; fi; \
  kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true
 
 # ---------- runtime stage ----------
