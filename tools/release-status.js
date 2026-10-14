@@ -27,15 +27,45 @@ const activeCore = ids.filter(x=>!retired.has(x));
 if (!Array.isArray(catalog.games)) errs.push('Missing catalog games array');
 const library = Array.isArray(catalog.games) ? catalog.games.length : 0;
 if (new Set(catalog.games?.map(x=>x.slug)).size !== library) errs.push('Duplicate library slugs');
-const total = activeCore.length+library, goal=500;
-const lastObserved = history.at(-1), lastReady=[...history].reverse().find(x=>x.status==='READY');
+const playableLibrary = catalog.games?.filter(g=>g.playable!==false&&!g.retired).length || 0;
+const archivedLibrary = library-playableLibrary;
+const historicalTotal = activeCore.length+library;
+const total = activeCore.length+playableLibrary, goal=500;
+// Only host evidence (e.g. owner screenshot) can mark a deployment CURRENT.
+// GitHub source commits are never treated as Deplexo deployments by inference.
+const currentReady = history.filter(x=>x.observedAsCurrent === true);
+if (currentReady.length > 1) errs.push('More than one host-current deployment record');
+if (currentReady.some(x=>x.status!=='READY')) errs.push('Host-current deployment must be READY');
+if (ledger.latestOwnerObservedHost?.currentReadySha &&
+    ledger.latestOwnerObservedHost.currentReadySha !== currentReady[0]?.commit)
+  errs.push('Host-current SHA disagrees with last owner screenshot');
+const lastObserved = history.at(-1);
+const lastReady = currentReady[0] || [...history].reverse().find(x=>x.status==='READY');
+const source = ledger.currentWorkingSource || null;
+if (source?.sourceStatus === 'SOURCE_ONLY_NOT_DEPLOYED' &&
+    history.some(x=>x.commit === source.headAtReconciliation))
+  errs.push('Source-only development commit incorrectly listed as a host deployment');
+if (source?.headAtReconciliation&&!isSha(source.headAtReconciliation))
+  errs.push('Working source SHA must be full SHA');
 let head = null;
 try { head = cp.execFileSync('git',['rev-parse','HEAD'],{cwd:ROOT,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim(); } catch {}
 const output = { checkedAtUTC:new Date().toISOString(), gitHead:head||'not available (Docker image may omit .git)',
+  hostCurrent:{sha:currentReady[0]?.commit||null,
+    status:currentReady[0]?.status||'UNCONFIRMED',
+    confirmation:'owner screenshot only; no independent HTTP readback',
+    branch:currentReady[0]?.branchReportedByHost||null,
+    evidence:currentReady[0]?.evidence||null},
   lastObservedDeployment:{sha:lastObserved?.commit,status:lastObserved?.status,evidence:lastObserved?.evidence},
   lastObservedReady:{sha:lastReady?.commit,evidence:lastReady?.evidence},
-  activeCoreGames:activeCore.length,libraryGames:library,totalGames:total,remainingTo500:Math.max(0,goal-total),
-  candidatePipeline:'research and intake available, not approved for bulk importing',
+  workingSource:{branch:source?.branch||null,shaFromLastReconciliation:source?.headAtReconciliation||null,
+    gitCheckoutHead:head||null,status:source?.sourceStatus||'UNKNOWN',
+    warning:'GitHub source does NOT imply deployed to Deplexo'},
+  automaticDeploymentOwnerConfirmedOff:ledger.ownerConfirmedAutoDeployOff===true,
+  activeCoreGames:activeCore.length,registeredLibraryGames:library,playableLibraryGames:playableLibrary,
+  archivedLibraryGames:archivedLibrary,historicalRegisteredGames:historicalTotal,
+  totalPlayableGames:total,totalGames:total,remainingPlayableGamesTo500:Math.max(0,goal-total),
+  remainingTo500:Math.max(0,goal-total),
+  candidatePipeline:'research and intake available, NOT counted as playable or AAA approved',
   publicLaunchApproved:false,unverifiedGates:ledger.pendingEvidence,ledgerErrors:errs };
 console.log(JSON.stringify(output,null,2));
 if (errs.length) process.exitCode=1;
