@@ -360,6 +360,7 @@
     }
   ],
   "pendingEvidence": [
+    "2026-10-14: prize admission now fail-closed in GitHub source from PR #23; 0 owner-certified replay proof games so official prize boards correctly empty. Full Node/Docker/device replay still unverified. CURRENT READY Deplexo 278af07 unchanged.",
     "Financial order-pack immutable quantity/refund source fix 2026-10-14: exact simulation PASS 7/7, real SQLite migration DML PASS. Full native finance/Stripe/BTC and device QA pending. Deplexo screenshot CURRENT READY 278af07 unchanged.",
     "Wallet branch unified Credits source changes NOT DEPLOYED. Native Node20 real better-sqlite3 tests and full Docker STEP11/12 pending. No current phone P95 evidence, mobile iOS Safari proof or settled payout replay QA. New security preflight R4 source simulation BLOCKED 37.",
     "2026-10-14: owner screenshot CURRENT 278af07 confirmed and integrity-indexed in docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json; only GitHub source for 10 Kenney chase models and one neutral Quaternius rig. Full Node/Docker, WebGL rendering, Android FPS, security and live API fingerprint unverified.",
@@ -577,9 +578,33 @@
         "manualPaymentsEnabled": false
       },
       "resume": "Run native credit/hold/refund tests on disposable DB and STEP11+STEP12; reconcile unsnapped legacy orders only from verified financial evidence, finish real Android/iPhone anti-cheat/art QA before manual release."
+    },
+    {
+      "commit": "f179cbe6201881bce9ff6a4ba879a2f1de34b3de",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "reason": "2026-10-14 source-only integration from prior draft PR #23: fail-closed independent replay certification for official score giveaways, excludes manually cleared runs from winner queries and entrant stats while free play continues.",
+      "validation": "19 V8 source-backed regression assertions PASS; 6 direct module assertions PASS; actual Python sqlite3 :memory: replay/certification SQL filter PASS. Full native Node/Docker, true gameplay replay fixtures and Android/iPhone browser QA NOT RUN.",
+      "host": "NOT DEPLOYED. Deplexo owner screenshot CURRENT READY 278af07; auto-deploy owner confirmed OFF.",
+      "files": [
+        "src/prize-score-proof.js",
+        "src/server.js",
+        "src/results.js",
+        "src/admin-scoring.js",
+        "src/boards.js",
+        "tools/test-prize-score-proof.js",
+        "tools/e2e-payments.js",
+        "docs/audit/PRIZE-SCORE-ADMISSION-DRAFT-2026-10-13.md"
+      ],
+      "qa": {
+        "independentlyCertifiedPrizeGames": 0,
+        "officialPrizeAdmissionStatus": "FAIL_CLOSED",
+        "liveDeployed": false,
+        "ownerApproved": false
+      },
+      "resume": "Verify all giveaway modes, official replay abuse test cases and per-game replay QA, then test actual Node/Docker; 0 games approved until owner/source evidence."
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-14 source checkpoint 490209fba5f7. Owner Deplexo CURRENT READY 278af07 unchanged; latest finance changes in source only. 4 grant + 3 refund simulated, sqlite DML equivalence PASS, full Node/Docker not run. Auto deploy OFF.",
+  "lastEvidenceReconciliation": "2026-10-14 f179cbe62018: prize verification source staged (0 certified), 25 V8 source checks and SQLite query pass, no native Docker/deployment. Last owner Deplexo screenshot 278af07 CURRENT READY; auto deploy off.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -595,7 +620,7 @@
   },
   "currentWorkingSource": {
     "branch": "program/five-release-full-hub-overhaul-20261013",
-    "headAtReconciliation": "490209fba5f72a10e0127c4e5700d88426747e66",
+    "headAtReconciliation": "f179cbe6201881bce9ff6a4ba879a2f1de34b3de",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
     "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
