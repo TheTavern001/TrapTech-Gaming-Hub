@@ -284,13 +284,16 @@ function sync(userId) {
         WHERE p.user_id=r.user_id AND p.reason='run' AND p.ref=CAST(r.id AS TEXT))
       ORDER BY r.id`).all(userId);
     if (runs.length) {
-      const best = {}; for (const r of db.prepare('SELECT game_id, MAX(score) AS b FROM runs WHERE user_id=? AND COALESCE(held,0)=0 AND id < ? GROUP BY game_id').all(userId, runs[0].id)) best[r.game_id] = r.b;
+      // Late-cleared runs can appear below an already rewarded run ID.
+      // Compare each run against ALL preceding approved scores, including
+      // previously rewarded later IDs. An in-memory best cursor can mis-award PB.
+      const priorBest = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=? AND held=0 AND id<?');
       const perDay = {};
       for (const r of runs) {
         const day = Math.floor(r.created_at / D);
         if (perDay[day] === undefined) perDay[day] = db.prepare("SELECT COUNT(*) AS c FROM points_ledger WHERE user_id=? AND reason='run' AND created_at >= ? AND created_at < ?").get(userId, day * D, (day + 1) * D).c;
-        const pb = best[r.game_id] !== undefined && r.score > best[r.game_id];
-        best[r.game_id] = Math.max(best[r.game_id] ?? -1, r.score);
+        const prior = priorBest.get(userId, r.game_id, r.id).b;
+        const pb = prior !== null && r.score > prior;
         const sk = SKILL[r.game_id]; const skill = sk ? (r.score >= sk.top1 ? EARN.skill.top1 : r.score >= sk.good ? EARN.skill.good : 0) : 0;
         const amt = perDay[day] < EARN.runDailyCap ? EARN.run + (pb ? EARN.pb : 0) + skill : 0; perDay[day]++;
         insL.run(userId, amt, 'run', String(r.id), r.created_at);
