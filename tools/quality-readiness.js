@@ -54,6 +54,17 @@ for (const record of quality.records) {
     record.metrics.androidP95FrameMs > 0 && record.metrics.androidP95FrameMs <= 16.7 &&
     Number.isFinite(record.metrics.minimumVerifiedRenderHeightPx) &&
     record.metrics.minimumVerifiedRenderHeightPx >= 720;
+  // 98% of players use phones; a Chromium iPhone user-agent simulation is
+  // NOT a real Safari/WebKit pass. Public AAA admissions require documented
+  // physical Android Chrome/WebView and physical iPhone Safari/WKWebView.
+  const ios = record.metrics && Number.isFinite(record.metrics.iosP95FrameMs) &&
+    record.metrics.iosP95FrameMs > 0 && record.metrics.iosP95FrameMs <= 16.7;
+  const mobile = record.mobileQa?.androidPhysical === true &&
+    record.mobileQa?.androidWebViewPhysical === true &&
+    record.mobileQa?.iosSafariPhysical === true &&
+    record.mobileQa?.iosWKWebViewPhysical === true &&
+    record.mobileQa?.orientationRotatedWithoutRunLoss === true &&
+    record.mobileQa?.phoneSafeAreaVerified === true;
   const reviewTime = Date.parse(record.reviewedAtUTC);
   const owner = typeof record.reviewer === 'string' && record.reviewer.trim().length >= 2 &&
     typeof record.reviewedAtUTC === 'string' && !Number.isNaN(reviewTime) &&
@@ -66,8 +77,8 @@ for (const record of quality.records) {
     typeof rec.mechanicsReviewNotes === 'string' && rec.mechanicsReviewNotes.length > 12 &&
     rec.scoreValidation?.legitimateAccepted === true &&
     rec.scoreValidation?.forgedRejected === true &&
-    rec.mobileQa?.androidPhysical === true && rec.mobileQa?.desktop === true);
-  const ok = record.status === 'APPROVED' && checks && android && owner && intake;
+    rec.mobileQa?.androidPhysical === true && rec.mobileQa?.iosPhysical === true);
+  const ok = record.status === 'APPROVED' && checks && android && ios && mobile && owner && intake;
   if (record.status === 'APPROVED' && !ok)
     errors.push('Approval without complete evidence or performance/intake gates: ' + record.id);
   if (ok) passed.push(record.id);
@@ -86,7 +97,7 @@ const result = {
   baselinePending:baselinePending.length, expansionGateOpen:baselinePending.length===0 && !errors.length,
   qualityRemainingTo500:Math.max(0,goal-passed.length), goal, unapprovedRegistered:pending.length,
   approvedIds:passed, errors,
-  note:'No score/asset/gameplay/Android/owner signoff is inferred from a registered title. This reporter does not run gameplay tests.'
+  note:'98% phone use: no score/asset/gameplay/real Android Chrome+WebView/real iPhone Safari+WKWebView/owner approval is inferred from registration; Chromium iPhone emulation does not qualify as real iOS evidence.'
 };
 console.log(JSON.stringify(result,null,2));
 if (errors.length || (process.argv.includes('--require-baseline') && baselinePending.length) ||
