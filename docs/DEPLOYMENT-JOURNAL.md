@@ -377,3 +377,9 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `67a2bd9f9f7de06fd49a87902727252ec403d232` adds eight existing game QA programs to `tools/offline-release-rehearsal.js`, including four Arrow Hero regressions, two Grow Op regressions, duplicate-mechanics review, and cannabis gameplay QA. Previously the primary `npm run verify:offline:full` path omitted these newer suites, despite a separate shell script containing them.
 - Confirmed the GitHub write and script entries; **native Node test execution, Docker image build, and phone testing are NOT RUN**. The Dockerfile was inspected but a proposed modification was not committed, so do not claim these checks are part of Docker STEP11.
 - This improves release verification coverage but does not advance 0 human-certified games or authorize a Deplexo deployment. Keep auto-deploy OFF. Next run full checkout `npm run verify:offline:full`, fix first failing command, obtain private phone and security evidence. This checkpoint remains source-only.
+
+## 2026-10-14 — rehearsal fail-closed on missing Docker verification
+
+- `bc1d6d701051c8c47a6152db07d4f0d20d42c1e0` changes `tools/offline-release-rehearsal.js`: source-only `npm run verify:offline` now records Docker as NOT_RUN and cannot report `allChecksPassed:true`; an explicit `dockerVerified` field only becomes true after successful complete Dockerfile build in `--full` mode.
+- GitHub commit confirmed; full checkout Node execution, Docker build, browser QA, physical Android/iPhone and production smoke **NOT RUN**. No deployment initiated.
+- Resume with `npm run verify:offline:full` on a full checkout and the current PR head, then fix any actual failing tests and gather physical phone/payment/score evidence. Auto-deploy remains OFF; 87 proposed playable, 0 quality certified, 0 additional games admitted. Source-only code changes do not confer approval.
