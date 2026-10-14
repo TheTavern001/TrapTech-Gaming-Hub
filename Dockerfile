@@ -104,6 +104,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-grow-op-immediate-swat.js \
  && node tools/test-grow-op-expiring-pest.js \
  && node tools/test-grow-op-suspended-tab.js \
+ && node tools/test-kit-mobile-lifecycle.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
  && node --check tools/test-grow-op-touch-fairness.js \
