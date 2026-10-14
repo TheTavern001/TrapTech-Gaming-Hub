@@ -77,6 +77,20 @@ assert.ok(pay.includes("return r.ok?{ok:true,item:r.item.id,price_credits:r.pric
   'Deprecated Crowns endpoint must delegate to the one cosmetic purchase implementation');
 assert.ok(!pay.includes("if (crowns(user.id) < price)"),'No separately spendable paid Crown wallet');
 assert.ok(pay.includes("Payment provider not supported"),'Unverified Whop webhook must remain disabled');
+assert.ok(pay.includes("['pack_crowns','INTEGER']"),'Store orders must have a snapshot Credit-quantity column');
+assert.ok((pay.match(/p\.kind === 'pack' \? p\.crowns\+p\.bonus : null/g)||[]).length>=3,
+ 'Bitcoin, Stripe and manual orders must pin Credit-pack quantities at creation');
+assert.ok(pay.includes('fresh.pack_crowns') && !pay.includes("if (p.kind === 'pack') addCrowns(o.user_id, p.crowns + p.bonus"),
+ 'Fulfillment must use the pinned order quantity, not a mutable product');
+assert.ok(pay.includes("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='purchase' AND ref=?"),
+ 'Refund must reverse exactly the original payment ledger grant');
+assert.ok(pay.includes("fresh.status !== 'paid'"),'No unconfirmed order may grant currency');
+assert.ok(pay.includes("if (o.refunded_at) return { ok:true, already:true };"),
+ 'Duplicate signed refund events must remain idempotent');
+assert.ok(read('src/unified-wallet.js').includes("CREDIT_PER_LEGACY_CROWN=10"),
+ 'Legacy Crown-to-credit migration ratio must remain pinned');
+assert.ok(read('tools/test-payment-order-snapshots.js').includes("LEGACY_NO_QUOTE"),
+ 'Unquoted historical orders must fail closed in regression');
 assert.ok(read('src/rotating-quests.js').includes('does not award XP or trust client completion claims'));
 console.log(JSON.stringify({pass:true,workstreams:board.workstreams.length,
   externalPackSources:assets.sourcePacks.length,defaultAvatarIdentical:true,
