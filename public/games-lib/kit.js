@@ -73,8 +73,8 @@
       gamePrefs=P;
       let wasPaused=false;
       P.openGameSettings({id:def.id,title:def.title,host:document.body,
-        onOpen:()=>{wasPaused=g.paused;gameSettingsOpen=true;g.paused=true;g.ptr.down=false;g.ptr.pressed=false;g.ptr.released=false;g._kp=false;g.kp={};g.keys={};g.btn={};g.btnP={};g.stick.on=false;g.stick.x=0;g.stick.y=0;},
-        onClose:()=>{g.ptr.down=false;g.ptr.pressed=false;g.ptr.released=false;g._kp=false;g.kp={};g.paused=wasPaused;gameSettingsOpen=false;},
+        onOpen:()=>{wasPaused=g.paused;gameSettingsOpen=true;g.paused=true;clearInputs();},
+        onClose:()=>{clearInputs();g.paused=wasPaused;gameSettingsOpen=false;},
         onChange:pref=>{
           muted=!pref.sound;cameraShakeAllowed=!pref.reducedMotion;
           const cap=P.qualityCap(pref.quality,devicePixelRatio||1);
@@ -86,19 +86,63 @@
     const btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
     const toL = (e) => [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
     const touches = new Map();
+    // Revoke all held pointers and keys together. A tab switch, focus loss or
+    // settings overlay must not leave a steering stick or firing key active.
+    function clearInputs() {
+      touches.clear();
+      g.ptr.down=false;g.ptr.pressed=false;g.ptr.released=false;g.ptr.pointerId=null;
+      g._kp=false;g.kp={};g.keys={};g.btn={};g.btnP={};
+      g.stick.on=false;g.stick.x=0;g.stick.y=0;
+    }
     function onDown(e) { e.preventDefault(); if(gameSettingsOpen)return; ac(); const [x, y] = toL(e); g.inputs++; window.Hub && Hub.input();
-      if (g.state !== 'play') { g.ptr.pressed = true; g.ptr.x = x; g.ptr.y = y; touches.set(e.pointerId, { k: 'ptr' }); return; }
+      if (g.state !== 'play') { g.ptr.pressed = true; g.ptr.x = x; g.ptr.y = y; g.ptr.pointerId=e.pointerId; touches.set(e.pointerId, { k: 'ptr' }); return; }
       for (const b of btns) if (Math.hypot(x - b.x, y - b.y) < b.r + 10) { g.btn[b.id] = true; g.btnP = g.btnP || {}; g.btnP[b.id] = true; if (b.key) g.keys[b.key] = true; touches.set(e.pointerId, { k: 'btn', b }); return; }
-      if (def.stick && (e.pointerType === 'touch' || def.stick === 'always') && (!def.stickZone || def.stickZone(x, y))) { g.stick.on = true; g.stick.cx = x; g.stick.cy = y; g.stick.x = g.stick.y = 0; touches.set(e.pointerId, { k: 'stick' }); if (!def.stickAlsoPtr) return; }
-      touches.set(e.pointerId, { k: 'ptr' }); g.ptr.down = true; g.ptr.pressed = true; g.ptr.x = g.ptr.sx = x; g.ptr.y = g.ptr.sy = y; }
-    function onMove(e) { if(gameSettingsOpen)return; const [x, y] = toL(e); const t = touches.get(e.pointerId); if (t && t.k === 'stick') { const dx = x - g.stick.cx, dy = y - g.stick.cy, m = Math.hypot(dx, dy), R = 50; g.stick.x = K.clamp(dx / R, -1, 1); g.stick.y = K.clamp(dy / R, -1, 1); if (m > R) { g.stick.cx = x - dx / m * R; g.stick.cy = y - dy / m * R; } if (!def.stickAlsoPtr) return; } if (!t || t.k === 'ptr' || e.pointerType === 'mouse') { g.ptr.x = x; g.ptr.y = y; } }
-    function onUp(e) { if(gameSettingsOpen){touches.delete(e.pointerId);return;} const t = touches.get(e.pointerId); touches.delete(e.pointerId); if (t && t.k === 'btn') { g.btn[t.b.id] = false; if (t.b.key) g.keys[t.b.key] = false; return; } if (t && t.k === 'stick') { g.stick.on = false; g.stick.x = g.stick.y = 0; if (!def.stickAlsoPtr) return; } g.ptr.down = false; g.ptr.released = true; }
+      const isStick=def.stick && (e.pointerType === 'touch' || def.stick === 'always') &&
+        (!def.stickZone || def.stickZone(x, y)) && !g.stick.on;
+      if(isStick) { g.stick.on=true;g.stick.cx=x;g.stick.cy=y;g.stick.x=g.stick.y=0;
+        if(!def.stickAlsoPtr){touches.set(e.pointerId,{k:'stick'});return;} }
+      // Never let a second finger overwrite the active aim/swipe pointer.
+      if(g.ptr.down){touches.set(e.pointerId,{k:isStick?'stick':'ignored'});return;}
+      touches.set(e.pointerId,{k:isStick?'stick-ptr':'ptr'});
+      g.ptr.pointerId=e.pointerId;g.ptr.down=true;g.ptr.pressed=true;g.ptr.x=g.ptr.sx=x;g.ptr.y=g.ptr.sy=y; }
+    function onMove(e) { if(gameSettingsOpen)return; const t=touches.get(e.pointerId);
+      if(!t)return; const [x,y]=toL(e);
+      if(t.k==='stick'||t.k==='stick-ptr') {
+        const dx=x-g.stick.cx,dy=y-g.stick.cy,m=Math.hypot(dx,dy),R=50;
+        g.stick.x=K.clamp(dx/R,-1,1);g.stick.y=K.clamp(dy/R,-1,1);
+        if(m>R){g.stick.cx=x-dx/m*R;g.stick.cy=y-dy/m*R;}
+        if(t.k==='stick')return;
+      }
+      if((t.k==='ptr'||t.k==='stick-ptr')&&g.ptr.pointerId===e.pointerId){g.ptr.x=x;g.ptr.y=y;}
+    }
+    function onUp(e) {
+      const t=touches.get(e.pointerId);
+      if(!t)return; // Stray global pointerup must never shoot, drop or restart.
+      touches.delete(e.pointerId);
+      if(gameSettingsOpen)return;
+      if(t.k==='btn'){g.btn[t.b.id]=false;if(t.b.key)g.keys[t.b.key]=false;return;}
+      if(t.k==='stick'||t.k==='stick-ptr'){
+        g.stick.on=false;g.stick.x=g.stick.y=0;
+        if(t.k==='stick')return;
+      }
+      if(t.k!=='ptr'&&t.k!=='stick-ptr')return;
+      if(g.ptr.pointerId!==e.pointerId)return;
+      g.ptr.down=false;g.ptr.pointerId=null;
+      if(e.type==='pointercancel'){g.ptr.pressed=false;return;}
+      g.ptr.released=true;
+    }
     cv.addEventListener('pointerdown', onDown); addEventListener('pointermove', onMove); addEventListener('pointerup', onUp); addEventListener('pointercancel', onUp);
     cv.addEventListener('contextmenu', e => e.preventDefault());
-    addEventListener('keydown', e => { if(gameSettingsOpen)return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { muted=!muted; if(gamePrefs)gamePrefs.saveGame(def.id,{sound:!muted}); else safeStore.set('gl_mute',muted?'1':'0'); return; }
-      if (!g.keys[e.key]) { g._kp = true; g.kp = g.kp || {}; g.kp[e.key] = true; g.inputs++; window.Hub && Hub.input(); ac(); } g.keys[e.key] = true; if (e.key === 'p' || e.key === 'Escape') g.paused = !g.paused && g.state === 'play'; });
+    addEventListener('keydown', e => { if(gameSettingsOpen)return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.key === 'm' || e.key === 'M') { if(e.repeat)return; muted=!muted; if(gamePrefs)gamePrefs.saveGame(def.id,{sound:!muted}); else safeStore.set('gl_mute',muted?'1':'0'); return; }
+      const fresh=!g.keys[e.key];
+      if (fresh) { g._kp=true;g.kp=g.kp||{};g.kp[e.key]=true;g.inputs++;window.Hub&&Hub.input();ac(); }
+      g.keys[e.key]=true;
+      // Auto-repeat of P/Escape must never rapidly unpause and repause the game.
+      if(fresh&&(e.key==='p'||e.key==='Escape'))g.paused=!g.paused&&g.state==='play';
+    });
     addEventListener('keyup', e => { if(!gameSettingsOpen)g.keys[e.key] = false; });
-    document.addEventListener('visibilitychange', () => { if (document.hidden && g.state === 'play') g.paused = true; });
+    addEventListener('blur',()=>{clearInputs();if(g.state==='play')g.paused=true;});
+    document.addEventListener('visibilitychange', () => { if(document.hidden){clearInputs();if(g.state==='play')g.paused=true;} });
     g.kd = (k) => !!(g.kp && g.kp[k]);
     async function begin() { g.state = 'starting'; const seed = window.Hub ? await Hub.start(def.id) : null; g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = false; def.init(g); g.state = 'play'; K.sfx('power'); }
     g.rnd = mulberry(); def.init(g);
