@@ -60,6 +60,7 @@ run grow-op-immediate-swat node tools/test-grow-op-immediate-swat.js
 run grow-op-expiring-pest node tools/test-grow-op-expiring-pest.js
 run grow-op-suspended-tab node tools/test-grow-op-suspended-tab.js
 run kit-mobile-lifecycle node tools/test-kit-mobile-lifecycle.js
+run kit-score-submit-error node tools/test-kit-score-submit-error.js
 run retired-duplicates node tools/test-owner-duplicate-retirements.js
 run external-source-vehicles node tools/test-imported-kenney-cars.js
 run neutral-rig-fingerprint node tools/test-neutral-avatar-source.js
