@@ -3,20 +3,27 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneRig } from 'three/addons/utils/SkeletonUtils.js';
 
-const sources = { male:'/assets/avatars/rigged/male-adventurer.gltf', female:'/assets/avatars/rigged/female-adventurer.gltf' };
+const sources = {
+  male:'/assets/avatars/rigged/male-adventurer.gltf',
+  female:'/assets/avatars/rigged/female-adventurer.gltf',
+  neutralQa:'/assets/avatars/rigged/quaternius-neutral-starter-qa.glb'
+};
 const cache = new Map();
 const SKIN = ['#f9d7b9','#f1c19b','#e0a679','#c98a5b','#a8693f','#8a5232','#6b3d22','#4a2915'];
 const HAIR = ['#1b1b1f','#4a2f1d','#7b4a24','#c58b3c','#e8c46a','#d9d4cc','#c2410c','#7c3aed','#22d3ee','#16a34a'];
 const BG = { night:['#0c152b','#4338ca'],violet:['#1a1040','#7c3aed'],ocean:['#09253f','#0e7490'],
   sunset:['#412040','#e87054'],haze:['#190d35','#7e22ce'],studio:['#111827','#7c3aed'] };
-function load(presentation) {
-  const file = sources[presentation === 'female' ? 'female' : 'male'];
+function load(presentation, neutralQa=false) {
+  const file = sources[neutralQa ? 'neutralQa' : presentation === 'female' ? 'female' : 'male'];
   if (!cache.has(file)) cache.set(file, new GLTFLoader().loadAsync(file).catch(e=>{cache.delete(file);throw e;}));
   return cache.get(file);
 }
 export async function mountRiggedAvatar(stage,cfg) {
   if (!stage || !stage.isConnected) return () => {};
-  const gltf = await load(cfg.gender);
+  const neutralQa=cfg.outfit==='base' &&
+    typeof location!=='undefined' &&
+    new URLSearchParams(location.search).get('avatarRigQA')==='1';
+  const gltf = await load(cfg.gender,neutralQa);
   if (!stage.isConnected) return () => {};
   const reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const scene = new THREE.Scene();
@@ -34,6 +41,13 @@ export async function mountRiggedAvatar(stage,cfg) {
   renderer.domElement.setAttribute('role','img');
   renderer.domElement.setAttribute('aria-label','Animated three-dimensional character. Drag to rotate.');
   stage.replaceChildren(renderer.domElement);
+  if(neutralQa) {
+    stage.style.position='relative';
+    const label=document.createElement('span');
+    label.textContent='SOURCE RIG QA · Not final avatar';
+    label.style.cssText='position:absolute;z-index:4;top:8px;left:8px;background:#102035e0;color:#f3f4f6;font:11px system-ui;padding:6px 8px;border-radius:6px;pointer-events:none';
+    stage.appendChild(label);
+  }
   scene.add(new THREE.HemisphereLight(0xeaf1ff,0x34415d,2.1));
   const key=new THREE.DirectionalLight(0xffead6,3.3);key.position.set(-3,7,6);scene.add(key);
   const rim=new THREE.DirectionalLight(0x90daff,2.35);rim.position.set(3,4,-5);scene.add(rim);
