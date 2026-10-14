@@ -360,6 +360,7 @@
     }
   ],
   "pendingEvidence": [
+    "2026-10-14: owner screenshot CURRENT 278af07 confirmed and integrity-indexed in docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json; only GitHub source for 10 Kenney chase models and one neutral Quaternius rig. Full Node/Docker, WebGL rendering, Android FPS, security and live API fingerprint unverified.",
     "Host latest confirmed CURRENT+READY 278af07. Developer program branch df091e8 and successors NOT DEPLOYED. Must not equate GitHub SHA with Deplexo build status. Deplexo manual R1 preflight BLOCKED.",
     "R1 manual preflight returns BLOCKED with 6 unresolved mechanics/score workstreams. Kenney source GLB integrity 10/10 PASS, visual/Android/gameplay still NOT RUN. Next 5 source titles research ONLY and cannot be counted.",
     "New 5-release overhaul source branch is NOT DEPLOYED. Need actual full checkout Node audit, 93-game mechanics and Android gameplay proofs, true avatar/modular cosmetics/asset imports, and a deliberately manual R1 image after gate.",
@@ -507,9 +508,27 @@
       "proposedPlayable": 87,
       "licenseReviewedSourceMeshes": 10,
       "readyForManualRelease": false
+    },
+    {
+      "commit": "b23bc678903865052b0b602bc3bbd5996a1e3cd1",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "reason": "Reconcile owner screenshot provenance with 278af07 CURRENT and track source-only gameplay/Quaternius QA work without generating host deployment.",
+      "validation": "151 source-backed V8 shim assertions pass for screenshot/deploy tracking; owner gameplay 39 V8 assertions and render allocation 13 source assertions pass; Quaternius 741320-byte 65-joint glTF metadata inspected; neutral in-Hub QA 7 eligibility predicates pass. Full native Node/Docker, browser, Android and anti-cheat replay not executed.",
+      "host": "NOT DEPLOYED (owner screenshot CURRENT 278af07, auto deploy off).",
+      "evidenceFiles": [
+        "docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json",
+        "tools/release-status.js",
+        "tools/test-deplexo-release-evidence.js",
+        "public/games-lib/wanted-run/game.js",
+        "tools/test-mobile-frame-allocation-regressions.js",
+        "public/assets/avatars/rigged/quaternius-neutral-starter-qa.glb",
+        "docs/audit/QUATERNIUS-NEUTRAL-STARTER-QA-2026-10-14.json"
+      ],
+      "qualityApproved": 0,
+      "manualReleaseGate": "BLOCKED"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-14 owner screenshot phone 12:17: 278af07 CURRENT READY (323s), 916f5c7 READY (561s), 03119b9 READY (390s from screenshot); df091e8 GitHub SOURCE ONLY NOT DEPLOYED. Auto deploy OFF per owner. No current host /api/build readback.",
+  "lastEvidenceReconciliation": "2026-10-14 owner screenshot reconciliation: host CURRENT READY 278af07, rollback READY 916f5c7 and 03119b9. Screenshot 709x1536, 108248 bytes, SHA256 b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad. Program source through b23bc6789038 NOT DEPLOYED, auto deploy OFF. 93 registered/87 proposed active, 0 quality approved.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -525,9 +544,11 @@
   },
   "currentWorkingSource": {
     "branch": "program/five-release-full-hub-overhaul-20261013",
-    "headAtReconciliation": "df091e892e6e6575846940630530897eb79fb650",
+    "headAtReconciliation": "b23bc678903865052b0b602bc3bbd5996a1e3cd1",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY."
+    "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY.",
+    "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
+    "reconciledScope": "Source snapshot immediately before this journal commit; the journal commit itself changes branch HEAD. No Deplexo host evidence for these source commits."
   },
   "ownerConfirmedAutoDeployOff": true
 }
