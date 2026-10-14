@@ -70,7 +70,13 @@ for(const f of ['src/anticheat.js','src/ac-levels.js','src/eligibility.js','src/
 const pay=read('src/monetize.js');
 assert.ok(pay.includes('premium XP boost: ONLY the premium-track level'));
 assert.ok(pay.includes('Math.floor(sp.xp * (owned ? 1 + boost / 100 : 1))'));
-assert.ok(read('src/shop.js').includes('Hub Points are COSMETIC ONLY'));
+assert.ok(read('src/shop.js').includes('Hub Credits are COSMETIC ONLY'));
+assert.ok(read('src/shop.js').includes("WALLET.balance(userId)"),'Points Shop must use one Credits balance');
+assert.ok(pay.includes("const WALLET = require('./unified-wallet')"),'Paid packs must credit same wallet');
+assert.ok(pay.includes("return r.ok?{ok:true,item:r.item.id,price_credits:r.price,credits:r.balance}:r"),
+  'Deprecated Crowns endpoint must delegate to the one cosmetic purchase implementation');
+assert.ok(!pay.includes("if (crowns(user.id) < price)"),'No separately spendable paid Crown wallet');
+assert.ok(pay.includes("Payment provider not supported"),'Unverified Whop webhook must remain disabled');
 assert.ok(read('src/rotating-quests.js').includes('does not award XP or trust client completion claims'));
 console.log(JSON.stringify({pass:true,workstreams:board.workstreams.length,
   externalPackSources:assets.sourcePacks.length,defaultAvatarIdentical:true,
