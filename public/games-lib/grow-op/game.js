@@ -5,7 +5,24 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
   init(g) { g.time = 0; g.deaths = 0; g.sel = 0; g.plants = []; for (let i = 0; i < 6; i++) g.plants.push(newPlant(g, i)); g.pests = []; g.pestTimer = 3; },
   update(g, dt) {
     g.time += dt;
-    const P = g.ptr; if (P.pressed && P.y < 330) { for (const p of g.plants) if (Math.abs(P.x - p.x) < 55) g.sel = p.i; for (const s of g.pests) if (Math.hypot(P.x - s.x, P.y - s.y) < 26) { s.dead = true; g.add(5, 'b'); g.sfx('pop'); g.burst(s.x, s.y, '#a3e635', 10); } }
+    const P = g.ptr;
+    if (P.pressed && P.y < 330) {
+      // Mobile-first: a pest tap must never silently change the selected
+      // plant, and overlapping hit regions must not award multiple pests.
+      // Pick the nearest live pest, resolve one action, then stop.
+      let hit = null, dist = 26;
+      for (const s of g.pests) {
+        if (s.dead) continue;
+        const d = Math.hypot(P.x - s.x, P.y - s.y);
+        if (d < dist) { hit = s; dist = d; }
+      }
+      if (hit) {
+        hit.dead = true; g.add(5, 'b'); g.sfx('pop');
+        g.burst(hit.x, hit.y, '#a3e635', 10);
+      } else {
+        for (const p of g.plants) if (Math.abs(P.x - p.x) < 55) { g.sel = p.i; break; }
+      }
+    }
     for (let i = 0; i < 6; i++) if (g.kd(String(i + 1))) g.sel = i; const p0 = g.plants[g.sel];
     if (g.btnP.W || g.kd('w')) { p0.water = Math.min(1.2, p0.water + 0.25); g.sfx('whoosh'); g.burst(p0.x, 200, '#38bdf8', 10, 120); }
     if (g.btnP.F || g.kd('f')) { p0.food = Math.min(1.2, p0.food + 0.22); g.sfx('click'); g.burst(p0.x, 260, '#fbbf24', 8, 100); }
