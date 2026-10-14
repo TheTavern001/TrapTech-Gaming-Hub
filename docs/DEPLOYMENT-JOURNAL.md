@@ -348,3 +348,11 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `228a62b8f2a6e916958b45b0487b17f68a6c4298` adds real game update callback regression for crossing hit, near miss, invincible player, and too-short flight. `1845e8ce48596f6a29064e2da15f98bc4cce83ee` adds it to the offline release gate.
 - **Executed on fetched committed JS in an isolated V8 harness:** all four observed results matched expectations: crossing damage 7.5; other scenarios damage 0. No real phone frame measurement or full Node/Docker gate was run.
 - **No production deployment**; owner should keep Deplexo automatic deploy OFF. Resume from current branch head, run Docker-based release checks and broader gameplay/device QA; catalog and public launch remain unapproved.
+
+## 2026-10-14 — Arrow Hero post-movement contact fix and deployment boundary
+
+- `3920b453b08892ef883d9d2d022793a8cb4db63c`: fixes enemy contact using stale positions computed before AI movement; contact is now checked at the enemy's final location in the update.
+- `8db136c7b5671c7ca44cf7b57dd95bc4a9f87b21`: new contact-vs-near-miss callback regression. `8f2d29e0744d22f942d5965b2db0399e8ba81061`: wired into consolidated offline release suite.
+- Executed against retrieved committed game code in V8: slime starting at y=428 reached y=424.5 and dealt 9 HP on contact; slime starting at y=460 reached y=456.5 and dealt 0 HP. Both expectations PASS. This is **not** proof of physical-device smoothness, whole-game balance, or complete Docker tests.
+- Production unchanged; latest owner screenshot still identifies `278af07` as READY. Do not enable automatic deployment merely because source-level regressions pass.
+- Next checkpoint: execute the complete Docker-backed offline release suite in full checkout, resolve failures, then verify mobile/visual/score/security approval for the private candidate. Expand research/intake in parallel but don't mark 500 admissions as completed.
