@@ -7,6 +7,7 @@
 - Registered library IDs: **80** (77 original builds, 3 vendored builds), including **6 owner-retired overlapping games** retained for history. **74 playable/discoverable library games**; add 13 active core games for **87 active titles**.
 - Giveaway-eligible active library games: **74**. The six archived game IDs cannot start new scored runs or giveaways; prior scores remain recorded.
 - External game redirects: 0.
+> Owner-directed deduplication: the six archived gameplay IDs remain in this *historical source inventory* for scores and credit attribution, but are hidden from player-facing discovery and cannot accept new scored runs. The six are **not** included in the 87 playable-title count; none of those 87 is AAA-certified.
 - By category: Endless Runners: 7 | Driving: 12 | Physics & Destruction: 3 | Tower Defense: 3 | Survival & Horde: 5 | Arcade Shooters: 5 | Puzzle & Brain: 9 | Reflex & Skill: 11 | Combat: 2 | Sports: 10 | Specialty: 2 | Cannabis: 11.
 
 ## Source of truth and runtime
@@ -39,8 +40,8 @@
 | 17 | Grid Wars | Geometry Wars | Survival & Horde | A+ | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 400/s, L2 | 48 KB | not run |
 | 18 | Moon Swarm | Vampire Survivors | Survival & Horde | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 150/s, L2 | 46 KB | not run |
 | 19 | Throttle Rider | Traffic Rider | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 60/s, L2 | 39 KB | not run |
-| 20 | Wreck Ride | Happy Wheels | Physics & Destruction | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 60/s, L2 | 24 KB | not run |
-| 21 | Rig Rally | Bad Piggies | Physics & Destruction | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 60/s, L2 | 24 KB | not run |
+| 20 | Wreck Ride | Happy Wheels | Physics & Destruction | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | archived → Hill Hauler | 60/s, L2 | 24 KB | not run |
+| 21 | Rig Rally | Bad Piggies | Physics & Destruction | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | archived → Hill Hauler | 60/s, L2 | 24 KB | not run |
 | 22 | Goo Tower | World of Goo | Physics & Destruction | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 20/s, L2 | 36 KB | not run |
 | 23 | Keep Guard | Kingdom Rush | Tower Defense | A | endless-waves | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 120/s, L2 | 30 KB | not run |
 | 24 | Node Siege | Infinitode 2 | Tower Defense | A | endless-waves | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 120/s, L2 | 19 KB | not run |
@@ -52,7 +53,7 @@
 | 30 | Hex Spin | Super Hexagon | Reflex & Skill | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 12/s, L2 | 15 KB | not run |
 | 31 | Color Hop | Color Switch | Reflex & Skill | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 3/s, L2 | 16 KB | not run |
 | 32 | Zig Path | ZigZag | Reflex & Skill | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 12/s, L2 | 12 KB | not run |
-| 33 | Drift King | Drift Boss | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 25/s, L2 | 15 KB | not run |
+| 33 | Drift King | Drift Boss | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | archived → Drift Rush | 25/s, L2 | 15 KB | not run |
 | 34 | Missile Guard | Missile Command | Arcade Shooters | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 150/s, L2 | 26 KB | not run |
 | 35 | Bug Blaster | Centipede | Arcade Shooters | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 200/s, L2 | 21 KB | not run |
 | 36 | Bubble Pop | Bubble Shooter | Puzzle & Brain | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 200/s, L2 | 41 KB | not run |
@@ -86,9 +87,9 @@
 | 64 | Kickflip City | Skateboard Trick Challenge | Sports | B | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 900/s, L2 | 33 KB | not run |
 | 65 | Tile Twin | Mahjong Solitaire | Puzzle & Brain | B | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 150/s, L2 | 34 KB | not run |
 | 66 | Tunnel Hop | Run (Tunnel runner) | Endless Runners | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 40/s, L2 | 32 KB | not run |
-| 67 | Dune Glide | Alto's Adventure | Endless Runners | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 80/s, L2 | 8 KB | not run |
-| 68 | Egg Roll | Eggy Car | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 40/s, L2 | 22 KB | not run |
-| 69 | Monster Crush | Monster truck crusher | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 120/s, L2 | 18 KB | not run |
+| 67 | Dune Glide | Alto's Adventure | Endless Runners | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | archived → Hill Hauler | 80/s, L2 | 8 KB | not run |
+| 68 | Egg Roll | Eggy Car | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | archived → Hill Hauler | 40/s, L2 | 22 KB | not run |
+| 69 | Monster Crush | Monster truck crusher | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | archived → Hill Hauler | 120/s, L2 | 18 KB | not run |
 | 70 | No Brakes | Faily Brakes | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 80/s, L2 | 21 KB | not run |
 | 71 | Cab Rush | Crazy Taxi | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 40/s, L2 | 15 KB | not run |
 | 72 | Dirt Dash | Excitebike | Driving | A | endless | built | MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art | yes | 40/s, L2 | 26 KB | not run |
