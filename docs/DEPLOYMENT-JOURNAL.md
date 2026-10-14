@@ -363,3 +363,11 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `2658b797e5b1296329d206bbc582eb39abb15f3b` adds a three-interval game-callback regression; `c8219c2dd4d8639f6109a4f07638ea25f16706f9` wires it into offline release verification.
 - Executed the updated real game callback using V8: at elapsed 0/300/10000 seconds, next wave intervals measured 4.49947/2.92053/0.75 seconds, with exactly one pest spawned each; expected difficulty acceleration PASS. This is not full Docker or Android/iOS device QA.
 - No deployment initiated. Release remains BLOCKED and auto-deploy OFF; next step remains full Docker-backed preflight and cross-game phone acceptance, alongside additional genuine gameplay repairs.
+
+## 2026-10-14 — Grow Op stalled-frame pest backlog control
+
+- `2d08bb58db49a69275a727ed8e8b40ba0f71b99c`: preserve limited overdue pest waves on slow frames using bounded catch-up (maximum four waves per tick); reset stale backlog after suspension so there is no unbounded loop on mobile resume.
+- `07f0f76dfcc6e78df8099aba1e3e682a307b5a8c`: deterministic callback regression for no early spawns, three overdue waves, and four-wave cap/reset under extreme backlog.
+- `bd78a1aafcfde44b9dbee6727891e9d52c4a037a`: includes regression in consolidated offline release gate.
+- Executed isolated V8 callback on fetched committed source: timer +0.1 => 0 pests; timer -2 => 3 pests and +0.25 timer; timer -99 => 4 pests and +0.75 timer. Expected results PASS. No native Node full-suite, Docker, phone performance, or host deployment verified.
+- Owner must keep auto-deploy OFF; the five-release overhaul and game additions are not fully integrated or QA-certified. Continue with complete local Docker gate, gameplay/mobile UX/security checks, then controlled private release.
