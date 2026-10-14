@@ -468,3 +468,11 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `c9ff053601dc8662b6ba03471304935e873e3836`: test for revoked cosmetic fallback and valid starter preservation; `9934e26ce2384c2c12c83b19ce704ed68ba868e3`, `bee1a0c0d85cd2dc45f44effc8484585a1c8bbf2` require regression in offline rehearsal and Docker prelaunch.
 - Actual extracted production function executed in isolated V8 with mock ownership: revoked crown/wings -> base/none, legitimate base/none preserved, PASS. This does NOT establish actual SQLite/HTTP/3D wardrobe integration and not physical-device certification.
 - Primary blockers unchanged: no executed full native checkout/Docker/HTTP suite, 0 of 87 game signoffs, unapproved avatar and cosmetic 3D art, unapproved 15 security gates. Deplexo remains screenshot-confirmed `278af07`. Keep auto deploy OFF; no live change authorized.
+
+## 2026-10-14 — Avatar wardrobe async-preview generation guard
+
+- `d5259b94287b302b4892ed1906a54d130323dbf5`: `public/js/avatar-3d.js` now assigns a generation to each avatar mount request; stale asynchronously imported renderer calls cannot take over a stage that has since received a newer request.
+- `475d4736300c760373e4dc16c15197fffd99487f`: `public/js/avatar-rig.js` checks that the same generation is still current **after** awaiting the rigged asset load, before replacing the stage's children.
+- `b3c5128e0c0ad64820a2f3ce053ac073e7826250`: JS parsing and static regression contract; `8f0ba1f4f03a9606c8e9b1b909deb263379d1b1e` and `75caf3b9e45de18fbf720bf6e92c323ced7de34c` add test to canonical rehearsal and Docker build.
+- Executed JS syntax parsing on both actual module sources and the committed test, all PASS. The new Node regression and physical rapid-selection/Three.js/WebGL interaction, production Docker and phone QA are NOT RUN. No claim of complete 3D wardrobe or AAA avatar readiness.
+- Deplexo remains screenshot-confirmed at `278af07`; development source remains in PR #29; auto deploy OFF. Next: integrated checkout full test, asset and wearable geometry certification, private candidate planning.
