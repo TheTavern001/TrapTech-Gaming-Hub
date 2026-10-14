@@ -35,6 +35,15 @@ for(const field of ['sceneRenderVerified','animRetargetVerified','modularSlotsVe
  'ownerApproved','defaultEnabled']) assert.equal(meta[field],false,
   'Do not certify unreviewed rig capability: '+field);
 assert.equal(meta.license,'CC0-1.0');
+// A QA query flag may display this source rig in the existing avatar editor,
+// but the current live/published starter must remain the owner-approved look.
+const renderer=fs.readFileSync(path.join(root,'public/js/avatar-rig.js'),'utf8');
+const dispatcher=fs.readFileSync(path.join(root,'public/js/avatar-3d.js'),'utf8');
+assert.ok(renderer.includes("neutralQa:'/assets/avatars/rigged/quaternius-neutral-starter-qa.glb'"));
+assert.ok(renderer.includes("new URLSearchParams(location.search).get('avatarRigQA')==='1'"));
+assert.ok(dispatcher.includes("new URLSearchParams(location.search).get('avatarRigQA')==='1'"));
+assert.ok(dispatcher.includes("if(neutralQa)return true"));
+assert.ok(dispatcher.includes("return cfg.outfit === 'adventurer'"),'Keep existing publicly supported rig behavior');
 console.log(JSON.stringify({pass:true,source:'Quaternius Universal Base Characters CC0',
  bytes:buf.length,joints:nodeNames.size,meshes:json.meshes.length,
  qaOnly:true,completedModularAvatar:false,deviceTested:false}));
