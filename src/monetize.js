@@ -132,6 +132,11 @@ async function createOrder(user, productId, t = Date.now()) {
   if (!st.providers.bitcoin.configured) return { status: 503, error: 'Bitcoin checkout is not configured.' };
   const p = prod(productId); if (!p || !p.active) return { status: 404, error: 'That item is not for sale.' };
   if (p.kind === 'prestige' && !prestigeSalesEnabled()) return { status: 403, error: 'Prestige originals are preview-only until their wearable variations and compatibility review are approved.' };
+  // Never accept real payment if a configured Credit pack would fail the
+  // immutable grant bound. A broken admin edit must fail BEFORE checkout.
+  if (p.kind === 'pack' && (!Number.isSafeInteger(p.crowns+p.bonus) ||
+      p.crowns+p.bonus<=0 || p.crowns+p.bonus>100000000))
+    return { status:503, error:'Credit pack temporarily unavailable; contact support' };
   if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return { status: 409, error: 'Sold out (or the last ones are reserved by open orders).' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: 'You already have this season\'s pass.' };
   const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status='pending' AND expires_at > ?").get(user.id, t).c; if (open >= 3) return { status: 429, error: 'Finish or let your open orders expire first (max 3).' };
@@ -158,6 +163,11 @@ async function createStripeOrder(user, productId, t = Date.now()) {
   if (!st.providers.stripe.configured) return { status: 503, error: 'Credit/debit card checkout is not configured.' };
   const p = prod(productId); if (!p || !p.active) return { status: 404, error: 'That item is not for sale.' };
   if (p.kind === 'prestige' && !prestigeSalesEnabled()) return { status: 403, error: 'Prestige originals are preview-only until their wearable variations and compatibility review are approved.' };
+  // Never accept real payment if a configured Credit pack would fail the
+  // immutable grant bound. A broken admin edit must fail BEFORE checkout.
+  if (p.kind === 'pack' && (!Number.isSafeInteger(p.crowns+p.bonus) ||
+      p.crowns+p.bonus<=0 || p.crowns+p.bonus>100000000))
+    return { status:503, error:'Credit pack temporarily unavailable; contact support' };
   if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return { status: 409, error: 'Sold out (or the last ones are reserved by open orders).' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: "You already have this season's pass." };
   const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status IN ('pending','seen','confirming') AND expires_at > ?").get(user.id, t).c;
@@ -324,7 +334,10 @@ function refund(orderRef, actor, note = '') {
   return reverseEntitlements(o, actor, (note ? note + '; ' : '') + 'send the BTC back manually from the configured wallet');
 }
 function manualGrant(userId, productId, actor, note = '') {
-  const p = prod(productId); if (!p) return { ok: false, error: 'Unknown product.' }; const t = Date.now(); const ref = 'M' + crypto.randomBytes(6).toString('hex').toUpperCase();
+  const p = prod(productId); if (!p) return { ok: false, error: 'Unknown product.' };
+  if (p.kind === 'pack' && (!Number.isSafeInteger(p.crowns+p.bonus) ||
+      p.crowns+p.bonus<=0 || p.crowns+p.bonus>100000000))
+    return { ok:false, error:'Invalid Credit pack configuration' }; const t = Date.now(); const ref = 'M' + crypto.randomBytes(6).toString('hex').toUpperCase();
   const id = db.prepare("INSERT INTO store_orders (ref, user_id, product_id, usd_cents, provider, status, created_at, expires_at, note, season, pack_crowns) VALUES (?,?,?,?, 'manual', 'paid', ?, ?, ?, ?, ?)").run(ref, userId, p.id, 0, t, t, `manual grant by ${actor}${note ? ': ' + note : ''}`, p.kind === 'pass' ? curSeason(t) : null, p.kind === 'pack' ? p.crowns+p.bonus : null).lastInsertRowid;
   const g = grant(db.prepare('SELECT * FROM store_orders WHERE id=?').get(id), actor); return { ...g, ref };
 }
