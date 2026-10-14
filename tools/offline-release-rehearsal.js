@@ -32,6 +32,7 @@ const tests=[
  'tools/test-grow-op-newborn-pests.js',
  'tools/test-grow-op-immediate-swat.js',
  'tools/test-grow-op-expiring-pest.js',
+ 'tools/test-grow-op-suspended-tab.js',
  'tools/test-owner-gameplay-distinctness.js',
  'tools/test-cannabis-gameplay-qa.js',
  'tools/test-mobile-frame-allocation-regressions.js',
