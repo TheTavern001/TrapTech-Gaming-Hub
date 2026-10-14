@@ -32,7 +32,9 @@
       "code": "public/games-lib; public/js/games",
       "status": "SOURCE_ONLY",
       "exit": "Every active title has Android/desktop run and replay record",
-      "evidence": [],
+      "evidence": [
+        "public/games-lib/mole-whack/game.js (no keyboard-only auto target; 30s labels)"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -90,7 +92,12 @@
       "code": "src/server.js; src/anticheat.js; src/ac-levels.js",
       "status": "SOURCE_ONLY",
       "exit": "Real score accepted; forged/replayed/truncated rejected for each title",
-      "evidence": [],
+      "evidence": [
+        "src/shop.js (held-run-reward clawback)",
+        "src/achievements.js",
+        "src/progress.js",
+        "tools/test-reward-integrity.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -201,7 +208,13 @@
       "code": "src/seasons.js; src/monetize.js",
       "status": "SOURCE_ONLY",
       "exit": "Paid XP only separate cosmetic track; idempotent season tier claims",
-      "evidence": [],
+      "evidence": [
+        "docs/UNIFIED-HUB-CREDITS-SECURITY-2026-10-14.md",
+        "src/unified-wallet.js",
+        "src/shop.js",
+        "src/monetize.js",
+        "tools/test-unified-wallet.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -245,7 +258,11 @@
       "code": "public/js/app.js; public/css; public/assets/brand",
       "status": "SOURCE_ONLY",
       "exit": "Mobile all-route screenshots, no text overflow, outdated branding removed",
-      "evidence": [],
+      "evidence": [
+        "public/js/hub-store.js",
+        "public/js/economy.js",
+        "docs/audit/MOBILE-FIRST-98-PERCENT-ACCEPTANCE-2026-10-14.json"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -267,7 +284,10 @@
       "code": "src/server.js; src/admin.js",
       "status": "SOURCE_ONLY",
       "exit": "Adversarial/auth regressions and persisted restore exercise",
-      "evidence": [],
+      "evidence": [
+        "docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.json",
+        "tools/preflight-manual-release.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -278,7 +298,11 @@
       "code": "src/monetize.js",
       "status": "SOURCE_ONLY",
       "exit": "Test checkout/webhook replay/refund/confirmation guard",
-      "evidence": [],
+      "evidence": [
+        "src/monetize.js (disabled Whop webhook)",
+        "tools/e2e-payments.js",
+        "tools/test-unified-wallet.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -349,5 +373,14 @@
     "joints": 65,
     "approved": false,
     "defaultEnabled": false
-  }
+  },
+  "currencyModel": "ONE_HUB_CREDITS_BUY_OR_EARN_NO_SECOND_WALLET",
+  "legacyCrownConversion": 10,
+  "mobilePhonePlayerShareEstimatedPct": 98,
+  "securityGateDocument": "docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.json",
+  "lastOwnerConfirmedCurrent": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+  "checkoutNewBranchDeployed": false,
+  "automaticDeployOwnerConfirmedOff": true,
+  "publicLaunchApproved": false,
+  "currencyMigrationNativeDockerTest": "NOT_RUN"
 }
