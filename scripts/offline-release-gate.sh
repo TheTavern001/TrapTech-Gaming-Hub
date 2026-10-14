@@ -68,7 +68,8 @@ if "$do_docker"; then
     fail=$((fail+1))
   fi
 else
-  echo "SKIP Docker STEP11/STEP12; rerun with --docker (no host deployment)" | tee -a "$report"
+  echo "BLOCKED Docker STEP11/STEP12 NOT RUN; source-only preflight is not a release verification" | tee -a "$report"
+  fail=$((fail+1))
 fi
 # Actual owner/device acceptance, never bypassed just because source passes.
 run "release-$release-readiness" node tools/preflight-manual-release.js "--release=$release" --require-ready
@@ -78,4 +79,4 @@ if ((fail>0)); then
   echo "BLOCKED: Do not enable Deplexo automatic deployment or promote this SHA." | tee -a "$report"
   exit 1
 fi
-echo "LOCAL TESTS GREEN; exact host readback, phone QA and owner approval still required." | tee -a "$report"
+echo "LOCAL NODE AND CONTAINER TESTS GREEN; exact host readback, phone QA and owner approval still required." | tee -a "$report"
