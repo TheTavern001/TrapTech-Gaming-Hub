@@ -53,6 +53,27 @@ assert.equal(gg.state,'play');
 assert.ok(gg.time>0,'Grow room uses elapsed survival time, not a false 3-minute ending');
 assert.match(grow.game.help,/3 dead plants/i);
 assert.doesNotMatch(grow.game.help,/3 minutes/i);
+// Twelve-minute synthetic phone-session sampling (not measured device FPS):
+// stage repeated plant care only to keep the simulation alive, never score it.
+function pestTrace(seed) {
+ const g=makeG(seed);grow.game.init(g);
+ let max=0,arrivals=0,expired=false,prev=0;
+ for(let frame=0;frame<4320;frame++){
+   for(const p of g.plants){ p.water=.65;p.food=.65;p.health=1; }
+   grow.game.update(g,1/6);
+   if(g.pests.length>prev)arrivals++;
+   if(frame>100&&g.pests.length<prev)expired=true;
+   prev=g.pests.length;
+   if(g.pests.length>max)max=g.pests.length;
+   if(max>18)throw Error('Grow Op over-retains active pests');
+ }
+ return {max,arrivals,expired,totalScore:g.score,active:g.pests.length};
+}
+const pests1=pestTrace(77),pests2=pestTrace(77);
+assert.ok(pests1.arrivals>8,'Pests must actually spawn in long sessions');
+assert.ok(pests1.expired,'Pests must expire instead of accumulating forever');
+assert.ok(pests1.max<=18,'Persisted actor count must be bounded');
+assert.deepEqual(pests1,pests2,'Same seeded input/session must spawn identical pests');
 function anyMatch(g){
  for(let y=0;y<8;y++)for(let x=0;x<8;x++){
   const v=g.b[y][x].v;
@@ -102,5 +123,5 @@ ho2.kd=k=>k===' ';dunk.game.update(ho2,0);
 assert.equal(ho2.ball.vx,ho.ball.vx,'No basketball auto-targeting from next hoop coordinates');
 assert.ok(!dunk.code.includes('const T = 0.9; b.vx = dx / T;'),'Old keyboard auto-basket cheat remains');
 console.log(JSON.stringify({pass:true,tested:['Trim Rush init/fair drag','Bud Bar one-tap lanes',
-  'Grow Op honest endless rules','Strain Crush 40 seeds + deadlock reshuffle','Dunk Flick manual keyboard/touch launch parity'],
+  'Grow Op honest endless rules + 12-minute bounded pest sim','Strain Crush 40 seeds + deadlock reshuffle','Dunk Flick manual keyboard/touch launch parity'],
   simulatedFramesOnly:true,AAAApproved:false,realDeviceTested:false}));
