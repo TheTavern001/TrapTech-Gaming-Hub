@@ -313,7 +313,10 @@
       "evidence": "Owner Deplexo Deployments screenshot at phone time 12:17 (user supplied in chat 2026-10-14): card 03119b9 READY, historical rollback available. Also owner earlier specifically confirmed this commit READY.",
       "observedAsCurrent": false,
       "verifiedAfterFix": true,
-      "qualification": "Host READY confirmed; individual gameplay visual, mobile and payment acceptance not proven."
+      "qualification": "Host READY confirmed; individual gameplay visual, mobile and payment acceptance not proven.",
+      "buildDurationSeconds": 390,
+      "evidenceDocument": "docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json",
+      "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
     },
     {
       "commit": "916f5c76673d35a48e38c9d3218f06c5dd6e5ee4",
@@ -323,7 +326,9 @@
       "evidence": "Owner Deplexo Deployments screenshot at phone time 12:17 (2026-10-14): card 916f5c7 READY, 561 sec, Rollback button. Full Git SHA independently resolved from GitHub commit API.",
       "observedAsCurrent": false,
       "verifiedAfterFix": true,
-      "qualification": "Historical READY only. Not equivalent to latest five-release development branch."
+      "qualification": "Historical READY only. Not equivalent to latest five-release development branch.",
+      "evidenceDocument": "docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json",
+      "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
     },
     {
       "commit": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -333,7 +338,9 @@
       "evidence": "Owner Deplexo Deployments screenshot at phone time 12:17 (2026-10-14): top card 278af07 shows CURRENT and READY, duration 323 seconds. GitHub API resolves exact full SHA.",
       "observedAsCurrent": true,
       "verifiedAfterFix": true,
-      "qualification": "Latest owner screenshot-confirmed current READY app. No independent /api/build body provided; host CURRENT does not certify visual/gameplay/AAA or post-R1/R5 work."
+      "qualification": "Latest owner screenshot-confirmed current READY app. No independent /api/build body provided; host CURRENT does not certify visual/gameplay/AAA or post-R1/R5 work.",
+      "evidenceDocument": "docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json",
+      "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
     }
   ],
   "sourceVerification": [
@@ -512,7 +519,9 @@
     "healthzReadback": "NOT independently observed on this revision",
     "apiBuildFingerprint": "NOT supplied from current host",
     "confidence": "OWNER_SCREENSHOT_CONFIRMED",
-    "observationTimeExactUTC": null
+    "observationTimeExactUTC": null,
+    "evidenceDocument": "docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json",
+    "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
   },
   "currentWorkingSource": {
     "branch": "program/five-release-full-hub-overhaul-20261013",
