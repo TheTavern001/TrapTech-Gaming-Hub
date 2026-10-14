@@ -39,6 +39,12 @@ const tests=[
  'tools/prelaunch-deep-audit.js'
 ];
 const records=[];
+const status=cp.spawnSync('git',['status','--porcelain','--untracked-files=normal'],{cwd:ROOT,encoding:'utf8',timeout:5000});
+if(!sha || status.status!==0 || !!status.stdout?.trim()){
+ records.push({label:'reproducible-clean-checkout',status:'FAIL',
+  error:!sha?'Git HEAD missing; cannot attribute tested source to a commit':
+    status.status!==0?'Cannot verify working-tree cleanliness':'Local checkout has uncommitted/untracked changes; evidence would not match the Git SHA'});
+} else records.push({label:'reproducible-clean-checkout',status:'PASS',sha});
 function run(label,command,commandArgs,timeout=120000){
  const at=Date.now();
  try {
