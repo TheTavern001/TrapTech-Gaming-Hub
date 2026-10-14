@@ -58,8 +58,10 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
     }
     if (g.pestTimer <= 0) g.pestTimer = 0.75;
     for (const p of g.plants) p.pests = counts[p.i];
-    for (const p of g.plants) { p.water -= dt * 0.045; p.food -= dt * 0.03; const okW = p.water > 0.35 && p.water < 0.95, okF = p.food > 0.3 && p.food < 0.95; p.health = Kit.clamp(p.health + ((okW && okF) ? 0.04 : -0.08) * dt - (p.pests || 0) * 0.03 * dt, 0, 1);
-      p.grow += dt * (0.05 + 0.08 * p.health) * (okW ? 1 : 0.3); if (p.health <= 0) { g.float(p.x, 150, 'DIED', '#ef4444', 18); g.sfx('bad'); g.deaths++; if (g.deaths >= 3) return g.end('3 plants died'); Object.assign(p, newPlant(g, p.i)); } }
+    // A resumed phone tab must not instantly kill plants through a huge delta.
+    const careDt = Math.min(dt, 0.25);
+    for (const p of g.plants) { p.water -= careDt * 0.045; p.food -= careDt * 0.03; const okW = p.water > 0.35 && p.water < 0.95, okF = p.food > 0.3 && p.food < 0.95; p.health = Kit.clamp(p.health + ((okW && okF) ? 0.04 : -0.08) * careDt - (p.pests || 0) * 0.03 * careDt, 0, 1);
+      p.grow += careDt * (0.05 + 0.08 * p.health) * (okW ? 1 : 0.3); if (p.health <= 0) { g.float(p.x, 150, 'DIED', '#ef4444', 18); g.sfx('bad'); g.deaths++; if (g.deaths >= 3) return g.end('3 plants died'); Object.assign(p, newPlant(g, p.i)); } }
 
     g.hud = 'LOST ' + g.deaths + '/3  ' + Math.floor(g.time / 60) + ':' + String(Math.floor(g.time % 60)).padStart(2, '0');
   },
