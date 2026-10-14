@@ -1,0 +1,218 @@
+{
+  "schema": 1,
+  "date": "2026-10-13",
+  "ownerGoal": 500,
+  "phase": "POST_FIVE_RELEASE_OVERHAUL",
+  "currentRegisteredHistory": 93,
+  "currentProposedPlayable": 87,
+  "approvedForAdmission": 0,
+  "addedToCatalog": 0,
+  "status": "RESEARCH_ONLY_NO_REPO_IMPORTS",
+  "licensePolicy": "Original MIT licence generally supports code reuse with notice; inspect each actual source/assets/font/audio separately; preserve notices and names, avoid unlicensed trademarks. Hosted locally, with seeded server score validation, unique endless/play-for-prize loops. Not listed until independently reviewed.",
+  "candidates": [
+    {
+      "queuePriority": 1,
+      "id": "hover-racing",
+      "title": "Futuristic Hover Racing",
+      "upstream": "https://github.com/BKcore/HexGL",
+      "path": "index.html",
+      "licensePath": "LICENSE",
+      "license": "MIT",
+      "referenceMechanic": "3D anti-gravity vehicle lap racing and time attack",
+      "genre": "3D Racing",
+      "mechanicsFamily": "hovercraft-time-attack",
+      "differentFrom": [
+        "drift-rush",
+        "gl-hill-hauler",
+        "gl-wanted-run"
+      ],
+      "needed": [
+        "Replace external dependencies with pinned local assets",
+        "Adapt finite lap progression to repeatable time-attack heats with exact server-defined tie rules",
+        "Verify mobile tilt/touch and 60fps target",
+        "Server-authoritative inputs/clock; no client-submitted raw time",
+        "Remove any power advantage from purchases"
+      ],
+      "qualityRisk": "Legacy Three.js and desktop-oriented controls: major modernization required",
+      "assetsMustAudit": [
+        "audio/LICENSE",
+        "textures",
+        "geometries"
+      ],
+      "endlessMode": "NOT_YET",
+      "mobileQa": "NOT_RUN",
+      "licenseVerifiedForRootCode": true,
+      "licenseVerifiedForAllMedia": false,
+      "offlinePackaged": false,
+      "assetsDownloaded": false,
+      "sourceCommitPinned": false,
+      "sourceSha256": null,
+      "compatibilityQA": false,
+      "serverScoreReplayQA": false,
+      "androidPerformanceQA": false,
+      "ownerApproved": false,
+      "decision": "RESEARCH_ONLY"
+    },
+    {
+      "queuePriority": 2,
+      "id": "reversi",
+      "title": "Reversi",
+      "upstream": "https://github.com/mashukui/web-games",
+      "path": "reversi/index.html",
+      "licensePath": "LICENSE",
+      "license": "MIT",
+      "referenceMechanic": "two-sided disc-flipping turn-based strategy against AI",
+      "genre": "Strategy",
+      "mechanicsFamily": "board-reversi",
+      "differentFrom": [
+        "gl-mine-sweep",
+        "gl-bud-merge"
+      ],
+      "needed": [
+        "Replicate full legal-move rules on server with seeded AI choices",
+        "Convert short matches into authenticated consecutive-match score sessions",
+        "Prevent board edits/autoplay and client-only AI claims",
+        "Phone gameboard UI with correct tap regions",
+        "Visual/audio source asset upgrade"
+      ],
+      "qualityRisk": "MIT single-file game is not AAA certified; finite rounds not presently giveaway-ready",
+      "assetsMustAudit": [
+        "Inline CSS, SVG and audio"
+      ],
+      "endlessMode": "NOT_YET",
+      "mobileQa": "NOT_RUN",
+      "licenseVerifiedForRootCode": true,
+      "licenseVerifiedForAllMedia": false,
+      "offlinePackaged": false,
+      "assetsDownloaded": false,
+      "sourceCommitPinned": false,
+      "sourceSha256": null,
+      "compatibilityQA": false,
+      "serverScoreReplayQA": false,
+      "androidPerformanceQA": false,
+      "ownerApproved": false,
+      "decision": "RESEARCH_ONLY"
+    },
+    {
+      "queuePriority": 3,
+      "id": "battleship",
+      "title": "Battleship Duel",
+      "upstream": "https://github.com/mashukui/web-games",
+      "path": "battleship/index.html",
+      "licensePath": "LICENSE",
+      "license": "MIT",
+      "referenceMechanic": "hidden-fleet search and strategy against AI",
+      "genre": "Strategy",
+      "mechanicsFamily": "hidden-fleet-deduction",
+      "differentFrom": [
+        "gl-mine-sweep",
+        "gl-keep-guard"
+      ],
+      "needed": [
+        "Server-commit ship placements and reveal proofs",
+        "Anti-information-leak and randomized board fairness",
+        "Repeatable scored rounds with move-efficiency and time tie breaker",
+        "Phone touch/animation work and licensed ship art",
+        "No paid hints or game power-ups"
+      ],
+      "qualityRisk": "Server-hidden state mandatory before prize competition",
+      "assetsMustAudit": [
+        "Inline images/emoji/audio"
+      ],
+      "endlessMode": "NOT_YET",
+      "mobileQa": "NOT_RUN",
+      "licenseVerifiedForRootCode": true,
+      "licenseVerifiedForAllMedia": false,
+      "offlinePackaged": false,
+      "assetsDownloaded": false,
+      "sourceCommitPinned": false,
+      "sourceSha256": null,
+      "compatibilityQA": false,
+      "serverScoreReplayQA": false,
+      "androidPerformanceQA": false,
+      "ownerApproved": false,
+      "decision": "RESEARCH_ONLY"
+    },
+    {
+      "queuePriority": 4,
+      "id": "sudoku",
+      "title": "Sudoku Sprint",
+      "upstream": "https://github.com/mashukui/web-games",
+      "path": "sudoku/index.html",
+      "licensePath": "LICENSE",
+      "license": "MIT",
+      "referenceMechanic": "number-placement logical grid completion",
+      "genre": "Logic Puzzle",
+      "mechanicsFamily": "constraint-logic-sudoku",
+      "differentFrom": [
+        "gl-mine-sweep",
+        "gl-bud-merge",
+        "gl-tile-twin"
+      ],
+      "needed": [
+        "Server-generated unique boards and solver-verified seed",
+        "Authenticated timed serial puzzle rounds",
+        "Disallow unearned hints in prize sessions",
+        "Responsive input, accessible notes and keyboard",
+        "Scoring rules including mistake penalties and tie breakers"
+      ],
+      "qualityRisk": "Shared daily board solvability and deterministic anti-cheat must be proven",
+      "assetsMustAudit": [
+        "Inline CSS/graphics"
+      ],
+      "endlessMode": "NOT_YET",
+      "mobileQa": "NOT_RUN",
+      "licenseVerifiedForRootCode": true,
+      "licenseVerifiedForAllMedia": false,
+      "offlinePackaged": false,
+      "assetsDownloaded": false,
+      "sourceCommitPinned": false,
+      "sourceSha256": null,
+      "compatibilityQA": false,
+      "serverScoreReplayQA": false,
+      "androidPerformanceQA": false,
+      "ownerApproved": false,
+      "decision": "RESEARCH_ONLY"
+    },
+    {
+      "queuePriority": 5,
+      "id": "maze-horror",
+      "title": "The Maze Survival",
+      "upstream": "https://github.com/duysqubix/web-arcade",
+      "path": "games/maze/index.html",
+      "licensePath": "LICENSE",
+      "license": "MIT",
+      "referenceMechanic": "first-person procedural maze escape from an enemy using stealth",
+      "genre": "3D Survival",
+      "mechanicsFamily": "first-person-stealth-maze",
+      "differentFrom": [
+        "gl-maze-muncher",
+        "gl-cube-horde"
+      ],
+      "needed": [
+        "Verify source contains no remote runtime scripts and package locally",
+        "Turn a single escape into repeatable server-seeded endless floor challenges",
+        "Bound AI pathfinding work for mobile 60fps",
+        "Remove paid sprint/stamina advantages; everybody identical",
+        "Canonical score/event replay and objective consistency"
+      ],
+      "qualityRisk": "Client-only horror prototype needs complete professional art, mobile control and fairness QA",
+      "assetsMustAudit": [
+        "Three.js CDN and generated audio"
+      ],
+      "endlessMode": "NOT_YET",
+      "mobileQa": "NOT_RUN",
+      "licenseVerifiedForRootCode": true,
+      "licenseVerifiedForAllMedia": false,
+      "offlinePackaged": false,
+      "assetsDownloaded": false,
+      "sourceCommitPinned": false,
+      "sourceSha256": null,
+      "compatibilityQA": false,
+      "serverScoreReplayQA": false,
+      "androidPerformanceQA": false,
+      "ownerApproved": false,
+      "decision": "RESEARCH_ONLY"
+    }
+  ]
+}
