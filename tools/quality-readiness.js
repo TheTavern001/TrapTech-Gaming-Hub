@@ -14,7 +14,7 @@ const required = quality.requiredChecks;
 const map = new Map();
 for (const id of baseline.activeCoreIds) map.set('core:' + id, {type:'core', baseline:true});
 const old = new Set(baseline.baselineLibrarySlugs);
-for (const g of games) map.set('library:' + g.slug, {type:'library', baseline:old.has(g.slug)});
+for (const g of games.filter(g=>g.playable!==false&&!g.retired)) map.set('library:' + g.slug, {type:'library', baseline:old.has(g.slug)});
 const errors = [], passed = [], pending = [];
 // Do not silently keep a retired/replaced baseline game in the quality denominator.
 const configSource = fs.readFileSync(path.join(ROOT, 'src/config.js'), 'utf8');
@@ -75,13 +75,13 @@ for (const record of quality.records) {
 for (const id of map.keys()) if (!passed.includes(id)) pending.push(id);
 const approvedSet = new Set(passed);
 const baselineIds = [...baseline.activeCoreIds.map(id=>'core:'+id),
-  ...baseline.baselineLibrarySlugs.map(slug=>'library:'+slug)];
+  ...games.filter(g=>g.playable!==false&&!g.retired&&old.has(g.slug)).map(g=>'library:'+g.slug)];
 const baselinePending = baselineIds.filter(id=>!approvedSet.has(id));
 const goal = quality.goal;
 const result = {
   report:'evidence-based quality certifications, not registered game count',
-  totalRegistered:map.size, registeredCore:baseline.activeCoreIds.length,
-  registeredLibrary:games.length, qualityApproved:passed.length,
+  totalRegistered:baseline.activeCoreIds.length+games.length, totalPlayable:map.size, archivedLibrary:games.filter(g=>g.retired).length,
+  registeredCore:baseline.activeCoreIds.length, registeredLibrary:games.length, qualityApproved:passed.length,
   baselineQualityApproved:baselineIds.length-baselinePending.length,
   baselinePending:baselinePending.length, expansionGateOpen:baselinePending.length===0 && !errors.length,
   qualityRemainingTo500:Math.max(0,goal-passed.length), goal, unapprovedRegistered:pending.length,
