@@ -191,7 +191,7 @@ function openMenu() {
     <a href="/quests">${icon('scroll-text')}Daily Quests${S.me && S.me.streak && S.me.streak.current ? `<span class="pill-mini">${icon('flame')}${S.me.streak.current}</span>` : ''}</a>
     <a href="/season">${icon('calendar-range')}Season Pass</a>
     <a href="/achievements">${icon('medal')}Achievements &amp; Rewards</a>
-    <a href="/shop">${icon('shopping-bag')}Points Shop</a>
+    <a href="/shop">${icon('shopping-bag')}Hub Credits Shop</a>
     <div class="dr-sec">Friends</div>
     <a href="/friends">${icon('users')}Friends &amp; Challenges</a>
     <a href="/invite">${icon('gift')}Invite Friends</a>
@@ -638,7 +638,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
     const chase = r.is_first ? `<div class="small" style="margin-top:4px;color:#fde047">${icon('crown')} You hold #1 on this board.</div>` : r.to_first ? `<div class="small" style="margin-top:4px" id="to-first">${icon('trending-up')} ${fmtScore(r.to_first, g.id)} more to beat #1</div>` : '';
     const heldHtml = r.held ? `<div class="held-msg" id="held-msg">${icon('scan-eye')} ${esc(r.held_reason)}</div>` : '';
     const verHtml = r.verified ? `<div class="small" style="margin-top:4px;color:#86efac">${icon('badge-check')} Replay-verified by the server</div>` : '';
-    const ptsHtml = r.points && r.points.gained > 0 ? `<div class="small" style="margin-top:4px">${icon('coins')} +${fmt(r.points.gained)} Hub Points <a href="/shop">(${fmt(r.points.balance)} - shop)</a></div>` : '';
+    const ptsHtml = r.points && r.points.gained > 0 ? `<div class="small" style="margin-top:4px">${icon('coins')} +${fmt(r.points.gained)} Hub Credits <a href="/shop">(${fmt(r.points.balance)} - spend Credits)</a></div>` : '';
     sv.innerHTML = `${pbHtml}${heldHtml}<div class="ok-msg" style="margin:0">Saved. ${r.held ? 'Pending review.' : `You're <b>#${r.rank}</b> of ${r.players} on the ${esc(g.title)} board (best ${fmtScore(r.best, g.id)}).`}${chase}${verHtml}${ptsHtml}${gw}${jtc}${stMsg}</div>
       ${r.level ? `<div class="xp-line">${icon('chevrons-up')} +${fmt(r.xp_gained)} XP • Level ${r.level.level}<span class="xpbar sm"><i style="width:${Math.round(r.level.into / r.level.need * 100)}%"></i></span></div>` : ''}
       <div class="share-row"><button class="btn sm ghost" id="share-run" data-run="${r.run_id}">${icon('share-2')} Share score</button><a class="btn sm ghost" href="/s/${r.run_id}">${icon('image')} Score card</a></div>
@@ -991,7 +991,7 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
     <div class="card badges2">${badgeGrid}</div>
     ${r.is_me && cz && cz.ok ? `<div class="section-h" id="customize"><h2 style="text-transform:none;font-size:1rem">${icon('palette')} Customize</h2><span class="small muted">${fmt(cz.owned_count)} rewards owned</span></div>
       <div class="card pad cz"><div class="tabs scroll-tabs" id="czt">${['banner', 'frame', 'title', 'badge', 'color', 'effect'].map(k => `<button data-k="${k}" class="${k === czTab ? 'on' : ''}">${TYPE_L[k]}s</button>`).join('')}</div><div id="czl"></div>
-      <p class="small dim center" style="margin:10px 0 0">${icon('info')} Cosmetic only, no cash value. Unlock more from <a href="/achievements">achievements</a> or pick them up in the <a href="/shop">Points Shop</a>.</p></div>` : ''}
+      <p class="small dim center" style="margin:10px 0 0">${icon('info')} Cosmetic only, no cash value. Unlock more from <a href="/achievements">achievements</a> or pick them up in the <a href="/shop">Hub Credits Shop</a>.</p></div>` : ''}
     ${p.best_by_game.length ? `<div class="section-h"><h2 style="text-transform:none;font-size:1rem">Best Scores</h2></div><div class="card">${p.best_by_game.map(b => `<a class="act-row" href="/games/${b.game_id}" style="color:var(--text)"><img src="${gameById(b.game_id)?.art || ''}" alt="" class="gthumb"><span class="g">${esc(b.game_title)}</span><span class="s">${fmtScore(b.best, b.game_id)}</span><span class="t">${b.plays} run${b.plays === 1 ? '' : 's'}</span></a>`).join('')}</div>` : ''}
     <div class="section-h"><h2 style="text-transform:none;font-size:1rem">Recent Activity</h2><span class="small muted">${fmt(p.giveaways_entered)} giveaway${p.giveaways_entered === 1 ? '' : 's'} entered</span></div>
     <div class="card">${p.recent.length ? p.recent.map(x => `<div class="act-row"><img src="${gameById(x.game_id)?.art || ''}" alt="" class="gthumb"><span class="g">${esc(x.game_title)}</span><span class="s">${fmtScore(x.score, x.game_id)}</span><span class="t">${ago(x.created_at)}</span></div>`).join('') : `<div class="empty">No runs yet. ${r.is_me ? '<a href="/games">Pick a game</a>' : ''}</div>`}</div>
