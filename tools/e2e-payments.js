@@ -27,6 +27,10 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const ADM = require('./admin-auth').adminClient(BASE); await ADM.login();
   const mk = async () => { const c = client(); c.u = 'pay_' + Math.random().toString(36).slice(2, 8); await c('/api/auth/signup', { body: { username: c.u, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); return c; };
   const [P1, P2, F] = [await mk(), await mk(), await mk()];
+  const whopAttempt = await client()('/api/pay/whop/webhook', { body: {
+    action:'payment.succeeded',data:{ metadata:{ order_ref:'FAKESETTLEMENT' } }
+  }});
+  ok(whopAttempt.status===404,'Unsupported payment webhook cannot mint free Credits');
   let r = await client()('/api/store'); ok(r.body.ok && !r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 12 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage), 'store: 4 packs, season pass, 12 one-of-one items; checkout safely OFF by default', r.body.checkout);
   r = await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: false } }); r = await P1('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 503, 'admin switch off -> checkout refused');
   await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: true } });
