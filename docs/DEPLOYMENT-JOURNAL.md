@@ -420,3 +420,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `602c030fe9bf7be28753aa78d707b9400cbdd91e`, `e4cadfbaa8b0ad36c6d2133f02c37e465179de12`, `e651fd07ddae5ce8288cde0eca55d3bde10d1e45` include regression in main rehearsal, offline gate, and Docker prelaunch.
 - V8 executed updated real game callback: both .25s and 600s produced plant health .52, water .38875, deaths 0; long frame reported 600 elapsed seconds. PASS. Native Node full test, container build, device and live host not executed; game is not AAA certified.
 - Deplexo screenshot remains CURRENT READY 278af07 on old QA branch. Source changes committed to PR #29 only. Auto-deploy must remain OFF pending integrated private candidate, full build and device acceptance.
+
+## 2026-10-14 — shared Kit mobile lifecycle hardening
+
+- `16a3985f8b64225e7d93b6830c7684daf383bc91` adds `pagehide` and `freeze` handling to the shared canvas Kit: revoke active touches, keys, virtual stick and on-screen button state; pause active play when mobile pages are frozen or navigated away. Existing `blur` and `visibilitychange` paths remain.
+- `925e5921cd0a6214263f167698f2aeabe092edf7` adds static lifecycle source-contract test. `7c6248a780217f1b7f46735eb5b77a0720260092`, `8983dc2baa5836d26b45bc51dfd5c1a0ec71238d`, `36f5e4d67c91b5042d472a53fcb0e515d7250924` wire it into canonical offline rehearsal, shell gate and Docker image build.
+- Repository source inspected and changes committed through GitHub connector. **The new static contract test, complete native Node suite, Docker build and physical Android/iOS lifecycle checks were NOT EXECUTED in a full checkout.** Do not infer release readiness.
+- Production current screenshot remains 278af07 on old QA branch, unchanged. PR #29 is source only. Keep automatic Deplexo deployments OFF until complete candidate and host verification. Next action: integrated build QA and cross-game source/asset work.
