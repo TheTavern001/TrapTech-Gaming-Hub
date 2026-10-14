@@ -360,6 +360,7 @@
     }
   ],
   "pendingEvidence": [
+    "Grow Op bounded NPC pest lifetime/cap tested in deterministic V8 simulation, actual phone performance and native Docker not run. R1-R5 manually accepted evidence still missing; 413 new distinct games would be required once 87 current games are independently approved.",
     "October 14 adult-theme + full 93-game QA: first-bud free-score, input-only auto-targets and impossible puzzle seeds fixed SOURCE ONLY; highest unresolved duplicate Pop Defense vs Haze Defense (consider Keep Guard). Native Docker + 98% phone real playback, art AAA, signed prize replay still NOT RUN.",
     "Offline runner added but NOT executed against complete private checkout. Run bash scripts/offline-release-gate.sh R1 --docker with Node20 deps; fix failures, then complete R1 manual phone acceptance before Deplexo deployment.",
     "Provider-settlement admin override patch NOT deployed. Real Node/Docker, provider E2E, iPhone/Android and human owner review UNRUN. Payment grant route must never mint from pending/underpaid orders; 0 financial approval.",
@@ -676,9 +677,25 @@
       "ownerAAACertified": 0,
       "confirmedNewGamesAdmitted": 0,
       "manualReleaseGate": "BLOCKED"
+    },
+    {
+      "commit": "7f65bfc30b0ca408f2c1193c21657b55773b9285",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "reason": "Owner requested truthful completion proximity and continued polishing; Grow Op mobile long-session pest stability and read-only five-release readiness scorecard.",
+      "validation": "Actual GitHub Grow Op callback and test sources via V8 Node VM shims: 238 game assertions PASS, including two 12-minute deterministic simulations. Owner release scorecard V8 sources: BLOCKED, 26 workstreams/0 approved, 15 security gates/0 verified, 87 proposed existing/0 owner approved, 413 additional catalog entries still needed once all 87 pass. Native Node/Docker, Android/iPhone, AAA art and host fingerprint NOT RUN.",
+      "host": "NO DEPLOYMENT. Last owner screenshot CURRENT/READY 278af07; Deplexo automatic deploy OFF. Public endpoint web verification unavailable, not evidence app is down.",
+      "evidenceFiles": [
+        "tools/owner-release-readiness.js",
+        "tools/test-cannabis-gameplay-qa.js",
+        "public/games-lib/grow-op/game.js",
+        "docs/audit/FIVE-RELEASE-FULL-HUB-WORKBOARD.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "BLOCKED"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-14 development branch 92c88cea1a69 source-only: 234 game callbacks, 361 93-title matrix assertions pass V8; Deplexo 278af07 CURRENT/READY last screenshot unchanged; owner confirmed auto deploy OFF; 0 AAA approved.",
+  "lastEvidenceReconciliation": "October 14 2026: source-checkpoint 7f65bfc30b0c only. 238 V8 gameplay assertions and read-only owner release scorecard BLOCKED (26/0 workstreams, 15/0 security, 87/0 game approvals); Deplexo CURRENT screenshot 278af07, auto-deploy off; public endpoints not independently readable.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -694,7 +711,7 @@
   },
   "currentWorkingSource": {
     "branch": "program/five-release-full-hub-overhaul-20261013",
-    "headAtReconciliation": "92c88cea1a696823f6322c58b81eaca855c34a9d",
+    "headAtReconciliation": "7f65bfc30b0ca408f2c1193c21657b55773b9285",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
     "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
