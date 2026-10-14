@@ -360,6 +360,7 @@
     }
   ],
   "pendingEvidence": [
+    "October 14 adult-theme + full 93-game QA: first-bud free-score, input-only auto-targets and impossible puzzle seeds fixed SOURCE ONLY; highest unresolved duplicate Pop Defense vs Haze Defense (consider Keep Guard). Native Docker + 98% phone real playback, art AAA, signed prize replay still NOT RUN.",
     "Offline runner added but NOT executed against complete private checkout. Run bash scripts/offline-release-gate.sh R1 --docker with Node20 deps; fix failures, then complete R1 manual phone acceptance before Deplexo deployment.",
     "Provider-settlement admin override patch NOT deployed. Real Node/Docker, provider E2E, iPhone/Android and human owner review UNRUN. Payment grant route must never mint from pending/underpaid orders; 0 financial approval.",
     "Native session revocation test and localhost HTTP auth smoke are added to Docker but have not yet run; after release legacy signed sessions are intentionally invalidated. User must reauthenticate; 98% Android/iOS device UAT pending.",
@@ -656,9 +657,28 @@
       ],
       "ownerApproved": false,
       "manualReleaseReady": false
+    },
+    {
+      "commit": "92c88cea1a696823f6322c58b81eaca855c34a9d",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "reason": "Owner game-wide AAA gameplay/reference mismatch and remaining duplicate complaint: source repairs to precision touch, scored first round, no-swap match board and keyboard aim exploit; 93-game matrix.",
+      "validation": "Latest game code and committed tests evaluated via V8 Node/VM shims: 234 simulated game callback assertions PASS and 361 exact 93-ID/13-family source ledger assertions PASS. Added both scripts to Docker prelaunch, but native Node/Docker/real browser/Android/iPhone and owner AAA review NOT RUN.",
+      "host": "NOT DEPLOYED. Latest owner screenshot-confirmed CURRENT Deplexo remains 278af07; auto deploy OFF.",
+      "evidenceFiles": [
+        "docs/audit/ALL-93-OWNER-GAMEPLAY-DISTINCTNESS-2026-10-14.json",
+        "docs/audit/OWNER-GAMEPLAY-CANNABIS-DUPLICATE-PASS-2026-10-14.md",
+        "tools/test-cannabis-gameplay-qa.js",
+        "tools/test-owner-gameplay-distinctness.js",
+        "tools/audit-full-game-mechanics.js"
+      ],
+      "historicalRegistered": 93,
+      "proposedPlayable": 87,
+      "ownerAAACertified": 0,
+      "confirmedNewGamesAdmitted": 0,
+      "manualReleaseGate": "BLOCKED"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-14: host CURRENT READY 278af07 screenshot; source checkpoint 5955a16937a2 not deployed. Offline SQLite SQL smoke PASS; full application native, Docker and real iOS/Android NOT RUN. R1 preflight BLOCKED 6.",
+  "lastEvidenceReconciliation": "2026-10-14 development branch 92c88cea1a69 source-only: 234 game callbacks, 361 93-title matrix assertions pass V8; Deplexo 278af07 CURRENT/READY last screenshot unchanged; owner confirmed auto deploy OFF; 0 AAA approved.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -674,11 +694,12 @@
   },
   "currentWorkingSource": {
     "branch": "program/five-release-full-hub-overhaul-20261013",
-    "headAtReconciliation": "6f6b3fe97ae7a5c8487bfb03196bfbd0cb1f3092",
+    "headAtReconciliation": "92c88cea1a696823f6322c58b81eaca855c34a9d",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
     "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
-    "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence."
+    "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
+    "lastAuditedGitHubHead": "92c88cea1a696823f6322c58b81eaca855c34a9d"
   },
   "ownerConfirmedAutoDeployOff": true
 }
