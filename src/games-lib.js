@@ -98,12 +98,23 @@ const LIST = [
   T('neon-circuit', 'Neon Circuit', 'Original neon arcade racer', 1, 'A', 'endless', 120, true, 'Energy cells 30–125 by combo; near-miss 5', '3 days'),
   T('rift-survival', 'Rift Survival', 'Original arena survival game', 4, 'A', 'endless', 180, true, 'Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop', '3 days'),
 ];
+// Owner-directed discovery consolidation. Keep old game IDs and source files for
+// historical leaderboards, but block new scored runs, giveaways and browsing.
+// The surviving representative is the only playable entry in each family.
+// This is a visibility/eligibility retirement; do not delete player score rows.
+const OWNER_RETIRED = Object.freeze({
+  'wreck-ride':'hill-hauler', 'egg-roll':'hill-hauler',
+  'monster-crush':'hill-hauler', 'rig-rally':'hill-hauler',
+  'dune-glide':'hill-hauler', 'drift-king':'drift-rush'
+});
 const games = LIST.map(x => {
-  const s = SOURCES[x.src];
+  const s = SOURCES[x.src], replacement = OWNER_RETIRED[x.slug] || null;
   return {
-    id: 'gl-' + x.slug, slug: x.slug, title: x.title, ref_internal: x.ref, category: CATS[x.cat], lib: true, playable: true, unit: 'pts',
+    id: 'gl-' + x.slug, slug: x.slug, title: x.title, ref_internal: x.ref, category: CATS[x.cat], lib: true,
+    playable: !replacement, retired: !!replacement, replacedBy: replacement ? (replacement === 'drift-rush' ? replacement : 'gl-' + replacement) : null,
+    unit: 'pts',
     url: `/games-lib/${x.slug}/index.html`, art: x.slug === 'neon-circuit' || x.slug === 'rift-survival' ? `/games-lib/${x.slug}/thumb.svg` : `/games-lib/${x.slug}/thumb.jpg`, tier: x.tier, competition: x.comp, endless: /^endless/.test(x.comp),
-    giveaway: true, just_for_fun: false, endless_mode: /^endless/.test(x.comp), scoring: x.scoring, event_length: x.evlen, acLevel: ['neon-circuit', 'rift-survival'].includes(x.slug) ? 3 : 2, ac_level: ['neon-circuit', 'rift-survival'].includes(x.slug) ? 'L3 score-event validation' : 'L2 session checks',
+    giveaway: !replacement, just_for_fun: false, endless_mode: /^endless/.test(x.comp), scoring: x.scoring, event_length: x.evlen, acLevel: ['neon-circuit', 'rift-survival'].includes(x.slug) ? 3 : 2, ac_level: ['neon-circuit', 'rift-survival'].includes(x.slug) ? 'L3 score-event validation' : 'L2 session checks',
     // rate ceiling: normal = perSec*t + grace (flagged above), hard reject at 2x (src/anticheat.js + cfg.capOf)
     ac: { perSec: x.rate, ramp: 0, grace: Math.max(50, x.rate * 20), max: 1e12, coinsPerSec: 1 },
     tiers: [x.rate * 20, x.rate * 90, x.rate * 240].map(Math.round),
