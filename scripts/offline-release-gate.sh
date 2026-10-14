@@ -64,6 +64,7 @@ run kit-score-submit-error node tools/test-kit-score-submit-error.js
 run kit-game-start-error node tools/test-kit-game-start-error.js
 run kit-run-serial node tools/test-kit-run-serial.js
 run kit-hidden-start node tools/test-kit-hidden-start.js
+run private-preview-readiness node tools/test-private-preview-readiness.js
 run retired-duplicates node tools/test-owner-duplicate-retirements.js
 run external-source-vehicles node tools/test-imported-kenney-cars.js
 run neutral-rig-fingerprint node tools/test-neutral-avatar-source.js
