@@ -356,3 +356,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - Executed against retrieved committed game code in V8: slime starting at y=428 reached y=424.5 and dealt 9 HP on contact; slime starting at y=460 reached y=456.5 and dealt 0 HP. Both expectations PASS. This is **not** proof of physical-device smoothness, whole-game balance, or complete Docker tests.
 - Production unchanged; latest owner screenshot still identifies `278af07` as READY. Do not enable automatic deployment merely because source-level regressions pass.
 - Next checkpoint: execute the complete Docker-backed offline release suite in full checkout, resolve failures, then verify mobile/visual/score/security approval for the private candidate. Expand research/intake in parallel but don't mark 500 admissions as completed.
+
+## 2026-10-14 — Grow Op difficulty clock fix
+
+- `ca5de37093104659d7511ac4b43cc854a3768ec6` corrects pest wave acceleration to use Grow Op's own elapsed clock (`g.time`) instead of host engine `g.t`, preventing progression from depending on unrelated host time state.
+- `2658b797e5b1296329d206bbc582eb39abb15f3b` adds a three-interval game-callback regression; `c8219c2dd4d8639f6109a4f07638ea25f16706f9` wires it into offline release verification.
+- Executed the updated real game callback using V8: at elapsed 0/300/10000 seconds, next wave intervals measured 4.49947/2.92053/0.75 seconds, with exactly one pest spawned each; expected difficulty acceleration PASS. This is not full Docker or Android/iOS device QA.
+- No deployment initiated. Release remains BLOCKED and auto-deploy OFF; next step remains full Docker-backed preflight and cross-game phone acceptance, alongside additional genuine gameplay repairs.
