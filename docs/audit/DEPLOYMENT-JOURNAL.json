@@ -298,6 +298,7 @@
     }
   ],
   "pendingEvidence": [
+    "New 5-release overhaul source branch is NOT DEPLOYED. Need actual full checkout Node audit, 93-game mechanics and Android gameplay proofs, true avatar/modular cosmetics/asset imports, and a deliberately manual R1 image after gate.",
     "5932ba6 confirmed Docker STEP 11/12 failure and targeted scanner fix; full build then host READY still pending. See docs/audit/DEPLEXO-5932BA6-ROOT-CAUSE-2026-10-13.md",
     "PR26 c2e6e9f, 70c018b: registry-driven expansion and options/menu input guard isolated and not Deplexo-deployed; 93 registered, 0 quality certified.",
     "Registry-driven game intake candidate can scan 94..500 games without weakening frozen 93-title baseline, but actual gameplay-quality certification remains 0; full Docker result and host READY pending.",
@@ -402,7 +403,26 @@
       "reason": "Fix exact Docker STEP11 phantom ./player-prefs.js import caused by regex treating quoted verification strings as executable module dependencies",
       "validation": "Fetched GitHub source parser V8 test passed; committed negative regression body PASS in V8 environment; actual full Docker unrun",
       "host": "NOT VERIFIED / review branch only"
+    },
+    {
+      "commit": "36b5ed3960a8b35c1bf308f198c2974a37950905",
+      "reason": "Owner confirms Deplexo auto deployment OFF; whole-hub five-release master handoff and evidence-based 26-workstream/93-game scope added to isolated dev branch.",
+      "validation": "New fairness test from GitHub fetched source executed 202 V8 assertions under in-memory file/path shim PASS; 93 code paths + 80 credits verified from GitHub recursive tree. Full Node/Docker/gameplay/3D asset manual/mobile unrun.",
+      "host": "NOT DEPLOYED — existing owner-confirmed READY 03119b9 preserved",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "historicalSourceCommit": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+      "sourceFiles": [
+        "docs/MASTER-TRAPTECH-FIVE-RELEASE-CONTRACT-2026-10-13.md",
+        "docs/audit/FIVE-RELEASE-FULL-HUB-WORKBOARD.json",
+        "docs/audit/EXTERNAL-ASSET-PIPELINE-2026-10-13.json",
+        "src/meta-fairness-contract.js",
+        "tools/test-full-hub-meta-contract.js",
+        "tools/audit-full-game-mechanics.js",
+        "docs/audit/ALL-GAME-SOURCE-PATH-SNAPSHOT-2026-10-13.json"
+      ],
+      "plannedDeplexoManualMilestones": 5,
+      "milestoneAlreadyDeployed": 0
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 ~22:07 America/New_York owner Deplexo STEP11 full log: 5932ba6 prelaunch regex false import confirmed; fix staged source-only, host READY pending."
+  "lastEvidenceReconciliation": "2026-10-13 late-night: owner confirmed Deplexo auto deploy OFF; 5-release source program branch staged without deploying; 93 source paths from tree verified, quality 0."
 }
