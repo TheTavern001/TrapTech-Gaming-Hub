@@ -164,6 +164,16 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   const labGlb = await get(BASE + '/games-lib/assets3d/rc-sedan.glb');
   check('Vehicle source GLB loads through Express',
     labGlb.res.status===200&&labGlb.body.length>20000&&labGlb.body.subarray(0,4).toString('ascii')==='glTF');
+  // Rig QA is intentionally opt-in and NOT a certified default avatar.
+  // A rendered mesh still requires actual Android FPS, clipping and owner QA.
+  const neutralRig=await get(BASE+'/assets/avatars/rigged/quaternius-neutral-starter-qa.glb');
+  const neutralLoader=await get(BASE+'/js/avatar-rig.js');
+  const neutralDispatcher=await get(BASE+'/js/avatar-3d.js');
+  check('Licensed neutral avatar source GLB serves intact for in-Hub QA only',
+    neutralRig.res.status===200&&neutralRig.body.length===741320 &&
+    neutralRig.body.subarray(0,4).toString('ascii')==='glTF' &&
+    neutralLoader.res.status===200&&neutralLoader.text.includes('quaternius-neutral-starter-qa.glb') &&
+    neutralDispatcher.res.status===200&&neutralDispatcher.text.includes("get('avatarRigQA')==='1'"));
   const storeResult = await get(BASE + '/api/store');
   let storeJson = null; try { storeJson = JSON.parse(storeResult.text); } catch {}
   const prestigeItems = storeJson?.prestige || [];
