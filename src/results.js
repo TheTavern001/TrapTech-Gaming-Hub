@@ -3,6 +3,7 @@
 // winner review (confirm / disqualify with auto-promotion) and an audit log.
 const crypto = require('crypto');
 const db = require('./db');
+const PRIZE_PROOF = require('./prize-score-proof');
 const cfg = require('./config');
 const N = require('./notify');
 const now = () => Date.now();
@@ -44,7 +45,7 @@ function liveStandings(g) {
   const X = module.exports.scoring; // v7 builder score rules (src/admin-scoring.js); legacy giveaways keep this query
   const rows = X && X.custom(g) ? X.standings(g, games, capSql(), E()) : db.prepare(`
     WITH w AS (SELECT r.id, r.user_id, r.game_id, r.score, r.created_at, (r.created_at - r.started_at) AS dur, ${SKILL_SQL('r.id')} AS m2 FROM runs r
-               WHERE r.event_id = @gid AND r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND (r.score <= ${capSql()} OR r.verify = 'cleared')),
+               WHERE r.event_id = @gid AND r.game_id IN (${ph}) AND r.started_at >= @s AND r.created_at >= @s AND r.created_at <= @e AND r.held = 0 AND r.verify = 'replay-ok' AND ${PRIZE_PROOF.sqlCertified('r')} AND r.score <= ${capSql()}),
     att AS (SELECT user_id, COUNT(*) AS attempts FROM w GROUP BY user_id),
     q AS (SELECT * FROM w WHERE score >= @min),
     -- best run per player per game: highest score, then the first run that reached it
