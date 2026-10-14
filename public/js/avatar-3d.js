@@ -18,15 +18,22 @@ export function supportsRiggedAvatar(cfg) {
     (cfg.mouth === 'smile' || !cfg.mouth) && (cfg.beard === 'none' || !cfg.beard);
 }
 export async function mountAvatar3D(stage, cfg) {
+  if (!stage || !stage.isConnected) return () => {};
+  // Async import/GLTF loads may finish after the user selects another outfit.
+  // A stale render must never overwrite the most recent wardrobe preview.
+  const generation = (stage.__hubAvatarRenderGeneration || 0) + 1;
+  stage.__hubAvatarRenderGeneration = generation;
   // The rigged model is accurate for the canonical starter. Unported attachment
   // combinations deliberately use the older preview, never pretend to be attached.
   const useRig = supportsRiggedAvatar(cfg);
   if (useRig) {
-    try { const { mountRiggedAvatar } = await import('./avatar-rig.js'); return await mountRiggedAvatar(stage, cfg); }
+    try { const { mountRiggedAvatar } = await import('./avatar-rig.js');
+      if (!stage.isConnected || stage.__hubAvatarRenderGeneration !== generation) return () => {};
+      return await mountRiggedAvatar(stage, cfg, generation); }
     catch (err) { console.warn('Rigged avatar unavailable; using basic renderer.', err); }
   }
   const THREE = await import('/games-lib/vendor/three.module.min.js');
-  if (!stage || !stage.isConnected) return () => {};
+  if (!stage || !stage.isConnected || stage.__hubAvatarRenderGeneration !== generation) return () => {};
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const scene = new THREE.Scene();
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
