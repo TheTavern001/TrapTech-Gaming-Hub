@@ -56,6 +56,26 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   let buildJson = null; try { buildJson = JSON.parse(build.text); } catch {}
   check('Build endpoint returns catalog counts', build.res.status === 200 && buildJson?.core_games === core.length && buildJson?.games_library === games.length, { status: build.res.status, expectedCore: core.length, actualCore: buildJson?.core_games, expectedLibrary: games.length, actualLibrary: buildJson?.games_library });
   if (!(build.res.status === 200 && buildJson?.core_games === core.length && buildJson?.games_library === games.length)) failures.push('Build endpoint returns catalog counts');
+  // Registered IDs include old scores; visible playable games intentionally
+  // exclude six owner-retired duplicates. Check both dimensions separately.
+  const expectedPlayable=games.filter(g=>g.playable!==false&&!g.retired).length;
+  const expectedArchived=games.filter(g=>g.retired).length;
+  check('Library playable/retired counters match registry',build.res.status===200 &&
+    buildJson?.games_library_playable===expectedPlayable &&
+    buildJson?.games_library_archived===expectedArchived,
+    {playable:buildJson?.games_library_playable,archived:buildJson?.games_library_archived,
+      expectedPlayable,expectedArchived});
+  const liveLib=await get(BASE+'/api/games-lib');let liveLibJson=null;
+  try{liveLibJson=JSON.parse(liveLib.text)}catch{}
+  check('Archived duplicate games remain historical but not playable',liveLib.res.status===200 &&
+    liveLibJson?.games?.length===games.length &&
+    liveLibJson.games.filter(g=>g.retired).length===expectedArchived &&
+    liveLibJson.games.filter(g=>g.retired).every(g=>g.playable===false&&g.giveaway===false&&g.replacedBy));
+  const primaryJs=await get(BASE+'/js/app.js');
+  const libraryIndex=await get(BASE+'/games-lib/index.html');
+  check('Both hub and library pages omit retired games from discovery',
+    primaryJs.res.status===200&&primaryJs.text.includes('g.playable !== false && !g.retired') &&
+    libraryIndex.res.status===200&&libraryIndex.text.includes('g.playable !== false && !g.retired'));
   check('Deployed source fingerprint matches this checkout', buildJson?.build_fingerprint === expected, { expected, deployed: buildJson?.build_fingerprint || null });
   if (buildJson?.build_fingerprint !== expected) failures.push('Deployed source fingerprint matches this checkout');
 
@@ -130,6 +150,15 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     cfgLab.res.status===200&&labModels?.previewOnly===true&&labModels?.models?.length===6);
   const labScript = await get(BASE + '/games-lib/labs/garage/garage.mjs');
   check('Vehicle viewer ESM is served',labScript.res.status===200&&labScript.text.includes('GLTFLoader'));
+  const chaseSource=await get(BASE+'/games-lib/wanted-run/game.js');
+  const chaseCar=await get(BASE+'/games-lib/assets3d/cv-sedan.glb');
+  check('Most Wanted uses CC0 vehicle source and police bust instead of scenery instant death',
+    chaseSource.res.status===200 &&
+    chaseSource.text.includes("sourceVehicle('cv-sedan')") &&
+    chaseSource.text.includes('g.blockedFor') &&
+    !chaseSource.text.includes("g.end('Wrecked on a") &&
+    chaseCar.res.status===200 && chaseCar.body.length>30000 &&
+    chaseCar.body.subarray(0,4).toString('ascii')==='glTF');
   const labGlb = await get(BASE + '/games-lib/assets3d/rc-sedan.glb');
   check('Vehicle source GLB loads through Express',
     labGlb.res.status===200&&labGlb.body.length>20000&&labGlb.body.subarray(0,4).toString('ascii')==='glTF');
