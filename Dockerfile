@@ -33,6 +33,8 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-session-revocation.js \
  && node --check tools/test-auth-session-live.js \
  && node --check src/unified-wallet.js \
+ && node --check tools/test-reviewed-wallet-read.js \
+ && node tools/test-reviewed-wallet-read.js \
  && node --check tools/test-unified-wallet.js \
  && node tools/test-unified-wallet.js \
  && node --check tools/test-payment-order-snapshots.js \
