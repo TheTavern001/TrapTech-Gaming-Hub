@@ -29,13 +29,14 @@ export async function mountRiggedAvatar(stage,cfg,generation) {
   const scene = new THREE.Scene();
   const bg = BG[cfg.bg] || BG.night;
   stage.style.background = 'radial-gradient(circle at 48% 40%,rgba(155,143,255,.26),transparent 50%),linear-gradient(145deg,' + bg.join(',') + ')';
-  const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+  const isPortrait=stage.classList.contains('avatar-profile-stage');
+  const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=1.16;
-  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.enabled=!isPortrait;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  let dpr=Math.min(1.5,window.devicePixelRatio||1),raf=0,alive=true,previous=0,slow=0;
+  let dpr=Math.min(isPortrait?1.25:1.5,window.devicePixelRatio||1),raf=0,alive=true,previous=0,slow=0;
   renderer.setPixelRatio(dpr);
   renderer.domElement.style.cssText='width:100%;height:100%;display:block;touch-action:pan-y;outline:none';
   renderer.domElement.setAttribute('role','img');
@@ -83,7 +84,6 @@ export async function mountRiggedAvatar(stage,cfg,generation) {
   ground.rotation.x=-Math.PI/2;ground.position.set(0,-.025,0);
   ground.receiveShadow=true;scene.add(ground);
   // Use a face-forward portrait on the profile, full body in the wardrobe editor.
-  const isPortrait=stage.classList.contains('avatar-profile-stage');
   const camera=new THREE.PerspectiveCamera(isPortrait?38:35,1,.1,50);
   if(isPortrait){camera.position.set(0,2.62,3.65);camera.lookAt(0,2.52,0);}
   else {camera.position.set(0,2.0,6.7);camera.lookAt(0,1.5,0);}
@@ -96,6 +96,10 @@ export async function mountRiggedAvatar(stage,cfg,generation) {
     const w=Math.max(180,stage.clientWidth),h=Math.max(220,stage.clientHeight);
     renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
   };
+  let stageVisible=true;
+  const visibilityObserver=typeof IntersectionObserver!=='undefined'?
+    new IntersectionObserver(entries=>{stageVisible=!!entries[0]?.isIntersecting;previous=0;}):null;
+  if(visibilityObserver)visibilityObserver.observe(stage);
   const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;
   if(observer)observer.observe(stage);else window.addEventListener('resize',resize);
   resize();
@@ -110,6 +114,7 @@ export async function mountRiggedAvatar(stage,cfg,generation) {
   const cleanup=()=>{
     if(!alive)return;
     alive=false;cancelAnimationFrame(raf);
+    if(visibilityObserver)visibilityObserver.disconnect();
     if(observer)observer.disconnect();else window.removeEventListener('resize',resize);
     renderer.domElement.removeEventListener('pointerdown',down);
     renderer.domElement.removeEventListener('pointermove',move);
@@ -124,7 +129,7 @@ export async function mountRiggedAvatar(stage,cfg,generation) {
     if(!alive)return;
     if(!stage.isConnected){cleanup();return;}
     raf=requestAnimationFrame(animate);
-    if(document.hidden){previous=0;return;}
+    if(document.hidden||!stageVisible){previous=0;return;}
     const dt=previous?Math.min(.05,(t-previous)/1000):0;
     if(previous&&t-previous>24)slow++;else slow=0;
     previous=t;
