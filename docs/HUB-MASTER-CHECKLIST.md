@@ -223,3 +223,12 @@ Add each subsequent deployment here, including successful deployments. Do not ov
 
 ## October 13 source build recovery checkpoint
 The same-commit `58a9f52` mobile suite/verifier disagreement is confirmed in the GitHub files; `b7be1ec` then adds an unconditional build-time import of secret-dependent `src/config.js`. The next candidate corrects the latter with source-only parsing while preserving audit checks. The owner documented failed Deplexo runs for `570a9fe` 113s, `eaaca78` 309s, `12446a1` 156s and `3623d72` 317s. Working-branch ref updates were visibly auto-built: do NOT assume a draft PR is a deployment-free sandbox. Use issue #11 for the full timeline and first-log request. Real build/host/gameplay/owner verification remains outstanding.
+
+### 2026-10-13 — Deplexo 5932ba6 exact first-error recovery gate
+
+- [x] SOURCE EVIDENCE: owner provided full Docker log; **STEP 11/12 `verify-prelaunch.js`** reports phantom `./player-prefs.js` import in quoted verification text, not a missing game file. All preceding logged tests passed.
+- [x] SOURCE: staged lexical import filter and negative real-import tests; Docker runs regression before prelaunch. Combined Hextris settings regression and existing registry-driven 500-game admission checks on one isolated branch.
+- [ ] NEEDS TEST: actual Node/Docker STEP 11/12 and STEP 12/12 HTTP smoke, Deplexo READY, current `/api/build` fingerprint and physical Android gameplay.
+- [ ] HOST CLEANUP: Deplexo public API documents listing previous deploys but no per-deployment delete. Do not delete the app (destroys its persistent data volume). Preserve the historical journal, avoid multiple auto-build branches, operate one approved deployment candidate.
+- [ ] GAME INTAKE: complete existing title QA and license checks before first newly approved distinct title. **93 registered, 0 individually AAA-certified.**
+- Reference: [source and hosting findings](audit/DEPLEXO-5932BA6-ROOT-CAUSE-2026-10-13.md).
