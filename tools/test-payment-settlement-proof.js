@@ -51,5 +51,5 @@ const e2e=fs.readFileSync(path.join(__dirname,'e2e-payments.js'),'utf8');
 for(const phrase of ['admin grant cannot turn a pending unpaid order into paid Credits',
  'admin cannot override blockchain underpayment','admin duplicate grant did not mint extra Credits'])
  assert.ok(e2e.includes(phrase),'Missing API security negative test: '+phrase);
-console.log(JSON.stringify({pass:true,assertions:27,financialProviders:['bitcoin','stripe','manual gift'],
+console.log(JSON.stringify({pass:true,assertions:30,financialProviders:['bitcoin','stripe','manual gift'],
   unpaidAndUnderpaidDenied:true,fullHttpTestsStillRequired:true}));
