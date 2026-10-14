@@ -40,7 +40,7 @@
             if (d < CR + 5 && d >= CR - 6) { const nx = dx / (d || 1), nz = dz / (d || 1); const vn = b.vx * nx + b.vz * nz; b.vx -= 1.6 * vn * nx; b.vz -= 1.6 * vn * nz; b.vy = Math.abs(b.vy) * 0.45; b.rim++; g.sfx('hit'); } } }
         if (!b.live) break; }
       if (b.live && (b.z > 1100 || b.z < -50 || b.y < -200 || Math.abs(b.x) > 400 || (b.bounces > 3))) { b.live = false; g.streak = 0; g.balls--; g.sfx('bad'); g.float(200, 560, 'MISS', '#ff5a5a', 22); if (g.balls <= 0) return g.end('Out of balls'); }
-      if (!b.live) { if (g.cups.every(c => c.hit)) { g.racks++; g.mark('r', g.racks); g.add(500 * g.racks, 'rack'); g.balls = Math.min(8, g.balls + 2); g.float(200, 250, 'RE-RACK +2 BALLS', '#ffd23f', 24); g.sfx('power'); rack(g); } setTimeout(() => {}, 0); newBall(g); }
+      if (!b.live) { if (g.cups.every(c => c.hit)) { g.racks++; g.mark('r', g.racks); g.add(500 * g.racks, 'rack'); g.balls = Math.min(8, g.balls + 2); g.float(200, 250, 'RE-RACK +2 BALLS', '#ffd23f', 24); g.sfx('power'); rack(g); } newBall(g); }
       if (g.splash) { g.splash.l -= dt; if (g.splash.l <= 0) g.splash = null; } },
     draw(g, c) { c.drawImage(bg(g.W, g.H), 0, 0); const b = g.ball;
       const cups = g.cups.filter(cp => !cp.hit).sort((a, b) => b.z - a.z); const bp = proj(b.x, b.y, b.z), sh = proj(b.x, 0, b.z);
