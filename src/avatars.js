@@ -85,7 +85,20 @@ const STARTER_AVATAR = Object.freeze({
 });
 function defaultFor() { return { ...STARTER_AVATAR }; }
 function clean(cfg, base) { const out = { ...base }; if (cfg && ['male', 'female', 'other'].includes(cfg.gender)) out.gender = cfg.gender; for (const k of KINDS) if (cfg && BYK[k][cfg[k]]) out[k] = cfg[k]; return out; }
-function configOf(user) { let c = {}; try { c = JSON.parse(user.avatar || '{}'); } catch {} return clean(c, defaultFor(user.username)); }
+function configOf(user) {
+  let c = {}; try { c = JSON.parse(user.avatar || '{}'); } catch {}
+  const cfg = clean(c, defaultFor(user.username));
+  // A previously equipped item must not outlive the entitlement it depends on.
+  // This also protects public profile SVG/API reads, not only wardrobe writes.
+  if (Number.isSafeInteger(user.id) && user.id > 0) {
+    const ctx = {}, starter = defaultFor(user.username);
+    for (const kind of KINDS) {
+      const part = BYK[kind] && BYK[kind][cfg[kind]];
+      if (!part || !owns(user.id, part, ctx)) cfg[kind] = starter[kind];
+    }
+  }
+  return cfg;
+}
 // ownership
 function owns(userId, part, ctx) {
   const u = part.unlock;
@@ -201,7 +214,7 @@ function routes(app, H) {
   app.get('/avatar/:u.svg', (req, res) => { const u = db.prepare('SELECT id, username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u));
     const cfg = u ? configOf(u) : defaultFor(req.params.u); const body = svg(cfg); const et = '"' + crypto.createHash('sha1').update(body).digest('base64').slice(0, 16) + '"';
     res.set({ 'Cache-Control': 'public, max-age=300', ETag: et, 'Content-Type': 'image/svg+xml' }); if (req.headers['if-none-match'] === et) return res.status(304).end(); res.send(body); });
-  app.get('/api/avatar/:u', (req, res) => { const u = db.prepare('SELECT username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u).slice(0, 32)); if (!u) return bad(res, 404, 'Avatar not found'); res.set('Cache-Control', 'public, max-age=60').json({ ok: true, avatar: configOf(u) }); });
+  app.get('/api/avatar/:u', (req, res) => { const u = db.prepare('SELECT id, username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u).slice(0, 32)); if (!u) return bad(res, 404, 'Avatar not found'); res.set('Cache-Control', 'public, max-age=60').json({ ok: true, avatar: configOf(u) }); });
   app.get('/avatar-preview.svg', (req, res) => { let c = {}; try { c = JSON.parse(String(req.query.c || '{}')); } catch {} res.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(svg(clean(c, defaultFor('preview')))); });
   app.get('/api/avatar', requireUser, (req, res) => { const shop = require('./shop');
     const points = shop.sync(req.user.id);
