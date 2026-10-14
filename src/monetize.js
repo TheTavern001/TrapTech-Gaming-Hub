@@ -476,8 +476,23 @@ function routes(app, A, H) {
   A.post('/store/orders/:ref/verify', async (req, res) => { const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(req.params.ref); if (!o) return bad(res, 404, 'Unknown order.');
     if (req.body && req.body.txid) db.prepare('UPDATE store_orders SET txid_hint=? WHERE id=?').run(String(req.body.txid).toLowerCase(), o.id);
     try { await check([o]); } catch (e) { return bad(res, 503, e.message); } res.json({ ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)) }); });
-  A.post('/store/orders/:ref/grant', (req, res) => { const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(req.params.ref); if (!o) return bad(res, 404, 'Unknown order.');
-    db.prepare("UPDATE store_orders SET status='paid', paid_at=COALESCE(paid_at, ?) WHERE id=?").run(Date.now(), o.id); const g = grant(o, 'admin ' + ((req.admin && req.admin.username) || '')); res.json({ ...g, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)) }); });
+  // The grant button is NOT a manual payment verifier. The provider must
+  // already have settled the order (signed Stripe webhook or confirmed BTC).
+  // Otherwise an admin click could mint purchased Credits from an unpaid or
+  // underpaid order. Use the separate /store/grant manual-gift workflow for
+  // explicit promotions; that path creates a zero-dollar audited manual order.
+  A.post('/store/orders/:ref/grant', (req, res) => {
+    const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(req.params.ref);
+    if (!o) return bad(res, 404, 'Unknown order.');
+    if (o.status !== 'paid' && o.status !== 'granted')
+      return bad(res, 409, 'Payment has not been verified and settled. Verify with the provider first.');
+    if (o.status === 'paid' && !o.paid_at)
+      return bad(res, 409, 'Missing verified settlement timestamp; payment reconciliation required.');
+    const g = grant(o, 'admin ' + ((req.admin && req.admin.username) || ''));
+    res.status(g.ok ? 200 : 409).json({
+      ...g, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id))
+    });
+  });
   A.post('/store/orders/:ref/refund', (req, res) => res.json(refund(req.params.ref, (req.admin && req.admin.username) || 'admin', String((req.body || {}).note || '').slice(0, 200))));
   A.post('/store/grant', (req, res) => { const b = req.body || {}; const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(String(b.username || '')); if (!u) return bad(res, 404, 'No such player.');
     if (b.crowns) { const delta=Number(b.crowns); if(!Number.isSafeInteger(delta)||Math.abs(delta)>100000000) return bad(res,400,'Invalid legacy amount'); addCrowns(u.id, delta, 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, credits: WALLET.balance(u.id) }); }
