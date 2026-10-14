@@ -23,7 +23,7 @@ const makeG=(seed=12)=>{
   end(reason){g.state='end';g.reason=reason}
  };return g;
 };
-const trim=get('trim-rush'),bud=get('bud-bar'),grow=get('grow-op'),match=get('strain-crush');
+const trim=get('trim-rush'),bud=get('bud-bar'),grow=get('grow-op'),match=get('strain-crush'),dunk=get('dunk-flick');
 const tr=makeG();trim.game.init(tr);
 assert.equal(tr.done,0,'First bud cannot inherit undefined completed-count');
 assert.ok(tr.leaves.length>=4,'First round must show leaves, not an empty auto-clear');
@@ -86,6 +86,21 @@ assert.equal(anyMatch(dead),false,'Reshuffle must not give free score matches');
 assert.equal(legalMove(dead),true,'Stalled board must be playable after seeded reshuffle');
 assert.equal(dead.score,scoreBefore,'Seeded no-moves reshuffle cannot award unearned points');
 assert.match(match.game.help,/60s/i);
+// Keyboard must never auto-shoot at a hoop target using its coordinates.
+const ho=makeG();dunk.game.init(ho);
+ho.kd=k=>k===' ';dunk.game.update(ho,0);
+assert.equal(ho.ball.held,true,'Space alone must not auto-aim and score');
+ho.kd=k=>k==='ArrowRight';dunk.game.update(ho,0);
+assert.equal(ho.aim.dx,12);
+ho.kd=k=>k===' ';dunk.game.update(ho,0);
+assert.equal(ho.ball.held,false,'Space may only release a shot after manually aiming');
+assert.equal(ho.ball.vx,12*4.2,'Keyboard shot must use the same touch launch physics');
+const ho2=makeG();dunk.game.init(ho2);
+ho2.hoops[1].x=4000; // target coordinate must NOT change launch velocity
+ho2.kd=k=>k==='ArrowRight';dunk.game.update(ho2,0);
+ho2.kd=k=>k===' ';dunk.game.update(ho2,0);
+assert.equal(ho2.ball.vx,ho.ball.vx,'No basketball auto-targeting from next hoop coordinates');
+assert.ok(!dunk.code.includes('const T = 0.9; b.vx = dx / T;'),'Old keyboard auto-basket cheat remains');
 console.log(JSON.stringify({pass:true,tested:['Trim Rush init/fair drag','Bud Bar one-tap lanes',
-  'Grow Op honest endless rules','Strain Crush 40 seeds + deadlock reshuffle'],
+  'Grow Op honest endless rules','Strain Crush 40 seeds + deadlock reshuffle','Dunk Flick manual keyboard/touch launch parity'],
   simulatedFramesOnly:true,AAAApproved:false,realDeviceTested:false}));
