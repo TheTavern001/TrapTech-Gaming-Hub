@@ -6,6 +6,8 @@ assert.equal(r.schemaVersion,1);
 assert.equal(r.neutralStarterConfigured,true);
 assert.equal(r.neutralStarterCanUseLicensedRig,false);
 assert.equal(r.authoredNeutralModularRigCertified,false);
+assert.equal(r.neutralSourceRigQaCandidate,true,'Source base rig should be imported for QA');
+assert.equal(r.neutralSourceRigQaOnly,true,'Imported base rig is not an approved modular avatar');
 assert.equal(r.onCharacter3DWearablesCertified,0);
 assert.equal(r.visualAAAApproved,false);
 assert.equal(r.includedLicense,true);
