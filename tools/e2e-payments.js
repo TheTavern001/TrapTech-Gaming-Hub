@@ -38,9 +38,9 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await P2('/api/store/orders', { body: { product_id: 'crowns-1100' } }); const o2 = r.body.order; ok(o2.sats !== o1.sats, 'two open orders for the same product never share an amount');
   r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending', 'nothing on chain yet -> pending');
   const t1 = txid(); M.txs.push({ txid: t1, sats: o1.sats });
-  r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'seen' && r.body.order.txid === t1 && r.body.crowns === 0, 'exact amount in the mempool -> seen, not granted yet (0 conf)', r.body.order);
+  r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'seen' && r.body.order.txid === t1 && r.body.credits === 0, 'exact amount in the mempool -> seen, not granted yet (0 conf)', r.body.order);
   M.txs.find(x => x.txid === t1).height = M.tip; r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} });
-  ok(r.body.order.status === 'granted' && r.body.crowns === 1100, '1 confirmation on a small order -> granted 1,100 Crowns automatically', r.body);
+  ok(r.body.order.status === 'granted' && r.body.credits === 11000, '1 confirmation grants 11,000 unified Hub Credits automatically', r.body);
   r = await P2(`/api/store/orders/${o2.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending' && !r.body.order.txid, "another order cannot claim P1's transaction");
   // txid paste for a non-exact (overpaid) amount
   const t2 = txid(); M.txs.push({ txid: t2, sats: o2.sats + 5000, height: M.tip });
@@ -48,9 +48,9 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await P2(`/api/store/orders/${o2.ref}/check`, { body: { txid: t2 } }); ok(r.body.order.status === 'granted' && r.body.order.flags.includes('overpaid'), 'pasted txid with an overpayment -> granted and flagged "overpaid" for a manual refund of the difference', r.body.order);
   // underpayment
   r = await F('/api/store/orders', { body: { product_id: 'crowns-500' } }); const o3 = r.body.order; const t3 = txid(); M.txs.push({ txid: t3, sats: o3.sats - 2000, height: M.tip });
-  r = await F(`/api/store/orders/${o3.ref}/check`, { body: { txid: t3 } }); ok(r.body.order.status === 'underpaid' && r.body.crowns === 0, 'underpayment -> "underpaid", nothing granted', r.body.order);
+  r = await F(`/api/store/orders/${o3.ref}/check`, { body: { txid: t3 } }); ok(r.body.order.status === 'underpaid' && r.body.credits === 0, 'underpayment -> "underpaid", nothing granted', r.body.order);
   r = await ADM(`/api/admin/store/orders/${o3.ref}/grant`, { body: {} }); ok(r.body.ok && r.body.order.status === 'granted', 'admin manual verify/grant fallback');
-  r = await ADM(`/api/admin/store/orders/${o3.ref}/refund`, { body: { note: 'test' } }); r = await F('/api/me/crowns'); ok(r.body.crowns === 0, 'admin refund reverses the Crowns');
+  r = await ADM(`/api/admin/store/orders/${o3.ref}/refund`, { body: { note: 'test' } }); r = await F('/api/me/crowns'); ok(r.body.credits === 0, 'admin refund reverses full migrated Hub Credits');
   // expiry
   const db = new (require('better-sqlite3'))(process.env.DB_PATH);
   r = await F('/api/store/orders', { body: { product_id: 'crowns-500' } }); const o4 = r.body.order; db.prepare('UPDATE store_orders SET created_at=created_at-3600e3, expires_at=expires_at-3600e3 WHERE ref=?').run(o4.ref);
@@ -64,14 +64,14 @@ function client() { const jar = {}; return async (p, o = {}) => {
     '12 individually numbered one-of-one original prestige cosmetics');
   r = await P1('/api/store/orders', { body: { product_id: 'prestige-original-crown' } });
   ok(r.status >= 400, 'prestige checkout refuses orders while compatibility approval is off');
-  // pass + crowns spend
+  // pass + one-credit-wallet spend
   r = await ADM('/api/admin/store/grant', { body: { username: P1.u, product_id: 'season-pass' } }); ok(r.ok !== false && r.body.ok, 'admin can grant a Season Pass manually');
   r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 15, 'premium track: 20 reward steps, 15% premium-track XP boost');
   r = await P1('/api/pass/quests'); ok(r.body.total === 48 && r.body.done < 48 && r.body.reward_season === r.body.season + 1, '48-quest chain toward next season\'s free pass');
   r = await client()('/api/shop'); const any = r.body && (r.body.daily || (r.body.sections && r.body.sections.daily) || []).find(Boolean);
-  if (any) { r = await P1('/api/crowns/buy', { body: { item_id: any.id } }); ok(r.body.ok && r.body.price_crowns >= 50, 'Crowns buy a cosmetic from the current shop', r.body); }
-  r = await P1('/api/crowns/buy', { body: { item_id: 'v7p1s3' } }); ok(r.status === 400, 'premium-track items cannot be bought with Crowns');
-  // NO ADVANTAGE: paid (P1: crowns and pass) vs free (F) on identical runs
+  if (any) { r = await P1('/api/crowns/buy', { body: { item_id: any.id } }); ok(r.body.ok && r.body.price_credits > 0 && Number.isSafeInteger(r.body.credits), 'Purchased Hub Credits buy the exact same cosmetic as earned Credits', r.body); }
+  r = await P1('/api/crowns/buy', { body: { item_id: 'v7p1s3' } }); ok(r.status === 400, 'premium-track items cannot be bought with Hub Credits');
+  // NO ADVANTAGE: paid Credits/Pass vs earned Credits/free on identical runs
   console.log('# paid vs free: identical treatment');
   const t0 = Date.now(); r = await ADM('/api/admin/giveaways', { body: { title: 'Pay-to-win check', host: 'T', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true } }); const gid = r.body.id;
   const [eP, eF] = await Promise.all([P1(`/api/giveaways/${gid}/eligibility`), F(`/api/giveaways/${gid}/eligibility`)]);
