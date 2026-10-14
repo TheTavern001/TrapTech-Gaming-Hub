@@ -274,10 +274,16 @@ let busy = false;
 async function sweep(t = Date.now()) { if (busy) return []; busy = true; try { return await check(openOrders(t), t); } catch (e) { console.error('[pay] sweep', e.message); return []; } finally { busy = false; } }
 if (!process.env.PAY_NO_SWEEP) setInterval(() => { if (ADDR() && openOrders().length) sweep(); }, 60e3).unref();
 
-function reverseEntitlements(o, actor, note = '', t = Date.now()) {
-  const p = prod(o.product_id); if (!p) return { ok: false, error: 'Unknown product.' };
-  db.transaction(() => {
-    if (o.granted_at) {
+function reverseEntitlements(incoming, actor, note = '', t = Date.now()) {
+  const p = prod(incoming.product_id); if (!p) return { ok: false, error: 'Unknown product.' };
+  // Serialize check, debit and refund status in one SQLite transaction.
+  // Duplicate provider webhooks may reference the same old order snapshot.
+  try {
+    return db.transaction(() => {
+      const o=db.prepare('SELECT * FROM store_orders WHERE id=?').get(incoming.id);
+      if (!o) return { ok:false, error:'Original payment order missing' };
+      if (o.refunded_at) return { ok:true, already:true };
+      if (o.granted_at) {
       if (p.kind === 'pack') {
         const recorded=db.prepare("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='purchase' AND ref=?").get(o.user_id,o.ref);
         if (!recorded || !Number.isSafeInteger(recorded.delta) || recorded.delta<=0)
@@ -299,10 +305,16 @@ function reverseEntitlements(o, actor, note = '', t = Date.now()) {
       }
       if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=? WHERE order_id=?').run(t, o.id);
     }
-    db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=?")
-      .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, o.id);
-  })();
-  return { ok: true };
+      db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=? AND refunded_at IS NULL")
+        .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, o.id);
+      return { ok:true };
+    })();
+  } catch (err) {
+    // Payment processing must fail closed without crashing Express or marking
+    // a refund completed when the immutable financial grant was unavailable.
+    console.error('[payments] Refund ledger reconciliation failed:', err.message);
+    return { ok:false, error:'Refund requires financial ledger reconciliation' };
+  }
 }
 function refund(orderRef, actor, note = '') {
   const o = db.prepare('SELECT * FROM store_orders WHERE ref=?').get(orderRef);
