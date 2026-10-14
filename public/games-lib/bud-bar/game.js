@@ -1,9 +1,9 @@
 // Bud Bar - original 4-counter dispensary rush (Hub build, cannabis theme; mechanic in the spirit of bar-tapper games)
-Kit.run({ id: 'gl-bud-bar', title: 'BUD BAR', help: 'Tap a counter (or Up/Down + Space) to slide an order\nServe every customer before they reach the end. Catch empties', bg: '#1c1917',
+Kit.run({ id: 'gl-bud-bar', title: 'BUD BAR', help: 'Tap any counter once to serve that lane (or Up/Down + Space).\nCatch returning empties by selecting their lane.', bg: '#1c1917',
   init(g) { g.lane = 0; g.cust = []; g.bags = []; g.empties = []; g.lives = 3; g.next = 1; g.served = 0; },
   update(g, dt) {
     const LY = (i) => 200 + i * 110; if (g.kd('ArrowUp')) g.lane = (g.lane + 3) % 4; if (g.kd('ArrowDown')) g.lane = (g.lane + 1) % 4;
-    let fire = g.kd(' '); if (g.ptr.pressed) { const i = Math.floor((g.ptr.y - 145) / 110); if (i >= 0 && i < 4) { if (i === g.lane) fire = true; g.lane = i; if (g.ptr.x > 300) fire = true; } }
+    let fire = g.kd(' '); if (g.ptr.pressed) { const i = Math.floor((g.ptr.y - 145) / 110); if (i >= 0 && i < 4) { g.lane = i; fire = true; } }
     if (fire) { g.bags.push({ lane: g.lane, x: 330 }); g.sfx('whoosh'); }
     const pace = 1 + g.t / 60; g.next -= dt; if (g.next <= 0) { g.next = g.R(1.2, 2.6) / pace; g.cust.push({ lane: g.RI(0, 3), x: -20, sp: g.R(16, 26) * pace, back: 0, c: g.pick(['#f472b6', '#22d3ee', '#fbbf24', '#a855f7', '#34d399']) }); }
     for (const b of g.bags) { b.x -= 330 * dt; const hit = g.cust.filter(k => k.lane === b.lane && !k.back && Math.abs(k.x - b.x) < 18).sort((a, b2) => b2.x - a.x)[0]; if (hit) { b.dead = true; hit.back = 1; g.burst(hit.x, LY(hit.lane) - 30, ['#9dff7a', '#fff'], 8, 120, 0.4); g.served++; g.add(50, 's'); g.float(hit.x, LY(hit.lane) - 40, '+50', '#34d399'); g.sfx('coin'); } else if (b.x < 20) { b.dead = true; g.burst(16, LY(b.lane) - 10, ['#cfe8ff', '#fff', '#3f9a3a'], 16, 180, 0.5); miss(g, 'An order slid off the counter'); if (g.state !== 'play') return; } }
