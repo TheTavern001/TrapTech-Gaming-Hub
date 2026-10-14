@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "asOf": "2026-10-13",
+  "sourceCommit": "50160deba3cd98bbb11fc0029d7e9e13e3425dc2",
+  "scope": "BINARY_STRUCTURE_ONLY",
+  "status": "PASS",
+  "description": "All 10 imported Kenney Car Kit GLB Git blob identities matched pinned upstream objects; retrieved exact binary file content and parsed embedded GLB JSON headers. This is not WebGL rendering, model orientation/mesh fit, animation, mobile performance or AAA certification.",
+  "sourceRights": "Kenney Car Kit 3.1 CC0, original model copies via Arslan12216775/kenney_car-kit public mirror",
+  "checks": [
+    "Full GLB magic glTF, version 2, exact declared byte length",
+    "Source blob SHA equals pinned upstream original Git object hash",
+    "GLB JSON chunk parse and glTF asset version 2.0",
+    "Each model contains nonzero meshes",
+    "Each model has exactly 1 embedded PNG image bufferView and zero external image URLs",
+    "Driving game default uses imported kc-sedan-sports; UI selector QA only",
+    "10 candidates distinct model IDs: 0 gameplay or score advantage"
+  ],
+  "models": [
+    {
+      "id": "kc-police",
+      "bytes": 207584,
+      "meshes": 6,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2304,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-race-future",
+      "bytes": 185448,
+      "meshes": 5,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2068,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-suv-luxury",
+      "bytes": 188200,
+      "meshes": 5,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2086,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-ambulance",
+      "bytes": 245804,
+      "meshes": 7,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2804,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-firetruck",
+      "bytes": 244684,
+      "meshes": 6,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2767,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-taxi",
+      "bytes": 187896,
+      "meshes": 5,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2072,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-sedan-sports",
+      "bytes": 189920,
+      "meshes": 6,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2088,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-truck",
+      "bytes": 188652,
+      "meshes": 5,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2082,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-garbage-truck",
+      "bytes": 280428,
+      "meshes": 7,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 3124,
+      "sourceIntegrity": true
+    },
+    {
+      "id": "kc-delivery",
+      "bytes": 252504,
+      "meshes": 6,
+      "embeddedImages": 1,
+      "externalImageUrls": 0,
+      "triangleCountApprox": 2476,
+      "sourceIntegrity": true
+    }
+  ],
+  "actualNodeDockerRun": false,
+  "realBrowserRun": false,
+  "androidDeviceRun": false,
+  "visualAAACertified": false,
+  "ownerApproved": false
+}
