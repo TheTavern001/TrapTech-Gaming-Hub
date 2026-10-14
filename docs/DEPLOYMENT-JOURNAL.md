@@ -476,3 +476,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `b3c5128e0c0ad64820a2f3ce053ac073e7826250`: JS parsing and static regression contract; `8f0ba1f4f03a9606c8e9b1b909deb263379d1b1e` and `75caf3b9e45de18fbf720bf6e92c323ced7de34c` add test to canonical rehearsal and Docker build.
 - Executed JS syntax parsing on both actual module sources and the committed test, all PASS. The new Node regression and physical rapid-selection/Three.js/WebGL interaction, production Docker and phone QA are NOT RUN. No claim of complete 3D wardrobe or AAA avatar readiness.
 - Deplexo remains screenshot-confirmed at `278af07`; development source remains in PR #29; auto deploy OFF. Next: integrated checkout full test, asset and wearable geometry certification, private candidate planning.
+
+## 2026-10-14 — Shared game adapter out-of-order run-start isolation
+
+- `5a8541ffea1f3de5123ba2ff422553b5520e5d05`: run start adapter now increments a request serial and refuses late results from previous requests so obsolete start responses cannot overwrite current token, seed or guest/error state. This applies across Kit library titles.
+- `c00d653f1664bb2e06e19225b2a0a4ff62b5bcc5`: asynchronous out-of-order response regression; `c220f88274d65d843589fb6927894640a5d0a06d`, `be9e27d5f7f8ff0197b511c95d7ceae69091f9a5`: offline rehearsal and Docker prelaunch wiring.
+- Actual fetched adapter executed using isolated V8 mock network: newer response resolved first, older second, final active token `new` and seed `2222` remained correct — PASS. Full Node suite, Docker build, browser/mobile and live Deplexo NOT RUN.
+- Owner requests whole AAA Hub complete; this is NOT delivered. No game has phone/visual approval, standard 3D character & usable shop assets incomplete. Deplexo screenshot host CURRENT `278af07` unchanged; auto deploy OFF. Resume with runnable full checkout, integrated build and real phone QA, then controlled manual private candidate.
