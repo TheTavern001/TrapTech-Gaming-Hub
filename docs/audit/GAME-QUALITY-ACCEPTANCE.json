@@ -1,19 +1,23 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "goal": 500,
-  "policy": "A title counts toward 500 only after evidence-backed pass for all categories below plus owner visual approval. Keep approvals empty until reviews actually occur. Registered games do not count as quality-approved.",
+  "policy": "Mobile-first 98% phone traffic. A game counts toward the 500 approved only after BOTH real Android and real iPhone Safari/WKWebView evidence, touch fairness, smooth mobile performance, asset rights, signed-score negatives, and owner visual signoff. Chromium emulated iPhone user agents do NOT count as real Safari/WebKit. Desktop is a secondary compatibility check.",
   "recordKey": "core:<active-core-id> or library:<slug>",
   "requiredChecks": [
     "visuals",
     "uniqueMechanics",
     "gameplayLoop",
     "androidControls",
-    "desktopControls",
     "pauseRestart",
     "scoreAntiCheat",
     "assetsAndLicense",
     "performanceAndroid",
-    "ownerApproval"
+    "ownerApproval",
+    "iosControls",
+    "performanceIOS",
+    "phoneSafeAreaOrientation",
+    "phonePauseResume",
+    "touchInputFairness"
   ],
   "recordTemplate": {
     "id": "core:example-id",
@@ -22,7 +26,11 @@
     "reviewedAtUTC": "",
     "metrics": {
       "androidP95FrameMs": null,
-      "minimumVerifiedRenderHeightPx": null
+      "minimumVerifiedRenderHeightPx": null,
+      "iosP95FrameMs": null,
+      "androidP50FrameMs": null,
+      "iosP50FrameMs": null,
+      "mobileWorstCaseMemoryMB": null
     },
     "checks": {
       "visuals": {
@@ -64,8 +72,38 @@
       "ownerApproval": {
         "passed": false,
         "evidence": ""
+      },
+      "iosControls": {
+        "passed": false,
+        "evidence": ""
+      },
+      "performanceIOS": {
+        "passed": false,
+        "evidence": ""
+      },
+      "phoneSafeAreaOrientation": {
+        "passed": false,
+        "evidence": ""
+      },
+      "phonePauseResume": {
+        "passed": false,
+        "evidence": ""
+      },
+      "touchInputFairness": {
+        "passed": false,
+        "evidence": ""
       }
-    }
+    },
+    "mobileQa": {
+      "androidPhysical": false,
+      "androidWebViewPhysical": false,
+      "iosSafariPhysical": false,
+      "iosWKWebViewPhysical": false,
+      "orientationRotatedWithoutRunLoss": false,
+      "phoneSafeAreaVerified": false
+    },
+    "notes": "The existing desktopControls check remains optional; all new iOS and phone-mode tests require actual device evidence; no autoapproval."
   },
-  "records": []
+  "records": [],
+  "mobileAcceptancePolicy": "docs/audit/MOBILE-FIRST-98-PERCENT-ACCEPTANCE-2026-10-14.json"
 }
