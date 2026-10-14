@@ -42,7 +42,8 @@ run reward-hold-clawback node tools/test-reward-integrity.js
 run payment-settlement-proof node tools/test-payment-settlement-proof.js
 run payment-quoted-order-integrity node tools/test-payment-order-snapshots.js
 run account-session-revocation node tools/test-session-revocation.js
-run auth-session-contract node tools/test-auth-session-live.js
+# Real HTTP auth/session integration is intentionally run by Docker STEP12
+# with BUILD_SMOKE=1 on localhost only; it refuses execution otherwise.
 run reviewed-wallet-cannot-be-spent node tools/test-reviewed-wallet-read.js
 run full-meta-fairness node tools/test-full-hub-meta-contract.js
 run game-owner-mechanics node tools/test-owner-reported-gameplay.js
