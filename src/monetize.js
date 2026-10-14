@@ -398,10 +398,10 @@ function routes(app, A, H) {
   const mine = (req) => db.prepare('SELECT * FROM store_orders WHERE ref=? AND user_id=?').get(String(req.params.ref), req.user.id);
   app.get('/api/store/orders/:ref', requireUser, (req, res) => { const o = mine(req); if (!o) return bad(res, 404, 'Order not found.'); const po = pubOrder(o); if (po.uri) po.qr_svg = require('./events').qrSvg(po.uri); res.json({ ok: true, order: po }); });
   app.post('/api/store/orders/:ref/check', requireUser, limiter('store-check', 30, 600e3), async (req, res) => { const o = mine(req); if (!o) return bad(res, 404, 'Order not found.');
-    if (o.provider === 'stripe') return res.json({ ok: true, order: pubOrder(o), crowns: crowns(req.user.id) });
+    if (o.provider === 'stripe') return res.json({ ok: true, order: pubOrder(o), credits: WALLET.balance(req.user.id) });
     const txid = String((req.body || {}).txid || '').trim().toLowerCase(); if (txid) { if (!/^[0-9a-f]{64}$/.test(txid)) return bad(res, 400, 'That does not look like a transaction id.'); db.prepare('UPDATE store_orders SET txid_hint=? WHERE id=?').run(txid, o.id); }
     try { await check([o]); } catch (e) { return bad(res, 503, 'Could not reach the blockchain explorer, try again shortly.'); }
-    res.json({ ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)), crowns: crowns(req.user.id) }); });
+    res.json({ ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)), credits: WALLET.balance(req.user.id) }); });
   app.get('/api/me/crowns', requireUser, (req, res) => res.json({ ok:true,deprecated:true,credits:WALLET.balance(req.user.id),history:db.prepare("SELECT amount,reason,ref,created_at FROM points_ledger WHERE user_id=? ORDER BY id DESC LIMIT 50").all(req.user.id) }));
   app.post('/api/crowns/buy', requireUser, (req, res) => { const r = buyWithCrowns(req.user, String((req.body || {}).item_id || '')); if (!r.ok) return bad(res, 400, r.error); res.json(r); });
   app.get('/api/pass', (req, res) => res.json({ ok: true, ...passState(currentUser(req)) }));
