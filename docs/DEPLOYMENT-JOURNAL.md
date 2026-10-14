@@ -371,3 +371,9 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `bd78a1aafcfde44b9dbee6727891e9d52c4a037a`: includes regression in consolidated offline release gate.
 - Executed isolated V8 callback on fetched committed source: timer +0.1 => 0 pests; timer -2 => 3 pests and +0.25 timer; timer -99 => 4 pests and +0.75 timer. Expected results PASS. No native Node full-suite, Docker, phone performance, or host deployment verified.
 - Owner must keep auto-deploy OFF; the five-release overhaul and game additions are not fully integrated or QA-certified. Continue with complete local Docker gate, gameplay/mobile UX/security checks, then controlled private release.
+
+## 2026-10-14 — canonical release rehearsal coverage integration
+
+- `67a2bd9f9f7de06fd49a87902727252ec403d232` adds eight existing game QA programs to `tools/offline-release-rehearsal.js`, including four Arrow Hero regressions, two Grow Op regressions, duplicate-mechanics review, and cannabis gameplay QA. Previously the primary `npm run verify:offline:full` path omitted these newer suites, despite a separate shell script containing them.
+- Confirmed the GitHub write and script entries; **native Node test execution, Docker image build, and phone testing are NOT RUN**. The Dockerfile was inspected but a proposed modification was not committed, so do not claim these checks are part of Docker STEP11.
+- This improves release verification coverage but does not advance 0 human-certified games or authorize a Deplexo deployment. Keep auto-deploy OFF. Next run full checkout `npm run verify:offline:full`, fix first failing command, obtain private phone and security evidence. This checkpoint remains source-only.
