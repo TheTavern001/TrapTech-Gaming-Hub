@@ -61,3 +61,10 @@ The **five-release budget is a planning limit**: internal Git commits/tests are 
 3. Source external packs and verify GLB rig/material/animation integration in actual game HUDs (not detached QA viewer).
 4. Implement runtime and server-backed meta systems; measure and approve across games.
 5. Manually deploy one completed milestone at a time. Record exact SHA, screenshots, errors and host fingerprint before the next. **Do not restart the broken loop of one deployment per commit.**
+
+## Implementation progress checkpoint — 2026-10-14 (source-only, not deployed)
+
+- Genuine **Kenney Car Kit 3.1** source import: 10 pinned, in-repository CC0 GLB meshes, 10/10 Git object and embedded texture checks passed; Most Wanted uses the Kenney sports sedan as identical default. QA-only preview selector does not grant entitlements. Pending mobile scene/physics/quality validation. See `docs/audit/KENNEY-CAR-KIT-IMPORTED-2026-10-13.json` and `docs/audit/KENNEY-CAR-KIT-BINARY-QA-2026-10-13.json`.
+- Accuracy correction: project-generated `rc-*` are not outsourced; `cv-*` are Divinux CC0, not Kenney. Do not advertise them as original Kenney Car Kit assets.
+- Future game queue contains five MIT-root-licenced, distinct mechanic research sources, zero intake/score/runtime approvals. File `docs/audit/POST-OVERHAUL-GAME-CANDIDATES-2026-10-13.json`; queue must remain unlisted until after existing Hub R1–R5 acceptance.
+- Manual operator gate `node tools/preflight-manual-release.js --release=R1 --require-ready` is currently **BLOCKED** for 6 R1 acceptance workstreams. R5/public gate additionally executes the evidence-based quality report. No silent approvals, no automatic pushes. 
