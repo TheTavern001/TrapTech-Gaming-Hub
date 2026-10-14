@@ -4,6 +4,7 @@
 // players and can never be redeemed for prizes or giveaway entries. Earned from runs, quests, streaks, achievements,
 // referrals and friend challenges; spent on rotating cosmetic items. All designs are original CSS/SVG.
 const db = require('./db');
+const WALLET = require('./unified-wallet');
 const cfg = require('./config');
 const D = 864e5;
 const svg = (s) => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
@@ -310,8 +311,8 @@ function sync(userId) {
   try { grantGates(userId); } catch (e) { console.error('gates', e.message); }
   return balance(userId);
 }
-const balance = (userId) => db.prepare('SELECT COALESCE(SUM(amount),0) AS b FROM points_ledger WHERE user_id=?').get(userId).b;
-const earned = (userId) => db.prepare('SELECT COALESCE(SUM(amount),0) AS b FROM points_ledger WHERE user_id=? AND amount > 0').get(userId).b;
+const balance = (userId) => WALLET.balance(userId);
+const earned = (userId) => db.prepare("SELECT COALESCE(SUM(amount),0) AS b FROM points_ledger WHERE user_id=? AND amount > 0 AND reason<>'legacy-crown'").get(userId).b;
 const owned = (userId) => new Set(db.prepare('SELECT item_id FROM user_items WHERE user_id=?').all(userId).map(r => r.item_id));
 
 function buy(user, itemId, t = Date.now()) {
@@ -320,7 +321,7 @@ function buy(user, itemId, t = Date.now()) {
   const rot = module.exports.rotation(t); if (!inRotation(rot, it)) return { ok: false, error: 'That item is not in the shop right now. Check back when it rotates in.' };
   if (owned(user.id).has(it.id)) return { ok: false, error: 'You already own this.' };
   const price = module.exports.priceFor(it, user, t);
-  const bal = module.exports.sync(user.id); if (bal < price) return { ok: false, error: `You need ${price - bal} more Hub Points.` };
+  const bal = module.exports.sync(user.id); if (bal < price) return { ok: false, error: `You need ${price - bal} more Hub Credits.` };
   const res = db.transaction(() => {
     const b = balance(user.id); if (b < price) return false;
     const r = db.prepare('INSERT OR IGNORE INTO user_items (user_id, item_id, price, acquired_at) VALUES (?,?,?,?)').run(user.id, it.id, price, t); if (!r.changes) return false;
@@ -366,7 +367,7 @@ function css() {
 const cssKey = () => realToday() + ':' + liveGenerated().length;
 
 // ---------- views for the player pages ----------
-const DISCLAIMER = 'Hub Points are cosmetic only. They have no cash value, cannot be bought, sold, traded or transferred, and cannot be redeemed for prizes or giveaway entries.';
+const DISCLAIMER = 'Hub Credits can be earned by playing or optionally purchased. They unlock cosmetics only, have no cash value, cannot be sold, traded, transferred or withdrawn, and cannot buy giveaway entries or game advantages.';
 const RULES = [
   'Daily picks change every day at midnight (hub time, America/New_York): 2 brand-new items, 1 Vault return when one is due, and 3 items from the catalog.',
   'Weekly featured changes every Monday at midnight: 2 brand-new epic or legendary items plus 2 picks from the catalog.',
