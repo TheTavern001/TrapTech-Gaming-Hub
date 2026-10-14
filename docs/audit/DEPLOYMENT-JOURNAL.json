@@ -360,6 +360,7 @@
     }
   ],
   "pendingEvidence": [
+    "Offline runner added but NOT executed against complete private checkout. Run bash scripts/offline-release-gate.sh R1 --docker with Node20 deps; fix failures, then complete R1 manual phone acceptance before Deplexo deployment.",
     "Provider-settlement admin override patch NOT deployed. Real Node/Docker, provider E2E, iPhone/Android and human owner review UNRUN. Payment grant route must never mint from pending/underpaid orders; 0 financial approval.",
     "Native session revocation test and localhost HTTP auth smoke are added to Docker but have not yet run; after release legacy signed sessions are intentionally invalidated. User must reauthenticate; 98% Android/iOS device UAT pending.",
     "2026-10-14: prize admission now fail-closed in GitHub source from PR #23; 0 owner-certified replay proof games so official prize boards correctly empty. Full Node/Docker/device replay still unverified. CURRENT READY Deplexo 278af07 unchanged.",
@@ -640,9 +641,24 @@
       "host": "NOT DEPLOYED. Last owner Deplexo CURRENT READY 278af07; auto-deploy OFF.",
       "releaseStatus": "SOURCE_ONLY, 0 owner-approved finance/security and game QA",
       "next": "Run disposable Node/Docker wallet, source order snapshot, pending-underpaid Stripe/BTC API negative tests before R1 through R5 release; never bypass provider settlement with admin paid-status mutation."
+    },
+    {
+      "commit": "5955a16937a2bca4a5dbaed2e0ef1ab2da68c2f9",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "reason": "Offline release gate and anti-cheat Credits cap fix on isolated source; no deployed build.",
+      "validation": "Isolated SQLite 3.46.1 in-memory query regression PASS for 40 held/disqualified run slots, single 1:10 Crown migration, signed refunds, and 4 review corrections; actual project Node20/better-sqlite3/Docker and mobile UAT not executed. R1 preflight source evaluation BLOCKED with six workstreams.",
+      "host": "NOT DEPLOYED; last screenshot CURRENT READY 278af07, auto deploy OFF.",
+      "sourceFiles": [
+        "src/shop.js",
+        "tools/test-reward-integrity.js",
+        "scripts/offline-release-gate.sh",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerApproved": false,
+      "manualReleaseReady": false
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-14 12:24 EDT continuation: program branch source-only through a15eb24; provider settlement override blocked; V8 provider 30, Hub contract 232 checks; R1/R3/R4 remain BLOCKED 6/21/38. Deplexo CURRENT READY 278af07 owner screenshot, no new host deploy.",
+  "lastEvidenceReconciliation": "2026-10-14: host CURRENT READY 278af07 screenshot; source checkpoint 5955a16937a2 not deployed. Offline SQLite SQL smoke PASS; full application native, Docker and real iOS/Android NOT RUN. R1 preflight BLOCKED 6.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
