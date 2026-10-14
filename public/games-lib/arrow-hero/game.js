@@ -69,8 +69,8 @@
         else if (e.t === 'turret') { if (e.cd <= 0) { e.cd = 2.6; for (let i = 0; i < 8; i++) { const a = i * 0.785 + e.ph * 0.3; g.eb.push({ x: e.x, y: e.y, vx: Math.cos(a) * 150, vy: Math.sin(a) * 150, r: 6, c: '#f87171' }); } } }
         else if (e.t === 'boss') { e.x += Math.sin(e.ph * 0.8) * 70 * dt; if (e.cd <= 0) { e.cd = Math.max(0.9, 1.8 - g.room * 0.02); const k = Math.floor(e.ph) % 3; if (k === 0) for (let i = 0; i < 14; i++) { const a = i * 0.449; g.eb.push({ x: e.x, y: e.y, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160, r: 7, c: '#fb923c' }); } else for (let i = -2; i <= 2; i++) { const a = Math.atan2(dy, dx) + i * 0.18; g.eb.push({ x: e.x, y: e.y, vx: Math.cos(a) * 230, vy: Math.sin(a) * 230, r: 7, c: '#fde047' }); } } }
         if (d < e.r + 12 && p.inv <= 0) { g.hp -= e.t === 'boss' ? 22 : 9; p.inv = 0.8; g.sfx('bad'); g.shake(6); } }
-      for (const b of g.eb) { b.x += b.vx * dt; b.y += b.vy * dt; if (b.x < RX || b.x > RX + RW || b.y < RY || b.y > RY + RH) b.dead = true; if (!b.dead && Math.hypot(b.x - p.x, b.y - p.y) < b.r + 10 && p.inv <= 0) { b.dead = true; g.hp -= 7 + g.room * 0.5; p.inv = 0.6; g.sfx('bad'); g.shake(5); } }
-      g.eb = g.eb.filter(b => !b.dead);
+      for (const b of g.eb) { const bx = b.x, by = b.y; b.x += b.vx * dt; b.y += b.vy * dt; if (!b.dead && p.inv <= 0 && arrowHitsEnemy(bx, by, b.x, b.y, { x:p.x, y:p.y, r:b.r + 6 })) { b.dead = true; g.hp -= 7 + g.room * 0.5; p.inv = 0.6; g.sfx('bad'); g.shake(5); } }
+      g.eb = g.eb.filter(b => !b.dead && b.x >= RX && b.x <= RX + RW && b.y >= RY && b.y <= RY + RH);
       if (g.hp <= 0) return g.end('Fell in room ' + g.room); },
     draw(g, c) { c.drawImage(floor(g.W, g.H), 0, 0); const p = g.p, t = g.t;
       // gate
