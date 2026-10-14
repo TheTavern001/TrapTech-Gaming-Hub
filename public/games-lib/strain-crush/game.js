@@ -1,7 +1,7 @@
 // Strain Crush - original timed match-3 with strain gems (Hub build, cannabis theme). Endless: matches refill the clock, the drain speeds up.
 (function () {
   const N = 8, S = 46, OX = 16, OY = 130; const G = ['#22c55e', '#a855f7', '#fbbf24', '#f97316', '#38bdf8', '#f472b6'];
-  Kit.run({ id: 'gl-strain-crush', title: 'STRAIN CRUSH', help: 'Swipe a gem into a neighbour to swap (or tap two)\nMatch 3+ strains - cascades multiply. 3 minutes', bg: '#1e1b4b',
+  Kit.run({ id: 'gl-strain-crush', title: 'STRAIN CRUSH', help: 'Swipe a gem into a neighbour to swap (or tap two)\nMatch 3+ strains; cascades multiply.\nStart with 60s; matches add time.', bg: '#1e1b4b',
     init(g) { g.b = []; for (let r = 0; r < N; r++) { g.b.push([]); for (let c = 0; c < N; c++) { let v; do v = g.RI(0, 5); while ((c > 1 && g.b[r][c - 1].v === v && g.b[r][c - 2].v === v) || (r > 1 && g.b[r - 1][c].v === v && g.b[r - 2][c].v === v)); g.b[r].push({ v, y: r, sp: 0 }); } } g.sel = null; g.time = 60; g.busy = 0; g.chain = 0; },
     update(g, dt) {
       g.time -= dt * (1 + g.t / 180); if (g.time <= 0) { g.time = 0; return g.end('Out of time'); }
