@@ -455,12 +455,30 @@
       "gl-pop-defense",
       "gl-keep-guard"
     ],
-    "simulatedGameCallbackAssertions": 234,
+    "simulatedGameCallbackAssertions": 238,
     "ledgerSourceAssertions": 361,
     "nativeDocker": "NOT_RUN",
     "androidPhysical": "NOT_RUN",
     "iosPhysical": "NOT_RUN",
     "aaaCertified": 0,
-    "report": "docs/audit/OWNER-GAMEPLAY-CANNABIS-DUPLICATE-PASS-2026-10-14.md"
+    "report": "docs/audit/OWNER-GAMEPLAY-CANNABIS-DUPLICATE-PASS-2026-10-14.md",
+    "growOpLongSessionSimulations": 2,
+    "growOpPestMax": 18,
+    "growOpPestLifetimeSecondsMax": 14,
+    "growOpNativeAndroidPerfEvidence": "NOT_RUN",
+    "growOpRegression": "tools/test-cannabis-gameplay-qa.js"
+  },
+  "releaseReadinessScorecard": "tools/owner-release-readiness.js",
+  "latestReleaseSnapshot": {
+    "at": "2026-10-14",
+    "metricsType": "QUALITY_APPROVAL_NOT_SOURCE_COMPLETENESS",
+    "workstreams": 26,
+    "approvedWorkstreams": 0,
+    "securityRequired": 15,
+    "securityVerified": 0,
+    "existingGameCount": 87,
+    "existingGameOwnerApproved": 0,
+    "futureAdditionalGamesNeededAfterExistingApproved": 413,
+    "zeroNewGamesAdmitted": true
   }
 }
