@@ -1,4 +1,4 @@
-// v7 shop + seasons pages (docs/ECONOMY.md): Points Shop with daily / weekly featured / season / event sections,
+// v7 shop + seasons pages (docs/ECONOMY.md): Hub Credits Shop with daily / weekly featured / season / event sections,
 // rendered previews, item detail sheet with "preview on my profile", earned items, season pass (60 levels, perks,
 // hall of fame) and the "How Seasons & Shop work" explainer. Installed from v7.js; routes run before app.js's.
 let C = null;
@@ -89,9 +89,9 @@ if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is una
     const catalog = catalogOpen ? await api('/api/shop/catalog?limit=24&offset=' + catalogOffset + '&type=' + encodeURIComponent(catalogType) + '&q=' + encodeURIComponent(catalogQuery)) : null;
     const bal = r.balance; const ev = r.events || [];
     shell('/shop', `<div class="narrow wide ec">
-      <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Points Shop</h1><a class="ec-how small" href="/shop/how-it-works">${icon('circle-help')} How it works</a></div>
-      ${r.signed_in ? `<div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><div class="tiny muted orb">HUB POINTS</div><b class="sb-n" id="pts-bal">${fmt(bal)}</b><div class="tiny muted">${fmt(r.earned)} earned all-time${r.perks && r.perks.discount ? ` • ${r.perks.discount}% season discount` : ''}</div></div><a class="btn sm ghost" href="#earn">How to earn</a></div>`
-        : `<div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><b>Earn Hub Points by playing</b><div class="tiny muted">Every run, quest, streak and season level pays points.</div></div><a class="btn sm" href="/signup?next=/shop">Sign up free</a></div>`}
+      <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Hub Credits Shop</h1><a class="ec-how small" href="/shop/how-it-works">${icon('circle-help')} How it works</a></div>
+      ${r.signed_in ? `<div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><div class="tiny muted orb">HUB CREDITS</div><b class="sb-n" id="pts-bal">${fmt(bal)}</b><div class="tiny muted">${fmt(r.earned)} earned all-time${r.perks && r.perks.discount ? ` • ${r.perks.discount}% season discount` : ''}</div></div><a class="btn sm ghost" href="#earn">How to earn</a></div>`
+        : `<div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><b>Earn Hub Credits by playing</b><div class="tiny muted">Play, complete quests and progress through seasons to earn Credits.</div></div><a class="btn sm" href="/signup?next=/shop">Sign up free</a></div>`}
       <div class="nocash">${icon('shield')} <span><b>Cosmetic only.</b> ${esc(r.disclaimer)}</span></div>
       ${ev.map(e => `<div class="ec-event card"><div class="ec-ev-h">${icon(e.icon || 'party-popper')}<div><b>${esc(e.name)}</b><div class="tiny muted">Event items for ${cdi(e.ends_at)} • ends ${localAt(e.ends_at)}</div></div></div>${grid('shop-event-' + esc(e.key), e.items, bal)}</div>`).join('')}
       <div class="section-h"><h2>${icon('sparkles')} Weekly featured</h2><span class="small muted">New in ${cdi(r.weekly_ends)} <span class="ec-at">(${localAt(r.weekly_ends)})</span></span></div>
@@ -121,7 +121,7 @@ if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is una
           <div class="btn-row shop-catalog-pager"><span class="small muted">${catalog.total ? catalogOffset+1 : 0}–${Math.min(catalogOffset+catalog.items.length,catalog.total)} of ${fmt(catalog.total)} items</span><button class="btn sm ghost" type="button" data-act="catalog-prev" ${catalogOffset<=0?'disabled':''}>Previous</button><button class="btn sm" type="button" data-act="catalog-next" ${catalogOffset+24>=catalog.total?'disabled':''}>Next</button></div>`
           : `<p class="small muted">Catalog is loading or unavailable. Try again shortly.</p>`}
       </div>` : ''}
-      <div class="card pad" id="earn"><h2 style="font-size:1rem;margin-bottom:8px">${icon('trending-up')} How to earn Hub Points</h2>
+      <div class="card pad" id="earn"><h2 style="font-size:1rem;margin-bottom:8px">${icon('trending-up')} How to earn Hub Credits</h2>
         <ul class="earn-list"><li><b>+${r.earn.run}</b> per finished run (first ${r.earn.runDailyCap} runs each day)</li><li><b>+${r.earn.skill.good} / +${r.earn.skill.top1}</b> more for a strong / top-1% score in that game</li><li><b>+${r.earn.pb}</b> bonus for a new personal best</li>
         <li><b>+${r.earn.quest}</b> per daily quest claimed</li><li><b>+${r.earn.checkinPerDay}</b> per streak day on check-in (up to +${r.earn.checkinMax})</li><li><b>+40 to +140</b> per season level, +100 per Overdrive star (<a href="/season">season pass</a>)</li>
         <li><b>+${r.earn.ach.bronze} to +${r.earn.ach.legendary}</b> per achievement</li><li><b>+${r.earn.challenge}</b> per friend challenge won • <b>+${r.earn.referral}</b> when an invited friend plays</li></ul>
