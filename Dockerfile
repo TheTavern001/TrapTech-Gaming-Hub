@@ -36,6 +36,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-payment-order-snapshots.js \
  && node --check tools/test-reward-integrity.js \
  && node tools/test-reward-integrity.js \
+ && node --check src/prize-score-proof.js \
+ && node --check tools/test-prize-score-proof.js \
+ && node tools/test-prize-score-proof.js \
  && node --check src/shop.js \
  && node --check src/shop-gen.js \
  && node --check src/avatars.js \
