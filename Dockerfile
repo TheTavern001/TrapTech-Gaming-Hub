@@ -70,6 +70,8 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s tools/test-runner-train-assets.js \
  && node --check tools/test-runner-train-assets.js \
  && node tools/test-runner-train-assets.js \
+ && node --check tools/test-owner-reported-gameplay.js \
+ && node tools/test-owner-reported-gameplay.js \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/local-imports.js \
  && node --check tools/test-prelaunch-imports.js \
