@@ -272,9 +272,41 @@ function priceFor(it, user, t = Date.now()) { const p = it.price; const d = user
 const EARN = { run: 5, pb: 10, runDailyCap: 40, skill: { good: 5, top1: 15 }, quest: 25, checkinPerDay: 10, checkinMax: 70, ach: { bronze: 20, silver: 40, gold: 80, epic: 150, legendary: 400 }, referral: 150, challenge: 30, season: 'free track: 40-140 per level, 100 per Overdrive star' };
 const SKILL = {}; for (const [id, R] of Object.entries(RANGES)) if (R.good && R.top1) SKILL[id] = { good: nice(R.good.median_pb), top1: nice(R.top1.pb) };
 const insL = db.prepare('INSERT OR IGNORE INTO points_ledger (user_id, amount, reason, ref, created_at) VALUES (?,?,?,?,?)');
+// A run can be disqualified AFTER its initial reward. Keep the original
+// award immutable for audit, and post unique debit/restoration rows on each
+// review-state transition. No held/confirmed run keeps spendable credit.
+// Net account balances may go negative after post-spend clawback; new purchases
+// cannot succeed until enough legitimate credits are earned or bought.
+function reconcileRunRewardIntegrity(userId, t=Date.now()) {
+  const originals=db.prepare(`SELECT r.id,r.held,p.amount
+    FROM runs r JOIN points_ledger p ON p.user_id=r.user_id
+      AND p.reason='run' AND p.ref=CAST(r.id AS TEXT)
+    WHERE r.user_id=?`).all(userId);
+  if (!originals.length) return 0;
+  const adjustments=db.prepare("SELECT ref,amount FROM points_ledger WHERE user_id=? AND reason='run-integrity'").all(userId);
+  const state=new Map();
+  for(const e of adjustments){
+    const m=/^(\\d+):(\\d+)$/.exec(e.ref);if(!m)continue;
+    const key=m[1],v=state.get(key)||{delta:0,max:0};
+    v.delta+=e.amount;v.max=Math.max(v.max,Number(m[2]));state.set(key,v);
+  }
+  let changed=0;
+  for(const r of originals){
+    const key=String(r.id),v=state.get(key)||{delta:0,max:0};
+    const expected=Number(r.held)===0?r.amount:0;
+    const correction=expected-(r.amount+v.delta);
+    if(!correction)continue;
+    const n=v.max+1;
+    const wrote=insL.run(userId,correction,'run-integrity',key+':'+n,t);
+    if(wrote.changes!==1)throw new Error('Run reward clawback ledger collision');
+    state.set(key,{delta:v.delta+correction,max:n});changed++;
+  }
+  return changed;
+}
 function sync(userId) {
   const ach = require('./achievements');
   db.transaction(() => {
+    reconcileRunRewardIntegrity(userId);
     // Only server-accepted, NOT held/disqualified runs can mint cosmetic points.
     // Anti-cheat clear can later release an older run: avoid a MAX(run_id)
     // cursor that permanently skips previously held runs once newer runs pay.
