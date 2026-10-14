@@ -317,7 +317,7 @@ const owned = (userId) => new Set(db.prepare('SELECT item_id FROM user_items WHE
 
 function buy(user, itemId, t = Date.now()) {
   const it = BY_ID[itemId]; if (!it) return { ok: false, error: 'Unknown item.' };
-  if (it.src === 'k' || it.src === 'b') return { ok: false, error: 'This item is earned, not sold.' };
+  if (it.src === 'k' || it.src === 'b' || it.src === 'p') return { ok: false, error: 'This item is earned, not sold.' };
   const rot = module.exports.rotation(t); if (!inRotation(rot, it)) return { ok: false, error: 'That item is not in the shop right now. Check back when it rotates in.' };
   if (owned(user.id).has(it.id)) return { ok: false, error: 'You already own this.' };
   const price = module.exports.priceFor(it, user, t);
