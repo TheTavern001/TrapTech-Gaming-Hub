@@ -60,12 +60,13 @@
       "id": "ANTI-CHEAT-HELD-REWARDS",
       "release": "R4",
       "requirement": "No minted rewards/XP/quests/achievements from held runs; later disqualifications claw back funds with ledger adjustment",
-      "status": "SOURCE_IMPLEMENTED_TEST_PENDING",
+      "status": "SOURCE_SQL_EQUIVALENCE_PASS_NATIVE_TEST_PENDING",
       "evidence": [
         "src/shop.js",
         "src/progress.js",
         "src/achievements.js",
-        "tools/test-reward-integrity.js"
+        "tools/test-reward-integrity.js",
+        "src/shop.js accepted-run cap filter"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -280,7 +281,8 @@
         "src/server.js",
         "src/monetize.js",
         "src/shop.js",
-        "src/unified-wallet.js"
+        "src/unified-wallet.js",
+        "scripts/offline-release-gate.sh"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -328,5 +330,7 @@
   "antiCheatPrizeProofStatus": "SOURCE_FAIL_CLOSED; ALL official prize-scoring games held until owner-approved independent replay",
   "lastSecuritySourceChange": "2026-10-14 session epoch rollout source only; Deplexo CURRENT screenshot SHA 278af07; source branch commits not deployed.",
   "latestOwnerScreenshotCurrent": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
-  "latestSecurityCheckpoint": "2026-10-14: source-only prevent unpaid order admin fulfillment; 30 V8 assertions PASS on actual repository source, Docker+browser+native phone tests NOT RUN. Manual gifts remain logged and $0. No Deplexo release."
+  "latestSecurityCheckpoint": "2026-10-14: source-only prevent unpaid order admin fulfillment; 30 V8 assertions PASS on actual repository source, Docker+browser+native phone tests NOT RUN. Manual gifts remain logged and $0. No Deplexo release.",
+  "lastSourceUpdate": "2026-10-14: isolated SQLite ledger/held-daily-cap query equivalence PASS; full application Node20/Docker and physical phone checks NOT RUN.",
+  "offlineReleaseRunner": "scripts/offline-release-gate.sh"
 }
