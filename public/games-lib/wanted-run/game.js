@@ -104,11 +104,31 @@ async function replaceChaserPrototype(template, id, hasBeacons) {
 replaceChaserPrototype(copP, 'kc-police', true);
 replaceChaserPrototype(tankP, 'kc-suv-luxury', false);
 let objRef = null; const INST = []; let camX = 0, camZ = 0;
+// Reuse 3D transform scratch objects. A dense 900-obstacle endless world was
+// allocating one Matrix4 clone per visible mesh per rendered frame, forcing
+// unnecessary mobile GC despite InstancedMesh batching.
+const instanceWorld = new THREE.Matrix4(), instanceFinal = new THREE.Matrix4();
+const instanceRotation = new THREE.Quaternion(), instancePosition = new THREE.Vector3();
+const instanceScale = new THREE.Vector3(), instanceUp = new THREE.Vector3(0, 1, 0);
 function render3d(g) { const c0 = g.car;
   if (objRef !== g.obj) { objRef = g.obj; objG.clear(); INST.length = 0; const kinds = { t: [PROTO.t], r: [PROTO.r], h0: [PROTO.h[0]], h1: [PROTO.h[1]], h2: [PROTO.h[2]] };
     for (const [k, [pr]] of Object.entries(kinds)) { const list = g.obj.filter(o => (o.k === 'h' ? 'h' + (o.v % 3) : o.k) === k); const ims = []; pr.traverse(m => { if (m.isMesh) { const im = new THREE.InstancedMesh(m.geometry, m.material, list.length); im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false; objG.add(im); ims.push({ im, local: m.matrixWorld.clone() }); } }); INST.push({ list, ims }); } }
-  const MM = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), SC = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
-  for (const it of INST) { let n = 0; for (const o of it.list) { if (Math.abs(o.x - c0.x) > 900 || Math.abs(o.y - c0.y) > 900) continue; const s = o.k === 'h' ? 1 : o.r / 20; Q.setFromAxisAngle(Y, o.k === 'h' ? (o.v % 4) * Math.PI / 2 : o.v); MM.compose(V.set(o.x * K, 0, o.y * K), Q, SC.set(s, s, s)); for (const { im, local } of it.ims) { const m = MM.clone().multiply(local); im.setMatrixAt(n, m); } n++; } for (const { im } of it.ims) { im.count = n; im.instanceMatrix.needsUpdate = true; } }
+  for (const it of INST) {
+    let n = 0;
+    for (const o of it.list) {
+      if (Math.abs(o.x - c0.x) > 900 || Math.abs(o.y - c0.y) > 900) continue;
+      const scale = o.k === 'h' ? 1 : o.r / 20;
+      instanceRotation.setFromAxisAngle(instanceUp, o.k === 'h' ? (o.v % 4) * Math.PI / 2 : o.v);
+      instanceWorld.compose(instancePosition.set(o.x * K, 0, o.y * K),
+        instanceRotation, instanceScale.set(scale, scale, scale));
+      for (const { im, local } of it.ims) {
+        instanceFinal.multiplyMatrices(instanceWorld, local);
+        im.setMatrixAt(n, instanceFinal);
+      }
+      n++;
+    }
+    for (const { im } of it.ims) { im.count = n; im.instanceMatrix.needsUpdate = true; }
+  }
   for (const p of g.cops) { if (!p.o) { p.o = (p.tank ? tankP : copP).clone(); carG.add(p.o); p.o.userData.lights = p.tank ? null : [p.o.children[p.o.children.length - 2], p.o.children[p.o.children.length - 1]]; } p.o.position.set(p.x * K, 0, p.y * K); p.o.rotation.y = -p.a; p.o.userData.f = g.frames; if (p.o.userData.lights) { const on = Math.sin(g.t * 18) > 0; p.o.userData.lights[0].visible = on; p.o.userData.lights[1].visible = !on; } }
   for (let i = carG.children.length - 1; i >= 0; i--) if (carG.children[i].userData.f !== g.frames) carG.remove(carG.children[i]);
   player.position.set(c0.x * K, 0, c0.y * K); player.rotation.y = -c0.a; player.rotation.x = 0; player.rotation.z = (g.steer || 0) * 0.06;
