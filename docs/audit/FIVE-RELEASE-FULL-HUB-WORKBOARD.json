@@ -96,7 +96,13 @@
         "src/shop.js (held-run-reward clawback)",
         "src/achievements.js",
         "src/progress.js",
-        "tools/test-reward-integrity.js"
+        "tools/test-reward-integrity.js",
+        "src/prize-score-proof.js",
+        "src/results.js",
+        "src/admin-scoring.js",
+        "src/boards.js",
+        "tools/test-prize-score-proof.js",
+        "docs/audit/PRIZE-SCORE-ADMISSION-DRAFT-2026-10-13.md"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -286,7 +292,9 @@
       "exit": "Adversarial/auth regressions and persisted restore exercise",
       "evidence": [
         "docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.json",
-        "tools/preflight-manual-release.js"
+        "tools/preflight-manual-release.js",
+        "src/prize-score-proof.js",
+        "tools/test-prize-score-proof.js"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -385,5 +393,7 @@
   "automaticDeployOwnerConfirmedOff": true,
   "publicLaunchApproved": false,
   "currencyMigrationNativeDockerTest": "NOT_RUN",
-  "sourceOnlyPaymentsVersion": "immutable quoted credits for Stripe/Bitcoin/manual, native e2e pending"
+  "sourceOnlyPaymentsVersion": "immutable quoted credits for Stripe/Bitcoin/manual, native e2e pending",
+  "gameProofCertifiedCount": 0,
+  "prizeScoreGate": "BLOCKED_UNTIL_INDEPENDENT_REPLAY_AND_OWNER_QA"
 }
