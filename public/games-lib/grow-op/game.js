@@ -32,9 +32,17 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
     // Timed, seeded pest waves are independent of render frame frequency.
     // Unswatted pests chew for a limited time, then leave. Cap actors to
     // keep long Android/iPhone sessions bounded in CPU and retained memory.
+    // Age existing pests first. New waves must not be born already expired
+    // after a tab suspension or a slow phone frame.
+    const counts = [0,0,0,0,0,0];
+    for (const pest of g.pests) {
+      pest.t += dt;
+      pest.x += Math.sin(pest.t * 7) * 30 * Math.min(dt, 0.1);
+      if (!pest.dead && pest.t < pest.life) counts[pest.p]++;
+      else pest.dead = true;
+    }
+    g.pests = g.pests.filter(pest => !pest.dead);
     g.pestTimer -= dt;
-    // Preserve wave counts across a slow frame instead of silently skipping
-    // waves; cap catch-up to bound work on phone resume after suspension.
     let waves = 0;
     while (g.pestTimer <= 0 && waves++ < 4) {
       const interval = Math.max(0.75, 4.5 - Math.min(3.75, g.time / 190));
@@ -43,17 +51,11 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
         const p = g.pick(g.plants);
         g.pests.push({ x:p.x + g.R(-30, 30), y:g.R(120, 300),
           p:p.i, t:0, life:9 + g.R(0, 5) });
+        counts[p.i]++;
       }
     }
     if (g.pestTimer <= 0) g.pestTimer = 0.75;
-    const counts = [0,0,0,0,0,0];
-    for (const pest of g.pests) {
-      pest.t += dt; pest.x += Math.sin(pest.t * 7) * 30 * dt;
-      if (!pest.dead && pest.t < pest.life) counts[pest.p]++;
-      else pest.dead = true;
-    }
     for (const p of g.plants) p.pests = counts[p.i];
-    g.pests = g.pests.filter(pest => !pest.dead);
     g.hud = 'LOST ' + g.deaths + '/3  ' + Math.floor(g.time / 60) + ':' + String(Math.floor(g.time % 60)).padStart(2, '0');
   },
   draw(g, c) {
