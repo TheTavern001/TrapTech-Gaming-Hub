@@ -96,12 +96,14 @@ if(full) {
    ['build','--file','Dockerfile','--tag',tag,'.'],20*60*1000);
  }
 }
+if(!full) records.push({label:'full-Dockerfile-STEP11-STEP12',status:'NOT_RUN',error:'Source-only rehearsal cannot be used as deploy-ready evidence; rerun with --full'});
 const failed=records.filter(x=>x.status!=='PASS');
 const report={schema:1,createdAtUTC:startedAt,finishedAtUTC:new Date().toISOString(),
  sourceSha:sha,release:stage,level:full?'FULL_LOCAL_DOCKER':'LOCAL_NODE_TESTS',
  hostDeploymentAttempted:false,githubActionsUsed:false,
  nodeTestsPassed:records.filter(x=>x.status==='PASS'&&x.label.startsWith('tools/')).length,
  nodeTestsTotal:tests.length,releaseGatePassed:ready,
+ dockerVerified:full&&records.some(x=>x.label==='full-Dockerfile-STEP11-STEP12'&&x.status==='PASS'),
  allChecksPassed:failed.length===0,failures:failed.map(x=>x.label),
  warning:'Local success is not live READY or real Android/iPhone device certification.',
  records};
