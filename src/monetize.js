@@ -15,6 +15,7 @@
 const crypto = require('crypto');
 const db = require('./db');
 const WALLET = require('./unified-wallet');
+const { verifiedSettlement } = require('./payment-settlement-proof');
 const BTC = require('./btc');
 const G = require('./shop-gen');
 
@@ -214,9 +215,12 @@ function grant(o, how = 'auto', t = Date.now()) {
   return db.transaction(() => {
     const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id);
     if (!fresh) return { ok:false, error:'Missing order' };
-    if (fresh.granted_at) return { ok: true, already: true };
-    if (fresh.refunded_at || fresh.status !== 'paid')
-      return { ok:false, error:'Order is not settled for fulfillment' };
+    if (fresh.refunded_at) return { ok:false, error:'Refunded orders cannot grant entitlements' };
+    if (fresh.granted_at) return { ok:true, already:true };
+    // Never fulfill on admin-forced paid status, missing Stripe intent, or
+    // insufficient BTC confirmations/amount; no unsigned client claims.
+    if (!verifiedSettlement(fresh))
+      return { ok:false, error:'Verified provider settlement is required for fulfillment' };
     if (p.kind === 'pack') {
       // Do not use mutable store products: pay-then-edit must never change grant.
       // Legacy orders without a snapshot require reconciliation, not guessing.
