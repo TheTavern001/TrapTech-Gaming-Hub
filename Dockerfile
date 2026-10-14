@@ -107,6 +107,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-kit-mobile-lifecycle.js \
  && node tools/test-kit-score-submit-error.js \
  && node tools/test-kit-game-start-error.js \
+ && node tools/test-kit-run-serial.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
  && node --check tools/test-grow-op-touch-fairness.js \
