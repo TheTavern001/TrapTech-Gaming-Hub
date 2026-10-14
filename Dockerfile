@@ -29,6 +29,9 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s docs/score-ranges.json \
  && echo 'Required prelaunch audit inputs present' \
  && mkdir -p docs/audit \
+ && node --check src/unified-wallet.js \
+ && node --check tools/test-unified-wallet.js \
+ && node tools/test-unified-wallet.js \
  && node --check src/shop.js \
  && node --check src/shop-gen.js \
  && node --check src/avatars.js \
