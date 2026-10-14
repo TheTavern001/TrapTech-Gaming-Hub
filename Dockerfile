@@ -37,6 +37,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-unified-wallet.js \
  && node --check tools/test-payment-order-snapshots.js \
  && node tools/test-payment-order-snapshots.js \
+ && node --check src/payment-settlement-proof.js \
+ && node --check tools/test-payment-settlement-proof.js \
+ && node tools/test-payment-settlement-proof.js \
  && node --check tools/test-reward-integrity.js \
  && node tools/test-reward-integrity.js \
  && node --check src/prize-score-proof.js \
