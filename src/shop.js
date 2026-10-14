@@ -1,6 +1,6 @@
 'use strict';
 // v5 Points + cosmetics shop.
-// Hub Points are COSMETIC ONLY: no cash value, cannot be bought with money, cannot be traded/transferred between
+// Hub Credits are COSMETIC ONLY: earn from playing or optionally buy. They have no cash value and cannot be traded/transferred between
 // players and can never be redeemed for prizes or giveaway entries. Earned from runs, quests, streaks, achievements,
 // referrals and friend challenges; spent on rotating cosmetic items. All designs are original CSS/SVG.
 const db = require('./db');
