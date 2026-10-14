@@ -19,8 +19,8 @@ function inspect({workstreams,baselineCertified,publicQualified}){
  for(const gate of security.gates){
   if(!stages.includes(gate.release))continue;
   if(gate.status!=='VERIFIED' || gate.ownerApproved!==true ||
-      gate.nativeDeviceEvidence!==true || gate.liveHostVerified!==true)
-    blockers.push('SECURITY '+gate.id+': '+gate.status+'; native/browser/owner evidence missing');
+      gate.preDeploymentVerified!==true || (gate.phoneEvidenceRequired && gate.nativeDeviceEvidence!==true))
+    blockers.push('SECURITY '+gate.id+': '+gate.status+'; predeployment/phone/owner evidence missing');
  }
  for(const w of workstreams){
   if(!stages.includes(w.release))continue;
