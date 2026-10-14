@@ -405,3 +405,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `4f50717234673cfe8651d44bc85cdd3deec2dec2` adds real gameplay callback regression for swatted vs unswatted pest; `93b65248a6c2ef83177033ba2b9102785d13b7a5`, `f765c4e64393c082fbf684899f0cb0b5ade62f2a`, and `f43746575c2517b8a402a19b4f12caa2febda451` wire it into canonical rehearsal, offline shell gate and Dockerfile.
 - Executed isolated V8 callback on fetched source: swatted earned 5 points and removed the pest, unswatted earned 0 with pest retained; swatted plant had higher health after identical tick. PASS. Complete Docker build, physical phone QA and security checks are NOT RUN.
 - Existing Hub full AAA/game catalog certification remains pending and Deplexo auto-deploy stays OFF. Resume with full Docker-backed test on an executable checkout, then mobile verification and controlled private deploy.
+
+## 2026-10-14 — Grow Op expired-pest fairness repair
+
+- `0eec6d389da4b9725831edc725eedb66b7a72c16` moves plant-health processing after same-frame pest aging/removal and live pest-count reconciliation. Previously a pest expiring in the frame could still inflict stale damage.
+- `0ebf9794033f45abbfa495add7f0f03831e2e880` adds a deterministic real update-callback regression. `6d3afc48a4d9debc016535c05c4f85012c8652cb`, `014315192f57f57f1aaf25bf2e330102d43dc714` and `709f73f2ed7ab0d2ba202e1cef111cc59c800263` integrate it in canonical rehearsal, offline gate and Docker build.
+- Actual isolated V8 execution on fetched game code: expiring pest gives plant health delta +0.004 and active pest +0.001 for identical 0.1-second tick; expected difference PASS. Full native Node suite, Docker image, mobile devices, hosted HTTP and cash/score security acceptance remain NOT RUN.
+- Release still unapproved. Keep auto-deploy OFF. Source-only progress must not be counted as completion of the avatar, shop, mobile, anti-cheat and 500-game goals.
