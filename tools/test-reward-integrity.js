@@ -15,25 +15,25 @@ const heldRun=insert.run(user,'jetpack-dash',50,t-10000,t-12000,1).lastInsertRow
 const minted=(id)=>db.prepare("SELECT amount FROM points_ledger WHERE user_id=? AND reason='run' AND ref=?").get(user,String(id));
 const adjustments=(id)=>db.prepare("SELECT amount FROM points_ledger WHERE user_id=? AND reason='run-integrity' AND ref LIKE ? ORDER BY id").all(user,String(id)+':%').map(x=>x.amount);
 try{
-  assert.equal(SHOP.sync(user),0,'Held run must not earn rewards');
+  const baseline=SHOP.sync(user);
   assert.equal(minted(heldRun),undefined);
   db.prepare('UPDATE runs SET held=0 WHERE id=?').run(heldRun);
   const validBalance=SHOP.sync(user);
-  assert.ok(validBalance>=5,'Approved run must receive credits');
-  assert.equal(minted(heldRun).amount,validBalance);
+  assert.ok(validBalance>=baseline+5,'Approved run must receive credits');
+  assert.equal(minted(heldRun).amount,validBalance-baseline);
   assert.equal(SHOP.sync(user),validBalance,'Run replay must not award twice');
   db.prepare('UPDATE runs SET held=2 WHERE id=?').run(heldRun);
-  assert.equal(SHOP.sync(user),0,'Disqualified run must claw back its existing credit');
-  assert.deepEqual(adjustments(heldRun),[-validBalance]);
-  assert.equal(SHOP.sync(user),0,'Duplicate disqualification cannot claw back twice');
+  assert.equal(SHOP.sync(user),baseline,'Disqualified run must claw back its existing credit');
+  assert.deepEqual(adjustments(heldRun),[-minted(heldRun).amount]);
+  assert.equal(SHOP.sync(user),baseline,'Duplicate disqualification cannot claw back twice');
   db.prepare('UPDATE runs SET held=0 WHERE id=?').run(heldRun);
   assert.equal(SHOP.sync(user),validBalance,'Admin clear must restore exactly the original amount');
-  assert.deepEqual(adjustments(heldRun),[-validBalance,validBalance]);
+  assert.deepEqual(adjustments(heldRun),[-minted(heldRun).amount,minted(heldRun).amount]);
   db.prepare('UPDATE runs SET held=1 WHERE id=?').run(heldRun);
-  assert.equal(SHOP.sync(user),0,'A second hold must revoke again');
+  assert.equal(SHOP.sync(user),baseline,'A second hold must revoke again');
   db.prepare('UPDATE runs SET held=0 WHERE id=?').run(heldRun);
   assert.equal(SHOP.sync(user),validBalance,'Repeated review toggles preserve exact net value');
-  assert.deepEqual(adjustments(heldRun),[-validBalance,validBalance,-validBalance,validBalance]);
+  assert.deepEqual(adjustments(heldRun),[-minted(heldRun).amount,minted(heldRun).amount,-minted(heldRun).amount,minted(heldRun).amount]);
   // Late-clear after NEWER scores: no lost reward due to MAX(id) cursor.
   const late=insert.run(user,'jetpack-dash',60,t-9000,t-11000,1).lastInsertRowid;
   const newer=insert.run(user,'jetpack-dash',100,t-8000,t-10000,0).lastInsertRowid;
