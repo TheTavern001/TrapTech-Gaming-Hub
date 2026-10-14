@@ -17,8 +17,8 @@
       // Otherwise several randomly placed obstacles can seal off a room.
       const w = 40 + g.R(0, 40);
       const left = g.RI(0, 1) === 0;
-      const x = left ? RX + 18 + g.R(0, 62) :
-        RX + RW - 18 - w - g.R(0, 62);
+      const x = left ? RX + 18 + g.R(0, 36) :
+        RX + RW - 18 - w - g.R(0, 36);
       g.obs.push({ x, y: RY + 120 + g.R(0, RH - 300), w, h: 30 });
     }
     const pos = () => { for (let k = 0; k < 30; k++) { const x = RX + 30 + g.R(0, RW - 60), y = RY + 40 + g.R(0, RH * 0.55); if (!g.obs.some(o => x > o.x - 16 && x < o.x + o.w + 16 && y > o.y - 16 && y < o.y + o.h + 16)) return [x, y]; } return [200, 150]; };
