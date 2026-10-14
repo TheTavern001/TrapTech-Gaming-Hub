@@ -54,7 +54,10 @@
       "code": "public/games-lib/wanted-run/game.js",
       "status": "SOURCE_ONLY",
       "exit": "Police trap/edge/object/seed tests, Android steering, stable score",
-      "evidence": [],
+      "evidence": [
+        "tools/test-owner-reported-gameplay.js",
+        "public/games-lib/wanted-run/game.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -98,7 +101,10 @@
       "code": "public/games-lib/assets3d; licenses",
       "status": "SOURCE_ONLY",
       "exit": "Every active game art ledger has licence/source/hash/device evidence",
-      "evidence": [],
+      "evidence": [
+        "docs/audit/KENNEY-CAR-KIT-IMPORTED-2026-10-13.json",
+        "docs/audit/KENNEY-CAR-KIT-BINARY-QA-2026-10-13.json"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -109,7 +115,10 @@
       "code": "public/games-lib/wanted-run/game.js",
       "status": "SOURCE_ONLY",
       "exit": "Gameplay car selector uses server-owned cosmetics and stable fixed physics",
-      "evidence": [],
+      "evidence": [
+        "public/games-lib/wanted-run/game.js",
+        "tools/test-imported-kenney-cars.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -296,7 +305,9 @@
       "code": "Dockerfile; docs/DEPLOYMENT-JOURNAL.md",
       "status": "NOT_STARTED",
       "exit": "Build Docker + HTTP smoke + Deplexo READY + owner device UAT",
-      "evidence": [],
+      "evidence": [
+        "tools/preflight-manual-release.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -307,9 +318,18 @@
       "code": "tools/verify-game-intake.js",
       "status": "BLOCKED",
       "exit": "Rights/score/graphics/device/owner approval for every new title",
-      "evidence": [],
+      "evidence": [
+        "docs/audit/POST-OVERHAUL-GAME-CANDIDATES-2026-10-13.json",
+        "tools/test-game-candidate-queue.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     }
-  ]
+  ],
+  "sourceCarModelsImported": 10,
+  "sourceCarsPrelaunchSourceIntegrity": 10,
+  "gameCandidatesResearchOnly": 5,
+  "gameCandidatesAddedToCatalog": 0,
+  "releaseMilestonesUsedByThisBranch": 0,
+  "publicLaunchGateStatus": "BLOCKED_PENDING_25_WORKSTREAMS_AND_PHYSICAL_QA"
 }
