@@ -19,7 +19,14 @@ if(ID){
     supportsSound:key==='dino-dash',supportsQuality:false,
     onOpen:()=>{
       if(key==='bud-merge'){previous=!!window.__ttVendorSettingsPaused;window.__ttVendorSettingsPaused=true;}
-      if(key==='hex-stack'){previous=!!window.__GL?.g?.paused;if(window.__GL?.g)window.__GL.g.paused=true;}
+      if(key==='hex-stack'){
+        const g=window.__GL?.g;
+        // An earlier quick close may still be waiting on native pause animation.
+        // Reopening must not confuse that pending resume with a user-initiated pause.
+        previous=!!g?.paused&&!g?.resumePending;
+        if(window.settings?.speedUpKeyHeld){window.rush/=4;window.settings.speedUpKeyHeld=false;}
+        if(g)g.paused=true;
+      }
       if(key==='dino-dash'){const r=window.Runner?.instance_;running=!!r?.isRunning?.();
         if(running)r.stop();}
     },
