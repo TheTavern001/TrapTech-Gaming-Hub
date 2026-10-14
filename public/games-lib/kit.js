@@ -142,6 +142,8 @@
     });
     addEventListener('keyup', e => { if(!gameSettingsOpen)g.keys[e.key] = false; });
     addEventListener('blur',()=>{clearInputs();if(g.state==='play')g.paused=true;});
+    addEventListener('pagehide',()=>{clearInputs();if(g.state==='play')g.paused=true;});
+    addEventListener('freeze',()=>{clearInputs();if(g.state==='play')g.paused=true;});
     document.addEventListener('visibilitychange', () => { if(document.hidden){clearInputs();if(g.state==='play')g.paused=true;} });
     g.kd = (k) => !!(g.kp && g.kp[k]);
     async function begin() { g.state = 'starting'; const seed = window.Hub ? await Hub.start(def.id) : null; g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = false; def.init(g); g.state = 'play'; K.sfx('power'); }
