@@ -274,9 +274,17 @@ const insL = db.prepare('INSERT OR IGNORE INTO points_ledger (user_id, amount, r
 function sync(userId) {
   const ach = require('./achievements');
   db.transaction(() => {
-    const runs = db.prepare('SELECT id, game_id, score, created_at FROM runs WHERE user_id=? AND id > COALESCE((SELECT MAX(CAST(ref AS INTEGER)) FROM points_ledger WHERE user_id=? AND reason=\'run\'), 0) ORDER BY id').all(userId, userId);
+    // Only server-accepted, NOT held/disqualified runs can mint cosmetic points.
+    // Anti-cheat clear can later release an older run: avoid a MAX(run_id)
+    // cursor that permanently skips previously held runs once newer runs pay.
+    // This key is immutable (run id), protected by UNIQUE(user_id,reason,ref).
+    const runs = db.prepare(`SELECT r.id, r.game_id, r.score, r.created_at
+      FROM runs r WHERE r.user_id=? AND COALESCE(r.held,0)=0
+      AND NOT EXISTS (SELECT 1 FROM points_ledger p
+        WHERE p.user_id=r.user_id AND p.reason='run' AND p.ref=CAST(r.id AS TEXT))
+      ORDER BY r.id`).all(userId);
     if (runs.length) {
-      const best = {}; for (const r of db.prepare('SELECT game_id, MAX(score) AS b FROM runs WHERE user_id=? AND id < ? GROUP BY game_id').all(userId, runs[0].id)) best[r.game_id] = r.b;
+      const best = {}; for (const r of db.prepare('SELECT game_id, MAX(score) AS b FROM runs WHERE user_id=? AND COALESCE(held,0)=0 AND id < ? GROUP BY game_id').all(userId, runs[0].id)) best[r.game_id] = r.b;
       const perDay = {};
       for (const r of runs) {
         const day = Math.floor(r.created_at / D);
@@ -313,7 +321,12 @@ function buy(user, itemId, t = Date.now()) {
   const res = db.transaction(() => {
     const b = balance(user.id); if (b < price) return false;
     const r = db.prepare('INSERT OR IGNORE INTO user_items (user_id, item_id, price, acquired_at) VALUES (?,?,?,?)').run(user.id, it.id, price, t); if (!r.changes) return false;
-    insL.run(user.id, -price, 'purchase', it.id, t); return true;
+    // Owning a cosmetic without a corresponding wallet debit is forbidden.
+    // If the ledger has an existing debit key (old refunded purchase, etc.),
+    // rollback the entire inventory insert rather than grant for free.
+    const debit = insL.run(user.id, -price, 'purchase', it.id, t);
+    if (debit.changes !== 1) throw new Error('Cosmetic debit could not be recorded');
+    return true;
   })();
   return res ? { ok: true, item: module.exports.pub(it, true), price, balance: balance(user.id) } : { ok: false, error: 'Purchase failed. Try again.' };
 }
