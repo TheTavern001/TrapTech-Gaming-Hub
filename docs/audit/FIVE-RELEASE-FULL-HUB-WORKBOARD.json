@@ -102,7 +102,9 @@
         "src/admin-scoring.js",
         "src/boards.js",
         "tools/test-prize-score-proof.js",
-        "docs/audit/PRIZE-SCORE-ADMISSION-DRAFT-2026-10-13.md"
+        "docs/audit/PRIZE-SCORE-ADMISSION-DRAFT-2026-10-13.md",
+        "src/shop.js held-run earning-cap filter",
+        "tools/test-reward-integrity.js review-cycle regression"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -368,7 +370,8 @@
       "status": "NOT_STARTED",
       "exit": "Build Docker + HTTP smoke + Deplexo READY + owner device UAT",
       "evidence": [
-        "tools/preflight-manual-release.js"
+        "tools/preflight-manual-release.js",
+        "scripts/offline-release-gate.sh"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -426,5 +429,11 @@
   },
   "providerSettlementSourcePassCount": 30,
   "providerSettlementFullNativeTestsDone": false,
-  "providerSettlementLastUpdate": "2026-10-14; 30 V8 assertions actual source, not Docker/HTTP"
+  "providerSettlementLastUpdate": "2026-10-14; 30 V8 assertions actual source, not Docker/HTTP",
+  "offlineReleaseAudit": {
+    "command": "bash scripts/offline-release-gate.sh R1 --docker",
+    "status": "REQUIRES_COMPLETE_LOCAL_CHECKOUT_AND_DOCKER",
+    "githubHostedRunnersNeeded": false,
+    "manualDeployment": "NOT YET AUTHORIZED"
+  }
 }
