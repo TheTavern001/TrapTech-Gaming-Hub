@@ -448,3 +448,9 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `046d43f5ad9aff3a2b284559841e4f0560c381d8` adds run callback isolation test; `8764853f63077bf59978eaaed325dc155f9b72bd`, `5d83f386321712bcd641eb6c1da8e2f875032f8e`, `f4de3fb64e6ac9adc0323b7a7d0777974c005b6c` wire it into canonical rehearsal, shell gate, Docker prelaunch.
 - GitHub source readback confirmed serial increment, two stale callback guards, immutable submission score snapshot. This is a static source contract check, **not** executed in browser/Node full test, Docker, Android or iPhone. Score server anti-cheat remains independent and unverified.
 - Current Deplexo screenshot remains old `278af07`; no deployment initiated. Keep auto deploy OFF pending all release gates. Next resume on PR #29 with actual build/test checkout and substantive visual/avatar/shop completion; do not count source mechanics as AAA-certified games.
+
+## 2026-10-14 — Kit async game start while mobile tab hidden
+
+- `163ecb7149f4e67535c88d6a720d7fd71053389c`: when a game start API call completes after the browser tab becomes hidden or the settings panel opens, Kit starts the game paused rather than silently running on the background tab. Power-up audio is also withheld while paused.
+- `050d9af0e39902d22da413c575b812868b6804a3`: added a static regression contract for asynchronous start/hidden-page behavior. `671f0c2e33ce12e01e855a8dfa55c49c1ccc8f2e`, `a51d674a43b15bf21761912adb1d3e813075a70f`, `3262b2aae22e2325833cb6647629029372a621ea` wire it into canonical offline rehearsal, shell gate, and Docker prelaunch.
+- GitHub changes committed, **new Node test not executed in full checkout; Docker/browser/device evidence not run**. Keep Deplexo auto deploy OFF. Production still screenshot-confirmed at `278af07` and no source-only fix qualifies game or hub as AAA-approved.
