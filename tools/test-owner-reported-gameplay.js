@@ -64,6 +64,21 @@ function game(obstacles){
 assert.ok(!wanted.includes("g.end('Wrecked on a"),'No crash-to-gameover scenery rule may return');
 assert.ok(wanted.includes("new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)"),'Most Wanted must use local licensed source vehicles');
 assert.ok(wanted.includes("sourceVehicle('kc-sedan-sports')"),'Every player must get the same default vehicle');
+assert.ok(wanted.includes("replaceChaserPrototype(copP, 'kc-police', true)"),
+  'Police chase must show licensed source police model');
+assert.ok(wanted.includes("replaceChaserPrototype(tankP, 'kc-suv-luxury', false)"),
+  'High-heat chase must display separately sourced silhouette');
+const worldStart=wanted.indexOf('function render3d(g)');
+const worldEnd=wanted.indexOf('window.__GL3',worldStart);
+assert.ok(worldStart>0&&worldEnd>worldStart,'3D game frame render must be present');
+const worldRender=wanted.slice(worldStart,worldEnd);
+assert.ok(wanted.includes('const instanceWorld = new THREE.Matrix4(), instanceFinal = new THREE.Matrix4();'),
+  'World instance matrices must be reusable global scratch objects');
+assert.ok(worldRender.includes('instanceFinal.multiplyMatrices(instanceWorld, local)'),
+  'Reuse matrix multiplication while preserving scenery transforms');
+assert.ok(!worldRender.includes('new THREE.Matrix4()') &&
+  !worldRender.includes('MM.clone().multiply(local)'),
+  'Rendering 900 instanced props must not allocate a new matrix per prop per frame');
 assert.ok(wanted.includes("get('vehicleQA')==='1'"),'Additional vehicle selection is QA-only before server unlocks');
 for(const name of ["kc-police","kc-race-future","kc-suv-luxury","kc-ambulance","kc-firetruck","kc-taxi","kc-sedan-sports","kc-truck","kc-garbage-truck","kc-delivery"]){
  const file=path.join(root,'public/games-lib/assets3d',name+'.glb');
