@@ -82,6 +82,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check tools/test-game-candidate-queue.js \
  && node tools/test-game-candidate-queue.js \
  && node --check tools/preflight-manual-release.js \
+ && node --check tools/release-status.js \
+ && node --check tools/test-deplexo-release-evidence.js \
+ && node tools/test-deplexo-release-evidence.js \
  && node --check tools/audit-full-game-mechanics.js \
  && node tools/audit-full-game-mechanics.js \
  && test -s docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
