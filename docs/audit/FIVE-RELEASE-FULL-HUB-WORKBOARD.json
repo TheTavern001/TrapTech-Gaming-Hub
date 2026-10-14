@@ -152,7 +152,12 @@
       "code": "src/avatars.js; public/assets/avatars",
       "status": "BLOCKED",
       "exit": "Commercial-compatible source rig + neutral standardized meshes approved",
-      "evidence": [],
+      "evidence": [
+        "docs/audit/QUATERNIUS-NEUTRAL-STARTER-QA-2026-10-14.json",
+        "tools/test-neutral-avatar-source.js",
+        "public/assets/avatars/rigged/quaternius-neutral-starter-qa.glb",
+        "public/js/avatar-rig.js (avatarRigQA opt-in only)"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -337,5 +342,12 @@
   "releaseMilestonesUsedByThisBranch": 0,
   "publicLaunchGateStatus": "BLOCKED_PENDING_25_WORKSTREAMS_AND_PHYSICAL_QA",
   "hostEvidence": "Owner Deplexo screenshot phone 12:17: 278af07 CURRENT READY (323s), 916f5c7 READY (561s), 03119b9 READY (390s). Independent /api/build not supplied.",
-  "currentDevelopmentIsLive": false
+  "currentDevelopmentIsLive": false,
+  "importedNeutralQACharacter": {
+    "sha": "b3fd79533fdb9fcedd077744f7e120920eb6cc97",
+    "license": "CC0",
+    "joints": 65,
+    "approved": false,
+    "defaultEnabled": false
+  }
 }
