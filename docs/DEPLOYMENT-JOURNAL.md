@@ -333,3 +333,11 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - **Executed V8 test harness in the connected-tool environment against the fetched real source:** four scenarios returned [{score:25,remaining:0},{score:25,remaining:0},{score:0,remaining:1},{score:0,remaining:1}] — PASS. This is deterministic engine-callback testing, NOT native Node file execution or independent browser/Android/iOS visual QA.
 - **Not run:** complete Node regression file in repo checkout, full Docker image, production Deplexo rollout, device FPS/touch tests, score replay security. No game is owner certified.
 - **Resume:** expand this verified gameplay correction pattern across the existing 87 proposed active games; execute `bash scripts/offline-release-gate.sh R1 --docker` on a complete checkout before manual deployment. Avoid conflating one game regression with full Hub readiness. Auto-deploy remains OFF.
+
+## 2026-10-14 — real Arrow Hero procedural room navigation repair
+
+- `5763273e6f7c0b95e6898bf076b686e2644015f7`, finalized by `cea0eeb09074255d4accb579a09c0c3565461e4d`: obstacles in Arrow Hero rooms are now placed into lateral bands, preserving a central passage for the 12px-radius player from spawn to exit. The first attempt used a wide 62px band that did not guarantee clearance; the 36px bound fixes this. Treat the second SHA as the correction.
+- `2e0a48f8027914863259d4fb17ddd24f1bc0b076`: adds a 1,000-room reachability test driving the actual room transition callback rather than merely matching source text.
+- `4b7b6d2f539b6388f37c05efb503d683d9a452ec`: adds the new navigation regression to `scripts/offline-release-gate.sh`.
+- **Executed source-level V8 room-transition probe against fetched game code:** 1,000 transitions, minimum measured centerline clearance 46.7px, zero path-blocking placements. This does not prove that all alternative obstacle/AI routes and device input are correct. Native Node file run, browser QA, Android/iOS QA, Docker build, Deplexo deployment remain **NOT RUN**.
+- The production version remains screenshot-confirmed `278af07`; no release candidate was deployed. Resume by running the entire offline suite in a full repository checkout with Docker and correcting any failures before a deliberate private preview. Owner need not enable automatic deployment yet.
