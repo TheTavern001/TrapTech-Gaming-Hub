@@ -2,14 +2,22 @@
 
 **Product:** The Gaming Hub by Trap Tech Solutions  
 **Repository:** `TheTavern001/gaming-hub-2`  
-**Production candidate:** `main` (the exact deployed commit must be verified from `/api/build`)  
+**Last owner-confirmed live Deplexo deployment:** `278af07` (CURRENT/READY, owner screenshot 2026-10-14). `main` and the overhaul branch are GitHub source branches; only an actual host observation or `/api/build` proves what is deployed.  
 **Primary goal:** Make the existing Hub fully reviewable and testable before public release; then expand toward 500 distinct, launch-ready games.  
 **Cost constraint:** $0 additions unless the owner explicitly approves a cost.  
-**Last reconciled:** 2026-10-13 (see live release journal; historic sections may be stale)
+**Last reconciled:** 2026-10-14 owner screenshot. Deplexo auto-deploy OFF. All five-release overhaul commits remain undeployed.
 
 > This file is the navigation index and durable requirements ledger. It is not proof that a feature works. A checked box means source work or a named check is present; it does not replace live, browser, device, security, legal, or owner acceptance evidence. Update this file and the detailed tracker in the same commit whenever scope or status changes.
 
-## Current evidence checkpoint — 2026-10-13
+## Current evidence checkpoint — 2026-10-14 (supersedes historic snapshot below)
+
+- **CURRENT+READY host:** `278af07ebfbc0eb2e783d8294cb1707c528c0163`, Deplexo screenshot build duration 323 seconds, branch `qa/gameplay-distinctness-and-collision-20261013`. Prior READY `916f5c7` and `03119b9` are rollback candidates, not current.
+- **SOURCE ONLY:** `df091e8` and newer `program/five-release-full-hub-overhaul-20261013` work. GitHub content is **not** on Deplexo without a manually observed deployment. The ten genuine Kenney Car Kit GLBs have NOT been verified live.
+- **Library baseline:** 13 active core + 80 historical library IDs, of which six duplicates retired in owner-directed source consolidation ⇒ **87 proposed playable games**. The 500-active goal therefore needs **413 independently tested additional titles**, not 407, unless any archived titles are materially redesigned and readmitted.
+- **Product gate:** 0 owner/AAA-approved games; five-release R1-R5 workboard remains BLOCKED until tests and device/human evidence. Full Hub redesign, 3D avatar, thousands of real 3D wearables, payments and anti-cheat are not certified by host READY.
+- **Control:** Deplexo automatic deployment OFF, leave it off until `node tools/preflight-manual-release.js --release=R1 --require-ready` passes and human review confirms complete R1. Do not spend a host deployment merely to test a commit. Read `docs/audit/DEPLOYMENT-JOURNAL.json`, which tracks full SHA and latest host evidence.
+
+### Historical evidence — 2026-10-13 (retained for traceability)
 
 **Read [the deployment journal](DEPLOYMENT-JOURNAL.md) and run `node tools/release-status.js` before starting another deployment.** The earlier October 12 table below is historical, not the latest live state. Observed later Deplexo READY at `420bab1` (after READY `8489b41`); subsequent screenshots show four failed builds: `58a9f52`, `b7be1ec`, `4ad48e9` and `71a07b4`. Their first failed commands are still **UNKNOWN**; source `570a9fe` has no host result. This status is screenshot-evidenced; it must be updated against the next build log and exact current `/api/build` SHA.
 
