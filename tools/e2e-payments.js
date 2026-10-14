@@ -82,8 +82,8 @@ function client() { const jar = {}; return async (p, o = {}) => {
   ok(JSON.stringify(eP.body.checks.map(c => [c.id, c.ok])) === JSON.stringify(eF.body.checks.map(c => [c.id, c.ok])), 'eligibility checks are identical for paid and free players');
   const play = async (c, score) => { const s = await c('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); await sleep(2300); return c('/api/score', { body: { token: s.body.token, score, coins: 0, duration_ms: 2300 } }); };
   const [sp, sf] = await Promise.all([play(P1, 40), play(F, 40)]);
-  ok(sp.body.ok && sf.body.ok && sp.body.held === sf.body.held && sp.body.verified === sf.body.verified, 'same run -> same anti-cheat result');
-  r = await client()(`/api/leaderboard?giveaway=${gid}`); const rows = r.body.rows; ok(rows.length === 2 && rows.every(x => x.score === 40), 'both on the event board with the same score');
+  ok(sp.body.ok && sf.body.ok && sp.body.held === sf.body.held && sp.body.verified === sf.body.verified && sp.body.held === true, 'same paid/free run -> same fair-play proof hold while no giveaway game is certified');
+  r = await client()(`/api/leaderboard?giveaway=${gid}`); const rows = r.body.rows; ok(rows.length === 0, 'no uncertified run can enter official giveaway standings even when paid and free players submit equal scores');
   const [hp, hf] = await Promise.all([play(P1, 99999), play(F, 99999)]); ok(hp.status === 422 && hf.status === 422, 'impossible score rejected for paid and free alike');
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'server.js'), 'utf8').split("app.post('/api/score'")[1].split('\napp.')[0];
   ok(!/monetize|crown|prestige|pass_owned|store_/.test(src) && !/monetize|crown|pass_owned/i.test(require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'results.js'), 'utf8')), 'score submission and results code never read store data');
