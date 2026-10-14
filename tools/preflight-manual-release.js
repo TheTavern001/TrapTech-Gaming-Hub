@@ -12,6 +12,8 @@ const security=j('docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.js
 const requirements=['R1','R2','R3','R4','R5'];
 const release=String(process.argv.find(a=>a.startsWith('--release='))||'--release=R1').split('=')[1].toUpperCase();
 const publicIntent=process.argv.includes('--public');
+const privatePreview=process.argv.includes('--private-preview');
+if(privatePreview&&publicIntent){console.error('Private preview and public launch are mutually exclusive');process.exit(2);}
 if(!requirements.includes(release)){console.error('Unknown release gate '+release);process.exit(2);}
 function inspect({workstreams,baselineCertified,publicQualified}){
  const stages=requirements.slice(0,requirements.indexOf(release)+1),blockers=[];
@@ -49,7 +51,23 @@ const blockers=inspect({workstreams:board.workstreams,baselineCertified,
 if(qualityResult&&qualityResult.status!==0)
  blockers.push('Source evidence quality-readiness '+(publicIntent?'--require-500':'--require-baseline')+
    ' failed (exit '+qualityResult.status+'); verify all per-title source/device/score/licensing approvals');
-const output={result:blockers.length?'BLOCKED':'ELIGIBLE_FOR_MANUAL_REVIEW',
+// Private preview is a separate evidence report, not an approval shortcut:
+ // pre-approval phone tests require a running candidate. Keep commercial/prize
+ // flows disabled and demand external local build evidence before any deployment.
+ if(privatePreview){
+  const previewBlockers=[
+   'Full Docker build and authenticated localhost HTTP smoke evidence must be supplied for exact candidate SHA',
+   'Private access, temporary test accounts and rollback/backup plan must be verified',
+   'Payments, prize giveaways and prestige sales must remain disabled until independently certified',
+   'Owner must explicitly enable the first controlled deployment after candidate and environment review'
+  ];
+  console.log(JSON.stringify({result:'PRIVATE_PREVIEW_PREPARATION',release,
+   publicLaunchApproved:false,automaticDeploymentMustRemainOff:true,
+   sourceReadyForPrivateDeployment:false,preflightRequirements:previewBlockers,
+   outstandingPublicAcceptance:blockers.length,notice:'No deployment and no quality approval is implied'},null,2));
+  if(process.argv.includes('--require-ready'))process.exitCode=1;
+ } else {
+ const output={result:blockers.length?'BLOCKED':'ELIGIBLE_FOR_MANUAL_REVIEW',
  release,publicIntent,automaticDeploymentMustRemainOff:true,
  currentRegistered:board.currentHistoricalRegistered,proposedPlayable:board.proposedActivePlayable,
  approvedFromBoard:board.individuallyQualityApproved,gameCandidatesUnapproved:queue.candidates.length,
@@ -57,3 +75,4 @@ const output={result:blockers.length?'BLOCKED':'ELIGIBLE_FOR_MANUAL_REVIEW',
  blockers};
 console.log(JSON.stringify(output,null,2));
 if(process.argv.includes('--require-ready')&&blockers.length)process.exitCode=1;
+ }
