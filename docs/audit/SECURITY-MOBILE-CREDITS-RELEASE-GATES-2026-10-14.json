@@ -26,12 +26,13 @@
       "id": "WALLET-ONE-BALANCE",
       "release": "R3",
       "requirement": "One purchasable/earnable cosmetics-only Credits wallet, no double spend",
-      "status": "SOURCE_IMPLEMENTED_TEST_PENDING",
+      "status": "SOURCE_IMPLEMENTED_NATIVE_SQLITE_AND_DEVICE_ACCEPTANCE_PENDING",
       "evidence": [
         "src/unified-wallet.js",
         "src/shop.js",
         "src/monetize.js",
-        "tools/test-unified-wallet.js"
+        "tools/test-unified-wallet.js",
+        "tools/test-payment-order-snapshots.js"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -43,10 +44,11 @@
       "id": "WALLET-MIGRATION-ONCE",
       "release": "R3",
       "requirement": "Migrating old points and Crowns with refunds/orders intact, one time each",
-      "status": "SQLITE_EQUIVALENCE_PASS_NATIVE_APP_TEST_PENDING",
+      "status": "SOURCE_IMPLEMENTED_NATIVE_SQLITE_AND_DEVICE_ACCEPTANCE_PENDING",
       "evidence": [
         "tools/test-unified-wallet.js",
-        "docs/UNIFIED-HUB-CREDITS-SECURITY-2026-10-14.md"
+        "docs/UNIFIED-HUB-CREDITS-SECURITY-2026-10-14.md",
+        "tools/test-payment-order-snapshots.js"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -139,7 +141,8 @@
       "status": "BLOCKED_NEGATIVE_TESTS",
       "evidence": [
         "src/monetize.js",
-        "tools/e2e-payments.js"
+        "tools/e2e-payments.js",
+        "tools/test-payment-order-snapshots.js"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -155,7 +158,8 @@
       "evidence": [
         "src/monetize.js",
         "src/btc.js",
-        "tools/e2e-payments.js"
+        "tools/e2e-payments.js",
+        "tools/test-payment-order-snapshots.js"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -167,10 +171,11 @@
       "id": "REFUNDS-EQUIP-CONTROL",
       "release": "R4",
       "requirement": "Reverse charged-back credits and disable refundable cosmetic entitlements when needed; audit with no loss of legal customer funds",
-      "status": "BLOCKED_UNIMPLEMENTED",
+      "status": "ORIGINAL_GRANT_REFUNDS_SOURCE_GUARDED_BUT_EQUIPMENT_REVOCATION_BLOCKED",
       "evidence": [
         "src/monetize.js",
-        "src/shop.js"
+        "src/shop.js",
+        "tools/test-payment-order-snapshots.js"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -239,5 +244,24 @@
       "phoneEvidenceRequired": false
     }
   ],
-  "description": "Predeployment gate requires source/server tests + owner approval and real phone proof for phone-facing controls; liveHostVerified is recorded AFTER manual Deplexo deployment and must NOT block a not-yet-deployed release candidate."
+  "description": "Predeployment gate requires source/server tests + owner approval and real phone proof for phone-facing controls; liveHostVerified is recorded AFTER manual Deplexo deployment and must NOT block a not-yet-deployed release candidate.",
+  "orderSnapshotSecurity": {
+    "status": "SOURCE_IMPLEMENTED_NOT_LIVE",
+    "snapshotField": "store_orders.pack_crowns",
+    "createdFor": [
+      "bitcoin",
+      "stripe",
+      "manual"
+    ],
+    "validatedBeforeCharging": true,
+    "grantUsesOriginalQuantity": true,
+    "refundUsesOriginalLedger": true,
+    "duplicateGrantIdempotent": true,
+    "legacyPendingWithoutQuote": "MANUAL_RECONCILIATION_ONLY",
+    "sourceSimulation": "7 focused V8 checks PASS: 4 grant + 3 refund",
+    "nativeSQLiteTest": "ADDED_TO_DOCKER_NOT_RUN",
+    "fullStripeBTCFixture": "NOT_RUN",
+    "deviceQa": "NOT_RUN",
+    "risk": "Existing unsettled legacy orders without a snapshot require owner financial reconciliation; chargeback cosmetics and entitlements still not reconciled."
+  }
 }
