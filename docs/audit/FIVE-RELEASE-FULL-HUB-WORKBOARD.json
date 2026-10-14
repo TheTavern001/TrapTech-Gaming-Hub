@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "asOf": "2026-10-13",
-  "connectedReadyCommit": "03119b9c019aae88896eabe34ee697b7cd469419",
+  "asOf": "2026-10-14",
+  "connectedReadyCommit": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
   "autoDeploy": false,
   "ownerConfirmedAutoDeployOff": true,
   "productionUntouched": true,
@@ -117,7 +117,8 @@
       "exit": "Gameplay car selector uses server-owned cosmetics and stable fixed physics",
       "evidence": [
         "public/games-lib/wanted-run/game.js",
-        "tools/test-imported-kenney-cars.js"
+        "tools/test-imported-kenney-cars.js",
+        "public/games-lib/wanted-run/game.js (Kenney player+police+SUV sources)"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -283,7 +284,10 @@
       "code": "tools/e2e-games-lib.js; docs/audit",
       "status": "NOT_STARTED",
       "exit": "Measured P50/P95/memory/heat on owner Android and desktop",
-      "evidence": [],
+      "evidence": [
+        "public/games-lib/wanted-run/game.js (per-frame matrix scratch reuse; source only)",
+        "tools/test-owner-reported-gameplay.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -331,5 +335,7 @@
   "gameCandidatesResearchOnly": 5,
   "gameCandidatesAddedToCatalog": 0,
   "releaseMilestonesUsedByThisBranch": 0,
-  "publicLaunchGateStatus": "BLOCKED_PENDING_25_WORKSTREAMS_AND_PHYSICAL_QA"
+  "publicLaunchGateStatus": "BLOCKED_PENDING_25_WORKSTREAMS_AND_PHYSICAL_QA",
+  "hostEvidence": "Owner Deplexo screenshot phone 12:17: 278af07 CURRENT READY (323s), 916f5c7 READY (561s), 03119b9 READY (390s). Independent /api/build not supplied.",
+  "currentDevelopmentIsLive": false
 }
