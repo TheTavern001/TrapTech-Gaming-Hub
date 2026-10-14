@@ -258,3 +258,21 @@ References: `docs/UNIFIED-HUB-CREDITS-SECURITY-2026-10-14.md`, `docs/audit/MOBIL
 - **Actual test completed:** isolated in-memory SQLite regression: historical Crown rows convert 1:10 exactly once, negative refund rows preserved, repeated run-review ledger corrections balance to zero, and held runs do not consume the daily cap — PASS. This is **not** full application Node20/better-sqlite3, production DB, Docker, Android or iOS verification.
 - **Alternative to unavailable hosted runner:** `bash scripts/offline-release-gate.sh R1` on a complete local checkout with `npm ci --omit=dev` executes the core Node QA; add `--docker` to execute the production Docker STEP11/STEP12 locally. The script produces a local timestamped evidence log and never deploys. HTTP auth test remains in Docker localhost STEP12 only.
 - **Release preflight result from latest branch sources:** `BLOCKED`, six outstanding R1 mechanics/fairness acceptance workstreams. Do **not** turn Deplexo auto-deploy back on. Run native suite, finish 87 playable-title QA and owner phone review, then make one deliberate manual R1 deployment with host SHA and build fingerprint verification.
+
+## 2026-10-14 — owner gameplay complaint: 11 themed games + 93-source identity and 13 mechanics-family QA (NO DEPLOYMENT)
+
+**Host:** last owner screenshot-confirmed CURRENT/READY remains `278af07ebfbc0eb2e783d8294cb1707c528c0163`; Deplexo automatic deployment OFF. These GitHub commits are **SOURCE_ONLY_NOT_DEPLOYED**.
+
+**Source bugs identified and repaired on `program/five-release-full-hub-overhaul-20261013`:**
+- `6ece7aa` Trim Rush removes keyboard Space auto-snip and fixes misleading 60s help; `a98942d` fixes first-round `nextBud()` called before `g.done=0` (zero leaves and free clean-trim score).
+- `c849ae9` Bud Bar first touch on a different lane now fires directly rather than only selecting; fixes phone usability.
+- `e37025d` Grow Op describes actual endless survival/3-dead-plants failure instead of nonexistent 3-minute stop.
+- `30e8701` Strain Crush corrects 60s renewable clock; `ab5eb64` adds seeded legal-swap board detection and zero-reward deadlock reshuffle.
+- `3abc107` Dunk Flick removes goal-coordinate-derived guaranteed keyboard basket, uses manual arrow aim and identical touch ballistics.
+- `9a221a7` adds Node VM-based real game callback regression for Trim, Bud Bar, Grow Op and 40 Strain Crush seeds; `218f6d0` expands to Dunk. `493a21b` adds gameplay callback tests to Docker; `93c5204` enriches full-catalog scanner with possible exploit/time/graphics flags and mechanics families.
+- `d8277f3` adds exact 93 registered ID owner QA snapshot: 87 proposed active, 6 archived, 13 mechanically related review clusters; one especially high-risk remaining duplicate is **Haze Defense ↔ Pop Defense** (both build/upgrade on path vs layered/splitting enemies; Keep Guard also needs comparison).
+- `915c159` / `5cfd624` add all-93 mechanic matrix consistency test to Docker; `28ca3cd` publishes `docs/audit/OWNER-GAMEPLAY-CANNABIS-DUPLICATE-PASS-2026-10-14.md`. Workboard updated with source-only evidence.
+
+**Actual validation:** exact committed scripts and latest GitHub game source callbacks evaluated through a V8 simulated Node VM filesystem: **234 gameplay assertions PASS, 361 catalog/source-registry assertions PASS**. Full Node/Docker build, browser/WebGL assets, actual Android/iPhone gameplay and 60 FPS, signed score replay, license/owner AAA certification **NOT RUN** for this branch. No game was approved for release and no new games added toward 500.
+
+**Next resume:** execute full native Docker/Node prelaunch in complete checkout; repair anything it fails. Compare each of the 13 families on real phones and consolidate proven gameplay duplicates while preserving score IDs (especially Haze Defense vs Pop Defense/Keep Guard). Replace procedural placeholder visuals using commercially sourced assets and integrate directly into game scenes. Finish R1–R5 Hub-wide QA before any controlled deployment. **Do not turn auto-deploy back on yet.**
