@@ -33,7 +33,14 @@ for(const entry of manifest.objects){
 }
 const game=read('public/games-lib/wanted-run/game.js').toString();
 assert.ok(game.includes("sourceVehicle('kc-sedan-sports')"),'All players must start with same car');
-for(const entry of manifest.objects)assert.ok(game.includes("'"+entry.id+"'"),'Imported model not available in in-game preview '+entry.id);
+// The in-game list is emitted as JSON text (double quotes); read its actual
+// model identifiers, do not search for a fragile quote style.
+const listSource=game.match(/const VEHICLES = (\[[^\n]+\]);/);
+assert.ok(listSource,'In-game vehicle selector data missing');
+const selectable=JSON.parse(listSource[1]);
+assert.equal(selectable.length,manifest.objects.length,'Some source models are missing from in-game preview');
+const inGameIds=new Set(selectable.map(v=>v[0]));
+for(const entry of manifest.objects)assert.ok(inGameIds.has(entry.id),'Imported model not available in in-game preview '+entry.id);
 assert.ok(game.includes("get('vehicleQA')==='1'"),'Do not sell unapproved variants');
 assert.ok(read(manifest.licenseRecord).toString().includes('CC0'),'CC0 grant missing');
 console.log(JSON.stringify({pass:true,kenneyModels:manifest.objects.length,license:'CC0',scoreEffects:false,qualityApproved:false}));
