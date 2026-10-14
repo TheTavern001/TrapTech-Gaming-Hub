@@ -279,7 +279,11 @@
       "code": "src/server.js; src/monetize.js",
       "status": "SOURCE_ONLY",
       "exit": "Only admin can create official events after verified settled payment",
-      "evidence": [],
+      "evidence": [
+        "src/payment-settlement-proof.js",
+        "tools/test-payment-settlement-proof.js",
+        "tools/e2e-payments.js (provider negative cases staged; NOT RUN)"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -299,7 +303,10 @@
         "src/server.js (signout/change/reset revoke)",
         "tools/test-session-revocation.js",
         "tools/test-auth-session-live.js",
-        "Dockerfile STEP11/STEP12"
+        "Dockerfile STEP11/STEP12",
+        "src/payment-settlement-proof.js",
+        "tools/test-payment-settlement-proof.js",
+        "tools/e2e-payments.js (provider negative cases staged; NOT RUN)"
       ],
       "openDefects": [
         "Full native Docker HTTP auth test NOT RUN; existing users forced to sign in again on release",
@@ -320,7 +327,10 @@
         "tools/e2e-payments.js",
         "tools/test-unified-wallet.js",
         "src/monetize.js (immutable order.pack_crowns + ledger-backed refunds + duplicated webhook refund idempotence)",
-        "tools/test-payment-order-snapshots.js (wired into Docker, native run pending)"
+        "tools/test-payment-order-snapshots.js (wired into Docker, native run pending)",
+        "src/payment-settlement-proof.js",
+        "tools/test-payment-settlement-proof.js",
+        "tools/e2e-payments.js (provider negative cases staged; NOT RUN)"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -413,5 +423,8 @@
     "dockerHttpRun": "NOT_RUN",
     "androidTest": "NOT_RUN",
     "iosTest": "NOT_RUN"
-  }
+  },
+  "providerSettlementSourcePassCount": 30,
+  "providerSettlementFullNativeTestsDone": false,
+  "providerSettlementLastUpdate": "2026-10-14; 30 V8 assertions actual source, not Docker/HTTP"
 }
