@@ -398,3 +398,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `f8d7ff731c942ec48c927a082974cfa090d661e3`, `ebaab7a0e90e519d341f232c7c33579934c59e46`, `962e1682b495b074f9cace13c78671010912e0b5`: added regression to canonical rehearsal, shell release gate and Docker image prelaunch.
 - **Executed isolated V8 callback test on fetched committed source:** with healthy plants after simulated 10-second frame gap, 3 spawned pests persist with age 0 and no game-over. Native Node, entire Docker, physical devices and hosted rollout NOT RUN. This does not certify AAA visuals or entire-game fairness.
 - Deplexo auto-deploy remains OFF. Resume with a runnable checkout for complete `npm run verify:offline:full` and Android/iOS verification; game intake and public launch require separate acceptance.
+
+## 2026-10-14 — Grow Op immediate swat fairness
+
+- `9a9a3561f7952a7917863518bbffdd67aa6e2ff1` fixes one-frame stale pest pressure: a touched, killed pest no longer damages its plant during the same update.
+- `4f50717234673cfe8651d44bc85cdd3deec2dec2` adds real gameplay callback regression for swatted vs unswatted pest; `93b65248a6c2ef83177033ba2b9102785d13b7a5`, `f765c4e64393c082fbf684899f0cb0b5ade62f2a`, and `f43746575c2517b8a402a19b4f12caa2febda451` wire it into canonical rehearsal, offline shell gate and Dockerfile.
+- Executed isolated V8 callback on fetched source: swatted earned 5 points and removed the pest, unswatted earned 0 with pest retained; swatted plant had higher health after identical tick. PASS. Complete Docker build, physical phone QA and security checks are NOT RUN.
+- Existing Hub full AAA/game catalog certification remains pending and Deplexo auto-deploy stays OFF. Resume with full Docker-backed test on an executable checkout, then mobile verification and controlled private deploy.
