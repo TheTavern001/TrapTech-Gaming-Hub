@@ -408,13 +408,14 @@ function routes(app, A, H) {
   app.get('/api/pass/quests', requireUser, (req, res) => res.json({ ok: true, ...require('./pass-quests').status(req.user.id) }));
   app.post('/api/pass/quests/claim', requireUser, (req, res) => { const r = require('./pass-quests').claim(req.user.id); if (!r.ok) return bad(res, 400, r.error); res.json(r); });
   app.post('/api/pass/claim', requireUser, (req, res) => { const r = claimPass(req.user); if (!r.ok) return bad(res, 400, r.error); res.json(r); });
-  // Whop: hosted checkout + webhook (OFF until WHOP_WEBHOOK_SECRET is set; documented in HANDOFF.md)
-  app.post('/api/pay/whop/webhook', (req, res) => { const sec = process.env.WHOP_WEBHOOK_SECRET; if (!sec) return res.status(404).json({ ok: false });
-    const sig = String(req.headers['x-whop-signature'] || ''); const mac = crypto.createHmac('sha256', sec).update(JSON.stringify(req.body || {})).digest('hex');
-    if (sig.length !== mac.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(mac))) return res.status(401).json({ ok: false });
-    const ref = req.body && req.body.data && req.body.data.metadata && req.body.data.metadata.order_ref; const o = ref && db.prepare('SELECT * FROM store_orders WHERE ref=?').get(ref);
-    if (o && req.body.action === 'payment.succeeded') { db.prepare("UPDATE store_orders SET provider='whop', status='paid', paid_at=? WHERE id=?").run(Date.now(), o.id); grant(o, 'whop'); }
-    res.json({ ok: true }); });
+  // Disabled legacy Whop webhook. This provider isn't integrated into
+  // checkoutState() and the old handler trusted a signed metadata order_ref
+  // without verifying the provider payment amount/currency/status. Even when
+  // WHOP_WEBHOOK_SECRET is accidentally configured, it must never mint Credits.
+  // Re-enable only with raw-body signature + remote paid amount verification,
+  // provider order binding and fully replay-tested settlement/refund logic.
+  app.post('/api/pay/whop/webhook', (req, res) =>
+    res.status(404).json({ ok:false, error:'Payment provider not supported' }));
   // ---- admin ----
   A.get('/store', (req, res) => res.json({ ok: true, checkout: checkoutState(), prestige_sales_enabled: prestigeSalesEnabled(), products: products(true), prestige: prestigeWall(), non_advantage: NON_ADVANTAGE, terms: TERMS,
     totals: db.prepare("SELECT product_id, COUNT(*) n, SUM(usd_cents) usd FROM store_orders WHERE status='granted' AND provider<>'manual' GROUP BY product_id").all() }));
