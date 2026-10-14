@@ -1,5 +1,21 @@
 # Deployment, audit, and 500-game release ledger
-Last reconciled: **2026-10-13 (GitHub head: `b7be1ec` at the time of review)**.
+Last reconciled: **2026-10-14 (owner Deplexo CURRENT screenshot, phone time 12:17; no independent `/api/build` readback)**.
+
+### Current live host vs. source development (latest evidence; supersedes the historic table below)
+
+| Exact Git SHA | Deplexo evidence | Interpretation |
+|---|---|---|
+| `278af07ebfbc0eb2e783d8294cb1707c528c0163` | **CURRENT / READY**, owner screenshot, build 323 seconds | Latest confirmed deployed build; QA/gameplay-distinctness branch |
+| `916f5c76673d35a48e38c9d3218f06c5dd6e5ee4` | **READY**, owner screenshot, build 561 seconds | Historic rollback, not current |
+| `03119b9c019aae88896eabe34ee697b7cd469419` | **READY**, owner screenshot, build 390 seconds | Historic rollback, not current |
+| `df091e892e6e6575846940630530897eb79fb650` | **No Deplexo deployment reported** | GitHub SOURCE_ONLY; first tracked overhaul checkpoint, NOT live |
+| Later commits on `program/five-release-full-hub-overhaul-20261013` | **No Deplexo deployment reported** | Kenney source vehicle imports, five-game research queue, meta fairness and release-tool work remain GitHub only |
+
+Owner confirmed **automatic deployment OFF**. Do not call `df091e8` READY or infer newer code from the GitHub commit timeline. The current Deplexo snapshot shows **93 historical registrations, 6 archived mechanics overlaps ⇒ 87 proposed playable titles in source**, not game-quality approval. Source work is not the 500-game public release.
+
+**Operator command:** `node tools/release-status.js` prints separate `hostCurrent`, `workingSource`, registered/playable/archived counts and errors. `node tools/test-deplexo-release-evidence.js` fails if a source-only SHA is falsely recorded as a deployment. Neither calls Deplexo. Keep this header up to date with every owner screenshot or full build log; historic events below remain chronological evidence, not current truth.
+
+
 
 This is the operational handoff for every restart or new working session. Read this document, `docs/HUB-MASTER-CHECKLIST.md`, the live app's `/api/build` and the **latest Deplexo log** before touching code. The machine-readable record is `docs/audit/DEPLOYMENT-JOURNAL.json`. Run `node tools/release-status.js` to see the branch SHA, latest observed deployment and catalog capacity. Do not infer production status from GitHub commits alone.
 
