@@ -34,7 +34,7 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
     // keep long Android/iPhone sessions bounded in CPU and retained memory.
     g.pestTimer -= dt;
     if (g.pestTimer <= 0) {
-      g.pestTimer += Math.max(0.75, 4.5 - Math.min(3.75, g.t / 190));
+      g.pestTimer += Math.max(0.75, 4.5 - Math.min(3.75, g.time / 190));
       if (g.pests.length < 18) {
         const p = g.pick(g.plants);
         g.pests.push({ x:p.x + g.R(-30, 30), y:g.R(120, 300),
