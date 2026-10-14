@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS prestige_owned (item_id TEXT NOT NULL, serial INTEGER
 // Database-level guard: each new Prestige original can have only one active owner.
 // Legacy numbered editions are excluded because their historical supply may exceed one.
 db.exec("CREATE UNIQUE INDEX IF NOT EXISTS prestige_original_one_owner ON prestige_owned(item_id) WHERE item_id LIKE 'prestige-original-%' AND revoked_at IS NULL");
-for (const [name, type] of [['provider_ref','TEXT'], ['checkout_url','TEXT'], ['provider_payment_id','TEXT']]) {
+for (const [name, type] of [['provider_ref','TEXT'], ['checkout_url','TEXT'], ['provider_payment_id','TEXT'], ['pack_crowns','INTEGER']]) {
   if (!db.prepare('PRAGMA table_info(store_orders)').all().some(c => c.name === name)) db.exec(`ALTER TABLE store_orders ADD COLUMN ${name} ${type}`);
 }
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS store_orders_provider_ref ON store_orders(provider, provider_ref) WHERE provider_ref IS NOT NULL');
@@ -144,8 +144,8 @@ async function createOrder(user, productId, t = Date.now()) {
     // Reservation and capacity check share one SQLite transaction, so two simultaneous requests cannot reserve
     // the same one-of-one original.
     if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return null;
-    return db.prepare('INSERT INTO store_orders (ref, user_id, product_id, usd_cents, provider, btc_usd, sats, address, need_confs, created_at, expires_at, season) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
-      .run(ref, user.id, p.id, p.usd_cents, 'bitcoin', usd, sats, ADDR(), needConfs(p, p.usd_cents), t, t + ORDER_TTL_MS, p.kind === 'pass' ? curSeason(t) : null).lastInsertRowid;
+    return db.prepare('INSERT INTO store_orders (ref, user_id, product_id, usd_cents, provider, btc_usd, sats, address, need_confs, created_at, expires_at, season, pack_crowns) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      .run(ref, user.id, p.id, p.usd_cents, 'bitcoin', usd, sats, ADDR(), needConfs(p, p.usd_cents), t, t + ORDER_TTL_MS, p.kind === 'pass' ? curSeason(t) : null, p.kind === 'pack' ? p.crowns+p.bonus : null).lastInsertRowid;
   });
   const id = insertOrder();
   if (!id) return { status: 409, error: 'This one-of-one original has just been reserved or sold.' };
@@ -166,8 +166,8 @@ async function createStripeOrder(user, productId, t = Date.now()) {
   const expires = t + ORDER_TTL_MS;
   const insertOrder = db.transaction(() => {
     if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return null;
-    return db.prepare("INSERT INTO store_orders (ref,user_id,product_id,usd_cents,provider,status,created_at,expires_at,season) VALUES (?,?,?,?,'stripe','pending',?,?,?)")
-      .run(ref, user.id, p.id, p.usd_cents, t, expires, p.kind === 'pass' ? curSeason(t) : null).lastInsertRowid;
+    return db.prepare("INSERT INTO store_orders (ref,user_id,product_id,usd_cents,provider,status,created_at,expires_at,season,pack_crowns) VALUES (?,?,?,?,'stripe','pending',?,?,?,?)")
+      .run(ref, user.id, p.id, p.usd_cents, t, expires, p.kind === 'pass' ? curSeason(t) : null, p.kind === 'pack' ? p.crowns+p.bonus : null).lastInsertRowid;
   });
   const id = insertOrder();
   if (!id) return { status: 409, error: 'This one-of-one original has just been reserved or sold.' };
@@ -202,8 +202,20 @@ async function createStripeOrder(user, productId, t = Date.now()) {
 function grant(o, how = 'auto', t = Date.now()) {
   const p = prod(o.product_id); if (!p) return { ok: false, error: 'unknown product' };
   return db.transaction(() => {
-    const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id); if (fresh.granted_at) return { ok: true, already: true };
-    if (p.kind === 'pack') addCrowns(o.user_id, p.crowns + p.bonus, 'purchase', o.ref, t);
+    const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id);
+    if (!fresh) return { ok:false, error:'Missing order' };
+    if (fresh.granted_at) return { ok: true, already: true };
+    if (fresh.refunded_at || fresh.status !== 'paid')
+      return { ok:false, error:'Order is not settled for fulfillment' };
+    if (p.kind === 'pack') {
+      // Do not use mutable store products: pay-then-edit must never change grant.
+      // Legacy orders without a snapshot require reconciliation, not guessing.
+      if (!Number.isSafeInteger(fresh.pack_crowns) ||
+          fresh.pack_crowns<=0 || fresh.pack_crowns>100000000)
+        return { ok:false, error:'Order lacks verified locked Credit quantity; manual review required' };
+      if (!addCrowns(fresh.user_id,fresh.pack_crowns,'purchase',fresh.ref,t))
+        return { ok:false, error:'Existing grant requires financial reconciliation' };
+    }
     else if (p.kind === 'pass') db.prepare('INSERT OR IGNORE INTO pass_owned (user_id, season, source, order_id, created_at) VALUES (?,?,?,?,?)').run(o.user_id, o.season || curSeason(t), 'purchase', o.id, t);
     else if (p.kind === 'prestige') {
       const issuedEver = db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=?').get(p.id).c;
@@ -266,7 +278,13 @@ function reverseEntitlements(o, actor, note = '', t = Date.now()) {
   const p = prod(o.product_id); if (!p) return { ok: false, error: 'Unknown product.' };
   db.transaction(() => {
     if (o.granted_at) {
-      if (p.kind === 'pack') addCrowns(o.user_id, -(p.crowns + p.bonus), 'refund', o.ref, t);
+      if (p.kind === 'pack') {
+        const recorded=db.prepare("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='purchase' AND ref=?").get(o.user_id,o.ref);
+        if (!recorded || !Number.isSafeInteger(recorded.delta) || recorded.delta<=0)
+          throw new Error('Missing immutable paid Credit grant; manual refund reconciliation required');
+        if (!addCrowns(o.user_id,-recorded.delta,'refund',o.ref,t))
+          throw new Error('Refund ledger entry already exists');
+      }
       if (p.kind === 'pass') {
         const season = o.season || curSeason(t);
         const claimed = new Set(db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(o.user_id, season).map(x => x.level));
@@ -295,7 +313,7 @@ function refund(orderRef, actor, note = '') {
 }
 function manualGrant(userId, productId, actor, note = '') {
   const p = prod(productId); if (!p) return { ok: false, error: 'Unknown product.' }; const t = Date.now(); const ref = 'M' + crypto.randomBytes(6).toString('hex').toUpperCase();
-  const id = db.prepare("INSERT INTO store_orders (ref, user_id, product_id, usd_cents, provider, status, created_at, expires_at, note, season) VALUES (?,?,?,?, 'manual', 'paid', ?, ?, ?, ?)").run(ref, userId, p.id, 0, t, t, `manual grant by ${actor}${note ? ': ' + note : ''}`, p.kind === 'pass' ? curSeason(t) : null).lastInsertRowid;
+  const id = db.prepare("INSERT INTO store_orders (ref, user_id, product_id, usd_cents, provider, status, created_at, expires_at, note, season, pack_crowns) VALUES (?,?,?,?, 'manual', 'paid', ?, ?, ?, ?, ?)").run(ref, userId, p.id, 0, t, t, `manual grant by ${actor}${note ? ': ' + note : ''}`, p.kind === 'pass' ? curSeason(t) : null, p.kind === 'pack' ? p.crowns+p.bonus : null).lastInsertRowid;
   const g = grant(db.prepare('SELECT * FROM store_orders WHERE id=?').get(id), actor); return { ...g, ref };
 }
 
