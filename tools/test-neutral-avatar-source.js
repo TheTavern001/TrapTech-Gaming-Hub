@@ -44,6 +44,21 @@ assert.ok(renderer.includes("new URLSearchParams(location.search).get('avatarRig
 assert.ok(dispatcher.includes("new URLSearchParams(location.search).get('avatarRigQA')==='1'"));
 assert.ok(dispatcher.includes("if(neutralQa)return true"));
 assert.ok(dispatcher.includes("return cfg.outfit === 'adventurer'"),'Keep existing publicly supported rig behavior');
+// Execute the actual eligibility body, not merely a string check; don't
+// accidentally enable the plain jade QA rig for every new free player.
+const m=dispatcher.match(/export function supportsRiggedAvatar\(cfg\) \{([\s\S]*?)\n\}/);
+assert.ok(m,'Avatar rig eligibility function missing');
+const allowed=new Function('cfg','location','URLSearchParams',m[1]);
+const starter={outfit:'base',hat:'none',acc:'none',held:'none',hair:'waves',
+ face:'oval',eyes:'wide',mouth:'smile',beard:'none'};
+assert.equal(allowed(starter,{search:''},URLSearchParams),false,
+ 'Normal default must not silently enable the unapproved QA avatar');
+assert.equal(allowed(starter,{search:'?avatarRigQA=1'},URLSearchParams),true,
+ 'The in-Hub private preview should load source rig for identical starter');
+assert.equal(allowed({...starter,hat:'top-hat'},{search:'?avatarRigQA=1'},URLSearchParams),false,
+ 'Unsupported accessories must not be shown as falsely attached');
+assert.equal(allowed({...starter,outfit:'adventurer'},{search:''},URLSearchParams),true,
+ 'Previously supported licensed adventurer preview must remain functional');
 console.log(JSON.stringify({pass:true,source:'Quaternius Universal Base Characters CC0',
  bytes:buf.length,joints:nodeNames.size,meshes:json.meshes.length,
  qaOnly:true,completedModularAvatar:false,deviceTested:false}));
