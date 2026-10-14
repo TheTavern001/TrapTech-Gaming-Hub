@@ -339,6 +339,11 @@ function refund(orderRef, actor, note = '') {
 }
 function manualGrant(userId, productId, actor, note = '') {
   const p = prod(productId); if (!p) return { ok: false, error: 'Unknown product.' };
+  // The 12 preview-only one-of-one originals must not be injected into a
+  // player's inventory by the manual gift path before wearable/collision,
+  // entitlement and rights certification.
+  if (p.kind === 'prestige' && !prestigeSalesEnabled())
+    return { ok:false, error:'Prestige cosmetics are preview-only until approved for release.' };
   if (p.kind === 'pack' && (!Number.isSafeInteger(p.crowns+p.bonus) ||
       p.crowns+p.bonus<=0 || p.crowns+p.bonus>100000000))
     return { ok:false, error:'Invalid Credit pack configuration' }; const t = Date.now(); const ref = 'M' + crypto.randomBytes(6).toString('hex').toUpperCase();
