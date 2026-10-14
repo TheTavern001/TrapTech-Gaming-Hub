@@ -40,11 +40,14 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const base = Math.ceil(9.99 / 60000 * 1e8);
   ok(r.body.ok && o1.address === ADDR && o1.sats > base && o1.sats <= base + 999 && o1.uri === `bitcoin:${ADDR}?amount=${(o1.sats / 1e8).toFixed(8)}` && o1.expires_at - o1.created_at === 45 * 60e3, 'order: unique sat offset (1-999), bitcoin: URI, 45-minute quote', o1);
   r = await P2('/api/store/orders', { body: { product_id: 'crowns-1100' } }); const o2 = r.body.order; ok(o2.sats !== o1.sats, 'two open orders for the same product never share an amount');
+  r = await ADM(`/api/admin/store/orders/${o1.ref}/grant`, { body: {} }); ok(r.status === 409, 'admin grant cannot turn a pending unpaid order into paid Credits');
   r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending', 'nothing on chain yet -> pending');
   const t1 = txid(); M.txs.push({ txid: t1, sats: o1.sats });
   r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'seen' && r.body.order.txid === t1 && r.body.credits === 0, 'exact amount in the mempool -> seen, not granted yet (0 conf)', r.body.order);
   M.txs.find(x => x.txid === t1).height = M.tip; r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} });
   ok(r.body.order.status === 'granted' && r.body.credits === 11000, '1 confirmation grants 11,000 unified Hub Credits automatically', r.body);
+  r = await ADM(`/api/admin/store/orders/${o1.ref}/grant`, { body: {} }); ok(r.body.ok && r.body.already, 'already settled and granted order is idempotent on admin verification');
+  r = await P1('/api/me/crowns'); ok(r.body.credits === 11000, 'admin duplicate grant did not mint extra Credits');
   r = await P2(`/api/store/orders/${o2.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending' && !r.body.order.txid, "another order cannot claim P1's transaction");
   // txid paste for a non-exact (overpaid) amount
   const t2 = txid(); M.txs.push({ txid: t2, sats: o2.sats + 5000, height: M.tip });
@@ -53,7 +56,8 @@ function client() { const jar = {}; return async (p, o = {}) => {
   // underpayment
   r = await F('/api/store/orders', { body: { product_id: 'crowns-500' } }); const o3 = r.body.order; const t3 = txid(); M.txs.push({ txid: t3, sats: o3.sats - 2000, height: M.tip });
   r = await F(`/api/store/orders/${o3.ref}/check`, { body: { txid: t3 } }); ok(r.body.order.status === 'underpaid' && r.body.credits === 0, 'underpayment -> "underpaid", nothing granted', r.body.order);
-  r = await ADM(`/api/admin/store/orders/${o3.ref}/grant`, { body: {} }); ok(r.body.ok && r.body.order.status === 'granted', 'admin manual verify/grant fallback');
+  r = await ADM(`/api/admin/store/orders/${o3.ref}/grant`, { body: {} }); ok(r.status === 409, 'admin cannot override blockchain underpayment by marking paid');
+  r = await F('/api/me/crowns'); ok(r.body.credits === 0, 'underpaid order remains zero Credits after an admin grant attempt');
   r = await ADM(`/api/admin/store/orders/${o3.ref}/refund`, { body: { note: 'test' } }); r = await F('/api/me/crowns'); ok(r.body.credits === 0, 'admin refund reverses full migrated Hub Credits');
   // expiry
   const db = new (require('better-sqlite3'))(process.env.DB_PATH);
