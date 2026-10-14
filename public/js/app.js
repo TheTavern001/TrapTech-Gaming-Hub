@@ -492,7 +492,7 @@ function gameCard(g, tall = false) {
 // ---------------- games ----------------
 route(/^\/games$/, (m, url) => {
   let cat = url.searchParams.get('cat') || 'All'; let q = '';
-  let catalog = [...S.games, ...S.libraryGames];
+  let catalog = [...S.games, ...S.libraryGames].filter(g => g.playable !== false && !g.retired);
   const categories = () => ['All', ...new Set(catalog.map(g => g.category).filter(Boolean))];
   if (cat !== 'All' && !categories().includes(cat)) cat = 'All';
   shell('/games', `<div class="games-heading"><h1>Games <span class="pill green" style="vertical-align:middle" id="games-count">${catalog.length} games</span></h1><p class="muted">The complete playable catalog. Search, filter, and jump straight into any game.</p></div>
@@ -512,7 +512,7 @@ route(/^\/games$/, (m, url) => {
   fetch('/api/games-lib', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(lib => {
     if (lib && Array.isArray(lib.games)) {
       S.libraryGames = lib.games;
-      catalog = [...S.games, ...S.libraryGames];
+      catalog = [...S.games, ...S.libraryGames].filter(g => g.playable !== false && !g.retired);
       const chips = document.getElementById('chips');
       if (chips) chips.innerHTML = categories().map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
       draw();
