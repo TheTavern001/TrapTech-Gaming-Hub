@@ -43,6 +43,32 @@ const REPORTED={
  'drift-rush':'Drift King and Drift Rush must not be interchangeable'
 };
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
+
+const REVIEW_FAMILIES=[
+ {name:'hill-physics-driving',ids:['gl-hill-hauler','gl-wreck-ride','gl-rig-rally','gl-egg-roll','gl-monster-crush','gl-dune-glide'],status:'SIX_RETIRED_EXCEPT_HILL_HAULER',reason:'Owner tested near-identical acceleration, rollovers and obstacle physics. Archived variants cannot launch new competitions.'},
+ {name:'drift-car',ids:['drift-rush','gl-drift-king','gl-neon-circuit'],status:'PARTIAL_ARCHIVE_REVIEW_ACTIVE_PAIR',reason:'Drift King archived; Drift Rush versus Neon Circuit still needs actual steering, timing, hazards and end-rule differentiation.'},
+ {name:'delivery-driving',ids:['gl-cab-rush','gl-green-dash','gl-throttle-rider'],status:'OWNER_REVIEW',reason:'Check deliveries/time bonuses versus lane-riding/traffic; common vehicle presentation is not sufficient distinction.'},
+ {name:'basketball-throw',ids:['gl-hoop-streak','gl-dunk-flick'],status:'OWNER_REVIEW',reason:'Flick projectile baskets; confirm shifting-shot timer versus hoop-to-hoop platform chain is genuinely different.'},
+ {name:'projectile-throw',ids:['gl-cup-toss','gl-paper-toss'],status:'OWNER_REVIEW',reason:'Swipe projectile physics overlaps; test rack/ball economy versus wind/three-misses target.'},
+ {name:'reaction-targets',ids:['gl-mole-whack','gl-pest-patrol'],status:'OWNER_REVIEW',reason:'Both tap targets; moving bugs, plant health and beneficial insects may be distinct from fixed timed grid.'},
+ {name:'lane-survival-runner',ids:['gl-rail-rush','gl-roof-runner','gl-tunnel-hop','gl-dino-dash'],status:'OWNER_REVIEW',reason:'Compare actual movement/camera/hazard-failure families rather than title or graphics.'},
+ {name:'survival-arena',ids:['gl-arrow-hero','gl-moon-swarm','gl-rift-survival','void-swarm'],status:'OWNER_REVIEW',reason:'Verify distinct enemy AI, combat loops, skill effects, survival objectives and mobile control.'},
+ {name:'tower-defense',ids:['gl-pop-defense','gl-keep-guard','gl-node-siege'],status:'OWNER_REVIEW',reason:'Validate tower pathing, building, upgrade balance and endless highscore, not just different art.'},
+ {name:'tile-puzzle',ids:['gl-bud-merge','gl-strain-crush','gl-tile-twin'],status:'DIFFERENT_RULES_SOURCE_REVIEW',reason:'2048 merging, match-three swapping and Mahjong pairs appear rule-distinct but still need device/asset QA.'},
+ {name:'cannabis-precision',ids:['gl-trim-rush','gl-roll-up','gl-bud-sort','gl-bud-bar'],status:'DIFFERENT_RULES_SOURCE_REVIEW',reason:'Trim drawing, timing stages, belt sorting, multi-lane service; verify actual touch satisfaction and game title fidelity.'}
+];
+const REPAIRED_IN_SOURCE={
+ 'gl-trim-rush':['init-leaves-before-counter-free-score','keyboard-space-auto-trim','misstated-60-second-limit'],
+ 'gl-bud-bar':['different-lane-first-tap-only-selected','empty-tray-catch-intent-needs-phone-QA'],
+ 'gl-strain-crush':['misstated-three-minute-round','seeded-unplayable-match3-board'],
+ 'gl-grow-op':['misstated-three-minute-end','tap-water-feed-harvest-discoverability-needs-QA'],
+ 'gl-mole-whack':['keyboard-space-auto-whack','misstated-60-second-round'],
+ 'gl-dunk-flick':['keyboard-goal-coordinates-auto-basket'],
+ 'gl-wanted-run':['scenery-impact-instant-death','visual-police-sourced-mesh-QA'],
+ 'gl-rail-rush':['train-side-hit-missing-collision'],
+ 'gl-arrow-hero':['touch-skill-selection-overlaps-movement'],
+ 'gl-cup-toss':['empty-timer-allocation-removed']
+};
 function mapGame(g,type){
  const dir=type==='library'?path.join(base,g.slug):path.join(ROOT,'public/js',path.dirname(g.module));
  const primary=type==='library'?path.join(dir,'game.js'):path.join(ROOT,'public/js',g.module);
@@ -57,6 +83,26 @@ function mapGame(g,type){
  const detect=engine==='hillcar'?'hillcar-other-candidates':engine==='topcar'?'topcar-other-candidates':
    engine==='runner3d'?'runner3d-other-candidates':null;
  const assetFiles=type==='library'?fs.existsSync(dir)?fs.readdirSync(dir).filter(x=>/^(CREDITS|LICENSE)/i.test(x)):[]:[];
+ // These are triage signals, not per-title verified gameplay failures.
+ const helpMatch=source.match(/help:\s*'((?:\\.|[^'])*)'/);
+ const instructions=helpMatch?helpMatch[1].replace(/\\n/g,' ').slice(0,260):null;
+ const startClock=source.match(/init\s*\(\s*g\s*\)\s*\{[\s\S]{0,450}?g\.time\s*=\s*(\d+(?:\.\d+)?)/);
+ const sourceStartTime=startClock?Number(startClock[1]):null;
+ const helpTime=instructions&&instructions.match(/\b(\d+)\s*(?:minutes?|seconds?|mins?|secs?)\b/i);
+ const claimedHelpTime=helpTime?Number(helpTime[1])*(/^m/i.test(helpTime[0].split(/\s+/).at(-1))?60:1):null;
+ const keyboardSpaceActions=(source.match(/g\.kd\s*\(\s*['"] ['"]\s*\)/g)||[]).length;
+ const targetAssistPattern=/g\.kd\s*\(\s*['"] ['"]\s*\)[\s\S]{0,160}(?:\.find\s*\(|H1\.[xy]|goal|target|const\s+T\s*=)/i;
+ const declaredUnseededRandomCalls=(source.match(/Math\.random\s*\(/g)||[]).length;
+ const usesExternallySourcedModel=/GLTFLoader|\.glb['"\x60]|loadAsync\(/.test(source);
+ const canvasDrawPrimitives=/Kit\.(?:rr|circ)|\.fillRect\s*\(|\.beginPath\s*\(|\.ellipse\s*\(/.test(source);
+ const possibleClockMismatch=claimedHelpTime!==null&&sourceStartTime!==null&&
+   claimedHelpTime!==sourceStartTime;
+ const triageFlags=[
+   ...(possibleClockMismatch?['HELP_CLOCK_MISMATCH_POTENTIAL']:[]),
+   ...(targetAssistPattern.test(source)?['INPUT_AUTO_TARGET_POTENTIAL']:[]),
+   ...(declaredUnseededRandomCalls?['MATH_RANDOM_REVIEW']:[]),
+   ...(!usesExternallySourcedModel&&canvasDrawPrimitives?['ART_PROCEDURAL_VECTOR_QA_REQUIRED']:[])
+ ];
  return {
   id:g.id,title:g.title,slug:g.slug||g.id,kind:type,registered:true,playable:g.playable!==false&&!g.retired,
   retired:!!g.retired,replacedBy:g.replacedBy||null,mechanicsFamily:pair[0]||detect||'UNCLASSIFIED',
@@ -64,6 +110,14 @@ function mapGame(g,type){
   engineSignature:engine,referenceLoop:type==='library'?g.ref_internal:null,
   scannedCodePaths:authorFiles.map(x=>x.file),scannedBytes:authorFiles.reduce((sum,x)=>sum+x.src.length,0),
   sourceSha256:source?hash(source):null,missingReadableJs:!authorFiles.length,
+  playableInstructionPreview:instructions,sourceStartingClockSeconds:sourceStartTime,
+  advertisedClockSeconds:claimedHelpTime,keyboardSpaceActionCount:keyboardSpaceActions,
+  explicitUnseededMathRandomCalls:declaredUnseededRandomCalls,
+  sourced3DModelLoaderDetected:usesExternallySourcedModel,
+  proceduralCanvasPrimitivesDetected:canvasDrawPrimitives,sourceTriageFlags:triageFlags,
+  knownCodeIssuesRepairedAwaitingDeviceQA:REPAIRED_IN_SOURCE[g.id]||[],
+  relatedMechanicFamilies:REVIEW_FAMILIES.filter(f=>f.ids.includes(g.id)).map(f=>f.name),
+  ownerQualityVerdict:'BLOCKED_NEEDS_PLAYTEST_GRAPHICS_SCORE_DEVICE_AND_TITLE_MATCH',
   assetProvenanceFiles:assetFiles,assetLicenseVerifiedForActualGame:false,
   gameplayComparedToInspiration:false,duplicateVerdictApproved:false,
   keyboardQa:'NOT_RUN',touchQa:'NOT_RUN',gamepadQa:'NOT_RUN',
@@ -85,6 +139,14 @@ const out={
  proposedPlayable:entries.filter(g=>g.playable).length,ownerArchivedDuplicates:entries.filter(g=>g.retired).length,
  sourceFilesScanned:entries.reduce((x,g)=>x+g.scannedCodePaths.length,0),
  sourceUnresolved:entries.filter(g=>g.missingReadableJs).map(g=>g.id),familyGroups,
+ sourceTriageCounts:{possibleClockMismatch:entries.filter(g=>g.sourceTriageFlags.includes('HELP_CLOCK_MISMATCH_POTENTIAL')).length,
+   possibleAutoTarget:entries.filter(g=>g.sourceTriageFlags.includes('INPUT_AUTO_TARGET_POTENTIAL')).length,
+   unseededRandom:entries.filter(g=>g.explicitUnseededMathRandomCalls>0).length,
+   canvasProceduralSource:entries.filter(g=>g.sourceTriageFlags.includes('ART_PROCEDURAL_VECTOR_QA_REQUIRED')).length},
+ crossGameFamilyReviews:REVIEW_FAMILIES.map(group=>({...group,allIdsPresent:group.ids.every(id=>entries.some(e=>e.id===id)),
+  activeMembers:group.ids.filter(id=>entries.some(e=>e.id===id&&e.playable)),
+  ownerQualityApproved:false})),
+ allGamesRequireMobilePlaybackAndLicensedArtApproval:true,
  caution:'Engine signature or different source SHA is not proof of unique gameplay. All devices, art and scoring evidence remain NOT_RUN until actually tested.',
  games:entries
 };
