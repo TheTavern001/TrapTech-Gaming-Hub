@@ -2,13 +2,26 @@
 (function () {
   const N = 8, S = 46, OX = 16, OY = 130; const G = ['#22c55e', '#a855f7', '#fbbf24', '#f97316', '#38bdf8', '#f472b6'];
   Kit.run({ id: 'gl-strain-crush', title: 'STRAIN CRUSH', help: 'Swipe a gem into a neighbour to swap (or tap two)\nMatch 3+ strains; cascades multiply.\nStart with 60s; matches add time.', bg: '#1e1b4b',
-    init(g) { g.b = []; for (let r = 0; r < N; r++) { g.b.push([]); for (let c = 0; c < N; c++) { let v; do v = g.RI(0, 5); while ((c > 1 && g.b[r][c - 1].v === v && g.b[r][c - 2].v === v) || (r > 1 && g.b[r - 1][c].v === v && g.b[r - 2][c].v === v)); g.b[r].push({ v, y: r, sp: 0 }); } } g.sel = null; g.time = 60; g.busy = 0; g.chain = 0; },
+    init(g) { rebuildPlayableBoard(g); g.sel = null; g.time = 60; g.busy = 0; g.chain = 0; },
     update(g, dt) {
       g.time -= dt * (1 + g.t / 180); if (g.time <= 0) { g.time = 0; return g.end('Out of time'); }
       let moving = false; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { const k = g.b[r][c]; if (k && k.y < r) { k.sp += 2200 * dt / S; k.y = Math.min(r, k.y + k.sp * dt); moving = true; } else if (k) { k.y = r; k.sp = 0; } }
       if (g.swap) { g.swap.t += dt * 6; if (g.swap.t >= 1) { const s = g.swap; g.swap = null; if (!resolve(g) && !s.back) { swap(g, s.a, s.b); g.swap = { a: s.a, b: s.b, t: 0, back: true }; g.sfx('bad'); } } return; }
-      if (!moving) { if (g.pending) { g.pending = false; if (!resolve(g)) g.chain = 0; } }
-      else return;
+      if (!moving) {
+        if (g.pending) {
+          g.pending = false;
+          if (!resolve(g)) {
+            g.chain = 0;
+            if (!hasLegalSwap(g)) {
+              // Deterministic seeded reshuffle prevents a dead-board
+              // giveaway loss. It grants zero points, XP or clock time.
+              rebuildPlayableBoard(g);
+              g.sel = null; g.down = null;
+              g.float(200, OY - 24, 'NO MOVES - SHUFFLED', '#a7f3d0', 15);
+            }
+          }
+        }
+      } else return;
       const cell = (x, y) => { const c = Math.floor((x - OX) / S), r = Math.floor((y - OY) / S); return r >= 0 && c >= 0 && r < N && c < N ? [r, c] : null; };
       const P = g.ptr; if (P.pressed) g.down = cell(P.x, P.y);
       if (P.down && g.down) { const dx = P.x - P.sx, dy = P.y - P.sy; if (Math.hypot(dx, dy) > 22) { const [r, c] = g.down; const t = Math.abs(dx) > Math.abs(dy) ? [r, c + Math.sign(dx)] : [r + Math.sign(dy), c]; g.down = null; g.sel = null; tryS(g, [r, c], t); } }
@@ -26,6 +39,60 @@
       if (g.sel) { c.strokeStyle = '#fff'; c.lineWidth = 3; c.strokeRect(OX + g.sel[1] * S + 2, OY + g.sel[0] * S + 2, S - 4, S - 4); } if (g.cur && !matchMedia('(pointer:coarse)').matches) { c.strokeStyle = 'rgba(34,211,238,.6)'; c.lineWidth = 2; c.strokeRect(OX + g.cur[1] * S + 4, OY + g.cur[0] * S + 4, S - 8, S - 8); }
       c.fillStyle = '#1d2a66'; c.fillRect(20, 60, g.W - 40, 10); c.fillStyle = '#34d399'; c.fillRect(20, 60, (g.W - 40) * g.time / 60, 10);
     } });
+  // Match-3 always presents at least one legal, score-producing swap.
+  // Every reshuffle consumes the same per-run seeded RNG for every player.
+  function hasRunAt(g, row, col) {
+    const v = g.b[row][col].v;
+    let count = 1;
+    for (let x = col - 1; x >= 0 && g.b[row][x].v === v; x--) count++;
+    for (let x = col + 1; x < N && g.b[row][x].v === v; x++) count++;
+    if (count >= 3) return true;
+    count = 1;
+    for (let y = row - 1; y >= 0 && g.b[y][col].v === v; y--) count++;
+    for (let y = row + 1; y < N && g.b[y][col].v === v; y++) count++;
+    return count >= 3;
+  }
+  function hasLegalSwap(g) {
+    for (let row = 0; row < N; row++) for (let col = 0; col < N; col++) {
+      for (const [dy, dx] of [[0, 1], [1, 0]]) {
+        const y = row + dy, x = col + dx;
+        if (y >= N || x >= N || g.b[row][col].v === g.b[y][x].v) continue;
+        const a = g.b[row][col].v, b = g.b[y][x].v;
+        g.b[row][col].v = b; g.b[y][x].v = a;
+        const legal = hasRunAt(g, row, col) || hasRunAt(g, y, x);
+        g.b[row][col].v = a; g.b[y][x].v = b;
+        if (legal) return true;
+      }
+    }
+    return false;
+  }
+  function rebuildPlayableBoard(g) {
+    // 24 bounded seeded attempts; fallback guarantees the same valid
+    // constructed pattern if an unusual seed produces repeated deadboards.
+    for (let tries = 0; tries < 24; tries++) {
+      g.b = [];
+      for (let row = 0; row < N; row++) {
+        g.b.push([]);
+        for (let col = 0; col < N; col++) {
+          let v,attempts=0;
+          do { v = g.RI(0, 5); attempts++; }
+          while (attempts < 30 && (
+            (col > 1 && g.b[row][col-1].v === v && g.b[row][col-2].v === v) ||
+            (row > 1 && g.b[row-1][col].v === v && g.b[row-2][col].v === v)
+          ));
+          if (attempts === 30) v = (row + col) % 6;
+          g.b[row].push({ v, y: row, sp: 0 });
+        }
+      }
+      if (hasLegalSwap(g)) return;
+    }
+    // Last-resort no-deadlock board, with an explicit center swap.
+    g.b = Array.from({length:N}, (_,row) =>
+      Array.from({length:N}, (_,col) => ({v:(row+col)%6,y:row,sp:0})));
+    g.b[0][0].v=1;g.b[0][1].v=0;g.b[0][2].v=1;
+    g.b[1][0].v=2;g.b[1][1].v=1;g.b[1][2].v=2;
+    if (!hasLegalSwap(g)) throw new Error('Strain Crush cannot construct legal puzzle');
+  }
   function leaf(c, x, y, col, v) { c.save(); c.translate(x, y); Kit.glow(c, col, 6); c.fillStyle = col; if (v % 2 === 0) { for (let f = -2; f <= 2; f++) { c.save(); c.rotate(f * 0.45 - Math.PI / 2); c.beginPath(); c.ellipse(9, 0, 10 - Math.abs(f) * 2, 3.5, 0, 0, 7); c.fill(); c.restore(); } } else if (v === 1 || v === 5) { c.beginPath(); for (let i = 0; i < 6; i++) c.lineTo(Math.cos(i * 1.047) * 16, Math.sin(i * 1.047) * 16); c.fill(); Kit.circ(c, -4, -4, 4, 'rgba(255,255,255,.4)'); } else { c.beginPath(); c.arc(0, 0, 15, 0, 7); c.fill(); Kit.circ(c, -5, -5, 4, 'rgba(255,255,255,.4)'); } Kit.noGlow(c); c.restore(); }
   function swap(g, a, b) { const t = g.b[a[0]][a[1]]; g.b[a[0]][a[1]] = g.b[b[0]][b[1]]; g.b[b[0]][b[1]] = t; }
   function tryS(g, a, b) { if (b[0] < 0 || b[1] < 0 || b[0] >= N || b[1] >= N) return; swap(g, a, b); g.swap = { a, b, t: 0 }; g.sfx('click'); g.chain = 0; }
