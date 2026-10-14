@@ -101,6 +101,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-grow-op-timed-difficulty.js \
  && node tools/test-grow-op-wave-catchup.js \
  && node tools/test-grow-op-newborn-pests.js \
+ && node tools/test-grow-op-immediate-swat.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
  && node --check tools/test-grow-op-touch-fairness.js \
