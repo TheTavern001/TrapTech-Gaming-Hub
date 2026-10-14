@@ -61,7 +61,12 @@
     g.flash = (col, t) => { g.flashC = col || '#fff'; g.flashT = t || 0.12; };
     g.sfx = K.sfx;
     g.end = (why) => { if (g.state !== 'play') return; g.state = 'over'; g.overT = 0; g.why = why || ''; K.sfx('die'); g.shake(8, 0.4); if (g.score > g.best) { g.best = g.score; safeStore.set('gl_best_' + def.id, g.best); g.newBest = true; } else g.newBest = false;
-      g.sub = { pending: true }; const p = window.Hub ? Hub.submit(g.score) : Promise.resolve({ ok: false, error: 'offline' }); p.then(r => { g.sub = r; window.__GL.lastSubmit = r; }); };
+      g.sub = { pending: true }; const p = window.Hub ? Promise.resolve().then(() => Hub.submit(g.score)) : Promise.resolve({ ok: false, error: 'offline' });
+      p.then(r => { g.sub = r; window.__GL.lastSubmit = r; }).catch(() => {
+        // Network errors must not leave the results screen permanently pending.
+        g.sub = { ok: false, error: 'Score submission failed. Try again when online.' };
+        window.__GL.lastSubmit = g.sub;
+      }); };
     g.held = () => g.ptr.down || g.keys[' '] || g.keys.ArrowUp || g.keys.w || g.keys.W;
     g.tap = () => g.ptr.pressed || g._kp;
     g.ax = () => (g.keys.ArrowRight || g.keys.d || g.keys.D ? 1 : 0) - (g.keys.ArrowLeft || g.keys.a || g.keys.A ? 1 : 0) + g.stick.x;
