@@ -257,7 +257,11 @@ function addCrowns(userId, delta, reason, ref = '', t = Date.now()) {
   })();
 }
 // DEPRECATED wire compatibility only: not a second balance or funding source.
-const crowns = (userId) => Math.floor(WALLET.balance(userId)/WALLET.CREDIT_PER_LEGACY_CROWN);
+// The ledger can be stale after an administrator holds a previously accepted
+// run. Reconcile immutable award adjustments BEFORE quoting spendable Credits.
+// Lazy import avoids a module-init cycle (shop -> wallet, monetization -> shop).
+const reviewedCredits = (userId) => require('./shop').sync(userId);
+const crowns = (userId) => Math.floor(reviewedCredits(userId)/WALLET.CREDIT_PER_LEGACY_CROWN);
 function flag(o, f) { const s = new Set((o.flags || '').split(',').filter(Boolean)); s.add(f); db.prepare('UPDATE store_orders SET flags=? WHERE id=?').run([...s].join(','), o.id); }
 
 // one pass over open orders against the chain. txsFor/tip injectable for tests.
@@ -442,7 +446,7 @@ function routes(app, A, H) {
       packs: products().filter(p => p.kind === 'pack').map(p => ({ id: p.id, name: p.name, usd_cents: p.usd_cents, credits: (p.crowns + p.bonus)*10 })),
       pass: (() => { const p = prod('season-pass'); return p && p.active ? { id: p.id, name: p.name, usd_cents: p.usd_cents, ...p.data } : null; })(),
       prestige: prestigeWall().filter(p => p.active).map(p => ({ ...p, owners: undefined, owners_count: p.owners.length })),
-      credits: me ? WALLET.balance(me.id) : null, non_advantage: NON_ADVANTAGE, terms: TERMS }); });
+      credits: me ? reviewedCredits(me.id) : null, non_advantage: NON_ADVANTAGE, terms: TERMS }); });
   app.get('/api/store/prestige', (req, res) => res.json({ ok: true, items: prestigeWall() }));
   app.get('/api/users/:u/prestige', (req, res) => { const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(req.params.u); res.json({ ok: true, items: u ? prestigeOf(u.id) : [] }); });
   app.post('/api/store/orders', requireUser, limiter('store-order', 20, 3600e3), async (req, res) => { const b = req.body || {}; const st = checkoutState(); const provider = String(b.provider || (st.providers.bitcoin.configured ? 'bitcoin' : 'stripe')); const r = provider === 'stripe' ? await createStripeOrder(req.user, String(b.product_id || '')) : provider === 'bitcoin' ? await createOrder(req.user, String(b.product_id || '')) : { status: 400, error: 'Unsupported payment method.' }; if (!r.ok) return bad(res, r.status, r.error); if (r.order.uri) r.order.qr_svg = require('./events').qrSvg(r.order.uri); res.json(r); });
@@ -450,11 +454,11 @@ function routes(app, A, H) {
   const mine = (req) => db.prepare('SELECT * FROM store_orders WHERE ref=? AND user_id=?').get(String(req.params.ref), req.user.id);
   app.get('/api/store/orders/:ref', requireUser, (req, res) => { const o = mine(req); if (!o) return bad(res, 404, 'Order not found.'); const po = pubOrder(o); if (po.uri) po.qr_svg = require('./events').qrSvg(po.uri); res.json({ ok: true, order: po }); });
   app.post('/api/store/orders/:ref/check', requireUser, limiter('store-check', 30, 600e3), async (req, res) => { const o = mine(req); if (!o) return bad(res, 404, 'Order not found.');
-    if (o.provider === 'stripe') return res.json({ ok: true, order: pubOrder(o), credits: WALLET.balance(req.user.id) });
+    if (o.provider === 'stripe') return res.json({ ok: true, order: pubOrder(o), credits: reviewedCredits(req.user.id) });
     const txid = String((req.body || {}).txid || '').trim().toLowerCase(); if (txid) { if (!/^[0-9a-f]{64}$/.test(txid)) return bad(res, 400, 'That does not look like a transaction id.'); db.prepare('UPDATE store_orders SET txid_hint=? WHERE id=?').run(txid, o.id); }
     try { await check([o]); } catch (e) { return bad(res, 503, 'Could not reach the blockchain explorer, try again shortly.'); }
-    res.json({ ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)), credits: WALLET.balance(req.user.id) }); });
-  app.get('/api/me/crowns', requireUser, (req, res) => res.json({ ok:true,deprecated:true,credits:WALLET.balance(req.user.id),history:db.prepare("SELECT amount,reason,ref,created_at FROM points_ledger WHERE user_id=? ORDER BY id DESC LIMIT 50").all(req.user.id) }));
+    res.json({ ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)), credits: reviewedCredits(req.user.id) }); });
+  app.get('/api/me/crowns', requireUser, (req, res) => res.json({ ok:true,deprecated:true,credits:reviewedCredits(req.user.id),history:db.prepare("SELECT amount,reason,ref,created_at FROM points_ledger WHERE user_id=? ORDER BY id DESC LIMIT 50").all(req.user.id) }));
   app.post('/api/crowns/buy', requireUser, limiter('credits-buy-legacy', 25, 60e3), (req, res) => { const r = buyWithCrowns(req.user, String((req.body || {}).item_id || '')); if (!r.ok) return bad(res, 400, r.error); res.json(r); });
   app.get('/api/pass', (req, res) => res.json({ ok: true, ...passState(currentUser(req)) }));
   app.get('/api/pass/quests', requireUser, (req, res) => res.json({ ok: true, ...require('./pass-quests').status(req.user.id) }));
@@ -504,7 +508,7 @@ function routes(app, A, H) {
   });
   A.post('/store/orders/:ref/refund', (req, res) => res.json(refund(req.params.ref, (req.admin && req.admin.username) || 'admin', String((req.body || {}).note || '').slice(0, 200))));
   A.post('/store/grant', (req, res) => { const b = req.body || {}; const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(String(b.username || '')); if (!u) return bad(res, 404, 'No such player.');
-    if (b.crowns) { const delta=Number(b.crowns); if(!Number.isSafeInteger(delta)||Math.abs(delta)>100000000) return bad(res,400,'Invalid legacy amount'); addCrowns(u.id, delta, 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, credits: WALLET.balance(u.id) }); }
+    if (b.crowns) { const delta=Number(b.crowns); if(!Number.isSafeInteger(delta)||Math.abs(delta)>100000000) return bad(res,400,'Invalid legacy amount'); addCrowns(u.id, delta, 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, credits: reviewedCredits(u.id) }); }
     res.json(manualGrant(u.id, String(b.product_id || ''), (req.admin && req.admin.username) || 'admin', String(b.note || ''))); });
 }
 module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, prestigeSalesEnabled, _stripeSignatureOk: stripeSignatureOk };
