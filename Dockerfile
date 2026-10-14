@@ -77,6 +77,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check src/meta-fairness-contract.js \
  && node --check tools/test-full-hub-meta-contract.js \
  && node tools/test-full-hub-meta-contract.js \
+ && node --check tools/audit-full-game-mechanics.js \
+ && node tools/audit-full-game-mechanics.js \
+ && test -s docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/local-imports.js \
  && node --check tools/test-prelaunch-imports.js \
@@ -89,6 +92,7 @@ RUN test -s tools/games-lib-static-check.js \
  && cp docs/audit/prelaunch-structural-audit.json /app/build/audit/prelaunch-structural-audit.json \
  && cp docs/audit/game-source-mechanics.json /app/build/audit/game-source-mechanics.json \
  && cp docs/audit/avatar-renderability.json /app/build/audit/avatar-renderability.json \
+ && cp docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json /app/build/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
 
 # Run the actual server in an isolated, disposable build-time database and verify its HTTP routes.
