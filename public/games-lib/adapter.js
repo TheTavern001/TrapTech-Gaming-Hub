@@ -20,7 +20,11 @@
     const dur = Math.round(performance.now() - H.t0);
     if (!H.token) return { ok: false, guest: H.guest, error: H.guest ? 'Sign in to save scores to the leaderboard.' : (H.err || 'Score not saved (no run session).') };
     const tok = H.token; H.token = null;
-    try { return await post('/api/score', { token: tok, score: Math.max(0, Math.floor(score)), coins: 0, duration_ms: dur, tel: H.telOut(), ev: { v: 1, e: H.ev, end: Math.round(dur / 10) } }); }
+    // Freeze the completed run's evidence before a new start resets telemetry.
+    // Neither async response order nor a subsequent run may mutate this proof.
+    const payload = { token: tok, score: Math.max(0, Math.floor(score)), coins: 0,
+      duration_ms: dur, tel: H.telOut(), ev: { v: 1, e: H.ev.slice(), end: Math.round(dur / 10) } };
+    try { return await post('/api/score', payload); }
     catch (e) { return { ok: false, error: 'Network error, score not saved.' }; }
   };
 })();
