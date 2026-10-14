@@ -13,6 +13,7 @@ const user=db.prepare("INSERT INTO users(username,pass_hash,created_at,birth_dat
 const insert=db.prepare('INSERT INTO runs(user_id,game_id,score,created_at,started_at,held) VALUES(?,?,?,?,?,?)');
 const heldRun=insert.run(user,'jetpack-dash',50,t-10000,t-12000,1).lastInsertRowid;
 const minted=(id)=>db.prepare("SELECT amount FROM points_ledger WHERE user_id=? AND reason='run' AND ref=?").get(user,String(id));
+const mintedFor=(userId,id)=>db.prepare("SELECT amount FROM points_ledger WHERE user_id=? AND reason='run' AND ref=?").get(userId,String(id));
 const adjustments=(id)=>db.prepare("SELECT amount FROM points_ledger WHERE user_id=? AND reason='run-integrity' AND ref LIKE ? ORDER BY id").all(user,String(id)+':%').map(x=>x.amount);
 try{
   const baseline=SHOP.sync(user);
@@ -48,6 +49,20 @@ try{
   // No negative wallet spend allowed after clawback.
   db.prepare('UPDATE runs SET held=2 WHERE id=?').run(heldRun);
   SHOP.sync(user);assert.ok(W.balance(user)>=0,'Other legit runs remain separately funded');
+  // Daily cap must be based on accepted runs, not a previous 40-run
+  // fraudulent batch whose awards have already been revoked.
+  const second=db.prepare("INSERT INTO users(username,pass_hash,created_at,birth_date) VALUES('CapReviewQA','x',?,'1990-01-01')").run(t-2*D).lastInsertRowid;
+  for(let i=0;i<40;i++)insert.run(second,'jetpack-dash',10,t-5000+i,t-6000+i,0);
+  SHOP.sync(second);
+  const initialCount=db.prepare("SELECT COUNT(*) n FROM points_ledger WHERE user_id=? AND reason='run'").get(second).n;
+  assert.equal(initialCount,40);
+  db.prepare("UPDATE runs SET held=2 WHERE user_id=?").run(second);
+  SHOP.sync(second);
+  const fresh=insert.run(second,'jetpack-dash',500,t-100,t-500,0).lastInsertRowid;
+  SHOP.sync(second);
+  const newest=mintedFor(second,fresh);
+  assert.ok(newest && newest.amount>=5,'Disqualified runs must release capped earned-Credit capacity');
+  assert.equal(SHOP.sync(second),W.balance(second),'Replaying daily-cap fix must be idempotent');
   assert.equal(W.currency.usableForGiveaways,false);
   console.log(JSON.stringify({pass:true,reviewTransitions:4,lateReviewRestored:true,
     duplicateEarnings:0,heldCanMint:false,source:'native disposable better-sqlite3',
