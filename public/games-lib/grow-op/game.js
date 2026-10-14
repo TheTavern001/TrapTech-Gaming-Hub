@@ -2,7 +2,7 @@
 // Six plants: keep water and nutrients in the green band, set the light cycle, swat pests, harvest at peak ripeness.
 Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to select it, then WATER / FEED / SWAT\nHarvest when the trichome meter is gold.\nEndless grow cycles; 3 dead plants ends the run.', bg: '#052e16',
   buttons: [{ id: 'W', label: 'WATER' }, { id: 'F', label: 'FEED' }, { id: 'H', label: 'HARVEST' }],
-  init(g) { g.time = 0; g.deaths = 0; g.sel = 0; g.plants = []; for (let i = 0; i < 6; i++) g.plants.push(newPlant(g, i)); g.pests = []; },
+  init(g) { g.time = 0; g.deaths = 0; g.sel = 0; g.plants = []; for (let i = 0; i < 6; i++) g.plants.push(newPlant(g, i)); g.pests = []; g.pestTimer = 3; },
   update(g, dt) {
     g.time += dt;
     const P = g.ptr; if (P.pressed && P.y < 330) { for (const p of g.plants) if (Math.abs(P.x - p.x) < 55) g.sel = p.i; for (const s of g.pests) if (Math.hypot(P.x - s.x, P.y - s.y) < 26) { s.dead = true; g.add(5, 'b'); g.sfx('pop'); g.burst(s.x, s.y, '#a3e635', 10); } }
@@ -12,8 +12,26 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
     if (g.btnP.H || g.kd('h') || g.kd(' ')) harvest(g, p0);
     for (const p of g.plants) { p.water -= dt * 0.045; p.food -= dt * 0.03; const okW = p.water > 0.35 && p.water < 0.95, okF = p.food > 0.3 && p.food < 0.95; p.health = Kit.clamp(p.health + ((okW && okF) ? 0.04 : -0.08) * dt - (p.pests || 0) * 0.03 * dt, 0, 1);
       p.grow += dt * (0.05 + 0.08 * p.health) * (okW ? 1 : 0.3); if (p.health <= 0) { g.float(p.x, 150, 'DIED', '#ef4444', 18); g.sfx('bad'); g.deaths++; if (g.deaths >= 3) return g.end('3 plants died'); Object.assign(p, newPlant(g, p.i)); } }
-    if (g.rnd() < dt * (0.15 + g.t / 500)) { const p = g.pick(g.plants); g.pests.push({ x: p.x + g.R(-30, 30), y: g.R(120, 300), p: p.i, t: 0 }); }
-    for (const s of g.pests) { s.t += dt; s.x += Math.sin(s.t * 7) * 30 * dt; } for (const p of g.plants) p.pests = g.pests.filter(s => !s.dead && s.p === p.i).length; g.pests = g.pests.filter(s => !s.dead);
+    // Timed, seeded pest waves are independent of render frame frequency.
+    // Unswatted pests chew for a limited time, then leave. Cap actors to
+    // keep long Android/iPhone sessions bounded in CPU and retained memory.
+    g.pestTimer -= dt;
+    if (g.pestTimer <= 0) {
+      g.pestTimer += Math.max(0.75, 4.5 - Math.min(3.75, g.t / 190));
+      if (g.pests.length < 18) {
+        const p = g.pick(g.plants);
+        g.pests.push({ x:p.x + g.R(-30, 30), y:g.R(120, 300),
+          p:p.i, t:0, life:9 + g.R(0, 5) });
+      }
+    }
+    const counts = [0,0,0,0,0,0];
+    for (const pest of g.pests) {
+      pest.t += dt; pest.x += Math.sin(pest.t * 7) * 30 * dt;
+      if (!pest.dead && pest.t < pest.life) counts[pest.p]++;
+      else pest.dead = true;
+    }
+    for (const p of g.plants) p.pests = counts[p.i];
+    g.pests = g.pests.filter(pest => !pest.dead);
     g.hud = 'LOST ' + g.deaths + '/3  ' + Math.floor(g.time / 60) + ':' + String(Math.floor(g.time % 60)).padStart(2, '0');
   },
   draw(g, c) {
