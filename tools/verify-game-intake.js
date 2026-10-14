@@ -38,9 +38,10 @@ for (const g of candidates) {
   items.push({slug:g.slug,title:g.title,admission:rec?.status||'NOT_RECORDED',checks,ready});
 }
 const approvedCount=items.filter(x=>x.ready).length;
-const currentActive=baseline.activeCoreIds.length+games.length;
+const activeLibrary=games.filter(g=>g.playable!==false&&!g.retired).length;
+const currentActive=baseline.activeCoreIds.length+activeLibrary;
 const out={reportType:'read-only admission inventory',registeredLibrary:games.length,baselineLibrary:keys.size,
-  activeCore:baseline.activeCoreIds.length,totalRegistered:currentActive,registeredNewGames:candidates.length,
+  activeCore:baseline.activeCoreIds.length,totalRegistered:baseline.activeCoreIds.length+games.length,totalPlayable:currentActive,archivedLibrary:games.length-activeLibrary,registeredNewGames:candidates.length,
   acceptedNewGames:approvedCount,remainingRegisteredToTarget:Math.max(0,baseline.targetActiveGames-currentActive),
   baselineTitlesStillNeedDeviceReview:true,newGameIntake:items,structuralFindings:findings,
   caution:'Registered does not mean verified or AAA; only per-game accepted entries have the evidence listed above.'};
