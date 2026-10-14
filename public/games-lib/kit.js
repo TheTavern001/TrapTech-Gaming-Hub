@@ -61,8 +61,11 @@
     g.flash = (col, t) => { g.flashC = col || '#fff'; g.flashT = t || 0.12; };
     g.sfx = K.sfx;
     g.end = (why) => { if (g.state !== 'play') return; g.state = 'over'; g.overT = 0; g.why = why || ''; K.sfx('die'); g.shake(8, 0.4); if (g.score > g.best) { g.best = g.score; safeStore.set('gl_best_' + def.id, g.best); g.newBest = true; } else g.newBest = false;
-      g.sub = { pending: true }; const p = window.Hub ? Promise.resolve().then(() => Hub.submit(g.score)) : Promise.resolve({ ok: false, error: 'offline' });
-      p.then(r => { g.sub = r; window.__GL.lastSubmit = r; }).catch(() => {
+      g.sub = { pending: true }; const finishedRun = g.runSerial;
+      const finalScore = g.score;
+      const p = window.Hub ? Promise.resolve().then(() => Hub.submit(finalScore)) : Promise.resolve({ ok: false, error: 'offline' });
+      p.then(r => { if (g.runSerial !== finishedRun) return; g.sub = r; window.__GL.lastSubmit = r; }).catch(() => {
+        if (g.runSerial !== finishedRun) return;
         // Network errors must not leave the results screen permanently pending.
         g.sub = { ok: false, error: 'Score submission failed. Try again when online.' };
         window.__GL.lastSubmit = g.sub;
@@ -151,7 +154,7 @@
     addEventListener('freeze',()=>{clearInputs();if(g.state==='play')g.paused=true;});
     document.addEventListener('visibilitychange', () => { if(document.hidden){clearInputs();if(g.state==='play')g.paused=true;} });
     g.kd = (k) => !!(g.kp && g.kp[k]);
-    async function begin() { g.state = 'starting'; g.startError = ''; let seed;
+    async function begin() { g.state = 'starting'; g.startError = ''; g.runSerial = (g.runSerial || 0) + 1; let seed;
       try { seed = window.Hub ? await Hub.start(def.id) : null; }
       catch (_) { g.state = 'title'; g.startError = 'Could not start game. Check connection and retry.'; return; }
       g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = false; def.init(g); g.state = 'play'; K.sfx('power'); }
