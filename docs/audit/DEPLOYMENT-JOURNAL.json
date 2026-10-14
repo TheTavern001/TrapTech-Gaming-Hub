@@ -360,6 +360,7 @@
     }
   ],
   "pendingEvidence": [
+    "Financial order-pack immutable quantity/refund source fix 2026-10-14: exact simulation PASS 7/7, real SQLite migration DML PASS. Full native finance/Stripe/BTC and device QA pending. Deplexo screenshot CURRENT READY 278af07 unchanged.",
     "Wallet branch unified Credits source changes NOT DEPLOYED. Native Node20 real better-sqlite3 tests and full Docker STEP11/12 pending. No current phone P95 evidence, mobile iOS Safari proof or settled payout replay QA. New security preflight R4 source simulation BLOCKED 37.",
     "2026-10-14: owner screenshot CURRENT 278af07 confirmed and integrity-indexed in docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json; only GitHub source for 10 Kenney chase models and one neutral Quaternius rig. Full Node/Docker, WebGL rendering, Android FPS, security and live API fingerprint unverified.",
     "Host latest confirmed CURRENT+READY 278af07. Developer program branch df091e8 and successors NOT DEPLOYED. Must not equate GitHub SHA with Deplexo build status. Deplexo manual R1 preflight BLOCKED.",
@@ -553,9 +554,32 @@
       "securityGates": 14,
       "ownerApprovedSecurity": 0,
       "admittedGames": 0
+    },
+    {
+      "commit": "490209fba5f72a10e0127c4e5700d88426747e66",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "reason": "Security checkpoint: paid-pack quantity was mutable between order creation and payment/refund; froze order.pack_crowns on Stripe/BTC/manual, blocked missing legacy snapshots/unpaid grants, exact original-ledger refund and refund idempotence; native regression added to Docker.",
+      "validation": "Exact source-backed V8 grant simulation 4/4 PASS; V8 refund simulation 3/3 PASS. Actual SQLite :memory: DML equivalence PASS (signed legacy migration, duplicate idempotence, frozen quote, exact refund). Native full app/Node better-sqlite3/Docker/real provider/Android/iOS NOT RUN.",
+      "host": "SOURCE ONLY. Owner screenshot 278af07 CURRENT READY unchanged. Deplexo auto deploy OFF.",
+      "files": [
+        "src/monetize.js",
+        "tools/test-payment-order-snapshots.js",
+        "tools/test-full-hub-meta-contract.js",
+        "Dockerfile",
+        "docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "qa": {
+        "securityGate": "BLOCKED",
+        "newPlayableGames": 0,
+        "ownerAAAGameApprovals": 0,
+        "liveDeployed": false,
+        "manualPaymentsEnabled": false
+      },
+      "resume": "Run native credit/hold/refund tests on disposable DB and STEP11+STEP12; reconcile unsnapped legacy orders only from verified financial evidence, finish real Android/iPhone anti-cheat/art QA before manual release."
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-14 new source-only wallet security checkpoint c91cbfaa3af1. Host CURRENT READY remains 278af07 from owner screenshot. No Deplexo deployment. One Hub Credits wallet (legacy Crown x10) sourced, native SQL-equivalence smoke PASS, Node20/Docker/manual phone review pending.",
+  "lastEvidenceReconciliation": "2026-10-14 source checkpoint 490209fba5f7. Owner Deplexo CURRENT READY 278af07 unchanged; latest finance changes in source only. 4 grant + 3 refund simulated, sqlite DML equivalence PASS, full Node/Docker not run. Auto deploy OFF.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -571,11 +595,11 @@
   },
   "currentWorkingSource": {
     "branch": "program/five-release-full-hub-overhaul-20261013",
-    "headAtReconciliation": "c91cbfaa3af14d9a84d1873ef4572a891cff1d7d",
+    "headAtReconciliation": "490209fba5f72a10e0127c4e5700d88426747e66",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
     "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
-    "reconciledScope": "Source head at 2026-10-14 wallet/security checkpoint; current journal commit moves source head. Deplexo does not deploy from this branch while auto deployment off."
+    "reconciledScope": "Source branch HEAD immediately before this evidence journal commit; no Deplexo host observation of subsequent commits."
   },
   "ownerConfirmedAutoDeployOff": true
 }
