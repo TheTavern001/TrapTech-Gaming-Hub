@@ -286,7 +286,7 @@ function reconcileRunRewardIntegrity(userId, t=Date.now()) {
   const adjustments=db.prepare("SELECT ref,amount FROM points_ledger WHERE user_id=? AND reason='run-integrity'").all(userId);
   const state=new Map();
   for(const e of adjustments){
-    const m=/^(\\d+):(\\d+)$/.exec(e.ref);if(!m)continue;
+    const m=/^(\d+):(\d+)$/.exec(e.ref);if(!m)continue;
     const key=m[1],v=state.get(key)||{delta:0,max:0};
     v.delta+=e.amount;v.max=Math.max(v.max,Number(m[2]));state.set(key,v);
   }
