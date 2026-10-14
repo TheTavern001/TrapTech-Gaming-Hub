@@ -176,6 +176,12 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     neutralDispatcher.res.status===200&&neutralDispatcher.text.includes("get('avatarRigQA')==='1'"));
   const storeResult = await get(BASE + '/api/store');
   let storeJson = null; try { storeJson = JSON.parse(storeResult.text); } catch {}
+  const creditsOk=storeResult.res.status===200 && storeJson?.currency?.name==='Hub Credits' &&
+    storeJson?.currency?.cosmeticOnly===true && storeJson?.packs?.length===4 &&
+    storeJson.packs.every(p=>Number.isInteger(p.credits)&&p.credits>0 &&
+      !Object.prototype.hasOwnProperty.call(p,'crowns'));
+  check('Single earn-or-buy Hub Credits store API with no second spendable balance',creditsOk,
+    {status:storeResult.res.status,packs:storeJson?.packs?.length,currency:storeJson?.currency?.name});
   const prestigeItems = storeJson?.prestige || [];
   const prestigeIds = prestigeItems.map(p => p.id);
   const prestigeReady = storeResult.res.status === 200 && prestigeItems.length === 12 && new Set(prestigeIds).size === 12 && prestigeItems.every(p => p.supply === 1 && p.usd_cents >= 100000);
