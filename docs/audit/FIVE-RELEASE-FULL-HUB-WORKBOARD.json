@@ -301,7 +301,9 @@
       "evidence": [
         "src/monetize.js (disabled Whop webhook)",
         "tools/e2e-payments.js",
-        "tools/test-unified-wallet.js"
+        "tools/test-unified-wallet.js",
+        "src/monetize.js (immutable order.pack_crowns + ledger-backed refunds + duplicated webhook refund idempotence)",
+        "tools/test-payment-order-snapshots.js (wired into Docker, native run pending)"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -382,5 +384,6 @@
   "checkoutNewBranchDeployed": false,
   "automaticDeployOwnerConfirmedOff": true,
   "publicLaunchApproved": false,
-  "currencyMigrationNativeDockerTest": "NOT_RUN"
+  "currencyMigrationNativeDockerTest": "NOT_RUN",
+  "sourceOnlyPaymentsVersion": "immutable quoted credits for Stripe/Bitcoin/manual, native e2e pending"
 }
