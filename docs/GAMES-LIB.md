@@ -4,8 +4,8 @@
 > This inventory is not a claim of AAA-quality certification. A title is verified only after recorded gameplay, score-integrity, visual, licence, desktop and Android evidence.
 
 ## Totals
-- Active catalog entries: **80** (77 original builds, 3 vendored builds).
-- Giveaway-eligible in registry: 80.
+- Registered library IDs: **80** (77 original builds, 3 vendored builds), including **6 owner-retired overlapping games** retained for history. **74 playable/discoverable library games**; add 13 active core games for **87 active titles**.
+- Giveaway-eligible active library games: **74**. The six archived game IDs cannot start new scored runs or giveaways; prior scores remain recorded.
 - External game redirects: 0.
 - By category: Endless Runners: 7 | Driving: 12 | Physics & Destruction: 3 | Tower Defense: 3 | Survival & Horde: 5 | Arcade Shooters: 5 | Puzzle & Brain: 9 | Reflex & Skill: 11 | Combat: 2 | Sports: 10 | Specialty: 2 | Cannabis: 11.
 
