@@ -316,6 +316,10 @@ export default async function RailRunner(cfg) {
         if (dx > 1.1) continue; let hit = false;
         if (it.kind === 'train' && iz + it.len / 2 > -0.3 && iz - it.len / 2 < 0.3 && pl.y < it.h - 0.4) hit = Math.abs(iz - it.len / 2) < 1.2 || it.moving ? 'front' : 'side';
         if (it.kind === 'low' && Math.abs(iz) < 0.45 && pl.y < 1.05) hit = 'front'; if (it.kind === 'high' && Math.abs(iz) < 0.35 && pl.roll <= 0 && pl.y < 1.5) hit = 'front';
+        // A train has a solid collision body: changing lane at impact must not
+        // turn it into a sideways shove. Valid ramp-to-roof landings remain
+        // handled by pl.ground above, so only below-roof overlap is lethal.
+        if (hit && it.kind === 'train') return die(g, 'Hit a train');
         if (hit === 'side' || (hit && Math.abs(prevX - pl.x) > 0.05 && dx > 0.5)) { const back = pl.x > it.lane * LANE ? 1 : -1; pl.lane = K.clamp(it.lane + back, -1, 1); if (pl.immune > 0) continue; pl.immune = 0.9; if (pl.stumble > 0) return die(g, 'Tripped twice'); pl.stumble = 2.0; g.chase = 0; g.shake(6); g.sfx('hit'); g.float(g.W / 2, g.H * 0.4, 'STUMBLE!', '#ffd23f', 24); continue; }
         if (hit) return die(g, it.kind === 'train' ? 'Hit a train' : 'Hit a barrier'); }
       for (const it of items) if (!it.dead && it.z - g.z > 14) it.dead = true;
