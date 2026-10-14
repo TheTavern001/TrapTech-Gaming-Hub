@@ -210,3 +210,4 @@ Source audit `tools/test-game-source-mechanics.js` and player/game-settings QA n
 
 References: `docs/UNIFIED-HUB-CREDITS-SECURITY-2026-10-14.md`, `docs/audit/MOBILE-FIRST-98-PERCENT-ACCEPTANCE-2026-10-14.json`, `docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.json`, `tools/test-unified-wallet.js`, `tools/test-reward-integrity.js`.
 
+**2026-10-14 regression refinement (source only, no deployment):** Commit `693b3351012103a0338b2cde335c14fd2ab510b4` adjusts the pending native `tools/test-reward-integrity.js` checks to isolate exact run-credit clawback from independently awarded Season Pass progress. Season entitlements earned *before a later disqualification* are not automatically clawed back and remain a specific security/design blocker; the test must not mistakenly claim otherwise. Actual Node20 Docker execution still pending, while last screenshot host CURRENT remains `278af07`.
