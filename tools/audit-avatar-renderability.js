@@ -25,6 +25,8 @@ const report={
  includedLicense:fs.existsSync(path.join(root,license)),
  neutralStarterConfigured:starterIsNeutral,
  neutralStarterCanUseLicensedRig:!(starterIsNeutral&&licensedRigRequiresClothes),
+ neutralSourceRigQaCandidate:fs.existsSync(path.join(root,'public/assets/avatars/rigged/quaternius-neutral-starter-qa.glb')),
+ neutralSourceRigQaOnly:true,
  authoredNeutralModularRigCertified:false,
  onCharacter3DWearablesCertified:0,
  generatedShopItemTypes:profileTypes,
