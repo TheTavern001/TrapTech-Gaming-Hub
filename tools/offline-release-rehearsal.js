@@ -47,6 +47,7 @@ const tests=[
  'tools/test-avatar-current-entitlements.js',
  'tools/test-avatar-async-stale-render.js',
  'tools/test-game-adapter-start-isolation.js',
+ 'tools/test-adapter-proof-snapshot.js',
  'tools/test-vehicle-lab-assets.js',
  'tools/test-imported-kenney-cars.js',
  'tools/test-full-hub-meta-contract.js',
