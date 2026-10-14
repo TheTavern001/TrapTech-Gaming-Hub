@@ -55,6 +55,7 @@ run full-gameplay-distinctness node tools/test-owner-gameplay-distinctness.js
 run cannabis-touch-and-gameplay node tools/test-cannabis-gameplay-qa.js
 run grow-op-timed-difficulty node tools/test-grow-op-timed-difficulty.js
 run grow-op-wave-catchup node tools/test-grow-op-wave-catchup.js
+run grow-op-newborn-pests node tools/test-grow-op-newborn-pests.js
 run retired-duplicates node tools/test-owner-duplicate-retirements.js
 run external-source-vehicles node tools/test-imported-kenney-cars.js
 run neutral-rig-fingerprint node tools/test-neutral-avatar-source.js
