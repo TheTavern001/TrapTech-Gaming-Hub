@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "ownerConfirmedOn": "2026-10-14",
+  "useCase": "Trap Tech browser/PWA Gaming Hub and private official giveaways",
+  "estimatedPlayerTrafficShare": {
+    "mobilePhonesPercent": 98,
+    "desktopPercent": 2,
+    "note": "Owner estimate; not analytics telemetry"
+  },
+  "priority": [
+    "Android Chrome and Android WebView/in-app browsers",
+    "iPhone Safari (real WebKit) and iOS WKWebView/in-app browsers",
+    "Desktop compatibility: secondary, never a blocker ahead of primary phone failure"
+  ],
+  "nonNegotiableMobile": [
+    "Every playable game fully touch-operable: no keyboard-only actions, skills, selection or hidden hotkeys required",
+    "All gameplay/scores/input semantics identical across iOS/Android for equivalent actions; no auto-aim or input-device-specific competitive assists",
+    "No horizontal clipping, safe-area collisions, screen-cutoff HUD or inaccessible bottom controls; CSS safe-area insets and notch/Dynamic Island",
+    "Portrait and landscape behavior game-specific; orientation change must resize without losing a scored run or restarting the level",
+    "Pause/resume/restart work after tab switch, lock screen, incoming call and app/WebView backgrounding; score clock follows official event rules",
+    "Touch pointercancel, multi-touch, swipe, virtual joystick, tap targets and haptics gracefully supported without phantom actions",
+    "Respect mobile autoplay policies: sound only after user interaction; muted, suspended and WebView-restricted audio never block gameplay",
+    "UI readable at narrow widths and device text scaling, with reduced motion and accessible contrast",
+    "Network interruption/offline/PWA and resumption: never fabricate an official scored completion after a connection loss",
+    "Mobile resource budgets: adaptive DPR and resolution, asset streaming, bounded CPU/GPU memory and no large allocation churn",
+    "Target smooth 60 fps on capable phones; measure P50/P95 frame times and stutter on real hardware; degrade LOD/effects rather than mechanics",
+    "Comparable touch control response and server validated score result on both platforms"
+  ],
+  "QAProfiles": [
+    {
+      "id": "android-physical",
+      "requiredPublic": true,
+      "deviceType": "real Android phone",
+      "browser": "latest stable Chrome",
+      "evidence": "video/screenshots + gameplay/score + input/pause/timing + measured FPS"
+    },
+    {
+      "id": "android-webview-physical",
+      "requiredPublic": true,
+      "deviceType": "real Android phone",
+      "browser": "in-app/WebView",
+      "evidence": "session/pointer/scroll/audio/cookie/storage and return-to-game"
+    },
+    {
+      "id": "ios-physical",
+      "requiredPublic": true,
+      "deviceType": "real iPhone",
+      "browser": "Safari WebKit",
+      "evidence": "video/screenshots + gameplay/score + touch/safe-area + measured FPS"
+    },
+    {
+      "id": "ios-wkwebview-physical",
+      "requiredPublic": true,
+      "deviceType": "real iPhone",
+      "browser": "WKWebView / supported in-app browser",
+      "evidence": "pointer, storage, audio unlock, layout and score round trip"
+    },
+    {
+      "id": "desktop",
+      "requiredPublic": false,
+      "deviceType": "desktop or laptop",
+      "browser": "Chromium/Firefox/Safari",
+      "evidence": "secondary keyboard/mouse usability"
+    }
+  ],
+  "browserSimulationLimitation": "Existing tools/e2e-mobile.js runs chromium.launch for all profiles. User agent/profile emulation called 'iphone14-safari' does NOT use WebKit and is not an actual Safari compatibility test. Real iPhone evidence or a native WebKit execution environment is required separately.",
+  "qualityThresholds": {
+    "p95FrameMsTarget": 16.7,
+    "measuredOnCapableRealPhones": true,
+    "p50FrameMsRequired": true,
+    "adaptiveQualityRequired": true,
+    "minimumTargetRenderHeightPixels": 720,
+    "renderHeightCaveat": "Physical render pixels, not CSS viewport size; phones with smaller available backing targets require documented exception and readable adaptive layout",
+    "touchInputLatencyBudgetMs": 100,
+    "note": "Performance targets are QA goals, not measured/certified results"
+  },
+  "currentEvidence": {
+    "androidRealDevice": "NOT RUN for new branch",
+    "iosRealDevice": "NOT RUN",
+    "chromiumMobileEmulation": "NOT EQUIVALENT TO IOS SAFARI",
+    "all93GameCertified": false,
+    "productionDeployTarget": "278af07 remains last screenshot-confirmed CURRENT READY; newer source undeployed"
+  },
+  "releaseGate": "Do not certify R5 private-release readiness or public launch without required phone-based proof; older desktop-only passes cannot substitute"
+}
