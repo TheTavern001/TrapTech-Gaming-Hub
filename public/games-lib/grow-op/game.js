@@ -1,6 +1,6 @@
-// Grow Op - original 3-minute grow-room management sim (Hub build, cannabis theme). Short session, skill-based.
+// Grow Op - endless grow-room management survival (Hub build, cannabis theme). Keep plants healthy and harvest; third loss ends the run.
 // Six plants: keep water and nutrients in the green band, set the light cycle, swat pests, harvest at peak ripeness.
-Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to select it, then WATER / FEED / SWAT\nHarvest when the trichome meter is gold - 3 minutes', bg: '#052e16',
+Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to select it, then WATER / FEED / SWAT\nHarvest when the trichome meter is gold.\nEndless grow cycles; 3 dead plants ends the run.', bg: '#052e16',
   buttons: [{ id: 'W', label: 'WATER' }, { id: 'F', label: 'FEED' }, { id: 'H', label: 'HARVEST' }],
   init(g) { g.time = 0; g.deaths = 0; g.sel = 0; g.plants = []; for (let i = 0; i < 6; i++) g.plants.push(newPlant(g, i)); g.pests = []; },
   update(g, dt) {
