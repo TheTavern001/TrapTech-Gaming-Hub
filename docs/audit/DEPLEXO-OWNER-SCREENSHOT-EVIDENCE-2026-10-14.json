@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "asOf": "2026-10-14",
+  "format": "OWNER_SUPPLIED_DEPLEXO_SCREENSHOT_METADATA",
+  "evidenceRule": "Deplexo CURRENT/READY may only be recorded when an owner screenshot, exact build log or independently verified host response supports it. Repo source commits alone do not prove deployment.",
+  "app": {
+    "id": "20e0c3e0-87bf-4d2f-8c25-5e41401a5121",
+    "slug": "glassy-drifter-9532",
+    "url": "https://glassy-drifter-9532.de.deplexo.com/"
+  },
+  "screenshots": [
+    {
+      "id": "owner-deplexo-current-2026-10-14-phone-1217",
+      "fileInOwnerConversation": true,
+      "binaryCopiedToGitHub": false,
+      "sha256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad",
+      "bytes": 108248,
+      "width": 709,
+      "height": 1536,
+      "phoneClock": "12:17",
+      "timezoneNotConfirmed": true,
+      "observedClaims": [
+        {
+          "gitCommit": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+          "short": "278af07",
+          "branch": "qa/gameplay-distinctness-and-collision-20261013",
+          "hostStatus": "READY",
+          "current": true,
+          "durationSeconds": 323
+        },
+        {
+          "gitCommit": "916f5c76673d35a48e38c9d3218f06c5dd6e5ee4",
+          "short": "916f5c7",
+          "branch": "qa/gameplay-distinctness-and-collision-20261013",
+          "hostStatus": "READY",
+          "current": false,
+          "durationSeconds": 561
+        },
+        {
+          "gitCommit": "03119b9c019aae88896eabe34ee697b7cd469419",
+          "short": "03119b9",
+          "branch": "qa/gameplay-distinctness-and-collision-20261013",
+          "hostStatus": "READY",
+          "current": false,
+          "durationSeconds": 390
+        }
+      ],
+      "doesNotShow": [
+        {
+          "gitCommit": "df091e892e6e6575846940630530897eb79fb650",
+          "sourceStatus": "GITHUB_SOURCE_ONLY",
+          "notEvidenceOfDeployment": true
+        }
+      ]
+    }
+  ],
+  "lastKnownHostCurrent": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+  "autoDeployOwnerConfirmedOff": true,
+  "hostReadback": {
+    "healthz": "NOT_OBSERVED_FROM_ASSISTANT_ENV",
+    "apiBuild": "NOT_OBSERVED_FROM_ASSISTANT_ENV"
+  },
+  "publicLaunchApproved": false
+}
