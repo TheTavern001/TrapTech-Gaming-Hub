@@ -94,6 +94,12 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-owner-reported-gameplay.js \
  && node --check tools/test-cannabis-gameplay-qa.js \
  && node tools/test-cannabis-gameplay-qa.js \
+ && node tools/test-arrow-hero-swept-collision.js \
+ && node tools/test-arrow-hero-hostile-projectiles.js \
+ && node tools/test-arrow-hero-contact-after-move.js \
+ && node tools/test-arrow-hero-room-reachability.js \
+ && node tools/test-grow-op-timed-difficulty.js \
+ && node tools/test-grow-op-wave-catchup.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
  && node --check tools/test-grow-op-touch-fairness.js \
