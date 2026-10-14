@@ -59,7 +59,13 @@ for (const g of games) {
   if (ids.has(g.id)) fail(where, 'Duplicate registry id');
   ids.add(g.id);
   if (!CATS.includes(g.category)) fail(where, 'Unknown category: ' + g.category);
-  if (!g.giveaway) fail(where, 'A listed library game is not giveaway eligible');
+  // Owner-approved duplicate retirements preserve historical game IDs
+  // but must not receive new scored runs or official giveaways.
+  if (g.retired) {
+    if (g.playable || g.giveaway || !g.replacedBy) fail(where,'Retired duplicate remains active or lacks a successor');
+  } else if (!g.giveaway || !g.playable) {
+    fail(where,'Active library game must be playable and giveaway-eligible');
+  }
   if (Number(g.acLevel || 0) < 2) fail(where, 'Anti-cheat level is below L2 or unspecified');
 
   const dir = path.join(GAME_ROOT, where);
