@@ -43,22 +43,61 @@ function render3d(g) { const c0 = g.car;
 window.__GL3 = () => S3.r.info.render;
 function toScreen(g, wx, wy) { const v = new THREE.Vector3(wx * K, 0.5, wy * K).project(cam); return { x: (v.x + 1) / 2 * g.W, y: (1 - v.y) / 2 * g.H }; }
 Kit.run({ id: 'gl-wanted-run', title: 'MOST WANTED RUN', help: 'Steer: left/right arrows or hold left/right side\nSurvive the chase - make cops crash into each other', bg: 'rgba(0,0,0,0)',
-  init(g) { g.car = { x: 0, y: 0, a: -Math.PI / 2, sp: 260 }; g.cops = []; g.obj = []; g.heat = 1; g.ht = 0; g.next = 2; g.sec = 0; g.coins = []; for (let i = 0; i < 900; i++) { const q = g.rnd(); const k = q < 0.55 ? 't' : q < 0.75 ? 'r' : 'h'; let x = g.R(-2000, 2000), y = g.R(-2000, 2000); if (k === 'h') { x = Math.round(x / 400) * 400 + 200; y = Math.round(y / 400) * 400 + 200 + g.R(-90, 90); } const r = k === 'h' ? 34 : g.R(14, 30); const dl = (v) => Math.abs(((v % 400) + 600) % 400 - 200); if (200 - dl(x) < 44 + (k === 'h' ? 40 : r * 0.6) || 200 - dl(y) < 44 + (k === 'h' ? 40 : r * 0.6)) continue; g.obj.push({ x, y, r, k, v: g.RI(0, 11) }); } g.obj = g.obj.filter(o => Math.hypot(o.x, o.y) > 120); },
+  init(g) { g.car = { x: 0, y: 0, a: -Math.PI / 2, sp: 260 }; g.bumpCooldown = 0; g.blockedFor = 0; g.bustTime = 0; g.cops = []; g.obj = []; g.heat = 1; g.ht = 0; g.next = 2; g.sec = 0; g.coins = []; for (let i = 0; i < 900; i++) { const q = g.rnd(); const k = q < 0.55 ? 't' : q < 0.75 ? 'r' : 'h'; let x = g.R(-2000, 2000), y = g.R(-2000, 2000); if (k === 'h') { x = Math.round(x / 400) * 400 + 200; y = Math.round(y / 400) * 400 + 200 + g.R(-90, 90); } const r = k === 'h' ? 34 : g.R(14, 30); const dl = (v) => Math.abs(((v % 400) + 600) % 400 - 200); if (200 - dl(x) < 44 + (k === 'h' ? 40 : r * 0.6) || 200 - dl(y) < 44 + (k === 'h' ? 40 : r * 0.6)) continue; g.obj.push({ x, y, r, k, v: g.RI(0, 11) }); } g.obj = g.obj.filter(o => Math.hypot(o.x, o.y) > 120); },
   update(g, dt) {
-    const c0 = g.car; let st = g.ax(); if (g.ptr.down) st = g.ptr.x < g.W / 2 ? -1 : 1; c0.a += st * 3.1 * dt; g.steer = Kit.lerp(g.steer || 0, st, Math.min(1, dt * 8)); c0.sp = Math.min(420, 260 + g.t * 2); c0.x += Math.cos(c0.a) * c0.sp * dt; c0.y += Math.sin(c0.a) * c0.sp * dt;
+    const c0 = g.car; let st = g.ax(); if (g.ptr.down) st = g.ptr.x < g.W / 2 ? -1 : 1; c0.a += st * 3.1 * dt; g.steer = Kit.lerp(g.steer || 0, st, Math.min(1, dt * 8)); c0.sp = Math.min(420, 260 + g.t * 2); const stepX = Math.cos(c0.a) * c0.sp * dt, stepY = Math.sin(c0.a) * c0.sp * dt;
     if (st && g.frames % 3 === 0) { const sp = toScreen(g, c0.x - Math.cos(c0.a) * 16, c0.y - Math.sin(c0.a) * 16); g.parts.push({ x: sp.x, y: sp.y, vx: g.R(-20, 20), vy: g.R(-20, 20), l: 0.5, m: 0, c: 'rgba(230,230,230,.7)', s: 7, gr: 0 }); }
-    // world recycling of obstacles around the car
-    for (const o of g.obj) { if (o.x - c0.x > 2000) o.x -= 4000; if (c0.x - o.x > 2000) o.x += 4000; if (o.y - c0.y > 2000) o.y -= 4000; if (c0.y - o.y > 2000) o.y += 4000; if (Math.hypot(o.x - c0.x, o.y - c0.y) < o.r + 12) { { const sp = toScreen(g, c0.x, c0.y); g.burst(sp.x, sp.y, ['#ef4444', '#fbbf24', '#fff'], 40, 260); } g.sfx('boom'); g.shake(12, 0.4); return g.end('Wrecked on a ' + ({ t: 'tree', r: 'rock', h: 'house' }[o.k])); } }
+    // Scenery collisions block the car rather than ending the run. Use a swept
+    // circle to catch high-speed impacts, while permitting movement away from
+    // an object after contact. A stopped car can be pinned and busted by cops.
+    let travel = 1, impact = null;
+    const travel2 = stepX * stepX + stepY * stepY, travelLen = Math.sqrt(travel2);
+    for (const o of g.obj) {
+      if (o.x - c0.x > 2000) o.x -= 4000;
+      if (c0.x - o.x > 2000) o.x += 4000;
+      if (o.y - c0.y > 2000) o.y -= 4000;
+      if (c0.y - o.y > 2000) o.y += 4000;
+      const r = o.r + 12, sx = c0.x - o.x, sy = c0.y - o.y;
+      const startDist = Math.hypot(sx, sy);
+      const endDist = Math.hypot(sx + stepX, sy + stepY);
+      if (startDist < r && endDist >= startDist) continue; // steer clear of an obstacle
+      const t = travel2 > 0 ? Kit.clamp(-(sx * stepX + sy * stepY) / travel2, 0, 1) : 0;
+      if (Math.hypot(sx + stepX * t, sy + stepY * t) < r) {
+        const stop = Math.max(0, t - r / Math.max(travelLen, 0.0001));
+        if (stop < travel) { travel = stop; impact = o; }
+      }
+    }
+    c0.x += stepX * travel;
+    c0.y += stepY * travel;
+    g.blockedFor = impact ? Math.min(5, g.blockedFor + dt) : Math.max(0, g.blockedFor - dt * 2);
+    g.bumpCooldown = Math.max(0, g.bumpCooldown - dt);
+    if (impact && g.bumpCooldown <= 0) {
+      const pos = toScreen(g, c0.x, c0.y);
+      g.burst(pos.x, pos.y, ['#fbbf24', '#fff'], 10, 90);
+      g.sfx('hit'); g.shake(3, 0.12); g.bumpCooldown = 0.4;
+    }
     g.sec += dt; const s = Math.floor(g.sec * 10); if (s > (g.ls || 0)) { g.add((s - (g.ls || 0)) * g.heat, 's'); g.ls = s; }
     g.ht += dt; if (g.ht > 15) { g.ht = 0; g.heat = Math.min(6, g.heat + 1); g.mark('w', g.heat); g.float(g.W / 2, 140, 'HEAT ' + g.heat + '\u2605', '#fbbf24', 26); g.sfx('power'); }
     g.next -= dt; if (g.next <= 0 && g.cops.length < 3 + g.heat * 2) { g.next = Math.max(0.6, 3 - g.heat * 0.35); const a = g.R(0, 6.28); g.cops.push({ x: c0.x + Math.cos(a) * 520, y: c0.y + Math.sin(a) * 520, a: a + Math.PI, sp: 250 + g.heat * 28 + g.R(-20, 20), tank: g.heat >= 4 && g.rnd() < 0.2 }); }
+    let copsGrabbing = 0;
     for (const p of g.cops) { const ta = Math.atan2(c0.y + Math.sin(c0.a) * 60 - p.y, c0.x + Math.cos(c0.a) * 60 - p.x); let d = ta - p.a; d = Math.atan2(Math.sin(d), Math.cos(d)); p.a += Kit.clamp(d, -2.4 * dt, 2.4 * dt); const sp = p.tank ? p.sp * 0.8 : p.sp; p.x += Math.cos(p.a) * sp * dt; p.y += Math.sin(p.a) * sp * dt;
-      if (Math.hypot(p.x - c0.x, p.y - c0.y) < (p.tank ? 26 : 20)) { { const sp = toScreen(g, c0.x, c0.y); g.burst(sp.x, sp.y, ['#3b82f6', '#ef4444', '#fff'], 40, 260); } g.sfx('boom'); g.shake(12, 0.4); return g.end('Busted!'); }
+      // One glancing police collision is recoverable; repeated contact while
+      // stuck, or several police cars pinning the player, fills the bust meter.
+      if (Math.hypot(p.x - c0.x, p.y - c0.y) < (p.tank ? 29 : 24)) copsGrabbing++;
       for (const o of g.obj) if (Math.hypot(o.x - p.x, o.y - p.y) < o.r + 10) p.dead = true;
       for (const q of g.cops) if (q !== p && !q.dead && Math.hypot(q.x - p.x, q.y - p.y) < 22) { p.dead = true; if (!q.tank) q.dead = true; } }
     for (const p of g.cops) if (p.dead) { g.add(50 * g.heat, 'k'); { const sp = toScreen(g, p.x, p.y); g.burst(sp.x, sp.y, ['#3b82f6', '#ef4444', '#fbbf24'], 25, 220); g.sfx('boom'); g.shake(6); g.float(sp.x, sp.y - 20, '+' + 50 * g.heat, '#fbbf24'); } }
     g.cops = g.cops.filter(p => !p.dead && Math.hypot(p.x - c0.x, p.y - c0.y) < 1200);
-    g.hud = '\u2605'.repeat(g.heat) + '  ' + Math.floor(g.sec) + 's';
+    const pinned = (g.blockedFor > 0.25 && copsGrabbing >= 1) || copsGrabbing >= 2;
+    g.bustTime = pinned ? Math.min(1.3, g.bustTime + dt) : Math.max(0, g.bustTime - dt * 2);
+    if (g.bustTime >= 1.25) {
+      const pos = toScreen(g, c0.x, c0.y);
+      g.burst(pos.x, pos.y, ['#3b82f6', '#ef4444', '#fff'], 40, 250);
+      g.sfx('boom'); g.shake(12, 0.4);
+      return g.end('BUSTED! Police have immobilized you');
+    }
+    g.hud = '\u2605'.repeat(g.heat) + '  ' + Math.floor(g.sec) + 's' +
+      (g.bustTime > 0 ? '  BUST ' + Math.round(g.bustTime / 1.25 * 100) + '%' : '');
   },
   draw(g, c) { c.clearRect(0, 0, g.W, g.H); render3d(g); const c0 = g.car; for (const p of g.cops) { const sp = toScreen(g, p.x, p.y); if (sp.x < 0 || sp.y < 0 || sp.x > g.W || sp.y > g.H) { const cc = toScreen(g, c0.x, c0.y); const a = Math.atan2(sp.y - cc.y, sp.x - cc.x); const x = Kit.clamp(cc.x + Math.cos(a) * 1000, 18, g.W - 18), y = Kit.clamp(cc.y + Math.sin(a) * 1000, 70, g.H - 18); c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = Math.sin(g.t * 18) > 0 ? '#ff3030' : '#3050ff'; c.beginPath(); c.moveTo(12, 0); c.lineTo(-8, -8); c.lineTo(-8, 8); c.fill(); c.restore(); } }
 } });
