@@ -32,6 +32,8 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check src/unified-wallet.js \
  && node --check tools/test-unified-wallet.js \
  && node tools/test-unified-wallet.js \
+ && node --check tools/test-payment-order-snapshots.js \
+ && node tools/test-payment-order-snapshots.js \
  && node --check tools/test-reward-integrity.js \
  && node tools/test-reward-integrity.js \
  && node --check src/shop.js \
