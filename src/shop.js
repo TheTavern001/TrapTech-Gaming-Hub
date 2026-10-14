@@ -324,7 +324,7 @@ function sync(userId) {
       const perDay = {};
       for (const r of runs) {
         const day = Math.floor(r.created_at / D);
-        if (perDay[day] === undefined) perDay[day] = db.prepare("SELECT COUNT(*) AS c FROM points_ledger WHERE user_id=? AND reason='run' AND created_at >= ? AND created_at < ?").get(userId, day * D, (day + 1) * D).c;
+        if (perDay[day] === undefined) perDay[day] = db.prepare("SELECT COUNT(*) AS c FROM points_ledger p JOIN runs r ON r.user_id=p.user_id AND CAST(r.id AS TEXT)=p.ref AND COALESCE(r.held,0)=0 WHERE p.user_id=? AND p.reason='run' AND p.created_at >= ? AND p.created_at < ?").get(userId, day * D, (day + 1) * D).c;
         const prior = priorBest.get(userId, r.game_id, r.id).b;
         const pb = prior !== null && r.score > prior;
         const sk = SKILL[r.game_id]; const skill = sk ? (r.score >= sk.top1 ? EARN.skill.top1 : r.score >= sk.good ? EARN.skill.good : 0) : 0;
