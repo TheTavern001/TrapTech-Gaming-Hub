@@ -56,7 +56,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-maze-muncher",
@@ -100,7 +102,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-alien-rows",
@@ -144,7 +148,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-cloud-hopper",
@@ -188,7 +194,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-road-hopper",
@@ -232,7 +240,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-bud-merge",
@@ -276,7 +286,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-hex-stack",
@@ -320,7 +332,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-dino-dash",
@@ -364,7 +378,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-rock-buster",
@@ -408,7 +424,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-star-swarm",
@@ -452,7 +470,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-rail-rush",
@@ -496,7 +516,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-hill-hauler",
@@ -540,7 +562,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-wanted-run",
@@ -584,7 +608,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-pop-defense",
@@ -628,7 +654,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-cube-horde",
@@ -672,7 +700,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-arrow-hero",
@@ -716,7 +746,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-grid-wars",
@@ -760,7 +792,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-moon-swarm",
@@ -804,7 +838,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-throttle-rider",
@@ -848,7 +884,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-wreck-ride",
@@ -856,14 +894,14 @@
       "title": "Wreck Ride",
       "category": "Physics & Destruction",
       "lib": true,
-      "playable": true,
+      "playable": false,
       "unit": "pts",
       "url": "/games-lib/wreck-ride/index.html",
       "art": "/games-lib/wreck-ride/thumb.jpg",
       "tier": "A",
       "competition": "endless",
       "endless": true,
-      "giveaway": true,
+      "giveaway": false,
       "just_for_fun": false,
       "endless_mode": true,
       "scoring": "Distance m + flips 150 + big air 20 + crates 25",
@@ -892,7 +930,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": true,
+      "replacedBy": "gl-hill-hauler"
     },
     {
       "id": "gl-rig-rally",
@@ -900,14 +940,14 @@
       "title": "Rig Rally",
       "category": "Physics & Destruction",
       "lib": true,
-      "playable": true,
+      "playable": false,
       "unit": "pts",
       "url": "/games-lib/rig-rally/index.html",
       "art": "/games-lib/rig-rally/thumb.jpg",
       "tier": "A",
       "competition": "endless",
       "endless": true,
-      "giveaway": true,
+      "giveaway": false,
       "just_for_fun": false,
       "endless_mode": true,
       "scoring": "Distance m + coins 5 + stars 50 (build your own rig)",
@@ -936,7 +976,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": true,
+      "replacedBy": "gl-hill-hauler"
     },
     {
       "id": "gl-goo-tower",
@@ -980,7 +1022,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-keep-guard",
@@ -1024,7 +1068,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-node-siege",
@@ -1068,7 +1114,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-orb-coil",
@@ -1112,7 +1160,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-neon-flipper",
@@ -1156,7 +1206,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-light-cycle",
@@ -1200,7 +1252,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-roof-runner",
@@ -1244,7 +1298,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-helix-drop",
@@ -1288,7 +1344,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-hex-spin",
@@ -1332,7 +1390,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-color-hop",
@@ -1376,7 +1436,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-zig-path",
@@ -1420,7 +1482,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-drift-king",
@@ -1428,14 +1492,14 @@
       "title": "Drift King",
       "category": "Driving",
       "lib": true,
-      "playable": true,
+      "playable": false,
       "unit": "pts",
       "url": "/games-lib/drift-king/index.html",
       "art": "/games-lib/drift-king/thumb.jpg",
       "tier": "A",
       "competition": "endless",
       "endless": true,
-      "giveaway": true,
+      "giveaway": false,
       "just_for_fun": false,
       "endless_mode": true,
       "scoring": "Distance",
@@ -1464,7 +1528,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": true,
+      "replacedBy": "drift-rush"
     },
     {
       "id": "gl-missile-guard",
@@ -1508,7 +1574,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-bug-blaster",
@@ -1552,7 +1620,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-bubble-pop",
@@ -1596,7 +1666,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-mine-sweep",
@@ -1640,7 +1712,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-knife-toss",
@@ -1684,7 +1758,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-mole-whack",
@@ -1728,7 +1804,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-grow-op",
@@ -1772,7 +1850,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-trim-rush",
@@ -1816,7 +1896,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-strain-crush",
@@ -1860,7 +1942,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-bud-bar",
@@ -1904,7 +1988,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-green-dash",
@@ -1948,7 +2034,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-roll-up",
@@ -1992,7 +2080,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-smoke-rings",
@@ -2036,7 +2126,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-bud-sort",
@@ -2080,7 +2172,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-pest-patrol",
@@ -2124,7 +2218,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-cup-toss",
@@ -2168,7 +2264,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-beat-tiles",
@@ -2212,7 +2310,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-moon-lander",
@@ -2256,7 +2356,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-pin-strike",
@@ -2300,7 +2402,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-bullseye",
@@ -2344,7 +2448,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-spot-kick",
@@ -2388,7 +2494,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-glow-echo",
@@ -2432,7 +2540,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-knockout",
@@ -2476,7 +2586,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-putt-party",
@@ -2520,7 +2632,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-cue-club",
@@ -2564,7 +2678,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-long-ball",
@@ -2608,7 +2724,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-rally-court",
@@ -2652,7 +2770,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-ice-snipe",
@@ -2696,7 +2816,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-reel-deal",
@@ -2740,7 +2862,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-hoop-streak",
@@ -2784,7 +2908,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-kickflip-city",
@@ -2828,7 +2954,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-tile-twin",
@@ -2872,7 +3000,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-tunnel-hop",
@@ -2916,7 +3046,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-dune-glide",
@@ -2924,14 +3056,14 @@
       "title": "Dune Glide",
       "category": "Endless Runners",
       "lib": true,
-      "playable": true,
+      "playable": false,
       "unit": "pts",
       "url": "/games-lib/dune-glide/index.html",
       "art": "/games-lib/dune-glide/thumb.jpg",
       "tier": "A",
       "competition": "endless",
       "endless": true,
-      "giveaway": true,
+      "giveaway": false,
       "just_for_fun": false,
       "endless_mode": true,
       "scoring": "Distance + flips 100 x n + coins 5",
@@ -2960,7 +3092,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": true,
+      "replacedBy": "gl-hill-hauler"
     },
     {
       "id": "gl-egg-roll",
@@ -2968,14 +3102,14 @@
       "title": "Egg Roll",
       "category": "Driving",
       "lib": true,
-      "playable": true,
+      "playable": false,
       "unit": "pts",
       "url": "/games-lib/egg-roll/index.html",
       "art": "/games-lib/egg-roll/thumb.jpg",
       "tier": "A",
       "competition": "endless",
       "endless": true,
-      "giveaway": true,
+      "giveaway": false,
       "just_for_fun": false,
       "endless_mode": true,
       "scoring": "Distance m + coins 5",
@@ -3004,7 +3138,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": true,
+      "replacedBy": "gl-hill-hauler"
     },
     {
       "id": "gl-monster-crush",
@@ -3012,14 +3148,14 @@
       "title": "Monster Crush",
       "category": "Driving",
       "lib": true,
-      "playable": true,
+      "playable": false,
       "unit": "pts",
       "url": "/games-lib/monster-crush/index.html",
       "art": "/games-lib/monster-crush/thumb.jpg",
       "tier": "A",
       "competition": "endless",
       "endless": true,
-      "giveaway": true,
+      "giveaway": false,
       "just_for_fun": false,
       "endless_mode": true,
       "scoring": "Distance + crushed cars 50 + flips",
@@ -3048,7 +3184,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": true,
+      "replacedBy": "gl-hill-hauler"
     },
     {
       "id": "gl-no-brakes",
@@ -3092,7 +3230,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-cab-rush",
@@ -3136,7 +3276,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-dirt-dash",
@@ -3180,7 +3322,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-road-brawl",
@@ -3224,7 +3368,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-derby-smash",
@@ -3268,7 +3414,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-dunk-flick",
@@ -3312,7 +3460,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-duck-shot",
@@ -3356,7 +3506,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-paper-toss",
@@ -3400,7 +3552,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-skee-roll",
@@ -3444,7 +3598,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-neon-circuit",
@@ -3488,7 +3644,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     },
     {
       "id": "gl-rift-survival",
@@ -3532,7 +3690,9 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ]
+      ],
+      "retired": false,
+      "replacedBy": null
     }
   ],
   "external": []
