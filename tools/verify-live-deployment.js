@@ -155,6 +155,8 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   check('Most Wanted uses CC0 vehicle source and police bust instead of scenery instant death',
     chaseSource.res.status===200 &&
     chaseSource.text.includes("sourceVehicle('kc-sedan-sports')") &&
+    chaseSource.text.includes("replaceChaserPrototype(copP, 'kc-police', true)") &&
+    chaseSource.text.includes("replaceChaserPrototype(tankP, 'kc-suv-luxury', false)") &&
     chaseSource.text.includes('g.blockedFor') &&
     !chaseSource.text.includes("g.end('Wrecked on a") &&
     chaseCar.res.status===200 && chaseCar.body.length>30000 &&
