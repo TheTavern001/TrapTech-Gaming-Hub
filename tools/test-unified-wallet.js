@@ -44,6 +44,7 @@ try{
   const normal=SHOP.rotation(t).daily.find(it=>it.src!=='k'&&it.src!=='b'&&it.src!=='p');
   assert.ok(normal,'Expected an ordinary cosmetic in rotation');
   MON.addCrowns(user,500000,'admin','wallet-fixture',t+5);
+  SHOP.sync(user);
   const before=W.balance(user);
   const purchase=MON.buyWithCrowns(u,normal.id,t);
   assert.equal(purchase.ok,true,'Legacy purchase endpoint must use exactly the same wallet spend');
