@@ -1,10 +1,10 @@
-// Trim Rush - original 60-second precision trimming (Hub build, cannabis theme). Swipe fan leaves off, never cut the bud.
-Kit.run({ id: 'gl-trim-rush', title: 'TRIM RUSH', help: 'Swipe / drag across the green fan leaves to snip them\nDon\'t slice the bud! 60 seconds', bg: '#14532d',
+// Trim Rush - endless precision trimming: start with 30 seconds, earn more time on accurate leaf cuts. Never cut the central bud.
+Kit.run({ id: 'gl-trim-rush', title: 'TRIM RUSH', help: 'Swipe across the green leaves. Avoid the central bud!\nStart with 30s; accurate cuts earn time.', bg: '#14532d',
   init(g) { g.time = 30; g.combo = 0; g.trail = []; nextBud(g); g.done = 0; },
   update(g, dt) {
     g.time -= dt * (1 + g.t / 120); if (g.time <= 0) { g.time = 0; return g.end('Out of time'); }
     const P = g.ptr; if (P.down) { g.trail.push({ x: P.x, y: P.y, l: 0.18 }); if (g.prev) cut(g, g.prev.x, g.prev.y, P.x, P.y); g.prev = { x: P.x, y: P.y }; } else g.prev = null;
-    if (g.kd(' ')) { const L = g.leaves.find(l => !l.cut); if (L) { const ex = 200 + Math.cos(L.a) * (L.len + 20), ey = 330 + Math.sin(L.a) * (L.len + 20); const mx = 200 + Math.cos(L.a) * L.len * 0.5, my = 330 + Math.sin(L.a) * L.len * 0.5; cut(g, mx - Math.sin(L.a) * 30, my + Math.cos(L.a) * 30, mx + Math.sin(L.a) * 30, my - Math.cos(L.a) * 30); } }
+    // Touch-first competitive parity: no keyboard auto-targeted leaf snips. Every cut requires a real drag across a specific leaf.
     for (const t of g.trail) t.l -= dt; g.trail = g.trail.filter(t => t.l > 0); for (const l of g.leaves) if (l.cut) { l.vy += 900 * dt; l.y += l.vy * dt; l.x += l.vx * dt; l.r += l.vr * dt; }
     if (g.leaves.every(l => l.cut) && !g.next) { g.next = 0.5; g.done++; const b = 30 + Math.round(g.combo * 2); g.add(b, 'c'); g.time = Math.min(30, g.time + 3); g.float(200, 200, 'CLEAN TRIM +' + b, '#fbbf24', 22); g.sfx('line'); } if (g.next && (g.next -= dt) <= 0) { g.next = 0; nextBud(g); }
     g.rot += dt * g.spin; g.hud = Math.ceil(g.time) + 's  BUDS ' + g.done;
