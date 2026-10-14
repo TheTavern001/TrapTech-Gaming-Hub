@@ -21,10 +21,18 @@
   function blocked(g, x, y, r) { if (x < RX + r || x > RX + RW - r || y < RY + r || y > RY + RH - r) return true; return g.obs.some(o => x > o.x - r && x < o.x + o.w + r && y > o.y - r && y < o.y + o.h + r); }
   function fire(g) { const p = g.p; const tg = g.en.reduce((b, e) => { const d = Math.hypot(e.x - p.x, e.y - p.y); return d < b.d ? { e, d } : b; }, { e: null, d: 1e9 }).e; if (!tg) return; const a = Math.atan2(tg.y - p.y, tg.x - p.x); p.face = a; const shots = []; const spread = 0.12; for (let i = 0; i <= g.multi; i++) shots.push([a, i * 0.09]); for (let i = 0; i < g.front; i++) shots.push([a + (i % 2 ? 1 : -1) * spread * Math.ceil((i + 1) / 2), 0]); for (let i = 0; i < g.diag; i++) { shots.push([a + 0.7, 0], [a - 0.7, 0]); }
     for (const [ang, delay] of shots) g.ar.push({ x: p.x, y: p.y, vx: Math.cos(ang) * 620, vy: Math.sin(ang) * 620, d: delay, rico: g.rico, pierce: g.pierce, hit: new Set() }); g.sfx('shoot'); }
-  Kit.run({ id: 'gl-arrow-hero', title: 'ARROW HERO', help: 'Drag anywhere to move (WASD / arrows). Stand still to auto-shoot\nClear the room, walk through the gate, pick a skill on level-up', bg: '#1a1410', stick: 'always', stickZone: () => true,
+  Kit.run({ id: 'gl-arrow-hero', title: 'ARROW HERO', help: 'Drag anywhere to move (WASD / arrows). Stand still to auto-shoot\nClear the room, walk through the gate, pick a skill on level-up', bg: '#1a1410', stick: 'always', stickZone: () => true, stickAlsoPtr: true,
+    // The virtual stick ordinarily consumes touch pointerdown. This game also
+    // needs that tap to select one of three level-up cards.
     init(g) { g.p = { x: 200, y: 600, inv: 1, face: -1.57, walk: 0 }; g.hp = g.maxhp = 120; g.rate = 0.55; g.dmg = 1; g.multi = 0; g.rico = 0; g.front = 0; g.diag = 0; g.pierce = 0; g.leech = 0; g.cd = 0; g.room = 1; g.xp = 0; g.need = 6; g.lvl = 1; g.kills = 0; g.choose = null; spawnRoom(g); g.hud = ''; },
     update(g, dt) { const p = g.p;
-      if (g.choose) { let pick = -1; for (let i = 0; i < 3; i++) if (g.kd(String(i + 1))) pick = i; if (g.ptr.pressed) { const i = Math.floor((g.ptr.y - 250) / 90); if (i >= 0 && i < 3) pick = i; } if (pick >= 0) { SK[g.choose[pick]][2](g); g.float(200, 330, SK[g.choose[pick]][0], '#9dff7a', 22); g.choose = null; g.sfx('power'); g.stick.on = false; g.stick.x = g.stick.y = 0; } return; }
+      if (g.choose) { let pick = -1; for (let i = 0; i < 3; i++) if (g.kd(String(i + 1))) pick = i; if (g.ptr.pressed) {
+        const i = Math.floor((g.ptr.y - 250) / 90);
+        // Only a tap inside the VISIBLE 320×76 card is a selection,
+        // not a stray touch on the overlay or a gap between cards.
+        if (g.ptr.x >= 40 && g.ptr.x <= 360 &&
+            i >= 0 && i < 3 && g.ptr.y < 250 + i * 90 + 76) pick = i;
+      } if (pick >= 0) { SK[g.choose[pick]][2](g); g.float(200, 330, SK[g.choose[pick]][0], '#9dff7a', 22); g.choose = null; g.sfx('power'); g.stick.on = false; g.stick.x = g.stick.y = 0; } return; }
       let mx = g.ax(), my = g.ay(); const ml = Math.hypot(mx, my); if (ml > 1) { mx /= ml; my /= ml; } const moving = ml > 0.15; if (moving) { const sp = 190; const nx = p.x + mx * sp * dt, ny = p.y + my * sp * dt; if (!blocked(g, nx, p.y, 12)) p.x = nx; if (!blocked(g, p.x, ny, 12)) p.y = ny; p.walk += dt * 10; p.face = Math.atan2(my, mx); }
       p.inv -= dt; g.cd -= dt; if (!moving && g.cd <= 0 && g.en.length) { fire(g); g.cd = g.rate; }
       if (g.gate && p.y < RY + 30 && Math.abs(p.x - 200) < 40) { g.room++; g.mark('r', g.room); g.add(100 * g.room, 'room'); spawnRoom(g); return; }
