@@ -1,11 +1,12 @@
 // v5 phone + in-app browser test (Potato chat, Android WebView, iOS WKWebView).
-// Emulates Pixel 7 (Chrome), iPhone 14 (Safari), an Android WebView UA, an iOS in-app (WKWebView) UA, and a
+// Runs on Chromium ONLY: Pixel 7 emulation, iPhone 14 viewport/UA emulation, Android WebView UA, iOS WKWebView UA, and a
 // "locked webview" (Android WebView UA + DOM storage that throws + cookies stripped from every response).
-// Visits every page and plays every game with touch input on each profile.
+// Visits pages with simulated touch. iPhone UA on Chromium is NOT Safari/WebKit QA.\n// Actual physical iPhone Safari + WKWebView and Android Chrome + WebView UAT remain mandatory, tracked separately.
 // Usage: node tools/e2e-mobile.js   (restart the server first: it signs up 5 accounts; signup is limited to 10/hour per IP)
 const { chromium, devices } = require('playwright-core');
 const path = require('path'); const fs = require('fs');
 const BASE = process.env.BASE || 'http://localhost:8787';
+console.log('MOBILE SIMULATION ONLY: all profiles use Chromium, including iPhone UA. This is NOT physical iOS Safari or WKWebView proof.');
 const SHOTS = path.join(__dirname, '..', 'screenshots', 'v5'); fs.mkdirSync(SHOTS, { recursive: true });
 let pass = 0, fail = 0; const errors = []; const report = {};
 const ok = (c, m, x) => { if (c) { pass++; console.log('  PASS', m); } else { fail++; console.log('  FAIL', m, x !== undefined ? JSON.stringify(x).slice(0, 300) : ''); } };
