@@ -142,13 +142,20 @@ const H = {};
 function currentUser(req) {
   // cookie first; X-Session header for in-app browsers (Potato / WebViews) that block cookies
   const tok = verify(cfg.SESSION_SECRET, parseCookies(req).gh_sess || String(req.headers['x-session'] || ''));
-  if (!tok || tok.e < now()) return null;
-  const u = db.prepare('SELECT id, username, created_at, banned, is_demo, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect FROM users WHERE id=?').get(tok.u);
-  if (!u || u.banned) return null;
+  // Legacy unversioned signatures are rejected after migration. Possession
+  // of a previously issued, copied X-Session header is not sufficient once
+  // its account has signed out, changed password or been reset by an admin.
+  if (!tok || !Number.isSafeInteger(tok.u) || !Number.isSafeInteger(tok.v) ||
+      !Number.isFinite(tok.e) || tok.e <= now()) return null;
+  const u = db.prepare('SELECT id, username, created_at, banned, is_demo, session_version, eq_banner, eq_frame, eq_title, eq_badge, eq_color, eq_effect FROM users WHERE id=?').get(tok.u);
+  if (!u || u.banned || tok.v !== u.session_version) return null;
   return u;
 }
 function startSession(req, res, user) {
-  const t = sign(cfg.SESSION_SECRET, { u: user.id, e: now() + cfg.SESSION_TTL_MS });
+  const current = db.prepare('SELECT session_version,banned FROM users WHERE id=?').get(user.id);
+  if (!current || current.banned) throw new Error('Cannot issue session to inactive account');
+  const t = sign(cfg.SESSION_SECRET, { u: user.id, v: current.session_version,
+    e: now() + cfg.SESSION_TTL_MS });
   setCookie(req, res, 'gh_sess', t, cfg.SESSION_TTL_MS);
   db.prepare('UPDATE users SET last_seen=? WHERE id=?').run(now(), user.id);
   return t;
@@ -199,14 +206,24 @@ app.post('/api/auth/signin', limiter('signin', 20, 15 * 60e3), (req, res) => {
   res.json({ ok: true, user: { username: u.username, cos: ach.publicCos(u) }, session });
 });
 
-app.post('/api/auth/signout', (req, res) => { setCookie(req, res, 'gh_sess', '', 0); res.json({ ok: true }); });
+app.post('/api/auth/signout', (req, res) => {
+  const active = currentUser(req);
+  if (active) db.prepare('UPDATE users SET session_version=session_version+1 WHERE id=?')
+    .run(active.id);
+  // Current implementation deliberately revokes all sessions for an account;
+  // a future per-device session registry may implement selective device logout.
+  setCookie(req, res, 'gh_sess', '', 0);
+  res.json({ ok:true, all_devices_signed_out:!!active });
+});
 
 app.post('/api/auth/password', requireUser, limiter('pw', 10, 3600e3), (req, res) => {
   const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
   if (!bcrypt.compareSync(String(req.body.current || ''), u.pass_hash)) return bad(res, 401, 'Current password is wrong.');
   const np = String(req.body.password || '');
   if (np.length < 8) return bad(res, 400, 'New password must be at least 8 characters.');
-  db.prepare('UPDATE users SET pass_hash=? WHERE id=?').run(bcrypt.hashSync(np, 10), u.id);
+  db.prepare('UPDATE users SET pass_hash=?, session_version=session_version+1 WHERE id=?')
+    .run(bcrypt.hashSync(np, 10), u.id);
+  setCookie(req, res, 'gh_sess', '', 0);
   res.json({ ok: true });
 });
 
@@ -704,7 +721,8 @@ A.get('/players', (req, res) => {
 A.post('/players/:id/ban', (req, res) => { db.prepare('UPDATE users SET banned=? WHERE id=?').run(req.body.banned ? 1 : 0, req.params.id); res.json({ ok: true }); });
 A.post('/players/:id/reset-password', (req, res) => {
   const tmp = crypto.randomBytes(6).toString('base64url');
-  const r = db.prepare('UPDATE users SET pass_hash=? WHERE id=?').run(bcrypt.hashSync(tmp, 10), req.params.id);
+  const r = db.prepare('UPDATE users SET pass_hash=?, session_version=session_version+1 WHERE id=?')
+    .run(bcrypt.hashSync(tmp, 10), req.params.id);
   if (!r.changes) return bad(res, 404, 'Not found');
   res.json({ ok: true, temp_password: tmp });
 });
