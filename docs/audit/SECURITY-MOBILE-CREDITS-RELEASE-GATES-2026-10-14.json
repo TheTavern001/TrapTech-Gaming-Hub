@@ -35,7 +35,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": true
     },
     {
       "id": "WALLET-MIGRATION-ONCE",
@@ -48,7 +50,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     },
     {
       "id": "ANTI-CHEAT-HELD-REWARDS",
@@ -63,7 +67,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     },
     {
       "id": "ANTI-CHEAT-PRIZE-REPLAY",
@@ -77,7 +83,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     },
     {
       "id": "SESSIONS-REVOCATION",
@@ -90,7 +98,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": true
     },
     {
       "id": "ADMIN-AUTH-2FA",
@@ -103,7 +113,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": true
     },
     {
       "id": "WEBHOOK-UNSUPPORTED",
@@ -116,7 +128,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     },
     {
       "id": "PAYMENT-STRIPE-SIGNED",
@@ -129,7 +143,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     },
     {
       "id": "PAYMENT-BITCOIN-SETTLEMENT",
@@ -143,7 +159,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     },
     {
       "id": "REFUNDS-EQUIP-CONTROL",
@@ -156,7 +174,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": true
     },
     {
       "id": "DB-PRIVACY-BACKUP",
@@ -169,7 +189,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     },
     {
       "id": "MOBILE-ANDROID-IOS",
@@ -181,7 +203,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": true
     },
     {
       "id": "NATIVE-IAP-APP-STORE",
@@ -193,7 +217,9 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     },
     {
       "id": "CREDIT-SECURE-SERVER",
@@ -208,7 +234,10 @@
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
-      "liveHostVerified": false
+      "liveHostVerified": false,
+      "preDeploymentVerified": false,
+      "phoneEvidenceRequired": false
     }
-  ]
+  ],
+  "description": "Predeployment gate requires source/server tests + owner approval and real phone proof for phone-facing controls; liveHostVerified is recorded AFTER manual Deplexo deployment and must NOT block a not-yet-deployed release candidate."
 }
