@@ -25,7 +25,7 @@ let achTier = null; // lazily loaded to avoid a require cycle with achievements.
 function xpFor(userId, since = 0, until = 8.64e15) {
   if (!achTier) achTier = (id) => (require('./achievements').BY_ID[id] || {}).tier;
   let xp = 0;
-  for (const r of db.prepare('SELECT game_id, score FROM runs WHERE user_id=? AND created_at>=? AND created_at<=?').all(userId, since, until)) xp += runXp(r);
+  for (const r of db.prepare('SELECT game_id, score FROM runs WHERE user_id=? AND held=0 AND created_at>=? AND created_at<=?').all(userId, since, until)) xp += runXp(r);
   for (const a of db.prepare('SELECT ach_id FROM user_achievements WHERE user_id=? AND unlocked_at>=? AND unlocked_at<=?').all(userId, since, until)) xp += ACH_XP[achTier(a.ach_id)] || 0;
   xp += db.prepare('SELECT COALESCE(SUM(xp),0) AS x FROM quest_claims WHERE user_id=? AND created_at>=? AND created_at<=?').get(userId, since, until).x;
   xp += db.prepare('SELECT COALESCE(SUM(xp),0) AS x FROM checkins WHERE user_id=? AND created_at>=? AND created_at<=?').get(userId, since, until).x;
@@ -67,14 +67,14 @@ function questsFor(day) {
 const BONUS_XP = 100;
 function questProgress(userId, t = Date.now()) {
   const day = dayNum(t); const from = dayStart(day), to = dayStart(day + 1) - 1;
-  const runs = db.prepare('SELECT game_id, score, created_at FROM runs WHERE user_id=? AND created_at>=? AND created_at<=? ORDER BY created_at').all(userId, from, to);
+  const runs = db.prepare('SELECT game_id, score, created_at FROM runs WHERE user_id=? AND held=0 AND created_at>=? AND created_at<=? ORDER BY created_at').all(userId, from, to);
   const claimed = new Set(db.prepare('SELECT idx FROM quest_claims WHERE user_id=? AND day=?').all(userId, day).map(r => r.idx));
   const val = (q) => {
     if (q.k === 'runs') return runs.length;
     if (q.k === 'game') return runs.filter(r => r.game_id === q.game).length;
     if (q.k === 'score') return Math.max(0, ...runs.filter(r => r.game_id === q.game).map(r => r.score));
     if (q.k === 'variety') return new Set(runs.map(r => r.game_id)).size;
-    if (q.k === 'pb') { let n = 0; for (const r of runs) { const prev = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=? AND created_at<?').get(userId, r.game_id, r.created_at).b; if (prev !== null && r.score > prev) n++; } return n; }
+    if (q.k === 'pb') { let n = 0; for (const r of runs) { const prev = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=? AND held=0 AND created_at<?').get(userId, r.game_id, r.created_at).b; if (prev !== null && r.score > prev) n++; } return n; }
     if (q.k === 'hype') return db.prepare('SELECT COUNT(*) AS c FROM reactions WHERE user_id=? AND created_at>=? AND created_at<=?').get(userId, from, to).c;
     return 0;
   };
