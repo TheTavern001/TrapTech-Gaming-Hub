@@ -84,7 +84,14 @@ assert.ok(pay.includes('fresh.pack_crowns') && !pay.includes("if (p.kind === 'pa
  'Fulfillment must use the pinned order quantity, not a mutable product');
 assert.ok(pay.includes("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='purchase' AND ref=?"),
  'Refund must reverse exactly the original payment ledger grant');
-assert.ok(pay.includes("fresh.status !== 'paid'"),'No unconfirmed order may grant currency');
+assert.ok(pay.includes("if (!verifiedSettlement(fresh))"),
+ 'Every order fulfillment must validate its fresh persisted provider settlement');
+assert.ok(pay.includes("const { verifiedSettlement } = require('./payment-settlement-proof')"),
+ 'Monetization must use the fail-closed provider proof module');
+assert.ok(!pay.includes("db.prepare(\"UPDATE store_orders SET status='paid', paid_at=COALESCE(paid_at, ?) WHERE id=?\").run(Date.now(), o.id)"),
+ 'Admin may not force-unverified paid status before granting');
+assert.ok(read('tools/test-payment-settlement-proof.js').includes('admin grant cannot turn a pending unpaid order'),
+ 'Source fallback must keep negative admin-settlement regression');
 assert.ok(pay.includes("if (o.refunded_at) return { ok:true, already:true };"),
  'Duplicate signed refund events must remain idempotent');
 assert.ok(read('src/unified-wallet.js').includes("CREDIT_PER_LEGACY_CROWN=10"),
