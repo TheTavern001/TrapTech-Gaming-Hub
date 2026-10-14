@@ -312,3 +312,9 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - GitHub connector confirmed source commit; native execution of the combined suite, full Docker build, Android/iPhone testing, and a new Deplexo deployment are **NOT RUN**. Adding a test command is not evidence that the test passed.
 - Owner requests rapid game expansion and public launch on 2026-10-14. Current admission queue contains five research-only candidates with unverified media rights/mobile score replay; **0 new imports approved**. Do not mislabel source registration as game or prize certification. First objective: offline suite and closed private phone QA; public security and payment gates remain mandatory.
 - Auto-deploy remains OFF. Last owner screenshot-confirmed CURRENT READY image remains `278af07`; no new production build claimed.
+
+## 2026-10-14 — condensed operator handoff, R1 offline QA wiring
+
+- Commit `13702142568695506e2fe7c2f8bf71203451fd4b` adds **existing** owner gameplay-distinctness and cannabis/Grow Op touch/interaction regressions to `scripts/offline-release-gate.sh`. The scripts already existed but were missing from this consolidated offline gate; source integration only, no claim of newly fixed gameplay.
+- Native Node/Docker tests **NOT RUN** in this connector-only edit; new Deplexo production deployment **NOT TRIGGERED**. Existing 87 proposed games still require phone-level acceptance; remaining 413-game expansion is on hold for public readiness, but candidate development may proceed separately.
+- Exact resume: run `bash scripts/offline-release-gate.sh R1 --docker` from a full checkout with a local container engine; collect first failed log line and fix underlying cause; then run all R1 in-game touch/scoring tests on an actual phone. Do not promote source-only results as device approval. Owner need not toggle anything; **auto-deploy OFF**.
