@@ -16,7 +16,8 @@
       "firstError": "prelaunch-deep-audit.js missingManifestIconRoutes: 1, blocker count 1",
       "rootCause": "audit incorrectly assumed static manifest icon required an explicit src/server.js route",
       "fixCommit": "ea454f93a05ecf715d880d880e42228327f0a7b6",
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "229c3672e3e8d5e67f8d81b953bd910ccf1f888b",
@@ -26,7 +27,8 @@
       "firstError": "docker temporary-server HTTP verification build step; underlying verifier result not visible in screenshot",
       "rootCause": "unconfirmed",
       "fixCommit": "649e2ab39e3de4c4595f037b01668a988adb7a06",
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "8489b41f3d091f5645f86a3bc95c381c65d18111",
@@ -37,7 +39,8 @@
       "rootCause": null,
       "fixCommit": null,
       "verifiedAfterFix": true,
-      "qualification": "only Deplexo READY observed, not all game/visual/physical-device QA"
+      "qualification": "only Deplexo READY observed, not all game/visual/physical-device QA",
+      "observedAsCurrent": false
     },
     {
       "commit": "420bab1d8eaee2a817576aa142395800511033cc",
@@ -48,7 +51,8 @@
       "rootCause": null,
       "fixCommit": null,
       "verifiedAfterFix": false,
-      "qualification": "Deplexo marked this historical revision READY; this is not proof of AAA acceptance, current URL serving revision, or payment/performance QA"
+      "qualification": "Deplexo marked this historical revision READY; this is not proof of AAA acceptance, current URL serving revision, or payment/performance QA",
+      "observedAsCurrent": false
     },
     {
       "commit": "58a9f52d584ee3bd6423000a83504d10b4527c4e",
@@ -60,7 +64,8 @@
       "fixCommit": "b7be1ec2c0098689dedb7512112738fd21990266",
       "verifiedAfterFix": false,
       "relatedSource": "public/games-lib/skee-roll/game.js; tools/e2e-mobile.js; tools/verify-prelaunch.js",
-      "buildDurationSeconds": 83
+      "buildDurationSeconds": 83,
+      "observedAsCurrent": false
     },
     {
       "commit": "b7be1ec2c0098689dedb7512112738fd21990266",
@@ -71,7 +76,8 @@
       "rootCause": "SOURCE-LEVEL DEFINITE: verify-prelaunch.js unconditionally requires src/config.js during Docker build without runtime secret env; config rejects missing secrets. First Deplexo error line still not supplied.",
       "fixCommit": null,
       "verifiedAfterFix": false,
-      "buildDurationSeconds": 108
+      "buildDurationSeconds": 108,
+      "observedAsCurrent": false
     },
     {
       "commit": "4ad48e9b7bf2e930cb0f52fca35bb3590da0cbe2",
@@ -81,7 +87,8 @@
       "firstError": "UNKNOWN — Docker build log not available",
       "rootCause": "inherits source-level Docker build guard runtime-config import from b7be1ec; exact Deplexo first failing command not supplied",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "71a07b4c1fb6f9bf97543fbfe5cacb85fd973b37",
@@ -91,7 +98,8 @@
       "firstError": "UNKNOWN — Docker build log not available",
       "rootCause": "inherits source-level Docker build guard runtime-config import from b7be1ec; exact Deplexo first failing command not supplied",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
@@ -103,7 +111,8 @@
       "firstError": "UNKNOWN — first failing Docker command/log not provided",
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "eaaca780ef334396ea9277581e977c84b9a021c3",
@@ -115,7 +124,8 @@
       "firstError": "UNKNOWN — first failing Docker command/log not provided",
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "12446a14d69de0dad8a547ac6d4f1b9280103364",
@@ -127,7 +137,8 @@
       "firstError": "UNKNOWN — first failing Docker command/log not provided",
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "3623d72353e82ae1a42261712755f362341584f3",
@@ -139,7 +150,8 @@
       "firstError": "UNKNOWN — first failing Docker command/log not provided",
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "55ebf1cce17139c0c177a91d5f2146311c0b020f",
@@ -149,7 +161,8 @@
       "rootCause": null,
       "fixCommit": null,
       "verifiedAfterFix": false,
-      "qualification": "Host READY only: no gameplay, payments, 500/10k QA."
+      "qualification": "Host READY only: no gameplay, payments, 500/10k QA.",
+      "observedAsCurrent": false
     },
     {
       "commit": "d5de30038259e8125b260868e4cdbfacb23e3dae",
@@ -158,7 +171,8 @@
       "firstError": "Error: Cannot find module '/app/tools/test-endless-buffers.js' (Node.js v20.20.2; Docker [1/2] STEP 11/12; exit status 1)",
       "rootCause": "CONFIRMED by owner-provided complete Deplexo build log: .dockerignore has 'tools/*' but no '!tools/test-endless-buffers.js'; Dockerfile COPY tools ./tools omits the file. Docker STEP 11/12 passes 96 game syntax files and then fails at 'node --check tools/test-endless-buffers.js' with MODULE_NOT_FOUND.",
       "fixCommit": "3dfd3913ec1cd182bc836f90488f4910999f3a5e",
-      "verifiedAfterFix": true
+      "verifiedAfterFix": true,
+      "observedAsCurrent": false
     },
     {
       "commit": "b5c9783fd198b6ac67799a6849b87605a5bd1c7d",
@@ -167,7 +181,8 @@
       "firstError": "UNKNOWN — error log not supplied for this commit",
       "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "1a2b7753c694f1cf4589ddf05231672d50c91a3b",
@@ -176,7 +191,8 @@
       "firstError": "UNKNOWN — error log not supplied for this commit",
       "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "61c1b9d38d0d0e9e73a89754910fb92bec8c19d5",
@@ -185,7 +201,8 @@
       "firstError": "UNKNOWN — error log not supplied for this commit",
       "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "3dfd3913ec1cd182bc836f90488f4910999f3a5e",
@@ -194,7 +211,8 @@
       "firstError": null,
       "rootCause": null,
       "fixCommit": null,
-      "verifiedAfterFix": true
+      "verifiedAfterFix": true,
+      "observedAsCurrent": false
     },
     {
       "commit": "7a52026312a4c771ebc83a0aad00bfee16ca6817",
@@ -204,7 +222,8 @@
       "rootCause": null,
       "fixCommit": null,
       "verifiedAfterFix": true,
-      "qualification": "Source digest has not been independently mapped to exact Git commit; performance/security/AAA pending."
+      "qualification": "Source digest has not been independently mapped to exact Git commit; performance/security/AAA pending.",
+      "observedAsCurrent": false
     },
     {
       "commit": "0b7e3a6c75e979386c1c35c1d7116031d0daff2d",
@@ -214,7 +233,8 @@
       "rootCause": null,
       "fixCommit": null,
       "verifiedAfterFix": true,
-      "qualification": "Git commit build READY confirmed by owner; source fingerprint/live facial API not independently matched"
+      "qualification": "Git commit build READY confirmed by owner; source fingerprint/live facial API not independently matched",
+      "observedAsCurrent": false
     },
     {
       "commit": "9f9a03dce482aedd6199f5a1a561d0444ac575f2",
@@ -224,7 +244,8 @@
       "rootCause": null,
       "fixCommit": null,
       "verifiedAfterFix": true,
-      "qualification": "Build READY only; no remote physical game-by-game/AAA verification, score replay, payment QA or source audit API read-back"
+      "qualification": "Build READY only; no remote physical game-by-game/AAA verification, score replay, payment QA or source audit API read-back",
+      "observedAsCurrent": false
     },
     {
       "commit": "d14555ccca789dd74192a0c1c28bde63a6465691",
@@ -234,7 +255,8 @@
       "rootCause": null,
       "fixCommit": null,
       "verifiedAfterFix": true,
-      "qualification": "Host image READY, actual /api/seasons and player XP not independently checked"
+      "qualification": "Host image READY, actual /api/seasons and player XP not independently checked",
+      "observedAsCurrent": false
     },
     {
       "commit": "5932ba613c2d22e4bdf97920d6071cc59c2b4dd6",
@@ -245,8 +267,9 @@
       "firstError": "tools/verify-prelaunch.js: tools/verify-live-deployment.js Missing local module dependency: ./player-prefs.js",
       "rootCause": "CONFIRMED: regex import audit falsely treats the string literal hubApp.text.includes(\"import * as GP from './player-prefs.js'\") as executable import relative to tools/. Actual public/js/app.js real import target is public/js/player-prefs.js.",
       "fixCommit": "8390117a940a5d1b2a5ad07158cb986ffbef335e",
-      "verifiedAfterFix": false,
-      "qualification": "Scanner fix source-tested; exact Docker/host READY not yet observed. Earlier game/asset/settings regressions passed in owner build log."
+      "verifiedAfterFix": true,
+      "qualification": "Scanner fix source-tested; exact Docker/host READY not yet observed. Earlier game/asset/settings regressions passed in owner build log. | Later c118594 owner-supplied build proves STEP 11 passes; 03119b9 later READY, but this failed historical attempt remains FAILED.",
+      "observedAsCurrent": false
     },
     {
       "commit": "4cf7e515771ec6b3113b875cb6de637f1ed2e5d7",
@@ -257,10 +280,11 @@
       "firstError": "UNKNOWN",
       "rootCause": "Unconfirmed, may share subsequent 5932ba6 regex false-import failure but no log for this attempt",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
-      "commit": "46a71d4",
+      "commit": "46a71d4ee3bdabc6db9cc19734b2a596bcff1f0e",
       "status": "FAILED",
       "buildDurationSeconds": 243,
       "branchReportedByHost": "feature/expansion-ready-game-admission-20261013",
@@ -268,7 +292,8 @@
       "firstError": "UNKNOWN",
       "rootCause": "Unconfirmed: same prelaunch scanner on this source branch, but first failing command not supplied",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
     },
     {
       "commit": "1d08431ed8f0a038135808c256e3aea03554eca0",
@@ -278,7 +303,37 @@
       "firstError": "UNKNOWN",
       "rootCause": "Unconfirmed without host logs",
       "fixCommit": null,
-      "verifiedAfterFix": false
+      "verifiedAfterFix": false,
+      "observedAsCurrent": false
+    },
+    {
+      "commit": "03119b9c019aae88896eabe34ee697b7cd469419",
+      "status": "READY",
+      "branchReportedByHost": "qa/gameplay-distinctness-and-collision-20261013",
+      "evidence": "Owner Deplexo Deployments screenshot at phone time 12:17 (user supplied in chat 2026-10-14): card 03119b9 READY, historical rollback available. Also owner earlier specifically confirmed this commit READY.",
+      "observedAsCurrent": false,
+      "verifiedAfterFix": true,
+      "qualification": "Host READY confirmed; individual gameplay visual, mobile and payment acceptance not proven."
+    },
+    {
+      "commit": "916f5c76673d35a48e38c9d3218f06c5dd6e5ee4",
+      "status": "READY",
+      "branchReportedByHost": "qa/gameplay-distinctness-and-collision-20261013",
+      "buildDurationSeconds": 561,
+      "evidence": "Owner Deplexo Deployments screenshot at phone time 12:17 (2026-10-14): card 916f5c7 READY, 561 sec, Rollback button. Full Git SHA independently resolved from GitHub commit API.",
+      "observedAsCurrent": false,
+      "verifiedAfterFix": true,
+      "qualification": "Historical READY only. Not equivalent to latest five-release development branch."
+    },
+    {
+      "commit": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+      "status": "READY",
+      "branchReportedByHost": "qa/gameplay-distinctness-and-collision-20261013",
+      "buildDurationSeconds": 323,
+      "evidence": "Owner Deplexo Deployments screenshot at phone time 12:17 (2026-10-14): top card 278af07 shows CURRENT and READY, duration 323 seconds. GitHub API resolves exact full SHA.",
+      "observedAsCurrent": true,
+      "verifiedAfterFix": true,
+      "qualification": "Latest owner screenshot-confirmed current READY app. No independent /api/build body provided; host CURRENT does not certify visual/gameplay/AAA or post-R1/R5 work."
     }
   ],
   "sourceVerification": [
@@ -298,6 +353,7 @@
     }
   ],
   "pendingEvidence": [
+    "Host latest confirmed CURRENT+READY 278af07. Developer program branch df091e8 and successors NOT DEPLOYED. Must not equate GitHub SHA with Deplexo build status. Deplexo manual R1 preflight BLOCKED.",
     "R1 manual preflight returns BLOCKED with 6 unresolved mechanics/score workstreams. Kenney source GLB integrity 10/10 PASS, visual/Android/gameplay still NOT RUN. Next 5 source titles research ONLY and cannot be counted.",
     "New 5-release overhaul source branch is NOT DEPLOYED. Need actual full checkout Node audit, 93-game mechanics and Android gameplay proofs, true avatar/modular cosmetics/asset imports, and a deliberately manual R1 image after gate.",
     "5932ba6 confirmed Docker STEP 11/12 failure and targeted scanner fix; full build then host READY still pending. See docs/audit/DEPLEXO-5932BA6-ROOT-CAUSE-2026-10-13.md",
@@ -446,5 +502,23 @@
       "readyForManualRelease": false
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-14, program five-release source branch: 10 true Kenney Kit 3.1 GLBs imported and verified, 5 candidates queued unadmitted, R1 manual preflight BLOCKED; auto deploy OFF, live READY unchanged."
+  "lastEvidenceReconciliation": "2026-10-14 owner screenshot phone 12:17: 278af07 CURRENT READY (323s), 916f5c7 READY (561s), 03119b9 READY (390s from screenshot); df091e8 GitHub SOURCE ONLY NOT DEPLOYED. Auto deploy OFF per owner. No current host /api/build readback.",
+  "latestOwnerObservedHost": {
+    "app": "glassy-drifter-9532",
+    "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+    "sourceBranch": "qa/gameplay-distinctness-and-collision-20261013",
+    "evidence": "Owner's Deplexo Deployments screenshot at phone 12:17 on 2026-10-14; CURRENT + READY shown",
+    "durationSeconds": 323,
+    "healthzReadback": "NOT independently observed on this revision",
+    "apiBuildFingerprint": "NOT supplied from current host",
+    "confidence": "OWNER_SCREENSHOT_CONFIRMED",
+    "observationTimeExactUTC": null
+  },
+  "currentWorkingSource": {
+    "branch": "program/five-release-full-hub-overhaul-20261013",
+    "headAtReconciliation": "df091e892e6e6575846940630530897eb79fb650",
+    "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
+    "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY."
+  },
+  "ownerConfirmedAutoDeployOff": true
 }
