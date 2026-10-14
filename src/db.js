@@ -243,6 +243,9 @@ addCol('bookings', 'addons', "TEXT NOT NULL DEFAULT ''");
 addCol('users', 'ref_code', "TEXT");
 addCol('users', 'referred_by', 'INTEGER');
 addCol('users', 'birth_date', "TEXT NOT NULL DEFAULT ''");
+// Every account session has a server-side revocation epoch. Legacy tokens
+// lacking the version are intentionally rejected after this security update.
+addCol('users', 'session_version', 'INTEGER NOT NULL DEFAULT 0');
 addCol('users', 'notif_seen_at', 'INTEGER NOT NULL DEFAULT 0');
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_ref ON users(ref_code)');
 // v4: deterministic winners, locked final standings, verifiable draws, winner review + audit
