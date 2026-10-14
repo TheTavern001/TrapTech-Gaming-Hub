@@ -6,6 +6,7 @@ const path = require('node:path');
 const cp = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const ledger = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/audit/DEPLOYMENT-JOURNAL.json'), 'utf8'));
+const screenshotLedger = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json'), 'utf8'));
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/games-lib/catalog.json'), 'utf8'));
 const config = fs.readFileSync(path.join(ROOT, 'src/config.js'), 'utf8');
 const history = ledger.releaseHistory || [], statuses = new Set(['FAILED','READY','BUILDING_OBSERVED','UNKNOWN']);
@@ -34,6 +35,17 @@ const total = activeCore.length+playableLibrary, goal=500;
 // Only host evidence (e.g. owner screenshot) can mark a deployment CURRENT.
 // GitHub source commits are never treated as Deplexo deployments by inference.
 const currentReady = history.filter(x=>x.observedAsCurrent === true);
+const lastScreenshot = screenshotLedger.screenshots?.at(-1);
+if (screenshotLedger.lastKnownHostCurrent!==ledger.latestOwnerObservedHost?.currentReadySha)
+  errs.push('Owner screenshot evidence conflicts with host-current SHA');
+if (!/^[a-f0-9]{64}$/i.test(lastScreenshot?.sha256||''))
+  errs.push('Screenshot evidence missing 64-char SHA256 fingerprint');
+if (lastScreenshot?.observedClaims?.filter(x=>x.current).length !== 1)
+  errs.push('Screenshot must establish exactly one CURRENT deployment');
+if (lastScreenshot?.observedClaims?.find(x=>x.current)?.gitCommit !==
+    ledger.latestOwnerObservedHost?.currentReadySha)
+  errs.push('Host-current ledger entry not matched by screenshot CURRENT card');
+
 if (currentReady.length > 1) errs.push('More than one host-current deployment record');
 if (currentReady.some(x=>x.status!=='READY')) errs.push('Host-current deployment must be READY');
 if (ledger.latestOwnerObservedHost?.currentReadySha &&
@@ -50,6 +62,9 @@ if (source?.headAtReconciliation&&!isSha(source.headAtReconciliation))
 let head = null;
 try { head = cp.execFileSync('git',['rev-parse','HEAD'],{cwd:ROOT,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim(); } catch {}
 const output = { checkedAtUTC:new Date().toISOString(), gitHead:head||'not available (Docker image may omit .git)',
+  ownerScreenshotEvidence:{metadataPath:'docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json',
+    screenshotSHA256:lastScreenshot?.sha256||null,observedPhoneClock:lastScreenshot?.phoneClock||null,
+    binaryRetainedInGitHub:lastScreenshot?.binaryCopiedToGitHub===true},
   hostCurrent:{sha:currentReady[0]?.commit||null,
     status:currentReady[0]?.status||'UNCONFIRMED',
     confirmation:'owner screenshot only; no independent HTTP readback',
