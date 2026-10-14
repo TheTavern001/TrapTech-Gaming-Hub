@@ -298,6 +298,7 @@
     }
   ],
   "pendingEvidence": [
+    "R1 manual preflight returns BLOCKED with 6 unresolved mechanics/score workstreams. Kenney source GLB integrity 10/10 PASS, visual/Android/gameplay still NOT RUN. Next 5 source titles research ONLY and cannot be counted.",
     "New 5-release overhaul source branch is NOT DEPLOYED. Need actual full checkout Node audit, 93-game mechanics and Android gameplay proofs, true avatar/modular cosmetics/asset imports, and a deliberately manual R1 image after gate.",
     "5932ba6 confirmed Docker STEP 11/12 failure and targeted scanner fix; full build then host READY still pending. See docs/audit/DEPLEXO-5932BA6-ROOT-CAUSE-2026-10-13.md",
     "PR26 c2e6e9f, 70c018b: registry-driven expansion and options/menu input guard isolated and not Deplexo-deployed; 93 registered, 0 quality certified.",
@@ -422,7 +423,28 @@
       ],
       "plannedDeplexoManualMilestones": 5,
       "milestoneAlreadyDeployed": 0
+    },
+    {
+      "commit": "fbebdf76bb86865f2fb8656fb6798dda44d5a4a7",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "reason": "User-directed offline R1/R2 progress: actual sourced Kenney Car Kit models (not procedural garage), in-game model replacing placeholder; five distinct post-overhaul game candidates research only; manual-release preflight remains blocked.",
+      "validation": "10/10 Kenney GLB source blobs matched exact SHA, bytes, glTF 2.0 geometry and embedded textures; owner-gameplay source simulation 29 V8 assertions, candidate 79 V8 assertions passed; manual R1 preflight source simulation blocked 6 as intended. No complete Node/Docker, real browser or Android render run.",
+      "host": "NOT DEPLOYED. Deplexo automatic deployment owner-confirmed OFF; preserve READY 03119b9.",
+      "sourceFiles": [
+        "docs/audit/KENNEY-CAR-KIT-IMPORTED-2026-10-13.json",
+        "docs/audit/KENNEY-CAR-KIT-BINARY-QA-2026-10-13.json",
+        "docs/audit/POST-OVERHAUL-GAME-CANDIDATES-2026-10-13.json",
+        "public/games-lib/wanted-run/game.js",
+        "tools/test-imported-kenney-cars.js",
+        "tools/test-game-candidate-queue.js",
+        "tools/preflight-manual-release.js"
+      ],
+      "workstreamStatus": "SOURCE_ONLY; owner approval pending",
+      "gamesRegistered": 93,
+      "proposedPlayable": 87,
+      "licenseReviewedSourceMeshes": 10,
+      "readyForManualRelease": false
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 late-night: owner confirmed Deplexo auto deploy OFF; 5-release source program branch staged without deploying; 93 source paths from tree verified, quality 0."
+  "lastEvidenceReconciliation": "2026-10-14, program five-release source branch: 10 true Kenney Kit 3.1 GLBs imported and verified, 5 candidates queued unadmitted, R1 manual preflight BLOCKED; auto deploy OFF, live READY unchanged."
 }
