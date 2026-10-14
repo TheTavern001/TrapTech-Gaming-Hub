@@ -19,6 +19,16 @@
     else { const cnt = Math.min(12, 2 + Math.floor(n * 0.8)); for (let i = 0; i < cnt; i++) { const t = g.pick(n < 2 ? ['slime', 'slime', 'mage'] : n < 4 ? ['slime', 'mage', 'bat'] : ['slime', 'mage', 'bat', 'turret']); const [x, y] = pos(); g.en.push({ t, x, y, r: t === 'turret' ? 16 : 14, hp: { slime: 5, mage: 4, bat: 3, turret: 8 }[t] * hpK, max: { slime: 5, mage: 4, bat: 3, turret: 8 }[t] * hpK, cd: g.R(0.8, 2), ph: g.R(0, 6), vx: 0, vy: 0 }); } }
     g.p.x = 200; g.p.y = RY + RH - 50; g.p.inv = 0.8; }
   function blocked(g, x, y, r) { if (x < RX + r || x > RX + RW - r || y < RY + r || y > RY + RH - r) return true; return g.obs.some(o => x > o.x - r && x < o.x + o.w + r && y > o.y - r && y < o.y + o.h + r); }
+  // A fast arrow can travel more than an enemy's diameter in one phone frame.
+  // Collision must cover the entire frame segment, not only the destination.
+  function arrowHitsEnemy(x0, y0, x1, y1, e) {
+    const dx = x1 - x0, dy = y1 - y0;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 > 0 ? Math.max(0, Math.min(1,
+      ((e.x - x0) * dx + (e.y - y0) * dy) / len2)) : 0;
+    const px = x0 + t * dx - e.x, py = y0 + t * dy - e.y;
+    return px * px + py * py < (e.r + 4) * (e.r + 4);
+  }
   function fire(g) { const p = g.p; const tg = g.en.reduce((b, e) => { const d = Math.hypot(e.x - p.x, e.y - p.y); return d < b.d ? { e, d } : b; }, { e: null, d: 1e9 }).e; if (!tg) return; const a = Math.atan2(tg.y - p.y, tg.x - p.x); p.face = a; const shots = []; const spread = 0.12; for (let i = 0; i <= g.multi; i++) shots.push([a, i * 0.09]); for (let i = 0; i < g.front; i++) shots.push([a + (i % 2 ? 1 : -1) * spread * Math.ceil((i + 1) / 2), 0]); for (let i = 0; i < g.diag; i++) { shots.push([a + 0.7, 0], [a - 0.7, 0]); }
     for (const [ang, delay] of shots) g.ar.push({ x: p.x, y: p.y, vx: Math.cos(ang) * 620, vy: Math.sin(ang) * 620, d: delay, rico: g.rico, pierce: g.pierce, hit: new Set() }); g.sfx('shoot'); }
   Kit.run({ id: 'gl-arrow-hero', title: 'ARROW HERO', help: 'Drag anywhere to move (WASD / arrows). Stand still to auto-shoot\nClear the room, walk through the gate, pick a skill on level-up', bg: '#1a1410', stick: 'always', stickZone: () => true, stickAlsoPtr: true,
@@ -37,8 +47,8 @@
       p.inv -= dt; g.cd -= dt; if (!moving && g.cd <= 0 && g.en.length) { fire(g); g.cd = g.rate; }
       if (g.gate && p.y < RY + 30 && Math.abs(p.x - 200) < 40) { g.room++; g.mark('r', g.room); g.add(100 * g.room, 'room'); spawnRoom(g); return; }
       // arrows
-      for (const a of g.ar) { if (a.d > 0) { a.d -= dt; continue; } a.x += a.vx * dt; a.y += a.vy * dt; if (a.x < RX || a.x > RX + RW || a.y < RY || a.y > RY + RH) a.dead = true;
-        for (const e of g.en) { if (a.hit.has(e) || e.dead) continue; if (Math.hypot(e.x - a.x, e.y - a.y) < e.r + 4) { a.hit.add(e); e.hp -= 1.6 * g.dmg; e.fl = 0.08; g.sfx('hit'); if (e.hp <= 0) { e.dead = true; g.kills++; g.mark('k', g.kills); g.add(e.t === 'boss' ? 1000 : 25, 'kill'); g.burst(e.x, e.y, e.t === 'boss' ? ['#f97316', '#fde047', '#fff'] : ['#84cc16', '#a855f7', '#fff'], e.t === 'boss' ? 40 : 12, 180); g.hp = Math.min(g.maxhp, g.hp + g.leech); g.xp += e.t === 'boss' ? 10 : 1; }
+      for (const a of g.ar) { if (a.d > 0) { a.d -= dt; continue; } const x0 = a.x, y0 = a.y; a.x += a.vx * dt; a.y += a.vy * dt; if (a.x < RX || a.x > RX + RW || a.y < RY || a.y > RY + RH) a.dead = true;
+        for (const e of g.en) { if (a.hit.has(e) || e.dead) continue; if (arrowHitsEnemy(x0, y0, a.x, a.y, e)) { a.hit.add(e); e.hp -= 1.6 * g.dmg; e.fl = 0.08; g.sfx('hit'); if (e.hp <= 0) { e.dead = true; g.kills++; g.mark('k', g.kills); g.add(e.t === 'boss' ? 1000 : 25, 'kill'); g.burst(e.x, e.y, e.t === 'boss' ? ['#f97316', '#fde047', '#fff'] : ['#84cc16', '#a855f7', '#fff'], e.t === 'boss' ? 40 : 12, 180); g.hp = Math.min(g.maxhp, g.hp + g.leech); g.xp += e.t === 'boss' ? 10 : 1; }
             if (a.pierce > 0) a.pierce--; else if (a.rico > 0) { a.rico--; const nx = g.en.filter(o => !o.dead && !a.hit.has(o)).sort((u, v) => Math.hypot(u.x - a.x, u.y - a.y) - Math.hypot(v.x - a.x, v.y - a.y))[0]; if (nx) { const an = Math.atan2(nx.y - a.y, nx.x - a.x); a.vx = Math.cos(an) * 620; a.vy = Math.sin(an) * 620; } else a.dead = true; } else a.dead = true; break; } } }
       g.ar = g.ar.filter(a => !a.dead && a.x > 0 && a.x < 400 && a.y > 0 && a.y < 700); g.en = g.en.filter(e => !e.dead);
       if (g.xp >= g.need) { g.xp -= g.need; g.need = Math.round(g.need * 1.35); g.lvl++; const idx = []; while (idx.length < 3) { const i = g.RI(0, SK.length - 1); if (!idx.includes(i)) idx.push(i); } g.choose = idx; g.sfx('power'); }
