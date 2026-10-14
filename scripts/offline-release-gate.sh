@@ -51,6 +51,7 @@ run retired-duplicates node tools/test-owner-duplicate-retirements.js
 run external-source-vehicles node tools/test-imported-kenney-cars.js
 run neutral-rig-fingerprint node tools/test-neutral-avatar-source.js
 run mobile-frame-allocations node tools/test-mobile-frame-allocation-regressions.js
+run prize-score-fail-closed node tools/test-prize-score-proof.js
 run candidate-admission-boundary node tools/test-game-candidate-queue.js
 run deplexo-evidence-separation node tools/test-deplexo-release-evidence.js
 run all-game-source-mechanics node tools/audit-full-game-mechanics.js
