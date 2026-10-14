@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // Native SQLite, disposable offline financial invariants. No real provider APIs.
-const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hub-snapshots-'));
 process.env.DATA_DIR=dir;process.env.DB_PATH=path.join(dir,'hub.db');
 process.env.NODE_ENV='test';process.env.PAY_NO_SWEEP='1';
@@ -13,10 +13,18 @@ const user=insert.run(t).lastInsertRowid;
 const product='crowns-500';
 const original=M.prod(product);assert.equal(original.kind,'pack');
 const quote=original.crowns+original.bonus;
-const orderSQL="INSERT INTO store_orders (ref,user_id,product_id,usd_cents,provider,status,created_at,expires_at,pack_crowns) VALUES (?,?,?,?,'manual',?,?,?,?)";
+const orderSQL="INSERT INTO store_orders (ref,user_id,product_id,usd_cents,provider,status,created_at,expires_at,pack_crowns,sats,received_sats,confs,need_confs,txid,address,paid_at) VALUES (?,?,?,?,'bitcoin',?,?,?,?,?,?,?,?,?,?,?)";
 const order=id=>db.prepare('SELECT * FROM store_orders WHERE id=?').get(id);
 const funds=()=>W.balance(user);
-const purchase=(ref,status,quantity)=>db.prepare(orderSQL).run(ref,user,product,original.usd_cents,status,t,t+3600000,quantity).lastInsertRowid;
+// Locally generated confirmed-BTC *fixture* fields; no real payment or
+// blockchain verification occurs in this test. Provider-settlement logic is
+// unit-tested separately, and actual explorer-backed e2e is still required.
+const purchase=(ref,status,quantity)=>{
+ const txid=crypto.createHash('sha256').update('test only '+ref).digest('hex');
+ return db.prepare(orderSQL).run(ref,user,product,original.usd_cents,status,
+  t,t+3600000,quantity,100001,100001,status==='paid'?1:0,1,txid,
+  '32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB',status==='paid'?t:null).lastInsertRowid;
+};
 try {
   const priceChanged=purchase('QUOTE_PINNED','paid',quote);
   assert.equal(order(priceChanged).pack_crowns,quote);
@@ -38,6 +46,11 @@ try {
   const held=M.grant(order(noQuote),'QA');
   assert.equal(held.ok,false,'Unknown old promised amount must be held for human reconciliation');
   assert.match(held.error,/snapshot|verified locked Credit/i);
+  assert.equal(funds(),0);
+  const forgedPaid=purchase('PAID_UNCONFIRMED','paid',quote);
+  db.prepare('UPDATE store_orders SET confs=0 WHERE id=?').run(forgedPaid);
+  assert.equal(M.grant(order(forgedPaid),'forged paid marker').ok,false,
+    'Changing only status to paid does not bypass actual stored confirmations');
   assert.equal(funds(),0);
   const pending=purchase('PENDING_UNPAID','pending',quote);
   assert.equal(M.grant(order(pending),'forged checkout').ok,false,'Unsettled order may not mint Credits');
