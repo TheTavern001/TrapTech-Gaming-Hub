@@ -105,13 +105,15 @@
       "licenseUrl": "https://quaternius.com/packs/universalbasecharacters.html",
       "declaredLicense": "CC0-1.0",
       "category": "neutral-avatar-rig",
-      "status": "CANDIDATE",
-      "localFiles": [],
+      "status": "PARTIALLY_IMPORTED",
+      "localFiles": [
+        "public/assets/avatars/rigged/quaternius-neutral-starter-qa.glb"
+      ],
       "downloadSha256": null,
-      "geometryCertification": "UNVERIFIED",
+      "geometryCertification": "SOURCE_GLTF_ONLY_NOT_RENDERED",
       "mobileArtCertification": "UNVERIFIED",
-      "licenseFileRecorded": null,
-      "notes": "6 bodies; uniform canonical skeleton/hitbox; free download may be subset, confirm compatible rig, 20 hairstyle availability and actual selected source license."
+      "licenseFileRecorded": "public/assets/avatars/rigged/LICENSE-Quaternius-CC0.txt",
+      "notes": "One 65-bone CC0 base source rig imported as a 741KB self-contained GLB from programasweights/avatar derivative (upstream Quaternius Universal Base Characters Standard). Solid matte jade, no animations or modular outfits, QA query only; NOT approved as default. See docs/audit/QUATERNIUS-NEUTRAL-STARTER-QA-2026-10-14.json. Add true compatible hair, outfit meshes, animation clips, mobile P95 before product signoff."
     },
     {
       "id": "quaternius-modular-outfits",
