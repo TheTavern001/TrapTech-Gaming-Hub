@@ -6,6 +6,14 @@ const fs=require('node:fs'),path=require('node:path'),cp=require('node:child_pro
 const root=path.resolve(__dirname,'..');
 const ledger=JSON.parse(fs.readFileSync(path.join(root,'docs/audit/DEPLOYMENT-JOURNAL.json'),'utf8'));
 const hist=ledger.releaseHistory;
+const screenshots=JSON.parse(fs.readFileSync(path.join(root,
+ 'docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json'),'utf8'));
+const lastScreenshot=screenshots.screenshots.at(-1);
+assert.equal(screenshots.lastKnownHostCurrent,ledger.latestOwnerObservedHost.currentReadySha);
+assert.match(lastScreenshot.sha256,/^[a-f0-9]{64}$/i);
+assert.equal(lastScreenshot.binaryCopiedToGitHub,false,'Only metadata is stored, not falsely claim screenshot bytes');
+assert.equal(lastScreenshot.observedClaims.filter(x=>x.current).length,1);
+
 const sha=s=>/^[a-f0-9]{40}$/i.test(s||'');
 const ids=new Set();
 for(const x of hist){
@@ -28,6 +36,15 @@ const run=cp.spawnSync(process.execPath,[path.join(root,'tools/release-status.js
 assert.equal(run.status,0,'Release status validator failed: '+run.stderr+'\n'+run.stdout);
 const report=JSON.parse(run.stdout);
 assert.equal(report.hostCurrent.sha,current[0].commit);
+assert.equal(report.ownerScreenshotEvidence.screenshotSHA256,lastScreenshot.sha256);
+assert.equal(report.ownerScreenshotEvidence.binaryRetainedInGitHub,false);
+for(const screenshotCard of lastScreenshot.observedClaims) {
+ const record=hist.find(x=>x.commit===screenshotCard.gitCommit);
+ assert.ok(record,'Missing screenshot-confirmed deployment '+screenshotCard.short);
+ assert.equal(record.status,screenshotCard.hostStatus);
+ assert.equal(record.buildDurationSeconds,screenshotCard.durationSeconds);
+ assert.equal(record.observedAsCurrent===true,screenshotCard.current);
+}
 assert.equal(report.hostCurrent.status,'READY');
 assert.equal(report.workingSource.status,'SOURCE_ONLY_NOT_DEPLOYED');
 assert.equal(report.workingSource.shaFromLastReconciliation,ledger.currentWorkingSource.headAtReconciliation);
