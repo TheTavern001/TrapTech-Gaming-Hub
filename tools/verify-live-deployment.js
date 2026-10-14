@@ -151,10 +151,10 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   const labScript = await get(BASE + '/games-lib/labs/garage/garage.mjs');
   check('Vehicle viewer ESM is served',labScript.res.status===200&&labScript.text.includes('GLTFLoader'));
   const chaseSource=await get(BASE+'/games-lib/wanted-run/game.js');
-  const chaseCar=await get(BASE+'/games-lib/assets3d/cv-sedan.glb');
+  const chaseCar=await get(BASE+'/games-lib/assets3d/kc-sedan-sports.glb');
   check('Most Wanted uses CC0 vehicle source and police bust instead of scenery instant death',
     chaseSource.res.status===200 &&
-    chaseSource.text.includes("sourceVehicle('cv-sedan')") &&
+    chaseSource.text.includes("sourceVehicle('kc-sedan-sports')") &&
     chaseSource.text.includes('g.blockedFor') &&
     !chaseSource.text.includes("g.end('Wrecked on a") &&
     chaseCar.res.status===200 && chaseCar.body.length>30000 &&

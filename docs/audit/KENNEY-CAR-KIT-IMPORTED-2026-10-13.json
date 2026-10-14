@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "asOf": "2026-10-13",
+  "sourcePublisher": "Kenney",
+  "primarySource": "https://kenney.nl/assets/car-kit",
+  "mirrorRepository": "https://github.com/Arslan12216775/kenney_car-kit",
+  "sourceFolder": "Models/GLB format",
+  "license": "CC0-1.0",
+  "licenseRecord": "public/games-lib/assets3d/LICENSE-Kenney-CC0.txt",
+  "gameUses": [
+    "gl-wanted-run"
+  ],
+  "status": "IMPORTED_UNREVIEWED",
+  "assetQualityApproved": false,
+  "scoreEffects": false,
+  "imagesEmbedded": true,
+  "objects": [
+    {
+      "id": "kc-police",
+      "label": "Police Cruiser",
+      "relativePath": "public/games-lib/assets3d/kc-police.glb",
+      "sourceRelativePath": "Models/GLB format/police.glb",
+      "gitBlobSha": "0803d5cef4ed0de564f478b68d21cb7f5dbaded4",
+      "bytes": 207584,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-race-future",
+      "label": "Future Racer",
+      "relativePath": "public/games-lib/assets3d/kc-race-future.glb",
+      "sourceRelativePath": "Models/GLB format/race-future.glb",
+      "gitBlobSha": "facebd1f91b9ee6ffc95d461da157445e2baad79",
+      "bytes": 185448,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-suv-luxury",
+      "label": "Luxury SUV",
+      "relativePath": "public/games-lib/assets3d/kc-suv-luxury.glb",
+      "sourceRelativePath": "Models/GLB format/suv-luxury.glb",
+      "gitBlobSha": "d9d4400e7f3ca90123394a32ea1097d5b23fc5f0",
+      "bytes": 188200,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-ambulance",
+      "label": "Ambulance",
+      "relativePath": "public/games-lib/assets3d/kc-ambulance.glb",
+      "sourceRelativePath": "Models/GLB format/ambulance.glb",
+      "gitBlobSha": "777bbd224e042c2ac322cccb5f22d976d85632f4",
+      "bytes": 245804,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-firetruck",
+      "label": "Fire Truck",
+      "relativePath": "public/games-lib/assets3d/kc-firetruck.glb",
+      "sourceRelativePath": "Models/GLB format/firetruck.glb",
+      "gitBlobSha": "1bf483360349b1748c23a2c9bca7a3dfef2b11e8",
+      "bytes": 244684,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-taxi",
+      "label": "Taxi",
+      "relativePath": "public/games-lib/assets3d/kc-taxi.glb",
+      "sourceRelativePath": "Models/GLB format/taxi.glb",
+      "gitBlobSha": "3e8ec0b172dfc9d64bbc5e65710ec8714e3b70fa",
+      "bytes": 187896,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-sedan-sports",
+      "label": "Sports Sedan",
+      "relativePath": "public/games-lib/assets3d/kc-sedan-sports.glb",
+      "sourceRelativePath": "Models/GLB format/sedan-sports.glb",
+      "gitBlobSha": "d66ab9b1d3358ff8079c54da2fe0d4be07f3109b",
+      "bytes": 189920,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-truck",
+      "label": "Work Truck",
+      "relativePath": "public/games-lib/assets3d/kc-truck.glb",
+      "sourceRelativePath": "Models/GLB format/truck.glb",
+      "gitBlobSha": "4e13fdc86c8928d5effbd3e0139fe2e5eee33abc",
+      "bytes": 188652,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-garbage-truck",
+      "label": "Utility Truck",
+      "relativePath": "public/games-lib/assets3d/kc-garbage-truck.glb",
+      "sourceRelativePath": "Models/GLB format/garbage-truck.glb",
+      "gitBlobSha": "41955f3ac1e706a6d0d8cacf974728a44f464bb1",
+      "bytes": 280428,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    },
+    {
+      "id": "kc-delivery",
+      "label": "Delivery Van",
+      "relativePath": "public/games-lib/assets3d/kc-delivery.glb",
+      "sourceRelativePath": "Models/GLB format/delivery.glb",
+      "gitBlobSha": "203badf677c28dd22f5750cae5b71b4f806175c9",
+      "bytes": 252504,
+      "license": "CC0-1.0",
+      "mobileReviewed": false
+    }
+  ]
+}

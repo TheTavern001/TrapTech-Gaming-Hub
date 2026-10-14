@@ -63,9 +63,9 @@ function game(obstacles){
 }
 assert.ok(!wanted.includes("g.end('Wrecked on a"),'No crash-to-gameover scenery rule may return');
 assert.ok(wanted.includes("new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)"),'Most Wanted must use local licensed source vehicles');
-assert.ok(wanted.includes("sourceVehicle('cv-sedan')"),'Every player must get the same default vehicle');
+assert.ok(wanted.includes("sourceVehicle('kc-sedan-sports')"),'Every player must get the same default vehicle');
 assert.ok(wanted.includes("get('vehicleQA')==='1'"),'Additional vehicle selection is QA-only before server unlocks');
-for(const name of ['cv-sedan','cv-hatchback','cv-estate','cv-pickup','cv-transporter','cv-truck']){
+for(const name of ["kc-police","kc-race-future","kc-suv-luxury","kc-ambulance","kc-firetruck","kc-taxi","kc-sedan-sports","kc-truck","kc-garbage-truck","kc-delivery"]){
  const file=path.join(root,'public/games-lib/assets3d',name+'.glb');
  const buf=fs.readFileSync(file);
  assert.ok(buf.length>30000&&buf.toString('ascii',0,4)==='glTF'&&buf.readUInt32LE(8)===buf.length,

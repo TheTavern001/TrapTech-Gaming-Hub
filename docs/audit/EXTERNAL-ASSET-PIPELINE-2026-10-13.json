@@ -21,18 +21,22 @@
       "category": "vehicles",
       "status": "PARTIALLY_IMPORTED",
       "localFiles": [
-        "public/games-lib/assets3d/cv-sedan.glb",
-        "public/games-lib/assets3d/cv-hatchback.glb",
-        "public/games-lib/assets3d/cv-estate.glb",
-        "public/games-lib/assets3d/cv-pickup.glb",
-        "public/games-lib/assets3d/cv-transporter.glb",
-        "public/games-lib/assets3d/cv-truck.glb"
+        "public/games-lib/assets3d/kc-police.glb",
+        "public/games-lib/assets3d/kc-race-future.glb",
+        "public/games-lib/assets3d/kc-suv-luxury.glb",
+        "public/games-lib/assets3d/kc-ambulance.glb",
+        "public/games-lib/assets3d/kc-firetruck.glb",
+        "public/games-lib/assets3d/kc-taxi.glb",
+        "public/games-lib/assets3d/kc-sedan-sports.glb",
+        "public/games-lib/assets3d/kc-truck.glb",
+        "public/games-lib/assets3d/kc-garbage-truck.glb",
+        "public/games-lib/assets3d/kc-delivery.glb"
       ],
       "downloadSha256": null,
       "geometryCertification": "UNVERIFIED",
       "mobileArtCertification": "UNVERIFIED",
       "licenseFileRecorded": "public/games-lib/assets3d/LICENSE-Kenney-CC0.txt",
-      "notes": "Selection currently has low visual variance by owner's in-game review; add additional distinct original silhouettes from this licensed pack and compatible materials."
+      "notes": "10 actual original Kenney Car Kit 3.1 CC0 self-contained GLB meshes, imported from a third-party public GitHub mirror; exact Git blob hashes and provenance in docs/audit/KENNEY-CAR-KIT-IMPORTED-2026-10-13.json. In-game QA preview only; art/rig/performance not approved."
     },
     {
       "id": "kenney-racing-kit",
@@ -183,6 +187,42 @@
       "mobileArtCertification": "UNVERIFIED",
       "licenseFileRecorded": null,
       "notes": "Commercial-grade PBR and HDRI; convert to mobile-ready basis/KTX2/mips, avoid unbounded 8K downloads."
+    },
+    {
+      "id": "divinux-cartoon-vehicles",
+      "name": "Cartoon Vehicles Pack 1",
+      "sourceUrl": "https://opengameart.org/content/cartoon-vehicles-pack-1",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "declaredLicense": "CC0-1.0",
+      "category": "legacy-vehicle-meshes",
+      "status": "PARTIALLY_IMPORTED",
+      "localFiles": [
+        "public/games-lib/assets3d/cv-sedan.glb",
+        "public/games-lib/assets3d/cv-hatchback.glb",
+        "public/games-lib/assets3d/cv-estate.glb",
+        "public/games-lib/assets3d/cv-pickup.glb",
+        "public/games-lib/assets3d/cv-transporter.glb",
+        "public/games-lib/assets3d/cv-truck.glb"
+      ],
+      "downloadSha256": null,
+      "geometryCertification": "UNVERIFIED",
+      "mobileArtCertification": "UNVERIFIED",
+      "licenseFileRecorded": null,
+      "notes": "Existing Divinux CC0 meshes, previously incorrectly claimed as Kenney in game comments. Maintain provenance; these are not the newly imported Kenney models."
     }
-  ]
+  ],
+  "internallyGeneratedAssets": {
+    "prefix": "rc-",
+    "files": [
+      "public/games-lib/assets3d/rc-sedan.glb",
+      "public/games-lib/assets3d/rc-hatch.glb",
+      "public/games-lib/assets3d/rc-suv.glb",
+      "public/games-lib/assets3d/rc-van.glb",
+      "public/games-lib/assets3d/rc-pickup.glb",
+      "public/games-lib/assets3d/rc-boxtruck.glb"
+    ],
+    "origin": "tools/blender/hub-cars.py",
+    "notExternalPack": true,
+    "notAAACertified": true
+  }
 }

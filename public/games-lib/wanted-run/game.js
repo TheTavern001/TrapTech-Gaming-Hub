@@ -32,10 +32,10 @@ const objG = new THREE.Group(), carG = new THREE.Group(); scene.add(objG, carG);
 const player = new THREE.Group(); scene.add(player);
 const fallbackCar = carProto('#ff7a1a', '#c2410c', false, false); player.add(fallbackCar);
 const copP = carProto('#f4f6fa', '#1a1f2e', true, false), tankP = carProto('#0f5a3e', '#063a28', false, true);
-// Real CC0 Kenney Car Kit assets already held locally. Everyone starts with
-// the sedan; swapping render meshes changes no scoring, speed or hitboxes.
-const VEHICLES = [['cv-sedan','Sedan'],['cv-hatchback','Hatchback'],['cv-estate','Estate'],
-  ['cv-pickup','Pickup'],['cv-transporter','Transporter'],['cv-truck','Truck']];
+// Authentic Kenney Car Kit 3.1 CC0 meshes, not procedural Blender garage
+// silhouettes. Visual swaps do not change physics, scoring or hitboxes.
+// The single default is identical for every account and every scored run.
+const VEHICLES = [["kc-police","Police Cruiser"],["kc-race-future","Future Racer"],["kc-suv-luxury","Luxury SUV"],["kc-ambulance","Ambulance"],["kc-firetruck","Fire Truck"],["kc-taxi","Taxi"],["kc-sedan-sports","Sports Sedan"],["kc-truck","Work Truck"],["kc-garbage-truck","Utility Truck"],["kc-delivery","Delivery Van"]];
 const vehicleLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 let vehicleSeq=0;
 async function sourceVehicle(id) {
@@ -67,7 +67,7 @@ if (new URLSearchParams(location.search).get('vehicleQA')==='1') {
   select.addEventListener('change',()=>sourceVehicle(select.value));panel.appendChild(select);
   panel.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(panel);
 }
-sourceVehicle('cv-sedan');
+sourceVehicle('kc-sedan-sports');
 let objRef = null; const INST = []; let camX = 0, camZ = 0;
 function render3d(g) { const c0 = g.car;
   if (objRef !== g.obj) { objRef = g.obj; objG.clear(); INST.length = 0; const kinds = { t: [PROTO.t], r: [PROTO.r], h0: [PROTO.h[0]], h1: [PROTO.h[1]], h2: [PROTO.h[2]] };
