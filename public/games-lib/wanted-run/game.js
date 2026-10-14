@@ -68,6 +68,41 @@ if (new URLSearchParams(location.search).get('vehicleQA')==='1') {
   panel.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(panel);
 }
 sourceVehicle('kc-sedan-sports');
+// The chasing police are a substantial part of the actual gameplay scene.
+// Replace procedural prototype boxes with licensed Kenney meshes, but keep
+// their original police light beacons and leave all chase physics untouched.
+// Asynchronous model failure preserves the complete existing fallback.
+async function replaceChaserPrototype(template, id, hasBeacons) {
+  if (!VEHICLES.some(v => v[0] === id)) return;
+  try {
+    const gltf = await vehicleLoader.loadAsync(new URL('../assets3d/' + id + '.glb', location.href).href);
+    const model = gltf.scene.clone(true);
+    let bounds = new THREE.Box3().setFromObject(model), size = bounds.getSize(new THREE.Vector3());
+    if (size.z > size.x) {
+      model.rotation.y = Math.PI / 2;
+      model.updateMatrixWorld(true);
+      bounds = new THREE.Box3().setFromObject(model);
+      size = bounds.getSize(new THREE.Vector3());
+    }
+    if (!(size.x > 0 && size.y > 0 && size.z > 0)) throw new Error('Invalid source chaser mesh bounds');
+    const k = Math.min(1.85 / size.x, 0.88 / size.z, 0.95 / size.y);
+    const center = bounds.getCenter(new THREE.Vector3());
+    model.scale.multiplyScalar(k);
+    model.position.set(-center.x * k, 0.18 - bounds.min.y * k, -center.z * k);
+    model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    // Existing render3d clones the last two children as sirens; preserve that
+    // contract and their red/blue visibility behavior when changing art.
+    const beacons = hasBeacons && Array.isArray(template.userData.lights)
+      ? template.userData.lights.slice(-2) : [];
+    template.clear();
+    template.add(model, ...beacons);
+    if (hasBeacons) template.userData.lights = beacons;
+  } catch (e) {
+    console.warn('Keeping procedural chase-car fallback after GLB load failure:', e.message);
+  }
+}
+replaceChaserPrototype(copP, 'kc-police', true);
+replaceChaserPrototype(tankP, 'kc-suv-luxury', false);
 let objRef = null; const INST = []; let camX = 0, camZ = 0;
 function render3d(g) { const c0 = g.car;
   if (objRef !== g.obj) { objRef = g.obj; objG.clear(); INST.length = 0; const kinds = { t: [PROTO.t], r: [PROTO.r], h0: [PROTO.h[0]], h1: [PROTO.h[1]], h2: [PROTO.h[2]] };
