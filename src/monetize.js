@@ -2,8 +2,8 @@
 // v7 Phase 4: PLAYER MONETISATION - COSMETIC ONLY. Nothing here can change a score, an attempt, a giveaway entry, an
 // eligibility check or a tie-break: those code paths (src/server.js /api/score, src/events.js, src/results.js,
 // src/eligibility.js, src/anticheat.js) never read anything from this module. tools/e2e-payments.js proves it.
-//  (a) Hub Crowns: hub currency bought in packs with real money, spendable ONLY on cosmetics / avatar items.
-//  (b) Season Pass: premium track on top of the free track (premium cosmetics, bonus Crowns, and a premium-track XP boost
+//  (a) Hub Credits: ONE currency earned from play OR purchased; separate historical crown transactions migrate at 10 Credits each.
+//  (b) Season Pass: premium track on top of the free track (premium cosmetics, bonus Credits, and a premium-track XP boost
 //      that only speeds up the premium track itself; never the season board, scores, attempts or eligibility).
 //  (c) "Earn next season's pass free": a hard 48-quest chain (src/pass-quests.js, docs/PASS-QUESTS.md).
 //  (d) Prestige showcase items: three numbered, limited, very expensive cosmetics with an "owned by" wall.
@@ -14,6 +14,7 @@
 // BTC_ADDRESS is set (and valid) AND the admin switches it on.
 const crypto = require('crypto');
 const db = require('./db');
+const WALLET = require('./unified-wallet');
 const BTC = require('./btc');
 const G = require('./shop-gen');
 
@@ -63,10 +64,10 @@ const LEGACY_PRESTIGE = {
   'prestige-crown': { name: 'Solid Gold Crown & Chain', fx: 'goldsweep' }
 };
 const SEED = [
-  { id: 'crowns-500', kind: 'pack', name: '500 Hub Crowns', usd_cents: 499, crowns: 500, bonus: 0, sort: 1 },
-  { id: 'crowns-1100', kind: 'pack', name: '1,100 Hub Crowns', usd_cents: 999, crowns: 1000, bonus: 100, sort: 2 },
-  { id: 'crowns-2400', kind: 'pack', name: '2,400 Hub Crowns', usd_cents: 1999, crowns: 2000, bonus: 400, sort: 3 },
-  { id: 'crowns-6500', kind: 'pack', name: '6,500 Hub Crowns', usd_cents: 4999, crowns: 5000, bonus: 1500, sort: 4 },
+  { id: 'crowns-500', kind: 'pack', name: '5,000 Hub Credits', usd_cents: 499, crowns: 500, bonus: 0, sort: 1 },
+  { id: 'crowns-1100', kind: 'pack', name: '11,000 Hub Credits', usd_cents: 999, crowns: 1000, bonus: 100, sort: 2 },
+  { id: 'crowns-2400', kind: 'pack', name: '24,000 Hub Credits', usd_cents: 1999, crowns: 2000, bonus: 400, sort: 3 },
+  { id: 'crowns-6500', kind: 'pack', name: '65,000 Hub Credits', usd_cents: 4999, crowns: 5000, bonus: 1500, sort: 4 },
   { id: 'season-pass', kind: 'pass', name: 'Season Pass (premium track)', usd_cents: 999, crowns: 0, bonus: 0, sort: 10, data: { bonus_crowns_total: 600, xp_boost_pct: 15 } },
   ...Object.entries(PRESTIGE).map(([id, p], i) => ({ id, kind: 'prestige', name: p.name, usd_cents: p.usd, crowns: 0, bonus: 0, supply: p.supply, sort: 20 + i, data: { blurb: p.blurb, fx: p.fx, confs: p.confs } })),
 ];
@@ -78,7 +79,10 @@ const SEED = [
     if (p.kind === 'prestige') updPrestige.run(p.name, p.usd_cents, JSON.stringify(p.data || {}), p.sort, Date.now(), p.id);
   }
 }
- // Retire the three former multi-supply showcase items without rewriting their history or existing owners.
+ // Keep old order IDs and monetary quantities for audit, but rename existing
+// pack labels in place. Do not reprice or re-grant historical orders.
+db.prepare("UPDATE store_products SET name = CASE id WHEN 'crowns-500' THEN '5,000 Hub Credits' WHEN 'crowns-1100' THEN '11,000 Hub Credits' WHEN 'crowns-2400' THEN '24,000 Hub Credits' WHEN 'crowns-6500' THEN '65,000 Hub Credits' END WHERE kind='pack' AND id IN ('crowns-500','crowns-1100','crowns-2400','crowns-6500') AND name LIKE '%Hub Crowns'");
+// Retire the three former multi-supply showcase items without rewriting their history or existing owners.
 db.prepare("UPDATE store_products SET active=0, updated_at=? WHERE id IN ('prestige-cane','prestige-throne','prestige-crown') AND kind='prestige'").run(Date.now());
 const prod = (id) => { const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = JSON.parse(p.data || '{}'); return p; };
 const products = (all = false) => db.prepare(`SELECT * FROM store_products ${all ? '' : 'WHERE active=1'} ORDER BY sort, id`).all().map(p => ({ ...p, data: JSON.parse(p.data || '{}') }));
@@ -215,8 +219,19 @@ function grant(o, how = 'auto', t = Date.now()) {
     return { ok: true };
   })();
 }
-function addCrowns(userId, delta, reason, ref = '', t = Date.now()) { db.prepare('INSERT OR IGNORE INTO crown_ledger (user_id, delta, reason, ref, created_at) VALUES (?,?,?,?,?)').run(userId, delta, reason, ref, t); }
-const crowns = (userId) => db.prepare('SELECT COALESCE(SUM(delta),0) s FROM crown_ledger WHERE user_id=?').get(userId).s;
+// Preserve order/refund identity in the historical monetary audit table, then
+// atomically reflect it ONCE into the sole spendable Hub Credits wallet.
+function addCrowns(userId, delta, reason, ref = '', t = Date.now()) {
+  if (!Number.isSafeInteger(delta) || Math.abs(delta) > 100000000)
+    throw new TypeError('Invalid legacy Crown ledger delta');
+  return db.transaction(() => {
+    const row=db.prepare('INSERT OR IGNORE INTO crown_ledger (user_id, delta, reason, ref, created_at) VALUES (?,?,?,?,?)').run(userId,delta,reason,ref,t);
+    WALLET.migrateLegacyCrowns(userId);
+    return row.changes===1;
+  })();
+}
+// DEPRECATED wire compatibility only: not a second balance or funding source.
+const crowns = (userId) => Math.floor(WALLET.balance(userId)/WALLET.CREDIT_PER_LEGACY_CROWN);
 function flag(o, f) { const s = new Set((o.flags || '').split(',').filter(Boolean)); s.add(f); db.prepare('UPDATE store_orders SET flags=? WHERE id=?').run([...s].join(','), o.id); }
 
 // one pass over open orders against the chain. txsFor/tip injectable for tests.
@@ -308,21 +323,15 @@ function claimPass(user, t = Date.now()) {
   return { ok: true, claimed: got };
 }
 
-// ---------- spend Crowns: cosmetics only ----------
-function crownPrice(it) { return Math.max(50, Math.round(((it && it.price) || 500) / 10 / 5) * 5); }
+// Historical /api/crowns/buy route remains as a compatibility alias. Both
+// old and new endpoints debit the SAME wallet and award the SAME cosmetic.
+function crownPrice(it) { return (it && it.price) || 0; }
 function buyWithCrowns(user, itemId, t = Date.now()) {
-  const SH = require('./shop'); const it = SH.BY_ID[itemId]; if (!it) return { ok: false, error: 'Unknown item.' };
-  if (it.src === 'k' || it.src === 'b' || it.src === 'p') return { ok: false, error: 'Track and earned items cannot be bought.' };
-  const on = SH.inRotation(SH.rotation(t), it);
-  if (!on) return { ok: false, error: 'That item is not in the shop right now.' };
-  const price = crownPrice(it); return db.transaction(() => {
-    if (db.prepare('SELECT 1 FROM user_items WHERE user_id=? AND item_id=?').get(user.id, it.id)) return { ok: false, error: 'You already own it.' };
-    if (crowns(user.id) < price) return { ok: false, error: `You need ${price - crowns(user.id)} more Hub Crowns.` };
-    addCrowns(user.id, -price, 'spend', it.id + ':' + t, t); db.prepare('INSERT INTO user_items (user_id, item_id, price, acquired_at) VALUES (?,?,0,?)').run(user.id, it.id, t);
-    return { ok: true, item: it.id, price_crowns: price, crowns: crowns(user.id) }; })();
+  const r=require('./shop').buy(user,itemId,t);
+  return r.ok?{ok:true,item:r.item.id,price_credits:r.price,credits:r.balance}:r;
 }
 
-const NON_ADVANTAGE = 'Everything sold in the Hub Store is cosmetic. Hub Crowns, the Season Pass and Prestige items never change scores, attempts, anti-cheat checks, giveaway entries, eligibility, tie-breaks or winners. Paid and free players are ranked by exactly the same rules.';
+const NON_ADVANTAGE = 'Everything sold in the Hub Store is cosmetic. Hub Credits, the Season Pass and Prestige items never change scores, attempts, anti-cheat checks, giveaway entries, eligibility, tie-breaks or winners. Paid and free players are ranked by exactly the same rules.';
 const TERMS = '[DRAFT - FOR LAWYER REVIEW] Digital items are a limited licence to use cosmetic content in The Gaming Hub, have no cash value and cannot be exchanged for money or prizes. All sales are final once an item is delivered, except where the law requires a refund or an order was charged in error; contact Trap Tech Solutions within 14 days. Bitcoin payments are final on-chain; refunds, when granted, are sent back in BTC at the USD value of the order. You must be 21+. Prestige items are numbered and limited; their serial number is a display feature, not an investment. Trap Tech Solutions may change or retire items.';
 
 function prestigeWall() { return Object.entries(PRESTIGE).map(([id, d]) => { const p = prod(id);
@@ -377,11 +386,11 @@ function routes(app, A, H) {
     res.json({ received: true });
   });
   app.get('/api/store', (req, res) => { const me = currentUser(req); const st = checkoutState();
-    res.json({ ok: true, currency: { name: 'Hub Crowns', short: 'Crowns' }, checkout: { enabled: st.enabled, reason: st.reason, methods: st.methods || [] }, prestige_sales_enabled: prestigeSalesEnabled(),
-      packs: products().filter(p => p.kind === 'pack').map(p => ({ id: p.id, name: p.name, usd_cents: p.usd_cents, crowns: p.crowns, bonus: p.bonus })),
+    res.json({ ok: true, currency: WALLET.currency, checkout: { enabled: st.enabled, reason: st.reason, methods: st.methods || [] }, prestige_sales_enabled: prestigeSalesEnabled(),
+      packs: products().filter(p => p.kind === 'pack').map(p => ({ id: p.id, name: p.name, usd_cents: p.usd_cents, credits: (p.crowns + p.bonus)*10 })),
       pass: (() => { const p = prod('season-pass'); return p && p.active ? { id: p.id, name: p.name, usd_cents: p.usd_cents, ...p.data } : null; })(),
       prestige: prestigeWall().filter(p => p.active).map(p => ({ ...p, owners: undefined, owners_count: p.owners.length })),
-      crowns: me ? crowns(me.id) : null, non_advantage: NON_ADVANTAGE, terms: TERMS }); });
+      credits: me ? WALLET.balance(me.id) : null, non_advantage: NON_ADVANTAGE, terms: TERMS }); });
   app.get('/api/store/prestige', (req, res) => res.json({ ok: true, items: prestigeWall() }));
   app.get('/api/users/:u/prestige', (req, res) => { const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(req.params.u); res.json({ ok: true, items: u ? prestigeOf(u.id) : [] }); });
   app.post('/api/store/orders', requireUser, limiter('store-order', 20, 3600e3), async (req, res) => { const b = req.body || {}; const st = checkoutState(); const provider = String(b.provider || (st.providers.bitcoin.configured ? 'bitcoin' : 'stripe')); const r = provider === 'stripe' ? await createStripeOrder(req.user, String(b.product_id || '')) : provider === 'bitcoin' ? await createOrder(req.user, String(b.product_id || '')) : { status: 400, error: 'Unsupported payment method.' }; if (!r.ok) return bad(res, r.status, r.error); if (r.order.uri) r.order.qr_svg = require('./events').qrSvg(r.order.uri); res.json(r); });
@@ -393,7 +402,7 @@ function routes(app, A, H) {
     const txid = String((req.body || {}).txid || '').trim().toLowerCase(); if (txid) { if (!/^[0-9a-f]{64}$/.test(txid)) return bad(res, 400, 'That does not look like a transaction id.'); db.prepare('UPDATE store_orders SET txid_hint=? WHERE id=?').run(txid, o.id); }
     try { await check([o]); } catch (e) { return bad(res, 503, 'Could not reach the blockchain explorer, try again shortly.'); }
     res.json({ ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)), crowns: crowns(req.user.id) }); });
-  app.get('/api/me/crowns', requireUser, (req, res) => res.json({ ok: true, crowns: crowns(req.user.id), history: db.prepare('SELECT delta, reason, ref, created_at FROM crown_ledger WHERE user_id=? ORDER BY id DESC LIMIT 50').all(req.user.id) }));
+  app.get('/api/me/crowns', requireUser, (req, res) => res.json({ ok:true,deprecated:true,credits:WALLET.balance(req.user.id),history:db.prepare("SELECT amount,reason,ref,created_at FROM points_ledger WHERE user_id=? ORDER BY id DESC LIMIT 50").all(req.user.id) }));
   app.post('/api/crowns/buy', requireUser, (req, res) => { const r = buyWithCrowns(req.user, String((req.body || {}).item_id || '')); if (!r.ok) return bad(res, 400, r.error); res.json(r); });
   app.get('/api/pass', (req, res) => res.json({ ok: true, ...passState(currentUser(req)) }));
   app.get('/api/pass/quests', requireUser, (req, res) => res.json({ ok: true, ...require('./pass-quests').status(req.user.id) }));
@@ -427,7 +436,7 @@ function routes(app, A, H) {
     db.prepare("UPDATE store_orders SET status='paid', paid_at=COALESCE(paid_at, ?) WHERE id=?").run(Date.now(), o.id); const g = grant(o, 'admin ' + ((req.admin && req.admin.username) || '')); res.json({ ...g, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)) }); });
   A.post('/store/orders/:ref/refund', (req, res) => res.json(refund(req.params.ref, (req.admin && req.admin.username) || 'admin', String((req.body || {}).note || '').slice(0, 200))));
   A.post('/store/grant', (req, res) => { const b = req.body || {}; const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(String(b.username || '')); if (!u) return bad(res, 404, 'No such player.');
-    if (b.crowns) { addCrowns(u.id, Math.trunc(Number(b.crowns)), 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, crowns: crowns(u.id) }); }
+    if (b.crowns) { const delta=Number(b.crowns); if(!Number.isSafeInteger(delta)||Math.abs(delta)>100000000) return bad(res,400,'Invalid legacy amount'); addCrowns(u.id, delta, 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, credits: WALLET.balance(u.id) }); }
     res.json(manualGrant(u.id, String(b.product_id || ''), (req.admin && req.admin.username) || 'admin', String(b.note || ''))); });
 }
 module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, prestigeSalesEnabled, _stripeSignatureOk: stripeSignatureOk };
