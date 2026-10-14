@@ -5,6 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { importSpecs } = require('./local-imports');
 
 const ROOT = path.resolve(__dirname, '..');
 const EXCLUDED = new Set(['node_modules', '.git', 'coverage', 'screenshots']);
@@ -41,13 +42,10 @@ for (const root of SCAN_ROOTS) {
       input: source, encoding: 'utf8', timeout: 15000
     });
     if (result.status !== 0) fail(rel(file), (result.stderr || result.stdout || 'JavaScript syntax check failed').trim().slice(0, 1400));
-    const importSpecs = new Set();
-    for (const m of source.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\bimport\s*(?:\(\s*)?['"]([^'"]+)['"]/g)) {
-      const spec = m[1] || m[2];
-      if (!spec || /^(?:[a-z]+:|\/\/|data:)/i.test(spec) || (!spec.startsWith('.') && !spec.startsWith('/'))) continue;
-      importSpecs.add(spec);
-    }
-    for (const spec of importSpecs) {
+    // Only actual JS module specifiers: quoted examples in other verifier
+    // strings are not dependencies. Strict filesystem checks below remain on.
+    const dependencySpecs = importSpecs(source);
+    for (const spec of dependencySpecs) {
       // Server-routed admin UI bundles and other /api/ paths are not static files.
       if (spec.startsWith('/api/')) continue;
       // Skip incomplete dynamic import expressions.

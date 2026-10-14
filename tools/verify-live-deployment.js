@@ -97,9 +97,16 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     hubApp.text.includes("import * as GP from './player-prefs.js'") &&
     hubApp.text.includes('GP.openGameSettings('));
   const libKit = await get(BASE + '/games-lib/kit.js');
+  // 2026-10-13 Deplexo c118594 STEP 12 smoke failure: old Kit marker
+  // lacked the gameSettingsOpen title/input guard added to the real runtime.
+  // Verify the full pause/restore and menu-input isolation contract.
   check('Library Kit game settings pause integration is served',libKit.res.status===200 &&
     libKit.text.includes("import('/js/player-prefs.js')") &&
-    libKit.text.includes('wasPaused=g.paused;g.paused=true'));
+    libKit.text.includes('wasPaused=g.paused;gameSettingsOpen=true;g.paused=true') &&
+    libKit.text.includes('g.paused=wasPaused;gameSettingsOpen=false') &&
+    libKit.text.includes('g.ptr.pressed=false;g.ptr.released=false') &&
+    libKit.text.includes("if (!gameSettingsOpen && (g.state === 'title'") &&
+    libKit.text.includes('if(gameSettingsOpen)return; ac();'));
   const vendorSettings = await get(BASE + '/games-lib/vendor-settings.mjs');
   check('Three independent licensed games share a source settings adapter',
     vendorSettings.res.status===200 &&

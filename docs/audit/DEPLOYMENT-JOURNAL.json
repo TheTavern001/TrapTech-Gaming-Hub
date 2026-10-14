@@ -235,6 +235,50 @@
       "fixCommit": null,
       "verifiedAfterFix": true,
       "qualification": "Host image READY, actual /api/seasons and player XP not independently checked"
+    },
+    {
+      "commit": "5932ba613c2d22e4bdf97920d6071cc59c2b4dd6",
+      "status": "FAILED",
+      "buildDurationSeconds": 203,
+      "branchReportedByHost": "fix/hex-stack-settings-pause-20261013",
+      "evidence": "owner-supplied complete Deplexo Docker build log 2026-10-13; [1/2] STEP 11/12 exit 1",
+      "firstError": "tools/verify-prelaunch.js: tools/verify-live-deployment.js Missing local module dependency: ./player-prefs.js",
+      "rootCause": "CONFIRMED: regex import audit falsely treats the string literal hubApp.text.includes(\"import * as GP from './player-prefs.js'\") as executable import relative to tools/. Actual public/js/app.js real import target is public/js/player-prefs.js.",
+      "fixCommit": "8390117a940a5d1b2a5ad07158cb986ffbef335e",
+      "verifiedAfterFix": false,
+      "qualification": "Scanner fix source-tested; exact Docker/host READY not yet observed. Earlier game/asset/settings regressions passed in owner build log."
+    },
+    {
+      "commit": "4cf7e515771ec6b3113b875cb6de637f1ed2e5d7",
+      "status": "FAILED",
+      "buildDurationSeconds": 210,
+      "branchReportedByHost": "fix/hex-stack-settings-pause-20261013",
+      "evidence": "owner Deplexo screenshot; ERROR 210 seconds (not full build log)",
+      "firstError": "UNKNOWN",
+      "rootCause": "Unconfirmed, may share subsequent 5932ba6 regex false-import failure but no log for this attempt",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "46a71d4",
+      "status": "FAILED",
+      "buildDurationSeconds": 243,
+      "branchReportedByHost": "feature/expansion-ready-game-admission-20261013",
+      "evidence": "owner Deplexo screenshot; ERROR 243 seconds (no log provided)",
+      "firstError": "UNKNOWN",
+      "rootCause": "Unconfirmed: same prelaunch scanner on this source branch, but first failing command not supplied",
+      "fixCommit": null,
+      "verifiedAfterFix": false
+    },
+    {
+      "commit": "1d08431ed8f0a038135808c256e3aea03554eca0",
+      "status": "FAILED",
+      "branchReportedByHost": "feature/expansion-ready-game-admission-20261013",
+      "evidence": "owner Deplexo screenshot; ERROR, duration obscured",
+      "firstError": "UNKNOWN",
+      "rootCause": "Unconfirmed without host logs",
+      "fixCommit": null,
+      "verifiedAfterFix": false
     }
   ],
   "sourceVerification": [
@@ -254,6 +298,7 @@
     }
   ],
   "pendingEvidence": [
+    "5932ba6 confirmed Docker STEP 11/12 failure and targeted scanner fix; full build then host READY still pending. See docs/audit/DEPLEXO-5932BA6-ROOT-CAUSE-2026-10-13.md",
     "PR26 c2e6e9f, 70c018b: registry-driven expansion and options/menu input guard isolated and not Deplexo-deployed; 93 registered, 0 quality certified.",
     "Registry-driven game intake candidate can scan 94..500 games without weakening frozen 93-title baseline, but actual gameplay-quality certification remains 0; full Docker result and host READY pending.",
     "Combined settings and previously Deplexo READY Rail Rush visual build: source of ccedb2a (licensed GLB saloon) + 0048954 (model test) restored on current branch. Combined host READY NOT YET VERIFIED.",
@@ -351,7 +396,13 @@
       "reason": "Pause-safe Kit game settings: block title/restart taps while overlay open and clear pending inputs",
       "validation": "Source parsed and automated source-level regression added; Docker and mobile pending",
       "host": "NOT DEPLOYED — isolated PR26"
+    },
+    {
+      "commit": "8390117a940a5d1b2a5ad07158cb986ffbef335e",
+      "reason": "Fix exact Docker STEP11 phantom ./player-prefs.js import caused by regex treating quoted verification strings as executable module dependencies",
+      "validation": "Fetched GitHub source parser V8 test passed; committed negative regression body PASS in V8 environment; actual full Docker unrun",
+      "host": "NOT VERIFIED / review branch only"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-13 19:06 EDT source review; last owner-confirmed READY is d71a54e, 15 newer settings source commits unconfirmed."
+  "lastEvidenceReconciliation": "2026-10-13 ~22:07 America/New_York owner Deplexo STEP11 full log: 5932ba6 prelaunch regex false import confirmed; fix staged source-only, host READY pending."
 }
