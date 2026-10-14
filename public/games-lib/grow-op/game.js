@@ -31,8 +31,6 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
     if (g.btnP.W || g.kd('w')) { p0.water = Math.min(1.2, p0.water + 0.25); g.sfx('whoosh'); g.burst(p0.x, 200, '#38bdf8', 10, 120); }
     if (g.btnP.F || g.kd('f')) { p0.food = Math.min(1.2, p0.food + 0.22); g.sfx('click'); g.burst(p0.x, 260, '#fbbf24', 8, 100); }
     if (g.btnP.H || g.kd('h') || g.kd(' ')) harvest(g, p0);
-    for (const p of g.plants) { p.water -= dt * 0.045; p.food -= dt * 0.03; const okW = p.water > 0.35 && p.water < 0.95, okF = p.food > 0.3 && p.food < 0.95; p.health = Kit.clamp(p.health + ((okW && okF) ? 0.04 : -0.08) * dt - (p.pests || 0) * 0.03 * dt, 0, 1);
-      p.grow += dt * (0.05 + 0.08 * p.health) * (okW ? 1 : 0.3); if (p.health <= 0) { g.float(p.x, 150, 'DIED', '#ef4444', 18); g.sfx('bad'); g.deaths++; if (g.deaths >= 3) return g.end('3 plants died'); Object.assign(p, newPlant(g, p.i)); } }
     // Timed, seeded pest waves are independent of render frame frequency.
     // Unswatted pests chew for a limited time, then leave. Cap actors to
     // keep long Android/iPhone sessions bounded in CPU and retained memory.
@@ -60,6 +58,9 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
     }
     if (g.pestTimer <= 0) g.pestTimer = 0.75;
     for (const p of g.plants) p.pests = counts[p.i];
+    for (const p of g.plants) { p.water -= dt * 0.045; p.food -= dt * 0.03; const okW = p.water > 0.35 && p.water < 0.95, okF = p.food > 0.3 && p.food < 0.95; p.health = Kit.clamp(p.health + ((okW && okF) ? 0.04 : -0.08) * dt - (p.pests || 0) * 0.03 * dt, 0, 1);
+      p.grow += dt * (0.05 + 0.08 * p.health) * (okW ? 1 : 0.3); if (p.health <= 0) { g.float(p.x, 150, 'DIED', '#ef4444', 18); g.sfx('bad'); g.deaths++; if (g.deaths >= 3) return g.end('3 plants died'); Object.assign(p, newPlant(g, p.i)); } }
+
     g.hud = 'LOST ' + g.deaths + '/3  ' + Math.floor(g.time / 60) + ':' + String(Math.floor(g.time % 60)).padStart(2, '0');
   },
   draw(g, c) {
