@@ -240,3 +240,10 @@ The same-commit `58a9f52` mobile suite/verifier disagreement is confirmed in the
 - [ ] HOST CLEANUP: Deplexo public API documents listing previous deploys but no per-deployment delete. Do not delete the app (destroys its persistent data volume). Preserve the historical journal, avoid multiple auto-build branches, operate one approved deployment candidate.
 - [ ] GAME INTAKE: complete existing title QA and license checks before first newly approved distinct title. **93 registered, 0 individually AAA-certified.**
 - Reference: [source and hosting findings](audit/DEPLEXO-5932BA6-ROOT-CAUSE-2026-10-13.md).
+
+## 2026-10-14 gameplay/duplicate QA checkpoint (source only, not deployed)
+
+- Adult-theme games: all **11 cannabis-category library titles** and the themed core modes reviewed for intended mechanic identities; no AAA claim. Most urgent fixes staged for Trim Rush (first-round free-score exploit and auto-snip), Bud Bar (first-tap lane), Strain Crush (unplayable board and help), Grow Op (false time rule), Dunk Flick (keyboard auto-basket). Full details: `docs/audit/OWNER-GAMEPLAY-CANNABIS-DUPLICATE-PASS-2026-10-14.md`.
+- Every one of 93 historic game IDs has a source/meta review record and 13 related mechanic families identified; six source archives preserved; Haze Defense vs Pop Defense is high-risk unresolved. 87 proposed active, 0 AAA/owner certified.
+- QA: 234 source callback simulated assertions and 361 source/registry checks passed under V8 filesystem/VM shims. New tests are wired into Docker prelaunch, **full real Docker/native browser/Android/iOS/AAA scoring not run**.
+- Deployment: screenshot-confirmed `278af07` CURRENT/READY remains unchanged; auto-deploy OFF. Do not start another partial deployment or intake more games until R1–R5 source/mobile/asset/security acceptance.
