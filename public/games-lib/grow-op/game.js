@@ -17,7 +17,11 @@ Kit.run({ id: 'gl-grow-op', title: 'GROW OP', orient: 'l', help: 'Tap a plant to
         if (d < dist) { hit = s; dist = d; }
       }
       if (hit) {
-        hit.dead = true; g.add(5, 'b'); g.sfx('pop');
+        hit.dead = true;
+        // A swatted pest must stop damaging its plant on this same tick.
+        const host = g.plants[hit.p];
+        if (host) host.pests = Math.max(0, host.pests - 1);
+        g.add(5, 'b'); g.sfx('pop');
         g.burst(hit.x, hit.y, '#a3e635', 10);
       } else {
         for (const p of g.plants) if (Math.abs(P.x - p.x) < 55) { g.sel = p.i; break; }
