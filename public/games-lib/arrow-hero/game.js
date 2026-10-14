@@ -12,7 +12,15 @@
     wall(0, RY - 30, W, 30); wall(0, RY + RH, W, 30); wall(0, RY, RX, RH); wall(RX + RW, RY, RX, RH);
     for (const x of [60, 340]) { c.fillStyle = '#ffb347'; c.shadowColor = '#ffb347'; c.shadowBlur = 18; c.beginPath(); c.arc(x, RY - 12, 5, 0, 7); c.fill(); c.shadowBlur = 0; }
     c.fillStyle = 'rgba(157,255,122,.5)'; c.font = 'bold 9px sans-serif'; c.textAlign = 'center'; c.fillText('\u2618 ARROW HERO \u00b7 21+', 200, RY + RH + 20); return (FLOOR = cv); }
-  function spawnRoom(g) { g.en = []; g.eb = []; g.ar = []; g.gate = false; const n = g.room; g.obs = []; for (let i = 0; i < Math.min(5, 1 + Math.floor(n / 2)); i++) g.obs.push({ x: RX + 50 + g.R(0, RW - 140), y: RY + 120 + g.R(0, RH - 300), w: 40 + g.R(0, 40), h: 30 });
+  function spawnRoom(g) { g.en = []; g.eb = []; g.ar = []; g.gate = false; const n = g.room; g.obs = []; for (let i = 0; i < Math.min(5, 1 + Math.floor(n / 2)); i++) {
+      // Keep a permanent navigable center lane to the exit and boss.
+      // Otherwise several randomly placed obstacles can seal off a room.
+      const w = 40 + g.R(0, 40);
+      const left = g.RI(0, 1) === 0;
+      const x = left ? RX + 18 + g.R(0, 62) :
+        RX + RW - 18 - w - g.R(0, 62);
+      g.obs.push({ x, y: RY + 120 + g.R(0, RH - 300), w, h: 30 });
+    }
     const pos = () => { for (let k = 0; k < 30; k++) { const x = RX + 30 + g.R(0, RW - 60), y = RY + 40 + g.R(0, RH * 0.55); if (!g.obs.some(o => x > o.x - 16 && x < o.x + o.w + 16 && y > o.y - 16 && y < o.y + o.h + 16)) return [x, y]; } return [200, 150]; };
     const hpK = 1 + n * 0.22;
     if (n % 5 === 0) { const [x, y] = [200, RY + 120]; g.en.push({ t: 'boss', x, y, r: 34, hp: 80 * hpK, max: 80 * hpK, cd: 1.5, ph: 0, vx: 0, vy: 0 }); }
