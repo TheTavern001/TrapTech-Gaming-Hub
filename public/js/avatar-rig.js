@@ -18,13 +18,13 @@ function load(presentation, neutralQa=false) {
   if (!cache.has(file)) cache.set(file, new GLTFLoader().loadAsync(file).catch(e=>{cache.delete(file);throw e;}));
   return cache.get(file);
 }
-export async function mountRiggedAvatar(stage,cfg) {
+export async function mountRiggedAvatar(stage,cfg,generation) {
   if (!stage || !stage.isConnected) return () => {};
   const neutralQa=cfg.outfit==='base' &&
     typeof location!=='undefined' &&
     new URLSearchParams(location.search).get('avatarRigQA')==='1';
   const gltf = await load(cfg.gender,neutralQa);
-  if (!stage.isConnected) return () => {};
+  if (!stage.isConnected || (generation && stage.__hubAvatarRenderGeneration !== generation)) return () => {};
   const reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const scene = new THREE.Scene();
   const bg = BG[cfg.bg] || BG.night;
