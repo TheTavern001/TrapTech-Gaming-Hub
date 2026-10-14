@@ -412,3 +412,11 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `0ebf9794033f45abbfa495add7f0f03831e2e880` adds a deterministic real update-callback regression. `6d3afc48a4d9debc016535c05c4f85012c8652cb`, `014315192f57f57f1aaf25bf2e330102d43dc714` and `709f73f2ed7ab0d2ba202e1cef111cc59c800263` integrate it in canonical rehearsal, offline gate and Docker build.
 - Actual isolated V8 execution on fetched game code: expiring pest gives plant health delta +0.004 and active pest +0.001 for identical 0.1-second tick; expected difference PASS. Full native Node suite, Docker image, mobile devices, hosted HTTP and cash/score security acceptance remain NOT RUN.
 - Release still unapproved. Keep auto-deploy OFF. Source-only progress must not be counted as completion of the avatar, shop, mobile, anti-cheat and 500-game goals.
+
+## 2026-10-14 — Grow Op phone tab suspension health integrity
+
+- `1e673f355abbef15948ac88deae340ac7319989b` bounds per-frame plant-resource, health and growth simulation to 0.25 seconds while retaining actual survival elapsed time and bounded pest-wave catchup. Without this, long mobile tab suspension can instantly eliminate plants on resume.
+- `4950377336f97fef9a8b109b985f1640344d0cc5` regression simulates a 600-second phone tab suspension with healthy plants, asserts same plant health and water delta as a 0.25-second update, zero deaths, and full elapsed survival time.
+- `602c030fe9bf7be28753aa78d707b9400cbdd91e`, `e4cadfbaa8b0ad36c6d2133f02c37e465179de12`, `e651fd07ddae5ce8288cde0eca55d3bde10d1e45` include regression in main rehearsal, offline gate, and Docker prelaunch.
+- V8 executed updated real game callback: both .25s and 600s produced plant health .52, water .38875, deaths 0; long frame reported 600 elapsed seconds. PASS. Native Node full test, container build, device and live host not executed; game is not AAA certified.
+- Deplexo screenshot remains CURRENT READY 278af07 on old QA branch. Source changes committed to PR #29 only. Auto-deploy must remain OFF pending integrated private candidate, full build and device acceptance.
