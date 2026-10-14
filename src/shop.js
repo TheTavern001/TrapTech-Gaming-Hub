@@ -300,7 +300,7 @@ function sync(userId) {
     for (const q of db.prepare('SELECT day, idx, created_at FROM quest_claims WHERE user_id=?').all(userId)) insL.run(userId, EARN.quest, 'quest', q.day + '-' + q.idx, q.created_at);
     const days = db.prepare('SELECT day, created_at FROM checkins WHERE user_id=? ORDER BY day').all(userId); let run = 0, prev = null;
     for (const c of days) { run = prev !== null && c.day === prev + 1 ? run + 1 : 1; prev = c.day; insL.run(userId, Math.min(EARN.checkinMax, EARN.checkinPerDay * run), 'checkin', String(c.day), c.created_at); }
-    for (const r of db.prepare('SELECT r.id, r.created_at FROM users r WHERE r.referred_by=? AND r.banned=0 AND EXISTS (SELECT 1 FROM runs WHERE user_id=r.id)').all(userId)) insL.run(userId, EARN.referral, 'referral', String(r.id), r.created_at);
+    for (const r of db.prepare('SELECT r.id, r.created_at FROM users r WHERE r.referred_by=? AND r.banned=0 AND EXISTS (SELECT 1 FROM runs WHERE user_id=r.id AND held=0)').all(userId)) insL.run(userId, EARN.referral, 'referral', String(r.id), r.created_at);
     for (const c of db.prepare("SELECT id, responded_at, created_at FROM challenges WHERE winner_id=? AND status='completed'").all(userId)) insL.run(userId, EARN.challenge, 'challenge', String(c.id), c.responded_at || c.created_at);
   })();
   try { SE().claimTrack(userId); } catch (e) { console.error('season track', e.message); }
