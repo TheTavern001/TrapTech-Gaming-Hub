@@ -41,6 +41,10 @@ assert.ok(src.includes("if (!verifiedSettlement(fresh))"),
   'Every grant path must check the fresh persisted provider evidence');
 assert.ok(!src.includes("db.prepare(\"UPDATE store_orders SET status='paid', paid_at=COALESCE(paid_at, ?) WHERE id=?\").run(Date.now(), o.id)"),
   'Admin grant must never mark a payment as paid');
+assert.ok(src.includes("if (p.kind === 'prestige' && !prestigeSalesEnabled())"),
+  'Unreleased 1-of-1 prestige cosmetics must never be granted, even manually');
+assert.ok(src.includes("Prestige cosmetics are preview-only until approved for release."),
+  'Manual preview-only entitlement must fail closed');
 assert.ok(src.includes("return bad(res, 409, 'Payment has not been verified and settled."),
   'Admin grant needs fail-closed pending-order rejection');
 const e2e=fs.readFileSync(path.join(__dirname,'e2e-payments.js'),'utf8');
