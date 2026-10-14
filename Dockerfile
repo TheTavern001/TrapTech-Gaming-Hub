@@ -79,6 +79,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check src/meta-fairness-contract.js \
  && node --check tools/test-full-hub-meta-contract.js \
  && node tools/test-full-hub-meta-contract.js \
+ && node --check tools/test-game-candidate-queue.js \
+ && node tools/test-game-candidate-queue.js \
+ && node --check tools/preflight-manual-release.js \
  && node --check tools/audit-full-game-mechanics.js \
  && node tools/audit-full-game-mechanics.js \
  && test -s docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
