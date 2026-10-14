@@ -92,6 +92,8 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-runner-train-assets.js \
  && node --check tools/test-owner-reported-gameplay.js \
  && node tools/test-owner-reported-gameplay.js \
+ && node --check tools/test-cannabis-gameplay-qa.js \
+ && node tools/test-cannabis-gameplay-qa.js \
  && node --check tools/test-mobile-frame-allocation-regressions.js \
  && node tools/test-mobile-frame-allocation-regressions.js \
  && node --check tools/test-imported-kenney-cars.js \
