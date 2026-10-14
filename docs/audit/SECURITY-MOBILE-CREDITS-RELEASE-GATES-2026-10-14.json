@@ -77,17 +77,33 @@
       "id": "ANTI-CHEAT-PRIZE-REPLAY",
       "release": "R4",
       "requirement": "Signed authenticated server-replay proof for every giveaway game, never trust player score/telemetry alone",
-      "status": "BLOCKED_UNCERTIFIED",
+      "status": "FAIL_CLOSED_STAGED_ZERO_APPROVED_GAMES_NO_REAL_REPLAY_CERTIFICATIONS",
       "evidence": [
         "src/anticheat.js",
         "src/server.js",
-        "docs/audit/GAME-QUALITY-ACCEPTANCE.json"
+        "docs/audit/GAME-QUALITY-ACCEPTANCE.json",
+        "src/prize-score-proof.js",
+        "src/server.js (official run verdict held if uncertified)",
+        "src/results.js (verified replay and certified-game query)",
+        "src/admin-scoring.js (custom rule query also checks proof)",
+        "src/boards.js (entrants conditional on proof)",
+        "tools/test-prize-score-proof.js"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
       "liveHostVerified": false,
       "preDeploymentVerified": false,
-      "phoneEvidenceRequired": false
+      "phoneEvidenceRequired": false,
+      "sourceChecks": {
+        "actualModuleStandaloneV8": 6,
+        "exactCommittedTestScriptV8Assertions": 19,
+        "physicalReplayValidated": 0,
+        "independentlyCertifiedGames": 0,
+        "adminClearedNotProof": true,
+        "freePlayUnaffected": true,
+        "buildSmokeExecuted": false,
+        "hostDeployed": false
+      }
     },
     {
       "id": "SESSIONS-REVOCATION",
@@ -263,5 +279,6 @@
     "fullStripeBTCFixture": "NOT_RUN",
     "deviceQa": "NOT_RUN",
     "risk": "Existing unsettled legacy orders without a snapshot require owner financial reconciliation; chargeback cosmetics and entitlements still not reconciled."
-  }
+  },
+  "antiCheatPrizeProofStatus": "SOURCE_FAIL_CLOSED; ALL official prize-scoring games held until owner-approved independent replay"
 }
