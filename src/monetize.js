@@ -403,7 +403,7 @@ function routes(app, A, H) {
     try { await check([o]); } catch (e) { return bad(res, 503, 'Could not reach the blockchain explorer, try again shortly.'); }
     res.json({ ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id)), credits: WALLET.balance(req.user.id) }); });
   app.get('/api/me/crowns', requireUser, (req, res) => res.json({ ok:true,deprecated:true,credits:WALLET.balance(req.user.id),history:db.prepare("SELECT amount,reason,ref,created_at FROM points_ledger WHERE user_id=? ORDER BY id DESC LIMIT 50").all(req.user.id) }));
-  app.post('/api/crowns/buy', requireUser, (req, res) => { const r = buyWithCrowns(req.user, String((req.body || {}).item_id || '')); if (!r.ok) return bad(res, 400, r.error); res.json(r); });
+  app.post('/api/crowns/buy', requireUser, limiter('credits-buy-legacy', 25, 60e3), (req, res) => { const r = buyWithCrowns(req.user, String((req.body || {}).item_id || '')); if (!r.ok) return bad(res, 400, r.error); res.json(r); });
   app.get('/api/pass', (req, res) => res.json({ ok: true, ...passState(currentUser(req)) }));
   app.get('/api/pass/quests', requireUser, (req, res) => res.json({ ok: true, ...require('./pass-quests').status(req.user.id) }));
   app.post('/api/pass/quests/claim', requireUser, (req, res) => { const r = require('./pass-quests').claim(req.user.id); if (!r.ok) return bad(res, 400, r.error); res.json(r); });
