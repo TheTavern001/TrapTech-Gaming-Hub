@@ -1,5 +1,7 @@
 // Most Wanted Run - original police-chase survival (Hub build). Voxel 3D world (three.js, code-built, original art).
 import * as THREE from 'three'; import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'; import { stage, bake, canvasTex } from '../runner3x.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 const S3 = stage({}); const { scene, cam, sun, hemi } = S3; scene.background = new THREE.Color('#9fd8f5'); scene.fog = new THREE.Fog('#9fd8f5', 38, 70); hemi.intensity = 1.25; hemi.groundColor.set('#6a8a5a'); sun.intensity = 2.5;
 S3.r.shadowMap.type = THREE.PCFSoftShadowMap; sun.shadow.radius = 3; { const sc = sun.shadow.camera; sc.left = -22; sc.right = 22; sc.top = 22; sc.bottom = -22; sc.far = 90; sc.updateProjectionMatrix(); }
 const K = 1 / 20;
@@ -26,7 +28,46 @@ function carProto(body, roof, cop, tank) { const g = new THREE.Group(); const L 
   if (tank) { g.add(mesh(rbox(0.8, 0.3, 0.8, 0.1), mat('#0a3a2a'), 0, 1.0, 0)); g.add(mesh(rbox(1.0, 0.14, 0.14, 0.05), mat('#0a3a2a'), 0.5, 1.05, 0)); }
   const b = bake(g, true); if (cop) { const r = new THREE.Mesh(rbox(0.16, 0.12, 0.28, 0.03), new THREE.MeshStandardMaterial({ color: '#ff2020', emissive: '#ff2020', emissiveIntensity: 2 })), bl = new THREE.Mesh(rbox(0.16, 0.12, 0.28, 0.03), new THREE.MeshStandardMaterial({ color: '#2040ff', emissive: '#2040ff', emissiveIntensity: 2 })); r.position.set(-0.1, 0.97, -0.16); bl.position.set(-0.1, 0.97, 0.16); b.add(r, bl); b.userData.lights = [r, bl]; } return b; }
 const PROTO = { t: treeProto(), r: rockProto(), h: [houseProto('#f2e6c4', false), houseProto('#c4e0f2', false), houseProto('#f2c4c4', true)] };
-const objG = new THREE.Group(), carG = new THREE.Group(); scene.add(objG, carG); const player = carProto('#ff7a1a', '#c2410c', false, false); scene.add(player); const copP = carProto('#f4f6fa', '#1a1f2e', true, false), tankP = carProto('#0f5a3e', '#063a28', false, true);
+const objG = new THREE.Group(), carG = new THREE.Group(); scene.add(objG, carG);
+const player = new THREE.Group(); scene.add(player);
+const fallbackCar = carProto('#ff7a1a', '#c2410c', false, false); player.add(fallbackCar);
+const copP = carProto('#f4f6fa', '#1a1f2e', true, false), tankP = carProto('#0f5a3e', '#063a28', false, true);
+// Real CC0 Kenney Car Kit assets already held locally. Everyone starts with
+// the sedan; swapping render meshes changes no scoring, speed or hitboxes.
+const VEHICLES = [['cv-sedan','Sedan'],['cv-hatchback','Hatchback'],['cv-estate','Estate'],
+  ['cv-pickup','Pickup'],['cv-transporter','Transporter'],['cv-truck','Truck']];
+const vehicleLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+let vehicleSeq=0;
+async function sourceVehicle(id) {
+  const seq=++vehicleSeq;
+  if (!VEHICLES.some(v => v[0] === id)) return;
+  try {
+    const gltf=await vehicleLoader.loadAsync(new URL('../assets3d/'+id+'.glb',location.href).href);
+    if (seq!==vehicleSeq) return;
+    const model=gltf.scene.clone(true);
+    let bounds=new THREE.Box3().setFromObject(model), size=bounds.getSize(new THREE.Vector3());
+    if (size.z>size.x) { model.rotation.y=Math.PI/2; model.updateMatrixWorld(true);
+      bounds=new THREE.Box3().setFromObject(model); size=bounds.getSize(new THREE.Vector3()); }
+    if (!(size.x>0&&size.y>0&&size.z>0)) throw new Error('Vehicle mesh has invalid bounds');
+    const k=Math.min(1.85/size.x,0.88/size.z,0.95/size.y),middle=bounds.getCenter(new THREE.Vector3());
+    model.scale.multiplyScalar(k); model.position.set(-middle.x*k,0.18-bounds.min.y*k,-middle.z*k);
+    model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+    player.clear(); player.add(model);
+  } catch(e) { console.warn('Vehicle GLB unavailable, preserving fallback:',e.message); }
+}
+// Preview *inside the driving game*, not a standalone public garage.
+// No one receives extra cosmetics for free: QA-only URL ?vehicleQA=1;
+// public users share the same default vehicle and identical driving physics.
+if (new URLSearchParams(location.search).get('vehicleQA')==='1') {
+  const panel=document.createElement('label');panel.textContent='PRIVATE VEHICLE QA · ';
+  panel.style.cssText='position:fixed;z-index:1200;left:10px;top:74px;background:#111b2def;color:white;padding:9px;border:1px solid #8194b5;border-radius:10px;font:12px system-ui';
+  const select=document.createElement('select');select.setAttribute('aria-label','Preview vehicle model');
+  select.style.cssText='font:inherit;color:#fff;background:#203757;padding:5px;max-width:180px';
+  for(const [id,label] of VEHICLES){const opt=document.createElement('option');opt.value=id;opt.textContent=label;select.appendChild(opt);}
+  select.addEventListener('change',()=>sourceVehicle(select.value));panel.appendChild(select);
+  panel.addEventListener('pointerdown',e=>e.stopPropagation());document.body.appendChild(panel);
+}
+sourceVehicle('cv-sedan');
 let objRef = null; const INST = []; let camX = 0, camZ = 0;
 function render3d(g) { const c0 = g.car;
   if (objRef !== g.obj) { objRef = g.obj; objG.clear(); INST.length = 0; const kinds = { t: [PROTO.t], r: [PROTO.r], h0: [PROTO.h[0]], h1: [PROTO.h[1]], h2: [PROTO.h[2]] };
