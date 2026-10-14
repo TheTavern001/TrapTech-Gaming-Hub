@@ -360,6 +360,7 @@
     }
   ],
   "pendingEvidence": [
+    "Native session revocation test and localhost HTTP auth smoke are added to Docker but have not yet run; after release legacy signed sessions are intentionally invalidated. User must reauthenticate; 98% Android/iOS device UAT pending.",
     "2026-10-14: prize admission now fail-closed in GitHub source from PR #23; 0 owner-certified replay proof games so official prize boards correctly empty. Full Node/Docker/device replay still unverified. CURRENT READY Deplexo 278af07 unchanged.",
     "Financial order-pack immutable quantity/refund source fix 2026-10-14: exact simulation PASS 7/7, real SQLite migration DML PASS. Full native finance/Stripe/BTC and device QA pending. Deplexo screenshot CURRENT READY 278af07 unchanged.",
     "Wallet branch unified Credits source changes NOT DEPLOYED. Native Node20 real better-sqlite3 tests and full Docker STEP11/12 pending. No current phone P95 evidence, mobile iOS Safari proof or settled payout replay QA. New security preflight R4 source simulation BLOCKED 37.",
@@ -602,9 +603,26 @@
         "ownerApproved": false
       },
       "resume": "Verify all giveaway modes, official replay abuse test cases and per-game replay QA, then test actual Node/Docker; 0 games approved until owner/source evidence."
+    },
+    {
+      "commit": "6f6b3fe97ae7a5c8487bfb03196bfbd0cb1f3092",
+      "branch": "program/five-release-full-hub-overhaul-20261013",
+      "reason": "Phone-first auth session security: SQLite versioned signed session, revocation on signout/password change/admin reset; Docker fail-closed source+localhost HTTP tests; staged only.",
+      "validation": "Exact test-session-revocation source executed in V8 with Buffer/HMAC/fs shims: 30 assertions PASS. Node native, Docker STEP11/STEP12, production HTTP and physical Android+iPhone NOT RUN. Screenshot CURRENT 278af07 unchanged.",
+      "host": "NOT DEPLOYED; owner-confirmed auto-deploy OFF and last current/ready 278af07.",
+      "sourceFiles": [
+        "src/db.js",
+        "src/server.js",
+        "tools/test-session-revocation.js",
+        "tools/test-auth-session-live.js",
+        "Dockerfile",
+        "docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.json"
+      ],
+      "releaseStatus": "R4 source-only, all five-release quality gates remain blocked",
+      "next": "Run native NODE test and full Docker, fix any fail, test real Android/iOS session logout/token theft and verify other R1-R5 workstreams before release."
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-14 f179cbe62018: prize verification source staged (0 certified), 25 V8 source checks and SQLite query pass, no native Docker/deployment. Last owner Deplexo screenshot 278af07 CURRENT READY; auto deploy off.",
+  "lastEvidenceReconciliation": "2026-10-14 EDT: last screenshot CURRENT READY 278af07. New session_version security patches and Docker localhost auth test only on development branch 6f6b3fe97ae7; V8 30 assertions PASS with crypto/filesystem shims; native Node/Docker/phones UNRUN. Deplexo auto deploy OFF.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -620,11 +638,11 @@
   },
   "currentWorkingSource": {
     "branch": "program/five-release-full-hub-overhaul-20261013",
-    "headAtReconciliation": "f179cbe6201881bce9ff6a4ba879a2f1de34b3de",
+    "headAtReconciliation": "6f6b3fe97ae7a5c8487bfb03196bfbd0cb1f3092",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
     "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
-    "reconciledScope": "Source branch HEAD immediately before this evidence journal commit; no Deplexo host observation of subsequent commits."
+    "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence."
   },
   "ownerConfirmedAutoDeployOff": true
 }
