@@ -44,6 +44,7 @@ const tests=[
  'tools/test-mobile-frame-allocation-regressions.js',
  'tools/test-player-game-settings.js',
  'tools/test-neutral-avatar-source.js',
+ 'tools/test-avatar-current-entitlements.js',
  'tools/test-vehicle-lab-assets.js',
  'tools/test-imported-kenney-cars.js',
  'tools/test-full-hub-meta-contract.js',
