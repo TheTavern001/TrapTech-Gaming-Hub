@@ -15,6 +15,15 @@ assert.equal(restricted.prizeProofHeld,true);
 assert.equal(full.held,0,'Original verdict cannot be mutated');
 assert.equal(P.admit(17,'rail-rush',free).held,1,'Client event log is not independent evidence');
 assert.equal(P.admit(17,'rail-rush',{flags:[],held:0,verify:'cleared'}).held,1,'Manual review is not replay');
+// Regression: repeated submission or review cannot silently certify a prize run.
+const twice=P.admit(17,'stack',restricted);
+assert.equal(twice.held,1,'Repeated admission stays held');
+assert.equal(twice.flags.filter(x=>x.code==='prize_proof_missing').length,1,'One audit reason per held verdict');
+for(const proof of ['events-ok','cleared','replay-ok',null,undefined]){
+ const verdict=P.admit(17,'stack',{reject:false,flags:[],held:0,verify:proof});
+ assert.equal(verdict.held,1,'Uncertified title remains held regardless of proof: '+String(proof));
+}
+assert.equal(P.sqlCertified('runs;DROP TABLE runs'),'(0=1)','Unsafe alias must never alter query');
 const rejected={reject:true,why:'forged'};assert.equal(P.admit(17,'stack',rejected),rejected,'Hard rejects preserved');
 for(const file of ['src/server.js','src/results.js','src/admin-scoring.js','src/boards.js']){
  const text=fs.readFileSync(path.join(root,file),'utf8');
