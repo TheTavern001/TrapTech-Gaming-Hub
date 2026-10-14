@@ -33,6 +33,16 @@ for(const entry of manifest.objects){
 }
 const game=read('public/games-lib/wanted-run/game.js').toString();
 assert.ok(game.includes("sourceVehicle('kc-sedan-sports')"),'All players must start with same car');
+assert.ok(game.includes("replaceChaserPrototype(copP, 'kc-police', true)"),
+  'Pursuing police must use licensed Kenney cruiser rather than only a box car');
+assert.ok(game.includes("replaceChaserPrototype(tankP, 'kc-suv-luxury', false)"),
+  'High-heat pursuer must use a distinct licensed Kenney SUV silhouette');
+assert.ok(game.includes('const beacons = hasBeacons && Array.isArray(template.userData.lights)'),
+  'Red/blue original police beacons must be preserved on model swap');
+assert.ok(game.includes('template.add(model, ...beacons);'),
+  'Police light children must remain direct children for the existing render loop');
+assert.ok(game.includes('Keeping procedural chase-car fallback after GLB load failure'),
+  'Asset loading failure must preserve gameplay even on weak mobile networks');
 // The in-game list is emitted as JSON text (double quotes); read its actual
 // model identifiers, do not search for a fragile quote style.
 const listSource=game.match(/const VEHICLES = (\[[^\n]+\]);/);
