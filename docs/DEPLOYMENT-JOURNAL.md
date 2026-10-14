@@ -341,3 +341,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `4b7b6d2f539b6388f37c05efb503d683d9a452ec`: adds the new navigation regression to `scripts/offline-release-gate.sh`.
 - **Executed source-level V8 room-transition probe against fetched game code:** 1,000 transitions, minimum measured centerline clearance 46.7px, zero path-blocking placements. This does not prove that all alternative obstacle/AI routes and device input are correct. Native Node file run, browser QA, Android/iOS QA, Docker build, Deplexo deployment remain **NOT RUN**.
 - The production version remains screenshot-confirmed `278af07`; no release candidate was deployed. Resume by running the entire offline suite in a full repository checkout with Docker and correcting any failures before a deliberate private preview. Owner need not enable automatic deployment yet.
+
+## 2026-10-14 — Arrow Hero hostile projectile collision fix
+
+- `27f9099de573ac6f4f8151f4f8247c7a97eb063e` replaces end-point-only enemy bolt/player detection with a segment sweep; this prevents hostile bolts tunneling through the player on slow frames while preserving invincibility checks. Offscreen projectiles are still removed after collision adjudication.
+- `228a62b8f2a6e916958b45b0487b17f68a6c4298` adds real game update callback regression for crossing hit, near miss, invincible player, and too-short flight. `1845e8ce48596f6a29064e2da15f98bc4cce83ee` adds it to the offline release gate.
+- **Executed on fetched committed JS in an isolated V8 harness:** all four observed results matched expectations: crossing damage 7.5; other scenarios damage 0. No real phone frame measurement or full Node/Docker gate was run.
+- **No production deployment**; owner should keep Deplexo automatic deploy OFF. Resume from current branch head, run Docker-based release checks and broader gameplay/device QA; catalog and public launch remain unapproved.
