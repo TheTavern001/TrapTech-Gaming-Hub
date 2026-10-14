@@ -1,5 +1,5 @@
-// Mole Whack - original 60-second whack-a-critter (Hub build). Short session: score attack, combos, no bombs!
-Kit.run({ id: 'gl-mole-whack', title: 'MOLE WHACK', help: 'Tap the critters as they pop up (or keys 1-9)\nAvoid the bombs. 60 seconds - combos multiply', bg: '#14532d',
+// Mole Whack - original 30-second opening clock with earnable bonus time (Hub build). Targeted taps/keys only.
+Kit.run({ id: 'gl-mole-whack', title: 'MOLE WHACK', help: 'Tap the critters as they pop up (or keys 1-9)\nAvoid bombs. Begin with 30 seconds; correct hits add time - combos multiply', bg: '#14532d',
   init(g) { g.holes = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) g.holes.push({ x: 80 + c * 120, y: 230 + r * 140, up: 0, t: 0, k: null, hit: 0 }); g.time = 30; g.combo = 0; g.next = 0.6; },
   update(g, dt) {
     g.time -= dt * (1 + g.t / 90); if (g.time <= 0) { g.time = 0; return g.end('Out of time'); } const pace = 1 + g.t / 40;
@@ -8,7 +8,8 @@ Kit.run({ id: 'gl-mole-whack', title: 'MOLE WHACK', help: 'Tap the critters as t
     const whack = (h) => { if (!h.k || h.hit || h.up < 0.4) { g.combo = 0; return; } h.hit = 1; if (h.k === 'bomb') { g.add(0); g.time = Math.max(0, g.time - 5); g.combo = 0; g.sfx('boom'); g.shake(10); g.flash('#ef4444'); g.float(h.x, h.y - 50, '-5s', '#ef4444', 22); return; } g.combo++; const m = Math.min(5, 1 + Math.floor(g.combo / 5)); const v = (h.k === 'gold' ? 50 : 10) * m; g.time = Math.min(30, g.time + (h.k === 'gold' ? 2 : 0.6)); g.add(v, 'h'); g.float(h.x, h.y - 60, '+' + v, h.k === 'gold' ? '#fbbf24' : '#fff', 18); g.burst(h.x, h.y - 30, h.k === 'gold' ? '#fbbf24' : '#a16207', 14, 180); g.sfx(h.k === 'gold' ? 'coin' : 'thud'); g.shake(3); };
     if (g.ptr.pressed) { let hit = false; for (const h of g.holes) if (Math.abs(g.ptr.x - h.x) < 55 && g.ptr.y < h.y + 30 && g.ptr.y > h.y - 90) { whack(h); hit = true; } if (!hit) g.combo = 0; g.ham = { x: g.ptr.x, y: g.ptr.y, t: 0.12 }; }
     for (let i = 0; i < 9; i++) if (g.kd(String(i + 1))) whack(g.holes[i]);
-    if (g.kd(' ')) { const h = g.holes.find(h => h.k && h.k !== 'bomb' && !h.hit && h.up > 0.5); if (h) whack(h); }
+    // No auto-target Space shortcut: scored reaction play must require an explicit
+    // target selection on every input device, never a keyboard-only assist.
     if (g.ham) g.ham.t -= dt; g.hud = Math.ceil(g.time) + 's  x' + Math.min(5, 1 + Math.floor(g.combo / 5));
   },
   draw(g, c) {
