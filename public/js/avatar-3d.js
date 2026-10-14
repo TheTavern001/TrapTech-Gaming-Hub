@@ -2,6 +2,15 @@
 // Use self-hosted CC0 Quaternius rigs for the shared starter; preserve the older compatible renderer for unported cosmetic combinations.
 // Only these purchased/equipped variations have accurate licensed rig rendering.
 export function supportsRiggedAvatar(cfg) {
+  // Explicit in-Hub neutral-rig QA; this does not change starter ownership
+  // or present an unfinished one-material model to all players.
+  const neutralQa=cfg.outfit==='base' &&
+    typeof location!=='undefined' &&
+    new URLSearchParams(location.search).get('avatarRigQA')==='1' &&
+    (cfg.hat==='none'||!cfg.hat) && (cfg.acc==='none'||!cfg.acc) &&
+    (cfg.held==='none'||!cfg.held) &&
+    (cfg.hair==='waves'||!cfg.hair) && (cfg.face==='oval'||!cfg.face);
+  if(neutralQa)return true;
   return cfg.outfit === 'adventurer' &&
     (!cfg.hat || cfg.hat === 'none') && (!cfg.acc || cfg.acc === 'none') &&
     (!cfg.held || cfg.held === 'none') && (cfg.hair === 'waves' || !cfg.hair) &&
