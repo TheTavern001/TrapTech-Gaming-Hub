@@ -305,3 +305,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - Only the test source changed; **no new game was certified** and there was **no deployment**.
 - Verification in this continuation: GitHub confirmed the commit; native Node execution, Docker, HTTP integration and phone prize flow are **NOT RUN**. Execute `node tools/test-prize-score-proof.js` and the full offline release suite before interpreting the change as a passing regression.
 - Next code focus: game-by-game touch/physics scoring audits and adversarial server replay, while keeping official prize eligibility fail-closed. Continue keeping Deplexo automatic deployment **OFF** until the manual release gate is satisfied.
+
+## 2026-10-14 — same-day launch push: offline prize security coverage
+
+- Source commit `c3ac4c67219bb2eff70ee8fd0988437da57b95cb` adds `tools/test-prize-score-proof.js` to the manual `scripts/offline-release-gate.sh` suite. This closes a verification-script omission: the official prize fail-closed regression was previously not included in the developer's consolidated offline gate.
+- GitHub connector confirmed source commit; native execution of the combined suite, full Docker build, Android/iPhone testing, and a new Deplexo deployment are **NOT RUN**. Adding a test command is not evidence that the test passed.
+- Owner requests rapid game expansion and public launch on 2026-10-14. Current admission queue contains five research-only candidates with unverified media rights/mobile score replay; **0 new imports approved**. Do not mislabel source registration as game or prize certification. First objective: offline suite and closed private phone QA; public security and payment gates remain mandatory.
+- Auto-deploy remains OFF. Last owner screenshot-confirmed CURRENT READY image remains `278af07`; no new production build claimed.
