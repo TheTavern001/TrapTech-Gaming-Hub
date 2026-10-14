@@ -18,7 +18,7 @@
   ],
   "hostReadyEvidence": "278af07 CURRENT READY from screenshot; overhaul GitHub branch still SOURCE_ONLY",
   "deplexoAutoDeployOff": true,
-  "totalGates": 14,
+  "totalGates": 15,
   "ownerApprovedGates": 0,
   "publicSecurityCertified": false,
   "gates": [
@@ -178,11 +178,13 @@
       "id": "PAYMENT-STRIPE-SIGNED",
       "release": "R4",
       "requirement": "Stripe event signature, true settled amount+currency+provider reference and replay-safe order grants",
-      "status": "BLOCKED_NEGATIVE_TESTS",
+      "status": "SOURCE_VERIFIED_SETTLEMENT_GUARD_ADDED_FULL_PROVIDER_NEGATIVE_TESTS_UNRUN",
       "evidence": [
         "src/monetize.js",
         "tools/e2e-payments.js",
-        "tools/test-payment-order-snapshots.js"
+        "tools/test-payment-order-snapshots.js",
+        "src/payment-settlement-proof.js",
+        "tools/test-payment-settlement-proof.js"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -194,12 +196,14 @@
       "id": "PAYMENT-BITCOIN-SETTLEMENT",
       "release": "R4",
       "requirement": "Confirmed blockchain payment, tx reuse/underpay/overpay/late quote/idempotency/chargeback scenarios",
-      "status": "BLOCKED_NEGATIVE_TESTS",
+      "status": "SOURCE_VERIFIED_SETTLEMENT_GUARD_ADDED_FULL_PROVIDER_NEGATIVE_TESTS_UNRUN",
       "evidence": [
         "src/monetize.js",
         "src/btc.js",
         "tools/e2e-payments.js",
-        "tools/test-payment-order-snapshots.js"
+        "tools/test-payment-order-snapshots.js",
+        "src/payment-settlement-proof.js",
+        "tools/test-payment-settlement-proof.js"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -215,7 +219,8 @@
       "evidence": [
         "src/monetize.js",
         "src/shop.js",
-        "tools/test-payment-order-snapshots.js"
+        "tools/test-payment-order-snapshots.js",
+        "src/monetize.js (refund immutable grant snapshot remains; privilege override blocked)"
       ],
       "ownerApproved": false,
       "nativeDeviceEvidence": false,
@@ -282,6 +287,22 @@
       "liveHostVerified": false,
       "preDeploymentVerified": false,
       "phoneEvidenceRequired": false
+    },
+    {
+      "id": "ADMIN-ORDER-SETTLEMENT",
+      "release": "R4",
+      "requirement": "Admin order fulfillment must not forge paid status; every Bitcoin, Stripe and manual gift grant must independently pass stored provider settlement proof.",
+      "status": "SOURCE_PROOF_AND_30_V8_ASSERTIONS_PASS_NATIVE_DOCKER_AND_PROVIDER_E2E_PENDING",
+      "evidence": [
+        "src/payment-settlement-proof.js",
+        "src/monetize.js",
+        "tools/test-payment-settlement-proof.js",
+        "tools/test-payment-order-snapshots.js",
+        "tools/e2e-payments.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
     }
   ],
   "description": "Predeployment gate requires source/server tests + owner approval and real phone proof for phone-facing controls; liveHostVerified is recorded AFTER manual Deplexo deployment and must NOT block a not-yet-deployed release candidate.",
@@ -305,5 +326,7 @@
     "risk": "Existing unsettled legacy orders without a snapshot require owner financial reconciliation; chargeback cosmetics and entitlements still not reconciled."
   },
   "antiCheatPrizeProofStatus": "SOURCE_FAIL_CLOSED; ALL official prize-scoring games held until owner-approved independent replay",
-  "lastSecuritySourceChange": "2026-10-14 session epoch rollout source only; Deplexo CURRENT screenshot SHA 278af07; source branch commits not deployed."
+  "lastSecuritySourceChange": "2026-10-14 session epoch rollout source only; Deplexo CURRENT screenshot SHA 278af07; source branch commits not deployed.",
+  "latestOwnerScreenshotCurrent": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+  "latestSecurityCheckpoint": "2026-10-14: source-only prevent unpaid order admin fulfillment; 30 V8 assertions PASS on actual repository source, Docker+browser+native phone tests NOT RUN. Manual gifts remain logged and $0. No Deplexo release."
 }
