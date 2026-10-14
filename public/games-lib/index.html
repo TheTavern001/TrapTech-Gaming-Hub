@@ -70,7 +70,7 @@
     try { const response = await fetch('catalog.json', {cache:'no-store'}); if (response.ok) r = await response.json(); } catch (_) {}
   }
   if (!r || !Array.isArray(r.games)) { list.innerHTML = '<p class="muted">The game catalog could not be loaded. Refresh the page or return to the Hub.</p>'; return; }
-  const library = r.games.filter(g => g && g.url && g.title);
+  const library = r.games.filter(g => g && g.playable !== false && !g.retired && g.url && g.title);
   let core = [];
   try { const response = await fetch('/api/games', {cache:'no-store'}); if (response.ok) { const d = await response.json(); core = (d.games || []).filter(g => g && g.id && g.title).map(g => ({ ...g, slug: g.id, url: '/play/' + encodeURIComponent(g.id), tier: 'V1', competition: 'Hub score tracking', giveaway: false, just_for_fun: false, source_group: 'core' })); } } catch (_) {}
   const ids = new Set();
