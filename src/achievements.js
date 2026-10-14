@@ -197,7 +197,7 @@ const ownedCount = (own) => own.banner.size + own.frame.size + own.title.size - 
 
 function computeStats(userId, opts = {}) {
   const u = db.prepare('SELECT id, is_demo, eq_banner, eq_frame, eq_title FROM users WHERE id=?').get(userId);
-  const runs = db.prepare('SELECT game_id, score, started_at, created_at FROM runs WHERE user_id=? ORDER BY created_at, id').all(userId);
+  const runs = db.prepare('SELECT game_id, score, started_at, created_at FROM runs WHERE user_id=? AND held=0 ORDER BY created_at, id').all(userId);
   const st = { runs: runs.length, points: 0, game: {}, pbBreaks: 0, f420: 0, fZero: 0, f777: 0, fDouble: 0, fMarathon: 0, fTwins: 0 };
   const days = new Set();
   for (const r of runs) {
@@ -221,7 +221,7 @@ function computeStats(userId, opts = {}) {
   st.dayStreak = best;
   // giveaways
   const entered = db.prepare(`SELECT DISTINCT g.* FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id = g.id
-    JOIN runs r ON r.game_id = gg.game_id AND r.user_id = ? AND r.started_at >= g.start_at AND r.created_at >= g.start_at AND r.created_at <= g.end_at AND r.score >= g.min_score`).all(userId);
+    JOIN runs r ON r.game_id = gg.game_id AND r.held=0 AND r.user_id = ? AND r.started_at >= g.start_at AND r.created_at >= g.start_at AND r.created_at <= g.end_at AND r.score >= g.min_score`).all(userId);
   st.gwEntered = entered.length;
   st.gwWon = db.prepare('SELECT COUNT(*) AS c FROM winners WHERE user_id=?').get(userId).c;
   st.gwPodium = 0; const t = Date.now();
@@ -251,7 +251,7 @@ function computeStats(userId, opts = {}) {
   st.tourney = require('./tournaments').placements(userId);
   st.following = db.prepare('SELECT COUNT(*) AS c FROM follows WHERE follower_id=?').get(userId).c;
   st.followers = db.prepare('SELECT COUNT(*) AS c FROM follows WHERE followee_id=?').get(userId).c;
-  st.referrals = db.prepare('SELECT COUNT(*) AS c FROM users r WHERE r.referred_by=? AND r.banned=0 AND EXISTS (SELECT 1 FROM runs WHERE user_id=r.id)').get(userId).c;
+  st.referrals = db.prepare('SELECT COUNT(*) AS c FROM users r WHERE r.referred_by=? AND r.banned=0 AND EXISTS (SELECT 1 FROM runs WHERE user_id=r.id AND held=0)').get(userId).c;
   st.referred = db.prepare('SELECT referred_by FROM users WHERE id=?').get(userId).referred_by ? 1 : 0;
   st.shares = db.prepare('SELECT COUNT(*) AS c FROM shares WHERE user_id=?').get(userId).c;
   // v5
