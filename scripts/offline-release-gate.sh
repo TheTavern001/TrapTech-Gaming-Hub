@@ -49,6 +49,7 @@ run full-meta-fairness node tools/test-full-hub-meta-contract.js
 run game-owner-mechanics node tools/test-owner-reported-gameplay.js
 run arrow-hero-swept-collision node tools/test-arrow-hero-swept-collision.js
 run arrow-hero-hostile-projectiles node tools/test-arrow-hero-hostile-projectiles.js
+run arrow-hero-postmove-contact node tools/test-arrow-hero-contact-after-move.js
 run arrow-hero-room-reachability node tools/test-arrow-hero-room-reachability.js
 run full-gameplay-distinctness node tools/test-owner-gameplay-distinctness.js
 run cannabis-touch-and-gameplay node tools/test-cannabis-gameplay-qa.js
