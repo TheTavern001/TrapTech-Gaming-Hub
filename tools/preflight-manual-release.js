@@ -8,12 +8,20 @@ const j=p=>JSON.parse(fs.readFileSync(path.join(root,p),'utf8'));
 const board=j('docs/audit/FIVE-RELEASE-FULL-HUB-WORKBOARD.json');
 const quality=j('docs/audit/GAME-QUALITY-ACCEPTANCE.json');
 const queue=j('docs/audit/POST-OVERHAUL-GAME-CANDIDATES-2026-10-13.json');
+const security=j('docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.json');
 const requirements=['R1','R2','R3','R4','R5'];
 const release=String(process.argv.find(a=>a.startsWith('--release='))||'--release=R1').split('=')[1].toUpperCase();
 const publicIntent=process.argv.includes('--public');
 if(!requirements.includes(release)){console.error('Unknown release gate '+release);process.exit(2);}
 function inspect({workstreams,baselineCertified,publicQualified}){
  const stages=requirements.slice(0,requirements.indexOf(release)+1),blockers=[];
+ // Every money, score and mobile privacy gate must be independently accepted.
+ for(const gate of security.gates){
+  if(!stages.includes(gate.release))continue;
+  if(gate.status!=='VERIFIED' || gate.ownerApproved!==true ||
+      gate.nativeDeviceEvidence!==true || gate.liveHostVerified!==true)
+    blockers.push('SECURITY '+gate.id+': '+gate.status+'; native/browser/owner evidence missing');
+ }
  for(const w of workstreams){
   if(!stages.includes(w.release))continue;
   if(w.status!=='OWNER_APPROVED'||w.ownerApproved!==true||!Array.isArray(w.evidence)||w.evidence.length<2)
@@ -45,6 +53,7 @@ const output={result:blockers.length?'BLOCKED':'ELIGIBLE_FOR_MANUAL_REVIEW',
  release,publicIntent,automaticDeploymentMustRemainOff:true,
  currentRegistered:board.currentHistoricalRegistered,proposedPlayable:board.proposedActivePlayable,
  approvedFromBoard:board.individuallyQualityApproved,gameCandidatesUnapproved:queue.candidates.length,
+ securityReleaseGates:security.gates.length,securityApproved:security.gates.filter(g=>g.status==='VERIFIED'&&g.ownerApproved===true).length,
  blockers};
 console.log(JSON.stringify(output,null,2));
 if(process.argv.includes('--require-ready')&&blockers.length)process.exitCode=1;
