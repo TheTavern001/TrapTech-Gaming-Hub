@@ -1,6 +1,6 @@
 // Trim Rush - endless precision trimming: start with 30 seconds, earn more time on accurate leaf cuts. Never cut the central bud.
 Kit.run({ id: 'gl-trim-rush', title: 'TRIM RUSH', help: 'Swipe across the green leaves. Avoid the central bud!\nStart with 30s; accurate cuts earn time.', bg: '#14532d',
-  init(g) { g.time = 30; g.combo = 0; g.trail = []; nextBud(g); g.done = 0; },
+  init(g) { g.time = 30; g.combo = 0; g.trail = []; g.done = 0; g.next = 0; nextBud(g); },
   update(g, dt) {
     g.time -= dt * (1 + g.t / 120); if (g.time <= 0) { g.time = 0; return g.end('Out of time'); }
     const P = g.ptr; if (P.down) { g.trail.push({ x: P.x, y: P.y, l: 0.18 }); if (g.prev) cut(g, g.prev.x, g.prev.y, P.x, P.y); g.prev = { x: P.x, y: P.y }; } else g.prev = null;
