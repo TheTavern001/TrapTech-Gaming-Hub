@@ -1,0 +1,214 @@
+{
+  "schema": 1,
+  "asOf": "2026-10-14",
+  "readiness": "BLOCKED",
+  "ownerTraffic": "98% Android/iPhone",
+  "currency": "Hub Credits",
+  "legacyMigration": {
+    "oldPointToCredits": 1,
+    "oldCrownToCredits": 10,
+    "livePerformed": false
+  },
+  "verifiedByLocalTool": "SQLite native SQL-equivalence smoke (not full project Node/Docker)",
+  "sandboxPassed": [
+    "unique legacy row migration idempotent",
+    "signed negative refund rows",
+    "positive grant once",
+    "reversible run-hold/clear ledger corrections"
+  ],
+  "hostReadyEvidence": "278af07 CURRENT READY from screenshot; overhaul GitHub branch still SOURCE_ONLY",
+  "deplexoAutoDeployOff": true,
+  "totalGates": 14,
+  "ownerApprovedGates": 0,
+  "publicSecurityCertified": false,
+  "gates": [
+    {
+      "id": "WALLET-ONE-BALANCE",
+      "release": "R3",
+      "requirement": "One purchasable/earnable cosmetics-only Credits wallet, no double spend",
+      "status": "SOURCE_IMPLEMENTED_TEST_PENDING",
+      "evidence": [
+        "src/unified-wallet.js",
+        "src/shop.js",
+        "src/monetize.js",
+        "tools/test-unified-wallet.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "WALLET-MIGRATION-ONCE",
+      "release": "R3",
+      "requirement": "Migrating old points and Crowns with refunds/orders intact, one time each",
+      "status": "SQLITE_EQUIVALENCE_PASS_NATIVE_APP_TEST_PENDING",
+      "evidence": [
+        "tools/test-unified-wallet.js",
+        "docs/UNIFIED-HUB-CREDITS-SECURITY-2026-10-14.md"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "ANTI-CHEAT-HELD-REWARDS",
+      "release": "R4",
+      "requirement": "No minted rewards/XP/quests/achievements from held runs; later disqualifications claw back funds with ledger adjustment",
+      "status": "SOURCE_IMPLEMENTED_TEST_PENDING",
+      "evidence": [
+        "src/shop.js",
+        "src/progress.js",
+        "src/achievements.js",
+        "tools/test-reward-integrity.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "ANTI-CHEAT-PRIZE-REPLAY",
+      "release": "R4",
+      "requirement": "Signed authenticated server-replay proof for every giveaway game, never trust player score/telemetry alone",
+      "status": "BLOCKED_UNCERTIFIED",
+      "evidence": [
+        "src/anticheat.js",
+        "src/server.js",
+        "docs/audit/GAME-QUALITY-ACCEPTANCE.json"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "SESSIONS-REVOCATION",
+      "release": "R4",
+      "requirement": "Invalidate stolen/logged-out X-Session/cookie tokens promptly, device revocation, rotation, reauth for money changes",
+      "status": "BLOCKED_UNVERIFIED",
+      "evidence": [
+        "src/server.js",
+        "src/admin-sec.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "ADMIN-AUTH-2FA",
+      "release": "R4",
+      "requirement": "TOTP admin, role-bound admin routes, lockouts, CSRF and secure recovery/password rotation",
+      "status": "BLOCKED_DEVICE_PENTEST",
+      "evidence": [
+        "src/admin-sec.js",
+        "src/server.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "WEBHOOK-UNSUPPORTED",
+      "release": "R4",
+      "requirement": "Disable unverified Whop payment grant handler even when legacy secret is present",
+      "status": "SOURCE_IMPLEMENTED_E2E_PENDING",
+      "evidence": [
+        "src/monetize.js",
+        "tools/e2e-payments.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "PAYMENT-STRIPE-SIGNED",
+      "release": "R4",
+      "requirement": "Stripe event signature, true settled amount+currency+provider reference and replay-safe order grants",
+      "status": "BLOCKED_NEGATIVE_TESTS",
+      "evidence": [
+        "src/monetize.js",
+        "tools/e2e-payments.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "PAYMENT-BITCOIN-SETTLEMENT",
+      "release": "R4",
+      "requirement": "Confirmed blockchain payment, tx reuse/underpay/overpay/late quote/idempotency/chargeback scenarios",
+      "status": "BLOCKED_NEGATIVE_TESTS",
+      "evidence": [
+        "src/monetize.js",
+        "src/btc.js",
+        "tools/e2e-payments.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "REFUNDS-EQUIP-CONTROL",
+      "release": "R4",
+      "requirement": "Reverse charged-back credits and disable refundable cosmetic entitlements when needed; audit with no loss of legal customer funds",
+      "status": "BLOCKED_UNIMPLEMENTED",
+      "evidence": [
+        "src/monetize.js",
+        "src/shop.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "DB-PRIVACY-BACKUP",
+      "release": "R4",
+      "requirement": "Encrypted off-host backup access, tested restore and retention, PII minimization, safe delete/export and no leaked user data",
+      "status": "BLOCKED_UNVERIFIED",
+      "evidence": [
+        "src/db.js",
+        "src/server.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "MOBILE-ANDROID-IOS",
+      "release": "R4",
+      "requirement": "Touch/privacy/storage/auth/cancel/rotation and p95 gameplay performance on real Android + Safari/WKWebView",
+      "status": "BLOCKED_UNRUN",
+      "evidence": [
+        "docs/audit/MOBILE-FIRST-98-PERCENT-ACCEPTANCE-2026-10-14.json"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "NATIVE-IAP-APP-STORE",
+      "release": "POST-R5",
+      "requirement": "If native Play/App Store app, verify server-side Play Billing/StoreKit receipts and compliant eligible region/entitlement flow",
+      "status": "NOT_INTEGRATED_FUTURE_APP",
+      "evidence": [
+        "docs/UNIFIED-HUB-CREDITS-SECURITY-2026-10-14.md"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    },
+    {
+      "id": "CREDIT-SECURE-SERVER",
+      "release": "R4",
+      "requirement": "No client-controlled credit mutation or eligible gameplay stats; CSRF/rate limits/cap and transaction isolation",
+      "status": "BLOCKED_FULL_PENTEST",
+      "evidence": [
+        "src/server.js",
+        "src/monetize.js",
+        "src/shop.js",
+        "src/unified-wallet.js"
+      ],
+      "ownerApproved": false,
+      "nativeDeviceEvidence": false,
+      "liveHostVerified": false
+    }
+  ]
+}
