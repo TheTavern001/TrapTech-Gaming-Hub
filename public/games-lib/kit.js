@@ -151,7 +151,10 @@
     addEventListener('freeze',()=>{clearInputs();if(g.state==='play')g.paused=true;});
     document.addEventListener('visibilitychange', () => { if(document.hidden){clearInputs();if(g.state==='play')g.paused=true;} });
     g.kd = (k) => !!(g.kp && g.kp[k]);
-    async function begin() { g.state = 'starting'; const seed = window.Hub ? await Hub.start(def.id) : null; g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = false; def.init(g); g.state = 'play'; K.sfx('power'); }
+    async function begin() { g.state = 'starting'; g.startError = ''; let seed;
+      try { seed = window.Hub ? await Hub.start(def.id) : null; }
+      catch (_) { g.state = 'title'; g.startError = 'Could not start game. Check connection and retry.'; return; }
+      g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = false; def.init(g); g.state = 'play'; K.sfx('power'); }
     g.rnd = mulberry(); def.init(g);
     let last = performance.now(), acc = 0, fpsT = 0, fpsN = 0;
     function frame(now) {
@@ -251,7 +254,7 @@
         const ay=Math.min(Hh-54,py+ph-22),bg=c.createLinearGradient(cx-115,ay-20,cx+115,ay+20);bg.addColorStop(0,'#855dff');bg.addColorStop(.55,'#636eff');bg.addColorStop(1,'#28c9e9');
         c.save();c.shadowColor='#7e7aff';c.shadowBlur=16;panel(cx-Math.min(128,pw*.39),ay-20,Math.min(256,pw*.78),40,14,bg,'rgba(255,255,255,.4)');c.restore();
         label(g.state==='starting'?'LOADING YOUR RUN…':'TAP / SPACE TO PLAY',cx,ay,12,'#fff');
-        label(g.best?'PERSONAL BEST · '+g.best.toLocaleString('en-US'):'CHASE THE HIGH SCORE',cx,py+ph+22,10,g.best?'#ffd479':'#8feaff');
+        label(g.startError || (g.best?'PERSONAL BEST · '+g.best.toLocaleString('en-US'):'CHASE THE HIGH SCORE'),cx,py+ph+22,10,g.startError?'#ffb4b4':(g.best?'#ffd479':'#8feaff'));
       }
       if(g.state==='over'){
         c.fillStyle='rgba(3,5,19,'+Math.min(.82,g.overT*1.7)+')';c.fillRect(0,0,W,Hh);
