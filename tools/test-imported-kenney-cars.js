@@ -19,7 +19,7 @@ for(const entry of manifest.objects){
  assert.equal(b.toString('ascii',0,4),'glTF','Not a GLB: '+entry.id);
  assert.equal(b.readUInt32LE(4),2,'Only glTF v2 accepted');
  assert.equal(b.readUInt32LE(8),b.length,'Truncated GLB: '+entry.id);
- const h=crypto.createHash('sha1').update(Buffer.from('blob '+b.length+'\\0')).update(b).digest('hex');
+ const h=crypto.createHash('sha1').update(Buffer.from('blob '+b.length+'\0')).update(b).digest('hex');
  assert.equal(h,entry.gitBlobSha,'Source Git blob differs: '+entry.id);
  const jsonSize=b.readUInt32LE(12);
  const kind=b.toString('ascii',16,20);
