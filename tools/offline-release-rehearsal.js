@@ -86,10 +86,10 @@ for(const file of tests){
 const ready=run('manual-release-'+stage,process.execPath,
  ['tools/preflight-manual-release.js','--release='+stage,'--require-ready'],30000);
 if(full) {
- const docker=cp.spawnSync('docker',['--version'],{encoding:'utf8',timeout:4000});
+ const docker=cp.spawnSync('docker',['info','--format','{{.ServerVersion}}'],{encoding:'utf8',timeout:8000});
  if(docker.error||docker.status!==0) {
   records.push({label:'full-Dockerfile-STEP11-STEP12',status:'FAIL',
-   error:'Docker unavailable: full release rehearsal requires exact local Dockerfile build'});
+   error:'Docker daemon unavailable: full release rehearsal requires a working Docker engine and exact Dockerfile build'});
  } else {
   const tag='traptech-rehearsal:'+((sha||'unverified').slice(0,12));
   run('full-Dockerfile-STEP11-STEP12','docker',
