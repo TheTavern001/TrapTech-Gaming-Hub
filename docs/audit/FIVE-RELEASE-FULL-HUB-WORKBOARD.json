@@ -294,9 +294,18 @@
         "docs/audit/SECURITY-MOBILE-CREDITS-RELEASE-GATES-2026-10-14.json",
         "tools/preflight-manual-release.js",
         "src/prize-score-proof.js",
-        "tools/test-prize-score-proof.js"
+        "tools/test-prize-score-proof.js",
+        "src/db.js (user session_version migration)",
+        "src/server.js (signout/change/reset revoke)",
+        "tools/test-session-revocation.js",
+        "tools/test-auth-session-live.js",
+        "Dockerfile STEP11/STEP12"
       ],
-      "openDefects": [],
+      "openDefects": [
+        "Full native Docker HTTP auth test NOT RUN; existing users forced to sign in again on release",
+        "Physical Android/iPhone cookie and X-Session storage/logout QA NOT RUN",
+        "Selective per-device session revocation, session theft/replay pentest, CSRF hardening and recovery still pending"
+      ],
       "ownerApproved": false
     },
     {
@@ -395,5 +404,14 @@
   "currencyMigrationNativeDockerTest": "NOT_RUN",
   "sourceOnlyPaymentsVersion": "immutable quoted credits for Stripe/Bitcoin/manual, native e2e pending",
   "gameProofCertifiedCount": 0,
-  "prizeScoreGate": "BLOCKED_UNTIL_INDEPENDENT_REPLAY_AND_OWNER_QA"
+  "prizeScoreGate": "BLOCKED_UNTIL_INDEPENDENT_REPLAY_AND_OWNER_QA",
+  "sourceSessionRevocation": {
+    "codeCommitted": true,
+    "forcedReloginOnDeploy": true,
+    "testAssertionsV8WithCryptographyShim": 30,
+    "dockerNodeRun": "NOT_RUN",
+    "dockerHttpRun": "NOT_RUN",
+    "androidTest": "NOT_RUN",
+    "iosTest": "NOT_RUN"
+  }
 }
