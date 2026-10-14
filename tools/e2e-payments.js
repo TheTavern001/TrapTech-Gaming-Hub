@@ -74,6 +74,9 @@ function client() { const jar = {}; return async (p, o = {}) => {
   ok(r.status >= 400, 'prestige checkout refuses orders while compatibility approval is off');
   // pass + one-credit-wallet spend
   r = await ADM('/api/admin/store/grant', { body: { username: P1.u, product_id: 'season-pass' } }); ok(r.ok !== false && r.body.ok, 'admin can grant a Season Pass manually');
+  r = await ADM('/api/admin/store/grant', { body: { username: P1.u, product_id: 'prestige-original-crown' } });
+  ok(!r.body.ok && /preview-only/i.test(r.body.error),
+    'An admin promotional grant cannot bypass unreleased prestige wearables');
   r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 15, 'premium track: 20 reward steps, 15% premium-track XP boost');
   r = await P1('/api/pass/quests'); ok(r.body.total === 48 && r.body.done < 48 && r.body.reward_season === r.body.season + 1, '48-quest chain toward next season\'s free pass');
   r = await client()('/api/shop'); const any = r.body && (r.body.daily || (r.body.sections && r.body.sections.daily) || []).find(Boolean);
