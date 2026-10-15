@@ -53,6 +53,7 @@ const tests=[
  'tools/test-existing-game-review-register.js',
  'tools/test-private-10k-harness.js',
  'tools/test-giveaway-booking-release-gates.js',
+ 'tools/test-booked-skill-winner-contract.js',
  'tools/test-booking-library-selection.js',
  'tools/test-optional-sponsor-channel.js',
  'tools/test-avatar-async-stale-render.js',
