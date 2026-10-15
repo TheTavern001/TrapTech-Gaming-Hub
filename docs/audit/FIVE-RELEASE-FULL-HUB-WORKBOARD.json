@@ -36,7 +36,9 @@
         "public/games-lib/mole-whack/game.js (no keyboard-only auto target; 30s labels)",
         "docs/audit/OWNER-GAMEPLAY-CANNABIS-DUPLICATE-PASS-2026-10-14.md",
         "tools/test-cannabis-gameplay-qa.js",
-        "tools/test-owner-gameplay-distinctness.js"
+        "tools/test-owner-gameplay-distinctness.js",
+        "docs/audit/EXISTING-GAME-REVIEW-REGISTER-2026-10-14.json",
+        "tools/test-existing-game-review-register.js"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -50,7 +52,8 @@
       "exit": "93 IDs preserved; 6 staged retirements; inspect every other family",
       "evidence": [
         "docs/audit/ALL-93-OWNER-GAMEPLAY-DISTINCTNESS-2026-10-14.json",
-        "tools/audit-full-game-mechanics.js"
+        "tools/audit-full-game-mechanics.js",
+        "docs/audit/GAMING-HUB-EXACT-REMAINING-WORK-2026-10-14.md"
       ],
       "openDefects": [],
       "ownerApproved": false
@@ -190,7 +193,11 @@
       "code": "src/avatars.js; public/js/app.js",
       "status": "BLOCKED",
       "exit": "No overlap/clipping for representative combinations, equip only if owned",
-      "evidence": [],
+      "evidence": [
+        "src/avatars.js (canonical Credits unlock and retired second wallet route)",
+        "public/js/avatar-editor.js (one Credits wallet)",
+        "tools/test-avatar-credit-spend-behavior.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
@@ -201,7 +208,11 @@
       "code": "src/shop-gen.js; src/shop.js",
       "status": "BLOCKED",
       "exit": "1k renderable pieces, correct variants, 3D preview and shop pagination",
-      "evidence": [],
+      "evidence": [
+        "public/js/economy.js (profile collection/wardrobe link)",
+        "public/js/hub-store.js (single-Credits customization distinction)",
+        "tools/test-shop-avatar-credit-integration.js"
+      ],
       "openDefects": [],
       "ownerApproved": false
     },
