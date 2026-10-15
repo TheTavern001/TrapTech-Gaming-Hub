@@ -882,9 +882,25 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "R1_PENDING_NEW_BUILD"
+    },
+    {
+      "commit": "R1_FAVICON_ALIAS_FIX_PENDING",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Fix four deterministic Trap Tech icon prelaunch blockers without altering payment/score/game flow",
+      "validation": "Verified code/html/asset matches in isolated JavaScript check; actual Docker pending",
+      "host": "R1_61FEC416_FAILED",
+      "evidenceFiles": [
+        "public/assets/brand/hub-mark.svg",
+        "public/assets/brand/tt-favicon.svg",
+        "public/assets/brand/tt-maskable.svg",
+        "tools/build-traptech-pwa-icons.js",
+        "tools/test-traptech-pwa-icons.js",
+        "tools/verify-prelaunch.js"
+      ],
+      "ownerAAACertified": 0
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: New R1 c5874566 auto-deployed to Docker builder and failed at tools/audit-full-game-mechanics.js:35 because core game has no slug, yet runtimeScripts precomputed library HTML path. Path made conditional and slug validation added; new executable isolated audit test added before full audit. No host READY or full AAA approval.",
+  "lastEvidenceReconciliation": "2026-10-15 R1 61fec416 Deplexo log: all 93-game audit / 87 active graph validations passed; fail four logo checks (3 stale aliases and favicon regex not handling PWA version query). Fix in candidate. Host deployment remains unsuccessful until new READY and live endpoint checks.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -900,14 +916,14 @@
   },
   "currentWorkingSource": {
     "branch": "qa/gameplay-distinctness-and-collision-20261013",
-    "headAtReconciliation": "c587456628e34b89aa65e83a44be66d5b9f09adf",
+    "headAtReconciliation": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "Current R1 c5874566 failed in source audit due to core entry lacking slug. Patched auditor only and added direct regression test. 87 games remain unapproved until device/visual/score QA; source-only, not deployed.",
+    "note": "R1 61fec416 failed after 93-game audit PASS on 4 icon alias/favicon audit checks; patch generator and checks in next SHA, no live verification.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "c587456628e34b89aa65e83a44be66d5b9f09adf",
+    "lastAuditedGitHubHead": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
     "buildAttemptStatus": "FAILED",
-    "lastFailedBuildSha": "c587456628e34b89aa65e83a44be66d5b9f09adf"
+    "lastFailedBuildSha": "61fec41636ea418c71765a21f7f6d3dd224bd22a"
   },
   "ownerConfirmedAutoDeployOff": false,
   "dashboardEvidence20261015": {
@@ -936,13 +952,13 @@
     "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
   },
   "lastReportedFailedDeployment20261015": {
-    "commit": "c587456628e34b89aa65e83a44be66d5b9f09adf",
+    "commit": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
     "status": "FAILED",
-    "error": "Node20 Docker build [1/2] STEP12/14 tools/audit-full-game-mechanics.js:35 path.join() received undefined in runtimeScripts('core')",
-    "cause": "core entries are parsed from src/config.js as {id,title,module} with no slug; runtimeScripts eagerly computed htmlPath=path.join(base,g.slug,'index.html') before branching for library HTML. This crashed on first core title, unrelated to game mechanics.",
-    "evidence": "Owner-supplied Deplexo error log and Deployments screenshot 2026-10-15: auto deployed c587456628e34b89aa65e83a44be66d5b9f09adf from QA branch; all preceding financial, game syntax, physics, 87-game contracts, release-history tests passed before audit-full-game-mechanics error.",
-    "correction": "Compute HTML path only for library entries, validate library slugs, add real auditor runtimeScripts mock-FS regression covering slugless core, library HTML, missing/unsafe slug and invoke it before full 93-game audit.",
-    "verification": "Patched actual runtimeScripts function executed for slugless core, valid library, missing slug, unsafe slug in isolated V8; full Docker/Deplexo still pending."
+    "error": "Node20 Docker image build [1/2] STEP12/14: node tools/verify-prelaunch.js returns 4 failures (favicon querystring regex false negative, three old SVG brand aliases mismatch).",
+    "cause": "Original TT crown icon generator created canonical SVG and PNGs but not hub-mark.svg, tt-favicon.svg and tt-maskable.svg. Three obsolete twin-T icon SVG files remained. The verify-prelaunch favicon regex required an unversioned .svg URL, while the PWA browser used a correctly cache-busted '?v=tt-crown-20261014' URL.",
+    "evidence": "Owner-supplied Deplexo build log shows complete 93-game audit succeeded (source graph complete 139, all 87 active script graphs traced), along with 87 runtime test and qa browser contract. Only 4 brand prelaunch checks failed; no build image / host READY.",
+    "correction": "Generate all 4 SVG aliases byte-for-byte from existing approved tt-mono.svg crown; normalize three legacy alias repository files; accept favicon URL query cache-busting in prelaunch; extend prebuild icon test to assert exact SVG aliases + favicon + splash canonical paths.",
+    "verification": "Verified exact SVG produced by generator matches committed canonical source; compiled HTML favicon and splash selectors match existing homepage and generator covers aliases. Full production image & mobile QA require Deplexo build."
   },
   "reportedFailedDeployments20261015": [
     {
@@ -999,6 +1015,15 @@
       "evidence": "Owner-supplied Deplexo error log and Deployments screenshot 2026-10-15: auto deployed c587456628e34b89aa65e83a44be66d5b9f09adf from QA branch; all preceding financial, game syntax, physics, 87-game contracts, release-history tests passed before audit-full-game-mechanics error.",
       "correction": "Compute HTML path only for library entries, validate library slugs, add real auditor runtimeScripts mock-FS regression covering slugless core, library HTML, missing/unsafe slug and invoke it before full 93-game audit.",
       "verification": "Patched actual runtimeScripts function executed for slugless core, valid library, missing slug, unsafe slug in isolated V8; full Docker/Deplexo still pending."
+    },
+    {
+      "commit": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
+      "status": "FAILED",
+      "error": "Node20 Docker image build [1/2] STEP12/14: node tools/verify-prelaunch.js returns 4 failures (favicon querystring regex false negative, three old SVG brand aliases mismatch).",
+      "cause": "Original TT crown icon generator created canonical SVG and PNGs but not hub-mark.svg, tt-favicon.svg and tt-maskable.svg. Three obsolete twin-T icon SVG files remained. The verify-prelaunch favicon regex required an unversioned .svg URL, while the PWA browser used a correctly cache-busted '?v=tt-crown-20261014' URL.",
+      "evidence": "Owner-supplied Deplexo build log shows complete 93-game audit succeeded (source graph complete 139, all 87 active script graphs traced), along with 87 runtime test and qa browser contract. Only 4 brand prelaunch checks failed; no build image / host READY.",
+      "correction": "Generate all 4 SVG aliases byte-for-byte from existing approved tt-mono.svg crown; normalize three legacy alias repository files; accept favicon URL query cache-busting in prelaunch; extend prebuild icon test to assert exact SVG aliases + favicon + splash canonical paths.",
+      "verification": "Verified exact SVG produced by generator matches committed canonical source; compiled HTML favicon and splash selectors match existing homepage and generator covers aliases. Full production image & mobile QA require Deplexo build."
     }
   ],
   "autoDeployOwnerConfirmedOn": true,

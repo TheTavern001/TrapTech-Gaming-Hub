@@ -28,7 +28,17 @@ for(const {rel,size,bytes} of files){
   assert.equal(installed.readUInt32BE(20),size,'PNG height: '+rel);
  }
 }
-assert.equal(fs.readFileSync(path.join(pub,'assets/brand/traptech-app-icon.svg'),'utf8'),
- fs.readFileSync(path.join(pub,'assets/brand/favicon.svg'),'utf8'));
+// Enforce the precise brand contract required by verify-prelaunch.js so the
+// earlier icon build test cannot pass while the later release audit fails.
+const canonical = fs.readFileSync(path.join(pub,'assets/brand/traptech-app-icon.svg'),'utf8').trim();
+for(const alias of ['favicon.svg','hub-mark.svg','tt-favicon.svg','tt-maskable.svg']){
+ const actual=fs.readFileSync(path.join(pub,'assets/brand',alias),'utf8').trim();
+ assert.equal(actual,canonical,'SVG alias drift: '+alias);
+}
+assert.match(html,/href=["']\/assets\/brand\/traptech-app-icon\.svg(?:\?[^"']*)?["']/,
+ 'Homepage favicon must use canonical Trap Tech icon (versioned URL allowed)');
+assert.match(html,/<img[^>]+src=["']\/assets\/brand\/traptech-app-icon\.svg["']/,
+ 'Homepage boot splash must use canonical Trap Tech icon');
+
 assert.ok(icon.svg().includes('ttg')&&icon.svg().includes('<polygon'),'Must use existing TT crown/monogram vectors');
 console.log(JSON.stringify({pass:true,assetFiles:files.length,icons:['192','512','maskable-512','apple-180'],source:'existing tt-mono.svg',oldControllerPngsRejected:true,deviceInstallTested:false}));

@@ -1,5 +1,12 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — R1 61fec416 icon alias/URL prelaunch check failure
+
+Owner confirmed Deplexo checked out `61fec41636ea418c71765a21f7f6d3dd224bd22a`. Prestart wallet/payment/anti-cheat contracts, mobile source tests, **93-title game dependency auditor** (`runtimeGraphComplete:true`, 87 active, 139 runtime source graph files), 87-runtime source-depth and browser source-level test contracts passed. Docker `STEP 12/14` then failed four brand tests in `tools/verify-prelaunch.js`. Three SVG aliases (`hub-mark.svg`, `tt-favicon.svg`, `tt-maskable.svg`) still carried older artwork, because the TT-crown generator did not write them; separately the HTML favicon used `?v=tt-crown-20261014` but the release regex only matched queryless `.svg`.
+
+Fix: extend the canonical TT asset generator to own *all* four SVG aliases, keep the three committed legacy aliases identical to the current approved `traptech-app-icon.svg`, update release favicon selector to accept optional version query, and enforce all these exact constraints in the earlier `tools/test-traptech-pwa-icons.js` gate. Do not relax brand identity or score/security checks. Verification before push: exact generated SVG equals canonical; source HTML passes updated favicon/splash regex; generated alias list complete. Actual Node20/Docker build and 87-device QA not yet verified; public release remains closed.
+
+
 ## 2026-10-15 — R1 c5874566 failed in 93-title source-audit function (core entry has no slug)
 
 Owner posted Deplexo error screenshot and Node20 Docker log for the **correct auto-deployed QA SHA** `c587456628e34b89aa65e83a44be66d5b9f09adf`. Wallet, bookings, session, source syntax, Kit, physics, mobile lifecycle, game catalog, owner duplicate policy and release-evidence tests passed. Build stopped at `tools/audit-full-game-mechanics.js:35`: `path.join(base,g.slug,'index.html')` executed unconditionally even for **core** records, which have `module` but no `slug`. This is an auditor bug, not proof of gameplay failure.
