@@ -4,15 +4,20 @@
 window.TD = function (cfg) {
   const CS = 40, COLS = 20, ROWS = 10, OY = 50; const T = cfg.theme || {};
   Kit.run({ id: cfg.id, title: cfg.title, orient: 'l', help: cfg.help || 'Tap a tower card, then tap a free tile to build\nTap a tower to upgrade it - waves auto-start', bg: T.bg || '#0b1e12',
-    init(g) { g.cash = cfg.startCash || 120; g.lives = cfg.lives || 20; g.wave = 0; g.en = []; g.tw = []; g.sh = []; g.sel = 0; g.wt = 6; g.queue = 0; g.occ = new Set(); g.block = new Set();
+    init(g) { g.cash = cfg.startCash || 120; g.lives = cfg.lives || 20; g.wave = 0; g.en = []; g.tw = []; g.sh = []; g.sel = 0; g.wt = 6; g.queue = 0; g.occ = new Set(); g.block = new Set(); g.cursor = {c: 2, r: 4};
       if (cfg.maze) { g.start = [0, 4]; g.goal = [COLS - 1, 5]; route(g); } else { g.path = expand(cfg.path); for (const p of g.path) g.block.add(p[0] + ',' + p[1]); }
       if (cfg.rocks) for (let i = 0; i < cfg.rocks; i++) { const c = g.RI(2, COLS - 3), r = g.RI(0, ROWS - 1); if (!g.block.has(c + ',' + r)) g.occ.add(c + ',' + r + ',rock'); } },
     update(g, dt) {
       for (let i = 0; i < cfg.towers.length; i++) if (g.kd(String(i + 1))) g.sel = i;
       const P = g.ptr; if (P.pressed) { if (P.y > g.H - 50) { const i = Math.floor((P.x - 10) / 118); if (i >= 0 && i < cfg.towers.length) { g.sel = i; g.sfx('click'); } else if (P.x > g.W - 110) { g.wt = 0; } }
         else { const c = Math.floor(P.x / CS), r = Math.floor((P.y - OY) / CS); if (c >= 0 && c < COLS && r >= 0 && r < ROWS) tap(g, c, r); } }
-      if (g.kd(' ')) { // keyboard helper: build the selected tower on the best free tile next to the road
-        let best = null, bs = -1; for (let c = 1; c < COLS - 1; c++) for (let r = 0; r < ROWS; r++) { if (!free(g, c, r)) continue; const sc = (g.path || []).filter(p => Math.abs(p[0] - c) <= 2 && Math.abs(p[1] - r) <= 2).length; if (sc > bs) { bs = sc; best = [c, r]; } } if (best) tap(g, best[0], best[1]); }
+      // Keyboard and touch players both choose placements manually.
+      // Do not pick the "best" tile automatically for desktop players.
+      if (g.kd('ArrowLeft')) g.cursor.c = Math.max(0, g.cursor.c - 1);
+      if (g.kd('ArrowRight')) g.cursor.c = Math.min(COLS - 1, g.cursor.c + 1);
+      if (g.kd('ArrowUp')) g.cursor.r = Math.max(0, g.cursor.r - 1);
+      if (g.kd('ArrowDown')) g.cursor.r = Math.min(ROWS - 1, g.cursor.r + 1);
+      if (g.kd(' ')) tap(g, g.cursor.c, g.cursor.r);
       if (g.kd('n') || g.kd('Enter')) g.wt = 0;
       g.wt -= dt; if (g.wt <= 0 && g.queue <= 0 && !g.en.length) { g.wave++; g.mark('w', g.wave); g.queue = cfg.perWave ? cfg.perWave(g.wave) : 6 + g.wave * 2; g.qi = 0; g.qt = 0; g.wt = 1e9; g.float(g.W / 2, 200, 'WAVE ' + g.wave, '#fbbf24', 28); g.sfx('bad'); }
       if (g.queue > 0) { g.qt -= dt; if (g.qt <= 0) { g.qt = Math.max(0.25, 0.9 - g.wave * 0.02); g.queue--; const e = cfg.enemy(g.wave, g.qi++, g); const p0 = g.path[0]; g.en.push({ ...e, max: e.hp, d: 0, x: p0[0] * CS + CS / 2, y: OY + p0[1] * CS + CS / 2, slow: 0 }); } }
@@ -74,6 +79,12 @@ window.TD = function (cfg) {
       c.fillStyle = T.road || '#a16207'; for (const p of g.path) c.fillRect(p[0] * CS + 2, OY + p[1] * CS + 2, CS - 4, CS - 4);
       for (const k of g.occ) { const [cc, r, t] = k.split(','); if (t === 'rock') { c.fillStyle = '#57534e'; Kit.rr(c, cc * CS + 6, OY + r * CS + 8, CS - 12, CS - 14, 8); c.fill(); } }
       const pe = g.path[g.path.length - 1]; c.fillStyle = T.base || '#6366f1'; c.fillRect(pe[0] * CS + 4, OY + pe[1] * CS + 4, CS - 8, CS - 8); }
+      // Visible tile focus enables accessible, deliberate keyboard placement.
+      if (g.cursor) {
+        const px = g.cursor.c * CS, py = OY + g.cursor.r * CS;
+        c.save(); c.strokeStyle = '#f9f5d0'; c.lineWidth = 2;
+        c.setLineDash([6, 3]); c.strokeRect(px + 2, py + 2, CS - 4, CS - 4); c.restore();
+      }
       for (const t of g.tw) { const S = cfg.towers[t.k]; if (cfg.drawTower) { cfg.drawTower(c, t, S, g); continue; } c.fillStyle = '#1f2937'; Kit.rr(c, t.x - 16, t.y - 16, 32, 32, 6); c.fill(); Kit.glow(c, S.c, 8); Kit.circ(c, t.x, t.y, 10 + t.lv, S.c); Kit.noGlow(c); c.strokeStyle = S.c; c.lineWidth = 5; c.beginPath(); c.moveTo(t.x, t.y); c.lineTo(t.x + Math.cos(t.a || 0) * 18, t.y + Math.sin(t.a || 0) * 18); c.stroke(); for (let i = 0; i < t.lv; i++) Kit.circ(c, t.x - 12 + i * 6, t.y + 14, 2, '#fbbf24');
         if (t.beam && (t.beam.l -= 1 / 60) > 0) { c.strokeStyle = S.c; c.lineWidth = 3; c.beginPath(); c.moveTo(t.x, t.y); c.lineTo(t.beam.x, t.beam.y); c.stroke(); } if (t.ring && (t.ring -= 1 / 60) > 0) { c.strokeStyle = S.c; c.globalAlpha = t.ring * 3; c.lineWidth = 2; c.beginPath(); c.arc(t.x, t.y, S.range * CS * (1 - t.ring * 2), 0, 7); c.stroke(); c.globalAlpha = 1; } }
       // Visible body/health of interceptors even for themes with custom towers.
