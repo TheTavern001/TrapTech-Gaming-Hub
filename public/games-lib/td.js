@@ -16,10 +16,45 @@ window.TD = function (cfg) {
       if (g.kd('n') || g.kd('Enter')) g.wt = 0;
       g.wt -= dt; if (g.wt <= 0 && g.queue <= 0 && !g.en.length) { g.wave++; g.mark('w', g.wave); g.queue = cfg.perWave ? cfg.perWave(g.wave) : 6 + g.wave * 2; g.qi = 0; g.qt = 0; g.wt = 1e9; g.float(g.W / 2, 200, 'WAVE ' + g.wave, '#fbbf24', 28); g.sfx('bad'); }
       if (g.queue > 0) { g.qt -= dt; if (g.qt <= 0) { g.qt = Math.max(0.25, 0.9 - g.wave * 0.02); g.queue--; const e = cfg.enemy(g.wave, g.qi++, g); const p0 = g.path[0]; g.en.push({ ...e, max: e.hp, d: 0, x: p0[0] * CS + CS / 2, y: OY + p0[1] * CS + CS / 2, slow: 0 }); } }
-      for (const e of g.en) { const sp = e.sp * (e.slow > 0 ? 0.5 : 1); e.slow -= dt; e.d += sp * dt / CS; const path = e.fly ? [g.path[0], g.path[g.path.length - 1]] : g.path; const L = path.length - 1; const seg = e.fly ? e.d / (Math.hypot(path[1][0] - path[0][0], path[1][1] - path[0][1])) : e.d;
+      // Barracks are a distinct tactical mechanic: trained guards stand on the
+      // road, intercept a single ground raider, take damage and respawn.
+      // This changes enemy path-time, defense priorities and wave strategy.
+      // All decisions use the run's deterministic frame/input state.
+      for (const e of g.en) e.blockedBy = null;
+      for (const t of g.tw) {
+        const S = cfg.towers[t.k];
+        if (S.kind !== 'barracks') continue;
+        const hpMax = 8 + 4 * t.lv;
+        if (!Number.isFinite(t.guardHP)) { t.guardHP = hpMax; t.guardHitCd = 0; t.guardRespawn = 0; }
+        if (t.guardHP <= 0) {
+          t.guardRespawn = (t.guardRespawn || 3) - dt;
+          if (t.guardRespawn <= 0) { t.guardHP = hpMax; t.guardRespawn = 0; }
+          t.guardTarget = null; continue;
+        }
+        const reach = S.range * (1 + 0.15 * (t.lv - 1)) * CS;
+        let target = null;
+        for (const e of g.en) {
+          if (e.fly || e.gone || e.dead || e.hp <= 0 || e.blockedBy) continue;
+          if (Math.hypot(e.x - t.x, e.y - t.y) <= reach && (!target || e.d > target.d)) target = e;
+        }
+        t.guardTarget = target;
+        if (!target) continue;
+        target.blockedBy = t;
+        t.guardHitCd -= dt;
+        if (t.guardHitCd <= 0) {
+          t.guardHitCd = Math.max(0.25, S.rate / (1 + 0.15 * (t.lv - 1)));
+          hurt(g, target, S.dmg * (1 + 0.4 * (t.lv - 1)), S);
+        }
+        t.guardHP -= Math.max(0.5, (target.v || 20) / 60) * dt;
+        if (t.guardHP <= 0) {
+          t.guardHP = 0; t.guardRespawn = 3; target.blockedBy = null; t.guardTarget = null;
+          g.float(t.x, t.y - 22, 'GUARD DOWN', '#fca5a5', 12);
+        }
+      }
+      for (const e of g.en) { const sp = (e.blockedBy ? 0 : e.sp) * (e.slow > 0 ? 0.5 : 1); e.slow -= dt; e.d += sp * dt / CS; const path = e.fly ? [g.path[0], g.path[g.path.length - 1]] : g.path; const L = path.length - 1; const seg = e.fly ? e.d / (Math.hypot(path[1][0] - path[0][0], path[1][1] - path[0][1])) : e.d;
         if (seg >= L) { e.gone = true; g.lives -= e.layers || 1; g.sfx('hit'); g.shake(5); g.flash('#ef4444', 0.08); continue; } const i = Math.floor(seg), f = seg - i; const a = path[i], b = path[i + 1]; e.x = (a[0] + (b[0] - a[0]) * f) * CS + CS / 2; e.y = OY + (a[1] + (b[1] - a[1]) * f) * CS + CS / 2; }
       g.en = g.en.filter(e => !e.gone); if (g.lives <= 0) return g.end('Base overrun');
-      for (const t of g.tw) { t.cd -= dt; const S = cfg.towers[t.k]; const rng = S.range * (1 + 0.15 * (t.lv - 1)) * CS; if (t.cd > 0) continue; let tg = null, bd = -1;
+      for (const t of g.tw) { t.cd -= dt; const S = cfg.towers[t.k]; if (S.kind === 'barracks') continue; const rng = S.range * (1 + 0.15 * (t.lv - 1)) * CS; if (t.cd > 0) continue; let tg = null, bd = -1;
         for (const e of g.en) { if (e.fly && S.noAir) continue; if (Math.hypot(e.x - t.x, e.y - t.y) <= rng && e.d > bd) { bd = e.d; tg = e; } }
         if (!tg) continue; t.cd = S.rate / (1 + 0.2 * (t.lv - 1)); t.a = Math.atan2(tg.y - t.y, tg.x - t.x); const dmg = S.dmg * (1 + 0.6 * (t.lv - 1));
         if (S.kind === 'laser' || S.kind === 'sniper') { hurt(g, tg, dmg, S); t.beam = { x: tg.x, y: tg.y, l: 0.08 }; g.sfx('shoot'); }
@@ -41,6 +76,17 @@ window.TD = function (cfg) {
       const pe = g.path[g.path.length - 1]; c.fillStyle = T.base || '#6366f1'; c.fillRect(pe[0] * CS + 4, OY + pe[1] * CS + 4, CS - 8, CS - 8); }
       for (const t of g.tw) { const S = cfg.towers[t.k]; if (cfg.drawTower) { cfg.drawTower(c, t, S, g); continue; } c.fillStyle = '#1f2937'; Kit.rr(c, t.x - 16, t.y - 16, 32, 32, 6); c.fill(); Kit.glow(c, S.c, 8); Kit.circ(c, t.x, t.y, 10 + t.lv, S.c); Kit.noGlow(c); c.strokeStyle = S.c; c.lineWidth = 5; c.beginPath(); c.moveTo(t.x, t.y); c.lineTo(t.x + Math.cos(t.a || 0) * 18, t.y + Math.sin(t.a || 0) * 18); c.stroke(); for (let i = 0; i < t.lv; i++) Kit.circ(c, t.x - 12 + i * 6, t.y + 14, 2, '#fbbf24');
         if (t.beam && (t.beam.l -= 1 / 60) > 0) { c.strokeStyle = S.c; c.lineWidth = 3; c.beginPath(); c.moveTo(t.x, t.y); c.lineTo(t.beam.x, t.beam.y); c.stroke(); } if (t.ring && (t.ring -= 1 / 60) > 0) { c.strokeStyle = S.c; c.globalAlpha = t.ring * 3; c.lineWidth = 2; c.beginPath(); c.arc(t.x, t.y, S.range * CS * (1 - t.ring * 2), 0, 7); c.stroke(); c.globalAlpha = 1; } }
+      // Visible body/health of interceptors even for themes with custom towers.
+      for (const t of g.tw) {
+        if (cfg.towers[t.k].kind !== 'barracks' || !(t.guardHP > 0)) continue;
+        const enemy = t.guardTarget && !t.guardTarget.dead && !t.guardTarget.gone ? t.guardTarget : null;
+        const gx = enemy ? enemy.x + 13 : t.x + 18, gy = enemy ? enemy.y - 10 : t.y - 24;
+        if (cfg.drawGuard) cfg.drawGuard(c, gx, gy, t.guardHP / (8 + 4 * t.lv), t, g);
+        else {
+          Kit.glow(c, '#fbbf24', 5); Kit.circ(c, gx, gy, 9, '#fbbf24'); Kit.noGlow(c);
+          c.fillStyle = '#34d399'; c.fillRect(gx - 11, gy - 16, 22 * Math.max(0, t.guardHP / (8 + 4 * t.lv)), 3);
+        }
+      }
       for (const e of g.en) { if (cfg.drawEnemy) cfg.drawEnemy(c, e, g); else { Kit.glow(c, e.c, 6); Kit.circ(c, e.x, e.y, e.r || 10, e.c); Kit.noGlow(c); } if (e.max > 1 && e.hp < e.max && !e.layers) { c.fillStyle = '#111'; c.fillRect(e.x - 12, e.y - 18, 24, 4); c.fillStyle = '#34d399'; c.fillRect(e.x - 12, e.y - 18, 24 * e.hp / e.max, 4); } }
       for (const s of g.sh) if (cfg.drawShot) cfg.drawShot(c, s, g); else Kit.circ(c, s.x, s.y, 3.5, s.S.c);
       if (cfg.drawBar) cfg.drawBar(c, g); else { c.fillStyle = 'rgba(5,7,20,.8)'; c.fillRect(0, g.H - 50, g.W, 50);
