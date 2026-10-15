@@ -55,6 +55,7 @@ async function storePage() {
   };
   C.shell('/shop', `<div class="narrow store">
     ${C.pageHead('Hub Store', 'Cosmetics only. Never a score, an entry or an edge.')}
+    <div class="card pad"><b>One wallet, two customization areas</b><p class="small muted">Hub Credits can unlock rotating profile designs or avatar clothing and accessories. Profile artwork is not automatically a wearable 3D model.</p><div class="btn-row"><a class="btn sm" href="/shop">${icon('palette')} Profile cosmetics</a><a class="btn sm ghost" href="/avatar">${icon('user-round')} Avatar wardrobe</a></div></div>
     <div class="card pad na-note" id="non-advantage">${icon('shield-check')} <b>Cosmetic only.</b> ${esc(r.non_advantage)}</div>
     ${co.enabled ? '' : `<div class="card pad muted small" id="checkout-off">${icon('lock')} ${esc(co.reason || 'Checkout is not available right now.')}</div>`}
     ${co.enabled ? `<div class="card pad payment-methods"><b>Payment method</b><div class="btn-row" role="group" aria-label="Payment method">${(co.methods || []).map(method => `<button type="button" class="btn sm ${method === paymentProvider ? 'on' : ''}" data-provider-choice="${method}" aria-pressed="${method === paymentProvider}">${method === 'bitcoin' ? icon('bitcoin') + ' Bitcoin (crypto)' : icon('credit-card') + ' Credit / debit card'}</button>`).join('')}</div><p class="tiny muted">Card details are handled by Stripe-hosted checkout. Bitcoin is paid directly to the configured receiving address.</p></div>` : ''}
