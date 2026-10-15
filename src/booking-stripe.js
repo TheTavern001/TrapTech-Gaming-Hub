@@ -94,7 +94,7 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
  });
  app.post('/api/sponsor/webhook/stripe',async(req,res)=>{
   // Same raw-body HMAC verification as the existing store Stripe webhook.
-  if(!require('./monetize')._stripeSignatureOk(req))
+  if(!require('./monetize')._stripeSignatureOk(req,process.env.STRIPE_BOOKING_WEBHOOK_SECRET))
    return res.status(400).json({ok:false,error:'Invalid payment signature.'});
   const event=req.body||{},obj=event.data?.object||{},t=Date.now();
   if(['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type)){
