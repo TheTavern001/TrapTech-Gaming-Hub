@@ -765,9 +765,22 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "BLOCKED"
+    },
+    {
+      "commit": "437b03eac89ecbfbeff7e86773de9d85d239e179",
+      "branch": "main and qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Remove repeated manual deployment log relays by connecting Cursor to Deplexo's official OAuth MCP; provide existing-app-only redeploy and evidence playbook.",
+      "validation": "Official Deplexo MCP documentation confirms server endpoint https://deplexo.com/mcp, browser OAuth PKCE, Cursor project .cursor/mcp.json, redeploy_app/get_deployment tools; repository config is valid JSON and contains no secrets; source branches aligned.",
+      "host": "SOURCE ONLY; no OAuth connection established, no Deplexo redeploy issued, no READY or mobile QA proof.",
+      "evidenceFiles": [
+        ".cursor/mcp.json",
+        "docs/DEPLEXO-AGENT-DEPLOY.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "BLOCKED_PENDING_HOST_AUTH_AND_TESTS"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: fixes for old 570a9 Docker Step 11 source import, plus explicit absent secret startup error; 16-check anonymous private-preview smoke added, validated against mocked restricted/leaking responses (16 passes for restricted; 10 failures triggered in leaked mock). 17 HTTP smoke source file marker checks passed, Git tree model/PNG assets present. No full native Docker, host, authenticated owner, iOS/Android or AAA certification.",
+  "lastEvidenceReconciliation": "2026-10-15: both GitHub branches aligned at 437b03ea after adding official Deplexo OAuth MCP setup for Cursor and safe existing-app-only deployment instructions. Deplexo user account not authorized here; no newer build attempted or verified. Last confirmed host READY 278af07; failed old 570a9 attempt logged.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -782,13 +795,13 @@
     "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
   },
   "currentWorkingSource": {
-    "branch": "main and qa/gameplay-distinctness-and-collision-20261013 (aligned after journal commit)",
-    "headAtReconciliation": "e981ced80a7f49eddea77fa2b53beabb8c28ce27",
+    "branch": "main and qa/gameplay-distinctness-and-collision-20261013",
+    "headAtReconciliation": "437b03eac89ecbfbeff7e86773de9d85d239e179",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "Source after explicit missing-secret startup fix 9e81088 and private preview checker e981ced8; next journal commit will be descendant. Both main and QA refs to be aligned after writing. Last user Deplexo checkout 570a9 FAILED, no corrected build confirmed.",
+    "note": "Official Deplexo OAuth MCP connection and authenticated existing-app agent redeploy playbook committed source-only. No OAuth authorization, Deplexo build or phone certification observed. Current host proof remains owner screenshot 278af07 and failed old 570a9 log.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "e981ced80a7f49eddea77fa2b53beabb8c28ce27"
+    "lastAuditedGitHubHead": "437b03eac89ecbfbeff7e86773de9d85d239e179"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {

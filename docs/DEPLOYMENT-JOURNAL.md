@@ -1,5 +1,10 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — Official Deplexo agent connection available (not connected or deployed)
+
+Following the user's demand to eliminate repeated manual deployment/log work, verified the first-party Deplexo [MCP guide](https://docs.deplexo.com/guides/mcp/): remote URL `https://deplexo.com/mcp`, OAuth user authorization, Cursor support, and `redeploy_app`/`get_deployment` tools. Committed safe project-local `.cursor/mcp.json` with only that HTTPS endpoint, and `docs/DEPLEXO-AGENT-DEPLOY.md` with existing-app-only target UUID, release guardrails, and requirements to verify live build fingerprint and anonymous review gate. **No OAuth authorization occurred, no tools from Deplexo were available to this chat, and no redeploy was triggered.** Both `main` and QA source refs aligned to `437b03eac89ecbfbeff7e86773de9d85d239e179` before this journal commit. After this journal commit, advance both refs again. The evidence bars remain unchanged: last positive host-current screenshot `278af07`, subsequent FAILED old-checkout `570a9fe`, proposed 87 playable titles with zero AAA owner/device certifications, no public approval.
+
+
 ## 2026-10-15 — Release hardening and owner-preview HTTP contract (GitHub source only)
 
 **Real problem addressed:** Owner-provided log checked out outdated main `570a9fe` and failed in Docker STEP 11 on `src/config.js:23` HMAC with undefined key. Main and QA refs have been advanced by fast-forward (not force-push) from that ancestor. Current code no longer imports runtime config into secretless prelaunch game-registry audit.
