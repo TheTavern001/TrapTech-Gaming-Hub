@@ -23,3 +23,5 @@ render.yaml
 # Dockerfile/.dockerignore must remain available to build-stage source audits.
 # Required by Dockerfile prelaunch audits; otherwise these files vanish from the build context.
 !docs/GAMES-LIB.md
+# Release acceptance contract is exercised by the unified build-stage regression.
+!docs/launch/TRAP-TECH-500-GAME-AAA-PUBLIC-ACCEPTANCE-2026-10-15.md
