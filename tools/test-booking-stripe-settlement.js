@@ -66,6 +66,8 @@ const db={
 };
 let stripeRequests=0;
 const mockedFetch=async (url,options)=>{
+ if(url==='https://api.stripe.com/v1/charges/ch_ABC123')
+  return {ok:true,json:async()=>({id:'ch_ABC123',payment_intent:'pi_ABC123'})};
  stripeRequests++;
  assert.equal(url,'https://api.stripe.com/v1/checkout/sessions');
  const amount=options.body.get('line_items[0][price_data][unit_amount]');
@@ -128,10 +130,16 @@ async function call(route,body={},signed=false,token=b.public_token){
  assert.equal(FEE.paidFeeRecorded(q),false,'Any refund must lock event out');
  r=await call(url,event(session),true);
  assert.equal(q.status,'refunded','Late replay cannot resurrect refunded event');
- assert.equal(stripeRequests,1,'No external provider calls in regression fixtures');
+ // Charge-only disputes may omit payment_intent in the signed event; look
+ // up the charge through the mocked Stripe API to identify and freeze it.
+ q.status='paid';q.refunded_at=null;b.eventRevoked=false;
+ r=await call(url,{type:'charge.dispute.created',data:{object:{charge:'ch_ABC123',payment_intent:null}}},true);
+ assert.equal(q.status,'refunded','Charge-only dispute must freeze booking');
+ assert.equal(b.eventRevoked,true,'Dispute must revoke any active vendor competition');
+ assert.equal(stripeRequests,1,'Checkout must not be created twice');
  console.log(JSON.stringify({pass:true,sourceRouteHandlersExecuted:true,
   invalidTokenBlocked:true,privateReviewBlocked:true,duplicateCheckoutReused:true,
   unsignedWebhookRejected:true,wrongAmountCurrencyAndReferenceRejected:true,
   signedPaymentMatched:true,webhookIdempotent:true,refundRevokesEvent:true,
-  replayCannotRestoreRefundedBooking:true,realStripeCalled:false,fullDockerTested:false}));
+  replayCannotRestoreRefundedBooking:true,chargeOnlyDisputeResolved:true,realStripeCalled:false,fullDockerTested:false}));
 })().catch(e=>{console.error(e);process.exitCode=1;});
