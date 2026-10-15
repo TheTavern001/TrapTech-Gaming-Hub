@@ -400,4 +400,9 @@ function mount(app, _express, A) {
   app.use(BASE, R);
 }
 
-module.exports = { mount, requireRole, requireAdmin, M, accounts, ROLES, roleAtLeast, BASE: () => BASE, _t: { hotp, totpStep, b32enc, b32dec, dec, clientIp } };
+// A fully authenticated owner session (password + TOTP) is required for review bypass.
+function isOwnerSession(req) {
+  const s=getSession(req);
+  return !!(s && s.stage==='full' && s.user && s.user.role==='owner' && !s.user.disabled);
+}
+module.exports = { mount, requireRole, requireAdmin, M, accounts, ROLES, roleAtLeast, isOwnerSession, BASE: () => BASE, _t: { hotp, totpStep, b32enc, b32dec, dec, clientIp } };
