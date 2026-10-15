@@ -170,6 +170,9 @@ RUN test -s tools/games-lib-static-check.js \
  && cp docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json /app/build/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
  && node -e "require('better-sqlite3')(':memory:').prepare('select 1').get(); require('@resvg/resvg-js'); console.log('native modules OK', process.platform, process.arch)"
 
+# Exercise consistent pre-start backups before any schema migration can touch a live DB.
+RUN node tools/test-prestart-db-snapshot.js
+
 # Run the actual server in an isolated, disposable build-time database and verify its HTTP routes.
 # This catches startup/runtime/icon/static-file regressions before the image is produced.
 RUN set -eu; \
@@ -199,6 +202,7 @@ COPY --from=build --chown=root:root /app/node_modules ./node_modules
 COPY --from=build --chown=root:root /app/build ./build
 COPY --chown=root:root package.json ./
 COPY --chown=root:root src ./src
+COPY --chown=root:root tools/prestart-db-snapshot.js ./tools/prestart-db-snapshot.js
 COPY --chown=root:root public ./public
 # The shop uses these score ranges to expose legitimate score-gated cosmetics at runtime.
 COPY --chown=root:root docs/score-ranges.json ./docs/score-ranges.json
@@ -208,8 +212,8 @@ USER node
 VOLUME ["/data"]
 EXPOSE 8787
 # Lightweight probe (bash /dev/tcp, no second node process, which would cost ~40 MB of RAM).
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
   CMD ["bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/${PORT:-8787} && printf 'GET /healthz HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && head -n1 <&3 | grep -q ' 200 '"]
 # Exec form, no npm (npm writes logs/cache and adds a second process). Heap is capped for a 128 MB container;
 # extra flags can be added with NODE_OPTIONS.
-CMD ["node", "--max-old-space-size=64", "--max-semi-space-size=1", "src/server.js"]
+CMD ["sh", "-c", "node --max-old-space-size=64 tools/prestart-db-snapshot.js && exec node --max-old-space-size=64 --max-semi-space-size=1 src/server.js"]
