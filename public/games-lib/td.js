@@ -3,7 +3,7 @@
 //        perWave(w)->count, bonus(w), startCash, lives, kill:'pts'|'layers' }
 window.TD = function (cfg) {
   const CS = 40, COLS = 20, ROWS = 10, OY = 50; const T = cfg.theme || {};
-  Kit.run({ id: cfg.id, title: cfg.title, orient: 'l', help: cfg.help || 'Tap a tower card, then tap a free tile to build\nTap a tower to upgrade it - waves auto-start', bg: T.bg || '#0b1e12',
+  Kit.run({ id: cfg.id, title: cfg.title, orient: 'l', help: (cfg.help || 'Tap a tower card, then tap a free tile to build\nTap a tower to upgrade it - waves auto-start') + '\nKeyboard: arrows move your chosen tile; Space builds there; number keys select a tower.', bg: T.bg || '#0b1e12',
     init(g) { g.cash = cfg.startCash || 120; g.lives = cfg.lives || 20; g.wave = 0; g.en = []; g.tw = []; g.sh = []; g.sel = 0; g.wt = 6; g.queue = 0; g.occ = new Set(); g.block = new Set(); g.cursor = {c: 2, r: 4};
       if (cfg.maze) { g.start = [0, 4]; g.goal = [COLS - 1, 5]; route(g); } else { g.path = expand(cfg.path); for (const p of g.path) g.block.add(p[0] + ',' + p[1]); }
       if (cfg.rocks) for (let i = 0; i < cfg.rocks; i++) { const c = g.RI(2, COLS - 3), r = g.RI(0, ROWS - 1); if (!g.block.has(c + ',' + r)) g.occ.add(c + ',' + r + ',rock'); } },
