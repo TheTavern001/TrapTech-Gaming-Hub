@@ -64,6 +64,10 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check tools/test-neutral-avatar-source.js \
  && node tools/test-neutral-avatar-source.js \
  && node tools/test-avatar-current-entitlements.js \
+ && node tools/test-avatar-one-credit-wallet.js \
+ && node tools/test-avatar-credit-spend-behavior.js \
+ && node tools/test-shop-avatar-credit-integration.js \
+ && node tools/test-existing-game-review-register.js \
  && node tools/test-avatar-async-stale-render.js \
  && node tools/test-avatar-rig-mobile-budget.js \
  && node tools/test-avatar-offscreen-fallback.js \
