@@ -140,6 +140,8 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-owner-preview-payment-lock.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
+ && node --check tools/test-vendor-signed-run-start.js \
+ && node tools/test-vendor-signed-run-start.js \
  && node --check tools/test-grow-op-touch-fairness.js \
  && node tools/test-grow-op-touch-fairness.js \
  && node --check tools/test-mobile-frame-allocation-regressions.js \

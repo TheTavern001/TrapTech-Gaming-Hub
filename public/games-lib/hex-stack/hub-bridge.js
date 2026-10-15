@@ -23,7 +23,12 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden && window.gameState === 1) pause(); });
   const _init = window.init; let pending = false;
   window.init = function (b) { if (!b && st !== 'over') return _init(b); if (pending) return; pending = true; st = 'starting';
-    const go = (seed) => { hubSeed(seed); pending = false; _init(b); st = 'play'; }; Hub.start('gl-hex-stack').then(go, () => go(null)); setTimeout(() => { if (pending) go(null); }, 4000); };
+    const fail = () => { if (!pending) return; pending = false; st = 'title';
+      const el = document.getElementById('hubmsg'); if (el) el.textContent = Hub.err || 'Sign in or reconnect to start a scored run.'; };
+    const go = (seed) => { if (!pending) return; if (!seed || !Hub.token) return fail();
+      hubSeed(seed); pending = false; _init(b); st = 'play'; };
+    Hub.start('gl-hex-stack').then(go, fail);
+    setTimeout(() => { if (pending) fail(); }, 12000); };
   window.hubOver = function () { if (st !== 'play') return; st = 'over'; const s = window.score || 0; Hub.submit(s).then(r => { GL.lastSubmit = r; }); };
 })();
 // Hub: on the title screen any tap / click / Space / Enter starts (upstream only accepted taps on the small play icon on some layouts)

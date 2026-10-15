@@ -16,7 +16,12 @@
   const _setup = GameManager.prototype.setup;
   GameManager.prototype.setup = function () { gm = this; state = 'starting'; merges = 0; const self = this; this.inputManager.events = this.inputManager.events || {};
     _setup.call(this); this.grid = new Grid(this.size); this.score = 0; this.over = false; this.won = false; this.keepPlaying = true;
-    Hub.start('gl-bud-merge').then((seed) => { Math.random = rng(seed); self.grid = new Grid(self.size); self.score = 0; self.addStartTiles(); self.actuate(); state = 'play'; msg('Merge buds - how far can you grow?'); }); };
+    Hub.start('gl-bud-merge').then((seed) => {
+      if (!seed || !Hub.token) { state = 'title'; msg(Hub.err || 'Sign in to begin a scored run. Tap New Game to retry.'); return; }
+      Math.random = rng(seed); self.grid = new Grid(self.size); self.score = 0;
+      self.addStartTiles(); self.actuate(); state = 'play';
+      msg('Merge buds - how far can you grow?');
+    }, error => { state = 'title'; GL.errors.push(String(error)); msg('Could not start the scored run. Retry when connected.'); }); };
   const _move = GameManager.prototype.move;
   GameManager.prototype.move = function (dir) { if (window.__ttVendorSettingsPaused || state !== 'play') return; const before = this.score; _move.call(this, dir); const d = this.score - before;
     if (d > 0) { merges++; Hub.event('m', d); }

@@ -466,7 +466,12 @@
          * Canvas container width expands out to the full width.
          */
         playIntro: function () {
-            window.HubTrex && HubTrex.start(); // [Gaming Hub hook] start a signed run
+            // Do not start the 3D/2D gameplay clock before the server accepts
+            // a new signed run. Otherwise players can accumulate unsigned distance.
+            if (window.HubTrex && !HubTrex.ready()) {
+                HubTrex.start().then(allowed => { if (allowed) this.playIntro(); });
+                return;
+            }
             if (!this.activated && !this.crashed) {
                 this.playingIntro = true;
                 this.tRex.playingIntro = true;
@@ -828,7 +833,10 @@
 
         restart: function () {
             if (!this.raqId) {
-                window.HubTrex && HubTrex.start(); // [Gaming Hub hook] start a signed run
+                if (window.HubTrex && !HubTrex.ready()) {
+                    HubTrex.start().then(allowed => { if (allowed) this.restart(); });
+                    return;
+                }
                 this.playCount++;
                 this.runningTime = 0;
                 this.playing = true;
