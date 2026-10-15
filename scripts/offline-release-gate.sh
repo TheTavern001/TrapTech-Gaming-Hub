@@ -50,6 +50,7 @@ run game-owner-mechanics node tools/test-owner-reported-gameplay.js
 run keep-guard-barracks-real-mechanics node tools/test-keep-guard-barracks.js
 run td-keyboard-touch-parity node tools/test-td-keyboard-touch-parity.js
 run load-harness-loopback-safety node tools/test-private-10k-harness.js
+run deplexo-snapshot-boot-order node tools/test-deplexo-snapshot-boot-order.js
 run giveaway-payment-and-game-approval node tools/test-giveaway-booking-release-gates.js
 run booked-skill-winner-contract node tools/test-booked-skill-winner-contract.js
 run booking-library-proposals node tools/test-booking-library-selection.js
