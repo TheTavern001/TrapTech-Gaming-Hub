@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "r1HostReadyFromOwnerScreenshot": "5fb461c077bfa42fe17f8a4333c730c7d73af2a8",
+  "policy": "Every confirmed failure requires root cause, a code correction, executable regression test, recorded outcome and promotion evidence. A note without a fix keeps an issue open. Run every listed test in Docker and both offline local commands. Host READY is not a physical game, finance or public launch certificate.",
+  "incidents": [
+    {
+      "id": "R1-SECRETLESS-BUILD",
+      "failedSha": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+      "rootCause": "Build imported runtime secret-dependent config during Docker build instead of static config",
+      "requiredTests": [
+        "tools/test-prelaunch-imports.js",
+        "tools/test-config-secret-preflight.js"
+      ],
+      "r1DockerFixResult": "PROVED_PASSED_IN_OWNER_OBSERVED_5FB461C_READY",
+      "stagedPostR1NativeRecheck": "NOT_RUN"
+    },
+    {
+      "id": "R1-PAYMENT-ORDER-REF",
+      "failedSha": "656074076ea4240e450452aa658ccf2697a54a58",
+      "rootCause": "Payment ledger test queried shortened, nonexistent transaction reference",
+      "requiredTests": [
+        "tools/test-payment-order-snapshots.js"
+      ],
+      "r1DockerFixResult": "PROVED_PASSED_IN_OWNER_OBSERVED_5FB461C_READY",
+      "stagedPostR1NativeRecheck": "NOT_RUN"
+    },
+    {
+      "id": "R1-POINTER-BEHAVIOR",
+      "failedSha": "d455ac26395904cdc1cd9f388a86c4db929cb6a4",
+      "rootCause": "Pointer test matched obsolete literal text instead of game touch behavior",
+      "requiredTests": [
+        "tools/test-owner-reported-gameplay.js"
+      ],
+      "r1DockerFixResult": "PROVED_PASSED_IN_OWNER_OBSERVED_5FB461C_READY",
+      "stagedPostR1NativeRecheck": "NOT_RUN"
+    },
+    {
+      "id": "R1-SCORE-SNAPSHOT",
+      "failedSha": "a6afa9cff3190399c939bbaee054267b7068a9f4",
+      "rootCause": "Submission test expected mutable score rather than immutable finalScore snapshot",
+      "requiredTests": [
+        "tools/test-kit-score-submit-error.js"
+      ],
+      "r1DockerFixResult": "PROVED_PASSED_IN_OWNER_OBSERVED_5FB461C_READY",
+      "stagedPostR1NativeRecheck": "NOT_RUN"
+    },
+    {
+      "id": "R1-BUILD-EVIDENCE",
+      "failedSha": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
+      "rootCause": "Journal overloaded source-only status with most recent failed build diagnostics",
+      "requiredTests": [
+        "tools/test-deplexo-release-evidence.js"
+      ],
+      "r1DockerFixResult": "PROVED_PASSED_IN_OWNER_OBSERVED_5FB461C_READY",
+      "stagedPostR1NativeRecheck": "NOT_RUN"
+    },
+    {
+      "id": "R1-CORE-SLUG",
+      "failedSha": "c587456628e34b89aa65e83a44be66d5b9f09adf",
+      "rootCause": "Source auditor constructed a library path for a slugless core game",
+      "requiredTests": [
+        "tools/test-audit-game-runtime-paths.js"
+      ],
+      "r1DockerFixResult": "PROVED_PASSED_IN_OWNER_OBSERVED_5FB461C_READY",
+      "stagedPostR1NativeRecheck": "NOT_RUN"
+    },
+    {
+      "id": "R1-ICON-ALIASES",
+      "failedSha": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
+      "rootCause": "Icon generator left stale aliases and favicon verifier refused a valid versioned URL",
+      "requiredTests": [
+        "tools/test-traptech-pwa-icons.js"
+      ],
+      "r1DockerFixResult": "PROVED_PASSED_IN_OWNER_OBSERVED_5FB461C_READY",
+      "stagedPostR1NativeRecheck": "NOT_RUN"
+    }
+  ],
+  "additionalRegressions": [
+    {
+      "id": "PRE-R1-PHANTOM-IMPORT",
+      "rootCause": "Scanner treated a string literal example as an actual executable import and rejected a valid bundle",
+      "requiredTests": [
+        "tools/test-prelaunch-imports.js"
+      ]
+    },
+    {
+      "id": "GAME-EXPANSION-87-CAP",
+      "rootCause": "Existing game count hardcode meant new games would be rejected or silently untested",
+      "requiredTests": [
+        "tools/test-qa-game-batches.js",
+        "tools/test-qa-87-browser-contract.js"
+      ]
+    }
+  ],
+  "allPhoneQualityApproved": false,
+  "stagedDockerTested": false
+}

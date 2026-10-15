@@ -55,8 +55,10 @@ for(const failed of failures){
  assert.equal(failed.status,'FAILED','Failed candidates cannot be treated as READY');
  assert.notEqual(failed.commit,current[0].commit,'Cannot mark failed candidate as screenshot-current host');
 }
-assert.equal(report.latestR1Build.sha,ledger.lastReportedFailedDeployment20261015.commit);
-assert.equal(report.latestR1Build.status,'FAILED');
+assert.equal(report.latestR1Build.sha,current[0].commit);
+assert.equal(report.latestR1Build.status,'READY');
+assert.equal(report.lastFailedR1Build.sha,ledger.lastReportedFailedDeployment20261015.commit);
+assert.equal(report.lastFailedR1Build.status,'FAILED');
 assert.equal(report.automaticDeploymentOwnerConfirmedOn,true);
 assert.equal(report.workingSource.shaFromLastReconciliation,ledger.currentWorkingSource.headAtReconciliation);
 assert.equal(report.historicalRegisteredGames,report.activeCoreGames+report.registeredLibraryGames);

@@ -36,6 +36,13 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 run node-version node --version
+run r1-incident-gate node tools/test-r1-incident-gates.js
+run r1-test-qa-87-browser-contract node tools/test-qa-87-browser-contract.js
+run r1-test-qa-game-batches node tools/test-qa-game-batches.js
+run r1-test-traptech-pwa-icons node tools/test-traptech-pwa-icons.js
+run r1-test-audit-game-runtime-paths node tools/test-audit-game-runtime-paths.js
+run r1-test-config-secret-preflight node tools/test-config-secret-preflight.js
+run r1-test-prelaunch-imports node tools/test-prelaunch-imports.js
 run wallet-source-syntax node --check src/unified-wallet.js
 run wallet-native-sqlite node tools/test-unified-wallet.js
 run reward-hold-clawback node tools/test-reward-integrity.js

@@ -1,5 +1,10 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — Fix-first policy enforced in predeploy testing
+
+Seven exact R1 failed Docker SHAs and two additional error families now have named regression coverage in `docs/audit/R1-INCIDENT-REGRESSION-CONTRACT.json`. The new `tools/test-r1-incident-gates.js` fails preflight if a regression test is missing from the Dockerfile or either offline verification route. Every original test still runs; source-status, screenshot-confirmed host READY and historical failures are separate rather than overloading one status. Last observed R1 host is `5fb461c` CURRENT READY; `61fec416` is the final historical failed image, **not** the latest deployment. Tested via source parsing and invariants; staging Docker rebuild/physical mobile still pending. This change is isolated from live Deplexo.
+
+
 ## 2026-10-15 — R2 staged upstream source and license reality check (not imports)
 
 Verified upstream repository existence, MIT root license metadata and specific source-file blob SHAs: HexGL `BKcore/HexGL@6addc95`, Reversi/Battleship/Sudoku `mashukui/web-games@3809452`, Maze `duysqubix/web-arcade@a8b8f27`. The three board/puzzle files exist, use local `i18n.js` and are finite client games requiring server-scored continuous rounds. Maze currently imports Three.js and a soldier GLB via CDNs, includes many uncontrolled random calls and has no established phone-touch proof. HexGL uses a legacy 32-script layout with remote favicon and requires port/rewrite. **0 games imported; 0 asset/media/license-complete, 0 giveaway-ready, 0 public-approved.** See `docs/audit/POST-R1-FIVE-GAME-SOURCE-VERIFICATION-2026-10-15.json`. Stage on work branch only to avoid automatic production redeployment.

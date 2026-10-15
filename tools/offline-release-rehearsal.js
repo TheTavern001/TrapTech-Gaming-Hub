@@ -16,6 +16,15 @@ const SHA=()=>{
 };
 const sha=SHA();
 const tests=[
+ 'tools/test-r1-incident-gates.js',
+ 'tools/test-qa-87-browser-contract.js',
+ 'tools/test-qa-game-batches.js',
+ 'tools/test-traptech-pwa-icons.js',
+ 'tools/test-audit-game-runtime-paths.js',
+ 'tools/test-deplexo-release-evidence.js',
+ 'tools/test-payment-order-snapshots.js',
+ 'tools/test-config-secret-preflight.js',
+ 'tools/test-prelaunch-imports.js',
  'tools/test-reviewed-wallet-read.js',
  'tools/test-unified-wallet.js',
  'tools/test-reward-integrity.js',
