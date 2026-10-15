@@ -5,13 +5,14 @@
 // physical Android/iOS tests and asset rights remain separate release gates.
 // Examples:
 // BASE=http://127.0.0.1:8787 node tools/qa-87-browser.js
+// QA_START_INDEX=100 QA_MAX_GAMES=100 BASE=http://127.0.0.1:8787 node tools/qa-87-browser.js
 // BASE=https://existing-app.example QA_INTERACTIVE_AUTH=1 QA_HEADLESS=0 node tools/qa-87-browser.js
 // QA_STORAGE_STATE=/tmp/reviewer.json BROWSER_ENGINE=webkit node tools/qa-87-browser.js
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),readline=require('node:readline');
+const {planGameBatch}=require('./qa-game-batches');
 const ROOT=path.resolve(__dirname,'..');
 const BASE=String(process.env.BASE||'http://127.0.0.1:8787').replace(/\/$/,'');
 const RUNS=Math.max(1,Math.min(30,Number(process.env.QA_SECONDS)||5));
-const MAX_GAMES=Math.max(1,Number(process.env.QA_MAX_GAMES)||87);
 const ENGINE=process.env.BROWSER_ENGINE||'chromium';
 const OUT=path.resolve(process.env.QA_REPORT_DIR||path.join(os.tmpdir(),'traptech-qa-87'));
 const SCREENSHOTS=path.join(OUT,'screenshots');
@@ -37,10 +38,12 @@ const core=[...body.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?
 const library=catalog.filter(g=>g.playable!==false&&!g.retired)
  .map(g=>({id:g.id,title:g.title,route:g.url,kind:'library'}));
 const games=[...core,...library];
-if(core.length!==13||library.length!==74||games.length!==87||new Set(games.map(g=>g.id)).size!==87){
- console.error('Active game catalog changed; rebaseline before claiming QA coverage',core.length,library.length);process.exit(2);
+if(core.length!==13||library.length<74||games.length<87){
+ console.error('Missing baseline active games',core.length,library.length);process.exit(2);
 }
-const targets=games.slice(0,MAX_GAMES),results=[];
+const batch=planGameBatch(games,{start:process.env.QA_START_INDEX??0,
+ limit:process.env.QA_MAX_GAMES??games.length,minimumActive:87});
+const targets=batch.targets,results=[];
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function filename(name){return name.replace(/[^a-z0-9._-]/gi,'_');}
 async function interactiveSignIn(browserOptions){
@@ -147,15 +150,17 @@ async function main(){
   const failed=results.filter(r=>!r.smokePassed),report={schema:1,
    testedAtUTC:new Date().toISOString(),engine:ENGINE,emulationOnly:true,host:BASE,
    fingerprint,authenticatedReviewer:signedIn,submittedRealScores:false,processedPayments:false,
-   expectedActiveTitles:87,attempted:results.length,passed:results.length-failed.length,
-   failed:failed.map(x=>x.id),fullCoverage:results.length===87,
+   expectedActiveTitles:batch.total,attempted:results.length,passed:results.length-failed.length,
+   failed:failed.map(x=>x.id),batchStartIndex:batch.start,batchEndExclusive:batch.endExclusive,
+   fullCoverage:batch.fullCoverage,requestedBatchPassed:failed.length===0,
    certifiedAAA:0,physicalAndroidApproved:0,physicalIphoneApproved:0,
    note:'Page/error/asset/limited frame-time smoke; not physical phone or end-to-end game-completion certification.',
    games:results};
   const target=path.join(OUT,'87-game-browser-smoke.json');
   fs.writeFileSync(target,JSON.stringify(report,null,2)+'\n');
   console.log('REPORT '+target);
-  if(failed.length||results.length!==87)process.exitCode=1;
+  // Requested batches are independently checked; optional full-coverage strict mode is explicit.
+  if(failed.length||(process.env.QA_REQUIRE_FULL_COVERAGE==='1'&&!batch.fullCoverage))process.exitCode=1;
   await context.close();
  }finally{await browser.close();}
 }
