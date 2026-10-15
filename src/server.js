@@ -392,7 +392,8 @@ function giveawayPublic(g, withWinners = true) {
     status: giveawayStatus(g), entrants: entrants.length, demo: !!g.is_demo, top: entrants.slice(0, 3).map(publicRow),
     win_method: g.win_method || 'score', winner_count: R.winnerCount(g), finalized_at: g.finalized_at || null, draw_commit: g.draw_commit || null,
     entrants_hash: g.entrants_hash || null, tiebreak_rules: R.TIEBREAK_RULES,
-    event_code: g.event_code || null, event_label: g.event_code ? EV.label(g) : null, official: true };
+    event_code: g.event_code || null, event_label: g.event_code ? EV.label(g) : null,
+    linked_requirements: require('./giveaway-linked').publicView(g.linked_requirements), official: true };
   if (H.v5Giveaway) Object.assign(out, H.v5Giveaway(g));
   if (H.v7Giveaway) H.v7Giveaway(g, out); // v7 builder: subtitle, description, banner, prizes, hidden board, official rules
   if (withWinners) {
@@ -406,14 +407,15 @@ function giveawayPublic(g, withWinners = true) {
 app.get('/api/giveaways', (req, res) => {
   const status = req.query.status;
   const all = db.prepare('SELECT * FROM giveaways WHERE active=1 ORDER BY start_at DESC').all();
-  let list = all.map(g => giveawayPublic(R.ready(g)));
+  let list = all.filter(g => !g.booking_id || ['active','scheduled'].includes(EV.status(g)))
+    .map(g => giveawayPublic(R.ready(g)));
   if (['active', 'upcoming', 'past'].includes(status)) list = list.filter(g => g.status === status);
   list.sort((a, b) => a.status === 'past' ? b.end_at - a.end_at : (b.featured - a.featured) || (a.end_at - b.end_at));
   res.json({ ok: true, giveaways: list, now: now() });
 });
 app.get('/api/giveaways/:id', (req, res) => {
   const g = R.ready(db.prepare('SELECT * FROM giveaways WHERE id=? AND active=1').get(req.params.id));
-  if (!g) return bad(res, 404, 'Giveaway not found');
+  if (!g || (g.booking_id && !['active','scheduled'].includes(EV.status(g)))) return bad(res, 404, 'Giveaway not found');
   const entrants = giveawayEntrants(g); const me = currentUser(req);
   const mine = me ? entrants.find(e => e.user_id === me.id) : null;
   const hidden = H.v7Hidden && H.v7Hidden(g); // v7: leaderboard hidden until the end
