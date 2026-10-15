@@ -52,6 +52,7 @@ const tests=[
  'tools/test-shop-avatar-credit-integration.js',
  'tools/test-existing-game-review-register.js',
  'tools/test-private-10k-harness.js',
+ 'tools/test-giveaway-booking-release-gates.js',
  'tools/test-avatar-async-stale-render.js',
  'tools/test-avatar-rig-mobile-budget.js',
  'tools/test-avatar-offscreen-fallback.js',
