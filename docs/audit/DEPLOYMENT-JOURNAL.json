@@ -809,9 +809,23 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "BLOCKED_HOST_AND_INDEPENDENT_QA"
+    },
+    {
+      "commit": "R1_RECOVERY_SINGLE_PUSH_PENDING",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Correct payment order snapshot test to use actual persisted order ref; preserve production code, rollback safety and payer balances.",
+      "validation": "Test source JS parsed; isolated SQLite wrong/correct-ref differential confirmed. Real better-sqlite3 test and complete Deplexo Docker re-run NOT YET OBSERVED.",
+      "host": "PREVIOUS_R1_FAILED_NEXT_R1_RECOVERY_UNVERIFIED",
+      "evidenceFiles": [
+        "tools/test-payment-order-snapshots.js",
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_BLOCKED_UNTIL_DOCKER_READY"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: source candidate 5aac573c includes zero-cost 87-title Playwright smoke (13 core, 74 library), improved console/asset/canvas checks, no reviewer cookie materialization, Docker safety contract. Browser syntax parsed, synthetic Chromium fixture passed. Actual 87-game browser run, full Docker, host READY and Android/iOS physical certification NOT performed. Deplexo auto-deploy not controlled in this chat.",
+  "lastEvidenceReconciliation": "2026-10-15: R1 6560740 Deplexo build correctly checked out and failed Docker STEP12/14 because financial snapshot test looked up QUOTE_PINN while order ref is QUOTE_PINNED. Earlier runtime tests passed. Test-only fix reuses immutable order reference for both purchase and refund ledgers; source parsed, SQLite mismatch reproduced; awaits next native build; R2-R5 untriggered.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -826,13 +840,13 @@
     "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
   },
   "currentWorkingSource": {
-    "branch": "main; QA fast-forward awaiting this journal update",
-    "headAtReconciliation": "5aac573c5d4f12cf89719d9144fb72e0fbe33331",
-    "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "87-title Playwright runner staged source-only; wait for controlled webhook deploy after account owner turns auto-deploy ON. No verified host READY on this SHA; 0 games AAA/score certified.",
+    "branch": "qa/gameplay-distinctness-and-collision-20261013",
+    "headAtReconciliation": "656074076ea4240e450452aa658ccf2697a54a58",
+    "sourceStatus": "R1_HOST_BUILD_FAILED_R1_FIX_STAGED",
+    "note": "Owner R1 log confirms QA checkout correct; Node20 preflight reached financial snapshot test, which has inconsistent QUOTE_PINNED vs QUOTE_PINN fixture. Recovery fix staged; no host ready proof or R2 deployment.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "5aac573c5d4f12cf89719d9144fb72e0fbe33331"
+    "lastAuditedGitHubHead": "656074076ea4240e450452aa658ccf2697a54a58"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {
@@ -861,12 +875,34 @@
     "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
   },
   "lastReportedFailedDeployment20261015": {
-    "commit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+    "commit": "656074076ea4240e450452aa658ccf2697a54a58",
     "status": "FAILED",
-    "error": "Docker STEP 11: ERR_INVALID_ARG_TYPE cryptographic HMAC key undefined in src/config.js:23",
-    "cause": "Old tools/verify-prelaunch.js imports runtime config without secrets available during Docker build",
-    "sourceCorrection": "2db3f2b7a8703a21575306daa5d07b43e1607bf6 (both main and QA contain fixed source and new regression guard)",
-    "sourceTests": "Compared old broken verifier and new verifier; new regression guard rejects old source, accepts fixed source; 81 Docker tool references exist in repository tree; full Docker/host NOT tested",
-    "deploymentState": "AUTO DEPLOY OFF; no host READY for corrected source observed"
-  }
+    "error": "Docker [1/2] STEP 12/14: tools/test-payment-order-snapshots.js:38 TypeError cannot read undefined.delta",
+    "cause": "Test fixture created store_orders.ref=QUOTE_PINNED but ledger queries and refund calls incorrectly used QUOTE_PINN, returning no ledger row despite preceding successful grant and balance assertions.",
+    "evidence": "Owner-pasted Deplexo build log, checkout 656074076ea4240e450452aa658ccf2697a54a58; native Node v20.20.2 + production modules; icon/preflight success through wallet test; failed test-payment-order-snapshots.js.",
+    "correctedSource": "tools/test-payment-order-snapshots.js now derives pinnedRef from order record, queries purchase/refund by parameterized ref and checks explicit presence; no production financial logic changed.",
+    "fixVerification": "JS syntax inspected; SQLite :memory: query repro confirms QUOTE_PINN => no row and QUOTE_PINNED => stored delta; next native Docker build still NOT RUN.",
+    "deploymentState": "R1 RECOVERY SOURCE PREPARATION ONLY: will push QA branch once, await Deplexo final status; R2-R5 BLOCKED"
+  },
+  "reportedFailedDeployments20261015": [
+    {
+      "commit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+      "status": "FAILED",
+      "error": "Docker STEP 11: ERR_INVALID_ARG_TYPE cryptographic HMAC key undefined in src/config.js:23",
+      "cause": "Old tools/verify-prelaunch.js imports runtime config without secrets available during Docker build",
+      "sourceCorrection": "2db3f2b7a8703a21575306daa5d07b43e1607bf6 (both main and QA contain fixed source and new regression guard)",
+      "sourceTests": "Compared old broken verifier and new verifier; new regression guard rejects old source, accepts fixed source; 81 Docker tool references exist in repository tree; full Docker/host NOT tested",
+      "deploymentState": "AUTO DEPLOY OFF; no host READY for corrected source observed"
+    },
+    {
+      "commit": "656074076ea4240e450452aa658ccf2697a54a58",
+      "status": "FAILED",
+      "error": "Docker [1/2] STEP 12/14: tools/test-payment-order-snapshots.js:38 TypeError cannot read undefined.delta",
+      "cause": "Test fixture created store_orders.ref=QUOTE_PINNED but ledger queries and refund calls incorrectly used QUOTE_PINN, returning no ledger row despite preceding successful grant and balance assertions.",
+      "evidence": "Owner-pasted Deplexo build log, checkout 656074076ea4240e450452aa658ccf2697a54a58; native Node v20.20.2 + production modules; icon/preflight success through wallet test; failed test-payment-order-snapshots.js.",
+      "correctedSource": "tools/test-payment-order-snapshots.js now derives pinnedRef from order record, queries purchase/refund by parameterized ref and checks explicit presence; no production financial logic changed.",
+      "fixVerification": "JS syntax inspected; SQLite :memory: query repro confirms QUOTE_PINN => no row and QUOTE_PINNED => stored delta; next native Docker build still NOT RUN.",
+      "deploymentState": "R1 RECOVERY SOURCE PREPARATION ONLY: will push QA branch once, await Deplexo final status; R2-R5 BLOCKED"
+    }
+  ]
 }

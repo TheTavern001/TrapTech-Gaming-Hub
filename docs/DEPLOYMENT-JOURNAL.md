@@ -1,5 +1,16 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — R1 Docker failure 6560740, precise test-fixture reference correction
+
+**Host:** User pasted full current R1 Deplexo Docker log proving `Checked out commit 656074076ea4240e450452aa658ccf2697a54a58` on QA branch (first time latest intended source checkout independently confirmed). Builder Node 20.20.2 ran base image/compiler, installed 113 production packages, generated and verified Trap Tech 192/512/maskable/iOS icon assets, passed secret initialization, revoked session and new single-wallet/atomic wallet tests. This is **not READY**: Docker stage 1/2 STEP 12/14 stopped on `tools/test-payment-order-snapshots.js:38` with `ledger.delta` undefined.
+
+**Root cause:** The disposable SQLite fixture inserted an order with `ref='QUOTE_PINNED'`. The test then queried `crown_ledger` using `ref='QUOTE_PINN'`, and repeated the wrong reference for refund and duplicate-refund assertions. The provider grant and wallet assertions directly preceding this lookup passed, indicating a mismatched test lookup. There is **no evidence** that actual payments were lost. Verified with isolated SQLite that the truncated query returns no row, whereas the exact reference returns the expected delta.
+
+**Source-only R1 recovery:** Reuse `pinnedRef` read from the immutable stored order and parameterize the purchase/refund ledger lookup; fail with an explicit missing-ledger message if absent. Leave `src/monetize.js`, wallet arithmetic, immutable ledger, settlement checks and production environment unchanged. Syntax inspected; full production dependency test and Docker rest of the suite **not yet rerun**. One QA branch recovery push is authorized; no R2–R5 pushes until it reaches host READY and private smoke confirms health, fingerprint, guest denial and /data continuity.
+
+**Safety:** Historic failed deployments remain in chronological audit. A failed build is not evidence of corrupt live data or proof of successful deployment. Public launch and 87 individual AAA/prize replay approvals remain at 0.
+
+
 ## 2026-10-15 — Free whole-catalog Playwright runner staged (not executed against Hub)
 
 **Deep research and independent access checks:** Deplexo's official deployments documentation confirms connected GitHub push webhook builds; build source is the selected resolved revision and failed builds do not replace a successful container. OAuth MCP can read deployment state/logs if authorized, but **no Deplexo authorization** is available in this ChatGPT tool session. Web and local container calls to the existing Hub origin did not yield a successful `/healthz` or `/api/build` response, and local container cannot resolve/download the private repository despite authenticated GitHub file API access from the connector. GitHub Actions allowance remains exhausted. The container **does** have a working Chromium/Playwright installation: an isolated, synthetic mobile-canvas browser smoke was successfully executed, **not** a Hub game test.
