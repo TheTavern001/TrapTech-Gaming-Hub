@@ -104,7 +104,7 @@ function checkSubmit(req, user, row, tok, t = Date.now()) {
 }
 function eventPublic(g, t = Date.now()) {
   return { id: g.id, code: g.event_code, url: `/event/${g.event_code}`, label: label(g), title: g.title, vendor: g.vendor || g.host, host: g.host, prize: g.prize,
-    image: g.image, games: gamesOf(g.id), linked_requirements: linked.publicView(g.linked_requirements), start_at: g.start_at, end_at: g.end_at, status: status(g, t), rules: g.rules, require_join: !!g.require_join };
+    image: g.image, games: gamesOf(g.id), linked_requirements: linked.publicView(g.linked_requirements), winner_rule: require('./booked-competition').publicRule(g), start_at: g.start_at, end_at: g.end_at, status: status(g, t), rules: g.rules, require_join: !!g.require_join };
 }
 function qrSvg(text) { const qr = require('qrcode-generator')(0, 'M'); qr.addData(text); qr.make(); return qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true }); }
 
