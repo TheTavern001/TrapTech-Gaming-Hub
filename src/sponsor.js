@@ -199,7 +199,7 @@ module.exports = function sponsor(app, A, h) {
     const info = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,package_snapshot,start_date,end_date,details,user_id,created_at,ip_hash,business_type,email,potato,licensed_confirmed,addons,features,public_token,notes)
       VALUES (?,?,?,?,'custom',?,?,?,?,?,?,?,?,?,?,?,'',?,?,?)`).run(brand, str(b.contact_name, 120), contact, str(b.event_type, 60), snapshot.slice(0, 1000),
       str(b.start_date, 20), str(b.end_date, 20), str(b.details, 4000), me ? me.id : null, now(), ipHash(req), businessType, email, potato, isCannabis ? 1 : 0, JSON.stringify(feats), token, str(b.notes, 2000));
-    { const cfg = require('./config'); const gids = (Array.isArray(b.games) ? b.games : []).map(String).filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway && !/^gl-/.test(id)).slice(0, 13);
+    { const cfg = require('./config'); const gids = [...new Set((Array.isArray(b.games) ? b.games : []).map(String).filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway && cfg.GAME_MAP[id].playable !== false && !cfg.GAME_MAP[id].retired))].slice(0, 13);
       db.prepare('UPDATE bookings SET prize=?, brand_color=?, game_ids=?, competition=?, length_days=? WHERE id=?').run(str(b.prize, 200), /^#[0-9a-fA-F]{6}$/.test(String(b.brand_color || '')) ? b.brand_color : '', JSON.stringify(gids),
         ['best', 'total', 'random'].includes(b.competition) ? b.competition : 'best', Math.max(1, Math.min(90, parseInt(b.length_days, 10) || 7)), info.lastInsertRowid); }
     logActivity('booking', `Sponsor quote request: ${brand} (${feats.length} features)`, me ? me.id : null, info.lastInsertRowid);
