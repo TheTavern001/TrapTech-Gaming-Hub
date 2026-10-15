@@ -162,7 +162,11 @@ function shell(path, inner, { cls = '', title } = {}) {
   // Async route handlers may finish after the user navigates somewhere else.
   // Only the active path may replace the application shell.
   const activePath = location.pathname.replace(/\/+$/, '') || '/';
-  if (activePath !== path) return;
+  // The avatar editor and store deliberately reuse the settings/shop shell styles.
+  // Accept only their explicitly registered route aliases, not arbitrary stale pages.
+  const alias = (path === '/settings' && activePath === '/avatar') ||
+    (path === '/shop' && (activePath === '/store' || activePath === '/prestige' || /^\/store\/order\/[A-Z0-9]{8,20}$/.test(activePath)));
+  if (activePath !== path && !alias) return;
   $app.innerHTML = `${topbar(path)}<main class="page ${cls}" id="main" tabindex="-1">${inner}</main>${footer()}${bottomnav(path)}`;
   setTitle(title || TITLES[path] || null);
   updateBell();
