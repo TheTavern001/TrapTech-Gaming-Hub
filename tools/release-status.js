@@ -6,6 +6,8 @@ const path = require('node:path');
 const cp = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const ledger = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/audit/DEPLOYMENT-JOURNAL.json'), 'utf8'));
+const latestAutoDeploy = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/audit/DEPLEXO-AUTO-DEPLOY-STATE-20261015.json'), 'utf8'));
+const postR1 = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/audit/POST-R1-FAILED-DEPLOYMENTS-20261015.json'), 'utf8'));
 const screenshotLedger = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json'), 'utf8'));
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/games-lib/catalog.json'), 'utf8'));
 const config = fs.readFileSync(path.join(ROOT, 'src/config.js'), 'utf8');
@@ -83,6 +85,9 @@ const output = { checkedAtUTC:new Date().toISOString(), gitHead:head||'not avail
     warning:'GitHub source does NOT imply deployed to Deplexo'},
   automaticDeploymentOwnerConfirmedOff:ledger.ownerConfirmedAutoDeployOff===true,
   automaticDeploymentOwnerConfirmedOn:ledger.autoDeployOwnerConfirmedOn===true,
+  automaticDeploymentCurrentOwnerReported:latestAutoDeploy.ownerCurrentReportedState,
+  postR1ObservedFailedBuilds:postR1.failed.length,
+  postR1LastObservedReady:{sha:postR1.readyObserved.commit,currentBadgeVisible:postR1.readyObserved.currentBadgeVisible},
   latestR1Build:{sha:lastObserved?.commit||null,
     status:lastObserved?.status||'UNKNOWN',
     error:lastObserved?.status==='FAILED'?(lastObserved?.firstError||null):null,

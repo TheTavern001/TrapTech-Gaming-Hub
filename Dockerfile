@@ -31,6 +31,7 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s docs/GAMES-LIB.md \
  && test -s docs/score-ranges.json \
  && echo 'Required prelaunch audit inputs present' \
+ && node tools/test-post-r1-build-evidence.js \
  && node tools/test-r1-incident-gates.js \
  && mkdir -p docs/audit \
  && node --check tools/verify-private-preview-live.js \

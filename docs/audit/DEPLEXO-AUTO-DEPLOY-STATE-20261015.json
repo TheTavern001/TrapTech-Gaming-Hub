@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "ownerCurrentReportedState": "OFF",
+  "ownerConfirmedAt": "2026-10-15",
+  "evidence": "User explicitly confirmed in this conversation: 'Auto deploy has been turned off fix this wtf'.",
+  "source": "owner report in Gaming Hub chat; Deplexo account state not independently accessed",
+  "priorOwnerReportedState": "ON",
+  "note": "Historical ON is not the current observation; do not automatically enable until a candidate has a verified source SHA and one controlled deployment."
+}

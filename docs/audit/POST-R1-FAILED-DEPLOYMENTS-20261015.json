@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "evidence": "Owner screenshots of Deplexo deployments for 2026-10-15 (phone 17:12)",
+  "branch": "work/post-r1-mobile-quality-and-game-intake-20261015",
+  "readyObserved": {
+    "commit": "41dc9462afcf89b2ceb5e3932e00f75cba42a9fc",
+    "status": "READY",
+    "currentBadgeVisible": false,
+    "source": "Owner screenshot; READY and Rollback shown; CURRENT label absent"
+  },
+  "failed": [
+    {
+      "commit": "cd54a4e2f43197f7790014d55a295c88b33a9e50",
+      "area": "license-source audit",
+      "status": "FAILED",
+      "evidence": "Owner Deplexo red ERROR screenshot, same short SHA",
+      "firstFailingLogLine": null,
+      "confirmedRootCause": null,
+      "verifiedFixed": false,
+      "releaseEligible": false
+    },
+    {
+      "commit": "6eb0aaa106cb27691cf014e7e62ecfc5ebbd1666",
+      "area": "predeploy R1 regression gates",
+      "status": "FAILED",
+      "evidence": "Owner Deplexo red ERROR screenshot, same short SHA",
+      "firstFailingLogLine": null,
+      "confirmedRootCause": null,
+      "verifiedFixed": false,
+      "releaseEligible": false
+    },
+    {
+      "commit": "6eb59229dc6009842251fc027846239ae7f075ed",
+      "area": "staged-vs-ready evidence checks",
+      "status": "FAILED",
+      "evidence": "Owner Deplexo red ERROR screenshot, same short SHA",
+      "firstFailingLogLine": null,
+      "confirmedRootCause": null,
+      "verifiedFixed": false,
+      "releaseEligible": false
+    },
+    {
+      "commit": "94cb0e8e3086ac7e60945e5756e403044b534bf5",
+      "area": "browser-QA contract",
+      "status": "FAILED",
+      "evidence": "Owner Deplexo red ERROR screenshot, same short SHA",
+      "firstFailingLogLine": null,
+      "confirmedRootCause": null,
+      "verifiedFixed": false,
+      "releaseEligible": false
+    },
+    {
+      "commit": "ec3dd26889a9a8fae42e8fc1e36a2449b828158d",
+      "area": "future READY transition validator",
+      "status": "FAILED",
+      "evidence": "Owner Deplexo red ERROR screenshot, same short SHA",
+      "firstFailingLogLine": null,
+      "confirmedRootCause": null,
+      "verifiedFixed": false,
+      "releaseEligible": false
+    },
+    {
+      "commit": "8f118c8dbe0654056e532c8780d668fdf7f24f9b",
+      "area": "QA regression guard",
+      "status": "FAILED",
+      "evidence": "Owner Deplexo red ERROR screenshot, same short SHA",
+      "firstFailingLogLine": null,
+      "confirmedRootCause": null,
+      "verifiedFixed": false,
+      "releaseEligible": false
+    }
+  ],
+  "correctiveState": "RELEASE_FROZEN_OFFLINE_REPAIR",
+  "requiredBeforeNextDeploy": "Obtain first failing log line, reproduce and fix, run exact Node+Docker build, then controlled manual Deplexo deployment; preserve any prior READY.",
+  "currentLiveSHA": "UNCONFIRMED_BY_LATEST_CROP"
+}

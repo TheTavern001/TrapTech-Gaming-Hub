@@ -16,6 +16,7 @@ const SHA=()=>{
 };
 const sha=SHA();
 const tests=[
+ 'tools/test-post-r1-build-evidence.js',
  'tools/test-qa-browser-runtime-integrity.js',
  'tools/test-r1-incident-gates.js',
  'tools/test-qa-87-browser-contract.js',

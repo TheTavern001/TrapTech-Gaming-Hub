@@ -16,7 +16,7 @@ trap 'rm -rf "$tmpdir"' EXIT
   printf 'DateUTC: %s\n' "$(date -u +%FT%TZ)"
   printf 'Release: %s\n' "$release"
   printf 'Git source HEAD: %s\n' "$(git rev-parse HEAD 2>/dev/null || printf UNKNOWN)"
-  printf 'Production host: NOT TESTED HERE; owner screenshot 278af07 CURRENT READY\n'
+  printf 'Production host: NOT TESTED HERE. Deplexo screenshots and actual current SHA require separate confirmation\n'
   printf 'Device Android/iOS: NOT TESTED HERE\n'
 } > "$report"
 fail=0
@@ -36,6 +36,7 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 run node-version node --version
+run post-r1-failed-build-evidence node tools/test-post-r1-build-evidence.js
 run qa-browser-runtime-integrity node tools/test-qa-browser-runtime-integrity.js
 run r1-incident-gate node tools/test-r1-incident-gates.js
 run r1-test-qa-87-browser-contract node tools/test-qa-87-browser-contract.js

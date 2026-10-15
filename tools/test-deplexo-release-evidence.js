@@ -63,7 +63,16 @@ assert.equal(report.latestR1Build.sha,current[0].commit);
 assert.equal(report.latestR1Build.status,'READY');
 assert.equal(report.lastFailedR1Build.sha,ledger.lastReportedFailedDeployment20261015.commit);
 assert.equal(report.lastFailedR1Build.status,'FAILED');
-assert.equal(report.automaticDeploymentOwnerConfirmedOn,true);
+assert.equal(report.automaticDeploymentOwnerConfirmedOn,true,'Preserve historical owner ON evidence');
+const currentAutoState=JSON.parse(fs.readFileSync(path.join(root,
+ 'docs/audit/DEPLEXO-AUTO-DEPLOY-STATE-20261015.json'),'utf8'));
+const postR1=JSON.parse(fs.readFileSync(path.join(root,
+ 'docs/audit/POST-R1-FAILED-DEPLOYMENTS-20261015.json'),'utf8'));
+assert.equal(report.automaticDeploymentCurrentOwnerReported,currentAutoState.ownerCurrentReportedState,
+ 'Report must use latest owner-reported setting, not historical ON');
+assert.equal(report.postR1ObservedFailedBuilds,postR1.failed.length);
+assert.equal(report.postR1LastObservedReady.currentBadgeVisible,false,
+ 'READY is not evidence of CURRENT');
 assert.equal(report.workingSource.shaFromLastReconciliation,ledger.currentWorkingSource.headAtReconciliation);
 assert.equal(report.historicalRegisteredGames,report.activeCoreGames+report.registeredLibraryGames);
 assert.equal(report.totalPlayableGames,report.activeCoreGames+report.playableLibraryGames);
