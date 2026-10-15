@@ -15,12 +15,14 @@ assert.equal(pkg.scripts['qa:87:browser'],'node tools/qa-87-browser.js');
 for(const marker of ['QA_REQUIRE_LOGIN','QA_STORAGE_STATE','QA_INTERACTIVE_AUTH',
  'window.__GL','frameMsP95','badAssets','jsExceptions','scoreReplayCertified:false',
  'visualAAAApproved:false','physicalAndroidApproved:0','physicalIphoneApproved:0',
- 'fullCoverage:batch.fullCoverage','page.route(\'**/api/score\'',
+ 'fullCoverage:batch.fullCoverage','qaRequestAllowed(request.method()',
  'runtimeSurfaceDetected:runtimeSurface','consoleErrors.length>0',
  'QA_START_INDEX','QA_MAX_GAMES','planGameBatch(games','QA_REQUIRE_FULL_COVERAGE',
  'runtimeIdentityVerified','runAuthorized:','QA_ALLOW_RUN_START']){
  assert.ok(src.includes(marker),'Missing browser safety/evidence invariant: '+marker);
 }
+assert.ok(!src.includes("page.route('**/api/score'"),
+ 'A narrow endpoint glob would fail to block future score URL query variants');
 assert.ok(!src.includes('context.storageState({path:'),
  'Interactive authenticated reviewer cookies must not be written to disk by default');
 const ts=src.replace(/^#![^\n]*\n/,'');

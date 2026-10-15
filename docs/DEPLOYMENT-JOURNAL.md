@@ -2,7 +2,7 @@
 
 ## 2026-10-15 — Game QA false-positive and unsafe-write fixes, staging only
 
-Library browser QA now checks actual signed-run game identity, engine identity and play/over state rather than accepting any canvas page. Core SPA pages are still surface-only tests, not game-loop proof. QA blocks all API mutations other than signed `POST /api/run/start`; remote host tests require explicit `QA_ALLOW_RUN_START=1` because creating runs writes temporary server records. Added negative regression to Docker and both offline test paths. Source test does not claim a browser, real phone, 500-game or public launch certification. Deplexo current READY remains `5fb461c`.
+Library browser QA now checks actual signed-run game identity, engine identity and play/over state rather than accepting any canvas page. Core SPA pages are still surface-only tests, not game-loop proof. QA blocks all API mutations other than signed `POST /api/run/start`; remote host tests require explicit `QA_ALLOW_RUN_START=1` because creating runs writes temporary server records. Added negative regression to Docker and both offline test paths. A stale predecessor contract requiring the old narrow score route was identified during staging preflight and corrected before deployment. Source test does not claim a browser, real phone, 500-game or public launch certification. Deplexo current READY remains `5fb461c`.
 
 
 ## 2026-10-15 — Fix-first policy enforced in predeploy testing
