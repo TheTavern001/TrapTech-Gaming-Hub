@@ -68,6 +68,10 @@ run private-preview-readiness node tools/test-private-preview-readiness.js
 run retired-duplicates node tools/test-owner-duplicate-retirements.js
 run external-source-vehicles node tools/test-imported-kenney-cars.js
 run neutral-rig-fingerprint node tools/test-neutral-avatar-source.js
+run avatar-one-credits-wallet node tools/test-avatar-one-credit-wallet.js
+run avatar-credit-spend-behavior node tools/test-avatar-credit-spend-behavior.js
+run shop-wardrobe-integration node tools/test-shop-avatar-credit-integration.js
+run complete-existing-game-review-register node tools/test-existing-game-review-register.js
 run mobile-frame-allocations node tools/test-mobile-frame-allocation-regressions.js
 run prize-score-fail-closed node tools/test-prize-score-proof.js
 run candidate-admission-boundary node tools/test-game-candidate-queue.js
