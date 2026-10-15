@@ -12,6 +12,13 @@ assert.ok(!importSpecs(live).includes('./player-prefs.js'),
 assert.ok(importSpecs(app).includes('./player-prefs.js'),
   'Real app import must remain checked by build');
 assert.ok(fs.existsSync(path.join(root,'public/js/player-prefs.js')),'App import target missing');
+// Deplexo STEP 11 regression: build-stage source audits have no runtime secrets.
+// Old main 570a9fe imported src/config.js to compute GAMES, then HMAC threw.
+const prelaunch=read('tools/verify-prelaunch.js');
+assert.ok(prelaunch.includes('const runtimeCore = [...ids].filter(id => !retiredIds.has(id));'),
+  'Prelaunch core game list must come from parsed source, never secret-dependent config');
+assert.ok(!prelaunch.includes("const runtimeCore = require('../src/config').GAMES"),
+  'Secretless Docker build cannot import runtime config to enumerate games');
 const fakes=[
   "const check = page.includes(\"import * as GP from './nonexistent.js'\");",
   "// import './fake-comment.js'\n/* export { x } from './fake-block.js' */",
