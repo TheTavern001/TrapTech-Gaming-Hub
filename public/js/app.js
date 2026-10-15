@@ -769,6 +769,7 @@ route(/^\/event\/(TT-[0-9A-Za-z]{5})$/i, async (m) => {
   shell('/giveaways', `<div class="narrow event-page">
     <div class="event-label" id="event-label">${icon('badge-check')} ${esc(r.board_label)}</div>
     <h1>${esc(e.title)}</h1>
+    ${e.winner_rule ? `<div class="card pad" role="note"><b>${icon('trophy')} How the winner is decided</b><p class="small muted" style="margin:6px 0 0">${esc(e.winner_rule)}</p></div>` : ''}
     <div class="card pad"><p style="margin:0 0 6px"><b>Prize:</b> ${esc(e.prize || e.title)}</p><p class="small muted" style="margin:0">Hosted by ${esc(e.vendor)}. Status: <b>${esc(e.status)}</b>. ${new Date(e.start_at).toLocaleString()} to ${new Date(e.end_at).toLocaleString()}.</p>
       ${(e.linked_requirements || []).filter(x=>x && x.kind==='visit' && !x.required).map(x=>`<div class="card pad" style="margin:10px 0"><b>${icon('external-link')} Brand channel</b><p class="small muted">Optional: visit the sponsoring brand's channel. Following is not required for giveaway entry or prizes.</p><a class="btn sm ghost" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.label || 'Visit channel')}</a></div>`).join('')}
       ${live ? `<div class="small muted" style="margin:10px 0 6px">${S.me ? 'Pick a game. Only runs started here count for this event:' : 'Sign in to play for this event:'}</div><div class="gpicks">${play}</div>` : ''}</div>
