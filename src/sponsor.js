@@ -134,7 +134,7 @@ function adminView(b) {
 }
 function saveQuote(id, body, by) {
   const b = db.prepare('SELECT * FROM bookings WHERE id=?').get(id); if (!b) return { ok: false, error: 'Request not found.' };
-  const q = quoteRow(id); if (q && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'This quote was already accepted; it can no longer change.' };
+  const q = quoteRow(id); if (q && ['accepted', 'paid', 'refunded'].includes(q.status)) return { ok: false, error: 'This quote was already accepted; it can no longer change.' };
   const lines = (Array.isArray(body.lines) ? body.lines : draftLines(b)).slice(0, 60).map(l => {
     const qty = Math.max(0, Math.min(1000, Number(l.qty) || 0)); const unit = Math.round(Number(l.unit_cents) || 0);
     const amount = l.amount_cents !== undefined && l.custom ? Math.round(Number(l.amount_cents) || 0) : Math.round(qty * unit);
@@ -163,7 +163,7 @@ function setStatus(id, status, by) {
 }
 // what the sponsor sees on the status page (prices only once a quote has been SENT)
 function sponsorView(b) {
-  const q = quoteRow(b.id); const shown = q && ['sent', 'accepted', 'declined', 'paid'].includes(q.status);
+  const q = quoteRow(b.id); const shown = q && ['sent', 'accepted', 'declined', 'paid', 'refunded'].includes(q.status);
   const pk = PK.getPackages();
   const ev = b.event_id ? db.prepare('SELECT id, event_code, title, start_at, end_at FROM giveaways WHERE id=?').get(b.event_id) : null;
   return { id: b.id, brand: b.brand, created_at: b.created_at, start_date: b.start_date, end_date: b.end_date, details: b.details, notes: b.notes, business_type: b.business_type,
