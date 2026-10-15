@@ -28,6 +28,15 @@ node tools/offline-release-rehearsal.js --release=R1 --full
 7. Perform Android Chrome and iOS Safari/WKWebView acceptance on the deployed SHA: login/logout and session revocation, 21+ gate, navigation and repeated profiles, avatar GPU memory/fps, purchasing restrictions, at least one end-to-end sample run per mechanics family, score hold/rejection, rewards, and responsive safe-area/landscape checks. Log every failure and exact build fingerprint.
 8. Fix/redeploy the tested R1 candidate if necessary; advance R2–R5 only with device and owner acceptance recorded. Public launch also requires all planned titles and payment/security gates independently certified.
 
+## Existing Deplexo app, not a second test site
+
+- The owner will review new features on the **existing** `glassy-drifter-9532.de.deplexo.com` app, in a *controlled first manual candidate deployment*. Do not create a second Deplexo app or tell the owner to install Docker.
+- **PR #29 now targets `main`**, and remains **DRAFT / NOT MERGED**. This does not change production or the existing Deplexo auto-deploy setting.
+- Before enabling any deployment, verify the **branch currently configured for the existing Deplexo app**. Owner history previously showed `qa/gameplay-distinctness-and-collision-20261013`; if still configured, merging to `main` will not by itself update that app. Choose the exact reviewed release commit/branch in Deplexo deliberately, never guess.
+- Keep client-facing payments, booked giveaways, prize runs and exclusive sales blocked until verified. Source logic fails closed for unapproved prize-scoring titles and unpaid bookings, but Stripe/webhooks, native database integration and backup/rollback remain unverified.
+- Deplexo is the only available Docker-capable integrated build path in this session: the assistant runtime has no Docker and cannot resolve github.com to clone the private repo. Treat Deplexo's first build as a **test of the candidate**, not prior proof it works. Capture actual build logs, release SHA/fingerprint and rollback state before promoting it to any clients.
+- **Optional brand link policy:** only one non-required public HTTPS channel link inside a normal booked giveaway; no subscriber count, follower-gating claim, automatic platform verification or growth/time guarantee. This is enforced by `src/giveaway-linked.js` and `tools/test-optional-sponsor-channel.js`.
+
 ## Go/no-go decision
 
 **NO-GO** until complete checkout + Docker/HTTP source build pass, backup/rollback verified, private controls locked down and reviewed, and exact deployment candidate SHA recorded. These are predeployment criteria. Postdeployment device tests are required before calling R1 owner-approved.
