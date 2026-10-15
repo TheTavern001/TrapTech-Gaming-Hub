@@ -14,7 +14,7 @@ ctx.testShell('/profile/old','stale');
 assert.equal(output.innerHTML,'not-replaced','Old async result must not overwrite a newly selected route');
 ctx.testShell('/shop','correct');
 assert.match(output.innerHTML,/correct/,'Active path must render');
-for(const [url,alias] of [['/avatar','/settings'],['/store','/shop'],['/prestige','/shop'],['/store/order/ABCD1234','/shop']]){
+for(const [url,alias] of [['/avatar','/settings'],['/store','/shop'],['/prestige','/shop'],['/shop/how-it-works','/shop'],['/store/order/ABCD1234','/shop']]){
  loc.pathname=url; output.innerHTML='not-replaced';ctx.testShell(alias,'expected-alias');
  assert.match(output.innerHTML,/expected-alias/,'Must render supported UI: '+url);
 }
