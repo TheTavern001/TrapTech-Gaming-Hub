@@ -14,9 +14,13 @@ ctx.testShell('/profile/old','stale');
 assert.equal(output.innerHTML,'not-replaced','Old async result must not overwrite a newly selected route');
 ctx.testShell('/shop','correct');
 assert.match(output.innerHTML,/correct/,'Active path must render');
-for(const [url,alias] of [['/avatar','/settings'],['/store','/shop'],['/prestige','/shop'],['/shop/how-it-works','/shop'],['/store/order/ABCD1234','/shop']]){
+for(const [url,alias] of [['/avatar','/settings'],['/store','/shop'],['/prestige','/shop'],['/shop/how-it-works','/shop'],['/store/order/ABCD1234','/shop'],['/sponsor/status/AbCDefghijklmnopqrst0123','/sponsor'],['/join/BRAND-INVITE','/giveaways']]){
  loc.pathname=url; output.innerHTML='not-replaced';ctx.testShell(alias,'expected-alias');
  assert.match(output.innerHTML,/expected-alias/,'Must render supported UI: '+url);
+}
+for (const [url,legacy] of [['/sponsor/status/too-short','/sponsor'],['/join/','/giveaways'],['/random/status/AbCDefghijklmnopqrst0123','/sponsor']]) {
+ loc.pathname=url; output.innerHTML='not-replaced';ctx.testShell(legacy,'wrong-private-route');
+ assert.equal(output.innerHTML,'not-replaced','Unexpected route must be blocked: '+url);
 }
 loc.pathname='/shop'; output.innerHTML='not-replaced';
 ctx.testShell('/settings','wrong-route');
