@@ -25,17 +25,19 @@ for(const bad of ['https://checkout.stripe.com.attacker.invalid/pay','http://che
 const q={booking_id:7,status:'accepted',total_cents:4900,valid_until:Date.now()+86400000,
  checkout_state:null,refunded_at:null};
 const b={id:7,public_token:'test-private-booking-token'};
-const handlers={},activity=[],statements=[],payments=[];
+const handlers={},activity=[],statements=[],payments=[],revocations=new Set();
 const db={
  exec(sql){statements.push(sql);},
  transaction(fn){return fn;},
  prepare(sql){
   return {
    all(){if(sql.startsWith('PRAGMA table_info'))return [];throw Error('Unknown all: '+sql);},
-   get(...v){if(sql.includes('SELECT booking_id FROM sponsor_quotes'))
+   get(...v){if(sql.includes('SELECT 1 FROM sponsor_payment_revocations'))return revocations.has(v[0])?{ok:1}:null;
+    if(sql.includes('SELECT booking_id FROM sponsor_quotes'))
      return q.status==='paid'&&q.provider_payment_id===v[0]?{booking_id:7}:null;
     throw Error('Unknown get: '+sql);},
    run(...v){
+    if(sql.includes('INSERT OR IGNORE INTO sponsor_payment_revocations')){revocations.add(v[0]);return {changes:1};}
     if(sql.includes("SET provider='stripe'")){
      if(q.status!=='accepted'||q.checkout_state==='creating')return {changes:0};
      [q.checkout_ref,q.checkout_created_at,q.checkout_expires_at]=v.slice(0,3);
@@ -131,9 +133,15 @@ async function call(route,body={},signed=false,token=b.public_token){
  assert.equal(FEE.paidFeeRecorded(q),false,'Any refund must lock event out');
  r=await call(url,event(session),true);
  assert.equal(q.status,'refunded','Late replay cannot resurrect refunded event');
+ // Simulate a refund webhook delivered BEFORE payment succeeded. The durable
+ // tombstone must freeze the booking when checkout.session.completed arrives.
+ q.status='accepted';q.refunded_at=null;q.provider_payment_id=null;q.settled_cents=null;
+ r=await call(url,event(session),true);
+ assert.equal(q.status,'refunded','Out-of-order success cannot resurrect previously refunded payment');
+ assert.equal(q.refunded_at>0,true,'Late payment is explicitly marked revoked');
  // Charge-only disputes may omit payment_intent in the signed event; look
  // up the charge through the mocked Stripe API to identify and freeze it.
- q.status='paid';q.refunded_at=null;b.eventRevoked=false;
+ q.status='paid';q.refunded_at=null;q.provider_payment_id='pi_ABC123';b.eventRevoked=false;
  r=await call(url,{type:'charge.dispute.created',data:{object:{charge:'ch_ABC123',payment_intent:null}}},true);
  assert.equal(q.status,'refunded','Charge-only dispute must freeze booking');
  assert.equal(b.eventRevoked,true,'Dispute must revoke any active vendor competition');
@@ -142,5 +150,5 @@ async function call(route,body={},signed=false,token=b.public_token){
   invalidTokenBlocked:true,privateReviewBlocked:true,duplicateCheckoutReused:true,
   unsignedWebhookRejected:true,wrongAmountCurrencyAndReferenceRejected:true,
   signedPaymentMatched:true,webhookIdempotent:true,refundRevokesEvent:true,
-  replayCannotRestoreRefundedBooking:true,chargeOnlyDisputeResolved:true,realStripeCalled:false,fullDockerTested:false}));
+  replayCannotRestoreRefundedBooking:true,chargeOnlyDisputeResolved:true,outOfOrderRefundBlocked:true,realStripeCalled:false,fullDockerTested:false}));
 })().catch(e=>{console.error(e);process.exitCode=1;});
