@@ -153,9 +153,11 @@ function boardsStatus(g) { const t = now(); return t < g.start_at ? 'upcoming' :
 const weightOf = (g, attempts) => (g.win_method === 'random' && g.weight_mode === 'activity') ? Math.min(WEIGHT.max, 1 + Math.floor((attempts || 0) / WEIGHT.per)) : 1;
 // at lock time: winners who became ineligible (won elsewhere meanwhile) are skipped with a logged reason
 function lockViolation(g, userId, t = now()) {
+  const linkedFailure=require('./giveaway-linked').checksFor({id:userId},g,db).find(c=>!c.ok);
+  if(linkedFailure)return 'Required linked action was not verified by Trap Tech at results lock: '+linkedFailure.label;
   if (g.channel_id && !g.open_to_all) { const m = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId); if (!m || m.brand_id !== g.channel_id) return 'Not a member of this brand when the giveaway ended (brand giveaways are for members only)'; }
   if (g.elig_win_cooldown_days) { const w = lastWin(userId, t - g.elig_win_cooldown_days * D); if (w) return `Win cooldown: already won a giveaway on ${fmtDate(w)} (${g.elig_win_cooldown_days}-day cooldown)`; }
   if (g.elig_brand_month && g.channel_id) { const w = lastWin(userId, t - 30 * D, g.channel_id); if (w) return `One win per brand per 30 days: already won this brand on ${fmtDate(w)}`; }
   return null;
 }
-module.exports = { extra: [], DEFAULTS, FIELDS, WEIGHT, read, rulesOf, describe, check, join, leave, setChecklist, activeEntries, weightOf, lockViolation, lastWin };
+module.exports = { extra: [(u,g)=>require('./giveaway-linked').checksFor(u,g,db)], DEFAULTS, FIELDS, WEIGHT, read, rulesOf, describe, check, join, leave, setChecklist, activeEntries, weightOf, lockViolation, lastWin };
