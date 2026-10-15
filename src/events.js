@@ -14,6 +14,7 @@
 //  * Nothing that decides "official" or "admin" lives in frontend JS; the game postMessage bridge is untrusted.
 const crypto = require('crypto');
 const db = require('./db');
+const linked = require('./giveaway-linked');
 const cfg = require('./config');
 const PU = require('./public-url');
 
@@ -78,6 +79,8 @@ function checkStart(req, user, gameId, ref, t = Date.now()) {
   const st = status(g, t);
   if (st !== 'active') return { status: 403, error: st === 'scheduled' ? 'This event has not started yet.' : st === 'ended' ? 'This event has ended.' : 'This event is not active.' };
   if (!user) return { status: 401, error: 'Please sign in first.' };
+  const linkedBlock = linked.checksFor(user,g,db).find(x=>!x.ok);
+  if(linkedBlock) return { status:403,error:linkedBlock.hint };
   const game = cfg.GAME_MAP[gameId];
   if (!game || !game.giveaway) return { status: 400, error: 'That game cannot count for an official giveaway.' };
   if (!gamesOf(g.id).includes(gameId)) return { status: 400, error: 'That game is not part of this event.' };
@@ -103,13 +106,15 @@ function checkSubmit(req, user, row, tok, t = Date.now()) {
 }
 function eventPublic(g, t = Date.now()) {
   return { id: g.id, code: g.event_code, url: `/event/${g.event_code}`, label: label(g), title: g.title, vendor: g.vendor || g.host, host: g.host, prize: g.prize,
-    image: g.image, games: gamesOf(g.id), start_at: g.start_at, end_at: g.end_at, status: status(g, t), rules: g.rules, require_join: !!g.require_join };
+    image: g.image, games: gamesOf(g.id), linked_requirements: linked.publicView(g.linked_requirements), start_at: g.start_at, end_at: g.end_at, status: status(g, t), rules: g.rules, require_join: !!g.require_join };
 }
 function qrSvg(text) { const qr = require('qrcode-generator')(0, 'M'); qr.addData(text); qr.make(); return qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true }); }
 
 const NOTICE = 'Only giveaways shown in the Official Giveaways section of The Gaming Hub are authorized Gaming Hub competitions. Public game scores do not count as entry into an official giveaway.';
 
 function routes(app, A, H) {
+  // Only the existing owner/admin router may approve membership and report milestones.
+  linked.routes(app,A,H,db);
   // Official Giveaways section: active (and upcoming) events only
   app.get('/api/events', (req, res) => {
     const t = Date.now(); const rows = db.prepare('SELECT * FROM giveaways WHERE active=1 AND archived=0 AND end_at > ? ORDER BY start_at').all(t);
