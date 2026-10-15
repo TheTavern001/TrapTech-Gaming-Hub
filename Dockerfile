@@ -19,7 +19,12 @@ COPY public ./public
 # Build-time audits consume the generated library inventory and supporting audit data.
 COPY docs ./docs
 COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
+# Source-only R1 audit inspects this shell gate; it is not shipped in runtime image.
+COPY scripts/offline-release-gate.sh ./scripts/offline-release-gate.sh
 COPY tools ./tools
+# Audit inspects Dockerfile and .dockerignore; both must exist in build stage.
+# These do not enter the final runtime image.
+COPY Dockerfile .dockerignore ./
 # Replace legacy purple-controller install PNGs with the exact existing gold-crown TT vector.
 # The same files are served for PWA manifest, Android adaptive icon and iOS home screen.
 RUN node tools/build-traptech-pwa-icons.js && node tools/test-traptech-pwa-icons.js
@@ -31,6 +36,7 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s docs/GAMES-LIB.md \
  && test -s docs/score-ranges.json \
  && echo 'Required prelaunch audit inputs present' \
+ && node tools/test-docker-audit-context.js \
  && node tools/test-post-r1-build-evidence.js \
  && node tools/test-r1-incident-gates.js \
  && mkdir -p docs/audit \
