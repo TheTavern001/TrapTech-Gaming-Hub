@@ -54,9 +54,15 @@ if (ledger.latestOwnerObservedHost?.currentReadySha &&
 const lastObserved = history.at(-1);
 const lastReady = currentReady[0] || [...history].reverse().find(x=>x.status==='READY');
 const source = ledger.currentWorkingSource || null;
-if (source?.sourceStatus === 'SOURCE_ONLY_NOT_DEPLOYED' &&
-    history.some(x=>x.commit === source.headAtReconciliation))
-  errs.push('Source-only development commit incorrectly listed as a host deployment');
+const sourceIsCurrentReady = currentReady.some(x=>x.commit===source?.headAtReconciliation);
+const expectedSourceState = sourceIsCurrentReady
+  ? 'HOST_READY_OWNER_SCREENSHOT_CONFIRMED' : 'SOURCE_ONLY_NOT_DEPLOYED';
+if(source?.sourceStatus!==expectedSourceState)
+  errs.push('Source-status/host evidence mismatch: expected '+expectedSourceState+
+    ', got '+String(source?.sourceStatus));
+if(source?.sourceStatus==='SOURCE_ONLY_NOT_DEPLOYED' &&
+   history.some(x=>x.commit===source.headAtReconciliation))
+  errs.push('Source-only development commit incorrectly listed as any host deployment');
 if (source?.headAtReconciliation&&!isSha(source.headAtReconciliation))
   errs.push('Working source SHA must be full SHA');
 let head = null;

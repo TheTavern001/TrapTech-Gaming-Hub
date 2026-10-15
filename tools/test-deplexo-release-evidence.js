@@ -29,8 +29,12 @@ assert.equal(current[0].status,'READY');
 assert.equal(current[0].commit,ledger.latestOwnerObservedHost.currentReadySha);
 assert.ok(current[0].evidence.includes('screenshot'));
 assert.ok(sha(ledger.currentWorkingSource.headAtReconciliation));
-assert.equal(ledger.currentWorkingSource.sourceStatus,'SOURCE_ONLY_NOT_DEPLOYED');
-assert.ok(!ids.has(ledger.currentWorkingSource.headAtReconciliation),
+const sourceIsCurrentReady=current.some(x=>x.commit===ledger.currentWorkingSource.headAtReconciliation);
+const correctSourceStatus=sourceIsCurrentReady
+ ? 'HOST_READY_OWNER_SCREENSHOT_CONFIRMED':'SOURCE_ONLY_NOT_DEPLOYED';
+assert.equal(ledger.currentWorkingSource.sourceStatus,correctSourceStatus,
+ 'Derive source-status from current host evidence, not a fixed build-state string');
+if(!sourceIsCurrentReady)assert.ok(!ids.has(ledger.currentWorkingSource.headAtReconciliation),
  'GitHub source-only SHA must never be misreported as a Deplexo host deployment');
 const run=cp.spawnSync(process.execPath,[path.join(root,'tools/release-status.js')],{cwd:root,encoding:'utf8',timeout:15000});
 assert.equal(run.status,0,'Release status validator failed: '+run.stderr+'\n'+run.stdout);
@@ -46,7 +50,7 @@ for(const screenshotCard of lastScreenshot.observedClaims) {
  assert.equal(record.observedAsCurrent===true,screenshotCard.current);
 }
 assert.equal(report.hostCurrent.status,'READY');
-assert.equal(report.workingSource.status,'SOURCE_ONLY_NOT_DEPLOYED');
+assert.equal(report.workingSource.status,correctSourceStatus);
 // Latest failed R1 candidate is NOT the last screenshot-confirmed CURRENT host.
 const failures=ledger.reportedFailedDeployments20261015||[];
 assert.ok(failures.length,'Owner-supplied R1 failure evidence must be retained');
