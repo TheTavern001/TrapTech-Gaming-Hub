@@ -68,6 +68,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-avatar-rig-mobile-budget.js \
  && node tools/test-avatar-offscreen-fallback.js \
  && node tools/test-profile-avatar-navigation.js \
+ && node tools/test-spa-stale-route.js \
  && node tools/test-game-adapter-start-isolation.js \
  && node tools/test-adapter-proof-snapshot.js \
  && node tools/test-adapter-invalid-score.js \
