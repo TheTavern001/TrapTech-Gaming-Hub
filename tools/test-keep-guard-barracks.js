@@ -8,7 +8,7 @@ const browser={};
 vm.runInNewContext(fs.readFileSync(path.join(root,'td.js'),'utf8'),{window:browser,Kit:K},{timeout:2000});
 const engine=browser.TD;
 browser.TD=config=>{keepConfig=config;};
-vm.runInNewContext(fs.readFileSync(path.join(root,'keep-guard/game.js'),'utf8'),{window:browser,Kit:K},{timeout:2000});
+vm.runInNewContext(fs.readFileSync(path.join(root,'keep-guard/game.js'),'utf8'),{window:browser,Kit:K,TD:browser.TD},{timeout:2000});
 assert.ok(keepConfig,'The real Keep Guard entrypoint must register its game configuration');
 assert.equal(keepConfig.towers.filter(x=>x.kind==='barracks').length,1);
 assert.match(keepConfig.help,/guards that stop ground raiders/i);
