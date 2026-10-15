@@ -20,6 +20,8 @@ function ensureSchema(db){
  add('checkout_expires_at','INTEGER');
  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_sponsor_stripe_session ON sponsor_quotes(provider_ref) WHERE provider_ref IS NOT NULL');
  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_sponsor_stripe_intent ON sponsor_quotes(provider_payment_id) WHERE provider_payment_id IS NOT NULL');
+ db.exec(`CREATE TABLE IF NOT EXISTS sponsor_payment_revocations(
+  payment_intent TEXT PRIMARY KEY, observed_at INTEGER NOT NULL, event_type TEXT NOT NULL)`);
 }
 function checkoutFields(q){
  return {available:FEE.stripeBookingConfigured(),state:q?.checkout_state||'not_started',
@@ -112,6 +114,21 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
     console.warn('[booking] Stripe event did not match saved booking payment:',id);
     return res.json({received:true});
    }
+   // Provider event delivery is not ordered. A refund or dispute may have
+   // arrived before checkout.session.completed. Never resurrect that payment.
+   if(db.prepare('SELECT 1 FROM sponsor_payment_revocations WHERE payment_intent=?').get(intent)){
+    db.transaction(()=>{
+     const u=db.prepare(`UPDATE sponsor_quotes SET status='refunded',refunded_at=?,
+      provider_payment_id=?,checkout_state='refunded',updated_at=?
+      WHERE booking_id=? AND provider_ref=? AND status IN ('accepted','paid')`)
+      .run(t,intent,t,id,obj.id);
+     if(u.changes){
+      db.prepare("UPDATE bookings SET status='refunded' WHERE id=?").run(id);
+      db.prepare("UPDATE giveaways SET payment_status='refunded',active=0,updated_at=? WHERE booking_id=?").run(t,id);
+     }
+    })();
+    return res.json({received:true});
+   }
    const change=db.transaction(()=>{
     const u=db.prepare(`UPDATE sponsor_quotes SET status='paid',paid_at=?,settled_cents=?,
      provider_payment_id=?,checkout_state='paid',updated_at=?
@@ -150,6 +167,10 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
     }
    }
    if(!intent)return res.json({received:true});
+   // Revocation must be durable even if Checkout's success event has not
+   // delivered provider_payment_id to sponsor_quotes yet.
+   db.prepare('INSERT OR IGNORE INTO sponsor_payment_revocations(payment_intent,observed_at,event_type) VALUES (?,?,?)')
+     .run(intent,t,event.type);
    const q=db.prepare("SELECT booking_id FROM sponsor_quotes WHERE provider='stripe' AND provider_payment_id=? AND status='paid'").get(intent);
    if(q){
     db.transaction(()=>{
