@@ -50,6 +50,15 @@ const captureStripeBody = (req, res, buf) => { if (String(req.originalUrl || '')
 const jsonSmall = express.json({ limit: '32kb', verify: captureStripeBody }), jsonScore = express.json({ limit: '96kb', verify: captureStripeBody });
 app.use((req, res, next) => (req.path === '/api/score' ? jsonScore : jsonSmall)(req, res, next));
 app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mode
+const PRIVATE_REVIEW = require('./private-review');
+app.use(PRIVATE_REVIEW.makeGate({
+  enabled: process.env.HUB_PRIVATE_REVIEW === '1',
+  users: process.env.HUB_PREVIEW_USERNAMES || '',
+  currentUser: req => currentUser(req),
+  isOwnerAdmin: req => ADMSEC.isOwnerSession(req),
+  adminBase: () => ADMSEC.BASE()
+})); // Explicit preview switch; OFF on normal public builds.
+
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
 app.get('/healthz', (req, res) => { try { db.prepare('SELECT 1').get(); res.json({ ok: true, product: 'The Gaming Hub', version: HUB_VERSION }); } catch (e) { res.status(500).json({ ok: false, version: HUB_VERSION }); } });
