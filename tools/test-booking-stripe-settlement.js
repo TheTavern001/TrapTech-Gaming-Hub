@@ -35,7 +35,7 @@ const db={
      return q.status==='paid'&&q.provider_payment_id===v[0]?{booking_id:7}:null;
     throw Error('Unknown get: '+sql);},
    run(...v){
-    if(sql.includes("checkout_state='creating'")){
+    if(sql.includes("SET provider='stripe'")){
      if(q.status!=='accepted'||q.checkout_state==='creating')return {changes:0};
      [q.checkout_ref,q.checkout_created_at,q.checkout_expires_at]=v.slice(0,3);
      q.checkout_state='creating';q.provider='stripe';q.provider_ref=null;return {changes:1};
