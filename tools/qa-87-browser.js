@@ -53,10 +53,10 @@ async function interactiveSignIn(browserOptions){
  const me=await page.evaluate(async()=>{try{const r=await fetch('/api/me');return r.ok?await r.json():null}catch{return null}});
  if(!me?.user){await context.close();throw Error('Signed-in reviewer not established; refusing to test anonymous/private pages');}
  // Keep storage state in temp, not repository, screenshots or build logs.
- const target=stateFile||path.join(OUT,'reviewer-state.json');
- await context.storageState({path:target});
- await context.close();
- return target;
+ // The user stays authenticated in this in-memory browser context.
+ // Do not write reviewer session cookies to disk, even in a tmp directory.
+ await page.close();
+ return context;
 }
 async function main(){
  fs.mkdirSync(SCREENSHOTS,{recursive:true});
@@ -70,9 +70,9 @@ async function main(){
  const contextOptions={viewport:{width:390,height:844},deviceScaleFactor:2,
   isMobile:true,hasTouch:true,locale:'en-US'};
  try{
-  let stored=stateFile;
-  if(INTERACTIVE)stored=await interactiveSignIn({browser,context:contextOptions});
-  const context=await browser.newContext({...contextOptions,...(stored?{storageState:stored}:{})});
+  const context=INTERACTIVE
+   ? await interactiveSignIn({browser,context:contextOptions})
+   : await browser.newContext({...contextOptions,...(stateFile?{storageState:stateFile}:{})});
   await context.addInitScript(()=>{
     // Only age gate for a local, isolated smoke; do not override owner auth.
     try{if(!localStorage.getItem('gh_age_ok'))localStorage.setItem('gh_age_ok',String(Date.now()));}catch{}
@@ -118,18 +118,22 @@ async function main(){
    const metrics=await page.evaluate(()=>{
     const gl=window.__GL||null;
     const cv=document.querySelector('canvas'),bounds=cv?.getBoundingClientRect();
-    return {kitState:gl?.state||null,frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:null,
+    const grid=document.querySelector('.grid-container');
+    return {domPuzzleDetected:!!grid,kitState:gl?.state||null,frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:null,
       fps:typeof gl?.fps==='number'?gl.fps:null,viewportWidth:innerWidth,
       viewportHeight:innerHeight,canvasSize:bounds?{width:Math.round(bounds.width),height:Math.round(bounds.height)}:null,
       horizontalOverflow:document.documentElement.scrollWidth>innerWidth+3};
    }).catch(()=>null);
    const title=(await page.title().catch(()=>''))||'';
-   const failed=status!==200||failures.length>0||badHttp.length>0||
-     metrics?.horizontalOverflow===true||(metrics?.frameP95Ms>25&&metrics?.kitState==='play');
+   const runtimeSurface=hasCanvas||metrics?.domPuzzleDetected===true;
+   const stuckInStartup=metrics?.kitState==='starting';
+   const failed=status!==200||failures.length>0||consoleErrors.length>0||badHttp.length>0||
+     !runtimeSurface||stuckInStartup||metrics?.horizontalOverflow===true||
+     (metrics?.frameP95Ms>25&&metrics?.kitState==='play');
    if(TAKE_ALL||failed)try{await page.screenshot({path:path.join(SCREENSHOTS,filename(g.id)+'.png'),timeout:4500});}catch{}
    await page.close();
    return {id:g.id,title:g.title,kind:g.kind,route:g.route,status,titleLoaded:!!title,canvasDetected:hasCanvas,
-    ...metrics,jsExceptions:failures,consoleErrors,badAssets:badHttp,
+    ...metrics,runtimeSurfaceDetected:runtimeSurface,jsExceptions:failures,consoleErrors,badAssets:badHttp,
     durationMs:Date.now()-started,smokePassed:!failed,
     androidPhysical:'NOT_TESTED',iosSafariPhysical:'NOT_TESTED',
     scoreReplayCertified:false,visualAAAApproved:false};
