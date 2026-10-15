@@ -40,6 +40,16 @@ app.use((req, res, next) => {
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') res.setHeader('Strict-Transport-Security', 'max-age=31536000');
   next();
 });
+const PRIVATE_REVIEW = require('./private-review');
+app.use(PRIVATE_REVIEW.makeGate({
+  enabled: process.env.HUB_PRIVATE_REVIEW === '1',
+  users: process.env.HUB_PREVIEW_USERNAMES || '',
+  currentUser: req => currentUser(req),
+  isOwnerAdmin: req => ADMSEC.isOwnerSession(req),
+  adminBase: () => ADMSEC.BASE()
+})); // Explicit preview switch; OFF on normal public builds.
+// The review gate MUST precede even compressed static files; otherwise /index.html
+// or pre-gzipped page assets could bypass it before Express routing.
 // Static text assets are gzipped at build time (scripts/deplexo-prebuild.js -> $BUILD_DIR/gz) and served as-is;
 // on-the-fly gzip is only used for dynamic responses (JSON, HTML). Smaller zlib windows keep per-response memory low.
 app.use(require('./static-gz')(path.join(cfg.ROOT, 'public')));
@@ -50,14 +60,6 @@ const captureStripeBody = (req, res, buf) => { if (String(req.originalUrl || '')
 const jsonSmall = express.json({ limit: '32kb', verify: captureStripeBody }), jsonScore = express.json({ limit: '96kb', verify: captureStripeBody });
 app.use((req, res, next) => (req.path === '/api/score' ? jsonScore : jsonSmall)(req, res, next));
 app.use(V7A.early); // v7 admin: player sign-in/device history + maintenance mode
-const PRIVATE_REVIEW = require('./private-review');
-app.use(PRIVATE_REVIEW.makeGate({
-  enabled: process.env.HUB_PRIVATE_REVIEW === '1',
-  users: process.env.HUB_PREVIEW_USERNAMES || '',
-  currentUser: req => currentUser(req),
-  isOwnerAdmin: req => ADMSEC.isOwnerSession(req),
-  adminBase: () => ADMSEC.BASE()
-})); // Explicit preview switch; OFF on normal public builds.
 
 
 // Health check for hosting platforms (Render healthCheckPath, Docker HEALTHCHECK)
