@@ -138,6 +138,8 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-private-preview-readiness.js \
  && node tools/test-private-review-access.js \
  && node tools/test-owner-preview-payment-lock.js \
+ && node tools/test-cosmetic-pass-progression.js \
+ && node tools/test-service-worker-privacy.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
  && node --check tools/test-goo-touch-gesture.js \
@@ -230,3 +232,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
 # Exec form, no npm (npm writes logs/cache and adds a second process). Heap is capped for a 128 MB container;
 # extra flags can be added with NODE_OPTIONS.
 CMD ["sh", "-c", "node --max-old-space-size=64 tools/prestart-db-snapshot.js && exec node --max-old-space-size=64 --max-semi-space-size=1 src/server.js"]
+

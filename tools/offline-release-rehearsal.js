@@ -43,6 +43,8 @@ const tests=[
  'tools/test-private-preview-readiness.js',
  'tools/test-private-review-access.js',
  'tools/test-owner-preview-payment-lock.js',
+ 'tools/test-cosmetic-pass-progression.js',
+ 'tools/test-service-worker-privacy.js',
  'tools/test-owner-gameplay-distinctness.js',
  'tools/test-cannabis-gameplay-qa.js',
  'tools/test-mobile-frame-allocation-regressions.js',
@@ -148,3 +150,4 @@ console.log(JSON.stringify({sourceSha:sha,release:stage,nodeTestsPassed:report.n
  nodeTestsTotal:tests.length,gate:ready?'ELIGIBLE_FOR_HUMAN_REVIEW':'BLOCKED',
  fullDocker:full,failed:failed.map(x=>x.label),reportPath:dest,noDeployment:true}));
 if(failed.length)process.exitCode=1;
+

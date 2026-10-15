@@ -77,7 +77,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await ADM('/api/admin/store/grant', { body: { username: P1.u, product_id: 'prestige-original-crown' } });
   ok(!r.body.ok && /preview-only/i.test(r.body.error),
     'An admin promotional grant cannot bypass unreleased prestige wearables');
-  r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 15, 'premium track: 20 reward steps, 15% premium-track XP boost');
+  r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 0 && r.body.premium_level === r.body.free_level, 'premium track: 20 cosmetic reward steps with equal earned-XP progression');
   r = await P1('/api/pass/quests'); ok(r.body.total === 48 && r.body.done < 48 && r.body.reward_season === r.body.season + 1, '48-quest chain toward next season\'s free pass');
   r = await client()('/api/shop'); const any = r.body && (r.body.daily || (r.body.sections && r.body.sections.daily) || []).find(Boolean);
   if (any) { r = await P1('/api/crowns/buy', { body: { item_id: any.id } }); ok(r.body.ok && r.body.price_credits > 0 && Number.isSafeInteger(r.body.credits), 'Purchased Hub Credits buy the exact same cosmetic as earned Credits', r.body); }
@@ -97,3 +97,4 @@ function client() { const jar = {}; return async (p, o = {}) => {
   await ADM('/api/admin/giveaways/' + gid, { method: 'DELETE' });
   console.log(`\n${pass} passed, ${fail} failed`); mock.close(); process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });
+

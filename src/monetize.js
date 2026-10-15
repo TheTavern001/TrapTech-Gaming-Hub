@@ -3,8 +3,7 @@
 // eligibility check or a tie-break: those code paths (src/server.js /api/score, src/events.js, src/results.js,
 // src/eligibility.js, src/anticheat.js) never read anything from this module. tools/e2e-payments.js proves it.
 //  (a) Hub Credits: ONE currency earned from play OR purchased; separate historical crown transactions migrate at 10 Credits each.
-//  (b) Season Pass: premium track on top of the free track (premium cosmetics, bonus Credits, and a premium-track XP boost
-//      that only speeds up the premium track itself; never the season board, scores, attempts or eligibility).
+//  (b) Season Pass: premium cosmetics and bonus Credits; both tracks use the same earned XP.
 //  (c) "Earn next season's pass free": a hard 48-quest chain (src/pass-quests.js, docs/PASS-QUESTS.md).
 //  (d) Prestige showcase items: three numbered, limited, very expensive cosmetics with an "owned by" wall.
 // PAYMENTS are provider-agnostic (PROVIDERS below). Default: BITCOIN to one fixed watch-only address (BTC_ADDRESS):
@@ -69,7 +68,7 @@ const SEED = [
   { id: 'crowns-1100', kind: 'pack', name: '11,000 Hub Credits', usd_cents: 999, crowns: 1000, bonus: 100, sort: 2 },
   { id: 'crowns-2400', kind: 'pack', name: '24,000 Hub Credits', usd_cents: 1999, crowns: 2000, bonus: 400, sort: 3 },
   { id: 'crowns-6500', kind: 'pack', name: '65,000 Hub Credits', usd_cents: 4999, crowns: 5000, bonus: 1500, sort: 4 },
-  { id: 'season-pass', kind: 'pass', name: 'Season Pass (premium track)', usd_cents: 999, crowns: 0, bonus: 0, sort: 10, data: { bonus_crowns_total: 600, xp_boost_pct: 15 } },
+  { id: 'season-pass', kind: 'pass', name: 'Season Pass (premium track)', usd_cents: 999, crowns: 0, bonus: 0, sort: 10, data: { bonus_crowns_total: 600, xp_boost_pct: 0 } },
   ...Object.entries(PRESTIGE).map(([id, p], i) => ({ id, kind: 'prestige', name: p.name, usd_cents: p.usd, crowns: 0, bonus: 0, supply: p.supply, sort: 20 + i, data: { blurb: p.blurb, fx: p.fx, confs: p.confs } })),
 ];
 { const ins = db.prepare('INSERT OR IGNORE INTO store_products (id, kind, name, usd_cents, crowns, bonus, supply, data, active, sort, updated_at) VALUES (?,?,?,?,?,?,?,?,1,?,?)');
@@ -85,8 +84,13 @@ const SEED = [
 db.prepare("UPDATE store_products SET name = CASE id WHEN 'crowns-500' THEN '5,000 Hub Credits' WHEN 'crowns-1100' THEN '11,000 Hub Credits' WHEN 'crowns-2400' THEN '24,000 Hub Credits' WHEN 'crowns-6500' THEN '65,000 Hub Credits' END WHERE kind='pack' AND id IN ('crowns-500','crowns-1100','crowns-2400','crowns-6500') AND name LIKE '%Hub Crowns'");
 // Retire the three former multi-supply showcase items without rewriting their history or existing owners.
 db.prepare("UPDATE store_products SET active=0, updated_at=? WHERE id IN ('prestige-cane','prestige-throne','prestige-crown') AND kind='prestige'").run(Date.now());
-const prod = (id) => { const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = JSON.parse(p.data || '{}'); return p; };
-const products = (all = false) => db.prepare(`SELECT * FROM store_products ${all ? '' : 'WHERE active=1'} ORDER BY sort, id`).all().map(p => ({ ...p, data: JSON.parse(p.data || '{}') }));
+// Normalize old catalog rows at the read boundary without rewriting order history.
+function productData(p) {
+  const data = JSON.parse(p.data || '{}');
+  return p.kind === 'pass' ? { ...data, xp_boost_pct: 0 } : data;
+}
+const prod = (id) => { const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = productData(p); return p; };
+const products = (all = false) => db.prepare(`SELECT * FROM store_products ${all ? '' : 'WHERE active=1'} ORDER BY sort, id`).all().map(p => ({ ...p, data: productData(p) }));
 const issued = (id) => db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=? AND revoked_at IS NULL').get(id).c;
 const reserved = (id) => db.prepare("SELECT COUNT(*) c FROM store_orders WHERE product_id=? AND status IN ('pending','seen','confirming')").get(id).c;
 
@@ -364,11 +368,12 @@ G.parse.contexts.p = (n, slot) => (n >= 1 && slot >= 1 && slot <= PASS_LEVELS ? 
 function premiumTrack(n) { return Array.from({ length: PASS_LEVELS / 3 }, (_, i) => { const L = (i + 1) * 3; const it = G.parse(G.make('p', n, L, G.parse.contexts.p(n, L)).id);
   return { level: L, item: it && { id: it.id, type: it.type, name: it.name, rarity: it.rarity }, crowns: L % 10 === 0 ? 100 : 0 }; }); }
 const hasPass = (userId, n) => !!db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(userId, n);
-// premium XP boost: ONLY the premium-track level (own progress). The public season board and every score are untouched.
+// Payment unlocks cosmetic claims, never faster progression. Ignore legacy
+// product xp_boost_pct values so an existing database cannot re-enable boosts.
 function passState(user, t = Date.now()) {
   const SE = require('./seasons'); const sp = user ? SE.seasonProgress(user.id, t) : null; const n = SE.seasonAt(t).number; const P = prod('season-pass');
-  const owned = user ? hasPass(user.id, n) : false; const boost = (P && P.data.xp_boost_pct) || 15;
-  const pxp = sp ? Math.floor(sp.xp * (owned ? 1 + boost / 100 : 1)) : 0; const plevel = SE.levelOf(pxp).level;
+  const owned = user ? hasPass(user.id, n) : false; const boost = 0;
+  const pxp = sp ? sp.xp : 0; const plevel = sp ? sp.level : 0;
   const claimed = new Set(user ? db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(user.id, n).map(r => r.level) : []);
   return { season: n, price_usd_cents: P ? P.usd_cents : null, owned, xp_boost_pct: boost, premium_xp: pxp, premium_level: plevel, free_level: sp ? sp.level : 0,
     track: premiumTrack(n).map(r => ({ ...r, unlocked: owned && plevel >= r.level, claimed: claimed.has(r.level) })), next_free: user ? require('./pass-quests').status(user.id, t) : null };
@@ -515,3 +520,4 @@ function routes(app, A, H) {
     res.json(manualGrant(u.id, String(b.product_id || ''), (req.admin && req.admin.username) || 'admin', String(b.note || ''))); });
 }
 module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, prestigeSalesEnabled, _stripeSignatureOk: stripeSignatureOk };
+
