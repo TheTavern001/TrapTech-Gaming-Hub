@@ -1,0 +1,20 @@
+#!/usr/bin/env node
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..');
+const sponsor=fs.readFileSync(path.join(root,'src/sponsor.js'),'utf8');
+const ui=fs.readFileSync(path.join(root,'public/js/v7.js'),'utf8');
+const config=fs.readFileSync(path.join(root,'src/config.js'),'utf8');
+const library=fs.readFileSync(path.join(root,'src/games-lib.js'),'utf8');
+new vm.Script(sponsor);new vm.Script(ui.replace(/^import .*$/gm,'').replace(/\bexport\s+(?=function\b)/g,''));
+assert.match(ui,/\.\.\.\(C\.S\.libraryGames \|\| \[\]\)/,'UI must include playable games library');
+assert.match(ui,/id="sb-game-search"/,'Mobile booking needs search instead of wall of 87 chips');
+assert.match(ui,/selected\.length>13/,'Must cap per-event game selection');
+assert.match(ui,/subject to certification/,'Quote must not promise giveaway eligibility');
+assert.match(sponsor,/\[\.\.\.new Set\(\(Array\.isArray\(b\.games\)/,'Server dedupes client selections');
+assert.match(sponsor,/cfg\.GAME_MAP\[id\]\.playable !== false && !cfg\.GAME_MAP\[id\]\.retired/);
+assert.doesNotMatch(sponsor,/&& !\/\^gl-\//,'Library titles must not be rejected solely for gl- prefix');
+assert.match(config,/GAME_MAP: Object\.fromEntries\(\[\.\.\.GAMES, \.\.\.LIB_GAMES\]/,'Both libraries in server lookup');
+assert.match(library,/giveaway: !replacement/,'Retired variants ineligible for events');
+assert.match(sponsor,/q\.status !== 'paid'/,'Booking confirmation requires accepted paid quote');
+console.log(JSON.stringify({pass:true,gameQuoteSelector:'core and library',maxSelected:13,retiredExcluded:true,prizeApprovalRetained:true,realBrowserAndSqliteTested:false}));
