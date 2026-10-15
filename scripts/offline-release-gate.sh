@@ -52,6 +52,7 @@ run td-keyboard-touch-parity node tools/test-td-keyboard-touch-parity.js
 run load-harness-loopback-safety node tools/test-private-10k-harness.js
 run giveaway-payment-and-game-approval node tools/test-giveaway-booking-release-gates.js
 run booking-library-proposals node tools/test-booking-library-selection.js
+run optional-sponsor-channel node tools/test-optional-sponsor-channel.js
 run arrow-hero-swept-collision node tools/test-arrow-hero-swept-collision.js
 run arrow-hero-hostile-projectiles node tools/test-arrow-hero-hostile-projectiles.js
 run arrow-hero-postmove-contact node tools/test-arrow-hero-contact-after-move.js
