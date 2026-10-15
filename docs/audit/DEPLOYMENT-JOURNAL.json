@@ -866,9 +866,25 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "R1_BLOCKED_UNTIL_SUCCESSFUL_HOST_BUILD"
+    },
+    {
+      "commit": "R1_AUDIT_CORE_SLUG_FIX_NEXT_SHA",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Fix crashing actual 93-game source runtime dependency audit on slugless core; do not weaken audit or QA gates",
+      "validation": "Tested patched auditor in function-execution simulation across core/library/missing/unsafe slug. Docker suite and physical device unverified until next build.",
+      "host": "OWNER_C587456_BUILD_FAILED_AT_SOURCE_AUDITOR",
+      "evidenceFiles": [
+        "tools/audit-full-game-mechanics.js",
+        "tools/test-audit-game-runtime-paths.js",
+        "Dockerfile",
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_PENDING_NEW_BUILD"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: Deplexo checked out 53efd4b1 and passed all source preflight tests shown until release-status contract. Exact error: sourceStatus incorrect R1 failure detail, expected SOURCE_ONLY_NOT_DEPLOYED. Restore stable source-state invariant, preserve failure separately, expose newest failure in status report, simulate original validator. No latest READY / host smoke / AAA certification.",
+  "lastEvidenceReconciliation": "2026-10-15: New R1 c5874566 auto-deployed to Docker builder and failed at tools/audit-full-game-mechanics.js:35 because core game has no slug, yet runtimeScripts precomputed library HTML path. Path made conditional and slug validation added; new executable isolated audit test added before full audit. No host READY or full AAA approval.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -884,14 +900,14 @@
   },
   "currentWorkingSource": {
     "branch": "qa/gameplay-distinctness-and-collision-20261013",
-    "headAtReconciliation": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
+    "headAtReconciliation": "c587456628e34b89aa65e83a44be66d5b9f09adf",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "Source not on latest READY app. R1 candidate 53efd4b1 build attempted and failed. Do not confuse historical screenshot READY with new release success.",
+    "note": "Current R1 c5874566 failed in source audit due to core entry lacking slug. Patched auditor only and added direct regression test. 87 games remain unapproved until device/visual/score QA; source-only, not deployed.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
+    "lastAuditedGitHubHead": "c587456628e34b89aa65e83a44be66d5b9f09adf",
     "buildAttemptStatus": "FAILED",
-    "lastFailedBuildSha": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc"
+    "lastFailedBuildSha": "c587456628e34b89aa65e83a44be66d5b9f09adf"
   },
   "ownerConfirmedAutoDeployOff": false,
   "dashboardEvidence20261015": {
@@ -920,13 +936,13 @@
     "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
   },
   "lastReportedFailedDeployment20261015": {
-    "commit": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
+    "commit": "c587456628e34b89aa65e83a44be66d5b9f09adf",
     "status": "FAILED",
-    "error": "Docker stage [1/2] STEP 12/14 tools/test-deplexo-release-evidence.js:32 asserts SOURCE_ONLY_NOT_DEPLOYED but journal field was overloaded with R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED",
-    "cause": "Both are true: candidate source is not deployed, and most recent R1 Docker build failed. Putting failed-build diagnostics inside canonical sourceStatus broke release contract.",
-    "evidence": "Owner supplied Deplexo Docker log for exact SHA 53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc; Node20 build passes finance, gameplay, source audit, Kit tests and simulated mobile QA through this release-validator assertion.",
-    "correction": "Keep sourceStatus=SOURCE_ONLY_NOT_DEPLOYED, store build failure in separate buildAttemptStatus and lastReportedFailedDeployment20261015; preserve older screenshot CURRENT/READY and chronological failed attempts.",
-    "verification": "Release-status and release-evidence scripts both passed isolated read-only V8 fixture execution, not full native Docker."
+    "error": "Node20 Docker build [1/2] STEP12/14 tools/audit-full-game-mechanics.js:35 path.join() received undefined in runtimeScripts('core')",
+    "cause": "core entries are parsed from src/config.js as {id,title,module} with no slug; runtimeScripts eagerly computed htmlPath=path.join(base,g.slug,'index.html') before branching for library HTML. This crashed on first core title, unrelated to game mechanics.",
+    "evidence": "Owner-supplied Deplexo error log and Deployments screenshot 2026-10-15: auto deployed c587456628e34b89aa65e83a44be66d5b9f09adf from QA branch; all preceding financial, game syntax, physics, 87-game contracts, release-history tests passed before audit-full-game-mechanics error.",
+    "correction": "Compute HTML path only for library entries, validate library slugs, add real auditor runtimeScripts mock-FS regression covering slugless core, library HTML, missing/unsafe slug and invoke it before full 93-game audit.",
+    "verification": "Patched actual runtimeScripts function executed for slugless core, valid library, missing slug, unsafe slug in isolated V8; full Docker/Deplexo still pending."
   },
   "reportedFailedDeployments20261015": [
     {
@@ -974,6 +990,15 @@
       "evidence": "Owner supplied Deplexo Docker log for exact SHA 53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc; Node20 build passes finance, gameplay, source audit, Kit tests and simulated mobile QA through this release-validator assertion.",
       "correction": "Keep sourceStatus=SOURCE_ONLY_NOT_DEPLOYED, store build failure in separate buildAttemptStatus and lastReportedFailedDeployment20261015; preserve older screenshot CURRENT/READY and chronological failed attempts.",
       "verification": "Release-status and release-evidence scripts both passed isolated read-only V8 fixture execution, not full native Docker."
+    },
+    {
+      "commit": "c587456628e34b89aa65e83a44be66d5b9f09adf",
+      "status": "FAILED",
+      "error": "Node20 Docker build [1/2] STEP12/14 tools/audit-full-game-mechanics.js:35 path.join() received undefined in runtimeScripts('core')",
+      "cause": "core entries are parsed from src/config.js as {id,title,module} with no slug; runtimeScripts eagerly computed htmlPath=path.join(base,g.slug,'index.html') before branching for library HTML. This crashed on first core title, unrelated to game mechanics.",
+      "evidence": "Owner-supplied Deplexo error log and Deployments screenshot 2026-10-15: auto deployed c587456628e34b89aa65e83a44be66d5b9f09adf from QA branch; all preceding financial, game syntax, physics, 87-game contracts, release-history tests passed before audit-full-game-mechanics error.",
+      "correction": "Compute HTML path only for library entries, validate library slugs, add real auditor runtimeScripts mock-FS regression covering slugless core, library HTML, missing/unsafe slug and invoke it before full 93-game audit.",
+      "verification": "Patched actual runtimeScripts function executed for slugless core, valid library, missing slug, unsafe slug in isolated V8; full Docker/Deplexo still pending."
     }
   ],
   "autoDeployOwnerConfirmedOn": true,

@@ -1,5 +1,12 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — R1 c5874566 failed in 93-title source-audit function (core entry has no slug)
+
+Owner posted Deplexo error screenshot and Node20 Docker log for the **correct auto-deployed QA SHA** `c587456628e34b89aa65e83a44be66d5b9f09adf`. Wallet, bookings, session, source syntax, Kit, physics, mobile lifecycle, game catalog, owner duplicate policy and release-evidence tests passed. Build stopped at `tools/audit-full-game-mechanics.js:35`: `path.join(base,g.slug,'index.html')` executed unconditionally even for **core** records, which have `module` but no `slug`. This is an auditor bug, not proof of gameplay failure.
+
+R1 source fix: construct `index.html` only for `type==='library'`, strictly validate library slug before path resolution, and add `tools/test-audit-game-runtime-paths.js` to Dockerfile **before** the full auditor. The new isolated test executes the actual source-auditor `runtimeScripts` function on a slugless core title and a library title and verifies invalid and traversal slugs are rejected. Validation of the corrected function in the tool runtime: PASS. No game runtime, player database or score/monetization logic modified. R1 host READY remains unconfirmed, 87/87 AAA/device certifications pending, R2–R5 paused.
+
+
 ## 2026-10-15 — R1 53efd4b1 Docker preflight progressed to release-evidence status contract
 
 Owner's Deplexo log confirms the exact commit `53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc` checked out. Payment, wallet, settlement holds, catalog, 96 JS game scripts, physical/collision source tests, Kit score/async, mobile lifecycle, avatar, quests and private-preview tests all PASS in native Node20 build. Docker stage 1/2 STEP12 failed at `tools/test-deplexo-release-evidence.js:32`: it correctly expected the source status `SOURCE_ONLY_NOT_DEPLOYED` but prior audit updates had overwritten that semantic field with `R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED`.
