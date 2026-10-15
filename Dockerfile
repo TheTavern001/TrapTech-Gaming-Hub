@@ -180,6 +180,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-qa-browser-runtime-integrity.js \
  && node --check tools/qa-frame-pacing.js \
  && node tools/test-qa-frame-pacing.js \
+ && node tools/test-unified-release-candidate.js \
  && test -s docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/local-imports.js \
