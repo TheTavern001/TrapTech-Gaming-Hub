@@ -37,6 +37,9 @@ for(const x of ['summarizeFramePacing','QA_REQUIRE_PACING','browserFrameP95Ms',
  'browserPacingStatus','emulatedFramePacingNotHardwareCertification']){
  assert.ok(qa.includes(x),'QA runner missing mobile frame pacing contract: '+x);
 }
+const ownerContract='docs/launch/TRAP-TECH-500-GAME-AAA-PUBLIC-ACCEPTANCE-2026-10-15.md';
+assert.ok(ignore.includes('!'+ownerContract),
+  'Docker context must include the release contract this test reads');
 const quality=JSON.parse(read('docs/audit/GAME-QUALITY-ACCEPTANCE.json'));
 assert.equal(quality.goal,500,'Do not quietly lower 500-game public acceptance target');
 assert.ok(read('docs/launch/TRAP-TECH-500-GAME-AAA-PUBLIC-ACCEPTANCE-2026-10-15.md')
