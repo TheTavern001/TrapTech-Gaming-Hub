@@ -1,5 +1,10 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — R2 staged upstream source and license reality check (not imports)
+
+Verified upstream repository existence, MIT root license metadata and specific source-file blob SHAs: HexGL `BKcore/HexGL@6addc95`, Reversi/Battleship/Sudoku `mashukui/web-games@3809452`, Maze `duysqubix/web-arcade@a8b8f27`. The three board/puzzle files exist, use local `i18n.js` and are finite client games requiring server-scored continuous rounds. Maze currently imports Three.js and a soldier GLB via CDNs, includes many uncontrolled random calls and has no established phone-touch proof. HexGL uses a legacy 32-script layout with remote favicon and requires port/rewrite. **0 games imported; 0 asset/media/license-complete, 0 giveaway-ready, 0 public-approved.** See `docs/audit/POST-R1-FIVE-GAME-SOURCE-VERIFICATION-2026-10-15.json`. Stage on work branch only to avoid automatic production redeployment.
+
+
 ## 2026-10-15 — R1 5fb461c CURRENT READY; freeze working host, develop separately
 
 Owner screenshot on Deplexo confirms existing app RUNNING with exact QA branch commit `5fb461c077bfa42fe17f8a4333c730c7d73af2a8` marked **CURRENT** and **READY**; successful image build **265 seconds**. Screenshot received in conversation 2026-10-15 at phone clock **03:21**, timezone unconfirmed. Screenshot SHA-256 `431af31afa8c6cdc6d201c1ae8a67985bfb3d6494406bd50475e41ae4c1765c8`; binary not committed (privacy).

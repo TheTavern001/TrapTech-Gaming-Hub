@@ -921,6 +921,17 @@
       "productionSha": "5fb461c077bfa42fe17f8a4333c730c7d73af2a8",
       "publicLaunchApproved": false,
       "note": "R1 host and source QA branches separated; no user data changed. 87 titles source registered, no individual AAA owner approvals."
+    },
+    {
+      "commit": "POST_R1_GAME_SOURCE_RESEARCH_20261015",
+      "branch": "work/post-r1-mobile-quality-and-game-intake-20261015",
+      "kind": "SOURCE_AUDIT_ONLY",
+      "upstreamsChecked": 3,
+      "sourceFilesChecked": 5,
+      "candidatesAccepted": 0,
+      "assetsImported": 0,
+      "proof": "docs/audit/POST-R1-FIVE-GAME-SOURCE-VERIFICATION-2026-10-15.json",
+      "publicLaunchApproved": false
     }
   ],
   "lastEvidenceReconciliation": "2026-10-15: screenshot R1 5fb461c CURRENT READY, RUNNING, build 265s; new staging branch prevents watched QA branch auto redeploy. Health/fingerprint not read from host. Public release remains blocked.",

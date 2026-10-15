@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "observedOn": "2026-10-15",
+  "scope": "Source existence and root repository MIT license check ONLY. Nothing downloaded or admitted into Gaming Hub.",
+  "policy": "Every candidate remains RESEARCH_ONLY until all media rights, offline packaging, endless scoring, server validation and physical Android/iOS gameplay and art quality gates are passed.",
+  "codeLicenseNote": "GitHub repository metadata reports MIT for all three upstream repositories. Root MIT license does not verify every linked external model, sound, texture, browser dependency, CDN, user-uploaded art or redistributable content.",
+  "upstreamRepos": [
+    {
+      "repository": "BKcore/HexGL",
+      "observedDefaultBranchSha": "6addc95a2fce3bf05f4d751823cc054c61a16d68",
+      "repoLicenseFromGitHubMetadata": "MIT",
+      "auditedFileShaPinIsNotImportedGame": true
+    },
+    {
+      "repository": "mashukui/web-games",
+      "observedDefaultBranchSha": "38094525ad727f40e3bbc7cfc91eb6dcbe042f11",
+      "repoLicenseFromGitHubMetadata": "MIT",
+      "auditedFileShaPinIsNotImportedGame": true
+    },
+    {
+      "repository": "duysqubix/web-arcade",
+      "observedDefaultBranchSha": "a8b8f278b9a11d0778b21ff0e5cfea27531bd4d8",
+      "repoLicenseFromGitHubMetadata": "MIT",
+      "auditedFileShaPinIsNotImportedGame": true
+    }
+  ],
+  "entries": [
+    {
+      "id": "hover-racing",
+      "upstream": "BKcore/HexGL",
+      "upstreamCommit": "6addc95a2fce3bf05f4d751823cc054c61a16d68",
+      "path": "index.html",
+      "sourceBlobSha": "c162c224a01cf06165735f37b626184b084ebce5",
+      "sourceBytes": 5145,
+      "verifiedExists": true,
+      "rootLicense": "MIT",
+      "legacyScriptsInHtml": 32,
+      "legacyRemoteFavicon": true,
+      "externalRuntimeDependenciesNeedAudit": true,
+      "gameplay": "Finite 3D hovercraft lap racer",
+      "next": "Integrate fully local licensed art and supported Three.js, reliable touch controls, mobile frame budget, repeated fair timed heats and server time authority",
+      "entryReady": false
+    },
+    {
+      "id": "reversi",
+      "upstream": "mashukui/web-games",
+      "upstreamCommit": "38094525ad727f40e3bbc7cfc91eb6dcbe042f11",
+      "path": "reversi/index.html",
+      "sourceBlobSha": "887ff5618b6c084fd852bba77ed32f003212ac4a",
+      "sourceBytes": 30593,
+      "verifiedExists": true,
+      "rootLicense": "MIT",
+      "knownLocalScriptRefs": [
+        "../i18n.js"
+      ],
+      "externalLinksReview": [
+        "https://saveone.pro"
+      ],
+      "gameplay": "Finite board game against AI",
+      "next": "Keep attribution, remove non-game links, package local i18n, implement server-verified legal move sequences and serial match score; mobile+art QA",
+      "entryReady": false
+    },
+    {
+      "id": "battleship",
+      "upstream": "mashukui/web-games",
+      "upstreamCommit": "38094525ad727f40e3bbc7cfc91eb6dcbe042f11",
+      "path": "battleship/index.html",
+      "sourceBlobSha": "bc5e9690405c04b20e9a1cf5808964d458171698",
+      "sourceBytes": 39521,
+      "verifiedExists": true,
+      "rootLicense": "MIT",
+      "knownLocalScriptRefs": [
+        "../i18n.js"
+      ],
+      "externalLinksReview": [
+        "https://saveone.pro"
+      ],
+      "gameplay": "Finite hidden-ship strategy",
+      "next": "Server-private fleet layouts, cryptographic seed/commit fairness, turn/replay validation, continuous fair rounds, phone QA and licensed 3D or 2D art",
+      "entryReady": false
+    },
+    {
+      "id": "sudoku",
+      "upstream": "mashukui/web-games",
+      "upstreamCommit": "38094525ad727f40e3bbc7cfc91eb6dcbe042f11",
+      "path": "sudoku/index.html",
+      "sourceBlobSha": "87d829a8fdc018e4a6f54def38e682f47e11fa46",
+      "sourceBytes": 25289,
+      "verifiedExists": true,
+      "rootLicense": "MIT",
+      "knownLocalScriptRefs": [
+        "../i18n.js"
+      ],
+      "externalLinksReview": [
+        "https://saveone.pro"
+      ],
+      "gameplay": "Finite puzzle",
+      "next": "Server generated unique puzzles and solution commitments, repeated rounds with mistake/time penalties, local assets and no paid hints, mobile legibility",
+      "entryReady": false
+    },
+    {
+      "id": "maze-horror",
+      "upstream": "duysqubix/web-arcade",
+      "upstreamCommit": "a8b8f278b9a11d0778b21ff0e5cfea27531bd4d8",
+      "path": "games/maze/index.html",
+      "sourceBlobSha": "771c4bf5e4d0e66aa40cf00cd1c92c815242a08e",
+      "sourceBytes": 78242,
+      "verifiedExists": true,
+      "rootLicense": "MIT",
+      "blockedExternalRuntime": [
+        "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "https://cdn.jsdelivr.net/gh/mrdoob/three.js@0edc965186ba1af11fd2d7cd45ecad3dbe38957f/examples/models/gltf/Soldier.glb"
+      ],
+      "randomCallsInHTML": 82,
+      "mobileTouchSourceEvidence": "NOT_ESTABLISHED",
+      "gameplay": "Finite horror maze",
+      "next": "Remove CDNs entirely, verify imported Soldier GLB license and origin or replace with CC0 model, implement deterministic endless maps/AI budget, skill controls and 60fps mobile measurements",
+      "entryReady": false
+    }
+  ],
+  "verifiedImportedNewGames": 0,
+  "passedCompleteLicenseAndMediaReview": 0,
+  "passedEndlessCompetitiveScoring": 0,
+  "passedServerReplayValidation": 0,
+  "passedPhysicalAndroidIOSQA": 0,
+  "readyForPublic": 0
+}

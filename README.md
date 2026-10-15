@@ -1,7 +1,7 @@
 # The Gaming Hub by Trap Tech Solutions
 
 Mobile-first game hub with accounts, leaderboards, giveaways, a booking request system and an admin dashboard, designed,
-built and operated by **Trap Tech Solutions**. 13 active core games and 80 curated Games Library titles (93 active entries, with three retired historical core-game IDs excluded), daily quests, login streaks, XP levels, a free season
+built and operated by **Trap Tech Solutions**. 13 active core games and 80 registered Games Library titles (74 playable and 6 archived overlapping IDs; 87 active playable titles), daily quests, login streaks, XP levels, a free season
 track, tournaments (timed and bracket), friends, notifications, share cards and invite codes. Competitive outcomes remain
 server-validated and purchases are limited to cosmetic items, profile presentation, and season-track content—never gameplay
 power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-gap research and sources.
@@ -13,7 +13,7 @@ power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-
 
 **Operational source of truth:** [Deployment and audit journal](docs/DEPLOYMENT-JOURNAL.md) → `docs/audit/DEPLOYMENT-JOURNAL.json`; [master workboard](docs/HUB-MASTER-CHECKLIST.md) and [game intake protocol](docs/audit/GAME-IMPORT-PROTOCOL.md). Record the exact GitHub SHA and observed Deplexo outcome for **every** attempt, including failure, in the journal. A screenshot of BUILDING is not proof of READY.
 
-Run `node tools/release-status.js` for current-source and last-observed-host status; run `node tools/verify-game-intake.js` for registered intake and `node tools/quality-readiness.js` for **evidence-backed AAA quality approval**, counted separately. The baseline is **93 active games**, target **500** (407 further distinct accepted titles). The research candidate list is not a live game list. Docker prelaunch now derives library counts from the registry rather than refusing a valid 81st game. All new titles still need rights, gameplay, score and Android QA before public release.
+Run `node tools/release-status.js` for current-source and last-observed-host status; run `node tools/verify-game-intake.js` for registered intake and `node tools/quality-readiness.js` for **evidence-backed AAA quality approval**, counted separately. The baseline is **87 currently playable games** (93 historically registered, including 6 archived library duplicates), target **500 individually approved playable titles**. Even if all existing 87 pass quality review, **413 additional mechanic-distinct titles** are required. The research candidate list is not a live game list. Docker prelaunch now derives library counts from the registry rather than refusing a valid 81st game. All new titles still need rights, gameplay, score and Android QA before public release.
 
 **Last Deplexo screenshot reconciliation:** historical READY at `420bab1`; later `58a9f52`, `b7be1ec`, `4ad48e9`, and `71a07b4` each FAILED (root causes unconfirmed until logs obtained). Deplexo also reports failed builds for `570a9fe`, `eaaca78`, `12446a1` and `3623d72` (working-branch builds). The branch is not a host-isolated sandbox. See the journal for exact evidence and resume point. This README does not claim the present `main` is live.
 
