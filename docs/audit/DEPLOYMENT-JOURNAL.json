@@ -778,9 +778,25 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "BLOCKED_PENDING_HOST_AUTH_AND_TESTS"
+    },
+    {
+      "commit": "a783d43d7dd05ae44c569857d97c42618aaa85f3",
+      "branch": "main",
+      "reason": "R1 game integrity and source-only audit bundle (new committed fixes also b116f933, 0ceaf833, 32393436, 31f07004, 607f650) for all 87 active titles.",
+      "validation": "Source JS parse and manual primary-script inspection; new deep JS dependency coverage/test, seeded RNG tests, vendor auth timing tests, Goo canceled touch regression wired into Docker. Native build/phone execution still pending.",
+      "host": "SOURCE_ONLY_NOT_DEPLOYED",
+      "evidenceFiles": [
+        "docs/DEPLOYMENT-JOURNAL.md",
+        "tools/audit-full-game-mechanics.js",
+        "tools/test-87-runtime-source-depth.js",
+        "tools/test-goo-touch-gesture.js",
+        "tools/test-vendor-signed-run-start.js"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "WAITING_DEPLEXO_R1_BUILD_AND_PHONE_QA"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: both GitHub branches aligned at 437b03ea after adding official Deplexo OAuth MCP setup for Cursor and safe existing-app-only deployment instructions. Deplexo user account not authorized here; no newer build attempted or verified. Last confirmed host READY 278af07; failed old 570a9 attempt logged.",
+  "lastEvidenceReconciliation": "2026-10-15: owner requested sequential auto deploy after R1 freeze. One existing Deplexo app, auto-deploy previously OFF; first new build not confirmed. Last owner-screenshot host READY 278af07 and last failed host checkout 570a9. Source-only game patches for Goo Tower deterministic wind/keyboard/touch, Light Cycle seeded AI, 3 imported score-start bridges; deeper 87 source graph audit added to Docker. No full native or phone test performed.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -795,13 +811,13 @@
     "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
   },
   "currentWorkingSource": {
-    "branch": "main and qa/gameplay-distinctness-and-collision-20261013",
-    "headAtReconciliation": "437b03eac89ecbfbeff7e86773de9d85d239e179",
+    "branch": "main; QA fast-forward awaiting this journal update",
+    "headAtReconciliation": "20ae2eec175952c749814e5042d44c7205e71e46",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "Official Deplexo OAuth MCP connection and authenticated existing-app agent redeploy playbook committed source-only. No OAuth authorization, Deplexo build or phone certification observed. Current host proof remains owner screenshot 278af07 and failed old 570a9 log.",
+    "note": "R1 private testing candidate staged: direct 84 custom primary sources + three open-source engines/bridges inspected; 87 active+6 archives deep graph source audit wired to Docker. Gameplay fixes b116f933, 31f07004, 607f650 and tests 0ceaf833, 32393436, a783d43; no corrected Deplexo READY/phone QA. Both refs will be aligned after journal update.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "437b03eac89ecbfbeff7e86773de9d85d239e179"
+    "lastAuditedGitHubHead": "a783d43d7dd05ae44c569857d97c42618aaa85f3"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {
