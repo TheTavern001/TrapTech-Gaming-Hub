@@ -693,9 +693,24 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "BLOCKED"
+    },
+    {
+      "commit": "eb4551a67d671dbfb4d3cc3fa6aca3b2e0b213fa",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Fast-forward Deplexo watched GitHub source to 496-commit-ahead restricted review candidate; fix preview owner lockout by validating existing active reviewer account in persistent DB; preserve manual deployment OFF.",
+      "validation": "Three JS files parsed in V8. Full tools/test-private-review-access.js executed against current src/private-review.js with a Node assert compatibility shim: 57 assertions PASS. Native Node execution, full Docker image, SQLite integration, real Deplexo environment, /api/build and physical Android/iOS NOT RUN.",
+      "host": "SOURCE ONLY. Owner screenshot-confirmed RUNNING/production branch commit remains 278af07; auto-deploy OFF. No new deployment triggered.",
+      "evidenceFiles": [
+        "src/private-review.js",
+        "src/server.js",
+        "tools/test-private-review-access.js",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "BLOCKED_PRIVATE_REVIEW_ENV_AND_DOCKER"
     }
   ],
-  "lastEvidenceReconciliation": "October 14 2026: source-checkpoint 7f65bfc30b0c only. 238 V8 gameplay assertions and read-only owner release scorecard BLOCKED (26/0 workstreams, 15/0 security, 87/0 game approvals); Deplexo CURRENT screenshot 278af07, auto-deploy off; public endpoints not independently readable.",
+  "lastEvidenceReconciliation": "2026-10-15 01:45 EDT owner dashboard screens: Deplexo app RUNNING on host branch qa/gameplay-distinctness-and-collision-20261013, production source at 278af07, auto deploy OFF, Dockerfile and /data. GitHub watched source safely fast-forwarded 278af07 -> 1796b826, then source-only lockout fix eb4551a; no deploy triggered or full Docker/HTTP/phone checks.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -710,13 +725,38 @@
     "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
   },
   "currentWorkingSource": {
-    "branch": "program/five-release-full-hub-overhaul-20261013",
-    "headAtReconciliation": "7f65bfc30b0ca408f2c1193c21657b55773b9285",
+    "branch": "qa/gameplay-distinctness-and-collision-20261013",
+    "headAtReconciliation": "eb4551a67d671dbfb4d3cc3fa6aca3b2e0b213fa",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "Development progressed past df091e8; source revision may change; refresh branch HEAD when running release-status.js. Only host evidence promotes a source SHA to READY.",
+    "note": "GitHub tracked Deplexo branch advanced from 278af07 to review candidate 1796b826 (496 commits) then validated source-only active-account preview guard eb4551a. Deplexo auto-deploy remains OFF. No new host build/READY/API build fingerprint observed. This journal commit follows that source code.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "92c88cea1a696823f6322c58b81eaca855c34a9d"
+    "lastAuditedGitHubHead": "eb4551a67d671dbfb4d3cc3fa6aca3b2e0b213fa"
   },
-  "ownerConfirmedAutoDeployOff": true
+  "ownerConfirmedAutoDeployOff": true,
+  "dashboardEvidence20261015": {
+    "source": "Owner-provided three Deplexo Android screenshots 2026-10-15 at phone time 01:44-01:45, EDT inferred from user session; no private environment values shown",
+    "binaryCopiedToGitHub": false,
+    "imageSHA256s": [
+      "e9655462f18d4acfc0a380692961d378a4702825242944bde8f7b36f50f18f26",
+      "e14baa38ddc8254a4ef76fd58bc2dd0d60099d18b5c8dfb9d18f74ccdf71108e",
+      "7420b9c78daaadf80387c74f1582b64959a8f67e0370c73a8cdcdc85e06acc3b"
+    ],
+    "screenshotBytes": [
+      104279,
+      108369,
+      88244
+    ],
+    "observedState": "Running",
+    "branch": "qa/gameplay-distinctness-and-collision-20261013",
+    "observedProductionCommit": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+    "autoDeployOnPush": false,
+    "buildMethod": "Dockerfile",
+    "persistentMount": "/data",
+    "rootDirectory": ".",
+    "dockerfilePath": "Dockerfile",
+    "reportedDeployments": 20,
+    "reportedLastDeploy": "1d Ago",
+    "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
+  }
 }

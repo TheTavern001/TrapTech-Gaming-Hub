@@ -1,4 +1,15 @@
 # Deployment, audit, and 500-game release ledger
+
+## 2026-10-15 01:45 EDT — Deplexo source branch aligned, owner-review startup hardened (NOT DEPLOYED)
+
+Owner's three Deplexo screenshots show the **existing single app RUNNING**, **20 deployments**, source branch `qa/gameplay-distinctness-and-collision-20261013` at `278af07ebfbc0eb2e783d8294cb1707c528c0163` labelled PRODUCTION, auto-deploy on push **OFF**, Dockerfile method, Dockerfile path `Dockerfile`, root `.`, and persistent storage `/data`. The displayed "last deploy 1d ago" is approximate. No current `/api/build` response or full build log was supplied. Screenshot SHA-256 hashes/byte sizes are in `docs/audit/DEPLOYMENT-JOURNAL.json`; screenshots themselves are not copied into the repo.
+
+GitHub verified the owner-review candidate `1796b8266e198522550353848c80da3e48075464` was **496 commits ahead/0 behind** the host-observed `278af07`. The Deplexo-watched branch was fast-forwarded with a verified expected SHA and `force=false` to `1796b826`; **this is a GitHub source movement, not a Deplexo deploy**.
+
+Subsequent security correction `eb4551a67d671dbfb4d3cc3fa6aca3b2e0b213fa`: allowlisted reviewer usernames must actually exist and be active in the persisted users table at private-review startup. Previously, a syntactically valid nonexistent username could lock the owner out. Updated `src/private-review.js`, `src/server.js` and `tools/test-private-review-access.js`. All three JS sources parsed in V8 and **57 test assertions passed** using a Node-assert-compatible isolated harness. Native Node, full Docker build, real SQLite integration, private-site login, Apple/Android device QA, and host fingerprint are **NOT RUN**.
+
+**Next exact action:** On the existing Deplexo app, verify an already-created Hub account can sign in, then set `HUB_PRIVATE_REVIEW=1` and `HUB_PREVIEW_USERNAMES=<that existing active Hub account>` (do not paste secrets into chat); preserve `/data`, existing session/admin secrets and a verified off-host DB backup. Supervise a **single manual Redeploy** with auto-deploy still OFF. Capture first failing Docker command/log if ERROR; if READY, check host `/healthz`, `/api/build`, guest 503 vs owner login, and payment lockdown. The source at this checkpoint is `eb4551a`; the journal-only commit containing this entry is its descendant and must be reconciled to the exact deployed SHA. **Private preview only; 87 proposed playable / 0 AAA-accepted, 500-game public launch not approved.**
+
 Last reconciled: **2026-10-14 (owner Deplexo CURRENT screenshot, phone time 12:17; no independent `/api/build` readback)**.
 
 ### Current live host vs. source development (latest evidence; supersedes the historic table below)
