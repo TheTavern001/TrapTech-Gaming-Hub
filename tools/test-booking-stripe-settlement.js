@@ -5,12 +5,13 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
-const env={STRIPE_SECRET_KEY:'sk_test_synthetictest123',STRIPE_WEBHOOK_SECRET:'whsec_synthetictest123',
+const env={STRIPE_SECRET_KEY:'sk_test_synthetictest123',STRIPE_WEBHOOK_SECRET:'whsec_synthetictest123',STRIPE_BOOKING_WEBHOOK_SECRET:'whsec_bookingtest123',
  PUBLIC_URL:'https://hub.example.test',HUB_PRIVATE_REVIEW:'0',PAYMENTS_LIVE_APPROVED:'0'};
 const load=(src,context)=>{const module={exports:{}};vm.runInNewContext(src,
  {...context,module,URL,Date,URLSearchParams},{timeout:2000});return module.exports;};
 const FEE=load(read('src/booking-fee-guard.js'),{process:{env}});
 assert.equal(FEE.stripeBookingConfigured(env),true);
+assert.equal(FEE.stripeBookingConfigured({...env,STRIPE_BOOKING_WEBHOOK_SECRET:''}),false, 'Missing sponsor endpoint signing secret blocks checkout');
 for(const config of [{...env,HUB_PRIVATE_REVIEW:'1'},{...env,STRIPE_SECRET_KEY:''},
  {...env,STRIPE_SECRET_KEY:'sk_live_synthetictest123'},
  {...env,PUBLIC_URL:'http://hub.example.test'}])
