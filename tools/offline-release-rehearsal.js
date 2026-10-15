@@ -49,6 +49,7 @@ const tests=[
  'tools/test-avatar-rig-mobile-budget.js',
  'tools/test-avatar-offscreen-fallback.js',
  'tools/test-profile-avatar-navigation.js',
+ 'tools/test-spa-stale-route.js',
  'tools/test-game-adapter-start-isolation.js',
  'tools/test-adapter-proof-snapshot.js',
  'tools/test-adapter-invalid-score.js',
