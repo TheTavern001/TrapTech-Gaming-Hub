@@ -17,7 +17,10 @@ const weightsOf = (gid) => { try { return Object.fromEntries(db.prepare('SELECT 
 const pausesOf = (g) => { try { const p = JSON.parse(g.pauses || '[]'); return Array.isArray(p) ? p.filter(x => Array.isArray(x) && Number.isFinite(+x[0])) : []; } catch { return []; } };
 const cfgOf = (g) => { try { return g.cfg ? JSON.parse(g.cfg) : {}; } catch { return {}; } };
 function custom(g) {
-  if (!g || !g.v7) return false;
+  if (!g || (!g.v7 && !g.booking_id)) return false;
+  // Booked giveaways use real server-verified rules without opting into the
+  // unrelated v7 builder settings or allowing random-draw interpretation.
+  if (g.booking_id && g.score_rule === 'best') return true;
   if (g.win_method === 'hybrid') return true;
   if (g.score_rule && g.score_rule !== 'sum_best') return true;
   if ((g.min_runs || 0) > 0 || pausesOf(g).length) return true;
@@ -50,7 +53,7 @@ function standings(g, games, capSql, E) {
   else if (rule === 'campaign' && lvl) pick = `b AS (SELECT user_id, lv, id, ws, created_at, sdur, sk, ROW_NUMBER() OVER (PARTITION BY user_id, game_id, lv ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
     x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM b WHERE rn = 1)`;
   else if (rule === 'campaign') pick = `x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM q)`;
-  else if (rule === 'best') pick = `x AS (SELECT user_id, id, created_at, ws AS tot, sdur AS tds, sk AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, created_at ASC, id ASC) AS rl FROM q)`;
+  else if (rule === 'best') pick = `x AS (SELECT user_id, id, created_at, ws AS tot, sdur AS tds, sk AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, sdur ASC, (sk IS NULL) ASC, sk DESC, id ASC) AS rl FROM q)`;
   else if (rule === 'total') pick = `x AS (SELECT user_id, id, created_at, SUM(ws) OVER (PARTITION BY user_id) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM q)`;
   else if (rule === 'avg_top') pick = `t AS (SELECT user_id, id, ws, created_at, sdur, sk, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ws DESC, created_at ASC, id ASC) AS rn FROM q),
     x AS (SELECT user_id, id, created_at, CAST(ROUND(SUM(ws) OVER (PARTITION BY user_id) * 1.0 / ${topN}) AS INTEGER) AS tot, SUM(sdur) OVER (PARTITION BY user_id) AS tds, SUM(sk) OVER (PARTITION BY user_id) AS sks, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rl FROM t WHERE rn <= ${topN})`;
