@@ -13,6 +13,7 @@ function send(gate,route,{method='GET',user=null,admin=false,header=null}={}){
 }
 const build=(on,users='ReviewOwner')=>makeGate({enabled:on,users,currentUser:r=>r.testUser,
  isOwnerAdmin:r=>r.testAdmin,adminBase:()=>'/randomized-secure-admin-path-12345'});
+assert.throws(()=>makeGate({enabled:true,users:'',adminBase:()=>null}),/requires a valid ADMIN_PATH/,'Missing owner access must stop startup');
 const off=build(false);
 assert.equal(send(off,'/api/score',{method:'POST'}).next,true,'Disabled mode must leave production unchanged');
 const gate=build(true);
