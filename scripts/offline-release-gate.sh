@@ -65,6 +65,7 @@ run load-harness-loopback-safety node tools/test-private-10k-harness.js
 run deplexo-snapshot-boot-order node tools/test-deplexo-snapshot-boot-order.js
 run private-review-access-controls node tools/test-private-review-access.js
 run giveaway-payment-and-game-approval node tools/test-giveaway-booking-release-gates.js
+run giveaway-stripe-provider-settlement node tools/test-booking-stripe-settlement.js
 run booked-skill-winner-contract node tools/test-booked-skill-winner-contract.js
 run booking-library-proposals node tools/test-booking-library-selection.js
 run optional-sponsor-channel node tools/test-optional-sponsor-channel.js
