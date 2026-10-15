@@ -6,7 +6,7 @@ const sponsor=fs.readFileSync(path.join(root,'src/sponsor.js'),'utf8');
 const ui=fs.readFileSync(path.join(root,'public/js/v7.js'),'utf8');
 const config=fs.readFileSync(path.join(root,'src/config.js'),'utf8');
 const library=fs.readFileSync(path.join(root,'src/games-lib.js'),'utf8');
-new vm.Script(sponsor);new vm.Script(ui.replace(/^import .*$/gm,'').replace(/\bexport\s+(?=function\b)/g,''));
+new vm.Script(sponsor);new vm.Script(ui.replace(/^import .*$/gm,'').replace(/\bexport\s+(?=(?:async\s+)?function\b)/g,''));
 assert.match(ui,/\.\.\.\(C\.S\.libraryGames \|\| \[\]\)/,'UI must include playable games library');
 assert.match(ui,/id="sb-game-search"/,'Mobile booking needs search instead of wall of 87 chips');
 assert.match(ui,/selected\.length>13/,'Must cap per-event game selection');
