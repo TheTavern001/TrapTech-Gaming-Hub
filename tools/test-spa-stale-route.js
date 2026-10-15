@@ -14,4 +14,11 @@ ctx.testShell('/profile/old','stale');
 assert.equal(output.innerHTML,'not-replaced','Old async result must not overwrite a newly selected route');
 ctx.testShell('/shop','correct');
 assert.match(output.innerHTML,/correct/,'Active path must render');
-console.log(JSON.stringify({pass:true,stalePageBlocked:true,currentPageRenders:true,liveBrowserVerified:false}));
+for(const [url,alias] of [['/avatar','/settings'],['/store','/shop'],['/prestige','/shop'],['/store/order/ABCD1234','/shop']]){
+ loc.pathname=url; output.innerHTML='not-replaced';ctx.testShell(alias,'expected-alias');
+ assert.match(output.innerHTML,/expected-alias/,'Must render supported UI: '+url);
+}
+loc.pathname='/shop'; output.innerHTML='not-replaced';
+ctx.testShell('/settings','wrong-route');
+assert.equal(output.innerHTML,'not-replaced','An unrelated alias must not bypass route guard');
+console.log(JSON.stringify({pass:true,stalePageBlocked:true,currentPageRenders:true,avatarAndStoreRoutesRestored:true,liveBrowserVerified:false}));
