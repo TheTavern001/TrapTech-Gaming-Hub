@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..');
+const server=fs.readFileSync(path.join(root,'src/avatars.js'),'utf8');
+const ui=fs.readFileSync(path.join(root,'public/js/avatar-editor.js'),'utf8');
+new vm.Script(server);
+new vm.Script(ui.replace(/^import .*$/gm,'').replace(/\bexport\s+(?=function\b)/g,''));
+assert.match(server,/app\.post\('\/api\/avatar\/buy-credits', requireUser, buyAvatarWithCredits\)/);
+assert.match(server,/app\.post\('\/api\/avatar\/buy-points', requireUser, buyAvatarWithCredits\)/);
+assert.match(server,/app\.post\('\/api\/avatar\/buy', requireUser, \(_req, res\) => bad\(res, 410,/);
+assert.doesNotMatch(server,/M\.addCrowns\(/);
+assert.doesNotMatch(server,/M\.crowns\(req\.user\.id\)/);
+assert.match(server,/points_ledger \(user_id, amount, reason, ref, created_at\)/);
+assert.match(server,/if \(!p \|\| p\.unlock === 'free' \|\| p\.unlock\.prestige\)/);
+assert.match(server,/if \(balance < price\)/);
+assert.match(server,/INSERT OR IGNORE INTO avatar_parts_owned/);
+assert.match(ui,/let credits = r\.credits \?\? r\.points \?\? 0/);
+assert.match(ui,/api\('\/api\/avatar\/buy-credits'/);
+assert.match(ui,/Hub Credits <b>/);
+assert.doesNotMatch(ui,/Hub Crowns|Earned Hub Points|av-buy-points|id="av-buy"/);
+console.log(JSON.stringify({pass:true,oneCustomerCurrency:'Hub Credits',legacyCrownPurchaseDisabled:true,prestigeRequiresEntitlement:true,sourceContractOnly:true}));
