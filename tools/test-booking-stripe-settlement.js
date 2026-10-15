@@ -48,12 +48,12 @@ const db={
     if(sql.includes("checkout_state='failed'")){
      q.checkout_state='failed';q.checkout_url=null;q.provider_ref=null;return {changes:1};
     }
-    if(sql.includes("SET status='paid'")){
+    if(sql.includes("UPDATE sponsor_quotes SET status='paid'")){
      if(q.status!=='accepted'||q.provider_ref!==v[6]||q.checkout_ref!==v[5])return {changes:0};
      q.status='paid';q.paid_at=v[0];q.settled_cents=v[1];
      q.provider_payment_id=v[2];q.checkout_state='paid';return {changes:1};
     }
-    if(sql.includes("SET status='refunded'")){
+    if(sql.includes("UPDATE sponsor_quotes SET status='refunded'")){
      q.status='refunded';q.refunded_at=v[0];q.checkout_state='refunded';return {changes:1};
     }
     if(sql.includes("UPDATE bookings SET status='paid'")){b.status='paid';return {changes:1};}
