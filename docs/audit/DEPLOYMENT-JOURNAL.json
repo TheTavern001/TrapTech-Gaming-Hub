@@ -737,9 +737,37 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "BLOCKED_UNTIL_DOCKER_AND_DEVICE_PROOF"
+    },
+    {
+      "commit": "9e81088fb301c8fb738c59e52db1544dbfa16cc2",
+      "branch": "main (QA fast-forward pending journal)",
+      "reason": "Make src/config.js fail explicitly on missing cryptographic secrets instead of invoking HMAC with an undefined key; run isolated secret-initialization test in Docker preflight.",
+      "validation": "Source syntax checks and six V8 secret-env simulations PASS; tools/test-config-secret-preflight.js added to Dockerfile RUN but its actual Node/Docker execution not performed. Neither Deplexo build nor real secrets verified.",
+      "host": "SOURCE ONLY, auto deploy OFF. No newer READY observed.",
+      "evidenceFiles": [
+        "src/config.js",
+        "tools/test-config-secret-preflight.js",
+        "Dockerfile"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "BLOCKED"
+    },
+    {
+      "commit": "e981ced80a7f49eddea77fa2b53beabb8c28ce27",
+      "branch": "main (QA fast-forward pending journal)",
+      "reason": "Add remote anonymous private-preview validator for existing Deplexo app (health/signin access, no guest pages, scoreboard, checkout); register npm verify:private and Docker script parse.",
+      "validation": "16 mocked healthy restricted responses PASS; simulated leak triggers 10 blocked-route failures and process exitCode=1. Source marker checks for 17 files expected by build HTTP smoke PASS. Git tree confirms key GLB and icon binary sizes. Actual Deplexo remote endpoint inaccessible and verification script not run on host; real owner sign-in and signed HTTP money flows remain untested.",
+      "host": "NO DEPLOYMENT TRIGGERED. Latest user-log attempt 570a9 FAILED; last screenshot current READY 278af07.",
+      "evidenceFiles": [
+        "tools/verify-private-preview-live.js",
+        "package.json",
+        "Dockerfile"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "BLOCKED"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: Owner supplied failed build log: checked out old main 570a9fe, Docker Step 11 failed on src/config.js:23 createHmac undefined due verify-prelaunch runtime import with no secrets. Previous host READY 278af07 remains last screenshot-proven. Fast-forwarded main to QA audited source 0bda3d, added regression test at 2db3f2, aligned main and QA. No successful new Deplexo build verified.",
+  "lastEvidenceReconciliation": "2026-10-15: fixes for old 570a9 Docker Step 11 source import, plus explicit absent secret startup error; 16-check anonymous private-preview smoke added, validated against mocked restricted/leaking responses (16 passes for restricted; 10 failures triggered in leaked mock). 17 HTTP smoke source file marker checks passed, Git tree model/PNG assets present. No full native Docker, host, authenticated owner, iOS/Android or AAA certification.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -754,13 +782,13 @@
     "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
   },
   "currentWorkingSource": {
-    "branch": "main and qa/gameplay-distinctness-and-collision-20261013 (aligned)",
-    "headAtReconciliation": "2db3f2b7a8703a21575306daa5d07b43e1607bf6",
+    "branch": "main and qa/gameplay-distinctness-and-collision-20261013 (aligned after journal commit)",
+    "headAtReconciliation": "e981ced80a7f49eddea77fa2b53beabb8c28ce27",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "Both possible Deplexo source branches were fast-forwarded to same 2db3f2 source. Old 570a9 failure logged accurately. No new Deplexo build success; auto deploy OFF; release remains source-only.",
+    "note": "Source after explicit missing-secret startup fix 9e81088 and private preview checker e981ced8; next journal commit will be descendant. Both main and QA refs to be aligned after writing. Last user Deplexo checkout 570a9 FAILED, no corrected build confirmed.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "2db3f2b7a8703a21575306daa5d07b43e1607bf6"
+    "lastAuditedGitHubHead": "e981ced80a7f49eddea77fa2b53beabb8c28ce27"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {

@@ -1,5 +1,20 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — Release hardening and owner-preview HTTP contract (GitHub source only)
+
+**Real problem addressed:** Owner-provided log checked out outdated main `570a9fe` and failed in Docker STEP 11 on `src/config.js:23` HMAC with undefined key. Main and QA refs have been advanced by fast-forward (not force-push) from that ancestor. Current code no longer imports runtime config into secretless prelaunch game-registry audit.
+
+**New code `9e81088`:** Missing runtime session/run secrets no longer crash with a cryptic HMAC type error; startup reports mandatory environment settings and exits. Source syntax and **six isolated mocked crypto/exit cases** pass. Docker now *requires* the native `tools/test-config-secret-preflight.js` regression to pass before an image is produced. This script has **not yet run inside Deplexo**.
+
+**New code `e981ced8`:** Added `npm run verify:private` to verify 16 anonymous HTTP conditions of the existing private-review app. These include health/build, sign-in/static loading, denial of guest homepage/games/shop/game iframe, and refusal of anonymous score, signup, and checkout writes. Mocked restricted-access server passed 16/16; an intentionally ungated mock caused 10 failures and the validator exited nonzero. **No live HTTP/phone test executed**.
+
+**Further inspection:** source-string contracts used by the image builder's HTTP smoke checked across 17 critical runtime files: zero missing markers. Git tree confirms required sample GLB/PNG assets exist and meet source-file size bounds (the exact QA neutral-avatar GLB is 741,320 bytes). These checks do not prove GPU rendering, runtime success or license compliance.
+
+**Release truth:** GitHub PR #29 appears merged because its source became an ancestor of `main`; **that is not a deployment**. Deplexo last owner-observed CURRENT/READY remains `278af07`; subsequent user provided FAILED build log for old checkout `570a9fe`. The existing app is inaccessible to the external web checker from this conversation and full Docker is unavailable here. Both candidate branches need the journal-only commit synchronized and Deplexo must check out that exact new SHA before any host claims. Automatic deploy stays OFF.
+
+**Remaining evidence:** 93 historical registrations, 87 proposed playable, 0 individually AAA/device-certified; 26/26 workstreams without owner approval; 15/15 security gates without full verified approval. 413 additional distinct quality-approved games required if all 87 pass. Physical Android/iOS touch/FPS/3D clipping, full build+native SQLite/backup, official prize replay, Stripe settlement/refunds and public approval remain **NOT VERIFIED**. Do not process paid giveaways, score-certified prizes, live purchases or public traffic based solely on these source changes.
+
+
 ## 2026-10-15 — Failed Deplexo redeploy was stale `main` source, root cause confirmed
 
 **Owner-provided build log** starts `Checked out commit 570a9feba0f17aa1de120c67b57f3a8a6c0f5930`. Docker reached **[1/2] STEP 11/12** after apt/npm, 3,150 quest-template checks, 96 game syntax checks, and 80-library structural checks passed. The first actual failure was:
