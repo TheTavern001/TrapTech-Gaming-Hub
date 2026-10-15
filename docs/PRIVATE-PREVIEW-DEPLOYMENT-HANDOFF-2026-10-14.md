@@ -37,6 +37,44 @@ node tools/offline-release-rehearsal.js --release=R1 --full
 - Deplexo is the only available Docker-capable integrated build path in this session: the assistant runtime has no Docker and cannot resolve github.com to clone the private repo. Treat Deplexo's first build as a **test of the candidate**, not prior proof it works. Capture actual build logs, release SHA/fingerprint and rollback state before promoting it to any clients.
 - **Optional brand link policy:** only one non-required public HTTPS channel link inside a normal booked giveaway; no subscriber count, follower-gating claim, automatic platform verification or growth/time guarantee. This is enforced by `src/giveaway-linked.js` and `tools/test-optional-sponsor-channel.js`.
 
+## Owner-only testing on the same deployed Deplexo URL (new)
+
+This is a runtime toggle, not another website. The server code now has a real
+`src/private-review.js` access gate **before compressed static assets and API
+routes**. It defaults OFF so ordinary public builds behave as before.
+
+For the first *restricted* owner review in Deplexo:
+- Set environment variable `HUB_PRIVATE_REVIEW=1`.
+- Set `HUB_PREVIEW_USERNAMES` to the **exact username(s)** of already-registered,
+  authorized player account(s) who will test. Comma-separated, no spaces needed.
+  This is an access allowlist, not an admin privilege grant. Passwords, tokens,
+  Stripe secrets and database files must never be supplied in chat.
+- Alternatively, a valid `ADMIN_PATH` and a fully authenticated owner admin
+  session (password **and TOTP**) can access the preview. The admin route
+  remains secret, and the Gate cannot expose its path.
+- When the gate is enabled without either an allowlisted reviewer OR a valid
+  `ADMIN_PATH`, the server **refuses to start** rather than accidentally
+  exposing a live review or locking out all authorized reviewers.
+- Anonymous and non-allowlisted visitors receive a temporary 503 page and
+  cannot submit scores, create accounts, purchase, or enter giveaways.
+  The health/build probe, static assets, sign-in route, and secret admin
+  sign-in path continue to work.
+- The gate does not turn uncertified games into certified prize engines:
+  official prize-score approvals, Stripe settlement, and test payments remain
+  separate release blockers.
+- A client with an old service-worker cache might still display cached art;
+  **the server APIs are nevertheless denied**. Clear PWA cache and reinstall
+  on devices if the old controller icon persists.
+
+When the owner authorizes **public** release after device testing, set
+`HUB_PRIVATE_REVIEW=0` and redeploy/restart as Deplexo requires.
+Do not simply remove a feature flag and claim all games have been certified.
+
+**Release validation:** Docker image build runs
+`node tools/test-private-review-access.js`, and the offline rehearsal includes
+the same access-control regression. Source-only testing cannot establish
+working production 2FA or persisted settings, so verify those on the deployed app.
+
 ## Go/no-go decision
 
 **NO-GO** until complete checkout + Docker/HTTP source build pass, backup/rollback verified, private controls locked down and reviewed, and exact deployment candidate SHA recorded. These are predeployment criteria. Postdeployment device tests are required before calling R1 owner-approved.
