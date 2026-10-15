@@ -165,7 +165,7 @@ function shell(path, inner, { cls = '', title } = {}) {
   // The avatar editor and store deliberately reuse the settings/shop shell styles.
   // Accept only their explicitly registered route aliases, not arbitrary stale pages.
   const alias = (path === '/settings' && activePath === '/avatar') ||
-    (path === '/shop' && (activePath === '/store' || activePath === '/prestige' || /^\/store\/order\/[A-Z0-9]{8,20}$/.test(activePath)));
+    (path === '/shop' && (activePath === '/store' || activePath === '/prestige' || activePath === '/shop/how-it-works' || /^\/store\/order\/[A-Z0-9]{8,20}$/.test(activePath)));
   if (activePath !== path && !alias) return;
   $app.innerHTML = `${topbar(path)}<main class="page ${cls}" id="main" tabindex="-1">${inner}</main>${footer()}${bottomnav(path)}`;
   setTitle(title || TITLES[path] || null);
