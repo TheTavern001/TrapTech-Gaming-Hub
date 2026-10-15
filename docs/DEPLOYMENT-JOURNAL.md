@@ -1,5 +1,15 @@
 # Deployment, audit, and 500-game release ledger
 
+
+## 2026-10-15 — R1 second Docker build: native finance passed; pointer mirror regression test stale
+
+Deplexo owner's new log confirms the correct `d455ac26395904cdc1cd9f388a86c4db929cb6a4` was checked out; immutable purchase snapshot and refund test `pass:true,quotedUnits:500,refundExact:true` now succeeded, followed by native security, quest, wallet, avatar, vehicle, game-source and pseudo-load tests.
+
+Docker 1/2 STEP12 failed at `tools/test-owner-reported-gameplay.js:93`: an exact `kit.includes('if (!def.stickAlsoPtr) return;')` source check. The **actual** Kit implementation uses `if(!def.stickAlsoPtr){touches.set(e.pointerId,{k:'stick'});return;}` then `{k:'stick-ptr'}` for mirrored touch. The source engine already behaved correctly. Executed the original Kit onDown/onMove/onUp handlers in isolation: mirrored stick+pointers, exclusive stick-only, pointercancel suppression all PASS. Replaced stale text check with real handler assertions in the test. No gameplay or payments code touched.
+
+This is still R1 recovery; do not push R2-R5 until Deplexo new exact SHA reaches READY and private runtime verified. Physical 87 game QA and prize replay certification remain unverified.
+
+
 ## 2026-10-15 — R1 Docker failure 6560740, precise test-fixture reference correction
 
 **Host:** User pasted full current R1 Deplexo Docker log proving `Checked out commit 656074076ea4240e450452aa658ccf2697a54a58` on QA branch (first time latest intended source checkout independently confirmed). Builder Node 20.20.2 ran base image/compiler, installed 113 production packages, generated and verified Trap Tech 192/512/maskable/iOS icon assets, passed secret initialization, revoked session and new single-wallet/atomic wallet tests. This is **not READY**: Docker stage 1/2 STEP 12/14 stopped on `tools/test-payment-order-snapshots.js:38` with `ledger.delta` undefined.

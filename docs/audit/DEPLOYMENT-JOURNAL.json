@@ -823,9 +823,23 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "R1_BLOCKED_UNTIL_DOCKER_READY"
+    },
+    {
+      "commit": "R1_RECOVERY_TEST_PATCH_IN_NEXT_SHA",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Executed real mobile pointer handlers instead of comparing obsolete if(!def.stickAlsoPtr) source string",
+      "validation": "V8 JS source syntax and isolated actual Kit handler simulation PASS for mirrored, stick-only, pointercancel. Full native Docker not rerun.",
+      "host": "R1_D455AC_FAILED_NEXT_BUILD_PENDING",
+      "evidenceFiles": [
+        "tools/test-owner-reported-gameplay.js",
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_BLOCKED_HOST_READY"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: R1 6560740 Deplexo build correctly checked out and failed Docker STEP12/14 because financial snapshot test looked up QUOTE_PINN while order ref is QUOTE_PINNED. Earlier runtime tests passed. Test-only fix reuses immutable order reference for both purchase and refund ledgers; source parsed, SQLite mismatch reproduced; awaits next native build; R2-R5 untriggered.",
+  "lastEvidenceReconciliation": "2026-10-15 R1 second deploy d455ac26 failed Docker step12 on outdated pointer-mirror literal assertion; payment test and many later native tests PASSED. Replaced assertion with real Kit onDown/onMove/onUp behavior checks, isolated passes for mirrored, exclusive and canceled gestures. R2-R5 still blocked, host READY unverified.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -841,12 +855,12 @@
   },
   "currentWorkingSource": {
     "branch": "qa/gameplay-distinctness-and-collision-20261013",
-    "headAtReconciliation": "656074076ea4240e450452aa658ccf2697a54a58",
-    "sourceStatus": "R1_HOST_BUILD_FAILED_R1_FIX_STAGED",
-    "note": "Owner R1 log confirms QA checkout correct; Node20 preflight reached financial snapshot test, which has inconsistent QUOTE_PINNED vs QUOTE_PINN fixture. Recovery fix staged; no host ready proof or R2 deployment.",
+    "headAtReconciliation": "d455ac26395904cdc1cd9f388a86c4db929cb6a4",
+    "sourceStatus": "R1_TEST_ASSERTION_FAILURE_RECOVERY_PREPARED",
+    "note": "d455ac26 checkout verified, finance snapshot fixed and passed. Pointer mirror engine correct but brittle source-string test failed; repaired test source-only, no Kit runtime change. Await Docker recovery.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "656074076ea4240e450452aa658ccf2697a54a58"
+    "lastAuditedGitHubHead": "d455ac26395904cdc1cd9f388a86c4db929cb6a4"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {
@@ -875,14 +889,13 @@
     "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
   },
   "lastReportedFailedDeployment20261015": {
-    "commit": "656074076ea4240e450452aa658ccf2697a54a58",
+    "commit": "d455ac26395904cdc1cd9f388a86c4db929cb6a4",
     "status": "FAILED",
-    "error": "Docker [1/2] STEP 12/14: tools/test-payment-order-snapshots.js:38 TypeError cannot read undefined.delta",
-    "cause": "Test fixture created store_orders.ref=QUOTE_PINNED but ledger queries and refund calls incorrectly used QUOTE_PINN, returning no ledger row despite preceding successful grant and balance assertions.",
-    "evidence": "Owner-pasted Deplexo build log, checkout 656074076ea4240e450452aa658ccf2697a54a58; native Node v20.20.2 + production modules; icon/preflight success through wallet test; failed test-payment-order-snapshots.js.",
-    "correctedSource": "tools/test-payment-order-snapshots.js now derives pinnedRef from order record, queries purchase/refund by parameterized ref and checks explicit presence; no production financial logic changed.",
-    "fixVerification": "JS syntax inspected; SQLite :memory: query repro confirms QUOTE_PINN => no row and QUOTE_PINNED => stored delta; next native Docker build still NOT RUN.",
-    "deploymentState": "R1 RECOVERY SOURCE PREPARATION ONLY: will push QA branch once, await Deplexo final status; R2-R5 BLOCKED"
+    "error": "Docker STEP 12/14 tools/test-owner-reported-gameplay.js:93 stale literal Kit pointer mirroring assertion",
+    "cause": "Exact source-string test expected if (!def.stickAlsoPtr) return;, but Kit implements equivalent exclusive stick and stick-ptr mirroring with pointer tracking and cancel safety.",
+    "evidence": "User pasted Deplexo native Node20 build: payment ledger snapshot fixed and passed, dozens of wallet, settlement, quest, avatar, game source tests passed; first assertion failure at line 93.",
+    "correction": "Change brittle source-contains assertion into executed input-handler behavior checks covering mirrored touch, stick-only touch, movement, touch release and pointercancel",
+    "qualification": "Actual source handlers executed independently and passed; Docker still awaiting next build."
   },
   "reportedFailedDeployments20261015": [
     {
@@ -903,6 +916,15 @@
       "correctedSource": "tools/test-payment-order-snapshots.js now derives pinnedRef from order record, queries purchase/refund by parameterized ref and checks explicit presence; no production financial logic changed.",
       "fixVerification": "JS syntax inspected; SQLite :memory: query repro confirms QUOTE_PINN => no row and QUOTE_PINNED => stored delta; next native Docker build still NOT RUN.",
       "deploymentState": "R1 RECOVERY SOURCE PREPARATION ONLY: will push QA branch once, await Deplexo final status; R2-R5 BLOCKED"
+    },
+    {
+      "commit": "d455ac26395904cdc1cd9f388a86c4db929cb6a4",
+      "status": "FAILED",
+      "error": "Docker STEP 12/14 tools/test-owner-reported-gameplay.js:93 stale literal Kit pointer mirroring assertion",
+      "cause": "Exact source-string test expected if (!def.stickAlsoPtr) return;, but Kit implements equivalent exclusive stick and stick-ptr mirroring with pointer tracking and cancel safety.",
+      "evidence": "User pasted Deplexo native Node20 build: payment ledger snapshot fixed and passed, dozens of wallet, settlement, quest, avatar, game source tests passed; first assertion failure at line 93.",
+      "correction": "Change brittle source-contains assertion into executed input-handler behavior checks covering mirrored touch, stick-only touch, movement, touch release and pointercancel",
+      "qualification": "Actual source handlers executed independently and passed; Docker still awaiting next build."
     }
   ]
 }
