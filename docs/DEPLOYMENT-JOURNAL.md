@@ -1,5 +1,10 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — R1 incident gate fixed for future verified READY transitions
+
+Found and fixed a latent deterministic deployment-test failure in `tools/test-r1-incident-gates.js`: it incorrectly required the forever-historical R1 READY SHA `5fb461c` to remain the latest Deplexo CURRENT host. The corrected validator protects R1 history while comparing dynamic CURRENT against exact owner-observed evidence; embedded fixtures confirm a later READY replaces CURRENT and reject FAILED or mismatched claims. No permanent static SHA assumptions for future releases. This is an isolated staging fix, not an actual Deplexo deployment; native Node20/Docker remains pending.
+
+
 ## 2026-10-15 — Game QA false-positive and unsafe-write fixes, staging only
 
 Library browser QA now checks actual signed-run game identity, engine identity and play/over state rather than accepting any canvas page. Core SPA pages are still surface-only tests, not game-loop proof. QA blocks all API mutations other than signed `POST /api/run/start`; remote host tests require explicit `QA_ALLOW_RUN_START=1` because creating runs writes temporary server records. Added negative regression to Docker and both offline test paths. A stale predecessor contract requiring the old narrow score route was identified during staging preflight and corrected before deployment. Source test does not claim a browser, real phone, 500-game or public launch certification. Deplexo current READY remains `5fb461c`.

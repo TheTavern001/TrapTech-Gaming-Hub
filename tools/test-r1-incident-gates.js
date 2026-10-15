@@ -26,7 +26,34 @@ for(const issue of [...contract.incidents,...contract.additionalRegressions]){
 assert.ok(docker.includes('node tools/test-r1-incident-gates.js'));
 assert.ok(offline.includes("'tools/test-r1-incident-gates.js'"));
 assert.ok(shell.includes('node tools/test-r1-incident-gates.js'));
-assert.equal(contract.r1HostReadyFromOwnerScreenshot,journal.latestOwnerObservedHost.currentReadySha);
+// Historic R1 READY never disappears, but a verified later deployment may become CURRENT.
+function validateCurrentHost(evidence){
+ const historic=evidence.releaseHistory.find(x=>x.commit===contract.r1HostReadyFromOwnerScreenshot);
+ assert.ok(historic&&historic.status==='READY','Historic R1 READY evidence must remain intact');
+ const selected=evidence.releaseHistory.filter(x=>x.observedAsCurrent);
+ assert.equal(selected.length,1,'Exactly one host deployment may be CURRENT');
+ assert.equal(selected[0].status,'READY','FAILED builds cannot be CURRENT');
+ assert.equal(selected[0].commit,evidence.latestOwnerObservedHost.currentReadySha,
+  'CURRENT must match owner-observed host evidence, not a static historical SHA');
+ return selected[0];
+}
+const hostCurrent=validateCurrentHost(journal);
+const futureSha='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+// Executed positive/negative fixture: a future READY may supersede R1, but
+// failed or mismatched host claims must never pass.
+const transition={
+ ...journal,
+ latestOwnerObservedHost:{...journal.latestOwnerObservedHost,currentReadySha:futureSha},
+ releaseHistory:[...journal.releaseHistory.map(x=>({...x,observedAsCurrent:false})),
+  {commit:futureSha,status:'READY',observedAsCurrent:true}]
+};
+assert.equal(validateCurrentHost(transition).commit,futureSha,
+ 'Future READY transition must work, not require hardcoded 5fb461c forever');
+assert.throws(()=>validateCurrentHost({...transition,releaseHistory:transition.releaseHistory.map(x=>
+ x.commit===futureSha?{...x,status:'FAILED'}:x)}),/FAILED builds cannot be CURRENT/);
+assert.throws(()=>validateCurrentHost({...transition,
+ latestOwnerObservedHost:{...transition.latestOwnerObservedHost,currentReadySha:contract.r1HostReadyFromOwnerScreenshot}}),
+ /CURRENT must match/);
 const evidenceForSource=journal.releaseHistory.some(x=>x.observedAsCurrent &&
  x.status==='READY' && x.commit===journal.currentWorkingSource.headAtReconciliation);
 const expectedSourceStatus=evidenceForSource
@@ -36,8 +63,8 @@ assert.equal(journal.currentWorkingSource.sourceStatus,expectedSourceStatus,
 if(!evidenceForSource)assert.ok(!journal.releaseHistory.some(
  x=>x.commit===journal.currentWorkingSource.headAtReconciliation),
  'Unreleased staging work may not be reported as deployed');
-assert.equal(journal.releaseHistory.filter(x=>x.observedAsCurrent).length,1);
-assert.equal(journal.releaseHistory.find(x=>x.observedAsCurrent).commit,contract.r1HostReadyFromOwnerScreenshot);
+assert.equal(hostCurrent.commit,journal.latestOwnerObservedHost.currentReadySha);
 assert.equal(journal.publicLaunchApproved,false);
 console.log(JSON.stringify({pass:true,knownFailedBuilds:contract.incidents.length,additionalRegressionFamilies:2,protectedExecutableTests:tests.size,
-  hostScreenshotReady:true,fullStagedDockerTested:false,physicalPhoneAAAApproved:false}));
+  historicR1ReadyRetained:true,currentHostSha:hostCurrent.commit,futureReadyTransitionValidated:true,
+  fullStagedDockerTested:false,physicalPhoneAAAApproved:false}));
