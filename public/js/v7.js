@@ -133,7 +133,7 @@ function sponsorPage(url) {
     draw();
   });
 }
-const SP_STATE = { pending: ['hourglass', 'Request received', 'Trap Tech is preparing your quote. You can close this page; bookmark it to come back.'], sent: ['file-text', 'Your quote is ready', 'Review it below and accept or decline.'], accepted: ['handshake', 'Quote accepted', 'Thank you! Message us on Potato to settle the amount; we start building your giveaway.'], declined: ['circle-x', 'Quote declined', 'No problem. You can send a new request any time.'], paid: ['badge-check', 'Payment recorded — launch review pending', 'Trap Tech is preparing the event and verifying game quality. Your official share link appears here only after final approval.'] };
+const SP_STATE = { pending: ['hourglass', 'Request received', 'Trap Tech is preparing your quote. You can close this page; bookmark it to come back.'], sent: ['file-text', 'Your quote is ready', 'Review it below and accept or decline.'], accepted: ['handshake', 'Quote accepted', 'Pay securely by card below. Your giveaway will only proceed after Stripe confirms the payment.'], declined: ['circle-x', 'Quote declined', 'No problem. You can send a new request any time.'], paid: ['badge-check', 'Payment verified — launch review pending', 'Stripe has verified your booking fee. The event remains private until Trap Tech certifies the game and approves publication.'], refunded: ['shield-alert', 'Payment refunded or disputed', 'This booking is on hold and any official event link is disabled. Contact Trap Tech to resolve the payment.'] };
 async function sponsorStatus(m, url) {
   setTimeout(() => { const b = document.getElementById('ev-copy'); if (b) b.onclick = () => navigator.clipboard && navigator.clipboard.writeText(location.origin + document.querySelector('#ev-share a').getAttribute('href')); }, 50);
   const { icon, esc } = C;
@@ -154,7 +154,15 @@ async function sponsorStatus(m, url) {
       ${qt.discount_pct ? `<tr class="disc"><td>Discount ${qt.discount_pct}%</td><td class="amt">−${money(Math.round(qt.lines.reduce((t, l) => t + (l.amount_cents || 0), 0) * qt.discount_pct / 100))}</td></tr>` : ''}${qt.discount_cents ? `<tr class="disc"><td>Discount</td><td class="amt">−${money(qt.discount_cents)}</td></tr>` : ''}
       <tr class="tot"><td>Total</td><td class="amt" id="sp-total">${money(qt.total_cents)}</td></tr></tbody></table>
       ${qt.note ? `<p class="small"><b>From Trap Tech:</b> ${esc(qt.note)}</p>` : ''}
-      ${qt.status === 'sent' ? (qt.expired ? `<div class="err">This quote expired on ${day(qt.valid_until)}. Message us on Potato for a fresh one.</div>` : `<p class="small muted">Valid until ${day(qt.valid_until)}. Payment is settled with Trap Tech Solutions on Potato after you accept.</p><div class="btn-row"><button class="btn" id="sp-acc">${icon('check')} Accept quote</button><button class="btn ghost" id="sp-dec">Decline</button></div>`) : ''}
+      ${qt.status === 'sent' ? (qt.expired ? `<div class="err">This quote expired on ${day(qt.valid_until)}. Message us on Potato for a fresh one.</div>` : `<p class="small muted">Valid until ${day(qt.valid_until)}. You can pay through secure Stripe checkout after accepting.</p><div class="btn-row"><button class="btn" id="sp-acc">${icon('check')} Accept quote</button><button class="btn ghost" id="sp-dec">Decline</button></div>`) : ''}
+    </div>` : ''}
+    ${q.status === 'accepted' ? `<div class="card pad" role="region" aria-label="Secure booking payment">
+      <h3>${icon('shield-check')} Complete your booking payment</h3>
+      <p class="small muted">Pay ${money(q.quote?.total_cents||0)} through secure Stripe checkout. Your official giveaway stays locked until the payment is verified and the selected game is certified.</p>
+      ${q.payment_checkout?.available
+        ? `<button class="btn" id="sp-pay">${icon('credit-card')} Pay securely by card</button>`
+        : `<p class="small muted" role="status">Secure checkout is not configured or is disabled during private review. No payment has been taken.</p>`}
+      ${url.searchParams.get('payment') === 'success' ? '<p class="small muted" role="status">Payment submitted. Stripe confirmation is pending; refresh this page to check the verified status.</p>' : ''}
     </div>` : ''}
     <div class="card pad"><h3>${icon('list-checks')} What you asked for</h3><ul class="sp-asked">${q.features.map(f => `<li>${icon('check')}<span>${esc(f.label)}</span></li>`).join('')}</ul>
       ${q.start_date || q.end_date ? `<p class="small muted">Dates: ${esc(q.start_date || 'flexible')} → ${esc(q.end_date || 'flexible')}</p>` : ''}${q.details ? `<p class="small"><b>Details:</b> ${esc(q.details)}</p>` : ''}${q.notes ? `<p class="small"><b>Notes:</b> ${esc(q.notes)}</p>` : ''}</div>
@@ -165,6 +173,19 @@ async function sponsorStatus(m, url) {
   const act = (a) => async () => { if (a === 'decline' && !confirm('Decline this quote?')) return; const x = await C.api(`/api/sponsor/requests/${encodeURIComponent(tok)}/${a}`, { method: 'POST', body: {} }); if (!x.ok) return C.toast(x.error || 'Could not save'); C.toast(a === 'accept' ? 'Quote accepted' : 'Quote declined'); sponsorStatus(m, new URL(location.href)); };
   const ac = document.getElementById('sp-acc'); if (ac) ac.onclick = act('accept');
   const dc = document.getElementById('sp-dec'); if (dc) dc.onclick = act('decline');
+  const pay = document.getElementById('sp-pay'); if (pay) pay.onclick = async () => {
+    pay.disabled = true; pay.textContent = 'Opening secure checkout…';
+    try {
+      const result = await C.api('/api/sponsor/requests/' + encodeURIComponent(tok) + '/checkout', { method: 'POST', body: {} });
+      if (!result.ok || !result.checkout_url) throw Error(result.error || 'Checkout unavailable');
+      const dest = new URL(result.checkout_url);
+      if (dest.protocol !== 'https:' || dest.hostname !== 'checkout.stripe.com') throw Error('Invalid payment destination');
+      window.location.assign(dest.href);
+    } catch (e) {
+      C.toast(e.message || 'Checkout unavailable'); pay.disabled = false;
+      pay.textContent = 'Pay securely by card';
+    }
+  };
 }
 
 // ---------------- brands ----------------
