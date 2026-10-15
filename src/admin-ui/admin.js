@@ -549,10 +549,10 @@ async function security() {
   $('#lo-all').onclick = async () => { if (!confirm('Sign out every admin session, including this one?')) return; await api('/api/admin/security/logout-all', { method: 'POST' }); location.href = AP + '/'; };
 }
 
-// ---------- v7: Sponsor a Host - requests, quote builder, price sheet (admin-only prices) ----------
+// ---------- Book a Giveaway — verified provider payments + private-event approval ----------
 const PLACE_L = [['giveaway', 'Link on the giveaway page'], ['game', 'Link on the game page'], ['announcement', 'Link in the launch announcement'], ['featured', 'Home Featured row'], ['hero', 'Home hero takeover'], ['skin', 'Branded game skin / theme'], ['open', 'Open to every hub player']];
 const usd = (c) => '$' + ((Math.round(c) || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const QS_PILL = { draft: ['', 'Draft'], sent: ['amber', 'Sent'], accepted: ['green', 'Accepted'], declined: ['red', 'Declined'], paid: ['green', 'Paid'] };
+const QS_PILL = { draft: ['', 'Draft'], sent: ['amber', 'Sent'], accepted: ['green', 'Accepted'], declined: ['red', 'Declined'], paid: ['green', 'Stripe verified'], refunded: ['red', 'Refunded / disputed'] };
 const qPill = (st) => { const [c, l] = QS_PILL[st] || QS_PILL.draft; return `<span class="pill ${c}">${l}</span>`; };
 async function sponsorAdmin(id) {
   const r = await api('/api/admin/sponsor/requests'); const list = r.requests || [];
@@ -561,7 +561,7 @@ async function sponsorAdmin(id) {
   const row = (b) => `<tr data-id="${b.id}" class="${q && q.id === b.id ? 'sel' : ''}"><td>${b.id}</td><td><a href="/admin/sponsor/${b.id}"><b>${esc(b.brand)}</b></a>${demoTag(b.is_demo)}<div class="small muted">${ago(b.created_at)} • ${esc(b.business_type || '')}${b.licensed_confirmed ? ' • licensed' : ''}</div></td><td class="num">${b.features.length}</td><td>${qPill(b.quote.status)}</td><td class="num">${usd(b.quote.total_cents)}</td></tr>`;
   let editor = `<div class="card pad"><p class="muted">Pick a request to build its quote. The draft is totalled automatically from the <a href="/admin/sponsor/prices">price sheet</a>; adjust lines, add custom items or a discount, then send it to the sponsor's private status page.</p></div>`;
   if (q) {
-    const Q = q.quote; const locked = ['accepted', 'paid'].includes(Q.status); const L = Q.lines.map(l => ({ ...l }));
+    const Q = q.quote; const locked = ['accepted', 'paid', 'refunded'].includes(Q.status); const L = Q.lines.map(l => ({ ...l }));
     const statusUrl = location.origin + '/sponsor/status/' + q.public_token;
     editor = `<div class="card pad" id="qb"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="flex:1">#${q.id} ${esc(q.brand)}</h2>${qPill(Q.status)}</div>
       <div class="small muted" style="margin:4px 0 10px">${esc(q.contact || '')}${q.contact_name ? ' • ' + esc(q.contact_name) : ''} • dates ${esc(q.start_date || 'flexible')} → ${esc(q.end_date || 'flexible')}${q.username ? ' • player @' + esc(q.username) : ''}</div>
@@ -578,8 +578,8 @@ async function sponsorAdmin(id) {
       <div class="qsum"><span>Subtotal <b id="q-sub"></b></span><span>Total <b id="q-tot"></b></span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         ${locked ? '' : `<button class="btn ghost" id="q-save">${icon('check')} Save draft</button><button class="btn" id="q-send">${icon('mail')} ${Q.status === 'sent' ? 'Re-send' : 'Send to sponsor'}</button>`}
-        ${Q.status === 'accepted' ? `<button class="btn" id="q-paid">${icon('banknote')} Mark paid</button>` : ''}
-        ${['accepted', 'paid'].includes(Q.status) ? (q.event_id ? `<a class="btn ghost" href="${AP}/official/${q.event_id}">${icon('settings')} Manage event</a> <a class="btn ghost" href="/event/${esc(q.event_code || '')}" target="_blank">${icon('badge-check')} Event ${esc(q.event_code || '')}</a>` : `<button class="btn" id="q-event">${icon('badge-check')} Create official event</button>`) : ''}
+        ${Q.status === 'accepted' ? `<span class="small muted" role="status">Payment pending. Sponsor pays through verified Stripe checkout using their private status page.</span>` : ''}
+        ${Q.status === 'paid' ? (q.event_id ? `<a class="btn ghost" href="${AP}/official/${q.event_id}">${icon('settings')} Manage event</a> <a class="btn ghost" href="/event/${esc(q.event_code || '')}" target="_blank">${icon('badge-check')} Event ${esc(q.event_code || '')}</a>` : `<button class="btn" id="q-event">${icon('badge-check')} Create official event</button>`) : ''}
         ${['draft', 'sent'].includes(Q.status) ? `<button class="btn danger sm" id="q-dec">Mark declined</button>` : ''}
         <button class="btn ghost sm" id="q-link" title="${esc(statusUrl)}">${icon('copy')} Copy sponsor status link</button>
         <button class="btn danger sm" id="q-del">${icon('trash-2')}</button></div>
@@ -605,10 +605,10 @@ async function sponsorAdmin(id) {
     const on = (s, f) => { const el = $(s); if (el) el.onclick = f; };
     on('#q-add', () => { L.push({ label: 'Custom item', qty: 1, unit_cents: 0, amount_cents: 0, custom: true }); paint(); });
     on('#q-auto', () => { if (!confirm('Replace the lines with a fresh total from the price sheet?')) return; L.length = 0; for (const f of q.features) { const fe = f; const billable = fe.unit === 'flat' ? 1 : fe.qty - (fe.id === 'weeks' ? 1 : 0); if (billable <= 0 && fe.id !== 'winner-contact') continue; L.push({ feature_id: fe.id, label: fe.name + (fe.unit !== 'flat' ? ` (${fe.qty}${fe.unit === 'week' ? ' weeks' : ''})` : ''), qty: Math.max(billable, 1), unit_cents: P[fe.id] || 0, amount_cents: fe.id === 'winner-contact' ? 0 : Math.max(billable, 1) * (P[fe.id] || 0) }); } paint(); });
-    on('#q-event', async () => { const x = await api(`/api/admin/sponsor/requests/${q.id}/create-event`, { method: 'POST', body: {} }); if (!x.ok) return msg(x.error); toast('Official event ' + x.code + ' created'); sponsorAdmin(q.id); });
+    on('#q-event', async () => { const x = await api(`/api/admin/sponsor/requests/${q.id}/create-event`, { method: 'POST', body: {} }); if (!x.ok) return msg(x.error); toast('Official event #' + x.id + ' prepared as an unpublished draft'); sponsorAdmin(q.id); });
     on('#q-save', async () => { if (await save()) { toast('Draft saved'); sponsorAdmin(q.id); } });
     on('#q-send', async () => { if (!confirm(`Send this ${$('#q-tot').textContent} quote to ${q.brand}? They see it on their private status page.`)) return; if (await save()) status('sent', 'Quote sent'); });
-    on('#q-paid', () => { if (confirm('Mark this accepted quote as paid?')) status('paid', 'Marked paid'); });
+    // A paid quote is established by Stripe signed webhook, never an admin button.
     on('#q-dec', () => { if (confirm('Mark this request declined?')) status('declined', 'Marked declined'); });
     on('#q-link', async () => { try { await navigator.clipboard.writeText(statusUrl); toast('Status link copied'); } catch { prompt('Sponsor status link', statusUrl); } });
     on('#q-del', async () => { if (!confirm(`Delete request #${q.id}? This cannot be undone.`)) return; await api('/api/admin/bookings/' + q.id, { method: 'DELETE' }); toast('Deleted'); nav(AP + '/sponsor'); });
