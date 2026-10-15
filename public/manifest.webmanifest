@@ -1,7 +1,7 @@
 {
   "name": "The Gaming Hub by Trap Tech Solutions",
   "short_name": "Gaming Hub",
-  "description": "Free arcade games, leaderboards, tournaments and brand giveaways. Built by Trap Tech Solutions. 21+. Points and cosmetics only.",
+  "description": "Mobile-first arcade, skill leaderboards and official giveaways by Trap Tech Solutions. 21+. Hub Credits unlock cosmetics only.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
@@ -15,25 +15,25 @@
   ],
   "icons": [
     {
-      "src": "/assets/brand/traptech-app-icon.svg",
+      "src": "/assets/brand/traptech-app-icon.svg?v=tt-crown-20261014",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/assets/icons/icon-192.png?v=gaming-hub-2",
+      "src": "/assets/icons/icon-192.png?v=tt-crown-20261014",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/icons/icon-512.png?v=gaming-hub-2",
+      "src": "/assets/icons/icon-512.png?v=tt-crown-20261014",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/icons/maskable-512.png?v=gaming-hub-2",
+      "src": "/assets/icons/maskable-512.png?v=tt-crown-20261014",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -45,7 +45,7 @@
       "url": "/games",
       "icons": [
         {
-          "src": "/assets/icons/icon-192.png?v=gaming-hub-2",
+          "src": "/assets/icons/icon-192.png?v=tt-crown-20261014",
           "sizes": "192x192"
         }
       ]
@@ -55,7 +55,7 @@
       "url": "/quests",
       "icons": [
         {
-          "src": "/assets/icons/icon-192.png?v=gaming-hub-2",
+          "src": "/assets/icons/icon-192.png?v=tt-crown-20261014",
           "sizes": "192x192"
         }
       ]
@@ -65,7 +65,7 @@
       "url": "/giveaways",
       "icons": [
         {
-          "src": "/assets/icons/icon-192.png?v=gaming-hub-2",
+          "src": "/assets/icons/icon-192.png?v=tt-crown-20261014",
           "sizes": "192x192"
         }
       ]
