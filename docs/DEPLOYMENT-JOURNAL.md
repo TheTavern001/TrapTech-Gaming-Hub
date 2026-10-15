@@ -504,3 +504,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `tools/test-avatar-rig-mobile-budget.js` was confirmed present on GitHub at blob `44c658ed31b906b8f9a534679fa3f8466960fa15`. Offline rehearsal and Dockerfile already referenced the test (blobs `5eb0eab67889490e9f471c1f2dedc00eb55ac4e1`, `c9e272219c9568af1cb06ae6e253c13648febe23`). No unnecessary duplicate commits made.
 - Source/test/rehearsal JS parsed successfully in isolated V8. No actual browser WebGL execution, measured FPS or memory comparison, native Node full suite, Docker build, or physical iOS/Android acceptance. Not an AAA or deployment approval.
 - User-requested full Hub overhaul is still incomplete. Deplexo remains last screenshot-confirmed `278af07`; auto deploy OFF; PR #29 is source only.
+
+## 2026-10-14 — Offscreen GPU suspension for fallback 3D avatar
+
+- `14f53561cfbd0ed2ec465abd30dabf94fbe53b32` adds viewport visibility tracking to the older 3D fallback renderer. It skips animation/render work for offscreen stages, matching the rigged Quaternius preview behavior, and disconnects the observer on cleanup. This improves mobile GPU scheduling without changing cosmetic entitlements or art.
+- `7bc7aaf1dea3553cf8c38152da4555ff57bdf8f4` adds the fallback renderer contract check; `6d9ffa19dbe5a017e25ef2d6d31b786b305dedf8`, `7cc17a4ae592bc28021e4fe5a399addbaee71a5c` integrate it into offline rehearsal and Docker prelaunch.
+- Actual committed fallback renderer parsed in V8, visibility/observer/readback checks present. This is **source verification, not FPS/device/browser execution**. Full Node/Docker/HTTP suite remains unrun and 3D wardrobe remains unfinished.
+- Production last owner-confirmed Deplexo commit `278af07` remains unchanged. Keep auto-deploy OFF pending verified private candidate and owner authorization. Resume with integrated release evidence and actual phone visual approval.
