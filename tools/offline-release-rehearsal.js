@@ -20,6 +20,7 @@ const tests=[
  'tools/test-docker-audit-context.js',
  'tools/test-qa-browser-runtime-integrity.js',
  'tools/test-qa-frame-pacing.js',
+ 'tools/test-unified-release-candidate.js',
  'tools/test-r1-incident-gates.js',
  'tools/test-qa-87-browser-contract.js',
  'tools/test-qa-game-batches.js',
