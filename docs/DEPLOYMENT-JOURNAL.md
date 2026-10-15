@@ -1,6 +1,14 @@
 # Deployment, audit, and 500-game release ledger
 
 
+## 2026-10-15 — R1 `a6afa9cf`: score submit source-test mismatch; actual handler verified
+
+Owner-pasted new Deplexo build log confirmed correct checkout `a6afa9cff3190399c939bbaee054267b7068a9f4`, successful native financial tests, signed prize holds, avatar/quests, game syntax, 96 script parses, physics/obstacle reachability, touch mirroring, and many mobile lifecycle checks. Docker STEP 12/14 failed at `tools/test-kit-score-submit-error.js:11`: legacy regex demanded `Promise.resolve().then(() => Hub.submit(g.score))`. Current Kit intentionally snapshots `const finalScore=g.score` before asynchronous submission and uses `Hub.submit(finalScore)`; the separate run-serial regression independently requires this frozen score.
+
+R1 test-only repair: execute the extracted `g.end` function with isolated fake Hub/local storage to confirm sync submission throw yields visible failure, final score remains snapshotted after later mutation, and stale completion doesn't replace current-run state. All **three** handler scenarios passed isolated execution. No Kit/runtime score logic touched; full Docker and host READY unverified until the next QA-branch build. Public prize gate and 87-game AAA approval remain unchanged (0).
+
+
+
 ## 2026-10-15 — R1 second Docker build: native finance passed; pointer mirror regression test stale
 
 Deplexo owner's new log confirms the correct `d455ac26395904cdc1cd9f388a86c4db929cb6a4` was checked out; immutable purchase snapshot and refund test `pass:true,quotedUnits:500,refundExact:true` now succeeded, followed by native security, quest, wallet, avatar, vehicle, game-source and pseudo-load tests.

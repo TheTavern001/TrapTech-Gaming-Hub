@@ -837,9 +837,23 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "R1_BLOCKED_HOST_READY"
+    },
+    {
+      "commit": "R1_SCORE_ERROR_TEST_FIX_NEXT_SHA",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Correct stale end-of-run regression expecting Hub.submit(g.score) although Kit snapshots finalScore; behaviorally assert submit error, score and run isolation.",
+      "validation": "Actual Kit callback extracted/executed PASS for 3 scenarios; JS syntax checked. Native Docker future run not yet available.",
+      "host": "R1_A6AFA9_FAILED_NEXT_QA_PUSH_PENDING",
+      "evidenceFiles": [
+        "tools/test-kit-score-submit-error.js",
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_BLOCKED_HOST_AND_DEVICE"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15 R1 second deploy d455ac26 failed Docker step12 on outdated pointer-mirror literal assertion; payment test and many later native tests PASSED. Replaced assertion with real Kit onDown/onMove/onUp behavior checks, isolated passes for mirrored, exclusive and canceled gestures. R2-R5 still blocked, host READY unverified.",
+  "lastEvidenceReconciliation": "2026-10-15: Deplexo correctly built a6afa9cf and passed financial, touch, collisions, Grow Op and lifecycle tests before stopping at stale score-submission regexp expecting Hub.submit(g.score). Real Kit safely submits frozen finalScore. Test now executes real Kit end handler and passes three isolation scenarios in tool runtime. R1 recovery pending, no host READY, R2-R5 untouched.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -855,12 +869,12 @@
   },
   "currentWorkingSource": {
     "branch": "qa/gameplay-distinctness-and-collision-20261013",
-    "headAtReconciliation": "d455ac26395904cdc1cd9f388a86c4db929cb6a4",
-    "sourceStatus": "R1_TEST_ASSERTION_FAILURE_RECOVERY_PREPARED",
-    "note": "d455ac26 checkout verified, finance snapshot fixed and passed. Pointer mirror engine correct but brittle source-string test failed; repaired test source-only, no Kit runtime change. Await Docker recovery.",
+    "headAtReconciliation": "a6afa9cff3190399c939bbaee054267b7068a9f4",
+    "sourceStatus": "R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED",
+    "note": "R1 live Docker Node20 stopped on stale score submission source check. Corrected test-only with actual Kit callback behavior tests; awaiting fresh Docker build, no production score logic changes.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "d455ac26395904cdc1cd9f388a86c4db929cb6a4"
+    "lastAuditedGitHubHead": "a6afa9cff3190399c939bbaee054267b7068a9f4"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {
@@ -889,13 +903,13 @@
     "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
   },
   "lastReportedFailedDeployment20261015": {
-    "commit": "d455ac26395904cdc1cd9f388a86c4db929cb6a4",
+    "commit": "a6afa9cff3190399c939bbaee054267b7068a9f4",
     "status": "FAILED",
-    "error": "Docker STEP 12/14 tools/test-owner-reported-gameplay.js:93 stale literal Kit pointer mirroring assertion",
-    "cause": "Exact source-string test expected if (!def.stickAlsoPtr) return;, but Kit implements equivalent exclusive stick and stick-ptr mirroring with pointer tracking and cancel safety.",
-    "evidence": "User pasted Deplexo native Node20 build: payment ledger snapshot fixed and passed, dozens of wallet, settlement, quest, avatar, game source tests passed; first assertion failure at line 93.",
-    "correction": "Change brittle source-contains assertion into executed input-handler behavior checks covering mirrored touch, stick-only touch, movement, touch release and pointercancel",
-    "qualification": "Actual source handlers executed independently and passed; Docker still awaiting next build."
+    "error": "Docker STEP 12/14 tools/test-kit-score-submit-error.js:11 stale regex expected Hub.submit(g.score) instead of frozen finalScore",
+    "cause": "The actual Kit captures const finalScore=g.score at game end, and asynchronously submits Hub.submit(finalScore) to avoid changed scores or cross-run races. The existing source-string-only test expected older unsafe code.",
+    "evidence": "Owner Deplexo log checkout a6afa9cff3190399c939bbaee054267b7068a9f4, Node 20.20.2; all previous checks, Kit touch controls, collision, Grow Op and lifecycle passed before failure.",
+    "correction": "Replace brittle static expectation with real Kit game-end handler execution: sync submit throw becomes resolved error state, frozen score stays 42 after mutation, stale completion stays isolated.",
+    "verification": "Actual Kit handler independently executed for 3 scenarios PASS; next full Docker build and live host NOT verified."
   },
   "reportedFailedDeployments20261015": [
     {
@@ -925,6 +939,15 @@
       "evidence": "User pasted Deplexo native Node20 build: payment ledger snapshot fixed and passed, dozens of wallet, settlement, quest, avatar, game source tests passed; first assertion failure at line 93.",
       "correction": "Change brittle source-contains assertion into executed input-handler behavior checks covering mirrored touch, stick-only touch, movement, touch release and pointercancel",
       "qualification": "Actual source handlers executed independently and passed; Docker still awaiting next build."
+    },
+    {
+      "commit": "a6afa9cff3190399c939bbaee054267b7068a9f4",
+      "status": "FAILED",
+      "error": "Docker STEP 12/14 tools/test-kit-score-submit-error.js:11 stale regex expected Hub.submit(g.score) instead of frozen finalScore",
+      "cause": "The actual Kit captures const finalScore=g.score at game end, and asynchronously submits Hub.submit(finalScore) to avoid changed scores or cross-run races. The existing source-string-only test expected older unsafe code.",
+      "evidence": "Owner Deplexo log checkout a6afa9cff3190399c939bbaee054267b7068a9f4, Node 20.20.2; all previous checks, Kit touch controls, collision, Grow Op and lifecycle passed before failure.",
+      "correction": "Replace brittle static expectation with real Kit game-end handler execution: sync submit throw becomes resolved error state, frozen score stays 42 after mutation, stale completion stays isolated.",
+      "verification": "Actual Kit handler independently executed for 3 scenarios PASS; next full Docker build and live host NOT verified."
     }
   ]
 }
