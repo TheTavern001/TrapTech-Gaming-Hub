@@ -133,6 +133,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-kit-run-serial.js \
  && node tools/test-kit-hidden-start.js \
  && node tools/test-private-preview-readiness.js \
+ && node tools/test-private-review-access.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
  && node --check tools/test-grow-op-touch-fairness.js \
