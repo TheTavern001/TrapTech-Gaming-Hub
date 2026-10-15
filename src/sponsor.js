@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const db = require('./db');
 const linked = require('./giveaway-linked');
 const PK = require('./packages');
+const BOOKING_FEE = require('./booking-fee-guard');
 
 const D = 864e5;
 const cents = (d) => Math.round(d * 100);
@@ -150,6 +151,7 @@ function setStatus(id, status, by) {
   if (!quoteRow(id)) { const r = saveQuote(id, {}, by); if (!r.ok) return r; }
   const q = quoteRow(id); const t = Date.now();
   if (status === 'paid' && q.status !== 'accepted') return { ok: false, error: 'Only an accepted quote can be marked paid.' };
+  if (status === 'paid' && !BOOKING_FEE.positiveFee(q)) return { ok: false, error: 'A zero-dollar quote cannot be marked paid as a vendor giveaway. Provide a positive booking fee.' };
   if (status === 'sent' && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'Already accepted.' };
   db.prepare(`UPDATE sponsor_quotes SET status=?, updated_at=?, updated_by=?, sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END, responded_at=CASE WHEN ? IN ('accepted','declined') THEN ? ELSE responded_at END, paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END WHERE booking_id=?`)
     .run(status, t, by || null, status, t, status, t, status, t, id);
@@ -250,7 +252,7 @@ module.exports = function sponsor(app, A, h) {
   // v7 Phase 3: an ACCEPTED (or paid) quote becomes an official event in one click. Idempotent: a second click returns the same event.
   A.post('/sponsor/requests/:id/create-event', (req, res) => {
     const b = db.prepare('SELECT * FROM bookings WHERE id=?').get(+req.params.id); if (!b) return bad(res, 404, 'Request not found.');
-    const q = quoteRow(b.id); if (!q || q.status !== 'paid') return bad(res, 409, 'The accepted quote must be marked paid by Trap Tech before preparing an official event.');
+    const q = quoteRow(b.id); if (!BOOKING_FEE.paidFeeRecorded(q)) return bad(res, 409, 'A positive booking fee and paid booking record are required before preparing an official event.');
     const EV = require('./events');
     const EVSTATUS = g => EV.status(g);
     if (b.event_id) { const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id); if (g) return res.json({ ok: true, existing: true, id: g.id, status: EVSTATUS(g), share_ready: false, message:'Share links are released only after settled payment and certified gameplay.' }); }
