@@ -17,7 +17,9 @@
     "audit:quality": "node tools/quality-readiness.js",
     "audit:public-launch": "node tools/public-release-gate.js",
     "verify:offline": "node tools/offline-release-rehearsal.js --release=R1",
-    "verify:offline:full": "node tools/offline-release-rehearsal.js --release=R1 --full"
+    "verify:offline:full": "node tools/offline-release-rehearsal.js --release=R1 --full",
+    "icons:sync": "node tools/build-traptech-pwa-icons.js",
+    "icons:verify": "node tools/test-traptech-pwa-icons.js"
   },
   "keywords": [],
   "author": "",
