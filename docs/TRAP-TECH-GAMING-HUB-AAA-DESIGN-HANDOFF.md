@@ -1,7 +1,8 @@
-# Trap Tech Gaming Hub — AAA Design & Asset Handoff
+# Trap Tech Gaming Hub — AAA Design, Assets & Production Handoff
 **Date:** 2026-10-15  
 **Focus:** Phone-first (99% Android + iPhone) premium giveaway gaming hub  
-**Goal:** Make the hub and every game feel expensive, cohesive, and immediately impressive
+**Goal:** Make the hub and every game feel expensive, cohesive, and immediately impressive  
+**Live hub:** https://glassy-drifter-9532.de.deplexo.com/
 
 ---
 
@@ -46,6 +47,7 @@ The hub is a single premium product, not a menu of mismatched mini-games. On a p
 4. **Juice sells the feel** — Particles, lighting, and feedback create the “expensive” impression more than extra polygons.
 5. **One product** — Lobby, games, avatar, shop, and giveaways must look like they belong together.
 6. **Trust** — Official giveaways and leaderboards must feel legitimate and skill-based.
+7. **Original over clones** — Distinct mechanics and art; do not closely copy commercial titles.
 
 ---
 
@@ -70,50 +72,71 @@ Use these for UI, sprites, 3D models, textures, audio, and VFX. Always verify th
 
 ---
 
-## 4. Free / Open High-Quality Games Suitable for Integration
+## 4. Realistic Path to a Large Catalog (500+ Goal)
 
-These are not “AAA console titles,” but they are among the best free, legally usable games or engines that can be adapted into a polished hub experience. Prioritize ones with clear licenses, mobile-friendly controls, and distinct mechanics.
+There are **no** 500 polished AAA commercial games available for free legal use in a giveaway hub.  
+AAA titles are copyrighted. Close clones of top-selling games are also not acceptable.
 
-| Game / Project | Genre | Why It Fits | License / Notes | Source |
-|----------------|-------|-------------|-----------------|--------|
-| **Kenney game prototypes** | Various arcade | Clean, consistent art, easy to restyle | CC0 assets | kenney.nl |
-| **Phaser examples / community games** | Arcade, puzzle | Web-native, mobile touch friendly | MIT / various | phaser.io / GitHub |
-| **Open-source HTML5 games** (e.g. certain 2048, snake, breakout variants) | Puzzle / arcade | Simple to integrate and juice up | Check per repo | GitHub search “html5 game mit” |
-| **Godot demo projects** (export to web) | Various | High-quality open demos | MIT | godotengine.org |
-| **Three.js / WebGL showcases** | 3D mini-games | Good for avatar or garage-style experiences | MIT | threejs.org examples |
-
-**Integration rules**
-- Preserve or re-implement scoring so it remains server-authoritative for giveaways.
-- Replace or restyle assets to match the hub’s dark neon identity.
-- Add the shared juice layer (particles, flashes, score pops).
-- Credit original authors in `CREDITS.md`.
-- Do not ship unlicensed clones of commercial games.
-
-**Priority for the hub right now**
-1. Polish and unify the existing 80+ library games with free Kenney/Quaternius assets and juice.
-2. Add 1–2 new high-quality open arcade or puzzle titles only after the current catalog has consistent visual and feedback quality.
-3. Keep official prize games fail-closed until device QA and anti-cheat review are complete.
+**What is realistic:**
+- Finish and certify the existing catalog first (~90 registered titles, 0 fully AAA/device-certified).
+- Build original short arcade, puzzle, runner, timing, and skill games (not full campaigns).
+- Use shared systems (juice, scoring, UI kit, avatar integration) so new games stay consistent and faster to produce.
+- Scale with modular CC0 assets + genre templates.
+- Reach hundreds of *registered* games relatively quickly; reach hundreds of *polished, device-certified, giveaway-ready* games is a multi-year production effort even with good tools.
 
 ---
 
-## 5. Immediate Next Steps
+## 5. AI Tools & Engines That Accelerate Original Mini-Games
 
-1. Apply the dark neon + volumetric-style lighting and ambient particles to the lobby.
-2. Integrate the shared juice helpers into featured games (Terp Tapper, Drift Rush, Rail Rush, etc.).
-3. Swap placeholder or low-quality art in priority games with Kenney/Quaternius CC0 assets.
-4. Ensure every screen respects phone safe areas and large touch targets.
-5. Update `CREDITS.md` with every new free asset used.
-6. Keep auto-deploy OFF until a controlled private preview is ready for device review.
+These help generate playable short games from prompts. They produce prototypes that still need integration, restyling, mobile optimization, scoring integrity, and certification.
+
+### Prompt-to-playable AI tools
+| Tool | Output | Best For | Link |
+|------|--------|----------|------|
+| **Rosebud AI** | 2D/3D browser games | Quick arcade loops, editable JS | https://www.rosebud.ai |
+| **Chatforce** | 2D/3D browser games + art/audio | Fast complete prototypes | https://chatforce.com |
+| **OpenGame** | HTML5 & 3D browser prototypes | Downloadable source | https://opengame.app |
+| **Voidless** | Godot or Phaser games | Iterative agent builds | https://voidless.dev/game-agent |
+| **Google Playground** | Experimental text-to-game | Quick browser prototypes | (search current Google tool) |
+| **Astrocade** | Casual short games | Social/remix style | (search Astrocade) |
+| **GDevelop + AI** | Visual engine projects | No-code + AI assist, HTML5 export | https://gdevelop.io |
+
+### Engines that pair well with AI coding assistants
+- **Phaser** — Best for mobile-friendly 2D HTML5 arcade games. https://phaser.io
+- **Godot** — Free 2D/3D with web export. https://godotengine.org
+- **PixiJS** — High-performance 2D rendering. https://pixijs.com
+
+### Open-source starting points (license-check required)
+- Attogram Games: https://github.com/attogram/games
+- Awesome Open Source Games: https://github.com/michelpereira/awesome-open-source-games
+- Open Source Games List: https://trilarion.github.io/opensourcegames/
 
 ---
 
-## 6. Success Criteria (Phone)
+## 6. Immediate Next Steps
 
-- Lobby looks sharp and atmospheric on a mid-range Android and recent iPhone.
-- Featured games feel responsive with clear juice and no stutter.
+1. Apply dark neon + volumetric-style lighting and ambient particles to the lobby.
+2. Integrate shared juice helpers into featured existing games.
+3. Use AI tools above to generate original short arcade/puzzle prototypes in the hub’s visual style.
+4. Restyle the best prototypes with Kenney/Quaternius CC0 assets.
+5. Integrate only after scoring, mobile controls, and performance are solid.
+6. Device-test and certify in small batches.
+7. Keep auto-deploy OFF until a controlled private preview is ready.
+8. Update `CREDITS.md` for every asset and any open-source code used.
+
+---
+
+## 7. Success Criteria (Phone)
+
+- Lobby looks sharp and atmospheric on mid-range Android and recent iPhone.
+- Games feel responsive with clear juice and stable frame rate.
 - Avatar and cosmetics preview cleanly.
-- Giveaway and leaderboard screens feel legitimate and exciting.
-- Frame rate stays stable and the phone does not overheat during normal sessions.
-- The entire hub feels like one premium product.
+- Giveaway and leaderboard screens feel legitimate.
+- Phone does not overheat during normal sessions.
+- Entire hub feels like one premium product.
+- All games are original or properly licensed — no close commercial clones.
 
-This document is the design and sourcing handoff. Visual approval, device FPS traces, and final giveaway certification still require owner review on real phones.
+---
+
+**This is the design, sourcing, and production handoff.**  
+Visual approval, device FPS traces, anti-cheat review, and final giveaway certification still require owner review on real phones. AI tools accelerate prototypes; they do not replace certification or legal clearance.
