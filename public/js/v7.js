@@ -77,7 +77,7 @@ function sponsorPage(url) {
       const gameSearch=document.getElementById('sb-game-search');
       if (gameSearch) gameSearch.addEventListener('input', () => {
         const query=gameSearch.value.trim().toLowerCase();
-        root.querySelectorAll('#sb-games [data-game-title]').forEach(el => { el.hidden=!el.dataset.gameTitle.includes(query); });
+        root.querySelectorAll('#sb-games [data-game-title]').forEach(el => { const show=el.dataset.gameTitle.includes(query); el.hidden=!show; el.style.display=show?'':'none'; });
       });
       const gamePicker=document.getElementById('sb-games');
       if (gamePicker) gamePicker.addEventListener('change', e => {
