@@ -1489,16 +1489,17 @@ route(/^\/friends$/, async (m, url) => {
 route(/^\/settings$/, () => {
   const standalone = matchMedia('(display-mode: standalone)').matches;
   const prefs = GP.globalPrefs();
-  shell('/settings', `<div class="narrow">${pageHead('Settings')}
+  shell('/settings', `<div class="narrow hub-settings">${pageHead('Settings')}
+    <nav class="settings-quick-nav" aria-label="Settings sections"><a href="#set-app">${icon('sliders-horizontal')} Device & gameplay</a>${S.me ? `<a href="#set-account">${icon('shield')} Account security</a><a href="#v7-brand">${icon('users')} Giveaway affiliation</a>` : ''}<a href="#set-legal">${icon('file-text')} Rules & privacy</a></nav>
     <div class="card pad" id="set-lang" style="margin-bottom:12px"></div>
     ${S.me ? `<a class="card pad" href="/avatar" id="set-avatar" style="display:flex;gap:12px;align-items:center;margin-bottom:12px">${avatar(S.me.username, false, 'lg')}<div><b>Your avatar</b><div class="small muted">Change your look: hair, outfit, hats, held items and more.</div></div></a>` : ''}
-    ${S.me ? `<div class="card pad"><h2 style="margin-bottom:10px">Account</h2><div class="mini-row" style="margin:0 0 10px">${framed(S.me.username, false, S.me.cos)}${pname(S.me.username, false, S.me.cos)}</div>
+    ${S.me ? `<div class="card pad" id="set-account"><h2 style="margin-bottom:10px">Account & security</h2><div class="mini-row" style="margin:0 0 10px">${framed(S.me.username, false, S.me.cos)}${pname(S.me.username, false, S.me.cos)}</div>
       <form id="pwf2"><div id="pwmsg2"></div><div class="field"><input class="input" type="password" id="cur2" placeholder="Current password" autocomplete="current-password" aria-label="Current password"></div>
       <div class="field"><input class="input" type="password" id="np2" placeholder="New password (min 8)" autocomplete="new-password" aria-label="New password"></div>
       <button class="btn ghost block" type="submit">Change password</button></form>
       <form id="potf" class="potato-set"><label class="lbl" for="pot">Potato username <span class="muted small">(private - only Trap Tech sees it, to contact you if you win)</span></label><div class="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="pot" value="${esc(S.me.potato || '')}" placeholder="yourhandle" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></div></form>
       <button class="btn danger block" data-act="signout" style="margin-top:10px">${icon('log-out')} Sign out</button></div>${V7.brandCard()}` : `<div class="card pad cta-card"><div style="flex:1"><b>Not signed in</b><div class="small muted">Sign in to manage your account.</div></div><a class="btn sm" href="/signin?next=/settings">Sign in</a></div>`}
-    <div class="card pad"><h2 style="margin-bottom:10px">App</h2>
+    <div class="card pad" id="set-app"><h2 style="margin-bottom:10px">Device & game preferences</h2>
       <div class="set-row"><div><b>${icon('smartphone')} Install the app</b><div class="small muted">${standalone ? 'Installed - you are using the app.' : 'Add The Gaming Hub to your home screen. Works offline for the app shell.'}</div></div><button class="btn sm" id="install" ${standalone ? 'disabled' : ''}>${standalone ? 'Installed' : 'Install app'}</button></div>
       ${!standalone ? '<p class="tiny muted" style="margin:0 0 8px">On iPhone: tap Share, then "Add to Home Screen".</p>' : ''}
       <div class="set-row"><div><b>${icon('accessibility')} Reduce motion</b><div class="small muted">Minimize decorative animation without changing game mechanics.</div></div><label class="toggle"><input type="checkbox" id="rm" ${prefs.reducedMotion ? 'checked' : ''}><span></span></label></div>
@@ -1509,7 +1510,7 @@ route(/^\/settings$/, () => {
       <p class="small muted">Settings are stored on this device. Each game also has its own small settings button, allowing sound, render quality and FPS overrides. No purchased or selected option changes scoring, speed, difficulty or prize eligibility.</p>
     </div>
     <div class="card pad about-mini">${TT('mono', 56)}<div><b>The Gaming Hub</b><div class="small muted">Built by Trap Tech Solutions</div></div><a class="btn sm ghost" href="/about">About</a></div>
-    <div class="card legal-links">${[['/terms', 'file-text', 'Terms of Service'], ['/privacy', 'shield', 'Privacy Policy'], ['/rules', 'scale', 'Official Giveaway Rules'], ['/responsible-play', 'heart-pulse', 'Responsible play']].map(([h, ic, l]) => `<a class="act-row" href="${h}">${icon(ic)}<span class="g">${l}</span>${icon('chevron-right')}</a>`).join('')}</div>
+    <div class="card legal-links" id="set-legal">${[['/terms', 'file-text', 'Terms of Service'], ['/privacy', 'shield', 'Privacy Policy'], ['/rules', 'scale', 'Official Giveaway Rules'], ['/responsible-play', 'heart-pulse', 'Responsible play']].map(([h, ic, l]) => `<a class="act-row" href="${h}">${icon(ic)}<span class="g">${l}</span>${icon('chevron-right')}</a>`).join('')}</div>
   </div>`);
   document.getElementById('rm').onchange=e=>GP.saveGlobal({reducedMotion:e.target.checked});
   document.getElementById('gp-sound').onchange=e=>GP.saveGlobal({sound:e.target.checked});
