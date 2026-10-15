@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "recordedUTC": "2026-10-15",
+  "area": "vendor booking payment gating",
+  "severity": "HIGH",
+  "status": "SOURCE_FIXED_PENDING_FULL_IMAGE_AND_PROVIDER_PROOF",
+  "rootCause": "Admin quote editor permits 100% discounts or custom negative lines so sponsor_quotes.total_cents can be zero. The original setStatus('paid') verified only status='accepted'; event creation and event listing verified only 'paid' labels, not that any positive fee was recorded. This could create a zero-fee vendor event if the owner subsequently enabled it and scoring certification passed.",
+  "impact": "Unaudited zero-dollar vendor booking could be treated as paid and pass status gating, undermining the required paid giveaway booking fee.",
+  "correctionFiles": [
+    "src/booking-fee-guard.js",
+    "src/sponsor.js",
+    "src/events.js",
+    "tools/test-giveaway-booking-release-gates.js"
+  ],
+  "correction": "Reject zero-dollar quotes from the admin paid transition; require a positive safe-integer booked total and a positive paid_at integer on create-event and live event status. Keep both game certification and owner activation as independent gates.",
+  "sourceChecks": {
+    "method": "Exact fetched source evaluated with JavaScript V8 test harness using mocked quote database/score certification",
+    "outcome": "PASS",
+    "cases": 7,
+    "notes": "Positive paid quote passes when game certified; zero or negative quote, missing payment timestamp, unpaid metadata block; syntax and runner references pass."
+  },
+  "liveStatus": {
+    "dockerBuild": "NOT_RUN",
+    "deplexo": "NOT_DEPLOYED",
+    "physicalPhone": "NOT_TESTED"
+  },
+  "openIndependentGate": "Admin mark-paid still represents manual bookkeeping, not verified money movement; signed Stripe webhook or independently reconciled on-chain/provider settlement is required before public commercial bookings. This fix MUST NOT be represented as complete payment protection.",
+  "deploymentSafety": "Change isolated on feature branch and draft PR only. Auto Deploy OFF. Do not merge/deploy to current production or new Trap Tech account without full Docker+HTTP+payment tests and owner approval."
+}
