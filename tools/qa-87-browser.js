@@ -40,7 +40,7 @@ const core=[...body.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?
 const library=catalog.filter(g=>g.playable!==false&&!g.retired)
  .map(g=>({id:g.id,title:g.title,route:g.url,kind:'library',build:g.build}));
 const games=[...core,...library];
-if(core.length!==13||library.length<74||games.length<87){
+if(core.length<13||library.length<74||games.length<87){
  console.error('Missing baseline active games',core.length,library.length);process.exit(2);
 }
 const batch=planGameBatch(games,{start:process.env.QA_START_INDEX??0,

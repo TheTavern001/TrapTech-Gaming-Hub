@@ -9,7 +9,7 @@ const games=require('../src/games-lib').games,config=read('src/config.js');
 const block=(config.match(/const GAMES = \[([\s\S]*?)\n\];/)||[])[1]||'';
 const core=[...block.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?module:\s*'([^']+)'/g)]
  .map(m=>m[1]).filter(id=>!['plinko','spin-to-win','blazed-roulette'].includes(id));
-assert.equal(core.length,13);
+assert.ok(core.length>=13,'Existing core games must remain, but adding distinct games must not break the build');
 assert.ok(games.filter(g=>g.playable!==false&&!g.retired).length>=74);
 assert.equal(pkg.scripts['qa:87:browser'],'node tools/qa-87-browser.js');
 for(const marker of ['QA_REQUIRE_LOGIN','QA_STORAGE_STATE','QA_INTERACTIVE_AUTH',
@@ -29,5 +29,5 @@ assert.ok(!src.includes('context.storageState({path:'),
  'Interactive authenticated reviewer cookies must not be written to disk by default');
 const ts=src.replace(/^#![^\n]*\n/,'');
 new Function('require','module','exports','process',ts);
-console.log(JSON.stringify({passed:true,core:13,library:games.filter(g=>g.playable!==false&&!g.retired).length,
+console.log(JSON.stringify({passed:true,core:core.length,library:games.filter(g=>g.playable!==false&&!g.retired).length,
  tests:'source-level guardrails and expandable mobile batches',physicalPhonesTested:false,gameplayCertified:0}));
