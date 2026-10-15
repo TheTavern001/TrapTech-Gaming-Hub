@@ -152,7 +152,7 @@ async function main(){
        const started=performance.now();
        const frame=t=>{
          if(done)return;
-         if(last!==null&&intervals.length<1200)intervals.push(t-last);
+         if(last!==null&&intervals.length<2400)intervals.push(t-last);
          last=t;
          if(t-started>=durationMs){clearTimeout(timeout);finish();}
          else requestAnimationFrame(frame);
