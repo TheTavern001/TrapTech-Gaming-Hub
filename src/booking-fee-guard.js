@@ -15,7 +15,7 @@ function paidFeeRecorded(q) {
    q.refunded_at==null;
 }
 function stripeBookingConfigured(env=process.env) {
- const secret=String(env.STRIPE_SECRET_KEY||''),webhook=String(env.STRIPE_WEBHOOK_SECRET||'');
+ const secret=String(env.STRIPE_SECRET_KEY||''),webhook=String(env.STRIPE_BOOKING_WEBHOOK_SECRET||'');
  let origin=null;
  try {const u=new URL(String(env.PUBLIC_URL||''));if(u.protocol==='https:'&&!u.username&&!u.password)origin=u.origin;} catch {}
  return !!origin && /^sk_(?:test|live)_[A-Za-z0-9]+$/.test(secret) &&
