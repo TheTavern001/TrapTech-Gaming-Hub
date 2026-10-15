@@ -52,6 +52,7 @@ const tests=[
  'tools/test-shop-avatar-credit-integration.js',
  'tools/test-existing-game-review-register.js',
  'tools/test-private-10k-harness.js',
+ 'tools/test-deplexo-snapshot-boot-order.js',
  'tools/test-giveaway-booking-release-gates.js',
  'tools/test-booked-skill-winner-contract.js',
  'tools/test-booking-library-selection.js',
