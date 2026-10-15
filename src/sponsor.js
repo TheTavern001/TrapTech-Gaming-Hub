@@ -68,7 +68,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS sponsor_quotes (
   note TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'draft', valid_until INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL,
   sent_at INTEGER, responded_at INTEGER, paid_at INTEGER, updated_by TEXT);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_token ON bookings(public_token);`);
-// Keep existing booking/event data while adding optional linked promo/goal metadata.
+// Keep existing booking/event data while adding one optional brand channel link. No growth goals or follow requirements.
 linked.ensureSchema(db);
 // migrate: every booking gets a private status token; old tier bookings get an equivalent feature list
 for (const b of db.prepare("SELECT id, package, addons FROM bookings WHERE public_token IS NULL").all()) {
