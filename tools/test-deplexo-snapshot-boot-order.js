@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const docker=fs.readFileSync(path.join(root,'Dockerfile'),'utf8');
+const source=fs.readFileSync(path.join(root,'tools/prestart-db-snapshot.js'),'utf8');
+new (require('node:vm').Script)(source);
+const cmd=docker.match(/^CMD (\[[^\n]+\])$/m);
+assert.ok(cmd,'Missing explicit runtime command');
+const args=JSON.parse(cmd[1]);
+assert.equal(args[0],'sh');
+assert.equal(args[1],'-c');
+assert.ok(args[2].indexOf('prestart-db-snapshot.js')>=0);
+assert.ok(args[2].indexOf('prestart-db-snapshot.js')<args[2].indexOf('src/server.js'),'Snapshot must happen before schema migration');
+assert.match(args[2],/&& exec node/,'Failed snapshot must block server and server must be PID 1');
+assert.match(docker,/COPY --chown=root:root tools\/prestart-db-snapshot\.js/,'Runtime image must carry snapshot code');
+assert.match(docker,/RUN node tools\/test-prestart-db-snapshot\.js/,'Image build must test real native SQLite backup');
+assert.match(source,/await source\.backup\(tmp\)/,'Use SQLite online backup API for WAL safety');
+assert.match(source,/if\(fs\.existsSync\(marker\)\)/,'Do not overwrite existing pre-upgrade snapshots');
+assert.doesNotMatch(source,/require\(['"]\.\.\/src\/db['"]\)/,'Do not import migrations into pre-start hook');
+console.log(JSON.stringify({pass:true,backupBeforeMigrations:true,failClosed:true,pid1Exec:true,realDockerBuildTested:false}));
