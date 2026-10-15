@@ -22,6 +22,10 @@ function sponsorPage(url) {
     let saved = {}; try { saved = JSON.parse(C.ls.getItem(SP_KEY) || '{}'); } catch {}
     const B = { picked: saved.picked || { base: 1, weeks: 1 }, business_type: saved.business_type || '', licensed: false, brand: saved.brand || '', contact_name: saved.contact_name || '', potato: saved.potato || (C.S.me ? (C.S.me.potato || '') : ''), email: saved.email || '', start_date: saved.start_date || '', end_date: saved.end_date || '', details: saved.details || '', notes: saved.notes || '', prize: saved.prize || '', brand_color: saved.brand_color || '#22d3ee', games: saved.games || [], competition: saved.competition || 'best', length_days: saved.length_days || '7', step: 1 };
     const COMP = { best: 'Highest single score', total: 'Total of best scores (several games)', random: 'Random draw among qualifying players' };
+    // Library titles are quote candidates, never automatically certified event games.
+    const bookingGames = [...new Map([...(C.S.games || []), ...(C.S.libraryGames || [])]
+      .filter(g => g && g.playable && !g.retired && g.giveaway !== false)
+      .map(g => [g.id, g])).values()];
     const pre = url.searchParams.get('feature'); if (pre && cat.features.some(f => f.id === pre)) B.picked[pre] = B.picked[pre] || 1;
     const F = Object.fromEntries(cat.features.map(f => [f.id, f]));
     const persist = () => { const { licensed, step, ...rest } = B; C.ls.setItem(SP_KEY, JSON.stringify(rest)); };
@@ -52,10 +56,10 @@ function sponsorPage(url) {
         <div class="field"><label class="lbl" for="sb-prize">Prize</label><input class="input" id="sb-prize" data-b="prize" value="${esc(B.prize)}" maxlength="200" placeholder="What the winner gets"></div>
         <div class="grid2"><div class="field"><label class="lbl small" for="sb-col">Brand color</label><input class="input" id="sb-col" type="color" data-b="brand_color" value="${esc(B.brand_color)}"></div><div class="field"><label class="lbl small" for="sb-len">Length (days)</label><input class="input" id="sb-len" type="number" min="1" max="90" data-b="length_days" value="${esc(B.length_days)}"></div></div>
         <div class="field"><label class="lbl" for="sb-comp">Competition type</label><select class="input" id="sb-comp" data-b="competition">${Object.entries(COMP).map(([k, l]) => `<option value="${k}" ${B.competition === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
-        <div class="field"><div class="lbl">Games</div><div class="chip-row" id="sb-games">${C.S.games.filter(g => g.playable).map(g => `<label class="chip"><input type="checkbox" value="${esc(g.id)}" ${B.games.includes(g.id) ? 'checked' : ''}> ${esc(g.title)}</label>`).join('')}</div></div>
+        <div class="field"><div class="lbl">Requested games <span class="muted small">(up to 13, subject to certification)</span></div><details class="card pad" id="sb-game-picker" ${B.games.length ? 'open' : ''}><summary>${B.games.length ? B.games.length + ' selected' : 'Browse ' + bookingGames.length + ' proposed games'}</summary><p class="small muted">Your choices are part of the quote, not an active competition. Trap Tech confirms approved games and scoring before any official share link is issued.</p><input class="input" type="search" id="sb-game-search" placeholder="Find a game by name" aria-label="Search proposed games" autocomplete="off"><div class="chip-row" id="sb-games" style="max-height:260px;overflow:auto">${bookingGames.map(g => `<label class="chip" data-game-title="${esc(g.title.toLowerCase())}"><input type="checkbox" value="${esc(g.id)}" ${B.games.includes(g.id) ? 'checked' : ''}> ${esc(g.title)}</label>`).join('')}</div></details></div>
         <div class="field"><label class="lbl" for="sb-d">More giveaway details</label><textarea class="input" id="sb-d" data-b="details" maxlength="4000" placeholder="Prize, which games, brand colors / logo link, age or region rules...">${esc(B.details)}</textarea></div>
         <div class="field"><label class="lbl" for="sb-n">Notes for Trap Tech <span class="muted small">(optional)</span></label><textarea class="input" id="sb-n" data-b="notes" maxlength="2000" placeholder="Budget, timing, anything else we should know">${esc(B.notes)}</textarea></div>`;
-      else body = `<div class="card pad rv">${[['Features', sel.map(x => F[x.id].name + (F[x.id].unit !== 'flat' ? ` (${unitText(F[x.id], x.qty)})` : '')).join(', ')], ['Business type', B.business_type], ...(B.business_type === cat.cannabis ? [['License', 'Confirmed licensed and legally permitted to advertise']] : []), ['Brand', B.brand], ['Prize', B.prize], ['Brand color', B.brand_color], ['Games', B.games.map(id => (C.S.games.find(g => g.id === id) || {}).title || id).join(', ') || 'Trap Tech picks'], ['Competition', COMP[B.competition]], ['Length', B.length_days + ' days'], ['Contact', [B.contact_name, B.potato ? '@' + B.potato.replace(/^@/, '') + ' on Potato' : '', B.email].filter(Boolean).join(' • ')], ['Dates', `${B.start_date || 'flexible'} → ${B.end_date || 'flexible'}`], ['Details', B.details || '-'], ['Notes', B.notes || '-']].map(([k, v]) => `<div class="rv-row"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</div>
+      else body = `<div class="card pad rv">${[['Features', sel.map(x => F[x.id].name + (F[x.id].unit !== 'flat' ? ` (${unitText(F[x.id], x.qty)})` : '')).join(', ')], ['Business type', B.business_type], ...(B.business_type === cat.cannabis ? [['License', 'Confirmed licensed and legally permitted to advertise']] : []), ['Brand', B.brand], ['Prize', B.prize], ['Brand color', B.brand_color], ['Games', B.games.map(id => (bookingGames.find(g => g.id === id) || {}).title || id).join(', ') || 'Trap Tech picks'], ['Competition', COMP[B.competition]], ['Length', B.length_days + ' days'], ['Contact', [B.contact_name, B.potato ? '@' + B.potato.replace(/^@/, '') + ' on Potato' : '', B.email].filter(Boolean).join(' • ')], ['Dates', `${B.start_date || 'flexible'} → ${B.end_date || 'flexible'}`], ['Details', B.details || '-'], ['Notes', B.notes || '-']].map(([k, v]) => `<div class="rv-row"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</div>
         <p class="small muted">Sending a request is free and commits you to nothing. You'll get a private link to see your quote, then accept or decline it.</p>`;
       C.shell('/sponsor', `<div class="narrow sponsor">
         ${C.pageHead('Book a Giveaway', 'Put your brand and prize in front of players who are already competing.')}
@@ -70,6 +74,19 @@ function sponsorPage(url) {
       const root = document.getElementById('main');
       root.querySelectorAll('[data-pick]').forEach(cb => cb.onchange = () => { if (cb.checked) B.picked[cb.dataset.pick] = F[cb.dataset.pick].dflt || 1; else delete B.picked[cb.dataset.pick]; persist(); const y = scrollY; draw(); scrollTo(0, y); });
       root.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { const f = F[b.dataset.q]; B.picked[f.id] = Math.max(f.min, Math.min(f.max, (B.picked[f.id] || f.dflt || 1) + +b.dataset.d)); persist(); const y = scrollY; draw(); scrollTo(0, y); });
+      const gameSearch=document.getElementById('sb-game-search');
+      if (gameSearch) gameSearch.addEventListener('input', () => {
+        const query=gameSearch.value.trim().toLowerCase();
+        root.querySelectorAll('#sb-games [data-game-title]').forEach(el => { el.hidden=!el.dataset.gameTitle.includes(query); });
+      });
+      const gamePicker=document.getElementById('sb-games');
+      if (gamePicker) gamePicker.addEventListener('change', e => {
+        const check=e.target;
+        if (!check || check.type!=='checkbox') return;
+        const selected=gamePicker.querySelectorAll('input:checked');
+        if (selected.length>13) { check.checked=false; C.toast('Select up to 13 games per giveaway request.'); return; }
+        B.games=[...selected].map(x=>x.value);persist();
+      });
       const bt = document.getElementById('bt'); if (bt) bt.onchange = () => { readForm(); B.licensed = false; draw(); };
       const pv = document.getElementById('prev'); if (pv) pv.onclick = () => { if (B.step === 2) readForm(); B.step--; draw(); scrollTo(0, 0); };
       document.getElementById('next').onclick = async () => {
