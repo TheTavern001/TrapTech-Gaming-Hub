@@ -53,7 +53,11 @@
       "evidence": [
         "docs/audit/ALL-93-OWNER-GAMEPLAY-DISTINCTNESS-2026-10-14.json",
         "tools/audit-full-game-mechanics.js",
-        "docs/audit/GAMING-HUB-EXACT-REMAINING-WORK-2026-10-14.md"
+        "docs/audit/GAMING-HUB-EXACT-REMAINING-WORK-2026-10-14.md",
+        "public/games-lib/td.js (manual keyboard placement; tactical barracks interceptors)",
+        "public/games-lib/keep-guard/game.js (defender tower and visible health)",
+        "tools/test-keep-guard-barracks.js",
+        "tools/test-td-keyboard-touch-parity.js"
       ],
       "openDefects": [],
       "ownerApproved": false
