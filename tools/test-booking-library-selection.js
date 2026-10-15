@@ -11,7 +11,8 @@ assert.match(ui,/\.\.\.\(C\.S\.libraryGames \|\| \[\]\)/,'UI must include playab
 assert.match(ui,/id="sb-game-search"/,'Mobile booking needs search instead of wall of 87 chips');
 assert.match(ui,/selected\.length>13/,'Must cap per-event game selection');
 assert.match(ui,/subject to certification/,'Quote must not promise giveaway eligibility');
-assert.match(sponsor,/\[\.\.\.new Set\(\(Array\.isArray\(b\.games\)/,'Server dedupes client selections');
+assert.match(sponsor,/contestCheck=require\('\.\/booked-competition'\)\.validate\(b\.competition \|\| 'best',proposedGames\)/,'All proposed games and competition type validated before booking is created');
+assert.match(sponsor,/proposedGames\.some\(id=>/,'Reject unregistered or retired selections');
 assert.match(sponsor,/cfg\.GAME_MAP\[id\]\.playable !== false && !cfg\.GAME_MAP\[id\]\.retired/);
 assert.doesNotMatch(sponsor,/&& !\/\^gl-\//,'Library titles must not be rejected solely for gl- prefix');
 assert.match(config,/GAME_MAP: Object\.fromEntries\(\[\.\.\.GAMES, \.\.\.LIB_GAMES\]/,'Both libraries in server lookup');
