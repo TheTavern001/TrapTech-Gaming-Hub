@@ -20,7 +20,7 @@ const FEATURES = [
   { id: 'weeks', group: 'Giveaway basics', name: 'Giveaway length', desc: 'How many weeks your giveaway runs (1 week is included).', unit: 'week', min: 1, max: 8, dflt: 1, free: 1, price: cents(25) },
   { id: 'games', group: 'Giveaway basics', name: 'Extra linked games', desc: 'Runs in more games count toward your giveaway (multi-game).', unit: 'each', min: 1, max: 15, dflt: 2, price: cents(15) },
   { id: 'giveaways', group: 'Giveaway basics', name: 'Extra giveaways in the same campaign', desc: 'Run more than one giveaway (for example a weekly prize) inside your dates.', unit: 'each', min: 1, max: 5, dflt: 1, price: cents(35) },
-  { id: 'winners', group: 'Winners & rules', name: 'Extra winners / prize tiers', desc: '1st / 2nd / 3rd prize tiers or more random-draw winners.', unit: 'each', min: 1, max: 20, dflt: 2, price: cents(15) },
+  { id: 'winners', group: 'Winners & rules', name: 'Extra winners / prize tiers', desc: 'Additional verified leaderboard placements (1st, 2nd, 3rd) with published skill-based ranking.', unit: 'each', min: 1, max: 20, dflt: 2, price: cents(15) },
   { id: 'weekly-winners', group: 'Winners & rules', name: 'Weekly leaderboard winners', desc: 'Extra winners from each week\'s leaderboard while the giveaway runs.', unit: 'flat', price: cents(49) },
   { id: 'entry-rules', group: 'Winners & rules', name: 'Custom entry rules', desc: 'Minimum score, recent activity or account-age rules to stop giveaway camping.', unit: 'flat', price: cents(19) },
   { id: 'open-to-all', group: 'Winners & rules', name: 'Open to every hub player', desc: 'By default only players affiliated with your brand can enter. Ask for a hub-wide giveaway open to everyone (admin approves).', unit: 'flat', price: cents(59), place: 'open' },
