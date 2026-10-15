@@ -497,3 +497,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `b25aaff4a814c1323350f2a8e6a2b57e0e3b2437`: new avatar rig GPU contract regression. `1ac4662390f3a1f0b70ac2fb709ec5e8e062bf23` and `c60785d22b9d6a977482cb9021f6a36c945bde2d`: canonical rehearsal and Docker test wiring.
 - Fetched real committed source and parsed as JS with imports/exports stripped: syntax PASS; readback verified offscreen pause, observer disconnect, portrait DPR cap. Native Node test, Docker release suite, Android/iPhone GPU p95 and actual GLTF rendered visual QA **NOT EXECUTED**. Do not infer AAA visuals or performance targets met.
 - Last owner Deplexo screenshot CURRENT was `278af07`; no new host evidence and auto deploy OFF. Source PR #29 remains unshipped. Avatar rig QA is not approved as universal final starter and asset/cosmetic integration remains incomplete.
+
+## 2026-10-14 — Resumed interrupted mobile 3D avatar budget work
+
+- Earlier interrupted call had successfully committed `428c98884afc67787d1a074bbc2a51fef60f0cd8` to `public/js/avatar-rig.js`: offscreen rig previews now skip frames using IntersectionObserver, profile avatars disable shadow maps and use lower maximum device-pixel ratio, and renderer uses low-power preference.
+- `tools/test-avatar-rig-mobile-budget.js` was confirmed present on GitHub at blob `44c658ed31b906b8f9a534679fa3f8466960fa15`. Offline rehearsal and Dockerfile already referenced the test (blobs `5eb0eab67889490e9f471c1f2dedc00eb55ac4e1`, `c9e272219c9568af1cb06ae6e253c13648febe23`). No unnecessary duplicate commits made.
+- Source/test/rehearsal JS parsed successfully in isolated V8. No actual browser WebGL execution, measured FPS or memory comparison, native Node full suite, Docker build, or physical iOS/Android acceptance. Not an AAA or deployment approval.
+- User-requested full Hub overhaul is still incomplete. Deplexo remains last screenshot-confirmed `278af07`; auto deploy OFF; PR #29 is source only.
