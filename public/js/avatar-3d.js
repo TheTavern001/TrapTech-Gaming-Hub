@@ -292,11 +292,14 @@ export async function mountAvatar3D(stage, cfg) {
   const resize = () => { if(!stage.isConnected) return; const w=Math.max(180,stage.clientWidth), h=Math.max(220,stage.clientHeight); renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
   const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null; if(observer) observer.observe(stage); else window.addEventListener('resize',resize);
   let frame=0, alive=true, cleanup=null, previousFrame=0, slowStreak=0;
+  let stageVisible=true;
+  const visibilityObserver=typeof IntersectionObserver!=='undefined' ? new IntersectionObserver(entries=>{stageVisible=!!entries[0]?.isIntersecting;previousFrame=0;}) : null;
+  if(visibilityObserver) visibilityObserver.observe(stage);
   const animate = (t) => {
     if(!alive) return;
     if(!stage.isConnected && cleanup) { cleanup(); return; }
     frame=requestAnimationFrame(animate);
-    if(document.hidden) { previousFrame=0; return; }
+    if(document.hidden || !stageVisible) { previousFrame=0; return; }
     if(previousFrame && t-previousFrame>24) slowStreak++; else slowStreak=0;
     previousFrame=t;
     if(slowStreak>=45 && renderRatio>1) {
@@ -309,7 +312,7 @@ export async function mountAvatar3D(stage, cfg) {
   };
   frame=requestAnimationFrame(animate);
   cleanup = () => {
-    if(!alive) return; alive=false; cancelAnimationFrame(frame); if(observer) observer.disconnect(); else window.removeEventListener('resize',resize);
+    if(!alive) return; alive=false; cancelAnimationFrame(frame); if(visibilityObserver) visibilityObserver.disconnect(); if(observer) observer.disconnect(); else window.removeEventListener('resize',resize);
     renderer.domElement.removeEventListener('pointerdown',down); renderer.domElement.removeEventListener('pointermove',move); renderer.domElement.removeEventListener('pointerup',up); renderer.domElement.removeEventListener('pointercancel',up);
     const geometryResources = new Set(); scene.traverse(o=>{if(o.geometry)geometryResources.add(o.geometry);}); geometryResources.forEach(g=>g.dispose()); materials.forEach(m=>m.dispose()); renderer.dispose(); renderer.domElement.remove();
   };
