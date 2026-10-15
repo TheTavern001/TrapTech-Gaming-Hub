@@ -20,7 +20,6 @@ licenses
 *.md
 !README.md
 render.yaml
-Dockerfile
-.dockerignore
+# Dockerfile/.dockerignore must remain available to build-stage source audits.
 # Required by Dockerfile prelaunch audits; otherwise these files vanish from the build context.
 !docs/GAMES-LIB.md
