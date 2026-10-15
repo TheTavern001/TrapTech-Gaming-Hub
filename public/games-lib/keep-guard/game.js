@@ -19,7 +19,7 @@
     const pe = pts[pts.length - 1]; c.save(); c.translate(g.W - 24, pe[1]); c.fillStyle = '#8a8f98'; c.fillRect(-20, -46, 40, 80); c.strokeStyle = OL; c.lineWidth = 2; c.strokeRect(-20, -46, 40, 80); for (let k = 0; k < 4; k++) { c.fillStyle = '#8a8f98'; c.fillRect(-20 + k * 11, -54, 7, 9); } c.fillStyle = '#3a2410'; c.beginPath(); c.arc(0, 14, 11, Math.PI, 0); c.lineTo(11, 30); c.lineTo(-11, 30); c.fill(); c.fillStyle = '#e8343a'; c.fillRect(-2, -78, 3, 26); c.fillStyle = '#1f8f58'; c.beginPath(); c.moveTo(1, -78); c.lineTo(20, -72); c.lineTo(1, -66); c.fill(); c.restore();
     c.save(); c.translate(120, OY + 378); c.fillStyle = '#5a3a1e'; c.fillRect(-2, -6, 4, 18); c.fillStyle = '#3a2410'; Kit.rr(c, -66, -22, 132, 20, 4); c.fill(); c.fillStyle = '#9dff7a'; c.font = 'bold 10px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('\u2618 GREENKEEP HOLD \u00b7 21+', 0, -12); c.restore();
     return (BG = cv); }
-  const TW = [{ n: 'Archers', cost: 70, range: 2.8, rate: 0.6, dmg: 1, c: '#c98a3e', speed: 560 }, { n: 'Mage', cost: 130, range: 2.4, rate: 1.1, dmg: 3, c: '#9b5cff', speed: 420 }, { n: 'Bombard', cost: 160, range: 3, rate: 1.6, dmg: 3, c: '#3a3f4a', kind: 'splash', radius: 1.3 }, { n: 'Frost Rune', cost: 120, range: 1.9, rate: 1.0, dmg: 1, c: '#7fd4ff', kind: 'pulse', slow: 0.5 }];
+  const TW = [{ n: 'Archers', cost: 70, range: 2.8, rate: 0.6, dmg: 1, c: '#c98a3e', speed: 560 }, { n: 'Mage', cost: 130, range: 2.4, rate: 1.1, dmg: 3, c: '#9b5cff', speed: 420 }, { n: 'Bombard', cost: 160, range: 3, rate: 1.6, dmg: 3, c: '#3a3f4a', kind: 'splash', radius: 1.3 }, { n: 'Barracks', cost: 150, range: 1.65, rate: 0.65, dmg: 2, c: '#e9b65b', kind: 'barracks' }];
   function towerArt(c, k, lv, t, a) { c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(2, 14, 20, 7, 0, 0, 7); c.fill(); c.lineWidth = 2; c.strokeStyle = OL;
     if (k === 2) { c.fillStyle = '#8a6a42'; Kit.rr(c, -17, -2, 34, 16, 4); c.fill(); c.stroke(); c.save(); c.rotate(a || 0); c.fillStyle = '#3a3f4a'; Kit.rr(c, -4, -9, 26, 14, 5); c.fill(); c.stroke(); c.fillStyle = '#1b1e24'; c.beginPath(); c.arc(22, -2, 4, 0, 7); c.fill(); c.restore(); c.fillStyle = '#5a3a1e'; c.beginPath(); c.arc(-10, 12, 6, 0, 7); c.arc(10, 12, 6, 0, 7); c.fill(); c.stroke(); return; }
     const sg = c.createLinearGradient(-15, 0, 15, 0); sg.addColorStop(0, '#9aa0aa'); sg.addColorStop(1, '#6a707a'); c.fillStyle = sg; c.beginPath(); c.moveTo(-15, 14); c.lineTo(-12, -14); c.lineTo(12, -14); c.lineTo(15, 14); c.closePath(); c.fill(); c.stroke(); c.strokeStyle = 'rgba(40,40,50,.35)'; c.lineWidth = 1; for (let y = -8; y < 14; y += 7) { c.beginPath(); c.moveTo(-14, y); c.lineTo(14, y); c.stroke(); } c.strokeStyle = OL; c.lineWidth = 2;
@@ -34,7 +34,7 @@
       if (k === 'troll' || k === 'orc') { c.fillStyle = '#9aa0aa'; c.beginPath(); c.arc(0, -13 * s, 6.3 * s, Math.PI, 0); c.fill(); c.stroke(); } c.save(); c.translate(7 * s, -2 * s); c.rotate(-0.6 + step * 0.3); c.fillStyle = '#5a3a1e'; c.fillRect(-1, -10 * s, 2.2, 12 * s); c.fillStyle = '#c8ccd4'; c.beginPath(); c.moveTo(-1, -10 * s); c.lineTo(4 * s, -12 * s); c.lineTo(1, -6 * s); c.fill(); c.restore(); }
     c.restore(); if (e.slowT > 0) { c.fillStyle = 'rgba(160,220,255,.35)'; c.beginPath(); c.arc(e.x, e.y, e.r + 3, 0, 7); c.fill(); } }
   TD({ id: 'gl-keep-guard', title: 'KEEP GUARD', startCash: 180, lives: 20, theme: { bg: '#2a3a1e', ground: '#4f8a3a', road: '#c9a46e', base: '#ef4444' },
-    help: 'Tap a tower card, then a grass tile to build\nTap towers to upgrade. Hold the keep against endless raids',
+    help: 'Tap a tower card, then a grass tile to build\nTap towers to upgrade. Barracks train guards that stop ground raiders in melee until defeated, then respawn. Protect the keep against endless raids',
     path: [[0, 1], [4, 1], [4, 6], [9, 6], [9, 3], [14, 3], [14, 8], [19, 8]],
     towers: TW, perWave: (w) => 7 + Math.floor(w * 1.8),
     enemy: (w, i, g) => { const r = g.rnd(); const kind = w > 8 && i % 9 === 8 ? 'troll' : w > 3 && r < 0.3 ? 'wolf' : w > 5 && r < 0.55 ? 'orc' : 'gob'; const S = { gob: [3, 1.5, 10, 10], wolf: [2, 2.6, 15, 9], orc: [9, 1.1, 30, 12], troll: [40, 0.7, 120, 16] }[kind]; const hm = 1 + w * 0.22; return { hp: Math.ceil(S[0] * hm), sp: S[1] * 34, v: S[2], c: '#8ac04a', r: S[3], kind, armor: kind === 'troll' ? 1 : 0 }; },
@@ -45,6 +45,21 @@
     drawTower: (c, t, S, g) => { c.save(); c.translate(t.x, t.y); towerArt(c, t.k, t.lv, g.t, t.a); c.restore(); if (t.ring > 0) { t.ring -= 1 / 60; c.strokeStyle = 'rgba(170,230,255,.9)'; c.globalAlpha = Math.max(0, t.ring * 4); c.lineWidth = 3; c.beginPath(); c.arc(t.x, t.y, S.range * 40 * (1 - t.ring * 2), 0, 7); c.stroke(); c.globalAlpha = 1; } },
     drawShot: (c, s, g) => { const a = Math.atan2(s.tg.y - s.y, s.tg.x - s.x); c.save(); c.translate(s.x, s.y); c.rotate(a); if (s.S.kind === 'splash') { c.fillStyle = '#1b1e24'; c.beginPath(); c.arc(0, 0, 5, 0, 7); c.fill(); c.fillStyle = '#ff9a3a'; c.beginPath(); c.arc(-6, 0, 2.5 + Math.random() * 2, 0, 7); c.fill(); } else if (s.S.n === 'Mage') { c.shadowColor = '#c08bff'; c.shadowBlur = 12; c.fillStyle = '#e6d2ff'; c.beginPath(); c.arc(0, 0, 4.5, 0, 7); c.fill(); } else { c.strokeStyle = '#5a3a1e'; c.lineWidth = 2; c.beginPath(); c.moveTo(-9, 0); c.lineTo(5, 0); c.stroke(); c.fillStyle = '#c8ccd4'; c.beginPath(); c.moveTo(8, 0); c.lineTo(3, -3); c.lineTo(3, 3); c.fill(); c.fillStyle = '#e8e0d0'; c.fillRect(-10, -2, 3, 4); } c.restore(); },
     drawEnemy: (c, e, g) => { if (e.px != null) e.vx = e.x - e.px; e.px = e.x; raider(c, e, g.t); if (e.max > 1 && e.hp < e.max) { c.fillStyle = '#2a0a0a'; c.fillRect(e.x - 11, e.y - e.r - 14, 22, 4); c.fillStyle = '#5fd36a'; c.fillRect(e.x - 11, e.y - e.r - 14, 22 * Math.max(0, e.hp / e.max), 4); } },
+    drawGuard: (c, x, y, ratio) => {
+      // Tiny distinct tactical unit with a visible shield and remaining health.
+      c.save(); c.translate(x, y);
+      c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(0, 11, 11, 4, 0, 0, 7); c.fill();
+      c.strokeStyle = '#533716'; c.lineWidth = 2;
+      c.fillStyle = '#d5b175'; c.fillRect(-6, -4, 12, 13); c.strokeRect(-6, -4, 12, 13);
+      c.fillStyle = '#7c5d3b'; c.fillRect(-6, -12, 12, 9);
+      c.fillStyle = '#ffd596'; c.beginPath(); c.arc(0, -13, 4, 0, 7); c.fill();
+      c.fillStyle = '#506d96'; c.beginPath(); c.moveTo(-10, -4); c.lineTo(-3, -6);
+      c.lineTo(-3, 8); c.lineTo(-7, 12); c.lineTo(-11, 5); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = '#d7e0ee'; c.lineWidth = 2; c.beginPath(); c.moveTo(8, -10); c.lineTo(13, 5); c.stroke();
+      c.fillStyle = '#281e1a'; c.fillRect(-12, -23, 24, 4);
+      c.fillStyle = ratio > .3 ? '#72df9f' : '#ef7b7b'; c.fillRect(-12, -23, 24 * Math.max(0, ratio), 4);
+      c.restore();
+    },
     drawBar: (c, g) => { for (const f of fx) { f.l -= 1 / 60; f.x += f.vx / 60; f.y += f.vy / 60; f.vy += 4; c.globalAlpha = Math.max(0, f.l * 2); c.fillStyle = f.c; c.fillRect(f.x - 2, f.y - 2, 4, 4); c.globalAlpha = 1; } for (let i = fx.length - 1; i >= 0; i--) if (fx[i].l <= 0) fx.splice(i, 1);
       const bg = c.createLinearGradient(0, g.H - 52, 0, g.H); bg.addColorStop(0, '#5a3a1e'); bg.addColorStop(1, '#3a2410'); c.fillStyle = bg; c.fillRect(0, g.H - 52, g.W, 52);
       TW.forEach((S, i) => { const x = 10 + i * 118, sel = g.sel === i, can = g.cash >= S.cost; c.fillStyle = sel ? '#fff3c4' : '#ead9b0'; Kit.rr(c, x, g.H - 46, 112, 42, 8); c.fill(); c.strokeStyle = sel ? '#ffc21f' : '#7a5a2a'; c.lineWidth = sel ? 3 : 1.5; c.stroke(); c.save(); c.translate(x + 22, g.H - 22); c.scale(0.62, 0.62); towerArt(c, i, 0, g.t, 0); c.restore();
