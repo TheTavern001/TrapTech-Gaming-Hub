@@ -1,23 +1,35 @@
 // Goo Tower - original goo-ball tower builder (Hub build, World of Goo-style). Matter.js (MIT) springy goo lattice. Code-drawn art.
 (function () { const M = window.Matter, B = M.Bodies, C = M.Constraint, DT = 1 / 120, R = 13, REACH = 118, MINL = 48;
   const lerp = (a, b, t) => a + (b - a) * t;
-  function addBall(g, x, y, fixed) { const b = B.circle(x, y, R, { density: 0.002, friction: 0.8, frictionAir: 0.02, restitution: 0.1, isStatic: !!fixed }); b.eyeT = Math.random() * 5; M.Composite.add(g.eng.world, b); return b; }
+  function addBall(g, x, y, fixed) { const b = B.circle(x, y, R, { density: 0.002, friction: 0.8, frictionAir: 0.02, restitution: 0.1, isStatic: !!fixed }); b.eyeT = g.R(0, 5); M.Composite.add(g.eng.world, b); return b; }
   function link(g, a, b) { const L = Math.hypot(a.position.x - b.position.x, a.position.y - b.position.y); const c = C.create({ bodyA: a, bodyB: b, length: L, stiffness: 0.35, damping: 0.08 }); M.Composite.add(g.eng.world, c); g.links.push(c); a.n = (a.n || 0) + 1; b.n = (b.n || 0) + 1; }
   function cands(g, x, y) { return g.nodes.map(n => [n, Math.hypot(n.position.x - x, n.position.y - y)]).filter(([, d]) => d < REACH && d > MINL * 0.6).sort((a, b) => a[1] - b[1]).slice(0, 2); }
   Kit.run({ id: 'gl-goo-tower', title: 'GOO TOWER', orient: 'p', help: 'Drag a goo ball near the tower and let go - it links to the 2 nearest balls\nBuild as high as you can. Wind gets stronger. Don\'t let it topple!', bg: '#1a1030',
     init(g) { const eng = M.Engine.create({ gravity: { y: 1 }, constraintIterations: 4, positionIterations: 8 }); g.eng = eng; g.links = []; g.nodes = []; g.free = []; g.prev = new Map(); g.acc = 0; g.alpha = 1;
       const gy = g.H - 70; g.gy = gy; M.Composite.add(eng.world, B.rectangle(g.W / 2, gy + 40, g.W * 3, 80, { isStatic: true, friction: 1 }));
       const a = addBall(g, g.W / 2 - 50, gy - R, true), b = addBall(g, g.W / 2 + 50, gy - R, true), c = addBall(g, g.W / 2, gy - R - 80); g.nodes.push(a, b, c); link(g, a, b); link(g, a, c); link(g, b, c);
-      g.best = 0; g.peak = 0; g.wind = 0; g.windT = 6; g.lost = 0; g.drag = null; g.spawnT = 0; g.camY = 0; g.camT = 0; g.placed = 0; },
+      g.best = 0; g.peak = 0; g.wind = 0; g.windT = 6; g.lost = 0; g.drag = null; g.spawnT = 0; g.camY = 0; g.camT = 0; g.placed = 0; g.kCursor = { x: g.W / 2, y: gy - 130 }; },
     update(g, dt) { const cy = g.camY;
       // spawn free goo crawling along the ground pile at the left
-      g.spawnT -= dt; if (g.free.length < 4 && g.spawnT <= 0) { g.spawnT = 0.6; g.free.push({ x: 30 + g.free.length * 34, y: g.gy - R, t: Math.random() * 6 }); } g.free.forEach((f, i) => { f.t += dt; f.x = lerp(f.x, 30 + i * 32, dt * 4); f.y = Math.min(g.gy - R, g.camY + g.H - 110) - Math.abs(Math.sin(f.t * 5)) * 6; });
+      g.spawnT -= dt; if (g.free.length < 4 && g.spawnT <= 0) { g.spawnT = 0.6; g.free.push({ x: 30 + g.free.length * 34, y: g.gy - R, t: g.R(0, 6) }); } g.free.forEach((f, i) => { f.t += dt; f.x = lerp(f.x, 30 + i * 32, dt * 4); f.y = Math.min(g.gy - R, g.camY + g.H - 110) - Math.abs(Math.sin(f.t * 5)) * 6; });
       const px = g.ptr.x, py = g.ptr.y + cy;
       if (g.ptr.pressed && !g.drag) { const i = g.free.findIndex(f => Math.hypot(f.x - px, f.y - py) < 34); if (i >= 0 || g.free.length) g.drag = { x: px, y: py, from: i >= 0 ? i : 0 }; }
       if (g.drag) { g.drag.x = px; g.drag.y = py; if (!g.ptr.down) { const cs = cands(g, px, py); if (cs.length >= 2) { g.free.splice(g.drag.from, 1); const b = addBall(g, px, py); g.nodes.push(b); for (const [n] of cs) link(g, b, n); g.placed++; g.sfx('pop'); } else g.sfx('click'); g.drag = null; } }
-      // keyboard: auto place at best spot above the top (accessibility / bot)
-      if (g.kd(' ') || g.kd('Enter')) { const srt = g.nodes.slice().sort((a, b) => a.position.y - b.position.y); const A = srt[0]; let Bn = srt.slice(1).find(n => Math.hypot(n.position.x - A.position.x, n.position.y - A.position.y) < 140) || srt[1]; const dx = Bn.position.x - A.position.x, dy = Bn.position.y - A.position.y, d = Math.hypot(dx, dy) || 1; const hh = Math.sqrt(Math.max(100, 80 * 80 - d * d / 4)); let nx = -dy / d, ny = dx / d; if (ny > 0) { nx = -nx; ny = -ny; } const tx = (A.position.x + Bn.position.x) / 2 + nx * hh, ty = (A.position.y + Bn.position.y) / 2 + ny * hh; const cs = cands(g, tx, ty); if (cs.length >= 2 && g.free.length) { g.free.shift(); const b = addBall(g, tx, ty); g.nodes.push(b); for (const [n] of cs) link(g, b, n); g.placed++; g.sfx('pop'); } }
-      g.windT -= dt; if (g.windT <= 0) { g.windT = 4 + Math.random() * 4; g.windTgt = (Math.random() < 0.5 ? -1 : 1) * Math.min(1, 0.15 + g.peak / 2000); } g.wind = lerp(g.wind, g.windTgt || 0, dt * 0.8);
+      // Keyboard parity: arrows/WASD move a visible cursor; Space/Enter places only
+      // at that chosen point. Never auto-solve the next optimal tower link.
+      const kx = Number(!!(g.keys.ArrowRight || g.keys.d)) - Number(!!(g.keys.ArrowLeft || g.keys.a));
+      const ky = Number(!!(g.keys.ArrowDown || g.keys.s)) - Number(!!(g.keys.ArrowUp || g.keys.w));
+      g.kCursor.x = Math.max(R, Math.min(g.W - R, g.kCursor.x + kx * dt * 230));
+      g.kCursor.y = Math.max(g.camY + 30, Math.min(g.gy - R - 15, g.kCursor.y + ky * dt * 230));
+      if (g.kd(' ') || g.kd('Enter')) {
+        const tx = g.kCursor.x, ty = g.kCursor.y, cs = cands(g, tx, ty);
+        if (cs.length >= 2 && g.free.length) {
+          g.free.shift(); const b = addBall(g, tx, ty); g.nodes.push(b);
+          for (const [n] of cs) link(g, b, n);
+          g.placed++; g.sfx('pop');
+        } else g.sfx('click');
+      }
+      g.windT -= dt; if (g.windT <= 0) { g.windT = g.R(4, 8); g.windTgt = (g.rnd() < 0.5 ? -1 : 1) * Math.min(1, 0.15 + g.peak / 2000); } g.wind = lerp(g.wind, g.windTgt || 0, dt * 0.8);
       g.acc += Math.min(dt, 0.1); for (const n of g.nodes) g.prev.set(n, { x: n.position.x, y: n.position.y });
       while (g.acc >= DT) { g.acc -= DT; for (const n of g.nodes) if (!n.isStatic) M.Body.applyForce(n, n.position, { x: g.wind * 0.00035 * Math.max(0, (g.gy - n.position.y) / 400), y: 0 }); M.Engine.update(g.eng, DT * 1000); }
       g.alpha = g.acc / DT;
@@ -32,6 +44,7 @@
       // silhouettes of pipes/hills (World of Goo vibe, original)
       c.fillStyle = '#2a1838'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 10) c.lineTo(x, H - 120 - cy * 0.3 + Math.sin(x * 0.02) * 30 + Math.sin(x * 0.05) * 10); c.lineTo(W, H); c.fill();
       c.save(); c.translate(0, -cy);
+      if (g.kCursor) { c.save(); c.strokeStyle = '#f7dd7c'; c.lineWidth = 2; c.setLineDash([5, 3]); c.beginPath(); c.arc(g.kCursor.x, g.kCursor.y, 18, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); c.restore(); }
       // height markers
       c.font = 'bold 11px system-ui'; c.textAlign = 'left'; for (let m = 10; m < 2000; m += 10) { const y = g.gy - R - m * 10; if (y < cy - 20 || y > cy + H) continue; c.strokeStyle = 'rgba(255,255,255,.12)'; c.setLineDash([6, 8]); c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); c.setLineDash([]); c.fillStyle = 'rgba(255,255,255,.4)'; c.fillText(m + ' m', 6, y - 4); }
       { const y = g.gy - R - g.peak * 10; c.strokeStyle = '#ffd23f'; c.lineWidth = 2; c.beginPath(); c.moveTo(W - 70, y); c.lineTo(W, y); c.stroke(); c.fillStyle = '#ffd23f'; c.textAlign = 'right'; c.fillText('BEST ' + g.peak + ' m', W - 4, y - 5); }

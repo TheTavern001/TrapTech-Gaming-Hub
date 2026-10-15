@@ -51,6 +51,18 @@ assert.ok(strain.includes("NO MOVES - SHUFFLED"));
 const dunk=read('public/games-lib/dunk-flick/game.js');
 assert.ok(!dunk.includes('const T = 0.9; b.vx = dx / T;'),
  'Never auto-aim keyboard shot from hoop target coordinates');
+// Competitive physics/AI random draws must consume the signed game's seeded RNG.
+const goo=read('public/games-lib/goo-tower/game.js');
+assert.ok(goo.includes('g.windT = g.R(4, 8);'));
+assert.ok(goo.includes("g.windTgt = (g.rnd() < 0.5 ? -1 : 1)"));
+assert.ok(goo.includes('g.kCursor.x + kx * dt * 230') &&
+ goo.includes('const tx = g.kCursor.x, ty = g.kCursor.y'),
+ 'Goo Tower must require manual keyboard placement');
+assert.ok(!goo.includes('srt.slice(1).find('),'No keyboard auto-solver');
+const lightCycle=read('public/games-lib/light-cycle/game.js');
+assert.ok(lightCycle.includes('aggr: g.R(0.3, 0.8)'),
+ 'Light Cycle AI aggression must use seeded RNG');
+assert.ok(!lightCycle.includes('aggr: 0.3 + Math.random()'));
 console.log(JSON.stringify({pass:true,gameIds:unique.size,archived:data.archiveHistoryPreserved,
  playable:data.activeProposed,manualMechanicClusters:layers?data.clusters.length:0,
  highRiskDuplication:['haze-defense','gl-pop-defense'],qualityCertified:0,
