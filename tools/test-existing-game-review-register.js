@@ -34,4 +34,7 @@ assert.equal(audit.summary.overlapClusters,source.clusters.length);
 assert.equal(audit.summary.proposedPlayable,audit.records.filter(x=>x.playable).length);
 assert.equal(audit.summary.archived,audit.records.filter(x=>x.retired).length);
 assert.equal(audit.summary.qualityApproved,quality.records.filter(x=>x.status==='APPROVED').length);
+const publicGameCatalog=fs.readFileSync(path.join(root,'public/games-lib/index.html'),'utf8');
+assert.doesNotMatch(publicGameCatalog,/esc\(g\.tier \|\|/,'Do not present unverified A+ source tiers as certified game quality');
+assert.match(publicGameCatalog,/Quality review pending/);
 console.log(JSON.stringify({pass:true,registered:audit.records.length,playable:audit.summary.proposedPlayable,retired:audit.summary.archived,overlapClusters:audit.summary.overlapClusters,deviceApproved:audit.summary.qualityApproved,scope:'source inventory, not full gameplay review'}));
