@@ -72,6 +72,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-shop-avatar-credit-integration.js \
  && node tools/test-existing-game-review-register.js \
  && node tools/test-private-10k-harness.js \
+ && node tools/test-giveaway-booking-release-gates.js \
  && node tools/test-avatar-async-stale-render.js \
  && node tools/test-avatar-rig-mobile-budget.js \
  && node tools/test-avatar-offscreen-fallback.js \
