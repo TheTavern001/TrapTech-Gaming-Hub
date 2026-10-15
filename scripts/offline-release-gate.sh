@@ -38,6 +38,7 @@ fi
 run node-version node --version
 run post-r1-failed-build-evidence node tools/test-post-r1-build-evidence.js
 run qa-browser-runtime-integrity node tools/test-qa-browser-runtime-integrity.js
+run qa-mobile-frame-pacing node tools/test-qa-frame-pacing.js
 run r1-incident-gate node tools/test-r1-incident-gates.js
 run r1-test-qa-87-browser-contract node tools/test-qa-87-browser-contract.js
 run r1-test-qa-game-batches node tools/test-qa-game-batches.js
