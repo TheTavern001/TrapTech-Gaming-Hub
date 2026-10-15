@@ -5,6 +5,9 @@
 // Static client JS is not a security boundary: gate server-side API actions.
 function makeGate({enabled=false,users='',currentUser=()=>null,isOwnerAdmin=()=>false,adminBase=()=>null}={}){
   const names=new Set(String(users).split(',').map(x=>x.trim().toLowerCase()).filter(x=>/^[a-z0-9_.-]{3,20}$/.test(x)));
+  if(enabled && names.size===0 && !adminBase()) {
+    throw Error('HUB_PRIVATE_REVIEW requires a valid ADMIN_PATH or HUB_PREVIEW_USERNAMES to prevent owner lockout.');
+  }
   const publicGet=new Set(['/healthz','/api/build','/signin','/manifest.webmanifest','/sw.js','/robots.txt','/favicon.ico']);
   const guestAuth=new Set(['/api/auth/signin','/api/auth/signout','/api/me']);
   const assets=/^\/(?:assets|css|js|fonts|i18n|og)\//;
