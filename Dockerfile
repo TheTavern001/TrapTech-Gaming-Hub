@@ -159,6 +159,8 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-deplexo-release-evidence.js \
  && node --check tools/audit-full-game-mechanics.js \
  && node tools/audit-full-game-mechanics.js \
+ && node --check tools/test-87-runtime-source-depth.js \
+ && node tools/test-87-runtime-source-depth.js \
  && test -s docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/local-imports.js \

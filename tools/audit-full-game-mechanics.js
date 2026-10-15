@@ -3,6 +3,7 @@
 // Whole-catalog source-only mechanics/asset audit. It is NOT a claim that a
 // syntax-valid title has been playtested or has AAA-quality artwork.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {importSpecs}=require('./local-imports');
 const ROOT=path.resolve(__dirname,'..'),lib=require('../src/games-lib').games;
 const read=p=>{try{return fs.readFileSync(p,'utf8')}catch{return ''}};
 const base=path.join(ROOT,'public','games-lib'),cfg=read(path.join(ROOT,'src/config.js'));
@@ -23,6 +24,42 @@ function collectJs(dir,max=28){
   }
  }
  return out.slice(0,max);
+}
+// Walk the actual browser-local script graph, not merely the tiny title wrapper.
+// Many competition mechanics are implemented in ../runner3x.js, ../td.js, arena.js,
+// imported open-source js/*, or a core game's ./games/engine.js.
+function runtimeScripts(type,g,primary,localPaths){
+ const publicRoot=path.join(ROOT,'public')+path.sep;
+ const seen=new Set(),queue=[...localPaths],missing=[],external=[];
+ const html=type==='library'?read(path.join(base,g.slug,'index.html')):'';
+ const htmlPath=path.join(base,g.slug,'index.html');
+ function add(spec,from){
+  const raw=String(spec||'').split(/[?#]/)[0];
+  if(!raw || /^(?:https?:|data:|\/\/)/i.test(raw)){if(raw)external.push(raw);return;}
+  // Bare ESM import names are resolved by the document import map.
+  if(!raw.startsWith('/')&&!raw.startsWith('.')){external.push(raw);return;}
+  if(!/\.m?js$/i.test(raw))return;
+  const abs=raw.startsWith('/')?path.resolve(ROOT,'public',raw.slice(1)):path.resolve(path.dirname(from),raw);
+  if(!abs.startsWith(publicRoot)){missing.push('unsafe path '+raw);return;}
+  if(!seen.has(abs))queue.push(abs);
+ }
+ if(type==='library')for(const m of html.matchAll(/<script\b[^>]*\bsrc\s*=\s*['"]([^'"]+)['"]/gi))
+  add(m[1],htmlPath);
+ else for(const spec of importSpecs(read(primary)))add(spec,primary);
+ const paths=[];
+ while(queue.length&&paths.length<140){
+  const p=queue.shift();if(seen.has(p))continue;seen.add(p);
+  if(!fs.existsSync(p)){missing.push(path.relative(ROOT,p).split(path.sep).join('/'));continue;}
+  paths.push(p);
+  // Traverse imported local gameplay engines but skip opaque minified vendor
+  // dependencies; the general prelaunch tool still verifies their file paths.
+  if(/[/\\]vendor[/\\]/.test(p))continue;
+  for(const spec of importSpecs(read(p)))add(spec,p);
+ }
+ if(queue.length)missing.push('dependency traversal exceeded 140 local scripts');
+ return {sourceFiles:paths.map(p=>path.relative(ROOT,p).split(path.sep).join('/')),
+  missing,externalImports:[...new Set(external)].slice(0,40),
+  runtimeScriptBytes:paths.reduce((n,p)=>n+Buffer.byteLength(read(p)),0)};
 }
 const same=(a,b)=>a&&b&&a===b;
 const OWNER={
@@ -75,6 +112,7 @@ function mapGame(g,type){
  const jsPaths=type==='library'?collectJs(dir):[primary];
  const parts=jsPaths.map(p=>({file:path.relative(ROOT,p),src:read(p)}));
  const source=parts.map(x=>x.src).join('\n'),authorFiles=parts.filter(x=>x.src);
+ const dependencyGraph=runtimeScripts(type,g,primary,jsPaths);
  const cue=s=>source.includes(s);
  const engine=cue('HillCar(')?'hillcar':cue('TopCar(')?'topcar':cue('Runner3D(')?'runner3d':
    cue('Kit.run(')?'kit':cue('THREE.WebGLRenderer')?'threejs-custom':cue('Arena(')?'arena':
@@ -109,6 +147,11 @@ function mapGame(g,type){
   ownerDistinctnessVerdict:pair[2]||'REQUIRES_MANUAL_GAMEPLAY_COMPARISON',
   engineSignature:engine,referenceLoop:type==='library'?g.ref_internal:null,
   scannedCodePaths:authorFiles.map(x=>x.file),scannedBytes:authorFiles.reduce((sum,x)=>sum+x.src.length,0),
+  actualRuntimeSourceFiles:dependencyGraph.sourceFiles,
+  actualRuntimeSourceCount:dependencyGraph.sourceFiles.length,
+  actualRuntimeSourceBytes:dependencyGraph.runtimeScriptBytes,
+  missingBrowserScriptDependencies:dependencyGraph.missing,
+  resolvedExternalBareImports:dependencyGraph.externalImports,
   sourceSha256:source?hash(source):null,missingReadableJs:!authorFiles.length,
   playableInstructionPreview:instructions,sourceStartingClockSeconds:sourceStartTime,
   advertisedClockSeconds:claimedHelpTime,keyboardSpaceActionCount:keyboardSpaceActions,
@@ -131,6 +174,8 @@ const entries=[...core.map(g=>mapGame(g,'core')),...lib.map(g=>mapGame(g,'librar
 if(core.length!==13||lib.length<80||entries.length!==core.length+lib.length)
  throw Error('Known baseline source inventory changed: core='+core.length+' library='+lib.length);
 if(new Set(entries.map(g=>g.id)).size!==entries.length)throw Error('Duplicate game ID in audit');
+if(entries.filter(x=>x.playable).length!==87||entries.filter(x=>x.retired).length!==6)
+ throw Error('87 active / 6 archived baseline drift requires explicit rebaseline before adding games');
 const familyGroups={};
 for(const g of entries)if(g.mechanicsFamily!=='UNCLASSIFIED')(familyGroups[g.mechanicsFamily]??=[]).push(g.id);
 const out={
@@ -138,6 +183,9 @@ const out={
  coreRegistered:core.length,libraryRegistered:lib.length,historicalRegistered:entries.length,
  proposedPlayable:entries.filter(g=>g.playable).length,ownerArchivedDuplicates:entries.filter(g=>g.retired).length,
  sourceFilesScanned:entries.reduce((x,g)=>x+g.scannedCodePaths.length,0),
+ sourceGraphFilesAudited:[...new Set(entries.flatMap(g=>g.actualRuntimeSourceFiles))].length,
+ activeDependencyGraphComplete:entries.filter(g=>g.playable).every(g=>g.actualRuntimeSourceCount>0&&g.missingBrowserScriptDependencies.length===0),
+ activeDependencyErrors:entries.filter(g=>g.playable&&g.missingBrowserScriptDependencies.length).map(g=>({id:g.id,missing:g.missingBrowserScriptDependencies})),
  sourceUnresolved:entries.filter(g=>g.missingReadableJs).map(g=>g.id),familyGroups,
  sourceTriageCounts:{possibleClockMismatch:entries.filter(g=>g.sourceTriageFlags.includes('HELP_CLOCK_MISMATCH_POTENTIAL')).length,
    possibleAutoTarget:entries.filter(g=>g.sourceTriageFlags.includes('INPUT_AUTO_TARGET_POTENTIAL')).length,
@@ -155,4 +203,6 @@ fs.mkdirSync(path.dirname(dest),{recursive:true});
 fs.writeFileSync(dest,JSON.stringify(out,null,2)+'\n');
 console.log(JSON.stringify({audit:out.auditType,core:core.length,library:lib.length,historical:entries.length,
  playable:out.proposedPlayable,archived:out.ownerArchivedDuplicates,sourceFiles:out.sourceFilesScanned,
- unresolved:out.sourceUnresolved.length,report:path.relative(ROOT,dest)}));
+ unresolved:out.sourceUnresolved.length,runtimeSourceFiles:out.sourceGraphFilesAudited,
+ runtimeGraphComplete:out.activeDependencyGraphComplete,
+ dependencyErrors:out.activeDependencyErrors.length,report:path.relative(ROOT,dest)}));
