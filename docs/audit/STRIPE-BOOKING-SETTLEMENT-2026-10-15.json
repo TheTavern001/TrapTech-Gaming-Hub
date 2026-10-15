@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "date": "2026-10-15",
+  "status": "SOURCE_IMPLEMENTED_OFFLINE_INTEGRATION_UNVERIFIED",
+  "releaseEligible": false,
+  "summary": "Replace manual admin-paid vendor event trust with Stripe Checkout and endpoint-specific signed webhook settlement. Preserve fail-closed event sharing, game certification, and admin activation.",
+  "fixes": [
+    "Secure Stripe Checkout from accepted sponsor quote; exact USD fee, locked quote and random checkout reference",
+    "Separate STRIPE_BOOKING_WEBHOOK_SECRET for dedicated booking webhook; STRIPE_WEBHOOK_SECRET still validates store purchases",
+    "Admin paid status disabled; event activation requires matched provider session, payment intent, amount, paid timestamp, no refund",
+    "Private review, absent keys, or no booking webhook signing secret block new checkout",
+    "Charge refund/dispute freezes booking and deactivates linked giveaway",
+    "Charge-only Stripe dispute with nullable payment_intent resolves Stripe Charge by API and requests retry on verification failure",
+    "Durable payment-intent revocation marker prevents out-of-order refund and subsequent checkout-success from reactivating prizes",
+    "Checkout HTTP uncertainty retries preserve Stripe idempotency key"
+  ],
+  "tests": {
+    "sourceSyntax": "PASS for changed JavaScript files",
+    "runtimeMocked": "PASS: actual GitHub booking handler evaluated against isolated in-memory fake database; 12 scenarios for checkout, payment, refund and replay",
+    "disputeMocked": "PASS: charge-only dispute resolves and locks; temporary Stripe lookup failure requests webhook retry",
+    "latePaymentAfterRefundMocked": "PASS: checkout-completed after previously persisted refund moves quote to refunded, not paid",
+    "stripeSignatureExecutableNodeTest": "ADDED to Docker and offline gates; not yet run with complete Node checkout",
+    "bookingStripeNodeTest": "ADDED to Docker and offline gates; not yet run with complete Node checkout",
+    "fullDockerImage": "NOT_RUN",
+    "stripeTestModeWebhook": "NOT_TESTED_WITH_ACTUAL_PROVIDER",
+    "phoneQA": "NOT_RUN",
+    "productionHost": "UNTOUCHED"
+  },
+  "configurationNeeds": [
+    "STRIPE_SECRET_KEY",
+    "STRIPE_BOOKING_WEBHOOK_SECRET (separate from store)",
+    "PUBLIC_URL HTTPS",
+    "Stripe subscription to required events",
+    "Explicit private-review and live-approval settings"
+  ],
+  "criticalReleaseGates": [
+    "Exact Docker build and local server/SQLite HTTP test must pass",
+    "Real signed Stripe test-mode event/refund/dispute test must pass",
+    "500 distinct individually device-certified games and avatar/shop acceptance remain unfinished"
+  ],
+  "safety": {
+    "autoDeploy": "OFF",
+    "deplexoUpdated": false,
+    "newDeplexoUpdated": false,
+    "livePaymentsEnabled": false
+  }
+}
