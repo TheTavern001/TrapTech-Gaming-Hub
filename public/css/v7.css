@@ -243,8 +243,8 @@
 .av-opt .tiny{max-width:100%;overflow-wrap:anywhere}
 .av-balances{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;color:#aebad2;font-size:.76rem}
 .av-balances b{color:#e6efff;font-weight:900;margin-left:5px}
-.av-buy-points{width:100%;min-height:45px;background:linear-gradient(115deg,#0e7490,#2563eb 56%,#7c3aed);border-color:rgba(137,238,255,.55);font-weight:800}
-.av-buy-points:focus-visible{outline:2px solid white;outline-offset:3px}
+.av-buy-credits{width:100%;min-height:45px;background:linear-gradient(115deg,#0e7490,#2563eb 56%,#7c3aed);border-color:rgba(137,238,255,.55);font-weight:800}
+.av-buy-credits:focus-visible{outline:2px solid white;outline-offset:3px}
 @media(max-width:720px){.av-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.av-item-visual{height:105px}}
 
 /* Compact Android avatar layout. Artwork is still in remediation. */
