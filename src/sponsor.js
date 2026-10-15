@@ -8,6 +8,7 @@
 // the accepted quote amount is settled with Trap Tech Solutions on Potato and the admin marks it paid.
 const crypto = require('crypto');
 const db = require('./db');
+const linked = require('./giveaway-linked');
 const PK = require('./packages');
 
 const D = 864e5;
@@ -67,6 +68,8 @@ db.exec(`CREATE TABLE IF NOT EXISTS sponsor_quotes (
   note TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'draft', valid_until INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL,
   sent_at INTEGER, responded_at INTEGER, paid_at INTEGER, updated_by TEXT);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_token ON bookings(public_token);`);
+// Keep existing booking/event data while adding optional linked promo/goal metadata.
+linked.ensureSchema(db);
 // migrate: every booking gets a private status token; old tier bookings get an equivalent feature list
 for (const b of db.prepare("SELECT id, package, addons FROM bookings WHERE public_token IS NULL").all()) {
   const feats = [{ id: 'base', qty: 1 }];
@@ -121,7 +124,7 @@ function quoteRow(id) { return db.prepare('SELECT * FROM sponsor_quotes WHERE bo
 function adminView(b) {
   const q = quoteRow(b.id); const lines = q ? JSON.parse(q.lines) : draftLines(b);
   const disc = q ? { pct: q.discount_pct, cents: q.discount_cents } : { pct: 0, cents: 0 };
-  return { ...b, features: featuresOf(b).map(x => ({ ...x, name: BY[x.id] ? BY[x.id].name : x.id, unit: BY[x.id] ? BY[x.id].unit : 'flat' })),
+  return { ...b, linked_requirements: linked.publicView(b.linked_requirements), features: featuresOf(b).map(x => ({ ...x, name: BY[x.id] ? BY[x.id].name : x.id, unit: BY[x.id] ? BY[x.id].unit : 'flat' })),
     quote: { saved: !!q, status: q ? q.status : 'draft', lines, discount_pct: disc.pct, discount_cents: disc.cents, subtotal_cents: lines.reduce((s, l) => s + (l.amount_cents || 0), 0),
       total_cents: total(lines, disc.pct, disc.cents), note: q ? q.note : '', valid_until: q ? q.valid_until : null, sent_at: q && q.sent_at, responded_at: q && q.responded_at, paid_at: q && q.paid_at,
       auto_total_cents: total(draftLines(b), 0, 0) } };
@@ -161,6 +164,7 @@ function sponsorView(b) {
   const ev = b.event_id ? db.prepare('SELECT id, event_code, title, start_at, end_at FROM giveaways WHERE id=?').get(b.event_id) : null;
   return { id: b.id, brand: b.brand, created_at: b.created_at, start_date: b.start_date, end_date: b.end_date, details: b.details, notes: b.notes, business_type: b.business_type,
     prize: b.prize || '', brand_color: b.brand_color || '', games: JSON.parse(b.game_ids || '[]'), competition: b.competition || 'best', length_days: b.length_days || 7,
+    linked_requirements: linked.publicView(b.linked_requirements),
     event: ev && ['active','scheduled'].includes(require('./events').status(db.prepare('SELECT * FROM giveaways WHERE id=?').get(ev.id))) ? { code: ev.event_code, url: '/event/' + ev.event_code, qr_svg: require('./events').qrSvg((require('./public-url').PUBLIC_URL || '') + '/event/' + ev.event_code), start_at: ev.start_at, end_at: ev.end_at } : null,
     status: shown ? q.status : (b.status === 'declined' ? 'declined' : 'pending'), potato_handle: pk.potato_handle,
     features: featuresOf(b).map(x => BY[x.id] && ({ id: x.id, label: label(BY[x.id], x.qty), note: x.note })).filter(Boolean),
@@ -192,6 +196,9 @@ module.exports = function sponsor(app, A, h) {
     if (!businessType) return bad(res, 400, 'Please choose your business type.');
     const isCannabis = businessType === PK.CANNABIS_TYPE;
     if (isCannabis && b.licensed !== true) return bad(res, 400, 'Cannabis product sellers must confirm the business is licensed and legally permitted to operate and advertise in its jurisdiction.');
+    let external;
+    try { external=linked.normalize(b.linked_requirements); }
+    catch(e){ return bad(res,400,e.message); }
     const feats = readFeatures(b.features);
     const snapshot = feats.map(x => label(BY[x.id], x.qty)).join(', ');
     const contact = [email, potato ? '@' + potato + ' (Potato)' : ''].filter(Boolean).join(' / ');
@@ -200,8 +207,8 @@ module.exports = function sponsor(app, A, h) {
       VALUES (?,?,?,?,'custom',?,?,?,?,?,?,?,?,?,?,?,'',?,?,?)`).run(brand, str(b.contact_name, 120), contact, str(b.event_type, 60), snapshot.slice(0, 1000),
       str(b.start_date, 20), str(b.end_date, 20), str(b.details, 4000), me ? me.id : null, now(), ipHash(req), businessType, email, potato, isCannabis ? 1 : 0, JSON.stringify(feats), token, str(b.notes, 2000));
     { const cfg = require('./config'); const gids = [...new Set((Array.isArray(b.games) ? b.games : []).map(String).filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway && cfg.GAME_MAP[id].playable !== false && !cfg.GAME_MAP[id].retired))].slice(0, 13);
-      db.prepare('UPDATE bookings SET prize=?, brand_color=?, game_ids=?, competition=?, length_days=? WHERE id=?').run(str(b.prize, 200), /^#[0-9a-fA-F]{6}$/.test(String(b.brand_color || '')) ? b.brand_color : '', JSON.stringify(gids),
-        ['best', 'total', 'random'].includes(b.competition) ? b.competition : 'best', Math.max(1, Math.min(90, parseInt(b.length_days, 10) || 7)), info.lastInsertRowid); }
+      db.prepare('UPDATE bookings SET prize=?, brand_color=?, game_ids=?, competition=?, length_days=?, linked_requirements=? WHERE id=?').run(str(b.prize, 200), /^#[0-9a-fA-F]{6}$/.test(String(b.brand_color || '')) ? b.brand_color : '', JSON.stringify(gids),
+        ['best', 'total', 'random'].includes(b.competition) ? b.competition : 'best', Math.max(1, Math.min(90, parseInt(b.length_days, 10) || 7)), JSON.stringify(external), info.lastInsertRowid); }
     logActivity('booking', `Sponsor quote request: ${brand} (${feats.length} features)`, me ? me.id : null, info.lastInsertRowid);
     const pk = PK.getPackages();
     res.json({ ok: true, id: info.lastInsertRowid, token, status_url: '/sponsor/status/' + token, features: feats.map(x => label(BY[x.id], x.qty)), potato_handle: pk.potato_handle, licensed_confirmed: isCannabis });
@@ -238,7 +245,7 @@ module.exports = function sponsor(app, A, h) {
     const EV = require('./events');
     const EVSTATUS = g => EV.status(g);
     if (b.event_id) { const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id); if (g) return res.json({ ok: true, existing: true, id: g.id, status: EVSTATUS(g), share_ready: false, message:'Share links are released only after settled payment and certified gameplay.' }); }
-    const cfg = require('./config'); let games = JSON.parse(b.game_ids || '[]').filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway); if (!games.length) games = ['stack'];
+    const cfg = require('./config'); let games = JSON.parse(b.game_ids || '[]').filter(id => cfg.GAME_MAP[id] && cfg.GAME_MAP[id].giveaway && cfg.GAME_MAP[id].playable !== false && !cfg.GAME_MAP[id].retired); if (!games.length) games = ['stack'];
     const day = 86400e3; const parse = (d) => { const t = Date.parse(String(d || '') + 'T12:00:00-04:00'); return Number.isFinite(t) ? t : null; };
     const start = Math.max(Date.now(), parse(b.start_date) || Date.now() + day); const end = parse(b.end_date) && parse(b.end_date) > start ? parse(b.end_date) : start + (b.length_days || 7) * day;
     const t = Date.now(); const comp = b.competition || 'best';
@@ -246,6 +253,7 @@ module.exports = function sponsor(app, A, h) {
       const info = db.prepare(`INSERT INTO giveaways (title, host, prize, image, start_at, end_at, entry_method, game_id, rules, active, created_at, updated_at, brand_color, win_method, winner_count)
         VALUES (?,?,?,?,?,?,'play',?,?,0,?,?,?,?,1)`).run(`${b.brand} Official Giveaway`, b.brand, b.prize || 'Prize from ' + b.brand, '', start, end, games[0], String(b.details || '').slice(0, 2000), t, t, b.brand_color || '', comp === 'random' ? 'random' : 'score');
       const gid = info.lastInsertRowid; for (const gm of games) db.prepare('INSERT OR IGNORE INTO giveaway_games (giveaway_id, game_id) VALUES (?,?)').run(gid, gm);
+      db.prepare('UPDATE giveaways SET linked_requirements=? WHERE id=?').run(JSON.stringify(linked.parse(b.linked_requirements)),gid);
       db.prepare("UPDATE giveaways SET vendor=?, booking_id=?, booking_status='booked', payment_status=? WHERE id=?").run(b.brand, b.id, q.status === 'paid' ? 'paid' : 'unpaid', gid);
       db.prepare('UPDATE bookings SET event_id=? WHERE id=?').run(gid, b.id); return gid; })();
     EV.ensureCodes(); const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(id);
