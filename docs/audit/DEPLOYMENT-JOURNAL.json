@@ -794,9 +794,24 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "WAITING_DEPLEXO_R1_BUILD_AND_PHONE_QA"
+    },
+    {
+      "commit": "5aac573c5d4f12cf89719d9144fb72e0fbe33331",
+      "branch": "main and qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Add an actual executable catalog-wide mobile-emulation browser QA runner for 13 core+74 library, fail JS/asset/runtime-surface checks, capture p95/screenshots while blocking score/checkout writes, with Docker safety contract; avoid GH Actions.",
+      "validation": "V8 syntax PASS and source contract markers PASS, isolated Chromium fixture with mocked play state PASS. Actual 87-browser suite NOT EXECUTED (private checkout and host unavailable); no full native Docker, no signed server replay, no Android/iPhone hardware QA.",
+      "host": "GITHUB_SOURCE_ONLY_NOT_DEPLOYED",
+      "evidenceFiles": [
+        "tools/qa-87-browser.js",
+        "tools/test-qa-87-browser-contract.js",
+        "docs/QA-87-BROWSER-SMOKE.md",
+        "Dockerfile"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "BLOCKED_HOST_AND_INDEPENDENT_QA"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: owner requested sequential auto deploy after R1 freeze. One existing Deplexo app, auto-deploy previously OFF; first new build not confirmed. Last owner-screenshot host READY 278af07 and last failed host checkout 570a9. Source-only game patches for Goo Tower deterministic wind/keyboard/touch, Light Cycle seeded AI, 3 imported score-start bridges; deeper 87 source graph audit added to Docker. No full native or phone test performed.",
+  "lastEvidenceReconciliation": "2026-10-15: source candidate 5aac573c includes zero-cost 87-title Playwright smoke (13 core, 74 library), improved console/asset/canvas checks, no reviewer cookie materialization, Docker safety contract. Browser syntax parsed, synthetic Chromium fixture passed. Actual 87-game browser run, full Docker, host READY and Android/iOS physical certification NOT performed. Deplexo auto-deploy not controlled in this chat.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -812,12 +827,12 @@
   },
   "currentWorkingSource": {
     "branch": "main; QA fast-forward awaiting this journal update",
-    "headAtReconciliation": "20ae2eec175952c749814e5042d44c7205e71e46",
+    "headAtReconciliation": "5aac573c5d4f12cf89719d9144fb72e0fbe33331",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "R1 private testing candidate staged: direct 84 custom primary sources + three open-source engines/bridges inspected; 87 active+6 archives deep graph source audit wired to Docker. Gameplay fixes b116f933, 31f07004, 607f650 and tests 0ceaf833, 32393436, a783d43; no corrected Deplexo READY/phone QA. Both refs will be aligned after journal update.",
+    "note": "87-title Playwright runner staged source-only; wait for controlled webhook deploy after account owner turns auto-deploy ON. No verified host READY on this SHA; 0 games AAA/score certified.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "a783d43d7dd05ae44c569857d97c42618aaa85f3"
+    "lastAuditedGitHubHead": "5aac573c5d4f12cf89719d9144fb72e0fbe33331"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {
