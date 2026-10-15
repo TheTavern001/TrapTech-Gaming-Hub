@@ -32,6 +32,8 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s docs/score-ranges.json \
  && echo 'Required prelaunch audit inputs present' \
  && mkdir -p docs/audit \
+ && node --check tools/test-config-secret-preflight.js \
+ && node tools/test-config-secret-preflight.js \
  && node --check tools/test-session-revocation.js \
  && node tools/test-session-revocation.js \
  && node --check tools/test-auth-session-live.js \

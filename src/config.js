@@ -20,7 +20,9 @@ const crypto = require('crypto');
 const derive = (label) => process.env.SECRET ? crypto.createHmac('sha256', process.env.SECRET).update(label).digest('base64url') : undefined;
 const SESSION_SECRET = process.env.SESSION_SECRET || derive('session');
 const RUN_SECRET = process.env.RUN_SECRET || derive('run-token');
-const IP_SALT = process.env.IP_SALT || derive('ip-salt') || crypto.createHmac('sha256', SESSION_SECRET || RUN_SECRET).update('ip-salt').digest('base64url');
+// Never hash with undefined before reporting missing required secrets.
+const seedSecret = SESSION_SECRET || RUN_SECRET;
+const IP_SALT = process.env.IP_SALT || derive('ip-salt') || (seedSecret ? crypto.createHmac('sha256', seedSecret).update('ip-salt').digest('base64url') : undefined);
 const missing = [];
 if (!process.env.ADMIN_PASSWORD) missing.push('ADMIN_PASSWORD');
 if (!SESSION_SECRET || !RUN_SECRET) missing.push('SECRET (or SESSION_SECRET + RUN_SECRET)');
