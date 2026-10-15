@@ -17,7 +17,7 @@ before('node tools/test-docker-audit-context.js','node tools/test-r1-incident-ga
 const excluded=new Set(ignore.split(/\r?\n/).map(x=>x.trim()).filter(x=>x&&!x.startsWith('#')));
 for(const p of ['Dockerfile','.dockerignore'])assert.ok(!excluded.has(p),'Reintroduced build-context exclusion: '+p);
 for(const t of ['tools/test-docker-audit-context.js','tools/test-r1-incident-gates.js',
- 'tools/test-booking-stripe-settlement.js',
+ 'tools/test-booking-stripe-settlement.js','tools/test-sponsor-webhook-signature.js',
  'tools/test-qa-frame-pacing.js','tools/test-giveaway-booking-release-gates.js',
  'tools/test-unified-release-candidate.js']){
  assert.ok(fs.statSync(path.join(root,t)).isFile(),'Missing cross-feature guard: '+t);
