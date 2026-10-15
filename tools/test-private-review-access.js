@@ -13,7 +13,8 @@ function send(gate,route,{method='GET',user=null,admin=false,header=null}={}){
 }
 const build=(on,users='ReviewOwner')=>makeGate({enabled:on,users,currentUser:r=>r.testUser,
  isOwnerAdmin:r=>r.testAdmin,adminBase:()=>'/randomized-secure-admin-path-12345'});
-assert.throws(()=>makeGate({enabled:true,users:'',adminBase:()=>null}),/requires a valid ADMIN_PATH/,'Missing owner access must stop startup');
+assert.throws(()=>makeGate({enabled:true,users:'',adminBase:()=>null}),/requires at least one valid HUB_PREVIEW_USERNAMES/,'Missing owner access must stop startup');
+assert.throws(()=>makeGate({enabled:true,users:'',adminBase:()=>'/configured-admin-secret'}),/requires at least one valid HUB_PREVIEW_USERNAMES/,'Scoped admin cookies alone cannot enter main Hub after login');
 const off=build(false);
 assert.equal(send(off,'/api/score',{method:'POST'}).next,true,'Disabled mode must leave production unchanged');
 const gate=build(true);
@@ -21,9 +22,12 @@ for(const route of ['/healthz','/api/build','/assets/brand/traptech-app-icon.svg
  '/js/app.js','/fonts/font.woff2','/manifest.webmanifest','/sw.js','/signin']){
  assert.equal(send(gate,route).next,true,'Login/asset/health GET must work: '+route);
 }
-for(const route of ['/api/auth/signin','/api/auth/signout','/api/me']){
+for(const route of ['/api/auth/signin','/api/auth/signout']){
  assert.equal(send(gate,route,{method:'POST'}).next,true,'Signin/session bootstrap: '+route);
 }
+assert.equal(send(gate,'/api/me').next,true,'Read-only sign-in state must remain available');
+assert.equal(send(gate,'/api/me',{method:'POST'}).next,false,'Do not expose future unauthenticated profile mutation routes');
+assert.equal(send(gate,'/api/store/webhook/stripe',{method:'POST'}).next,true,'Signature-verified Stripe webhook handler must remain reachable for existing orders');
 for(const route of ['/','/games','/sponsor','/store','/giveaways','/api/score','/api/auth/signup','/api/store/checkout','/api/sponsor/requests']){
  const denied=send(gate,route,{method:route.startsWith('/api/')?'POST':'GET'});
  assert.equal(denied.next,false,'Guests should not enter preview: '+route);
@@ -39,5 +43,5 @@ assert.equal(send(gate,'/shop',{admin:true}).next,true,'Fully authenticated admi
 assert.equal(send(gate,'/randomized-secure-admin-path-12345/').next,true,'Admin sign-in path must remain reachable');
 assert.equal(send(gate,'/randomized-secure-admin-path-12345/api').next,true,'Admin router enforces its own 2FA');
 assert.equal(send(gate,'/randomized-secure-admin-path-12345-imitator').next,false,'Do not accept prefix collisions');
-assert.equal(send(gate,'/api/store/checkout',{user:{username:'ReviewOwner'},method:'POST'}).next,true,'Authenticated owner preview may exercise testing routes');
-console.log(JSON.stringify({pass:true,productionDefaultUnchanged:true,ownerOnly:true,admin2FAIntegration:true,noClientRoleOverride:true,publicPaymentScoreWritesBlocked:true,realDeplexoEnvironmentTested:false}));
+assert.equal(send(gate,'/api/score',{user:{username:'ReviewOwner'},method:'POST'}).next,true,'Approved reviewer may test server-scored practice games');
+console.log(JSON.stringify({pass:true,productionDefaultUnchanged:true,ownerOnly:true,admin2FAIntegration:true,noClientRoleOverride:true,publicPaymentScoreWritesBlocked:true,reviewerGameScoresAllowed:true,scopeBootstrapMethods:true,adminCookieCannotReplacePlayerAccount:true,realDeplexoEnvironmentTested:false}));
