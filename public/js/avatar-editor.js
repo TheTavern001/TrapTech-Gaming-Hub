@@ -3,7 +3,7 @@ import { mountAvatar3D, supportsRiggedAvatar } from './avatar-3d.js';
 let avatarCleanup = null;
 let C = null;
 const KL = { bg: 'Background', skin: 'Skin · free', face: 'Face · free', hair: 'Hair', hairc: 'Hair color', eyes: 'Eyes · free', mouth: 'Mouth · free', beard: 'Facial hair · free', build: 'Body build', outfit: 'Outfit', hat: 'Hat', acc: 'Accessory', held: 'Held item', emote: 'Emotes' };
-const lockText = (p) => p.owned ? '' : p.unlock.prestige ? 'One-of-one Prestige: win or collect' : p.unlock.ach ? `${p.unlock.ach} achievements or ${p.points} Points` : `Earn ${p.points} Points${p.crowns ? ` or spend ${p.crowns} Crowns` : ''}`;
+const lockText = (p) => p.owned ? '' : p.unlock.prestige ? 'One-of-one Prestige: not available until certified' : p.unlock.ach ? `${p.unlock.ach} achievements or ${p.credits} Credits` : `Unlock for ${p.credits} Hub Credits (earn or buy optional Credits)`;
 // The selection grid must spotlight the ITEM, not reproduce an almost-identical smiley
 // head 150 times. Reuse licensed first-party game artwork for suitable props, then
 // show a clearly labeled slot icon/material; the live 3D stage remains the actual preview.
@@ -32,7 +32,7 @@ const itemArt = (p, cfg, palette, icon) => {
 async function editor() {
   const { icon, esc, api, S } = C; if (!S.me) return C.go('/signin?next=/avatar', true);
   const r = await api('/api/avatar'); if (!r.ok) return C.shell('/settings', C.emptyState('user', 'Avatar unavailable', ''));
-  const cfg = { ...r.avatar }; let tab = 'skin'; let crowns = r.crowns, points = r.points || 0;
+  const cfg = { ...r.avatar }; let tab = 'skin'; let credits = r.credits ?? r.points ?? 0;
   const selectedPart = () => r.parts.find(p => p.kind === tab && p.id === cfg[tab]);
   const pendingUnlocks = () => r.parts.filter(p => cfg[p.kind] === p.id && !p.owned);
   const prev = (c) => '/avatar-preview.svg?c=' + encodeURIComponent(JSON.stringify(c));
@@ -47,7 +47,7 @@ async function editor() {
       : '<span class="av-model-status compat">Compatibility preview · rigged wardrobe asset pending</span>';
     const showStarter = JSON.stringify(cfg) !== JSON.stringify(r.starter);
     C.shell('/settings', `<div class="narrow avatar-ed">${C.pageHead('Your avatar', 'Shown on boards, profiles and winner lists. Cosmetic only.')}
-      <div class="av-ed"><div class="av-prev card pad"><div id="avatar-stage" class="avatar-stage" aria-label="Interactive 3D avatar preview"></div><img id="av-prev" src="${prev(cfg)}" alt="Avatar preview" width="220" height="220" style="display:none"><p class="tiny muted">Drag the 3D character to rotate it. Cosmetic only.</p>${modelStatus}<div class="av-selection"><b>${esc(selected?.label || 'Starter option')}</b><span class="tiny ${selected?.owned ? 'ok' : 'lock'}">${esc(details)}</span></div>${showStarter ? '<button class="btn sm ghost" type="button" id="av-reset-starter">Preview shared starter avatar</button>' : ''}<div class="av-balances"><span>Earned Hub Points <b>${C.fmt(points)}</b></span><span>Hub Crowns <b>${C.fmt(crowns)}</b></span></div>${selected && !selected.owned && Number.isFinite(selected.points) && selected.points > 0 ? `<button class="btn av-buy-points" id="av-buy-points" type="button">${icon('gamepad-2')} Unlock for ${C.fmt(selected.points)} earned Points</button>` : ''}${selected && !selected.owned && selected.unlock.crowns ? `<button class="btn av-buy" id="av-buy" type="button">${icon('shopping-bag')} Buy with ${C.fmt(selected.unlock.crowns)} Crowns</button>` : ''}<button class="btn" id="av-save" type="button" ${locked.length ? 'disabled aria-disabled="true"' : ''}>${icon('check')} Save avatar</button>${locked.length ? '<p class="tiny muted">Save is available after you equip only unlocked items.</p>' : ''}<div id="av-msg">${msg}</div></div>
+      <div class="av-ed"><div class="av-prev card pad"><div id="avatar-stage" class="avatar-stage" aria-label="Interactive 3D avatar preview"></div><img id="av-prev" src="${prev(cfg)}" alt="Avatar preview" width="220" height="220" style="display:none"><p class="tiny muted">Drag the 3D character to rotate it. Cosmetic only.</p>${modelStatus}<div class="av-selection"><b>${esc(selected?.label || 'Starter option')}</b><span class="tiny ${selected?.owned ? 'ok' : 'lock'}">${esc(details)}</span></div>${showStarter ? '<button class="btn sm ghost" type="button" id="av-reset-starter">Preview shared starter avatar</button>' : ''}<div class="av-balances"><span>Hub Credits <b>${C.fmt(credits)}</b></span><a href="/store" class="small">Get Credits</a></div>${selected && !selected.owned && Number.isFinite(selected.credits) && selected.credits > 0 ? `<button class="btn av-buy-credits" id="av-buy-credits" type="button">${icon('gamepad-2')} Unlock for ${C.fmt(selected.credits)} Credits</button>` : ''}<button class="btn" id="av-save" type="button" ${locked.length ? 'disabled aria-disabled="true"' : ''}>${icon('check')} Save avatar</button>${locked.length ? '<p class="tiny muted">Save is available after you equip only unlocked items.</p>' : ''}<div id="av-msg">${msg}</div></div>
       <div class="card pad"><div class="avatar-gender" role="group" aria-label="Avatar presentation"><span class="small muted">Presentation</span>${[["male","Male"],["female","Female"],["other","Other"]].map(([id,label]) => `<button type="button" class="btn ${cfg.gender === id ? "on" : ""}" data-gender="${id}" aria-pressed="${cfg.gender === id}">${label}</button>`).join("")}</div><div class="tabs av-tabs" role="tablist">${r.kinds.map(k => `<button class="tab ${k === tab ? 'on' : ''}" data-tab="${k}" role="tab" aria-selected="${k === tab}">${esc(KL[k] || k)}</button>`).join('')}</div>
         <div class="av-grid">${parts.map(p => { const c2 = { ...cfg, [p.kind]: p.id }; return `<button type="button" class="av-opt ${cfg[p.kind] === p.id ? 'on' : ''} ${p.owned ? '' : 'locked'}" data-k="${p.kind}" data-id="${esc(p.id)}" aria-pressed="${cfg[p.kind] === p.id}" title="Preview ${esc(p.label)}">${itemArt(p, c2, r, icon)}<span class="small">${esc(p.label)}</span><span class="tiny ${p.owned ? 'muted' : 'lock'}">${p.owned ? 'Owned / unlocked' : `${icon('lock')} ${esc(lockText(p))}`}</span></button>`; }).join('')}</div></div></div></div>`, { title: 'Avatar' });
     const stage = document.getElementById('avatar-stage'); const fallback = document.getElementById('av-prev');
@@ -60,30 +60,18 @@ async function editor() {
     });
     const reset = document.getElementById('av-reset-starter');
     if (reset) reset.onclick = () => { Object.assign(cfg, r.starter); tab = 'skin'; draw('<div class="ok-msg">Previewing the new starter. Tap Save to equip it.</div>'); };
-    const earn = document.getElementById('av-buy-points');
-    if (earn) earn.onclick = async () => {
-      const p = selectedPart(); if (!p || p.owned || !Number.isFinite(p.points)) return;
-      if (!confirm(`Unlock "${p.label}" for ${p.points} earned Hub Points? This is cosmetic only.`)) return;
-      earn.disabled = true;
-      try {
-        const x = await api('/api/avatar/buy-points', { method: 'POST', body: { part: p.kind + ':' + p.id } });
-        if (!x.ok) return C.toast(x.error || 'Unable to unlock item');
-        p.owned = true; points = x.points;
-        draw('<div class="ok-msg">Earned unlock secured. Save to equip it.</div>');
-      } finally { if (earn.isConnected) earn.disabled = false; }
-    };
-    const buy = document.getElementById('av-buy');
-    if (buy) buy.onclick = async () => {
+    const buyCredits = document.getElementById('av-buy-credits');
+    if (buyCredits) buyCredits.onclick = async () => {
       const p = selectedPart();
-      if (!p || p.owned || !p.unlock.crowns) return;
-      if (!confirm(`Buy "${p.label}" for ${p.unlock.crowns} Hub Crowns? This only changes your appearance.`)) return;
-      buy.disabled = true;
+      if (!p || p.owned || !Number.isSafeInteger(p.credits) || p.credits <= 0) return;
+      if (!confirm(`Unlock "${p.label}" for ${p.credits} Hub Credits? Cosmetic only; no gameplay advantage.`)) return;
+      buyCredits.disabled = true;
       try {
-        const x = await api('/api/avatar/buy', { method: 'POST', body: { part: p.kind + ':' + p.id } });
-        if (!x.ok) { C.toast(x.error || 'Could not complete purchase'); return; }
-        p.owned = true; crowns = x.crowns;
-        draw('<div class="ok-msg">Unlocked. Save to equip on your profile.</div>');
-      } finally { if (buy.isConnected) buy.disabled = false; }
+        const x = await api('/api/avatar/buy-credits', { method: 'POST', body: { part: p.kind + ':' + p.id } });
+        if (!x.ok) return C.toast(x.error || 'Unable to unlock item');
+        p.owned = true; credits = x.credits;
+        draw('<div class="ok-msg">Unlocked with Hub Credits. Save to equip on your profile.</div>');
+      } finally { if (buyCredits.isConnected) buyCredits.disabled = false; }
     };
     document.getElementById('av-save').onclick = async () => {
       if (pendingUnlocks().length) return C.toast('Choose unlocked items or buy them before saving.');
