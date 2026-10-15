@@ -511,3 +511,10 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `7bc7aaf1dea3553cf8c38152da4555ff57bdf8f4` adds the fallback renderer contract check; `6d9ffa19dbe5a017e25ef2d6d31b786b305dedf8`, `7cc17a4ae592bc28021e4fe5a399addbaee71a5c` integrate it into offline rehearsal and Docker prelaunch.
 - Actual committed fallback renderer parsed in V8, visibility/observer/readback checks present. This is **source verification, not FPS/device/browser execution**. Full Node/Docker/HTTP suite remains unrun and 3D wardrobe remains unfinished.
 - Production last owner-confirmed Deplexo commit `278af07` remains unchanged. Keep auto-deploy OFF pending verified private candidate and owner authorization. Resume with integrated release evidence and actual phone visual approval.
+
+## 2026-10-14 — Client invalid-score submission guards
+
+- `c18ad0f36ab00de3195f6836a8558aacce6db5fc`: shared game adapter rejects nonnumber, NaN, infinity, negatives and scores above the safe integer range; also rejects impossible elapsed durations before consuming a signed run. This prevents accidental JSON null score transmission, **not** server-side cheating.
+- `085a006ae18cc0e3594e7c81b2cacecd5a783af7`: regression covering seven invalid scores, token preservation and valid run submission. `9cc6664bd65a5dbf35a9e3aebc163fab7adf8479` and `4cf7ff2ed028a7c5dac9f39c65355200b76ddec9`: offline rehearsal and Docker integration.
+- Executed actual fetched adapter JS with V8 mock fetch: seven invalid attempts rejected without network submit, run token retained, valid score 99 subsequently submitted; PASS. Native Node script/full Docker/HTTP/device testing still NOT RUN.
+- Deployment unchanged (owner screenshot `278af07`), auto deploy OFF. Full AAA Hub, 87 games and 500-game goal remain incomplete, and source-only checks do not authorize public launch.
