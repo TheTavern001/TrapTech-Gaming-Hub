@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS gw_claims (giveaway_id INTEGER NOT NULL REFERENCES gi
 
 // ---------- catalogs ----------
 const PRIZE_TYPES = { physical: 'Physical item', digital: 'Digital code', giftcard: 'Gift card', points: 'Hub Points (cosmetic only)', cosmetic: 'Cosmetic item', custom: 'Custom' };
-const SCORE_RULES = { best: 'Best single run', sum_best: 'Sum of best run per game', total: 'Total of all runs', avg_top: 'Average of top N runs', improved: 'Most improved', campaign: 'Campaign: cumulative across a level set', fastest: 'Fastest completion + score' };
+const SCORE_RULES = { best: 'Best single run', sum_best: 'Sum of best run per game', total: 'Total of all runs', avg_top: 'Average of top N runs', improved: 'Most improved', campaign: 'Campaign: cumulative across a level set', fastest: 'Highest verified score, then fastest server-timed run' };
 const PROF = require('./admin-profiles');
 const COMP_TYPES = Object.keys(PROF.COMP);
 const REGIONS = ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
