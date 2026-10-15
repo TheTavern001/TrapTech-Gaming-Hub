@@ -95,17 +95,32 @@ async function main(){
   const monitor=async(g)=>{
    const page=await context.newPage();
    const failures=[],consoleErrors=[],badHttp=[],started=Date.now();let status=null,hasCanvas=false;
+   const signedRunAuthorizations=[],pendingRunProofs=[];
    page.on('pageerror',error=>failures.push(String(error.message).slice(0,360)));
    page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text().slice(0,360));});
    page.on('response',res=>{try{
-     const url=new URL(res.url());if(url.origin===BASE&&res.status()>=400&&
+     const url=new URL(res.url()),request=res.request();
+     if(url.origin===BASE&&url.pathname==='/api/run/start'&&request.method()==='POST') {
+       const promise=(async()=>{
+         let body=null,reply=null;
+         try{body=request.postDataJSON();reply=await res.json();}catch{}
+         // Never save bearer tokens or seeds to reports.
+         signedRunAuthorizations.push({gameId:body?.game_id||null,
+           authorized:res.status()>=200&&res.status()<300&&reply?.ok===true&&
+             typeof reply.token==='string'&&reply.token.length>0&&reply.seed!=null});
+       })();
+       pendingRunProofs.push(promise);
+     }
+     if(url.origin===BASE&&res.status()>=400&&
        /\.(?:js|mjs|css|png|svg|jpg|jpeg|webp|glb|wasm)(?:\?|$)/i.test(url.pathname))
        badHttp.push({url:url.pathname,status:res.status()});
    }catch{}});
-   // Deny all API writes except an explicitly allowed signed run start.
-   await page.route(/\/api\//,route=>{
+   // Deny every HTTP mutation except same-origin signed run start.
+   // Routes must cover future score/admin/payment URLs and cross-origin writes.
+   await page.route('**/*',route=>{
      const request=route.request();
-     if(qaRequestAllowed(request.method(),new URL(request.url()).pathname,allowRunStart))return route.continue();
+     if(qaRequestAllowed(request.method(),request.url(),allowRunStart,BASE))
+       return route.continue();
      return route.fulfill({status:403,contentType:'application/json',
        body:JSON.stringify({ok:false,error:'QA mutation blocked'})});
    });
@@ -113,34 +128,45 @@ async function main(){
     const response=await page.goto(BASE+g.route,{waitUntil:'domcontentloaded',timeout:25000});
     status=response?.status()||null;
     if(status===200){
-     await page.waitForTimeout(500);
+     // Wait for the actual engine, not merely a static canvas.
+     if(g.kind==='core')
+       await page.waitForFunction(()=>window.__game?.running===true,null,{timeout:12000});
+     else if(g.build==='built')
+       await page.waitForFunction(()=>!!window.__GL?.g?.def,null,{timeout:12000});
+     await page.waitForTimeout(250);
      hasCanvas=await page.locator('canvas').count()>0;
-     // "Title loaded" is not a claim that the game's whole physics loop works.
-     if(hasCanvas){
-      const canvas=page.locator('canvas').first();
-      if(await canvas.isVisible().catch(()=>false))await canvas.tap({force:true,timeout:2500}).catch(()=>{});
-     }
+     // Runner's first canvas (#gl3d) is a noninteractive renderer; #gl handles touch.
+     const touchCanvas=g.kind==='core'?page.locator("canvas#game"):
+       g.build==='built'?page.locator("canvas#gl"):page.locator('canvas:visible').last();
+     if(await touchCanvas.count()&&await touchCanvas.isVisible().catch(()=>false))
+       await touchCanvas.tap({force:true,timeout:3000});
      await page.waitForTimeout(RUNS*1000);
     }
    }catch(e){failures.push('Navigation/interaction: '+String(e.message).slice(0,350));}
+   await Promise.all(pendingRunProofs);
+   const signedRun=signedRunAuthorizations.find(x=>x.gameId===g.id&&x.authorized)||null;
    const metrics=await page.evaluate(()=>{
     const gl=window.__GL||null;
     const cv=document.querySelector('canvas'),bounds=cv?.getBoundingClientRect();
     const grid=document.querySelector('.grid-container');
+    const core=window.__game||null;
     return {domPuzzleDetected:!!grid,kitState:gl?.state||null,
       hubGameId:window.Hub?.id||null,kitGameId:gl?.g?.def?.id||null,
-      runAuthorized:window.Hub?.seed!=null&&window.Hub?.guest!==true,
-      frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:null,
-      fps:typeof gl?.fps==='number'?gl.fps:null,viewportWidth:innerWidth,
+      coreGameId:document.querySelector('canvas#game')?.dataset?.game||null,
+      coreState:core?.state||null,
+      frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:
+        typeof core?.frameMsP95==='number'?core.frameMsP95:null,
+      fps:typeof gl?.fps==='number'?gl.fps:typeof core?.fps==='number'?core.fps:null,
+      viewportWidth:innerWidth,
       viewportHeight:innerHeight,canvasSize:bounds?{width:Math.round(bounds.width),height:Math.round(bounds.height)}:null,
       horizontalOverflow:document.documentElement.scrollWidth>innerWidth+3};
    }).catch(()=>null);
    const title=(await page.title().catch(()=>''))||'';
    const runtimeSurface=hasCanvas||metrics?.domPuzzleDetected===true;
-   const runtimeProof=inspectGameRuntime(g,metrics);
+   const runtimeProof=inspectGameRuntime(g,metrics,signedRun);
    const stuckInStartup=metrics?.kitState==='starting';
    const failed=status!==200||failures.length>0||consoleErrors.length>0||badHttp.length>0||
-     !runtimeSurface||stuckInStartup||(g.kind==='library'&&!runtimeProof.verified)||
+     !runtimeSurface||stuckInStartup||!runtimeProof.verified||
      metrics?.horizontalOverflow===true||
      (metrics?.frameP95Ms>25&&metrics?.kitState==='play');
    if(TAKE_ALL||failed)try{await page.screenshot({path:path.join(SCREENSHOTS,filename(g.id)+'.png'),timeout:4500});}catch{}
@@ -148,6 +174,7 @@ async function main(){
    return {id:g.id,title:g.title,kind:g.kind,route:g.route,status,titleLoaded:!!title,canvasDetected:hasCanvas,
     ...metrics,runtimeSurfaceDetected:runtimeSurface,
     runtimeIdentityVerified:runtimeProof.verified,runtimeProofNote:runtimeProof.reason,
+    signedRunObserved:!!signedRun,
     jsExceptions:failures,consoleErrors,badAssets:badHttp,
     durationMs:Date.now()-started,smokePassed:!failed,
     androidPhysical:'NOT_TESTED',iosSafariPhysical:'NOT_TESTED',
@@ -167,7 +194,7 @@ async function main(){
    failed:failed.map(x=>x.id),batchStartIndex:batch.start,batchEndExclusive:batch.endExclusive,
    fullCoverage:batch.fullCoverage,requestedBatchPassed:failed.length===0,
    certifiedAAA:0,physicalAndroidApproved:0,physicalIphoneApproved:0,
-   note:'Page/error/asset/limited frame-time smoke; not physical phone or end-to-end game-completion certification.',
+   note:'Signed run-start and game-engine playback smoke; no score or commerce writes. Not full gameplay, physical phones, replay integrity or AAA certification.',
    games:results};
   const target=path.join(OUT,'87-game-browser-smoke.json');
   fs.writeFileSync(target,JSON.stringify(report,null,2)+'\n');

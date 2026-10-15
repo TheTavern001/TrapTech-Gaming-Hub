@@ -1,3 +1,13 @@
+# Deplexo R2 auto-build containment — 2026-10-15
+
+Owner Deplexo screenshots (phone 17:12) show READY build 41dc946 (288 seconds, rollback button) followed by failed work-branch build cards cd54a4e, 6eb0aaa, 6eb5922, 94cb0e8, ec3dd26, 8f118c8. Screenshots do not expose the first failing Docker command for these candidates, and the READY entry is not explicitly marked CURRENT in the supplied crop. Preserve READY evidence; do not assert the R2 failures share a root cause without their log tails. No deploy/rollback performed by this assistant.
+
+Root process defect: Deplexo continued auto-building the unfinished work/post-r1-mobile-quality-and-game-intake-20261015 branch. Required control: Deplexo Auto Deploy OFF on the existing app before any more changes to that watched branch. GitHub plugin cannot change host settings. Work moved to a *different*, non-host-watched source branch: work/offline-r2-deployment-stabilization-20261015. This separation prevents changes to the watched branch during repair; verify host Auto Deploy OFF before a future merge or source change.
+
+Verified source-level QA defects: mobile smoke tapped the first canvas (#gl3d noninteractive 3D renderer) instead of actual touch canvas (#gl); checks accepted library engine state and client flags without correlating a successful HTTP signed run, and treated core games as surface-only. Isolated source patch selects correct tap canvas, requires HTTP run-start proof and running engine in both groups, and blocks all non-read requests except explicitly allowed same-origin run starts. These are source changes, NOT a verified Deplexo build, web QA or physical-device certification. The R2 build failure reasons remain UNKNOWN pending the first error lines from the latest deployment log.
+
+---
+
 # Deployment, audit, and 500-game release ledger
 
 ## 2026-10-15 — R1 incident gate fixed for future verified READY transitions
