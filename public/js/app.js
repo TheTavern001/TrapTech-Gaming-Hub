@@ -159,6 +159,10 @@ const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards',
   '/about': 'About Trap Tech Solutions', '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/settings': 'Settings' };
 function setTitle(t) { document.title = t ? `${t} | The Gaming Hub by Trap Tech Solutions` : 'The Gaming Hub by Trap Tech Solutions'; }
 function shell(path, inner, { cls = '', title } = {}) {
+  // Async route handlers may finish after the user navigates somewhere else.
+  // Only the active path may replace the application shell.
+  const activePath = location.pathname.replace(/\/+$/, '') || '/';
+  if (activePath !== path) return;
   $app.innerHTML = `${topbar(path)}<main class="page ${cls}" id="main" tabindex="-1">${inner}</main>${footer()}${bottomnav(path)}`;
   setTitle(title || TITLES[path] || null);
   updateBell();
