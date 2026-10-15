@@ -42,10 +42,11 @@ function avatar(name, demo, cls = '') {
   return `<span class="av ${cls}" style="background:linear-gradient(135deg,hsl(${a} 80% 55%),hsl(${b} 80% 40%))">${esc(String(name).slice(0, 2).toUpperCase())}${name ? `<img class="av-img" src="/avatar/${encodeURIComponent(name)}.svg${AV_BUST[name] ? '?v=' + AV_BUST[name] : ''}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span>`;
 }
 async function hydrateProfileAvatar(username) {
+  const requestedNavigation = navCount;
   const host = document.querySelector('.prof-head .av');
   if (!host || host.dataset.webglAvatar) return;
   const r = await api('/api/avatar/' + encodeURIComponent(username));
-  if (!r.ok || !host.isConnected) return;
+  if (!r.ok || !host.isConnected || navCount !== requestedNavigation) return;
   host.dataset.webglAvatar = '1';
   host.querySelector('.av-img')?.remove();
   const stage = document.createElement('span');
@@ -55,9 +56,10 @@ async function hydrateProfileAvatar(username) {
   host.appendChild(stage);
   try {
     const cleanup = await mountAvatar3D(stage, r.avatar);
-    if (!stage.isConnected) cleanup();
+    if (!stage.isConnected || navCount !== requestedNavigation) cleanup();
     else host._avatar3dCleanup = cleanup;
   } catch {
+    if (!host.isConnected || navCount !== requestedNavigation) return;
     stage.remove();
     const img = document.createElement('img');
     img.className = 'av-img'; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
@@ -234,6 +236,12 @@ const NO_SKEL = /^\/(play|signin|signup|welcome|forgot)\b/;
 const AGE_FREE = /^\/(terms|privacy|rules|responsible-play|about)$/;
 let navCount = 0;
 async function render() {
+  // Profile WebGL owns GPU resources that must be released before route replacement.
+  // A detached stage cannot rely on the next animation frame to clean up promptly.
+  const priorAvatar = document.querySelector('.prof-head .av');
+  if (priorAvatar && typeof priorAvatar._avatar3dCleanup === 'function') {
+    priorAvatar._avatar3dCleanup(); priorAvatar._avatar3dCleanup = null;
+  }
   if (S.game) { S.game.destroy(); S.game = null; }
   if (S.poll) { clearInterval(S.poll); S.poll = null; }
   document.body.style.overflow = '';
