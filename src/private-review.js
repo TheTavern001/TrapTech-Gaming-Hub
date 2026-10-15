@@ -12,7 +12,10 @@ function makeGate({enabled=false,users='',currentUser=()=>null,isOwnerAdmin=()=>
     throw Error('HUB_PRIVATE_REVIEW requires at least one valid HUB_PREVIEW_USERNAMES account to prevent owner lockout.');
   }
   const publicGet=new Set(['/healthz','/api/build','/signin','/manifest.webmanifest','/sw.js','/robots.txt','/favicon.ico']);
-  const guestAuth=new Set(['/api/auth/signin','/api/auth/signout','/api/me']);
+  // Only authentication bootstrap GET/POST methods are public to reviewers.
+  // Stripe webhook delivery must continue: the payment handler itself strictly
+  // validates Stripe's signature and reconciles already-open prior orders.
+  const guestAuth=new Set(['/api/auth/signin','/api/auth/signout']);
   const assets=/^\/(?:assets|css|js|fonts|i18n|og)\//;
   return (req,res,next)=>{
     if(!enabled)return next();
@@ -25,7 +28,9 @@ function makeGate({enabled=false,users='',currentUser=()=>null,isOwnerAdmin=()=>
     if(base && (pathname===base || pathname.startsWith(base+'/')))return next();
     if((method==='GET'||method==='HEAD') &&
        (publicGet.has(pathname)||assets.test(pathname)||pathname==='/cosmetics.css'))return next();
-    if(guestAuth.has(pathname)&&(['GET','HEAD','POST'].includes(method)))return next();
+    if(pathname==='/api/me' && (method==='GET'||method==='HEAD'))return next();
+    if(pathname==='/api/store/webhook/stripe' && method==='POST')return next();
+    if(guestAuth.has(pathname)&&method==='POST')return next();
     let allowed=false;
     try {
       const user=currentUser(req);
