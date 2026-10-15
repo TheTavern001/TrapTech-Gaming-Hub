@@ -43,8 +43,12 @@ function runtimeScripts(type,g,primary,localPaths){
   if(!abs.startsWith(publicRoot)){missing.push('unsafe path '+raw);return;}
   if(!seen.has(abs))queue.push(abs);
  }
- if(type==='library')for(const m of html.matchAll(/<script\b[^>]*\bsrc\s*=\s*['"]([^'"]+)['"]/gi))
-  add(m[1],htmlPath);
+ if(type==='library')for(const m of html.matchAll(/<script\b[^>]*\bsrc\s*=\s*['"]([^'"]+)['"]/gi)) {
+  const link=m[1];
+  // HTML src="game.js" and src="js/main.js" are relative filenames,
+  // unlike bare ESM package specifiers such as import 'three'.
+  add(link.startsWith('/')||link.startsWith('.')||/^(?:https?:|data:|\/\/)/i.test(link)?link:'./'+link,htmlPath);
+ }
  else for(const spec of importSpecs(read(primary)))add(spec,primary);
  const paths=[];
  while(queue.length&&paths.length<140){
