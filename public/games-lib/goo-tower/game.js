@@ -13,14 +13,15 @@
       // spawn free goo crawling along the ground pile at the left
       g.spawnT -= dt; if (g.free.length < 4 && g.spawnT <= 0) { g.spawnT = 0.6; g.free.push({ x: 30 + g.free.length * 34, y: g.gy - R, t: g.R(0, 6) }); } g.free.forEach((f, i) => { f.t += dt; f.x = lerp(f.x, 30 + i * 32, dt * 4); f.y = Math.min(g.gy - R, g.camY + g.H - 110) - Math.abs(Math.sin(f.t * 5)) * 6; });
       const px = g.ptr.x, py = g.ptr.y + cy;
-      if (g.ptr.pressed && !g.drag) { const i = g.free.findIndex(f => Math.hypot(f.x - px, f.y - py) < 34); if (i >= 0 || g.free.length) g.drag = { x: px, y: py, from: i >= 0 ? i : 0 }; }
-      if (g.drag) { g.drag.x = px; g.drag.y = py; if (!g.ptr.down) { const cs = cands(g, px, py); if (cs.length >= 2) { g.free.splice(g.drag.from, 1); const b = addBall(g, px, py); g.nodes.push(b); for (const [n] of cs) link(g, b, n); g.placed++; g.sfx('pop'); } else g.sfx('click'); g.drag = null; } }
+      if (g.ptr.pressed && !g.drag) { const i = g.free.findIndex(f => Math.hypot(f.x - px, f.y - py) < 34); if (i >= 0) g.drag = { x: px, y: py, from: i }; }
+      if (g.drag) { g.drag.x = px; g.drag.y = py; if (!g.ptr.down) { if (g.ptr.released) { const cs = cands(g, px, py); if (cs.length >= 2) { g.free.splice(g.drag.from, 1); const b = addBall(g, px, py); g.nodes.push(b); for (const [n] of cs) link(g, b, n); g.placed++; g.sfx('pop'); } else g.sfx('click'); } g.drag = null; } }
       // Keyboard parity: arrows/WASD move a visible cursor; Space/Enter places only
       // at that chosen point. Never auto-solve the next optimal tower link.
       const kx = Number(!!(g.keys.ArrowRight || g.keys.d)) - Number(!!(g.keys.ArrowLeft || g.keys.a));
       const ky = Number(!!(g.keys.ArrowDown || g.keys.s)) - Number(!!(g.keys.ArrowUp || g.keys.w));
       g.kCursor.x = Math.max(R, Math.min(g.W - R, g.kCursor.x + kx * dt * 230));
       g.kCursor.y = Math.max(g.camY + 30, Math.min(g.gy - R - 15, g.kCursor.y + ky * dt * 230));
+      if (kx || ky || g.kd(' ') || g.kd('Enter')) g.kCursor.used = true;
       if (g.kd(' ') || g.kd('Enter')) {
         const tx = g.kCursor.x, ty = g.kCursor.y, cs = cands(g, tx, ty);
         if (cs.length >= 2 && g.free.length) {
@@ -44,7 +45,7 @@
       // silhouettes of pipes/hills (World of Goo vibe, original)
       c.fillStyle = '#2a1838'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 10) c.lineTo(x, H - 120 - cy * 0.3 + Math.sin(x * 0.02) * 30 + Math.sin(x * 0.05) * 10); c.lineTo(W, H); c.fill();
       c.save(); c.translate(0, -cy);
-      if (g.kCursor) { c.save(); c.strokeStyle = '#f7dd7c'; c.lineWidth = 2; c.setLineDash([5, 3]); c.beginPath(); c.arc(g.kCursor.x, g.kCursor.y, 18, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); c.restore(); }
+      if (g.kCursor && g.kCursor.used) { c.save(); c.strokeStyle = '#f7dd7c'; c.lineWidth = 2; c.setLineDash([5, 3]); c.beginPath(); c.arc(g.kCursor.x, g.kCursor.y, 18, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); c.restore(); }
       // height markers
       c.font = 'bold 11px system-ui'; c.textAlign = 'left'; for (let m = 10; m < 2000; m += 10) { const y = g.gy - R - m * 10; if (y < cy - 20 || y > cy + H) continue; c.strokeStyle = 'rgba(255,255,255,.12)'; c.setLineDash([6, 8]); c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); c.setLineDash([]); c.fillStyle = 'rgba(255,255,255,.4)'; c.fillText(m + ' m', 6, y - 4); }
       { const y = g.gy - R - g.peak * 10; c.strokeStyle = '#ffd23f'; c.lineWidth = 2; c.beginPath(); c.moveTo(W - 70, y); c.lineTo(W, y); c.stroke(); c.fillStyle = '#ffd23f'; c.textAlign = 'right'; c.fillText('BEST ' + g.peak + ' m', W - 4, y - 5); }
