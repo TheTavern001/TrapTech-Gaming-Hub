@@ -114,10 +114,13 @@ function checkoutState() {
   // Production live card charging also requires a separate operator flag.
   const stripeLive = String(process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live_');
   if (stripeLive && !liveApproval) stripe.configured = false;
-  const enabled = on && (btc.configured || stripe.configured);
+  // Private owner review must never create real-money checkout sessions,
+  // even when a previous deployment left the admin checkout switch ON.
+  const reviewLocked = process.env.HUB_PRIVATE_REVIEW === '1';
+  const enabled = !reviewLocked && on && (btc.configured || stripe.configured);
   return { enabled, admin_switch: on, methods: enabled ? [...(btc.configured ? ['bitcoin'] : []), ...(stripe.configured ? ['stripe'] : [])] : [],
     providers: { bitcoin: btc, stripe, whop: { configured: false, mode: 'not integrated' } },
-    reason: !on ? 'Checkout is switched off by the admin.' : stripeLive && !liveApproval && !btc.configured ? 'Live Stripe checkout requires operator payment approval.' : !btc.configured && !stripe.configured ? 'Configure a valid BTC_ADDRESS or Stripe keys plus an HTTPS PUBLIC_URL to enable checkout.' : null };
+    reason: reviewLocked ? 'Checkout is disabled during private owner review.' : !on ? 'Checkout is switched off by the admin.' : stripeLive && !liveApproval && !btc.configured ? 'Live Stripe checkout requires operator payment approval.' : !btc.configured && !stripe.configured ? 'Configure a valid BTC_ADDRESS or Stripe keys plus an HTTPS PUBLIC_URL to enable checkout.' : null };
 }
 const ORDER_TTL_MS = 45 * 60e3, LATE_MS = 24 * 3600e3;
 const needConfs = (p, usd) => p.kind === 'prestige' ? Math.max(6, (p.data && p.data.confs) || 6) : usd >= 20000 ? 3 : 1;
