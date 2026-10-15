@@ -208,7 +208,7 @@ function svg(c) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">${o.join('')}</svg>`;
 }
 function partsFor(userId) { const ctx = {}; return P.map(p => ({ kind: p.kind, id: p.id, label: p.label, unlock: p.unlock, owned: userId ? owns(userId, p, ctx) : p.unlock === 'free',
-  crowns: p.unlock.crowns || 0, points: pointsPrice(p) })); }
+  crowns: p.unlock.crowns || 0, points: pointsPrice(p), credits: pointsPrice(p) })); }
 function routes(app, H) {
   const { requireUser, currentUser, bad } = H; const cache = new Map();
   app.get('/avatar/:u.svg', (req, res) => { const u = db.prepare('SELECT id, username, avatar FROM users WHERE username=? COLLATE NOCASE').get(String(req.params.u));
@@ -219,28 +219,25 @@ function routes(app, H) {
   app.get('/api/avatar', requireUser, (req, res) => { const shop = require('./shop');
     const points = shop.sync(req.user.id);
     res.json({ ok: true, avatar: configOf(req.user), kinds: KINDS, parts: partsFor(req.user.id),
-      bg: BG, skin: SKIN, hair_colors: HAIRC, starter: defaultFor(), points, crowns: require('./monetize').crowns(req.user.id) });
+      bg: BG, skin: SKIN, hair_colors: HAIRC, starter: defaultFor(), credits: points, points });
   });
   app.put('/api/avatar', requireUser, (req, res) => { const want = clean(req.body && req.body.avatar, configOf(req.user)); const ctx = {};
     for (const k of KINDS) { const p = BYK[k][want[k]]; if (!owns(req.user.id, p, ctx)) return bad(res, 403, `Unlock "${p.label}" first.`); }
     db.prepare('UPDATE users SET avatar=? WHERE id=?').run(JSON.stringify(want), req.user.id); res.json({ ok: true, avatar: want }); });
-  app.post('/api/avatar/buy', requireUser, (req, res) => { const [k, id] = String((req.body || {}).part || '').split(':'); const p = BYK[k] && BYK[k][id]; if (!p || !p.unlock.crowns) return bad(res, 400, 'That part is not sold for Crowns.');
-    const M = require('./monetize'); const t = Date.now();
-    const r = db.transaction(() => { if (owns(req.user.id, p, {})) return { error: 'You already own it.' };
-      if (M.crowns(req.user.id) < p.unlock.crowns) return { error: `You need ${p.unlock.crowns - M.crowns(req.user.id)} more Hub Crowns.` };
-      M.addCrowns(req.user.id, -p.unlock.crowns, 'spend', 'avatar:' + key(p), t); db.prepare('INSERT INTO avatar_parts_owned (user_id, part, created_at) VALUES (?,?,?)').run(req.user.id, key(p), t); return { ok: true }; })();
-    if (r.error) return bad(res, 400, r.error); res.json({ ok: true, crowns: M.crowns(req.user.id) }); });
-  app.post('/api/avatar/buy-points', requireUser, (req, res) => {
+  // Legacy dual-currency purchase must never spend a second Crown balance.
+  // Require older clients to refresh instead of silently repricing their order.
+  app.post('/api/avatar/buy', requireUser, (_req, res) => bad(res, 410, 'Refresh the Hub to purchase avatar parts with Hub Credits.'));
+  const buyAvatarWithCredits = (req, res) => {
     const [k, id] = String((req.body || {}).part || '').split(':');
     const p = BYK[k] && BYK[k][id];
-    if (!p || p.unlock === 'free' || p.unlock.prestige) return bad(res, 400, 'That item is not sold for Hub Points.');
+    if (!p || p.unlock === 'free' || p.unlock.prestige) return bad(res, 400, 'That item cannot be purchased with Hub Credits.');
     const price = pointsPrice(p), t = Date.now(), shop = require('./shop');
-    // Pull in server-validated runs/achievements before the purchase; the player cannot mint Points from the browser.
+    // Sync signed accepted runs and migrate historical Crown credits before attempting a debit.
     shop.sync(req.user.id);
     const result = db.transaction(() => {
       if (owns(req.user.id, p, {})) return { error: 'You already own this part.' };
       const balance = shop.balance(req.user.id);
-      if (balance < price) return { error: `Earn ${price - balance} more Hub Points by playing or completing quests.` };
+      if (balance < price) return { error: `You need ${price - balance} more Hub Credits. Earn Credits by playing or purchase them optionally.` };
       const purchased = db.prepare('INSERT OR IGNORE INTO avatar_parts_owned (user_id, part, created_at) VALUES (?,?,?)').run(req.user.id, key(p), t);
       if (!purchased.changes) return { error: 'You already own this part.' };
       db.prepare('INSERT INTO points_ledger (user_id, amount, reason, ref, created_at) VALUES (?,?,?,?,?)')
@@ -248,8 +245,12 @@ function routes(app, H) {
       return { ok: true };
     })();
     if (result.error) return bad(res, 400, result.error);
-    res.json({ ok: true, item: key(p), price_points: price, points: shop.balance(req.user.id) });
-  });
+    const credits = shop.balance(req.user.id);
+    res.json({ ok: true, item: key(p), price_credits: price, credits, price_points: price, points: credits });
+  };
+  app.post('/api/avatar/buy-credits', requireUser, buyAvatarWithCredits);
+  // Compatibility: historical Points route now debits the same Credits wallet.
+  app.post('/api/avatar/buy-points', requireUser, buyAvatarWithCredits);
 }
 
 module.exports = { routes, svg, configOf, defaultFor, partsFor, KINDS, P };
