@@ -16,7 +16,7 @@ To test against owner-only private review with existing reviewer authorization, 
 BASE=https://glassy-drifter-9532.de.deplexo.com QA_INTERACTIVE_AUTH=1 QA_HEADLESS=0 npm run qa:87:browser
 ```
 
-Or supply `QA_STORAGE_STATE=/path/outside/repository/reviewer-state.json`. The runner blocks `/api/score` writes and common checkout/order endpoints. Starting a signed game may still create a server-side test-run record; for a zero-mutation check, use an isolated local server. Screenshots and session state are placed in an OS temp directory by default (override `QA_REPORT_DIR` to another **private** directory). Do not commit reviewer session state or account screenshots.
+Or supply `QA_STORAGE_STATE=/path/outside/repository/reviewer-state.json`. The runner blocks `/api/score` writes and common checkout/order endpoints. Starting a signed game may still create a server-side test-run record; for a zero-mutation check, use an isolated local server. Screenshots and the QA JSON report are placed in an OS temp directory by default; interactive sign-in keeps the reviewer session in browser memory (an explicitly supplied QA_STORAGE_STATE file is read, not written) (override `QA_REPORT_DIR` to another **private** directory). Do not commit reviewer session state or account screenshots.
 
 To sample simulated WebKit in a separate smoke run:
 
