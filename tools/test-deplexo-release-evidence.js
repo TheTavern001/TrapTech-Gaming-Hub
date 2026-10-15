@@ -47,6 +47,17 @@ for(const screenshotCard of lastScreenshot.observedClaims) {
 }
 assert.equal(report.hostCurrent.status,'READY');
 assert.equal(report.workingSource.status,'SOURCE_ONLY_NOT_DEPLOYED');
+// Latest failed R1 candidate is NOT the last screenshot-confirmed CURRENT host.
+const failures=ledger.reportedFailedDeployments20261015||[];
+assert.ok(failures.length,'Owner-supplied R1 failure evidence must be retained');
+for(const failed of failures){
+ assert.ok(sha(failed.commit),'Build failures need exact Git SHA');
+ assert.equal(failed.status,'FAILED','Failed candidates cannot be treated as READY');
+ assert.notEqual(failed.commit,current[0].commit,'Cannot mark failed candidate as screenshot-current host');
+}
+assert.equal(report.latestR1Build.sha,ledger.lastReportedFailedDeployment20261015.commit);
+assert.equal(report.latestR1Build.status,'FAILED');
+assert.equal(report.automaticDeploymentOwnerConfirmedOn,true);
 assert.equal(report.workingSource.shaFromLastReconciliation,ledger.currentWorkingSource.headAtReconciliation);
 assert.equal(report.historicalRegisteredGames,report.activeCoreGames+report.registeredLibraryGames);
 assert.equal(report.totalPlayableGames,report.activeCoreGames+report.playableLibraryGames);

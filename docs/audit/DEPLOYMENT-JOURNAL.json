@@ -851,9 +851,24 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "R1_BLOCKED_HOST_AND_DEVICE"
+    },
+    {
+      "commit": "R1_RELEASE_EVIDENCE_FIX_NEXT_SHA",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Separate source-not-deployed from failed-R1-build evidence; preserve owner observed historic current READY and correct auto-deploy ON status.",
+      "validation": "V8 syntax PASS and original release-status+release-evidence tests PASS using fetched source and isolated virtual FS; next native Deplexo Docker pending",
+      "host": "LATEST_R1_53EFD4_FAILED_HOST_LAST_SCREENSHOT_READY_278AF07",
+      "evidenceFiles": [
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "tools/release-status.js",
+        "tools/test-deplexo-release-evidence.js",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_BLOCKED_UNTIL_SUCCESSFUL_HOST_BUILD"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: Deplexo correctly built a6afa9cf and passed financial, touch, collisions, Grow Op and lifecycle tests before stopping at stale score-submission regexp expecting Hub.submit(g.score). Real Kit safely submits frozen finalScore. Test now executes real Kit end handler and passes three isolation scenarios in tool runtime. R1 recovery pending, no host READY, R2-R5 untouched.",
+  "lastEvidenceReconciliation": "2026-10-15: Deplexo checked out 53efd4b1 and passed all source preflight tests shown until release-status contract. Exact error: sourceStatus incorrect R1 failure detail, expected SOURCE_ONLY_NOT_DEPLOYED. Restore stable source-state invariant, preserve failure separately, expose newest failure in status report, simulate original validator. No latest READY / host smoke / AAA certification.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -869,14 +884,16 @@
   },
   "currentWorkingSource": {
     "branch": "qa/gameplay-distinctness-and-collision-20261013",
-    "headAtReconciliation": "a6afa9cff3190399c939bbaee054267b7068a9f4",
-    "sourceStatus": "R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED",
-    "note": "R1 live Docker Node20 stopped on stale score submission source check. Corrected test-only with actual Kit callback behavior tests; awaiting fresh Docker build, no production score logic changes.",
+    "headAtReconciliation": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
+    "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
+    "note": "Source not on latest READY app. R1 candidate 53efd4b1 build attempted and failed. Do not confuse historical screenshot READY with new release success.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "a6afa9cff3190399c939bbaee054267b7068a9f4"
+    "lastAuditedGitHubHead": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
+    "buildAttemptStatus": "FAILED",
+    "lastFailedBuildSha": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc"
   },
-  "ownerConfirmedAutoDeployOff": true,
+  "ownerConfirmedAutoDeployOff": false,
   "dashboardEvidence20261015": {
     "source": "Owner-provided three Deplexo Android screenshots 2026-10-15 at phone time 01:44-01:45, EDT inferred from user session; no private environment values shown",
     "binaryCopiedToGitHub": false,
@@ -903,13 +920,13 @@
     "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
   },
   "lastReportedFailedDeployment20261015": {
-    "commit": "a6afa9cff3190399c939bbaee054267b7068a9f4",
+    "commit": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
     "status": "FAILED",
-    "error": "Docker STEP 12/14 tools/test-kit-score-submit-error.js:11 stale regex expected Hub.submit(g.score) instead of frozen finalScore",
-    "cause": "The actual Kit captures const finalScore=g.score at game end, and asynchronously submits Hub.submit(finalScore) to avoid changed scores or cross-run races. The existing source-string-only test expected older unsafe code.",
-    "evidence": "Owner Deplexo log checkout a6afa9cff3190399c939bbaee054267b7068a9f4, Node 20.20.2; all previous checks, Kit touch controls, collision, Grow Op and lifecycle passed before failure.",
-    "correction": "Replace brittle static expectation with real Kit game-end handler execution: sync submit throw becomes resolved error state, frozen score stays 42 after mutation, stale completion stays isolated.",
-    "verification": "Actual Kit handler independently executed for 3 scenarios PASS; next full Docker build and live host NOT verified."
+    "error": "Docker stage [1/2] STEP 12/14 tools/test-deplexo-release-evidence.js:32 asserts SOURCE_ONLY_NOT_DEPLOYED but journal field was overloaded with R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED",
+    "cause": "Both are true: candidate source is not deployed, and most recent R1 Docker build failed. Putting failed-build diagnostics inside canonical sourceStatus broke release contract.",
+    "evidence": "Owner supplied Deplexo Docker log for exact SHA 53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc; Node20 build passes finance, gameplay, source audit, Kit tests and simulated mobile QA through this release-validator assertion.",
+    "correction": "Keep sourceStatus=SOURCE_ONLY_NOT_DEPLOYED, store build failure in separate buildAttemptStatus and lastReportedFailedDeployment20261015; preserve older screenshot CURRENT/READY and chronological failed attempts.",
+    "verification": "Release-status and release-evidence scripts both passed isolated read-only V8 fixture execution, not full native Docker."
   },
   "reportedFailedDeployments20261015": [
     {
@@ -948,6 +965,17 @@
       "evidence": "Owner Deplexo log checkout a6afa9cff3190399c939bbaee054267b7068a9f4, Node 20.20.2; all previous checks, Kit touch controls, collision, Grow Op and lifecycle passed before failure.",
       "correction": "Replace brittle static expectation with real Kit game-end handler execution: sync submit throw becomes resolved error state, frozen score stays 42 after mutation, stale completion stays isolated.",
       "verification": "Actual Kit handler independently executed for 3 scenarios PASS; next full Docker build and live host NOT verified."
+    },
+    {
+      "commit": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
+      "status": "FAILED",
+      "error": "Docker stage [1/2] STEP 12/14 tools/test-deplexo-release-evidence.js:32 asserts SOURCE_ONLY_NOT_DEPLOYED but journal field was overloaded with R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED",
+      "cause": "Both are true: candidate source is not deployed, and most recent R1 Docker build failed. Putting failed-build diagnostics inside canonical sourceStatus broke release contract.",
+      "evidence": "Owner supplied Deplexo Docker log for exact SHA 53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc; Node20 build passes finance, gameplay, source audit, Kit tests and simulated mobile QA through this release-validator assertion.",
+      "correction": "Keep sourceStatus=SOURCE_ONLY_NOT_DEPLOYED, store build failure in separate buildAttemptStatus and lastReportedFailedDeployment20261015; preserve older screenshot CURRENT/READY and chronological failed attempts.",
+      "verification": "Release-status and release-evidence scripts both passed isolated read-only V8 fixture execution, not full native Docker."
     }
-  ]
+  ],
+  "autoDeployOwnerConfirmedOn": true,
+  "ownerLastAutoDeployConfirmation": "2026-10-15 owner reports Auto Deploy on Push ON; verified via correct QA branch checkout in successive Deplexo build logs"
 }

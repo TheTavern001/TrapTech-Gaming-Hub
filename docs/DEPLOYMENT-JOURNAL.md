@@ -1,5 +1,14 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — R1 53efd4b1 Docker preflight progressed to release-evidence status contract
+
+Owner's Deplexo log confirms the exact commit `53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc` checked out. Payment, wallet, settlement holds, catalog, 96 JS game scripts, physical/collision source tests, Kit score/async, mobile lifecycle, avatar, quests and private-preview tests all PASS in native Node20 build. Docker stage 1/2 STEP12 failed at `tools/test-deplexo-release-evidence.js:32`: it correctly expected the source status `SOURCE_ONLY_NOT_DEPLOYED` but prior audit updates had overwritten that semantic field with `R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED`.
+
+Both facts are preserved separately: the **current candidate has not deployed** and its **latest build FAILED**. Restore canonical source status, retain failed attempt in `reportedFailedDeployments20261015`, and expose owner-reported recent build failure separately from historical screenshot-confirmed Deplexo CURRENT/READY `278af07` in `release-status.js`. A separate invariant test checks the failure ledger, that nobody promotes failed commits to READY, and the owner-confirmed Auto Deploy ON setting. Executed the original release-status and release-evidence scripts in read-only isolated JS using the actual fetched repository fixtures: PASS. Full native Docker and live health require the next R1 recovery build.
+
+**No changes to game runtime, payments, secrets, /data or public prize eligibility.** No AAA/game acceptance signoff; R2-R5 remain paused.
+
+
 
 ## 2026-10-15 — R1 `a6afa9cf`: score submit source-test mismatch; actual handler verified
 
