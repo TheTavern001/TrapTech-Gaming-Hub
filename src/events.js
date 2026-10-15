@@ -116,7 +116,7 @@ function routes(app, A, H) {
     res.json({ ok: true, notice: NOTICE, events: rows.map(g => eventPublic(g, t)).filter(e => e.status === 'active' || e.status === 'scheduled') });
   });
   app.get('/api/event/:code', (req, res) => {
-    const g = find(req.params.code); if (!g || /^\d+$/.test(req.params.code)) return res.status(404).json({ ok: false, error: 'That is not an official Gaming Hub event.', notice: NOTICE });
+    const g = find(req.params.code); if (!g || /^\d+$/.test(req.params.code) || !['active','scheduled'].includes(status(g))) return res.status(404).json({ ok: false, error: 'That is not an authorized, publicly shareable Gaming Hub event.', notice: NOTICE });
     const R = require('./results'); const rows = (H.giveawayEntrants ? H.giveawayEntrants(g) : R.liveStandings(g)).slice(0, 100)
       .map(r => ({ rank: r.rank, username: r.username, score: r.score, cos: r.cos, avatar: r.avatar }));
     res.json({ ok: true, notice: NOTICE, event: eventPublic(g), board: rows, board_label: label(g) });
