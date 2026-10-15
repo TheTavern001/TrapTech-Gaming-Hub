@@ -69,6 +69,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-avatar-offscreen-fallback.js \
  && node tools/test-game-adapter-start-isolation.js \
  && node tools/test-adapter-proof-snapshot.js \
+ && node tools/test-adapter-invalid-score.js \
  && node --check tools/audit-avatar-renderability.js \
  && node tools/audit-avatar-renderability.js \
  && test -s tools/test-avatar-renderability.js \
