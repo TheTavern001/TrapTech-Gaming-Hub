@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "updatedUTC": "2026-10-15",
+  "candidateBranch": "release/candidate-r2-consolidated-20261015",
+  "deployable": false,
+  "sourceStatus": "INTEGRATED_SOURCE_ONLY_DOCKER_AND_RUNTIME_UNVERIFIED",
+  "includedFixes": [
+    "R2 Dockerfile and offline shell input copy repair",
+    "QA87 improvements from independent offline stabilization branch",
+    "Game browser p50/p95 pacing evidence and opt-in strict gate",
+    "Positive paid booking fee guard and negative fixtures",
+    "Owner 500-game launch acceptance contract"
+  ],
+  "sourceVerification": {
+    "result": "PASS",
+    "checks": [
+      "All 91 explicit Docker build-stage node tools/*.js invocations scanned for direct .md references. Only docs/GAMES-LIB.md and the new owner launch contract appear, and both have .dockerignore exceptions.",
+      "Latest consolidated source strings passed unified cross-feature integration contract in JavaScript V8 with mocked filesystem.",
+      "Frame-pacing and payment-condition negative fixtures evaluated at source level in V8.",
+      "Existing R2 audit-input copy checks retained."
+    ],
+    "notEquivalentToFullTests": true
+  },
+  "unverified": [
+    "Executable Node tests on complete checked-out source",
+    "Full multi-stage Docker build and native dependency install",
+    "Isolated live HTTP score, booking, shop, login and admin journeys",
+    "Android/iPhone performance and gameplay quality",
+    "Actual provider-verified sponsor booking settlements",
+    "500 independently approved games and real cosmetic assets",
+    "Deplexo READY and live build fingerprint"
+  ],
+  "releaseBlockers": [
+    "Do not promote until exact Docker build and local HTTP integration PASS",
+    "Auto Deploy must remain OFF",
+    "Public needs 500 device-tested distinct games, functioning cosmetics/shop, provider proof and owner acceptance"
+  ],
+  "migration": "Preserve current host, reserve new Trap Tech Deplexo account for final owner-authorized launch."
+}
