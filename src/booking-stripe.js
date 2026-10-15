@@ -92,7 +92,7 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
    return bad(res,503,'Secure checkout could not be started. No payment has been recorded.');
   }
  });
- app.post('/api/sponsor/webhook/stripe',(req,res)=>{
+ app.post('/api/sponsor/webhook/stripe',async(req,res)=>{
   // Same raw-body HMAC verification as the existing store Stripe webhook.
   if(!require('./monetize')._stripeSignatureOk(req))
    return res.status(400).json({ok:false,error:'Invalid payment signature.'});
@@ -127,9 +127,29 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
     WHERE provider='stripe' AND provider_ref=? AND status='accepted'`)
     .run(String(obj.id||''));
   }else if(event.type==='charge.refunded'||event.type==='charge.dispute.created'){
-   const intent=typeof obj.payment_intent==='string'?obj.payment_intent:'';
+   let intent=typeof obj.payment_intent==='string'?obj.payment_intent:'';
    const refund=event.type==='charge.dispute.created'||Number(obj.amount_refunded)>0;
-   if(!intent||!refund)return res.json({received:true});
+   if(!refund)return res.json({received:true});
+   // Stripe's dispute object may omit payment_intent even when charge is set.
+   // Retrieve the signed event's charge from Stripe rather than ignoring a
+   // disputed booked event. A transient lookup error must request retry.
+   if(!intent && event.type==='charge.dispute.created'){
+    const charge=typeof obj.charge==='string'?obj.charge:'';
+    if(!/^ch_[A-Za-z0-9]+$/.test(charge))
+     return res.status(503).json({received:false,error:'Dispute charge could not be verified.'});
+    try{
+     const result=await fetch('https://api.stripe.com/v1/charges/'+encodeURIComponent(charge),{
+      headers:{Authorization:'Bearer '+process.env.STRIPE_SECRET_KEY}
+     });
+     const details=await result.json().catch(()=>({}));
+     if(!result.ok||details.id!==charge)throw Error('Stripe charge lookup failed');
+     intent=typeof details.payment_intent==='string'?details.payment_intent:'';
+     if(!/^pi_[A-Za-z0-9]+$/.test(intent))throw Error('Charge has no verifiable payment intent');
+    }catch{
+     return res.status(503).json({received:false,error:'Stripe dispute verification temporarily unavailable.'});
+    }
+   }
+   if(!intent)return res.json({received:true});
    const q=db.prepare("SELECT booking_id FROM sponsor_quotes WHERE provider='stripe' AND provider_payment_id=? AND status='paid'").get(intent);
    if(q){
     db.transaction(()=>{
