@@ -518,3 +518,9 @@ Next precise R1 resume: run complete native Node 20 / Docker suite, finish 13 hi
 - `085a006ae18cc0e3594e7c81b2cacecd5a783af7`: regression covering seven invalid scores, token preservation and valid run submission. `9cc6664bd65a5dbf35a9e3aebc163fab7adf8479` and `4cf7ff2ed028a7c5dac9f39c65355200b76ddec9`: offline rehearsal and Docker integration.
 - Executed actual fetched adapter JS with V8 mock fetch: seven invalid attempts rejected without network submit, run token retained, valid score 99 subsequently submitted; PASS. Native Node script/full Docker/HTTP/device testing still NOT RUN.
 - Deployment unchanged (owner screenshot `278af07`), auto deploy OFF. Full AAA Hub, 87 games and 500-game goal remain incomplete, and source-only checks do not authorize public launch.
+
+## 2026-10-14 — Profile WebGL navigation teardown and stale hydration
+
+- `f6382d8cc1517d338f297b4ad062b98dbf440d52`: `public/js/app.js` now explicitly calls the existing profile 3D cleanup function before SPA route replacement; avatar hydration remembers the navigation generation so late API/rig results cannot attach a profile avatar after navigation. The stale failure fallback no longer inserts a profile SVG into an abandoned route.
+- `6120b487ee776ae27a4842b59f5efbc78d6ff514` adds a JavaScript structural navigation cleanup test; `f934aa1b91496bdedbeacfd08379e3a43f1c1188`, `32d3197cb582d08c93c42b56dde86a7881d1ab73` wire it into canonical rehearsal and Docker prelaunch.
+- `app.js` re-fetched and parsed in isolated V8; navigation guards and cleanup source inspected, PASS. Full Node suite, real WebGL, memory profiling, integrated Docker/HTTP and Android/iOS verification NOT RUN. No production deployment; last owner-screenshot host `278af07`. Keep auto deploy OFF. AAA avatar, shop, catalog, payments and all device acceptance still outstanding.
