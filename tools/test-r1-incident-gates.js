@@ -65,6 +65,6 @@ if(!evidenceForSource)assert.ok(!journal.releaseHistory.some(
  'Unreleased staging work may not be reported as deployed');
 assert.equal(hostCurrent.commit,journal.latestOwnerObservedHost.currentReadySha);
 assert.equal(journal.publicLaunchApproved,false);
-console.log(JSON.stringify({pass:true,knownFailedBuilds:contract.incidents.length,additionalRegressionFamilies:2,protectedExecutableTests:tests.size,
+console.log(JSON.stringify({pass:true,knownFailedBuilds:contract.incidents.length,additionalRegressionFamilies:contract.additionalRegressions.length,protectedExecutableTests:tests.size,
   historicR1ReadyRetained:true,currentHostSha:hostCurrent.commit,futureReadyTransitionValidated:true,
   fullStagedDockerTested:false,physicalPhoneAAAApproved:false}));

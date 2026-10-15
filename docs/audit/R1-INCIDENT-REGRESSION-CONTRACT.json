@@ -90,6 +90,17 @@
         "tools/test-qa-game-batches.js",
         "tools/test-qa-87-browser-contract.js"
       ]
+    },
+    {
+      "id": "POST-R1-QA-UNSTARTED-CANVAS",
+      "rootCause": "Mobile browser catalog smoke marked library games PASS on any canvas, without verifying signed game identity or actual playable state; narrow score route blocker risked unsafe API mutations",
+      "requiredTests": [
+        "tools/test-qa-browser-runtime-integrity.js",
+        "tools/test-qa-87-browser-contract.js"
+      ],
+      "correction": "Enforce signed run identity, Kit engine match, play/over state, remote QA run-start opt-in and deny-by-default API mutation routing",
+      "status": "SOURCE_FIXED_STAGING_NATIVE_BROWSER_AND_PHONE_VERIFICATION_PENDING",
+      "sourceCommit": "94cb0e8e3086ac7e60945e5756e403044b534bf5"
     }
   ],
   "allPhoneQualityApproved": false,
