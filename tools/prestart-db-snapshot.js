@@ -49,19 +49,23 @@ async function snapshot({dbPath=DB,dir=path.join(path.dirname(dbPath),'pre-relea
   if(!/^[a-f0-9]{12,64}$/.test(key))throw Error('Invalid release fingerprint');
   if(!fs.existsSync(dbPath))return {ok:true,status:'fresh-install-no-existing-db'};
   if(fs.statSync(dbPath).size===0)throw Error('Existing SQLite file is empty; refusing to assume a new install.');
-  fs.mkdirSync(dir,{recursive:true});
+  fs.mkdirSync(dir,{recursive:true,mode:0o700});
+  fs.chmodSync(dir,0o700); // Persistent snapshots contain user/account data.
   const target=path.join(dir,'hub-preupgrade-'+key+'.db');
   const marker=path.join(dir,'hub-preupgrade-'+key+'.json');
   if(fs.existsSync(marker)){
     const previous=JSON.parse(fs.readFileSync(marker,'utf8'));
     if(previous.key!==key||!fs.existsSync(target)||fs.statSync(target).size===0)
       throw Error('The recorded pre-release snapshot is missing or mismatched. Deployment stopped.');
+    const checked=checkDb(target);checked.close();
+    fs.chmodSync(target,0o600);
     return {ok:true,status:'snapshot-already-present',file:target};
   }
   // If interrupted after rename but before the marker write, retain the
   // original snapshot rather than overwrite it with a possibly migrated DB.
   if(fs.existsSync(target)){
     const verified=checkDb(target);verified.close();
+    fs.chmodSync(target,0o600);
   }else{
     spaceForSnapshot(dbPath,dir);
     const tmp=target+'.tmp-'+process.pid;
@@ -69,6 +73,7 @@ async function snapshot({dbPath=DB,dir=path.join(path.dirname(dbPath),'pre-relea
     try{
       await source.backup(tmp);
       const verified=checkDb(tmp);verified.close();
+      fs.chmodSync(tmp,0o600);
       fs.renameSync(tmp,target);
     }finally{
       source.close();
