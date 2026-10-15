@@ -1,5 +1,10 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — Game QA false-positive and unsafe-write fixes, staging only
+
+Library browser QA now checks actual signed-run game identity, engine identity and play/over state rather than accepting any canvas page. Core SPA pages are still surface-only tests, not game-loop proof. QA blocks all API mutations other than signed `POST /api/run/start`; remote host tests require explicit `QA_ALLOW_RUN_START=1` because creating runs writes temporary server records. Added negative regression to Docker and both offline test paths. Source test does not claim a browser, real phone, 500-game or public launch certification. Deplexo current READY remains `5fb461c`.
+
+
 ## 2026-10-15 — Fix-first policy enforced in predeploy testing
 
 Seven exact R1 failed Docker SHAs and two additional error families now have named regression coverage in `docs/audit/R1-INCIDENT-REGRESSION-CONTRACT.json`. The new `tools/test-r1-incident-gates.js` fails preflight if a regression test is missing from the Dockerfile or either offline verification route. Every original test still runs; source-status, screenshot-confirmed host READY and historical failures are separate rather than overloading one status. Last observed R1 host is `5fb461c` CURRENT READY; `61fec416` is the final historical failed image, **not** the latest deployment. Tested via source parsing and invariants; staging Docker rebuild/physical mobile still pending. This change is isolated from live Deplexo.

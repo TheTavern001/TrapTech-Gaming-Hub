@@ -170,6 +170,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-87-runtime-source-depth.js \
  && node --check tools/test-qa-87-browser-contract.js \
  && node tools/test-qa-87-browser-contract.js  && node tools/test-qa-game-batches.js \
+ && node tools/test-qa-browser-runtime-integrity.js \
  && test -s docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/local-imports.js \

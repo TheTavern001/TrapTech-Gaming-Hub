@@ -10,6 +10,7 @@
 // QA_STORAGE_STATE=/tmp/reviewer.json BROWSER_ENGINE=webkit node tools/qa-87-browser.js
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),readline=require('node:readline');
 const {planGameBatch}=require('./qa-game-batches');
+const {loopbackOrigin,qaRequestAllowed,inspectGameRuntime}=require('./qa-game-runtime');
 const ROOT=path.resolve(__dirname,'..');
 const BASE=String(process.env.BASE||'http://127.0.0.1:8787').replace(/\/$/,'');
 const RUNS=Math.max(1,Math.min(30,Number(process.env.QA_SECONDS)||5));
@@ -18,6 +19,7 @@ const OUT=path.resolve(process.env.QA_REPORT_DIR||path.join(os.tmpdir(),'traptec
 const SCREENSHOTS=path.join(OUT,'screenshots');
 const stateFile=process.env.QA_STORAGE_STATE||'';
 const INTERACTIVE=process.env.QA_INTERACTIVE_AUTH==='1';
+const allowRunStart=loopbackOrigin(BASE)||process.env.QA_ALLOW_RUN_START==='1';
 const TAKE_ALL=process.env.QA_ALL_SCREENSHOTS==='1';
 const HEADLESS=process.env.QA_HEADLESS!=='0'&&!INTERACTIVE;
 if(!/^https?:\/\/[^/?#]+$/i.test(BASE)){console.error('BASE must be an HTTP(S) origin');process.exit(2);}
@@ -36,7 +38,7 @@ const core=[...body.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?
  .filter(m=>!new Set(['plinko','spin-to-win','blazed-roulette']).has(m[1]))
  .map(m=>({id:m[1],title:m[2],route:'/play/'+encodeURIComponent(m[1]),kind:'core'}));
 const library=catalog.filter(g=>g.playable!==false&&!g.retired)
- .map(g=>({id:g.id,title:g.title,route:g.url,kind:'library'}));
+ .map(g=>({id:g.id,title:g.title,route:g.url,kind:'library',build:g.build}));
 const games=[...core,...library];
 if(core.length!==13||library.length<74||games.length<87){
  console.error('Missing baseline active games',core.length,library.length);process.exit(2);
@@ -62,6 +64,7 @@ async function interactiveSignIn(browserOptions){
  return context;
 }
 async function main(){
+ if(!allowRunStart)throw Error('Remote QA needs QA_ALLOW_RUN_START=1 to create temporary signed run-start records');
  fs.mkdirSync(SCREENSHOTS,{recursive:true});
  const executablePath=process.env.CHROME_BIN||
   ['/usr/bin/chromium','/usr/bin/google-chrome','/usr/bin/chromium-browser'].find(x=>fs.existsSync(x));
@@ -99,11 +102,13 @@ async function main(){
        /\.(?:js|mjs|css|png|svg|jpg|jpeg|webp|glb|wasm)(?:\?|$)/i.test(url.pathname))
        badHttp.push({url:url.pathname,status:res.status()});
    }catch{}});
-   // Never submit a real score, buy an item, issue prize payment or place an order.
-   await page.route('**/api/score',route=>route.fulfill({status:403,contentType:'application/json',
-      body:JSON.stringify({ok:false,error:'Non-destructive QA: score submission disabled'})}));
-   await page.route(/\/api\/(?:store|shop|giveaways|admin)\/(?:checkout|buy|purchase|award|refund|send)/,
-      route=>route.fulfill({status:403,body:'QA write denied'}));
+   // Deny all API writes except an explicitly allowed signed run start.
+   await page.route(/\/api\//,route=>{
+     const request=route.request();
+     if(qaRequestAllowed(request.method(),new URL(request.url()).pathname,allowRunStart))return route.continue();
+     return route.fulfill({status:403,contentType:'application/json',
+       body:JSON.stringify({ok:false,error:'QA mutation blocked'})});
+   });
    try{
     const response=await page.goto(BASE+g.route,{waitUntil:'domcontentloaded',timeout:25000});
     status=response?.status()||null;
@@ -122,21 +127,28 @@ async function main(){
     const gl=window.__GL||null;
     const cv=document.querySelector('canvas'),bounds=cv?.getBoundingClientRect();
     const grid=document.querySelector('.grid-container');
-    return {domPuzzleDetected:!!grid,kitState:gl?.state||null,frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:null,
+    return {domPuzzleDetected:!!grid,kitState:gl?.state||null,
+      hubGameId:window.Hub?.id||null,kitGameId:gl?.g?.def?.id||null,
+      runAuthorized:window.Hub?.seed!=null&&window.Hub?.guest!==true,
+      frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:null,
       fps:typeof gl?.fps==='number'?gl.fps:null,viewportWidth:innerWidth,
       viewportHeight:innerHeight,canvasSize:bounds?{width:Math.round(bounds.width),height:Math.round(bounds.height)}:null,
       horizontalOverflow:document.documentElement.scrollWidth>innerWidth+3};
    }).catch(()=>null);
    const title=(await page.title().catch(()=>''))||'';
    const runtimeSurface=hasCanvas||metrics?.domPuzzleDetected===true;
+   const runtimeProof=inspectGameRuntime(g,metrics);
    const stuckInStartup=metrics?.kitState==='starting';
    const failed=status!==200||failures.length>0||consoleErrors.length>0||badHttp.length>0||
-     !runtimeSurface||stuckInStartup||metrics?.horizontalOverflow===true||
+     !runtimeSurface||stuckInStartup||(g.kind==='library'&&!runtimeProof.verified)||
+     metrics?.horizontalOverflow===true||
      (metrics?.frameP95Ms>25&&metrics?.kitState==='play');
    if(TAKE_ALL||failed)try{await page.screenshot({path:path.join(SCREENSHOTS,filename(g.id)+'.png'),timeout:4500});}catch{}
    await page.close();
    return {id:g.id,title:g.title,kind:g.kind,route:g.route,status,titleLoaded:!!title,canvasDetected:hasCanvas,
-    ...metrics,runtimeSurfaceDetected:runtimeSurface,jsExceptions:failures,consoleErrors,badAssets:badHttp,
+    ...metrics,runtimeSurfaceDetected:runtimeSurface,
+    runtimeIdentityVerified:runtimeProof.verified,runtimeProofNote:runtimeProof.reason,
+    jsExceptions:failures,consoleErrors,badAssets:badHttp,
     durationMs:Date.now()-started,smokePassed:!failed,
     androidPhysical:'NOT_TESTED',iosSafariPhysical:'NOT_TESTED',
     scoreReplayCertified:false,visualAAAApproved:false};
@@ -149,7 +161,8 @@ async function main(){
   }
   const failed=results.filter(r=>!r.smokePassed),report={schema:1,
    testedAtUTC:new Date().toISOString(),engine:ENGINE,emulationOnly:true,host:BASE,
-   fingerprint,authenticatedReviewer:signedIn,submittedRealScores:false,processedPayments:false,
+   fingerprint,authenticatedReviewer:signedIn,serverSignedRunStartsAllowed:allowRunStart,
+   submittedRealScores:false,processedPayments:false,
    expectedActiveTitles:batch.total,attempted:results.length,passed:results.length-failed.length,
    failed:failed.map(x=>x.id),batchStartIndex:batch.start,batchEndExclusive:batch.endExclusive,
    fullCoverage:batch.fullCoverage,requestedBatchPassed:failed.length===0,
