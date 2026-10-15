@@ -351,11 +351,23 @@
       "branchReportedByHost": "qa/gameplay-distinctness-and-collision-20261013",
       "buildDurationSeconds": 323,
       "evidence": "Owner Deplexo Deployments screenshot at phone time 12:17 (2026-10-14): top card 278af07 shows CURRENT and READY, duration 323 seconds. GitHub API resolves exact full SHA.",
-      "observedAsCurrent": true,
+      "observedAsCurrent": false,
       "verifiedAfterFix": true,
       "qualification": "Latest owner screenshot-confirmed current READY app. No independent /api/build body provided; host CURRENT does not certify visual/gameplay/AAA or post-R1/R5 work.",
       "evidenceDocument": "docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json",
       "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
+    },
+    {
+      "commit": "5fb461c077bfa42fe17f8a4333c730c7d73af2a8",
+      "status": "READY",
+      "branchReportedByHost": "qa/gameplay-distinctness-and-collision-20261013",
+      "buildDurationSeconds": 265,
+      "evidence": "Owner screenshot (2026-10-15 phone 03:21): glassy-drifter-9532 RUNNING, top deployment 5fb461c marked CURRENT and READY, build 265s.",
+      "observedAsCurrent": true,
+      "verifiedAfterFix": true,
+      "qualification": "Deplexo READY and CURRENT only. No independent /healthz or /api/build readback from assistant environment (DNS unavailable); no individual AAA, real-device, game replay, financial or public release approval.",
+      "evidenceDocument": "docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json",
+      "screenshotSHA256": "431af31afa8c6cdc6d201c1ae8a67985bfb3d6494406bd50475e41ae4c1765c8"
     }
   ],
   "sourceVerification": [
@@ -405,9 +417,9 @@
     {
       "id": "01",
       "name": "Stable audited baseline",
-      "status": "IN_PROGRESS",
+      "status": "HOST_READY_DEVICE_SIGNOFF_PENDING",
       "entry": "existing 13 active core games + 80 library titles",
-      "exit": "Deplexo READY exact SHA, structural audit zero blockers; owner mobile walkthrough and release tracker"
+      "exit": "R1 verified READY 5fb461c. Physical Android/iPhone, game-by-game visuals/control performance, prize score proof and owner signoff still required."
     },
     {
       "id": "02",
@@ -898,31 +910,42 @@
         "tools/verify-prelaunch.js"
       ],
       "ownerAAACertified": 0
+    },
+    {
+      "commit": "R1_SCREENSHOT_READY_5fb461c0",
+      "branch": "work/post-r1-mobile-quality-and-game-intake-20261015",
+      "host": "Deplexo screenshot CURRENT READY",
+      "status": "VERIFIED_OWNER_UI",
+      "screenshotSha256": "431af31afa8c6cdc6d201c1ae8a67985bfb3d6494406bd50475e41ae4c1765c8",
+      "sourceWorkSha": "41dc9462afcf89b2ceb5e3932e00f75cba42a9fc",
+      "productionSha": "5fb461c077bfa42fe17f8a4333c730c7d73af2a8",
+      "publicLaunchApproved": false,
+      "note": "R1 host and source QA branches separated; no user data changed. 87 titles source registered, no individual AAA owner approvals."
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15 R1 61fec416 Deplexo log: all 93-game audit / 87 active graph validations passed; fail four logo checks (3 stale aliases and favicon regex not handling PWA version query). Fix in candidate. Host deployment remains unsuccessful until new READY and live endpoint checks.",
+  "lastEvidenceReconciliation": "2026-10-15: screenshot R1 5fb461c CURRENT READY, RUNNING, build 265s; new staging branch prevents watched QA branch auto redeploy. Health/fingerprint not read from host. Public release remains blocked.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
-    "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
+    "currentReadySha": "5fb461c077bfa42fe17f8a4333c730c7d73af2a8",
     "sourceBranch": "qa/gameplay-distinctness-and-collision-20261013",
-    "evidence": "Owner's Deplexo Deployments screenshot at phone 12:17 on 2026-10-14; CURRENT + READY shown",
-    "durationSeconds": 323,
-    "healthzReadback": "NOT independently observed on this revision",
-    "apiBuildFingerprint": "NOT supplied from current host",
+    "evidence": "Owner Deplexo deployments screenshot 2026-10-15, local phone clock 03:21; RUNNING and CURRENT READY, 265 seconds.",
+    "durationSeconds": 265,
+    "healthzReadback": "NOT independently observed: assistant environment DNS resolution unavailable",
+    "apiBuildFingerprint": "NOT independently observed",
     "confidence": "OWNER_SCREENSHOT_CONFIRMED",
     "observationTimeExactUTC": null,
     "evidenceDocument": "docs/audit/DEPLEXO-OWNER-SCREENSHOT-EVIDENCE-2026-10-14.json",
-    "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
+    "screenshotSHA256": "431af31afa8c6cdc6d201c1ae8a67985bfb3d6494406bd50475e41ae4c1765c8"
   },
   "currentWorkingSource": {
     "branch": "qa/gameplay-distinctness-and-collision-20261013",
-    "headAtReconciliation": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
-    "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "R1 61fec416 failed after 93-game audit PASS on 4 icon alias/favicon audit checks; patch generator and checks in next SHA, no live verification.",
+    "headAtReconciliation": "5fb461c077bfa42fe17f8a4333c730c7d73af2a8",
+    "sourceStatus": "HOST_READY_OWNER_SCREENSHOT_CONFIRMED",
+    "note": "R1 5fb461c is screenshot-confirmed CURRENT+READY. Subsequent code staging is isolated on work/post-r1-mobile-quality-and-game-intake-20261015; no new host build implied.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
-    "buildAttemptStatus": "FAILED",
+    "lastAuditedGitHubHead": "5fb461c077bfa42fe17f8a4333c730c7d73af2a8",
+    "buildAttemptStatus": "READY",
     "lastFailedBuildSha": "61fec41636ea418c71765a21f7f6d3dd224bd22a"
   },
   "ownerConfirmedAutoDeployOff": false,

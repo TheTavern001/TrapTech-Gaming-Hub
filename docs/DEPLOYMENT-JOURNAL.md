@@ -1,5 +1,14 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — R1 5fb461c CURRENT READY; freeze working host, develop separately
+
+Owner screenshot on Deplexo confirms existing app RUNNING with exact QA branch commit `5fb461c077bfa42fe17f8a4333c730c7d73af2a8` marked **CURRENT** and **READY**; successful image build **265 seconds**. Screenshot received in conversation 2026-10-15 at phone clock **03:21**, timezone unconfirmed. Screenshot SHA-256 `431af31afa8c6cdc6d201c1ae8a67985bfb3d6494406bd50475e41ae4c1765c8`; binary not committed (privacy).
+
+**Validated milestone:** R1 Docker image build completed at Deplexo after source-level prelaunch fixes. **Not validated:** independent `/healthz`, `/api/build` fingerprint (assistant tools unable to resolve live DNS), sessions, commerce state, admin 2FA end to end, prize anti-cheat replay, graphics/controls on real Android or iOS, any individual AAA-game acceptance, 500 games or public signoff. Public gate and private-review payment/prize restrictions must remain enabled.
+
+**Next working branch:** `work/post-r1-mobile-quality-and-game-intake-20261015`, based on R1 READY commit. Current source test prep upgrades the automated browser test from fixed 87 coverage to full dynamic catalog (87–500) and explicit 100-game batches. The watched QA branch stays at R1 current; staging should not auto deploy. This is work toward R2–R5, not evidence those releases are approved.
+
+
 ## 2026-10-15 — R1 61fec416 icon alias/URL prelaunch check failure
 
 Owner confirmed Deplexo checked out `61fec41636ea418c71765a21f7f6d3dd224bd22a`. Prestart wallet/payment/anti-cheat contracts, mobile source tests, **93-title game dependency auditor** (`runtimeGraphComplete:true`, 87 active, 139 runtime source graph files), 87-runtime source-depth and browser source-level test contracts passed. Docker `STEP 12/14` then failed four brand tests in `tools/verify-prelaunch.js`. Three SVG aliases (`hub-mark.svg`, `tt-favicon.svg`, `tt-maskable.svg`) still carried older artwork, because the TT-crown generator did not write them; separately the HTML favicon used `?v=tt-crown-20261014` but the release regex only matched queryless `.svg`.
