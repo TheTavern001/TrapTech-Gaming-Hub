@@ -54,6 +54,15 @@ function status(g, t = Date.now()) {
   if (g.state === 'cancelled') return 'cancelled';
   if (g.archived) return 'archived';
   if (!g.active || g.state === 'paused') return g.state === 'paused' ? 'paused' : 'draft';
+  // Booking and settlement are not cosmetic labels. A linked vendor event
+  // cannot become an official competition just because active=1 was set.
+  if (g.booking_id) {
+    const q=db.prepare('SELECT status FROM sponsor_quotes WHERE booking_id=?').get(g.booking_id);
+    if (!q || q.status !== 'paid' || g.payment_status !== 'paid') return 'payment-pending';
+  }
+  // Signed score uploads alone are not independent gameplay replay proof.
+  const ids=gamesOf(g.id), proof=require('./prize-score-proof');
+  if (!ids.length || ids.some(id=>!proof.isCertified(id))) return 'quality-pending';
   if (t < g.start_at) return 'scheduled';
   if (t >= g.end_at || g.finalized_at) return 'ended';
   return 'active';
@@ -115,6 +124,8 @@ function routes(app, A, H) {
   // vendor share kit (admin): link + QR code
   A.get('/events/:id/share', (req, res) => {
     const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });
+    const st=status(g);
+    if (st !== 'active' && st !== 'scheduled') return res.status(409).json({ ok:false, error:'This giveaway is not authorized for sharing until booking payment and game scoring certification are approved.', status:st });
     const url = PU.originOf(req) + '/event/' + g.event_code;
     res.json({ ok: true, code: g.event_code, url, label: label(g), qr_svg: qrSvg(url), status: status(g), vendor: g.vendor || g.host, booking_status: g.booking_status || null, payment_status: g.payment_status || null, booking_id: g.booking_id || null });
   });
@@ -122,7 +133,7 @@ function routes(app, A, H) {
     const g = find(req.params.id); if (!g) return res.status(404).json({ ok: false, error: 'Unknown event.' });
     const b = req.body || {}; const pick = (v, ok, d) => ok.includes(v) ? v : d;
     db.prepare('UPDATE giveaways SET vendor=?, booking_status=?, payment_status=?, updated_at=? WHERE id=?').run(String(b.vendor ?? g.vendor).slice(0, 80),
-      pick(b.booking_status, ['none', 'requested', 'quoted', 'accepted', 'booked'], g.booking_status), pick(b.payment_status, ['n/a', 'unpaid', 'paid', 'refunded', 'comped'], g.payment_status), Date.now(), g.id);
+      pick(b.booking_status, ['none', 'requested', 'quoted', 'accepted', 'booked'], g.booking_status), g.booking_id ? g.payment_status : pick(b.payment_status, ['n/a', 'unpaid', 'paid', 'refunded', 'comped'], g.payment_status), Date.now(), g.id);
     res.json({ ok: true, event: eventPublic(find(g.id)) });
   });
   // sudden-death playoff for an exact skill tie on a winning place (src/games-lib-playoff.js; admin page /games-lib/admin-playoffs.html)
