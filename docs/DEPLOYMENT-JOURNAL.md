@@ -1,5 +1,21 @@
 # Deployment, audit, and 500-game release ledger
 
+## 2026-10-15 — Failed Deplexo redeploy was stale `main` source, root cause confirmed
+
+**Owner-provided build log** starts `Checked out commit 570a9feba0f17aa1de120c67b57f3a8a6c0f5930`. Docker reached **[1/2] STEP 11/12** after apt/npm, 3,150 quest-template checks, 96 game syntax checks, and 80-library structural checks passed. The first actual failure was:
+```
+TypeError [ERR_INVALID_ARG_TYPE]: The "key" argument must be ... Received undefined
+at Object.<anonymous> (/app/src/config.js:23:68)
+```
+This is **not** proof the owner's two new environment values are wrong. The old `tools/verify-prelaunch.js` explicitly did `const runtimeCore = require('../src/config').GAMES`. That runtime config derives HMAC secrets, which are intentionally unavailable at build time. The older commit had this known defect. The corrected verifier instead parses source data, no runtime secret import. Test `tools/test-prelaunch-imports.js` now rejects this exact old direct-require regression.
+
+**Source repair:** GitHub proved `qa/gameplay-distinctness-and-collision-20261013` descended cleanly from old `main` by 571 commits (0 behind). A **non-forced fast-forward** changed `main` from `570a9fe` to `0bda3d2`. Added regression guard `2db3f2b7a8703a21575306daa5d07b43e1607bf6` to `main`, then fast-forwarded the QA branch to the same commit. Both possible Deplexo source refs now match. Source inventory confirms all 81 referenced test-tool files exist; no required Docker markdown is excluded. This proves only source integrity, **not a complete Docker pass**.
+
+**Host truth:** Owner says latest manual redeploy FAILED; this new failure log identifies `570a9fe`, but no successful image or updated `/api/build` has been observed. Deplexo dashboard previously showed QA branch; the builder's explicit checkout of main must be reconciled by the next actual build log. Previous owner screenshot-confirmed READY `278af07` remains the only affirmative production source state. Auto-deploy was owner-confirmed OFF; neither GitHub ref change triggers a deploy in that configuration. Existing `HUB_PRIVATE_REVIEW` and reviewer account settings need no further change based on this log.
+
+**Next action:** A *single supervised manual redeploy* of the existing app, ensuring the new log says `Checked out commit 2db3f2b` or its journal descendant. If it still says `570a9fe`, source selection/cache in Deplexo is the remaining issue, not a code build failure. If new SHA is checked out, inspect the **first actual Docker failing line** or READY; test `/healthz`, `/api/build`, anonymous vs owner-only access, checkout lockdown, database snapshots. Keep public launch blocked; 87 proposed playable games, 0 game-by-game AAA and mobile signoffs.
+
+
 ## 2026-10-15 01:45 EDT — Deplexo source branch aligned, owner-review startup hardened (NOT DEPLOYED)
 
 Owner's three Deplexo screenshots show the **existing single app RUNNING**, **20 deployments**, source branch `qa/gameplay-distinctness-and-collision-20261013` at `278af07ebfbc0eb2e783d8294cb1707c528c0163` labelled PRODUCTION, auto-deploy on push **OFF**, Dockerfile method, Dockerfile path `Dockerfile`, root `.`, and persistent storage `/data`. The displayed "last deploy 1d ago" is approximate. No current `/api/build` response or full build log was supplied. Screenshot SHA-256 hashes/byte sizes are in `docs/audit/DEPLOYMENT-JOURNAL.json`; screenshots themselves are not copied into the repo.

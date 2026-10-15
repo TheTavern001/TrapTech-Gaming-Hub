@@ -112,7 +112,22 @@
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
       "verifiedAfterFix": false,
-      "observedAsCurrent": false
+      "observedAsCurrent": false,
+      "buildRetries": [
+        {
+          "reportedByOwnerAt": "2026-10-15",
+          "observedCommit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+          "result": "FAILED",
+          "firstFailingStep": "Docker build [1/2] STEP 11/12 RUN prelaunch tool audit",
+          "firstError": "TypeError [ERR_INVALID_ARG_TYPE]: key received undefined at src/config.js:23:68; node:internal/crypto/keys:595",
+          "confirmedCause": "tools/verify-prelaunch.js on old main directly invoked require('../src/config').GAMES during secretless build; derived IP_SALT createHmac key became undefined.",
+          "otherVerified": "npm ci installed 113 packages; rotating quest templates 3150 passed; 96 game syntax checks and 80 game library structural checks passed.",
+          "stageEvidence": "Owner-supplied pasted complete Docker build log 2026-10-15; log shows checkout 570a9fe despite earlier Deplexo dashboard branch label QA; actual deploy ref precedence still unverified.",
+          "fixPresentInGitHubHead": "2db3f2b7a8703a21575306daa5d07b43e1607bf6",
+          "fixedBuildVerified": false
+        }
+      ],
+      "newRetryRootCauseConfirmed": "2026-10-15 retry failure conclusively at verify-prelaunch.js requiring src/config.js; 2026-10-13 failed build logs remain unknown."
     },
     {
       "commit": "eaaca780ef334396ea9277581e977c84b9a021c3",
@@ -708,9 +723,23 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "BLOCKED_PRIVATE_REVIEW_ENV_AND_DOCKER"
+    },
+    {
+      "commit": "2db3f2b7a8703a21575306daa5d07b43e1607bf6",
+      "branch": "main and qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Recover from 2026-10-15 failed Deplexo build checkout of stale main 570a9; align both possible source refs by non-forced 571-commit fast-forward; add Docker secretless audit regression test.",
+      "validation": "GitHub compare confirms QA 571 commits ahead old main and 0 behind. 81 Docker referenced tools found in complete 1388-file tree; no missing tool references or required .md excluded. JS syntax parse and new source-only regression rejects old 570a9 bad import and passes updated verifier. Full Docker, private review authentication, data migration and Android visual QA NOT RUN.",
+      "host": "Owner log FAILED at 570a9 Step 11; main and QA updated on GitHub only; no corrected Deplexo build observed.",
+      "evidenceFiles": [
+        "tools/verify-prelaunch.js",
+        "tools/test-prelaunch-imports.js",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "BLOCKED_UNTIL_DOCKER_AND_DEVICE_PROOF"
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15 01:45 EDT owner dashboard screens: Deplexo app RUNNING on host branch qa/gameplay-distinctness-and-collision-20261013, production source at 278af07, auto deploy OFF, Dockerfile and /data. GitHub watched source safely fast-forwarded 278af07 -> 1796b826, then source-only lockout fix eb4551a; no deploy triggered or full Docker/HTTP/phone checks.",
+  "lastEvidenceReconciliation": "2026-10-15: Owner supplied failed build log: checked out old main 570a9fe, Docker Step 11 failed on src/config.js:23 createHmac undefined due verify-prelaunch runtime import with no secrets. Previous host READY 278af07 remains last screenshot-proven. Fast-forwarded main to QA audited source 0bda3d, added regression test at 2db3f2, aligned main and QA. No successful new Deplexo build verified.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -725,13 +754,13 @@
     "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
   },
   "currentWorkingSource": {
-    "branch": "qa/gameplay-distinctness-and-collision-20261013",
-    "headAtReconciliation": "eb4551a67d671dbfb4d3cc3fa6aca3b2e0b213fa",
+    "branch": "main and qa/gameplay-distinctness-and-collision-20261013 (aligned)",
+    "headAtReconciliation": "2db3f2b7a8703a21575306daa5d07b43e1607bf6",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "GitHub tracked Deplexo branch advanced from 278af07 to review candidate 1796b826 (496 commits) then validated source-only active-account preview guard eb4551a. Deplexo auto-deploy remains OFF. No new host build/READY/API build fingerprint observed. This journal commit follows that source code.",
+    "note": "Both possible Deplexo source branches were fast-forwarded to same 2db3f2 source. Old 570a9 failure logged accurately. No new Deplexo build success; auto deploy OFF; release remains source-only.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "eb4551a67d671dbfb4d3cc3fa6aca3b2e0b213fa"
+    "lastAuditedGitHubHead": "2db3f2b7a8703a21575306daa5d07b43e1607bf6"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {
@@ -758,5 +787,14 @@
     "reportedDeployments": 20,
     "reportedLastDeploy": "1d Ago",
     "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
+  },
+  "lastReportedFailedDeployment20261015": {
+    "commit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+    "status": "FAILED",
+    "error": "Docker STEP 11: ERR_INVALID_ARG_TYPE cryptographic HMAC key undefined in src/config.js:23",
+    "cause": "Old tools/verify-prelaunch.js imports runtime config without secrets available during Docker build",
+    "sourceCorrection": "2db3f2b7a8703a21575306daa5d07b43e1607bf6 (both main and QA contain fixed source and new regression guard)",
+    "sourceTests": "Compared old broken verifier and new verifier; new regression guard rejects old source, accepts fixed source; 81 Docker tool references exist in repository tree; full Docker/host NOT tested",
+    "deploymentState": "AUTO DEPLOY OFF; no host READY for corrected source observed"
   }
 }
