@@ -44,6 +44,7 @@ const PRIVATE_REVIEW = require('./private-review');
 app.use(PRIVATE_REVIEW.makeGate({
   enabled: process.env.HUB_PRIVATE_REVIEW === '1',
   users: process.env.HUB_PREVIEW_USERNAMES || '',
+  reviewerExists: username => !!db.prepare('SELECT 1 FROM users WHERE lower(username)=? AND banned=0 LIMIT 1').get(username),
   currentUser: req => currentUser(req),
   isOwnerAdmin: req => ADMSEC.isOwnerSession(req),
   adminBase: () => ADMSEC.BASE()

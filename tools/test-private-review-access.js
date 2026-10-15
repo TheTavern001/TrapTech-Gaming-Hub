@@ -11,10 +11,17 @@ function send(gate,route,{method='GET',user=null,admin=false,header=null}={}){
  gate(req,res,()=>{nexts++});
  return {next:nexts===1,code:res.code,data:res.data,headers:res.headers,mime:res.mime};
 }
-const build=(on,users='ReviewOwner')=>makeGate({enabled:on,users,currentUser:r=>r.testUser,
+const build=(on,users='ReviewOwner')=>makeGate({enabled:on,users,
+ reviewerExists:name=>name==='reviewowner',currentUser:r=>r.testUser,
  isOwnerAdmin:r=>r.testAdmin,adminBase:()=>'/randomized-secure-admin-path-12345'});
 assert.throws(()=>makeGate({enabled:true,users:'',adminBase:()=>null}),/requires at least one valid HUB_PREVIEW_USERNAMES/,'Missing owner access must stop startup');
 assert.throws(()=>makeGate({enabled:true,users:'',adminBase:()=>'/configured-admin-secret'}),/requires at least one valid HUB_PREVIEW_USERNAMES/,'Scoped admin cookies alone cannot enter main Hub after login');
+assert.throws(()=>makeGate({enabled:true,users:'ValidButMissing',reviewerExists:()=>false}),
+ /requires at least one existing active/,'Nonexistent reviewer must block startup');
+assert.throws(()=>makeGate({enabled:true,users:'BannedPlayer',reviewerExists:()=>false}),
+ /requires at least one existing active/,'Suspended reviewer must not satisfy the allowlist');
+assert.doesNotThrow(()=>makeGate({enabled:true,users:'Missing,ReviewOwner',
+ reviewerExists:name=>name==='reviewowner'}),'At least one active existing reviewer is sufficient');
 const off=build(false);
 assert.equal(send(off,'/api/score',{method:'POST'}).next,true,'Disabled mode must leave production unchanged');
 const gate=build(true);
@@ -44,4 +51,4 @@ assert.equal(send(gate,'/randomized-secure-admin-path-12345/').next,true,'Admin 
 assert.equal(send(gate,'/randomized-secure-admin-path-12345/api').next,true,'Admin router enforces its own 2FA');
 assert.equal(send(gate,'/randomized-secure-admin-path-12345-imitator').next,false,'Do not accept prefix collisions');
 assert.equal(send(gate,'/api/score',{user:{username:'ReviewOwner'},method:'POST'}).next,true,'Approved reviewer may test server-scored practice games');
-console.log(JSON.stringify({pass:true,productionDefaultUnchanged:true,ownerOnly:true,admin2FAIntegration:true,noClientRoleOverride:true,publicPaymentScoreWritesBlocked:true,reviewerGameScoresAllowed:true,scopeBootstrapMethods:true,adminCookieCannotReplacePlayerAccount:true,realDeplexoEnvironmentTested:false}));
+console.log(JSON.stringify({pass:true,productionDefaultUnchanged:true,ownerOnly:true,admin2FAIntegration:true,noClientRoleOverride:true,publicPaymentScoreWritesBlocked:true,reviewerGameScoresAllowed:true,scopeBootstrapMethods:true,adminCookieCannotReplacePlayerAccount:true,existingAccountValidation:true,realDeplexoEnvironmentTested:false}));

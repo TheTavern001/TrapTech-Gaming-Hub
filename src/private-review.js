@@ -3,13 +3,19 @@
 // ENV: HUB_PRIVATE_REVIEW=1, HUB_PREVIEW_USERNAMES=existing,player,usernames
 // Never default ON or infer permission from a claimed client header.
 // Static client JS is not a security boundary: gate server-side API actions.
-function makeGate({enabled=false,users='',currentUser=()=>null,isOwnerAdmin=()=>false,adminBase=()=>null}={}){
+function makeGate({enabled=false,users='',reviewerExists=()=>false,currentUser=()=>null,isOwnerAdmin=()=>false,adminBase=()=>null}={}){
   const names=new Set(String(users).split(',').map(x=>x.trim().toLowerCase()).filter(x=>/^[a-z0-9_.-]{3,20}$/.test(x)));
   // Admin session cookie is deliberately scoped to the secret /<ADMIN_PATH>.
   // Browsers do not attach it to the public / route, so it cannot serve as
   // the sole access method for the owner-facing Hub review URL.
   if(enabled && names.size===0) {
     throw Error('HUB_PRIVATE_REVIEW requires at least one valid HUB_PREVIEW_USERNAMES account to prevent owner lockout.');
+  }
+  // A correctly formatted but nonexistent/banned username cannot serve as owner access.
+  if(enabled && ![...names].some(name=>{
+    try { return reviewerExists(name) === true; } catch { return false; }
+  })) {
+    throw Error('HUB_PRIVATE_REVIEW requires at least one existing active HUB_PREVIEW_USERNAMES account to prevent owner lockout.');
   }
   const publicGet=new Set(['/healthz','/api/build','/signin','/manifest.webmanifest','/sw.js','/robots.txt','/favicon.ico']);
   // Only authentication bootstrap GET/POST methods are public to reviewers.
