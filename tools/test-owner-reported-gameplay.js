@@ -96,7 +96,7 @@ const pointerStart=kit.indexOf('    function onDown(e) {');
 const pointerEnd=kit.indexOf("    cv.addEventListener('pointerdown', onDown)",pointerStart);
 assert.ok(pointerStart>=0&&pointerEnd>pointerStart,'Kit pointer handlers missing');
 const pointerHandler=new Function('g','def','btns','toL','touches','K','ac','window','Hub','gameSettingsOpen',
- kit.slice(pointerStart,pointerEnd)+'\\nreturn {onDown,onMove,onUp};');
+ kit.slice(pointerStart,pointerEnd)+String.fromCharCode(10)+'return {onDown,onMove,onUp};');
 function pointerSample(mirror,endType='pointerup') {
  const g={state:'play',ptr:{x:0,y:0,down:false,pressed:false,released:false},
   stick:{x:0,y:0,on:false},btn:{},keys:{},inputs:0};
