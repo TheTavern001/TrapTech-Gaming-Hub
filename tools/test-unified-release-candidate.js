@@ -30,6 +30,8 @@ assert.ok(server.includes("'/api/sponsor/webhook/stripe'"),'Signed webhook must 
 assert.ok(event.includes("require('./booking-fee-guard').paidFeeRecorded(q)"),'Event release must check paid booking fee');
 assert.ok(sponsor.includes("if (status === 'paid') return"),'Admin may not assert payment settlement');
 assert.ok(sponsor.includes('BOOKING_STRIPE.register(app,db,h,'),'Stripe provider routes must be registered');
+assert.ok(read('src/booking-fee-guard.js').includes('STRIPE_BOOKING_WEBHOOK_SECRET'), 'Vendor checkout requires an endpoint-specific signing secret');
+assert.ok(read('src/booking-stripe.js').includes('_stripeSignatureOk(req,process.env.STRIPE_BOOKING_WEBHOOK_SECRET)'), 'Signed sponsor callback must use its own secret');
 assert.ok(sponsor.includes('BOOKING_FEE.paidFeeRecorded(q)'),'Event creation must check recorded paid fee');
 assert.ok(!positive.positiveFee({total_cents:0}), 'Free bookings cannot count');
 assert.ok(!positive.paidFeeRecorded({status:'paid',total_cents:5000}), 'Missing payment timestamp cannot count');
