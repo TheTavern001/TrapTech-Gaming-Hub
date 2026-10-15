@@ -970,7 +970,7 @@
       ],
       "qa": {
         "gameplay": "NOT_DEVICE_TESTED",
-        "distinctness": "SIDE_BY_SIDE_REQUIRED",
+        "distinctness": "MECHANICS_DIVERGENCE_SOURCE_TESTED_DEVICE_REVIEW_PENDING",
         "graphics": "NOT_ART_APPROVED",
         "sound": "NOT_ART_APPROVED",
         "android": "NOT_DEVICE_TESTED",
@@ -979,7 +979,12 @@
         "scoreProof": "NOT_TITLE_CERTIFIED",
         "ownerSignoff": false
       },
-      "followup": "Play side-by-side against layered-path-tower-defense"
+      "followup": "Compare barracks interception, melee/rally strategy and mobile play against Pop Defense and Haze Defense; cannot call independent before device and owner approval",
+      "sourceImplementationUpdates": [
+        "Tactical barracks guards intercept ground enemies, inflict melee damage, lose health and respawn; flight bypasses guards",
+        "Keyboard placement now requires manually selecting a tile, matching touch placement",
+        "Source-level deterministic engine simulation passed; independent game/device/visual owner approval still pending"
+      ]
     },
     {
       "id": "gl-node-siege",
