@@ -40,7 +40,8 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
   if(q.checkout_state==='open' && Number(q.checkout_expires_at)>t && FEE.validCheckoutUrl(q.checkout_url))
     return res.json({ok:true,checkout_url:q.checkout_url,reused:true});
   // Atomically reserve this booking's checkout to avoid concurrent sessions.
-  const ref='B'+crypto.randomBytes(12).toString('hex').toUpperCase();
+  const ref=q.checkout_state==='creating' && /^B[0-9A-F]{24}$/.test(String(q.checkout_ref||''))
+    ?q.checkout_ref:'B'+crypto.randomBytes(12).toString('hex').toUpperCase();
   const reservation=db.prepare(`UPDATE sponsor_quotes SET provider='stripe',checkout_ref=?,checkout_state='creating',
    checkout_created_at=?,checkout_expires_at=?,checkout_url=NULL,provider_ref=NULL
    WHERE booking_id=? AND status='accepted' AND refunded_at IS NULL
@@ -49,6 +50,7 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
          OR (checkout_state='creating' AND checkout_created_at<?))`)
     .run(ref,t,t+CHECKOUT_MS,b.id,t,t-2*60e3);
   if(reservation.changes!==1)return bad(res,409,'Secure checkout is being prepared. Refresh the booking page.');
+  let definiteRejection=false;
   try{
    const expires=t+CHECKOUT_MS;
    const form=new URLSearchParams();
@@ -69,7 +71,8 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
      'Content-Type':'application/x-www-form-urlencoded','Idempotency-Key':'hub-booking-'+ref},body:form
    });
    const data=await response.json().catch(()=>({}));
-   if(!response.ok||!/^cs_(?:test|live)_[A-Za-z0-9]+$/.test(String(data.id||''))||
+   if(!response.ok){definiteRejection=true;throw Error('Stripe checkout rejected');}
+   if(!/^cs_(?:test|live)_[A-Za-z0-9]+$/.test(String(data.id||''))||
       !FEE.validCheckoutUrl(data.url))throw Error('Stripe checkout unavailable');
    const expiry=Number(data.expires_at)*1000;
    const actualExpiry=Number.isFinite(expiry)&&expiry>t?Math.min(expires,expiry):expires;
@@ -79,7 +82,10 @@ function register(app,db,h,{byToken,quoteRow,sponsorView}){
    if(updated.changes!==1)throw Error('Booking checkout reservation changed before commit');
    return res.json({ok:true,checkout_url:data.url,reused:false});
   }catch(e){
-   db.prepare(`UPDATE sponsor_quotes SET checkout_state='failed',checkout_url=NULL,
+   // A network timeout is ambiguous: Stripe may have accepted the session.
+   // Retain the checkout reference so the next attempt uses the SAME Stripe
+   // idempotency key. Only a definitive non-2xx response can reset it.
+   if(definiteRejection)db.prepare(`UPDATE sponsor_quotes SET checkout_state='failed',checkout_url=NULL,
      provider_ref=NULL WHERE booking_id=? AND checkout_ref=? AND status='accepted' AND checkout_state='creating'`)
      .run(b.id,ref);
    console.error('[booking] Stripe checkout initialization failed for booking:',b.id,String(e.message||e));
