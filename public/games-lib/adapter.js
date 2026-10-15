@@ -17,7 +17,13 @@
   H.input = function () { const T = H.tel, t = performance.now(); if (T.last) { const d = t - T.last; T.sum += d; T.sq += d * d; T.k++; T.min = T.min ? Math.min(T.min, d) : d; } T.last = t; T.n++; };
   H.telOut = function () { const T = H.tel, m = T.k ? T.sum / T.k : 0; return { n: T.n, mean: Math.round(m), sd: Math.round(Math.sqrt(Math.max(0, T.k ? T.sq / T.k - m * m : 0))), min: Math.round(T.min) }; };
   H.submit = async function (score) {
+    // Invalid scoring data must never be serialized as JSON null or accepted as zero.
+    // Preserve the active token so an invalid caller cannot consume a valid run.
+    if (typeof score !== 'number' || !Number.isFinite(score) || score < 0 || !Number.isSafeInteger(Math.floor(score)))
+      return { ok: false, error: 'Invalid game score; the run was not submitted.' };
     const dur = Math.round(performance.now() - H.t0);
+    if (!Number.isSafeInteger(dur) || dur < 0)
+      return { ok: false, error: 'Invalid game duration; the run was not submitted.' };
     if (!H.token) return { ok: false, guest: H.guest, error: H.guest ? 'Sign in to save scores to the leaderboard.' : (H.err || 'Score not saved (no run session).') };
     const tok = H.token; H.token = null;
     // Freeze the completed run's evidence before a new start resets telemetry.
