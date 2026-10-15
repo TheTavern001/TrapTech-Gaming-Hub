@@ -49,6 +49,7 @@ run full-meta-fairness node tools/test-full-hub-meta-contract.js
 run game-owner-mechanics node tools/test-owner-reported-gameplay.js
 run keep-guard-barracks-real-mechanics node tools/test-keep-guard-barracks.js
 run td-keyboard-touch-parity node tools/test-td-keyboard-touch-parity.js
+run load-harness-loopback-safety node tools/test-private-10k-harness.js
 run arrow-hero-swept-collision node tools/test-arrow-hero-swept-collision.js
 run arrow-hero-hostile-projectiles node tools/test-arrow-hero-hostile-projectiles.js
 run arrow-hero-postmove-contact node tools/test-arrow-hero-contact-after-move.js
