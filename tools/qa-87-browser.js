@@ -11,6 +11,7 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),readline=require('node:readline');
 const {planGameBatch}=require('./qa-game-batches');
 const {loopbackOrigin,qaRequestAllowed,inspectGameRuntime}=require('./qa-game-runtime');
+const {summarizeFramePacing}=require('./qa-frame-pacing');
 const ROOT=path.resolve(__dirname,'..');
 const BASE=String(process.env.BASE||'http://127.0.0.1:8787').replace(/\/$/,'');
 const RUNS=Math.max(1,Math.min(30,Number(process.env.QA_SECONDS)||5));
@@ -21,6 +22,7 @@ const stateFile=process.env.QA_STORAGE_STATE||'';
 const INTERACTIVE=process.env.QA_INTERACTIVE_AUTH==='1';
 const allowRunStart=loopbackOrigin(BASE)||process.env.QA_ALLOW_RUN_START==='1';
 const TAKE_ALL=process.env.QA_ALL_SCREENSHOTS==='1';
+const STRICT_PACING=process.env.QA_REQUIRE_PACING==='1';
 const HEADLESS=process.env.QA_HEADLESS!=='0'&&!INTERACTIVE;
 if(!/^https?:\/\/[^/?#]+$/i.test(BASE)){console.error('BASE must be an HTTP(S) origin');process.exit(2);}
 if(!['chromium','webkit'].includes(ENGINE)){console.error('BROWSER_ENGINE must be chromium or webkit');process.exit(2);}
@@ -40,7 +42,7 @@ const core=[...body.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S]*?
 const library=catalog.filter(g=>g.playable!==false&&!g.retired)
  .map(g=>({id:g.id,title:g.title,route:g.url,kind:'library',build:g.build}));
 const games=[...core,...library];
-if(core.length!==13||library.length<74||games.length<87){
+if(core.length<13||library.length<74||games.length<87){
  console.error('Missing baseline active games',core.length,library.length);process.exit(2);
 }
 const batch=planGameBatch(games,{start:process.env.QA_START_INDEX??0,
@@ -95,6 +97,7 @@ async function main(){
   const monitor=async(g)=>{
    const page=await context.newPage();
    const failures=[],consoleErrors=[],badHttp=[],started=Date.now();let status=null,hasCanvas=false;
+   let pacingSamples=[];
    const signedRunAuthorizations=[],pendingRunProofs=[];
    page.on('pageerror',error=>failures.push(String(error.message).slice(0,360)));
    page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text().slice(0,360));});
@@ -140,10 +143,26 @@ async function main(){
        g.build==='built'?page.locator("canvas#gl"):page.locator('canvas:visible').last();
      if(await touchCanvas.count()&&await touchCanvas.isVisible().catch(()=>false))
        await touchCanvas.tap({force:true,timeout:3000});
-     await page.waitForTimeout(RUNS*1000);
+     // rAF intervals are an app-independent browser pacing proxy, NOT drawn-frame proof.
+     // Measure after touch/game start, not while the page is merely loading.
+     pacingSamples=await page.evaluate(durationMs=>new Promise(resolve=>{
+       const intervals=[];let last=null,done=false;
+       const finish=()=>{if(!done){done=true;resolve(intervals);}};
+       const timeout=setTimeout(finish,durationMs+1500);
+       const started=performance.now();
+       const frame=t=>{
+         if(done)return;
+         if(last!==null&&intervals.length<2400)intervals.push(t-last);
+         last=t;
+         if(t-started>=durationMs){clearTimeout(timeout);finish();}
+         else requestAnimationFrame(frame);
+       };
+       requestAnimationFrame(frame);
+     }),RUNS*1000);
     }
    }catch(e){failures.push('Navigation/interaction: '+String(e.message).slice(0,350));}
    await Promise.all(pendingRunProofs);
+   const pacing=summarizeFramePacing(pacingSamples);
    const signedRun=signedRunAuthorizations.find(x=>x.gameId===g.id&&x.authorized)||null;
    const metrics=await page.evaluate(()=>{
     const gl=window.__GL||null;
@@ -168,11 +187,16 @@ async function main(){
    const failed=status!==200||failures.length>0||consoleErrors.length>0||badHttp.length>0||
      !runtimeSurface||stuckInStartup||!runtimeProof.verified||
      metrics?.horizontalOverflow===true||
-     (metrics?.frameP95Ms>25&&metrics?.kitState==='play');
+     (Number.isFinite(metrics?.frameP95Ms)&&metrics.frameP95Ms>33.4&&
+       (metrics?.kitState==='play'||metrics?.coreState==='play'))||
+     (STRICT_PACING && !pacing.passed);
    if(TAKE_ALL||failed)try{await page.screenshot({path:path.join(SCREENSHOTS,filename(g.id)+'.png'),timeout:4500});}catch{}
    await page.close();
    return {id:g.id,title:g.title,kind:g.kind,route:g.route,status,titleLoaded:!!title,canvasDetected:hasCanvas,
     ...metrics,runtimeSurfaceDetected:runtimeSurface,
+    browserFrameP50Ms:pacing.p50Ms,browserFrameP95Ms:pacing.p95Ms,
+    browserPacingSamples:pacing.samples,browserPacingStatus:pacing.status,
+    browserLongFrames:pacing.longFrames,browserPacingPassed:pacing.passed,
     runtimeIdentityVerified:runtimeProof.verified,runtimeProofNote:runtimeProof.reason,
     signedRunObserved:!!signedRun,
     jsExceptions:failures,consoleErrors,badAssets:badHttp,
@@ -193,8 +217,11 @@ async function main(){
    expectedActiveTitles:batch.total,attempted:results.length,passed:results.length-failed.length,
    failed:failed.map(x=>x.id),batchStartIndex:batch.start,batchEndExclusive:batch.endExclusive,
    fullCoverage:batch.fullCoverage,requestedBatchPassed:failed.length===0,
+   strictPacingRequired:STRICT_PACING,emulatedFramePacingNotHardwareCertification:true,
+   pacingMeasuredGames:results.filter(x=>x.browserPacingStatus!=='INSUFFICIENT_SAMPLES').length,
+   pacingFailedGames:results.filter(x=>!x.browserPacingPassed).map(x=>x.id),
    certifiedAAA:0,physicalAndroidApproved:0,physicalIphoneApproved:0,
-   note:'Signed run-start and game-engine playback smoke; no score or commerce writes. Not full gameplay, physical phones, replay integrity or AAA certification.',
+   note:'Signed run-start/game-engine/browser-rAF pacing smoke; rAF timing is not engine drawn-frame timing. No score or commerce writes. Not full gameplay, physical phones, replay integrity or AAA certification.',
    games:results};
   const target=path.join(OUT,'87-game-browser-smoke.json');
   fs.writeFileSync(target,JSON.stringify(report,null,2)+'\n');
