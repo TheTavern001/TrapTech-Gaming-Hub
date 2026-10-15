@@ -167,7 +167,7 @@ function shell(path, inner, { cls = '', title } = {}) {
   const alias = (path === '/settings' && activePath === '/avatar') ||
     (path === '/shop' && (activePath === '/store' || activePath === '/prestige' || activePath === '/shop/how-it-works' || /^\/store\/order\/[A-Z0-9]{8,20}$/.test(activePath))) ||
     (path === '/sponsor' && /^\/sponsor\/status\/[A-Za-z0-9_-]{20,40}$/.test(activePath)) ||
-    (path === '/giveaways' && /^\/join\/[A-Za-z0-9-]{3,40}$/.test(activePath));
+    (path === '/giveaways' && (/^\/join\/[A-Za-z0-9-]{3,40}$/.test(activePath) || /^\/event\/TT-[0-9A-Za-z]{5}$/i.test(activePath) || /^\/giveaways\/\d+(?:\/(?:rules|live))?$/.test(activePath)));
   if (activePath !== path && !alias) return;
   $app.innerHTML = `${topbar(path)}<main class="page ${cls}" id="main" tabindex="-1">${inner}</main>${footer()}${bottomnav(path)}`;
   setTitle(title || TITLES[path] || null);
@@ -765,6 +765,7 @@ route(/^\/event\/(TT-[0-9A-Za-z]{5})$/i, async (m) => {
     <div class="event-label" id="event-label">${icon('badge-check')} ${esc(r.board_label)}</div>
     <h1>${esc(e.title)}</h1>
     <div class="card pad"><p style="margin:0 0 6px"><b>Prize:</b> ${esc(e.prize || e.title)}</p><p class="small muted" style="margin:0">Hosted by ${esc(e.vendor)}. Status: <b>${esc(e.status)}</b>. ${new Date(e.start_at).toLocaleString()} to ${new Date(e.end_at).toLocaleString()}.</p>
+      ${(e.linked_requirements || []).filter(x=>x && x.kind==='visit' && !x.required).map(x=>`<div class="card pad" style="margin:10px 0"><b>${icon('external-link')} Brand channel</b><p class="small muted">Optional: visit the sponsoring brand's channel. Following is not required for giveaway entry or prizes.</p><a class="btn sm ghost" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.label || 'Visit channel')}</a></div>`).join('')}
       ${live ? `<div class="small muted" style="margin:10px 0 6px">${S.me ? 'Pick a game. Only runs started here count for this event:' : 'Sign in to play for this event:'}</div><div class="gpicks">${play}</div>` : ''}</div>
     <div class="card" style="margin-top:14px"><div class="panel-h"><h2>Event leaderboard</h2></div>${r.board.length ? `<table class="lb"><tbody>${r.board.map(x => `<tr><td>#${x.rank}</td><td>${esc(x.username)}</td><td class="num">${fmt(x.score)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No event runs yet.</div>'}</div>
     <p class="small muted">This board only counts runs started from this event. Public game scores never count. <a href="/giveaways/${e.id}/rules">Official rules</a></p>
