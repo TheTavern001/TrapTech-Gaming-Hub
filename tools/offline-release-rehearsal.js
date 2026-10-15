@@ -23,6 +23,8 @@ const tests=[
  'tools/test-payment-settlement-proof.js',
  'tools/test-prize-score-proof.js',
  'tools/test-owner-reported-gameplay.js',
+ 'tools/test-keep-guard-barracks.js',
+ 'tools/test-td-keyboard-touch-parity.js',
  'tools/test-arrow-hero-swept-collision.js',
  'tools/test-arrow-hero-hostile-projectiles.js',
  'tools/test-arrow-hero-contact-after-move.js',
