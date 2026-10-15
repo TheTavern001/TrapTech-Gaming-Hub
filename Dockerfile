@@ -85,6 +85,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-private-10k-harness.js \
  && node tools/test-giveaway-booking-release-gates.js \
  && node tools/test-booking-stripe-settlement.js \
+ && node tools/test-sponsor-webhook-signature.js \
  && node tools/test-booked-skill-winner-contract.js \
  && node tools/test-booking-library-selection.js \
  && node tools/test-optional-sponsor-channel.js \
