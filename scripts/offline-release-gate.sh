@@ -47,6 +47,8 @@ run account-session-revocation node tools/test-session-revocation.js
 run reviewed-wallet-cannot-be-spent node tools/test-reviewed-wallet-read.js
 run full-meta-fairness node tools/test-full-hub-meta-contract.js
 run game-owner-mechanics node tools/test-owner-reported-gameplay.js
+run keep-guard-barracks-real-mechanics node tools/test-keep-guard-barracks.js
+run td-keyboard-touch-parity node tools/test-td-keyboard-touch-parity.js
 run arrow-hero-swept-collision node tools/test-arrow-hero-swept-collision.js
 run arrow-hero-hostile-projectiles node tools/test-arrow-hero-hostile-projectiles.js
 run arrow-hero-postmove-contact node tools/test-arrow-hero-contact-after-move.js
