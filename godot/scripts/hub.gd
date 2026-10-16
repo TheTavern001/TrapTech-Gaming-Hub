@@ -19,29 +19,26 @@ func _ready() -> void:
 func _add_nav() -> void:
 	var nav = HBoxContainer.new()
 	nav.alignment = BoxContainer.ALIGNMENT_CENTER
-	nav.add_theme_constant_override("separation", 12)
-	var shop_btn = Button.new()
-	shop_btn.text = "Shop / Season"
-	shop_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/shop.tscn"))
-	var give_btn = Button.new()
-	give_btn.text = "Giveaways"
-	give_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/giveaways.tscn"))
-	var ach_btn = Button.new()
-	ach_btn.text = "Achievements"
-	ach_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/achievements.tscn"))
-	var quest_btn = Button.new()
-	quest_btn.text = "Quests"
-	quest_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/quests.tscn"))
-	var profile_btn = Button.new()
-	profile_btn.text = "Profile"
-	profile_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/profile.tscn"))
-	nav.add_child(shop_btn)
-	nav.add_child(give_btn)
-	nav.add_child(ach_btn)
-	nav.add_child(quest_btn)
-	nav.add_child(profile_btn)
+	nav.add_theme_constant_override("separation", 8)
+	var buttons = [
+		["Shop / Season", "res://scenes/shop.tscn"],
+		["Giveaways", "res://scenes/giveaways.tscn"],
+		["Achievements", "res://scenes/achievements.tscn"],
+		["Quests", "res://scenes/quests.tscn"],
+		["Leaderboard", "res://scenes/leaderboard.tscn"],
+		["Notifications", "res://scenes/notifications.tscn"],
+		["Profile", "res://scenes/profile.tscn"]
+	]
+	for b in buttons:
+		var btn = Button.new()
+		btn.text = b[0]
+		btn.pressed.connect(_go.bind(b[1]))
+		nav.add_child(btn)
 	$VBox.add_child(nav)
 	$VBox.move_child(nav, 3)
+
+func _go(path: String) -> void:
+	get_tree().change_scene_to_file(path)
 
 func _build_grid() -> void:
 	for g in games:
