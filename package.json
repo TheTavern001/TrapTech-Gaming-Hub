@@ -5,6 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "start:external": "node src/start-with-external.js",
     "demo:seed": "node src/demo.js seed",
     "demo:wipe": "node src/demo.js wipe",
     "test": "node tools/e2e-api.js",
