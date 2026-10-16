@@ -71,13 +71,27 @@ async function editor() {
         if (!x.ok) return C.toast(x.error || 'Unable to unlock item');
         p.owned = true; credits = x.credits;
         draw('<div class="ok-msg">Unlocked with Hub Credits. Save to equip on your profile.</div>');
+      } catch (_) {
+        C.toast('Connection lost. Your Credits were not confirmed; refresh your balance before trying again.');
       } finally { if (buyCredits.isConnected) buyCredits.disabled = false; }
     };
-    document.getElementById('av-save').onclick = async () => {
+    const saveButton = document.getElementById('av-save');
+    if (saveButton) saveButton.onclick = async () => {
+      if (saveButton.disabled) return;
       if (pendingUnlocks().length) return C.toast('Choose unlocked items or buy them before saving.');
-      const x = await api('/api/avatar', { method: 'PUT', body: { avatar: cfg } });
-      if (!x.ok) return draw(`<div class="err">${esc(x.error)}</div>`);
-      C.bumpAvatar(S.me.username); draw('<div class="ok-msg">Saved. Your avatar now updates across the Hub.</div>');
+      saveButton.disabled = true;
+      const snapshot = { ...cfg };
+      try {
+        const x = await api('/api/avatar', { method: 'PUT', body: { avatar: snapshot } });
+        if (!x.ok) return draw(`<div class="err">${esc(x.error || 'Unable to save this avatar.')}</div>`);
+        r.avatar = { ...x.avatar };
+        C.bumpAvatar(S.me.username);
+        draw('<div class="ok-msg">Saved. Your avatar now updates across the Hub.</div>');
+      } catch (_) {
+        C.toast('Unable to save avatar. Check your connection and retry.');
+      } finally {
+        if (saveButton.isConnected) saveButton.disabled = false;
+      }
     };
   };
   draw();
