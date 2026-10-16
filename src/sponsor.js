@@ -4,8 +4,8 @@
 // offered), adds details, and sends a free quote request. Only admins see the price sheet (settings key "sponsor_prices",
 // seeded from the old v5 prices); the admin gets an auto-totalled draft quote per request, can adjust it (discounts,
 // custom lines), and marks it sent / accepted / declined / paid. The sponsor sees the quote on their private status page
-// (/sponsor/status/<token>) once it is sent, and accepts or declines it there. Payment stays the existing manual flow:
-// the accepted quote amount is settled through secure Stripe card checkout and the admin marks it paid.
+// (/sponsor/status/<token>) once sent, and accepts or declines it there. Paid bookings use Stripe-hosted
+// checkout; only a signed, matched provider event may record payment. Admins cannot mark quotes paid.
 const crypto = require('crypto');
 const db = require('./db');
 const linked = require('./giveaway-linked');
