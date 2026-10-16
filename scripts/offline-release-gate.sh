@@ -60,6 +60,7 @@ run reviewed-wallet-cannot-be-spent node tools/test-reviewed-wallet-read.js
 run full-meta-fairness node tools/test-full-hub-meta-contract.js
 run game-owner-mechanics node tools/test-owner-reported-gameplay.js
 run three-real-games node tools/test-three-gameplay-fixes.js
+run mobile-phone-entry node tools/test-mobile-only-entry.js
 run keep-guard-barracks-real-mechanics node tools/test-keep-guard-barracks.js
 run td-keyboard-touch-parity node tools/test-td-keyboard-touch-parity.js
 run load-harness-loopback-safety node tools/test-private-10k-harness.js
