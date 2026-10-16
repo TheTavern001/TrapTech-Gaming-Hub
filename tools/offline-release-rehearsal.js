@@ -44,6 +44,7 @@ const tests=[
  'tools/test-private-review-access.js',
  'tools/test-owner-preview-payment-lock.js',
  'tools/test-cosmetic-pass-progression.js',
+ 'tools/test-prestige-cosmetic-xp.js',
  'tools/test-service-worker-privacy.js',
  'tools/test-owner-gameplay-distinctness.js',
  'tools/test-cannabis-gameplay-qa.js',

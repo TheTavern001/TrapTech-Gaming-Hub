@@ -368,15 +368,17 @@ G.parse.contexts.p = (n, slot) => (n >= 1 && slot >= 1 && slot <= PASS_LEVELS ? 
 function premiumTrack(n) { return Array.from({ length: PASS_LEVELS / 3 }, (_, i) => { const L = (i + 1) * 3; const it = G.parse(G.make('p', n, L, G.parse.contexts.p(n, L)).id);
   return { level: L, item: it && { id: it.id, type: it.type, name: it.name, rarity: it.rarity }, crowns: L % 10 === 0 ? 100 : 0 }; }); }
 const hasPass = (userId, n) => !!db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(userId, n);
-// Payment unlocks cosmetic claims, never faster progression. Ignore legacy
-// product xp_boost_pct values so an existing database cannot re-enable boosts.
+// A pass unlocks claims; delivered $1,000+ Prestige ownership grants permanent
+// 2x cosmetic XP. Legacy pass-only 15% configuration does not control this perk.
 function passState(user, t = Date.now()) {
   const SE = require('./seasons'); const sp = user ? SE.seasonProgress(user.id, t) : null; const n = SE.seasonAt(t).number; const P = prod('season-pass');
-  const owned = user ? hasPass(user.id, n) : false; const boost = 0;
-  const pxp = sp ? sp.xp : 0; const plevel = sp ? sp.level : 0;
+  const owned = user ? hasPass(user.id, n) : false;
+  const cosmetic = sp ? sp.cosmetic_xp : {xp:0,bonus_xp:0,multiplier:1,starts_at:null};
+  const boost = (cosmetic.multiplier - 1) * 100;
+  const pxp = cosmetic.xp; const plevel = SE.levelOf(pxp).level;
   const claimed = new Set(user ? db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(user.id, n).map(r => r.level) : []);
   return { season: n, price_usd_cents: P ? P.usd_cents : null, owned, xp_boost_pct: boost, premium_xp: pxp, premium_level: plevel, free_level: sp ? sp.level : 0,
-    track: premiumTrack(n).map(r => ({ ...r, unlocked: owned && plevel >= r.level, claimed: claimed.has(r.level) })), next_free: user ? require('./pass-quests').status(user.id, t) : null };
+    cosmetic_xp: cosmetic, track: premiumTrack(n).map(r => ({ ...r, unlocked: owned && plevel >= r.level, claimed: claimed.has(r.level) })), next_free: user ? require('./pass-quests').status(user.id, t) : null };
 }
 function claimPass(user, t = Date.now()) {
   const st = passState(user, t); if (!st.owned) return { ok: false, error: 'Get the Season Pass to claim premium rewards.' };

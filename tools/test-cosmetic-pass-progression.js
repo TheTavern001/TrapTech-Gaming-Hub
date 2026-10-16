@@ -20,10 +20,10 @@ for (const boost of [0, 15, 100, -10]) {
 }
 assert.equal(normalize({kind:'pack',data:'{"quantity":50}'}).quantity, 50);
 const production = slice('function passState(user', 'function claimPass(') + '\npassState;';
-const evaluate = (owned, xp, level, user = {id: 7}) => vm.runInNewContext(production, {
+const evaluate = (owned, xp, level, user = {id: 7}, multiplier = 1) => vm.runInNewContext(production, {
   require(name) {
     if (name === './seasons') return {
-      seasonProgress: () => ({xp, level}), seasonAt: () => ({number: 1})
+      seasonProgress: () => ({xp, level, cosmetic_xp:{xp:xp*multiplier,bonus_xp:xp*(multiplier-1),multiplier,starts_at:multiplier===2?20:null}}), seasonAt: () => ({number: 1}), levelOf: () => ({level:level*multiplier})
     };
     if (name === './pass-quests') return {status: () => ({})};
     throw Error('Unexpected dependency: ' + name);
@@ -43,4 +43,10 @@ for (const [xp, level] of [[0,0],[299,2],[300,3],[1234,8],[100000,60]]) {
   assert.ok(paid.track.every(r => r.unlocked === (level >= r.level)));
 }
 assert.equal(evaluate(false, 900, 9, null).premium_xp, 0);
+const prestige = evaluate(true, 300, 3, {id:7}, 2);
+assert.equal(prestige.premium_xp,600);
+assert.equal(prestige.premium_level,6);
+assert.equal(prestige.xp_boost_pct,100);
+assert.equal(prestige.free_level,3,'Ranked level stays unboosted');
+assert.ok(evaluate(false,300,3,{id:7},2).track.every(r=>!r.unlocked),'Prestige does not grant a paid pass');
 console.log(JSON.stringify({ok:true,legacyBoostIgnored:true,equalProgression:true,cosmeticClaimsStillRequirePass:true}));

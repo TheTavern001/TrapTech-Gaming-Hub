@@ -139,6 +139,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-private-review-access.js \
  && node tools/test-owner-preview-payment-lock.js \
  && node tools/test-cosmetic-pass-progression.js \
+ && node tools/test-prestige-cosmetic-xp.js \
  && node tools/test-service-worker-privacy.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
