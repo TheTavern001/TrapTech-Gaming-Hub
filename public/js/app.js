@@ -446,7 +446,7 @@ route(/^\/(home)?$/, async () => {
       <div class="home-intro-copy">
         <div class="home-eyebrow"><span class="home-live-dot"></span> THE GAMING HUB <span class="home-eyebrow-sep">/</span> BY TRAP TECH SOLUTIONS</div>
         <h1>${S.me ? `Welcome back, ${esc(S.me.username)}.` : 'Ready. Set. Play.'}</h1>
-        <p>Jump into a quick run, climb the boards, and keep an eye on official competitions. Free to play. Built for mobile and desktop.</p>
+        <p>Jump into a quick run, climb the boards, and keep an eye on official competitions. Free to play on Android and iPhone. Desktop edition planned separately.</p>
         <div class="home-intro-actions"><a class="btn" href="/games">${icon('gamepad-2')} Explore Games</a><a class="btn ghost" href="/giveaways">${icon('gift')} Official Giveaways</a></div>
         <div class="home-points"><span>${icon('trophy')} Skill-based leaderboards</span><span>${icon('zap')} Daily quests &amp; XP</span><span>${icon('shield-check')} Official event listings</span></div>
       </div>

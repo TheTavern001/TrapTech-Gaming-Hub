@@ -19,7 +19,12 @@ COPY public ./public
 # Build-time audits consume the generated library inventory and supporting audit data.
 COPY docs ./docs
 COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
+# Source-only R1 audit inspects this shell gate; it is not shipped in runtime image.
+COPY scripts/offline-release-gate.sh ./scripts/offline-release-gate.sh
 COPY tools ./tools
+# Audit inspects Dockerfile and .dockerignore; both must exist in build stage.
+# These do not enter the final runtime image.
+COPY Dockerfile .dockerignore ./
 # Replace legacy purple-controller install PNGs with the exact existing gold-crown TT vector.
 # The same files are served for PWA manifest, Android adaptive icon and iOS home screen.
 RUN node tools/build-traptech-pwa-icons.js && node tools/test-traptech-pwa-icons.js
@@ -31,6 +36,7 @@ RUN test -s tools/games-lib-static-check.js \
  && test -s docs/GAMES-LIB.md \
  && test -s docs/score-ranges.json \
  && echo 'Required prelaunch audit inputs present' \
+ && node tools/test-docker-audit-context.js \
  && node tools/test-post-r1-build-evidence.js \
  && node tools/test-r1-incident-gates.js \
  && mkdir -p docs/audit \
@@ -78,6 +84,8 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-existing-game-review-register.js \
  && node tools/test-private-10k-harness.js \
  && node tools/test-giveaway-booking-release-gates.js \
+ && node tools/test-booking-stripe-settlement.js \
+ && node tools/test-sponsor-webhook-signature.js \
  && node tools/test-booked-skill-winner-contract.js \
  && node tools/test-booking-library-selection.js \
  && node tools/test-optional-sponsor-channel.js \
@@ -118,6 +126,11 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-runner-train-assets.js \
  && node --check tools/test-owner-reported-gameplay.js \
  && node tools/test-owner-reported-gameplay.js \
+ && node tools/test-three-gameplay-fixes.js \
+ && node tools/test-kit-mobile-loop.js \
+ && node tools/test-kit-official-run-start.js \
+ && node tools/test-avatar-editor-mobile-save.js \
+ && node tools/test-mobile-only-entry.js \
  && node tools/test-keep-guard-barracks.js \
  && node tools/test-td-keyboard-touch-parity.js \
  && node --check tools/test-cannabis-gameplay-qa.js \
@@ -138,6 +151,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-kit-run-serial.js \
  && node tools/test-kit-hidden-start.js \
  && node tools/test-private-preview-readiness.js \
+ && node tools/test-private-preview-rehearsal-mode.js \
  && node tools/test-private-review-access.js \
  && node tools/test-owner-preview-payment-lock.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
@@ -172,6 +186,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check tools/test-qa-87-browser-contract.js \
  && node tools/test-qa-87-browser-contract.js  && node tools/test-qa-game-batches.js \
  && node tools/test-qa-browser-runtime-integrity.js \
+ && node --check tools/qa-frame-pacing.js \
+ && node tools/test-qa-frame-pacing.js \
+ && node tools/test-unified-release-candidate.js \
  && test -s docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json \
  && node --check tools/prelaunch-deep-audit.js \
  && node --check tools/local-imports.js \

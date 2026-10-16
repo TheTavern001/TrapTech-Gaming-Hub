@@ -4,12 +4,14 @@
 // offered), adds details, and sends a free quote request. Only admins see the price sheet (settings key "sponsor_prices",
 // seeded from the old v5 prices); the admin gets an auto-totalled draft quote per request, can adjust it (discounts,
 // custom lines), and marks it sent / accepted / declined / paid. The sponsor sees the quote on their private status page
-// (/sponsor/status/<token>) once it is sent, and accepts or declines it there. Payment stays the existing manual flow:
-// the accepted quote amount is settled with Trap Tech Solutions on Potato and the admin marks it paid.
+// (/sponsor/status/<token>) once sent, and accepts or declines it there. Paid bookings use Stripe-hosted
+// checkout; only a signed, matched provider event may record payment. Admins cannot mark quotes paid.
 const crypto = require('crypto');
 const db = require('./db');
 const linked = require('./giveaway-linked');
 const PK = require('./packages');
+const BOOKING_FEE = require('./booking-fee-guard');
+const BOOKING_STRIPE = require('./booking-stripe');
 
 const D = 864e5;
 const cents = (d) => Math.round(d * 100);
@@ -68,6 +70,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS sponsor_quotes (
   note TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'draft', valid_until INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL,
   sent_at INTEGER, responded_at INTEGER, paid_at INTEGER, updated_by TEXT);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_token ON bookings(public_token);`);
+BOOKING_STRIPE.ensureSchema(db);
 // Keep existing booking/event data while adding one optional brand channel link. No growth goals or follow requirements.
 linked.ensureSchema(db);
 // migrate: every booking gets a private status token; old tier bookings get an equivalent feature list
@@ -131,7 +134,7 @@ function adminView(b) {
 }
 function saveQuote(id, body, by) {
   const b = db.prepare('SELECT * FROM bookings WHERE id=?').get(id); if (!b) return { ok: false, error: 'Request not found.' };
-  const q = quoteRow(id); if (q && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'This quote was already accepted; it can no longer change.' };
+  const q = quoteRow(id); if (q && ['accepted', 'paid', 'refunded'].includes(q.status)) return { ok: false, error: 'This quote was already accepted; it can no longer change.' };
   const lines = (Array.isArray(body.lines) ? body.lines : draftLines(b)).slice(0, 60).map(l => {
     const qty = Math.max(0, Math.min(1000, Number(l.qty) || 0)); const unit = Math.round(Number(l.unit_cents) || 0);
     const amount = l.amount_cents !== undefined && l.custom ? Math.round(Number(l.amount_cents) || 0) : Math.round(qty * unit);
@@ -149,7 +152,9 @@ function setStatus(id, status, by) {
   if (!['sent', 'accepted', 'declined', 'paid', 'draft'].includes(status)) return { ok: false, error: 'Unknown status.' };
   if (!quoteRow(id)) { const r = saveQuote(id, {}, by); if (!r.ok) return r; }
   const q = quoteRow(id); const t = Date.now();
-  if (status === 'paid' && q.status !== 'accepted') return { ok: false, error: 'Only an accepted quote can be marked paid.' };
+  if (status === 'paid') return { ok:false,error:'Payments are verified through signed Stripe webhooks, not by an admin status button.' };
+  if (q.status === 'paid' || q.status === 'refunded') return { ok:false,error:'A settled or refunded booking cannot be manually reset.' };
+  if (q.status === 'accepted' && status !== 'accepted') return { ok:false,error:'An accepted quote cannot be reset or declined after checkout authorization. Contact support for a verified refund or replacement booking.' };
   if (status === 'sent' && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'Already accepted.' };
   db.prepare(`UPDATE sponsor_quotes SET status=?, updated_at=?, updated_by=?, sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END, responded_at=CASE WHEN ? IN ('accepted','declined') THEN ? ELSE responded_at END, paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END WHERE booking_id=?`)
     .run(status, t, by || null, status, t, status, t, status, t, id);
@@ -159,7 +164,7 @@ function setStatus(id, status, by) {
 }
 // what the sponsor sees on the status page (prices only once a quote has been SENT)
 function sponsorView(b) {
-  const q = quoteRow(b.id); const shown = q && ['sent', 'accepted', 'declined', 'paid'].includes(q.status);
+  const q = quoteRow(b.id); const shown = q && ['sent', 'accepted', 'declined', 'paid', 'refunded'].includes(q.status);
   const pk = PK.getPackages();
   const ev = b.event_id ? db.prepare('SELECT id, event_code, title, start_at, end_at FROM giveaways WHERE id=?').get(b.event_id) : null;
   return { id: b.id, brand: b.brand, created_at: b.created_at, start_date: b.start_date, end_date: b.end_date, details: b.details, notes: b.notes, business_type: b.business_type,
@@ -167,6 +172,7 @@ function sponsorView(b) {
     linked_requirements: linked.publicView(b.linked_requirements),
     event: ev && ['active','scheduled'].includes(require('./events').status(db.prepare('SELECT * FROM giveaways WHERE id=?').get(ev.id))) ? { code: ev.event_code, url: '/event/' + ev.event_code, qr_svg: require('./events').qrSvg((require('./public-url').PUBLIC_URL || '') + '/event/' + ev.event_code), start_at: ev.start_at, end_at: ev.end_at } : null,
     status: shown ? q.status : (b.status === 'declined' ? 'declined' : 'pending'), potato_handle: pk.potato_handle,
+    payment_checkout: BOOKING_STRIPE.checkoutFields(q),
     features: featuresOf(b).map(x => BY[x.id] && ({ id: x.id, label: label(BY[x.id], x.qty), note: x.note })).filter(Boolean),
     quote: shown ? { lines: JSON.parse(q.lines).map(l => ({ label: l.label, qty: l.qty, amount_cents: l.amount_cents, note: l.note })), discount_pct: q.discount_pct, discount_cents: q.discount_cents,
       total_cents: q.total_cents, note: q.note, valid_until: q.valid_until, sent_at: q.sent_at, responded_at: q.responded_at, paid_at: q.paid_at, status: q.status,
@@ -184,7 +190,7 @@ const publicCatalog = () => ({ groups: GROUPS, features: FEATURES.map(f => ({ id
 module.exports = function sponsor(app, A, h) {
   const { now, bad, currentUser, str, limiter, logActivity, ipHash } = h;
   h.placementsOf = placementsOf;
-  app.get('/api/sponsor/catalog', (req, res) => { const pk = PK.getPackages(); res.json({ ok: true, ...publicCatalog(), business_types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE, potato_handle: pk.potato_handle, faq: (pk.faq || []).filter(f => !/pay|price|cost/i.test(f[0]) && !/\$\d|\b(basic|premium|elite|tiers?)\b/i.test(f.join(' '))).concat([['When do I pay?', 'Not now. A request is free. Trap Tech looks at the features you picked and sends you a quote on your private status page. You only pay after you accept it, settled with Trap Tech Solutions on Potato.']]) }); });
+  app.get('/api/sponsor/catalog', (req, res) => { const pk = PK.getPackages(); res.json({ ok: true, ...publicCatalog(), business_types: PK.BUSINESS_TYPES, cannabis: PK.CANNABIS_TYPE, potato_handle: pk.potato_handle, faq: (pk.faq || []).filter(f => !/pay|price|cost/i.test(f[0]) && !/\$\d|\b(basic|premium|elite|tiers?)\b/i.test(f.join(' '))).concat([['When do I pay?', 'Not now. A request is free. Trap Tech looks at the features you picked and sends you a quote on your private status page. You only pay after you accept it, settled through secure Stripe card checkout.']]) }); });
   const create = (req, res) => {
     const b = req.body || {};
     const brand = str(b.brand, 120); const email = str(b.email, 160).toLowerCase(); const potato = str(b.potato, 40).replace(/^@/, '');
@@ -225,6 +231,7 @@ module.exports = function sponsor(app, A, h) {
   app.post('/api/sponsor/requests', limiter('booking', 15, 3600e3), create);
   app.post('/api/bookings', limiter('booking', 15, 3600e3), create); // old clients
   const byToken = (t) => /^[A-Za-z0-9_-]{20,40}$/.test(String(t)) ? db.prepare('SELECT * FROM bookings WHERE public_token=?').get(String(t)) : null;
+  BOOKING_STRIPE.register(app,db,h,{byToken,quoteRow,sponsorView});
   app.get('/api/sponsor/requests/:token', limiter('sp-status', 120, 600e3), (req, res) => { const b = byToken(req.params.token); if (!b) return bad(res, 404, 'Request not found.'); res.json({ ok: true, request: sponsorView(b) }); });
   app.post('/api/sponsor/requests/:token/:act(accept|decline)', limiter('sp-act', 20, 600e3), (req, res) => {
     const b = byToken(req.params.token); if (!b) return bad(res, 404, 'Request not found.');
@@ -250,7 +257,7 @@ module.exports = function sponsor(app, A, h) {
   // v7 Phase 3: an ACCEPTED (or paid) quote becomes an official event in one click. Idempotent: a second click returns the same event.
   A.post('/sponsor/requests/:id/create-event', (req, res) => {
     const b = db.prepare('SELECT * FROM bookings WHERE id=?').get(+req.params.id); if (!b) return bad(res, 404, 'Request not found.');
-    const q = quoteRow(b.id); if (!q || q.status !== 'paid') return bad(res, 409, 'The accepted quote must be marked paid by Trap Tech before preparing an official event.');
+    const q = quoteRow(b.id); if (!BOOKING_FEE.paidFeeRecorded(q)) return bad(res, 409, 'A positive booking fee and paid booking record are required before preparing an official event.');
     const EV = require('./events');
     const EVSTATUS = g => EV.status(g);
     if (b.event_id) { const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(b.event_id); if (g) return res.json({ ok: true, existing: true, id: g.id, status: EVSTATUS(g), share_ready: false, message:'Share links are released only after settled payment and certified gameplay.' }); }

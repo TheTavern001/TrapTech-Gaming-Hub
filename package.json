@@ -18,6 +18,7 @@
     "audit:public-launch": "node tools/public-release-gate.js",
     "verify:offline": "node tools/offline-release-rehearsal.js --release=R1",
     "verify:offline:full": "node tools/offline-release-rehearsal.js --release=R1 --full",
+    "verify:offline:private": "node tools/offline-release-rehearsal.js --release=R2 --full --private-preview",
     "icons:sync": "node tools/build-traptech-pwa-icons.js",
     "icons:verify": "node tools/test-traptech-pwa-icons.js",
     "verify:private": "node tools/verify-private-preview-live.js",

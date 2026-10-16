@@ -4,7 +4,7 @@ function spr(c, im, x, y, w, rot) { const h = w * im.height / im.width; if (rot)
 Kit.run({ id: 'gl-alien-rows', title: 'ALIEN ROWS', help: 'Move: arrows / drag   Fire: auto on touch, Space\nShields crumble - clear every wave', bg: '#03041a',
   init(g) { g.p = { x: 200, cd: 0 }; g.wave = 0; g.shots = []; g.bombs = []; g.lives = 3; g.ufo = null; g.inv = 0; newWave(g); g.sh = []; for (let s = 0; s < 4; s++) for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) g.sh.push({ x: 50 + s * 95 + i * 7, y: 560 + j * 7, hp: 2 }); },
   update(g, dt) {
-    const p = g.p; p.x = Kit.clamp(p.x + g.ax() * 260 * dt, 20, g.W - 20); if (g.ptr.down) p.x += Kit.clamp(g.ptr.x - p.x, -340 * dt, 340 * dt);
+    const p = g.p; p.x = Kit.clamp(p.x + g.ax() * 260 * dt, 20, g.W - 20); if (g.ptr.down) p.x = Kit.clamp(p.x + Kit.clamp(g.ptr.x - p.x, -340 * dt, 340 * dt), 20, g.W - 20);
     p.cd -= dt; if ((g.keys[' '] || g.ptr.down) && p.cd <= 0 && g.shots.length < 2) { g.shots.push({ x: p.x, y: 620 }); p.cd = 0.32; g.sfx('shoot'); }
     g.inv = Math.max(0, g.inv - dt);
     for (const s of g.shots) s.y -= 520 * dt; g.shots = g.shots.filter(s => s.y > 40 && !s.dead);
@@ -13,8 +13,8 @@ Kit.run({ id: 'gl-alien-rows', title: 'ALIEN ROWS', help: 'Move: arrows / drag  
     g.mt -= dt; const iv = Math.max(0.05, 0.75 * alive.length / g.al.length + 0.02 - g.wave * 0.02);
     if (g.mt <= 0) { g.mt = iv; g.step = !g.step; Kit.tone(g.step ? 90 : 70, 0.06, 'square', 0.05); let edge = false; for (const a of alive) if ((g.dir > 0 && a.x > g.W - 30) || (g.dir < 0 && a.x < 30)) edge = true; if (edge) { g.dir *= -1; for (const a of alive) a.y += 18; } else for (const a of alive) a.x += 10 * g.dir; }
     for (const a of alive) { if (a.y > 545) return g.end('They landed'); for (const s of g.shots) if (!s.dead && Math.abs(s.x - a.x) < 14 && Math.abs(s.y - a.y) < 11) { s.dead = a.dead = true; g.add(a.v, 'k'); g.burst(a.x, a.y, a.c, 14, 180); g.sfx('pop'); g.float(a.x, a.y, a.v, a.c, 13); } }
-    if (g.rnd() < dt * (0.7 + g.wave * 0.25)) { const sh = g.pick(alive); g.bombs.push({ x: sh.x, y: sh.y + 10, v: 170 + g.wave * 12 }); }
-    for (const b of g.bombs) { b.y += b.v * dt; for (const s of g.sh) if (s.hp > 0 && Math.abs(b.x - s.x - 3) < 5 && Math.abs(b.y - s.y - 3) < 6) { s.hp--; b.dead = true; break; }
+    if (g.bombs.length < 24 && g.rnd() < 1 - Math.exp(-dt * Math.min(10, 0.7 + g.wave * 0.25))) { const sh = g.pick(alive.filter(a => !a.dead)); if (sh) g.bombs.push({ x: sh.x, y: sh.y + 10, v: 170 + Math.min(g.wave, 45) * 12 }); }
+    for (const b of g.bombs) { b.y += b.v * dt; for (const s of g.sh) if (!b.dead && s.hp > 0 && Math.abs(b.x - s.x - 3) < 5 && Math.abs(b.y - s.y - 3) < 6) { s.hp--; b.dead = true; break; }
       if (!b.dead && g.inv <= 0 && Math.abs(b.x - p.x) < 16 && Math.abs(b.y - 630) < 12) { b.dead = true; g.lives--; g.inv = 1.5; g.shake(10); g.flash('#ef4444'); g.burst(p.x, 630, '#22d3ee', 30, 240); g.sfx('boom'); if (g.lives <= 0) return g.end('Ship destroyed'); } }
     g.bombs = g.bombs.filter(b => b.y < g.H && !b.dead);
     for (const s of g.shots) for (const q of g.sh) if (!s.dead && q.hp > 0 && Math.abs(s.x - q.x - 3) < 5 && Math.abs(s.y - q.y - 3) < 6) { q.hp--; s.dead = true; }

@@ -64,13 +64,17 @@
       "area": "QA regression guard",
       "status": "FAILED",
       "evidence": "Owner Deplexo red ERROR screenshot, same short SHA",
-      "firstFailingLogLine": null,
-      "confirmedRootCause": null,
+      "firstFailingLogLine": "Error: ENOENT: no such file or directory, open '/app/Dockerfile' (node tools/test-r1-incident-gates.js:5; Docker build STEP 12/14, Node 20.20.2)",
+      "confirmedRootCause": "R1 regression audit reads Dockerfile and scripts/offline-release-gate.sh from repository root, but build stage copied neither. .dockerignore also excluded Dockerfile. Corrective Docker COPY of both audit inputs plus safe inclusion of Dockerfile/.dockerignore required; keep check enabled.",
       "verifiedFixed": false,
-      "releaseEligible": false
+      "releaseEligible": false,
+      "rootCauseEvidence": "Owner pasted exact Deplexo build log for commit 8f118c8dbe0654056e532c8780d668fdf7f24f9b on 2026-10-15; npm and PWA icon steps passed before source-audit ENOENT.",
+      "correctiveBranch": "repair/r2-container-audit-inputs-20261015",
+      "regressionTest": "tools/test-docker-audit-context.js (run in Docker and both local offline release scripts)",
+      "fixStatus": "SOURCE_CORRECTION_COMMITTED_DOCKER_AND_DEPLEXO_NOT_YET_VERIFIED"
     }
   ],
   "correctiveState": "RELEASE_FROZEN_OFFLINE_REPAIR",
-  "requiredBeforeNextDeploy": "Obtain first failing log line, reproduce and fix, run exact Node+Docker build, then controlled manual Deplexo deployment; preserve any prior READY.",
+  "requiredBeforeNextDeploy": "Run offline Node tests and full Docker build on exact repair SHA; validate live health/build fingerprint only after one controlled manual Deplexo deployment. Preserve any historical READY and auto-deploy OFF.",
   "currentLiveSHA": "UNCONFIRMED_BY_LATEST_CROP"
 }

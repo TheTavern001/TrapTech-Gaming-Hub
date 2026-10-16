@@ -37,7 +37,10 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 run node-version node --version
 run post-r1-failed-build-evidence node tools/test-post-r1-build-evidence.js
+run docker-build-audit-context node tools/test-docker-audit-context.js
 run qa-browser-runtime-integrity node tools/test-qa-browser-runtime-integrity.js
+run qa-mobile-frame-pacing node tools/test-qa-frame-pacing.js
+run r2-unified-release-candidate node tools/test-unified-release-candidate.js
 run r1-incident-gate node tools/test-r1-incident-gates.js
 run r1-test-qa-87-browser-contract node tools/test-qa-87-browser-contract.js
 run r1-test-qa-game-batches node tools/test-qa-game-batches.js
@@ -56,12 +59,20 @@ run account-session-revocation node tools/test-session-revocation.js
 run reviewed-wallet-cannot-be-spent node tools/test-reviewed-wallet-read.js
 run full-meta-fairness node tools/test-full-hub-meta-contract.js
 run game-owner-mechanics node tools/test-owner-reported-gameplay.js
+run three-real-games node tools/test-three-gameplay-fixes.js
+run shared-game-engine-seed-and-frame node tools/test-kit-mobile-loop.js
+run official-game-run-start node tools/test-kit-official-run-start.js
+run avatar-mobile-offline-save node tools/test-avatar-editor-mobile-save.js
+run mobile-phone-entry node tools/test-mobile-only-entry.js
 run keep-guard-barracks-real-mechanics node tools/test-keep-guard-barracks.js
 run td-keyboard-touch-parity node tools/test-td-keyboard-touch-parity.js
 run load-harness-loopback-safety node tools/test-private-10k-harness.js
 run deplexo-snapshot-boot-order node tools/test-deplexo-snapshot-boot-order.js
 run private-review-access-controls node tools/test-private-review-access.js
+run private-preview-image-mode node tools/test-private-preview-rehearsal-mode.js
 run giveaway-payment-and-game-approval node tools/test-giveaway-booking-release-gates.js
+run giveaway-stripe-provider-settlement node tools/test-booking-stripe-settlement.js
+run sponsor-stripe-webhook-signature node tools/test-sponsor-webhook-signature.js
 run booked-skill-winner-contract node tools/test-booked-skill-winner-contract.js
 run booking-library-proposals node tools/test-booking-library-selection.js
 run optional-sponsor-channel node tools/test-optional-sponsor-channel.js

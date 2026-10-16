@@ -398,8 +398,8 @@ function prestigeWall() { return Object.entries(PRESTIGE).map(([id, d]) => { con
     owners: db.prepare('SELECT o.serial, u.username, o.created_at FROM prestige_owned o JOIN users u ON u.id=o.user_id WHERE o.item_id=? AND o.revoked_at IS NULL ORDER BY o.serial').all(id) }; }); }
 const prestigeOf = (userId) => db.prepare('SELECT item_id, serial, created_at FROM prestige_owned WHERE user_id=? AND revoked_at IS NULL ORDER BY created_at').all(userId).map(r => ({ ...r, name: (PRESTIGE[r.item_id] || LEGACY_PRESTIGE[r.item_id] || {}).name, fx: (PRESTIGE[r.item_id] || LEGACY_PRESTIGE[r.item_id] || {}).fx, supply: (prod(r.item_id) || {}).supply }));
 
-function stripeSignatureOk(req) {
-  const secret = String(process.env.STRIPE_WEBHOOK_SECRET || '');
+function stripeSignatureOk(req, signingSecret = process.env.STRIPE_WEBHOOK_SECRET) {
+  const secret = String(signingSecret || '');
   const raw = req.rawBody;
   if (!secret || !Buffer.isBuffer(raw)) return false;
   const parts = String(req.headers['stripe-signature'] || '').split(',').map(x => x.split('='));

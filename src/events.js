@@ -58,8 +58,8 @@ function status(g, t = Date.now()) {
   // Booking and settlement are not cosmetic labels. A linked vendor event
   // cannot become an official competition just because active=1 was set.
   if (g.booking_id) {
-    const q=db.prepare('SELECT status FROM sponsor_quotes WHERE booking_id=?').get(g.booking_id);
-    if (!q || q.status !== 'paid' || g.payment_status !== 'paid') return 'payment-pending';
+    const q=db.prepare('SELECT status,total_cents,paid_at,provider,provider_ref,provider_payment_id,settled_cents,refunded_at FROM sponsor_quotes WHERE booking_id=?').get(g.booking_id);
+    if (!require('./booking-fee-guard').paidFeeRecorded(q) || g.payment_status !== 'paid') return 'payment-pending';
   }
   // Signed score uploads alone are not independent gameplay replay proof.
   const ids=gamesOf(g.id), proof=require('./prize-score-proof');

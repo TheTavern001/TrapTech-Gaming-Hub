@@ -101,6 +101,15 @@
       "correction": "Enforce signed run identity, Kit engine match, play/over state, remote QA run-start opt-in and deny-by-default API mutation routing",
       "status": "SOURCE_FIXED_STAGING_NATIVE_BROWSER_AND_PHONE_VERIFICATION_PENDING",
       "sourceCommit": "94cb0e8e3086ac7e60945e5756e403044b534bf5"
+    },
+    {
+      "id": "R2-BUILD-STAGE-AUDIT-SOURCE-MISSING",
+      "rootCause": "Deplexo build for 8f118c8 failed when the R1 incident test read /app/Dockerfile, which was absent because .dockerignore excluded it and Docker never copied it; the same test also reads an uncopied offline shell gate.",
+      "requiredTests": [
+        "tools/test-docker-audit-context.js"
+      ],
+      "status": "SOURCE_CORRECTED_PENDING_FULL_DOCKER_AND_HOST_CONFIRMATION",
+      "failedSha": "8f118c8dbe0654056e532c8780d668fdf7f24f9b"
     }
   ],
   "allPhoneQualityApproved": false,

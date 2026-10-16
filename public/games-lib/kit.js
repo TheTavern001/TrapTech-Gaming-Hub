@@ -22,7 +22,7 @@
   K.circ = (c, x, y, r, col) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); };
   K.hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   K.cr = (cx, cy, r, b) => { const x = K.clamp(cx, b.x, b.x + b.w), y = K.clamp(cy, b.y, b.y + b.h); return (cx - x) ** 2 + (cy - y) ** 2 < r * r; };
-  function mulberry(seedHex) { let a = (parseInt(String(seedHex || '').slice(0, 8), 16) || (Math.random() * 4e9)) >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function mulberry(seedHex) { const valid = /^[0-9a-f]{8,}$/i.test(String(seedHex || '')); let a = (valid ? parseInt(String(seedHex).slice(0, 8), 16) : (Math.random() * 4e9)) >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   // ---- WebAudio synth ----
   let AC = null, muted = safeStore.get('gl_mute') === '1';
   function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
@@ -48,6 +48,7 @@
     const initialDpr = Math.min(2, devicePixelRatio || 1);
     let renderDpr = initialDpr, slowFrames = 0, p95Ms = 0; let cameraShakeAllowed=true;let gamePrefs=null;
     const frameSamples = [];
+    let vignetteGradient = null; // World-space HUD gradient is static; avoid reallocation at 30–60fps.
     function resize() { const vw = innerWidth, vh = innerHeight, d = renderDpr; scale = Math.min(vw / W, vh / Hh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - cw) / 2; oy = (vh - ch) / 2; cv.style.cssText = `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`; cv.width = Math.max(1,Math.floor(cw * d)); cv.height = Math.max(1,Math.floor(ch * d)); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
     addEventListener('resize', resize); resize();
     const g = { W, H: Hh, c, t: 0, score: 0, best: +(safeStore.get('gl_best_' + def.id) || 0), state: 'title', rnd: Math.random, keys: {}, hud: '', parts: [], texts: [], shakeT: 0, shakeM: 0, flashT: 0, flashC: '#fff', frames: 0, fps: 60, inputs: 0,
@@ -157,7 +158,18 @@
     async function begin() { g.state = 'starting'; g.startError = ''; g.runSerial = (g.runSerial || 0) + 1; let seed;
       try { seed = window.Hub ? await Hub.start(def.id) : null; }
       catch (_) { g.state = 'title'; g.startError = 'Could not start game. Check connection and retry.'; return; }
-      g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = document.hidden || gameSettingsOpen; def.init(g); g.state = 'play'; if (!g.paused) K.sfx('power'); }
+      // Official giveaway/playoff runs must never downgrade silently into
+      // offline practice: a green local score with no server run is deceptive.
+      const query = new URLSearchParams(location.search);
+      const official = ['event','event_code','giveaway_id','giveaway','playoff'].some(k => query.has(k));
+      const signed = !!(window.Hub && Hub.token);
+      const validSeed = typeof seed === 'string' && /^[0-9a-f]{8,}$/i.test(seed);
+      if ((official && (!signed || !validSeed)) || (signed && !validSeed)) {
+        g.state = 'title';
+        g.startError = official ? 'Official run unavailable. Sign in or check the event.' : 'Score run unavailable. Retry.';
+        return;
+      }
+      g.practice = !signed; g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = document.hidden || gameSettingsOpen; def.init(g); g.state = 'play'; if (!g.paused) K.sfx('power'); }
     g.rnd = mulberry(); def.init(g);
     let last = performance.now(), acc = 0, fpsT = 0, fpsN = 0;
     function frame(now) {
@@ -213,8 +225,11 @@
         c.font='800 '+size+'px system-ui,sans-serif'; c.textAlign=align||'center'; c.textBaseline='middle';
         c.lineWidth=3; c.strokeStyle='rgba(3,5,18,.88)'; c.strokeText(s,x,y); c.fillStyle=color||'#f7f7ff'; c.fillText(s,x,y);
       };
-      const edge=c.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*.18,W/2,Hh/2,Math.max(W,Hh)*.72);
-      edge.addColorStop(0,'rgba(4,7,22,0)'); edge.addColorStop(1,'rgba(3,5,17,.32)');
+      if (!vignetteGradient) {
+        vignetteGradient=c.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*.18,W/2,Hh/2,Math.max(W,Hh)*.72);
+        vignetteGradient.addColorStop(0,'rgba(4,7,22,0)'); vignetteGradient.addColorStop(1,'rgba(3,5,17,.32)');
+      }
+      const edge=vignetteGradient;
       c.fillStyle=edge;c.fillRect(0,0,W,Hh);c.strokeStyle='rgba(137,104,255,.20)';c.lineWidth=1.5;c.strokeRect(5,5,W-10,Hh-10);
 
       if(g.state==='play'||g.state==='over'){
@@ -229,6 +244,7 @@
           if(g.hud){c.font='800 12px system-ui,sans-serif';const hw=Math.min(W-36,c.measureText(g.hud).width+26);panel((W-hw)/2,58,hw,27,10,'rgba(8,11,30,.78)','rgba(255,255,255,.12)');label(g.hud,W/2,71,11,'#d9d4ff');}
         }
         if(g.state==='play'){
+          if(g.practice) label('PRACTICE · NOT RANKED',W/2,108,10,'#ffe6a3');
           for(const b of btns){const active=!!g.btn[b.id],r=b.r+3;c.save();c.shadowColor=active?'#8e75ff':'#36d9f5';c.shadowBlur=active?18:7;
             K.circ(c,b.x,b.y,r,active?'rgba(143,105,255,.86)':'rgba(12,20,49,.78)');c.restore();
             K.circ(c,b.x,b.y,r-3,active?'rgba(232,222,255,.20)':'rgba(100,220,255,.12)');
