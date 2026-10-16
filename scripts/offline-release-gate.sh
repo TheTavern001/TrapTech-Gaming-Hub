@@ -64,6 +64,7 @@ run td-keyboard-touch-parity node tools/test-td-keyboard-touch-parity.js
 run load-harness-loopback-safety node tools/test-private-10k-harness.js
 run deplexo-snapshot-boot-order node tools/test-deplexo-snapshot-boot-order.js
 run private-review-access-controls node tools/test-private-review-access.js
+run private-preview-image-mode node tools/test-private-preview-rehearsal-mode.js
 run giveaway-payment-and-game-approval node tools/test-giveaway-booking-release-gates.js
 run giveaway-stripe-provider-settlement node tools/test-booking-stripe-settlement.js
 run sponsor-stripe-webhook-signature node tools/test-sponsor-webhook-signature.js
