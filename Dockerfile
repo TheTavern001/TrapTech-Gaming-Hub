@@ -129,6 +129,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-three-gameplay-fixes.js \
  && node tools/test-kit-mobile-loop.js \
  && node tools/test-kit-official-run-start.js \
+ && node tools/test-avatar-editor-mobile-save.js \
  && node tools/test-mobile-only-entry.js \
  && node tools/test-keep-guard-barracks.js \
  && node tools/test-td-keyboard-touch-parity.js \
