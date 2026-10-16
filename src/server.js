@@ -49,6 +49,9 @@ app.use(PRIVATE_REVIEW.makeGate({
   isOwnerAdmin: req => ADMSEC.isOwnerSession(req),
   adminBase: () => ADMSEC.BASE()
 })); // Explicit preview switch; OFF on normal public builds.
+// HTML navigation is phone-first. This presentation gate precedes pre-gzipped
+// and ordinary public files; signed scores/permissions stay server-validated.
+app.use(require('./mobile-entry').gate);
 // The review gate MUST precede even compressed static files; otherwise /index.html
 // or pre-gzipped page assets could bypass it before Express routing.
 // Static text assets are gzipped at build time (scripts/deplexo-prebuild.js -> $BUILD_DIR/gz) and served as-is;
