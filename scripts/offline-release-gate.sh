@@ -76,6 +76,9 @@ run kit-hidden-start node tools/test-kit-hidden-start.js
 run private-preview-readiness node tools/test-private-preview-readiness.js
 run private-review-access node tools/test-private-review-access.js
 run private-preview-payment-lock node tools/test-owner-preview-payment-lock.js
+run cosmetic-pass-progression node tools/test-cosmetic-pass-progression.js
+run prestige-cosmetic-xp node tools/test-prestige-cosmetic-xp.js
+run service-worker-privacy node tools/test-service-worker-privacy.js
 run retired-duplicates node tools/test-owner-duplicate-retirements.js
 run external-source-vehicles node tools/test-imported-kenney-cars.js
 run neutral-rig-fingerprint node tools/test-neutral-avatar-source.js
@@ -111,3 +114,4 @@ if ((fail>0)); then
   exit 1
 fi
 echo "LOCAL NODE AND CONTAINER TESTS GREEN; exact host readback, phone QA and owner approval still required." | tee -a "$report"
+

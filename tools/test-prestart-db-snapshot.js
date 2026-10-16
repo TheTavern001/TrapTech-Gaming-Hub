@@ -44,6 +44,14 @@ const {snapshot,releaseKey}=require('./prestart-db-snapshot');
     fs.writeFileSync(damagedPath,'not a valid sqlite database');
     await assert.rejects(snapshot({dbPath:damagedPath,dir,key:'cccccccccccc33333333'}));
     assert.match(releaseKey(),/^[a-f0-9]{20}$/);
+    const fixture=path.join(root,'source');fs.mkdirSync(path.join(fixture,'src'),{recursive:true});
+    fs.writeFileSync(path.join(fixture,'src','monetize.js'),'payment schema v1');
+    const before=releaseKey(fixture);
+    fs.writeFileSync(path.join(fixture,'src','monetize.js'),'payment schema v2');
+    assert.notEqual(releaseKey(fixture),before,'Payment migrations require a new pre-upgrade snapshot');
+    const walletBefore=releaseKey(fixture);
+    fs.writeFileSync(path.join(fixture,'src','unified-wallet.js'),'new wallet schema');
+    assert.notEqual(releaseKey(fixture),walletBefore,'New server modules cannot escape snapshot fingerprint');
     console.log(JSON.stringify({pass:true,newInstallSkips:true,originalOwnerPreserved:true,existingReleaseBackupNeverOverwritten:true,subsequentReleaseBackedUp:true,corruptDbFailsClosed:true,corruptPreviousBackupRejected:true,privatePermissions:true,realDeplexoVolumeNotTested:true}));
   }finally{fs.rmSync(root,{recursive:true,force:true})}
 })().catch(e=>{console.error(e);process.exitCode=1});

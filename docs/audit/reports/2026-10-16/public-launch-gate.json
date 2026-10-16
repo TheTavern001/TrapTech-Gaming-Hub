@@ -1,0 +1,18 @@
+{
+  "stage": "PUBLIC_LAUNCH",
+  "approved": false,
+  "registeredChecks": 9,
+  "blockers": [
+    "deplexoReadyAtExactMainSha: missing documented PASS",
+    "full500QualityCertifications: missing documented PASS",
+    "avatarProfileMobileAndDesktop: missing documented PASS",
+    "storeTestCheckoutSignedWebhookRefund: missing documented PASS",
+    "liveMerchantAndTermsCompliance: missing documented PASS",
+    "persistentBackupsAndRestore: missing documented PASS",
+    "gameplayAuthAntiCheatGiveaway: missing documented PASS",
+    "sustained10kPopulationStagingLoad: missing documented PASS",
+    "ownerFinalVisualAcceptance: missing documented PASS",
+    "Game quality certification: 500 individual passes not verified",
+    "Public launch has no final owner release approval"
+  ]
+}

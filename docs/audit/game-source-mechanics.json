@@ -1,0 +1,2471 @@
+{
+  "schemaVersion": 1,
+  "audit": "static source inventory, not AAA certification",
+  "registered": 93,
+  "core": 13,
+  "library": 80,
+  "qualityApproved": 0,
+  "errors": [],
+  "missingArtwork": [],
+  "possibleIdenticalGameSources": [],
+  "criteriaNotTested": [
+    "Mobile/desktop gameplay",
+    "Distinct core game loops",
+    "Graphic quality",
+    "Gameplay latency and frame time",
+    "Real assets and rights",
+    "Score replay security",
+    "Owner art approval"
+  ],
+  "games": [
+    {
+      "id": "core:jetpack-dash",
+      "title": "Jetpack Dash",
+      "type": "core",
+      "files": [
+        "public/js/jetpack.js"
+      ],
+      "sourceSha256": "2dd4ba382cf837a28a6114142e5633ab8cce44b69f7a3ba8c616f4d17a2d508b",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v5/jetpack-dash.webp",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v5/jetpack-dash-tall.webp",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:drift-rush",
+      "title": "Drift Rush",
+      "type": "core",
+      "files": [
+        "public/js/games/drift-rush.js"
+      ],
+      "sourceSha256": "410e5539d8344772aab9be53f0a691eba98bc09a75a374b08c78191ac841634c",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v5/drift-rush.webp",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v5/drift-rush-tall.webp",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:memory-match",
+      "title": "Memory Match",
+      "type": "core",
+      "files": [
+        "public/js/games/memory-match.js"
+      ],
+      "sourceSha256": "c17be40e97461d67b8e9e762dfe60c08d5c2bde0dbdc2f71914bc197e156d2f6",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v5/memory-match.webp",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v5/memory-match-tall.webp",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:high-score",
+      "title": "High Score",
+      "type": "core",
+      "files": [
+        "public/js/games/high-score.js"
+      ],
+      "sourceSha256": "f250a5eb4ef4eb6cd55e014df5532fff2c97f011e4f9cc43e838849db5a6331d",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v5/high-score.webp",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v5/high-score-tall.webp",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:terp-tapper",
+      "title": "Terp Tapper",
+      "type": "core",
+      "files": [
+        "public/js/games/terp-tapper.js"
+      ],
+      "sourceSha256": "10ce753c0b21391cf9dcc2526541ee742af4fbfd18f6ee7765217e268970c951",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v5/terp-tapper.webp",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v5/terp-tapper-tall.webp",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:munchies-snake",
+      "title": "Neon Munchies",
+      "type": "core",
+      "files": [
+        "public/js/games/munchies-snake.js"
+      ],
+      "sourceSha256": "ebf8704b14e454615cc5bbc090688215adc70613df5ab7a3626333aa30828d40",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v5/munchies-snake.webp",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v5/munchies-snake-tall.webp",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:brick-breaker",
+      "title": "Brick Breaker",
+      "type": "core",
+      "files": [
+        "public/js/games/brick-breaker.js"
+      ],
+      "sourceSha256": "3e3fe447795fab69590bf9dbdc470a9ad0a64e9036871c1af4d30687860e65bf",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v5/brick-breaker.webp",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v5/brick-breaker-tall.webp",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:sky-hopper",
+      "title": "Sky Hopper",
+      "type": "core",
+      "files": [
+        "public/js/games/sky-hopper.js"
+      ],
+      "sourceSha256": "bcbad3953718f2900eb1fefeed3c406f51651d54c9f3d8c431153112d9d78d0f",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v5/sky-hopper.webp",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v5/sky-hopper-tall.webp",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:void-swarm",
+      "title": "Void Swarm",
+      "type": "core",
+      "files": [
+        "public/js/games/void-swarm.js"
+      ],
+      "sourceSha256": "f2f270c4a55eb5ec4101b8a788e632d1c350280e2b456575137c6a50f4b2be9d",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v7/void-swarm.svg",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v7/void-swarm-tall.svg",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:stack",
+      "title": "Stack",
+      "type": "core",
+      "files": [
+        "public/js/games/stack.js"
+      ],
+      "sourceSha256": "835b0f55cc32865fecf285d75d209911f98bc1ea3df358ae1933a63aba84be07",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v7/stack.svg",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v7/stack-tall.svg",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:grow-guard",
+      "title": "Grow Guard",
+      "type": "core",
+      "files": [
+        "public/js/games/grow-guard.js"
+      ],
+      "sourceSha256": "42240d7e7153c6d637db61925056c3d424dee0982aafaee8cc061317dd287491",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v7/grow-guard.svg",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v7/grow-guard-tall.svg",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:sling-smash",
+      "title": "Sling Smash",
+      "type": "core",
+      "files": [
+        "public/js/games/sling-smash.js"
+      ],
+      "sourceSha256": "863ef6295dec3b197723a91a608ed3e13187562ea03184f53fa33ea5e47abd03",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v7/sling-smash.svg",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v7/sling-smash-tall.svg",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "core:haze-defense",
+      "title": "Haze Defense",
+      "type": "core",
+      "files": [
+        "public/js/games/haze-defense.js"
+      ],
+      "sourceSha256": "bff706abe7c4a14456247311fad8d1eb7db0a0596e90cddea019f13edc1417ac",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/assets/cards/v7/haze-defense.svg",
+      "artExists": true,
+      "tallArt": "public/assets/cards/v7/haze-defense-tall.svg",
+      "tallArtExists": true,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:block-drop",
+      "title": "Block Drop",
+      "type": "library",
+      "files": [
+        "public/games-lib/block-drop/game.js"
+      ],
+      "sourceSha256": "83c737f3cd391f2459a748ed0f3d558e45015bcd3001d38a22042394697badbc",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/block-drop/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:maze-muncher",
+      "title": "Maze Muncher",
+      "type": "library",
+      "files": [
+        "public/games-lib/maze-muncher/game.js"
+      ],
+      "sourceSha256": "b811c039b14e62adeedfaca2f43fb256f3629790c22263ac97f300ac28b78ff5",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/maze-muncher/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:alien-rows",
+      "title": "Alien Rows",
+      "type": "library",
+      "files": [
+        "public/games-lib/alien-rows/game.js"
+      ],
+      "sourceSha256": "346f041b8c5da0193157d60e2d8cf4631286dab4cb0b85b8b9d9bd5242b616a8",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/alien-rows/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:cloud-hopper",
+      "title": "Cloud Hopper",
+      "type": "library",
+      "files": [
+        "public/games-lib/cloud-hopper/game.js"
+      ],
+      "sourceSha256": "fd594a6ccceedb62fd6fafff0c14478f5e9d387452acb7cb1cbb15c34fd36811",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/cloud-hopper/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:road-hopper",
+      "title": "Road Hopper",
+      "type": "library",
+      "files": [
+        "public/games-lib/road-hopper/game.js"
+      ],
+      "sourceSha256": "565f2e40269617c1438cd620ef17ea3ef6ac8c2177404603cc21cbaf6ad52045",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/road-hopper/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:bud-merge",
+      "title": "Bud Merge",
+      "type": "library",
+      "files": [
+        "public/games-lib/bud-merge/js/bind_polyfill.js",
+        "public/games-lib/bud-merge/js/classlist_polyfill.js",
+        "public/games-lib/bud-merge/js/animframe_polyfill.js",
+        "public/games-lib/bud-merge/js/keyboard_input_manager.js",
+        "public/games-lib/bud-merge/js/html_actuator.js",
+        "public/games-lib/bud-merge/js/grid.js",
+        "public/games-lib/bud-merge/js/tile.js",
+        "public/games-lib/bud-merge/js/local_storage_manager.js",
+        "public/games-lib/bud-merge/js/game_manager.js",
+        "public/games-lib/bud-merge/js/hub-bridge.js"
+      ],
+      "sourceSha256": "de31bf30a8bf48688f8308278919a8bb0570d1848f7edc0736f43e19b361c243",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/bud-merge/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:hex-stack",
+      "title": "Hex Stack",
+      "type": "library",
+      "files": [
+        "public/games-lib/hex-stack/hub-pre.js",
+        "public/games-lib/hex-stack/vendor/hammer.min.js",
+        "public/games-lib/hex-stack/vendor/js.cookie.js",
+        "public/games-lib/hex-stack/vendor/jsonfn.min.js",
+        "public/games-lib/hex-stack/vendor/keypress.min.js",
+        "public/games-lib/hex-stack/vendor/jquery.js",
+        "public/games-lib/hex-stack/js/save-state.js",
+        "public/games-lib/hex-stack/js/view.js",
+        "public/games-lib/hex-stack/js/wavegen.js",
+        "public/games-lib/hex-stack/js/math.js",
+        "public/games-lib/hex-stack/js/Block.js",
+        "public/games-lib/hex-stack/js/Hex.js",
+        "public/games-lib/hex-stack/js/Text.js",
+        "public/games-lib/hex-stack/js/comboTimer.js",
+        "public/games-lib/hex-stack/js/checking.js",
+        "public/games-lib/hex-stack/js/update.js",
+        "public/games-lib/hex-stack/js/render.js",
+        "public/games-lib/hex-stack/js/input.js",
+        "public/games-lib/hex-stack/js/main.js",
+        "public/games-lib/hex-stack/js/initialization.js",
+        "public/games-lib/hex-stack/vendor/sweet-alert.min.js",
+        "public/games-lib/hex-stack/hub-bridge.js"
+      ],
+      "sourceSha256": "a18dae5db8dbc93f6ba85a3d4926f09c4c4d671bc84b2e5f0dcaf9bce24bafb7",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/hex-stack/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:dino-dash",
+      "title": "Desert Dash",
+      "type": "library",
+      "files": [
+        "public/games-lib/dino-dash/bridge.js",
+        "public/games-lib/dino-dash/index.js"
+      ],
+      "sourceSha256": "24d3fd5327961934a3724a748c7b233aa46f2ad77f29d91f2d3177186fbc7512",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/dino-dash/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:rock-buster",
+      "title": "Rock Buster",
+      "type": "library",
+      "files": [
+        "public/games-lib/rock-buster/game.js"
+      ],
+      "sourceSha256": "21a9ea82a46cabb4a39f605a92b4cf5e9cbb33ce1507ad8240bcf2fa4415a509",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/rock-buster/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:star-swarm",
+      "title": "Star Swarm",
+      "type": "library",
+      "files": [
+        "public/games-lib/star-swarm/game.js"
+      ],
+      "sourceSha256": "ab20bb9b6d89dd0b7e03dcf1044ffece8d647008b483566bc7e855e7462faf92",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/star-swarm/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:rail-rush",
+      "title": "Rail Rush",
+      "type": "library",
+      "files": [
+        "public/games-lib/rail-rush/game.js"
+      ],
+      "sourceSha256": "7039cf85e973e9cfd283bdfed97ef9fa8e17b9f17dcdef62b22661e0832bd4a6",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": false,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/rail-rush/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:hill-hauler",
+      "title": "Hill Hauler",
+      "type": "library",
+      "files": [
+        "public/games-lib/hill-hauler/game.js"
+      ],
+      "sourceSha256": "cce660b295232ed7dc9d8add0e2cc5f508b64a5754af1c1231d0c7964cce9417",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/hill-hauler/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:wanted-run",
+      "title": "Most Wanted Run",
+      "type": "library",
+      "files": [
+        "public/games-lib/wanted-run/game.js"
+      ],
+      "sourceSha256": "f36075939328a5443b0cb2db476cb19036455da525b7069b48555f5ec45bc0d7",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/wanted-run/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:pop-defense",
+      "title": "Pop Defense",
+      "type": "library",
+      "files": [
+        "public/games-lib/pop-defense/game.js"
+      ],
+      "sourceSha256": "a7d76216e681eb03facaec88e1c64c9097b9531e42a48680143c816861d7410a",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/pop-defense/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:cube-horde",
+      "title": "Cube Horde",
+      "type": "library",
+      "files": [
+        "public/games-lib/cube-horde/game.js"
+      ],
+      "sourceSha256": "ba683c59f8d9299344401b0428919e001fab967361b9fc583270cdab30d6593c",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/cube-horde/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:arrow-hero",
+      "title": "Arrow Hero",
+      "type": "library",
+      "files": [
+        "public/games-lib/arrow-hero/game.js"
+      ],
+      "sourceSha256": "d53a5924bf1042e8d75c03592d4c34fd3c61892c22afba4200526f801ee24cf4",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/arrow-hero/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:grid-wars",
+      "title": "Grid Wars",
+      "type": "library",
+      "files": [
+        "public/games-lib/grid-wars/game.js"
+      ],
+      "sourceSha256": "0a58f7b686d349c644855d5c318a33fe2022d7e23f751f03d58e74c0f1df23aa",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/grid-wars/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:moon-swarm",
+      "title": "Moon Swarm",
+      "type": "library",
+      "files": [
+        "public/games-lib/moon-swarm/game.js"
+      ],
+      "sourceSha256": "b25977a45e142d0df3be7da301cad1c2026fd91345b3d9bd29362643cb8815e6",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/moon-swarm/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:throttle-rider",
+      "title": "Throttle Rider",
+      "type": "library",
+      "files": [
+        "public/games-lib/throttle-rider/game.js"
+      ],
+      "sourceSha256": "617d61c1f4ef6cd8a71bf9159df565605e4a15c819f9e52892ecaf8c93b7e64a",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": false,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/throttle-rider/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:wreck-ride",
+      "title": "Wreck Ride",
+      "type": "library",
+      "files": [
+        "public/games-lib/wreck-ride/game.js"
+      ],
+      "sourceSha256": "1d31496b39289bf3b967baa5c8e17f5e5076e0c4303792e3b5b58429c528f9e0",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/wreck-ride/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:rig-rally",
+      "title": "Rig Rally",
+      "type": "library",
+      "files": [
+        "public/games-lib/rig-rally/game.js"
+      ],
+      "sourceSha256": "c51e9d0c6d9ca3ec1cb7915dbf3ac724849bdffff37d945493be74e5bd70364b",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/rig-rally/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:goo-tower",
+      "title": "Goo Tower",
+      "type": "library",
+      "files": [
+        "public/games-lib/goo-tower/game.js"
+      ],
+      "sourceSha256": "4874ba0f9958e17a7721656107aaa1fa89eacd3149aaf170fed7b109cbcec88b",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/goo-tower/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:keep-guard",
+      "title": "Keep Guard",
+      "type": "library",
+      "files": [
+        "public/games-lib/keep-guard/game.js"
+      ],
+      "sourceSha256": "e5107feededfecbc0b6a2d4fde80c1da379faa159dbfa14fef03fe0a687e796b",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/keep-guard/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:node-siege",
+      "title": "Node Siege",
+      "type": "library",
+      "files": [
+        "public/games-lib/node-siege/game.js"
+      ],
+      "sourceSha256": "df8bd57d5e4dfbc27c0a3a62f3f9541aa6eb1a57b2f0601940937633ef022a2a",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/node-siege/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:orb-coil",
+      "title": "Orb Coil",
+      "type": "library",
+      "files": [
+        "public/games-lib/orb-coil/game.js"
+      ],
+      "sourceSha256": "ef9fe9d5269946cd24e9b64ffdee978c565222ec0ee6def23c653e657c0b3554",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/orb-coil/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:neon-flipper",
+      "title": "Neon Flipper",
+      "type": "library",
+      "files": [
+        "public/games-lib/neon-flipper/game.js"
+      ],
+      "sourceSha256": "2c9a7b12daf3bab27bf5f7168dddbf6bbf9d5cb6d43be37954dac3f58deb0572",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/neon-flipper/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:light-cycle",
+      "title": "Light Cycle",
+      "type": "library",
+      "files": [
+        "public/games-lib/light-cycle/game.js"
+      ],
+      "sourceSha256": "96645e6bf06f1219e541c234e6d2b5e683fce303d40bcb49b3c7bec15de3fddb",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/light-cycle/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:roof-runner",
+      "title": "Roof Runner",
+      "type": "library",
+      "files": [
+        "public/games-lib/roof-runner/game.js"
+      ],
+      "sourceSha256": "78cdc024dd3e89d3332fa6e10e4cd3f93b7a8d1630883484341a3ef5aacb7294",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/roof-runner/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:helix-drop",
+      "title": "Helix Drop",
+      "type": "library",
+      "files": [
+        "public/games-lib/helix-drop/game.js"
+      ],
+      "sourceSha256": "100221b1be99d33fb553c03ff201e089b5793d3944c1a9ea97a9b2c2778a593c",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/helix-drop/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:hex-spin",
+      "title": "Hex Spin",
+      "type": "library",
+      "files": [
+        "public/games-lib/hex-spin/game.js"
+      ],
+      "sourceSha256": "213391fc8dbb6e84a55e3858f4283fa5c2da69a91b0043bfe3d4cd558bc1da60",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/hex-spin/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:color-hop",
+      "title": "Color Hop",
+      "type": "library",
+      "files": [
+        "public/games-lib/color-hop/game.js"
+      ],
+      "sourceSha256": "eba74a7de8cae276ab022f297e09e39667c925762716b680ee3b1f23084b5665",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/color-hop/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:zig-path",
+      "title": "Zig Path",
+      "type": "library",
+      "files": [
+        "public/games-lib/zig-path/game.js"
+      ],
+      "sourceSha256": "e533c6dbb759dca0e0c0b97f377c09e80dea9b8e6e6dc812f8b9415cf1ad52b2",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/zig-path/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:drift-king",
+      "title": "Drift King",
+      "type": "library",
+      "files": [
+        "public/games-lib/drift-king/game.js"
+      ],
+      "sourceSha256": "a83c65d8fd3572dc05a60086f97236bf257ed0fe024749d8ba5aeef397e6027c",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/drift-king/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:missile-guard",
+      "title": "Missile Guard",
+      "type": "library",
+      "files": [
+        "public/games-lib/missile-guard/game.js"
+      ],
+      "sourceSha256": "c5b1426ec2e80ab0f437ca509d9fa61989ea3fd5adb757382e89b710fec7d38c",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/missile-guard/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:bug-blaster",
+      "title": "Bug Blaster",
+      "type": "library",
+      "files": [
+        "public/games-lib/bug-blaster/game.js"
+      ],
+      "sourceSha256": "e54ca699ab0816c8689b11d3c9952d47b0309579d6a108e9f5767ccfaf187ffb",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/bug-blaster/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:bubble-pop",
+      "title": "Bubble Pop",
+      "type": "library",
+      "files": [
+        "public/games-lib/bubble-pop/game.js"
+      ],
+      "sourceSha256": "19db42f6d8d9d749be02a773864bf38070581f8a8db453705ef490b80e80ef88",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/bubble-pop/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:mine-sweep",
+      "title": "Mine Sweep",
+      "type": "library",
+      "files": [
+        "public/games-lib/mine-sweep/game.js"
+      ],
+      "sourceSha256": "a4d49cc154551825b489f84906acd051738ad8a1480a30025fa879f09992b27a",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/mine-sweep/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:knife-toss",
+      "title": "Knife Toss",
+      "type": "library",
+      "files": [
+        "public/games-lib/knife-toss/game.js"
+      ],
+      "sourceSha256": "e944b680c5c936513137933f4e9c128962013f756fb33d51cbc9016515549022",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/knife-toss/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:mole-whack",
+      "title": "Mole Whack",
+      "type": "library",
+      "files": [
+        "public/games-lib/mole-whack/game.js"
+      ],
+      "sourceSha256": "76545a1e8f7ce662bc80cde0cfc709e5b211f0d9704d4caef846cf0c2489c4b0",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/mole-whack/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:grow-op",
+      "title": "Grow Op",
+      "type": "library",
+      "files": [
+        "public/games-lib/grow-op/game.js"
+      ],
+      "sourceSha256": "29a55b8b98e327623f024d565f5d51b296b34cfaf5b4cb8e5b4276fab189ebcc",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/grow-op/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:trim-rush",
+      "title": "Trim Rush",
+      "type": "library",
+      "files": [
+        "public/games-lib/trim-rush/game.js"
+      ],
+      "sourceSha256": "88c0a4a7b7a02827b28b1d266b49ebcd235dd59505b838b21700421b291d1985",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/trim-rush/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:strain-crush",
+      "title": "Strain Crush",
+      "type": "library",
+      "files": [
+        "public/games-lib/strain-crush/game.js"
+      ],
+      "sourceSha256": "a1338ba9a4d759dbc4bed9fb4cc6d1ee8e89c96ba5dce0b6919ac2dacfab342e",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/strain-crush/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:bud-bar",
+      "title": "Bud Bar",
+      "type": "library",
+      "files": [
+        "public/games-lib/bud-bar/game.js"
+      ],
+      "sourceSha256": "a5ff904708a4d6b84e326d4e9596eecfa70a7dca0fd3a838bdfe12087f2d47a9",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/bud-bar/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:green-dash",
+      "title": "Green Dash",
+      "type": "library",
+      "files": [
+        "public/games-lib/green-dash/game.js"
+      ],
+      "sourceSha256": "6c6cfffa44c71a3c93253c3aa4f6228a0c64e5497bae60e46c90ff37c2e62aca",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/green-dash/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:roll-up",
+      "title": "Roll Up",
+      "type": "library",
+      "files": [
+        "public/games-lib/roll-up/game.js"
+      ],
+      "sourceSha256": "f1f5d265a8be43f46f545ca8fed437d059a2782eb8638ecf68982913449f4144",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/roll-up/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:smoke-rings",
+      "title": "Smoke Rings",
+      "type": "library",
+      "files": [
+        "public/games-lib/smoke-rings/game.js"
+      ],
+      "sourceSha256": "1f0a6d3ffa22f1919d1fec7ca770add6bc118b71a81eadd4c48502408feb3994",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/smoke-rings/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:bud-sort",
+      "title": "Bud Sort",
+      "type": "library",
+      "files": [
+        "public/games-lib/bud-sort/game.js"
+      ],
+      "sourceSha256": "5010f5bc0313bf5bccb0d657852a1fc852eaa6d15289a2645aeedb63b0d36dbc",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/bud-sort/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:pest-patrol",
+      "title": "Pest Patrol",
+      "type": "library",
+      "files": [
+        "public/games-lib/pest-patrol/game.js"
+      ],
+      "sourceSha256": "c7768367b11be1790c2353805c3389d69fffc14af082070045036149533d6007",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/pest-patrol/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:cup-toss",
+      "title": "Cup Toss",
+      "type": "library",
+      "files": [
+        "public/games-lib/cup-toss/game.js"
+      ],
+      "sourceSha256": "c45229bb4c3d3ba85521f5cc0482c6a92ebd871be6d0ae3e7fbcd83f7dc2da68",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/cup-toss/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:beat-tiles",
+      "title": "Beat Tiles",
+      "type": "library",
+      "files": [
+        "public/games-lib/beat-tiles/game.js"
+      ],
+      "sourceSha256": "7b4307c0bd9dce345ff18eae69c5a977acb26e9435ff903b199ac46ef6a203c8",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/beat-tiles/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:moon-lander",
+      "title": "Moon Lander",
+      "type": "library",
+      "files": [
+        "public/games-lib/moon-lander/game.js"
+      ],
+      "sourceSha256": "98978ed22b3547eac9e828278d46874f68b5d40fb3a5e819153115821b3c2af7",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/moon-lander/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:pin-strike",
+      "title": "Pin Strike",
+      "type": "library",
+      "files": [
+        "public/games-lib/pin-strike/game.js"
+      ],
+      "sourceSha256": "d75d7d19590d4b04539ae516b6687b0097cd086bae300a6d459f82e51ee055cd",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/pin-strike/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:bullseye",
+      "title": "Bullseye",
+      "type": "library",
+      "files": [
+        "public/games-lib/bullseye/game.js"
+      ],
+      "sourceSha256": "bb32a501f5c7209d52b2ed5f58b6a9a0678e289b441639f86c40724c7d453002",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/bullseye/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:spot-kick",
+      "title": "Spot Kick",
+      "type": "library",
+      "files": [
+        "public/games-lib/spot-kick/game.js"
+      ],
+      "sourceSha256": "4eb525930df8f5c71982d97bcc30650a169d9a0de01deb61dfc3b223f520a29e",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/spot-kick/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:glow-echo",
+      "title": "Glow Echo",
+      "type": "library",
+      "files": [
+        "public/games-lib/glow-echo/game.js"
+      ],
+      "sourceSha256": "748e44da7caafd62753483cb082391e333318eebce97bbf3b66eb60fb33578c1",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/glow-echo/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:knockout",
+      "title": "Knockout Ring",
+      "type": "library",
+      "files": [
+        "public/games-lib/knockout/game.js"
+      ],
+      "sourceSha256": "a61fdd524591e42ed8c303c67d176bc9421d362d4f792c790bf18d91c59b7194",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/knockout/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:putt-party",
+      "title": "Putt Party",
+      "type": "library",
+      "files": [
+        "public/games-lib/putt-party/game.js"
+      ],
+      "sourceSha256": "efa4b564951d5f4696be174bc6120e1e12fe77c9fa5c2027a08efbc190806df8",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/putt-party/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:cue-club",
+      "title": "Cue Club",
+      "type": "library",
+      "files": [
+        "public/games-lib/cue-club/game.js"
+      ],
+      "sourceSha256": "4356b3eb4fe200a7d00ab67119736bc1ae6563c3a147cb9f8b51b90127a33a6c",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/cue-club/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:long-ball",
+      "title": "Long Ball",
+      "type": "library",
+      "files": [
+        "public/games-lib/long-ball/game.js"
+      ],
+      "sourceSha256": "d49902ae7496f912c444182ba1e719dd18fd7587de5417283c5b3887cc855346",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/long-ball/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:rally-court",
+      "title": "Rally Court",
+      "type": "library",
+      "files": [
+        "public/games-lib/rally-court/game.js"
+      ],
+      "sourceSha256": "50de135d4a3c3167d5e9ad6401816b5629fd1f7e21b43556e249f7dc63a24022",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/rally-court/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:ice-snipe",
+      "title": "Ice Snipe",
+      "type": "library",
+      "files": [
+        "public/games-lib/ice-snipe/game.js"
+      ],
+      "sourceSha256": "80d42d45351c5655973ee1ad67780ca25aaea2db24c487979bd5014a842a1a4c",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/ice-snipe/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:reel-deal",
+      "title": "Reel Deal",
+      "type": "library",
+      "files": [
+        "public/games-lib/reel-deal/game.js"
+      ],
+      "sourceSha256": "a378cb3c4b9fe733fe13c44f356ba87593735ac14b8d41901a2739ff3fc27334",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/reel-deal/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:hoop-streak",
+      "title": "Hoop Streak",
+      "type": "library",
+      "files": [
+        "public/games-lib/hoop-streak/game.js"
+      ],
+      "sourceSha256": "8528d95c4045fe608f6cfc33d6223905f33c961d767f2816f455ff0d705ff509",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/hoop-streak/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:kickflip-city",
+      "title": "Kickflip City",
+      "type": "library",
+      "files": [
+        "public/games-lib/kickflip-city/game.js"
+      ],
+      "sourceSha256": "a55f511ab819ac06d1535928d3832a386dee1aa0cbcc697732e1c656afbe5936",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/kickflip-city/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:tile-twin",
+      "title": "Tile Twin",
+      "type": "library",
+      "files": [
+        "public/games-lib/tile-twin/game.js"
+      ],
+      "sourceSha256": "af4a2fc9f57bc64cbf3d0e417cc0b30cb5082c5151932e78862895526255ec33",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/tile-twin/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:tunnel-hop",
+      "title": "Tunnel Hop",
+      "type": "library",
+      "files": [
+        "public/games-lib/tunnel-hop/game.js"
+      ],
+      "sourceSha256": "1fbab19976d5dc509f269ab085acecd33a83f9b5581886d8fffbbb77af2e7e2c",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/tunnel-hop/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:dune-glide",
+      "title": "Dune Glide",
+      "type": "library",
+      "files": [
+        "public/games-lib/dune-glide/game.js"
+      ],
+      "sourceSha256": "352ca7dc0b8c830880443cf56d01b2fbc966bceb3b06848721d849f4f04c80cd",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": true,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/dune-glide/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:egg-roll",
+      "title": "Egg Roll",
+      "type": "library",
+      "files": [
+        "public/games-lib/egg-roll/game.js"
+      ],
+      "sourceSha256": "c5c8dea544e0baf9fb0f5bf154f55d2f2879b03b50c40bbb2785c02b8f8cedbe",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": false,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/egg-roll/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:monster-crush",
+      "title": "Monster Crush",
+      "type": "library",
+      "files": [
+        "public/games-lib/monster-crush/game.js"
+      ],
+      "sourceSha256": "6487458d5e47d8e9b48cc1a3233d093b68fd2a198d9b6d244dfd77a3117f9eb5",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": false,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/monster-crush/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:no-brakes",
+      "title": "No Brakes",
+      "type": "library",
+      "files": [
+        "public/games-lib/no-brakes/game.js"
+      ],
+      "sourceSha256": "a2e05272b355e9b3893c9ff7b7a2492abf40909c661f890c837481f854d18df9",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/no-brakes/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:cab-rush",
+      "title": "Cab Rush",
+      "type": "library",
+      "files": [
+        "public/games-lib/cab-rush/game.js"
+      ],
+      "sourceSha256": "c7c5daab9e058dd9d62adb6277e68fafeee1bba7dee7af4d65a4a435e5a5772a",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": false,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/cab-rush/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:dirt-dash",
+      "title": "Dirt Dash",
+      "type": "library",
+      "files": [
+        "public/games-lib/dirt-dash/game.js"
+      ],
+      "sourceSha256": "ca2b59584a4abdf92b35b61feeccbc3e2ac524f4917bf806b16eaeb33dbc3571",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/dirt-dash/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:road-brawl",
+      "title": "Road Brawl",
+      "type": "library",
+      "files": [
+        "public/games-lib/road-brawl/game.js"
+      ],
+      "sourceSha256": "77dd6b46883bcba728df7b65abf8b49f71d9bec64695b6e76d598deaaed8fb24",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/road-brawl/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:derby-smash",
+      "title": "Derby Smash",
+      "type": "library",
+      "files": [
+        "public/games-lib/derby-smash/game.js"
+      ],
+      "sourceSha256": "0d037cd6820572b428c6bc7b6a6644e376aac89dd84ab655d5e2ce209faa5c5b",
+      "staticChecks": {
+        "inputHint": false,
+        "difficultyHint": false,
+        "completionHint": false
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/derby-smash/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:dunk-flick",
+      "title": "Dunk Flick",
+      "type": "library",
+      "files": [
+        "public/games-lib/dunk-flick/game.js"
+      ],
+      "sourceSha256": "4862e91a15572432f263974316ab92383c3989f5d66c64a9981a57b3795fd570",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": false,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/dunk-flick/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:duck-shot",
+      "title": "Duck Shot",
+      "type": "library",
+      "files": [
+        "public/games-lib/duck-shot/game.js"
+      ],
+      "sourceSha256": "dea4a2472ee8ac0f155dd95e7db450811416848a6a1cc7c36aa4740a0c223551",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/duck-shot/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:paper-toss",
+      "title": "Paper Toss",
+      "type": "library",
+      "files": [
+        "public/games-lib/paper-toss/game.js"
+      ],
+      "sourceSha256": "0b3469e896eaf38da801bba41a564aa229ba1b5366f7f79ee048287faaba0b16",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/paper-toss/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:skee-roll",
+      "title": "Skee Roll",
+      "type": "library",
+      "files": [
+        "public/games-lib/skee-roll/game.js"
+      ],
+      "sourceSha256": "0173768b41ea5429a11d2cbae102d4cc612ffdda06244e242ab6223c26adaaeb",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/skee-roll/thumb.jpg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:neon-circuit",
+      "title": "Neon Circuit",
+      "type": "library",
+      "files": [
+        "public/games-lib/neon-circuit/game.js"
+      ],
+      "sourceSha256": "c988f0bb57dc5124403f0df02912b229066945c920ae888222b29515a9570709",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/neon-circuit/thumb.svg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    },
+    {
+      "id": "library:rift-survival",
+      "title": "Rift Survival",
+      "type": "library",
+      "files": [
+        "public/games-lib/rift-survival/game.js"
+      ],
+      "sourceSha256": "831a0ced400002ff655eb364c55fc638bf5d85c9dea3b284f0033618032609c4",
+      "staticChecks": {
+        "inputHint": true,
+        "difficultyHint": true,
+        "completionHint": true
+      },
+      "requiresHumanGameplay": true,
+      "referencedArt": "public/games-lib/rift-survival/thumb.svg",
+      "artExists": true,
+      "tallArt": null,
+      "tallArtExists": null,
+      "certifiedVisuals": false,
+      "certifiedAndroid": false,
+      "certifiedControls": false,
+      "certifiedLicense": false,
+      "certifiedServerScoreReplay": false,
+      "certifiedAAA": false,
+      "comment": "Static heuristic only; sources and metadata are not visual/playtesting evidence."
+    }
+  ]
+}

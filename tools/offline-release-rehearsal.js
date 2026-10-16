@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // ZERO Github Actions usage; ZERO Deplexo deployments. Requires checked-out
-// repository and Node 20 + production dependencies (for --full, Docker).
+// repository and Node 24 + production dependencies (for --full, Docker).
 // Writes evidence outside the repo in OS tmp; never certifies the R1-R5 gate
 // without matching successful tests, release acceptance and a host fingerprint.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
@@ -21,6 +21,8 @@ const tests=[
  'tools/test-reward-integrity.js',
  'tools/test-session-revocation.js',
  'tools/test-payment-settlement-proof.js',
+ 'tools/test-payment-webhook-integration.js',
+ 'tools/test-private-review-http.js',
  'tools/test-prize-score-proof.js',
  'tools/test-owner-reported-gameplay.js',
  'tools/test-keep-guard-barracks.js',
@@ -43,6 +45,9 @@ const tests=[
  'tools/test-private-preview-readiness.js',
  'tools/test-private-review-access.js',
  'tools/test-owner-preview-payment-lock.js',
+ 'tools/test-cosmetic-pass-progression.js',
+ 'tools/test-prestige-cosmetic-xp.js',
+ 'tools/test-service-worker-privacy.js',
  'tools/test-owner-gameplay-distinctness.js',
  'tools/test-cannabis-gameplay-qa.js',
  'tools/test-mobile-frame-allocation-regressions.js',
@@ -76,6 +81,7 @@ const tests=[
  'tools/verify-game-syntax.js',
  'tools/games-lib-static-check.js',
  'tools/audit-full-game-mechanics.js',
+ 'tools/test-audit-game-runtime-paths.js',
  'tools/verify-prelaunch.js',
  'tools/prelaunch-deep-audit.js'
 ];
@@ -148,3 +154,4 @@ console.log(JSON.stringify({sourceSha:sha,release:stage,nodeTestsPassed:report.n
  nodeTestsTotal:tests.length,gate:ready?'ELIGIBLE_FOR_HUMAN_REVIEW':'BLOCKED',
  fullDocker:full,failed:failed.map(x=>x.label),reportPath:dest,noDeployment:true}));
 if(failed.length)process.exitCode=1;
+

@@ -153,7 +153,8 @@ async function seasonPage() {
           <div class="tiny">${fmt(s.xp)} season XP${s.head_start ? ` (incl. ${fmt(s.head_start)} head start)` : ''} • ${fmt(s.need - s.into)} XP to ${lvl >= s.levels ? 'the next Overdrive star' : 'level ' + (lvl + 1)}</div>`
           : `<a class="btn sm" href="/signup?next=/season">Sign up to start earning</a>`}
       </div></div>
-    <div class="nocash">${icon('shield')} <span><b>Free track only.</b> No paid pass. Every level is earned by playing; rewards are cosmetic with no cash value and never affect giveaways.</span></div>
+    <div class="nocash">${icon('shield')} <span><b>Cosmetic rewards.</b> Prestige items priced at $1,000+ grant permanent 2× cosmetic XP from play, quests and achievements. Ranked XP, Credit grants, quest objectives and giveaway eligibility stay based on earned progress.</span></div>
+    ${r.signed_in && s.cosmetic_xp ? `<div class="card pad"><b>Cosmetic level ${s.cosmetic_level}</b><p class="small">${fmt(s.cosmetic_xp.xp)} cosmetic XP${s.cosmetic_xp.multiplier === 2 ? ' · Permanent 2× Prestige bonus active' : ''}. Ranked level ${lvl}.</p></div>` : ''}
     <div class="section-h"><h2>${icon('zap')} Season perks</h2><a class="small" href="/shop/how-it-works#seasons">How seasons work</a></div>
     <div class="ec-perks">${s.perks.map(p => `<div class="card ec-perk ${p.active ? 'on' : ''}"><span class="ec-pl">Lv ${p.level}</span><b>${esc(p.name)}</b><span class="tiny muted">${esc(p.desc)}</span>${p.active ? `<span class="pill green">${icon('check')} Active</span>` : ''}</div>`).join('')}</div>
     <div class="section-h"><h2>${icon('list-checks')} Reward track</h2><span class="small muted">${s.levels} levels • ${fmt(s.max_xp)} XP</span></div>
@@ -212,3 +213,4 @@ export function install(ctx) {
   first(/^\/season$/, seasonPage);
 }
 export { preview, detailSheet };
+

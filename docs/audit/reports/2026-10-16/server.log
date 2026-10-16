@@ -1,0 +1,5 @@
+[static-gz] 249 precompressed assets
+[admin] ADMIN_PATH is not set (or shorter than 16 characters of A-Z a-z 0-9 _ -): the admin dashboard is DISABLED. Set ADMIN_PATH to a long random slug.
+[admin] owner account "owner" created (signs in with ADMIN_PASSWORD, then sets up an authenticator app)
+[2026-10-16T04:46:48.340Z] Gaming Hub listening on port 35355 (db: /workspace/scratch/659ae5194525/reconciled-release/http-db/hub.db, node v24.19.0 linux/x64, heap limit 67 MB, uid 0)
+[2026-10-16T04:46:49.520Z] SIGTERM received, shutting down

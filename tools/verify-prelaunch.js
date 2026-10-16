@@ -72,6 +72,13 @@ const core = [...block.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S
 counts.coreGames = core.length;
 if (!core.length) fail('src/config.js', 'No core games were parsed from the registry');
 const ids = new Set();
+// Covers appear in the lobby, detail page and boot overlay. A missing cover
+// used to pass source checks and produce a 404 in every actual game launch.
+for(const match of block.matchAll(/\bart(?:Tall)?:\s*'([^']+)'/g)) {
+  const art=match[1],file=path.resolve(ROOT,'public','.'+art);
+  if(!file.startsWith(path.resolve(ROOT,'public')+path.sep)||!fs.existsSync(file))
+    fail('src/config.js','Missing registered game cover: '+art);
+}
 for (const [, id, title, module] of core) {
   if (ids.has(id)) fail('src/config.js', 'Duplicate core game id: ' + id);
   ids.add(id);
@@ -204,7 +211,7 @@ const indexHtml = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
 const redesignCss = path.join(ROOT, 'public/css/launch-redesign.css');
 if (!fs.existsSync(redesignCss) || !fs.readFileSync(redesignCss, 'utf8').trim()) fail('public/css/launch-redesign.css', 'Launch redesign stylesheet is missing or empty');
 if (!/href=["']\/css\/launch-redesign\.css(?:\?[^"']*)?["']/.test(indexHtml)) fail('public/index.html', 'Homepage does not link the launch redesign stylesheet');
-if (!/href=["']\/assets\/brand\/traptech-app-icon\.svg["']/.test(indexHtml)) fail('public/index.html', 'Homepage browser favicon must use the canonical Trap Tech app icon');
+if (!/href=["']\/assets\/brand\/traptech-app-icon\.svg(?:\?[^"']*)?["']/.test(indexHtml)) fail('public/index.html', 'Homepage browser favicon must use the canonical Trap Tech app icon');
 if (!/src=["']\/assets\/brand\/traptech-app-icon\.svg["']/.test(indexHtml)) fail('public/index.html', 'Hub startup/splash mark must use the canonical Trap Tech app icon');
 const canonical = fs.readFileSync(path.join(ROOT, 'public/assets/brand/traptech-app-icon.svg'), 'utf8').trim();
 for (const alias of ['favicon.svg', 'hub-mark.svg', 'tt-favicon.svg', 'tt-maskable.svg']) {

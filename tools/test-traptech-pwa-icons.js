@@ -17,7 +17,10 @@ assert.ok(manifest.icons.some(x=>x.purpose==='maskable'));
 assert.ok(manifest.icons.every(x=>x.src.includes('v=tt-crown-20261014')));
 assert.ok(html.includes('traptech-app-icon.svg?v=tt-crown-20261014'));
 assert.ok(html.includes('apple-touch-icon.png?v=tt-crown-20261014'));
-assert.ok(sw.includes('gh-shell-v9-tt-crown-20261014'));
+// Cache versions change when privacy fixes invalidate old offline data.
+// Assert icon coverage rather than pinning an obsolete cache name.
+for(const suffix of expected)
+ assert.ok(sw.includes('/assets/icons/'+suffix),'Install icon absent from offline shell: '+suffix);
 const files=icon.generated();
 for(const {rel,size,bytes} of files){
  const installed=fs.readFileSync(path.join(pub,rel));
@@ -28,7 +31,8 @@ for(const {rel,size,bytes} of files){
   assert.equal(installed.readUInt32BE(20),size,'PNG height: '+rel);
  }
 }
-assert.equal(fs.readFileSync(path.join(pub,'assets/brand/traptech-app-icon.svg'),'utf8'),
- fs.readFileSync(path.join(pub,'assets/brand/favicon.svg'),'utf8'));
+const canonical=fs.readFileSync(path.join(pub,'assets/brand/traptech-app-icon.svg'),'utf8').trim();
+for(const alias of ['favicon.svg','hub-mark.svg','tt-favicon.svg','tt-maskable.svg'])
+ assert.equal(fs.readFileSync(path.join(pub,'assets/brand',alias),'utf8').trim(),canonical,'SVG alias drift: '+alias);
 assert.ok(icon.svg().includes('ttg')&&icon.svg().includes('<polygon'),'Must use existing TT crown/monogram vectors');
 console.log(JSON.stringify({pass:true,assetFiles:files.length,icons:['192','512','maskable-512','apple-180'],source:'existing tt-mono.svg',oldControllerPngsRejected:true,deviceInstallTested:false}));

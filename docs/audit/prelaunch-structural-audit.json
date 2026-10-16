@@ -1,0 +1,3009 @@
+{
+  "generatedAt": "2026-10-16T04:46:46.218Z",
+  "mode": "read-only structural audit of core Hub games and Games Library; not a visual/gameplay/physical-device pass",
+  "summary": {
+    "registryGames": 80,
+    "releaseSystemContractsPassed": 20,
+    "releaseSystemContractsTotal": 20,
+    "missingAchievementGameCount": 0,
+    "unresolvedAchievementRewardCount": 0,
+    "coreGamesRegistered": 13,
+    "coreGamesWithBlockers": 0,
+    "coreGamesWithReviewNotes": 16,
+    "gamesWithBlockers": 0,
+    "gamesWithReviewNotes": 77,
+    "duplicateReviewFindings": 0,
+    "activeRegistryReferences": 80,
+    "avatar": {
+      "editorPresent": true,
+      "rendererPresent": true,
+      "ownershipTestsDetected": true
+    },
+    "shop": {
+      "staticItemsFound": 30,
+      "duplicateStaticIds": 0,
+      "generatorPresent": true
+    }
+  },
+  "coreGames": [
+    {
+      "id": "jetpack-dash",
+      "title": "Jetpack Dash",
+      "module": "jetpack.js",
+      "moduleHash": "2dd4ba382cf837a28a6114142e5633ab8cce44b69f7a3ba8c616f4d17a2d508b",
+      "hasCanvasToken": true,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": true,
+      "hasKeyboardToken": true,
+      "problems": [],
+      "notes": [
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "id": "drift-rush",
+      "title": "Drift Rush",
+      "module": "games/drift-rush.js",
+      "moduleHash": "410e5539d8344772aab9be53f0a691eba98bc09a75a374b08c78191ac841634c",
+      "hasCanvasToken": true,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "id": "plinko",
+      "title": "Plinko",
+      "module": "games/plinko.js",
+      "moduleHash": "ad14de3d6e494152eebe78208acf7fa6270d303fab3898cfc1c2deb9bde39d96",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "spin-to-win",
+      "title": "Spin to Win",
+      "module": "games/spin-to-win.js",
+      "moduleHash": "29da3086f340737c34cc3330895193f517cf1ae50e465a24343c9f1e80f4a363",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "memory-match",
+      "title": "Memory Match",
+      "module": "games/memory-match.js",
+      "moduleHash": "c17be40e97461d67b8e9e762dfe60c08d5c2bde0dbdc2f71914bc197e156d2f6",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "high-score",
+      "title": "High Score",
+      "module": "games/high-score.js",
+      "moduleHash": "f250a5eb4ef4eb6cd55e014df5532fff2c97f011e4f9cc43e838849db5a6331d",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious pointer/touch/keyboard input token"
+      ]
+    },
+    {
+      "id": "blazed-roulette",
+      "title": "Blazed Roulette",
+      "module": "games/blazed-roulette.js",
+      "moduleHash": "9097a14ba612b96bb3bc491c35c438eaaf9743c11684f781bbe722e921770bf2",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "id": "terp-tapper",
+      "title": "Terp Tapper",
+      "module": "games/terp-tapper.js",
+      "moduleHash": "10ce753c0b21391cf9dcc2526541ee742af4fbfd18f6ee7765217e268970c951",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "munchies-snake",
+      "title": "Neon Munchies",
+      "module": "games/munchies-snake.js",
+      "moduleHash": "ebf8704b14e454615cc5bbc090688215adc70613df5ab7a3626333aa30828d40",
+      "hasCanvasToken": true,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "brick-breaker",
+      "title": "Brick Breaker",
+      "module": "games/brick-breaker.js",
+      "moduleHash": "3e3fe447795fab69590bf9dbdc470a9ad0a64e9036871c1af4d30687860e65bf",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "sky-hopper",
+      "title": "Sky Hopper",
+      "module": "games/sky-hopper.js",
+      "moduleHash": "bcbad3953718f2900eb1fefeed3c406f51651d54c9f3d8c431153112d9d78d0f",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "void-swarm",
+      "title": "Void Swarm",
+      "module": "games/void-swarm.js",
+      "moduleHash": "f2f270c4a55eb5ec4101b8a788e632d1c350280e2b456575137c6a50f4b2be9d",
+      "hasCanvasToken": true,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "stack",
+      "title": "Stack",
+      "module": "games/stack.js",
+      "moduleHash": "835b0f55cc32865fecf285d75d209911f98bc1ea3df358ae1933a63aba84be07",
+      "hasCanvasToken": true,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "grow-guard",
+      "title": "Grow Guard",
+      "module": "games/grow-guard.js",
+      "moduleHash": "42240d7e7153c6d637db61925056c3d424dee0982aafaee8cc061317dd287491",
+      "hasCanvasToken": true,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious pointer/touch/keyboard input token"
+      ]
+    },
+    {
+      "id": "sling-smash",
+      "title": "Sling Smash",
+      "module": "games/sling-smash.js",
+      "moduleHash": "863ef6295dec3b197723a91a608ed3e13187562ea03184f53fa33ea5e47abd03",
+      "hasCanvasToken": false,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "id": "haze-defense",
+      "title": "Haze Defense",
+      "module": "games/haze-defense.js",
+      "moduleHash": "bff706abe7c4a14456247311fad8d1eb7db0a0596e90cddea019f13edc1417ac",
+      "hasCanvasToken": true,
+      "hasWebGLToken": false,
+      "hasPointerOrTouchToken": false,
+      "hasKeyboardToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious pointer/touch/keyboard input token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    }
+  ],
+  "games": [
+    {
+      "slug": "block-drop",
+      "id": "gl-block-drop",
+      "title": "Block Drop",
+      "category": "Puzzle & Brain",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "7a47f25783633bc1503737740dc3a87322945c23e6774c489dd002caee508495",
+      "gameJsHash": "83c737f3cd391f2459a748ed0f3d558e45015bcd3001d38a22042394697badbc",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "maze-muncher",
+      "id": "gl-maze-muncher",
+      "title": "Maze Muncher",
+      "category": "Specialty",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "fd0293dd5964df4cfe969f883adbfc43c8605ed3ccc977a81e7207c45045d071",
+      "gameJsHash": "b811c039b14e62adeedfaca2f43fb256f3629790c22263ac97f300ac28b78ff5",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "alien-rows",
+      "id": "gl-alien-rows",
+      "title": "Alien Rows",
+      "category": "Arcade Shooters",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "0d4bcd8bfa1eae014ea4ce4db3483827606718a905f970de7768d6b388a21530",
+      "gameJsHash": "346f041b8c5da0193157d60e2d8cf4631286dab4cb0b85b8b9d9bd5242b616a8",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "cloud-hopper",
+      "id": "gl-cloud-hopper",
+      "title": "Cloud Hopper",
+      "category": "Endless Runners",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "cdd096a5856a4e60ef0bd4a82a6dfafca8dc98573846a1d1c0ee366024a6a7b6",
+      "gameJsHash": "fd594a6ccceedb62fd6fafff0c14478f5e9d387452acb7cb1cbb15c34fd36811",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "road-hopper",
+      "id": "gl-road-hopper",
+      "title": "Road Hopper",
+      "category": "Endless Runners",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "40914896b9dd0f7c9b4d9057144f1ad9c671b55d95c8098a81d97b6c3491e1df",
+      "gameJsHash": "565f2e40269617c1438cd620ef17ea3ef6ac8c2177404603cc21cbaf6ad52045",
+      "hasCanvas": false,
+      "hasWebGL": true,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "bud-merge",
+      "id": "gl-bud-merge",
+      "title": "Bud Merge",
+      "category": "Cannabis",
+      "build": "vendored",
+      "source": "github.com/gabrielecirulli/2048",
+      "implementationPresent": true,
+      "htmlHash": "2cc339ac7f57adde7f6cb5527ccce450807c13cdce54f6a9b15d0fff7530a399",
+      "gameJsHash": null,
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "slug": "hex-stack",
+      "id": "gl-hex-stack",
+      "title": "Hex Stack",
+      "category": "Puzzle & Brain",
+      "build": "vendored",
+      "source": "github.com/Hextris/hextris",
+      "implementationPresent": true,
+      "htmlHash": "299ea71b5011290772610ae2e008752ce3920f4b589bb8605889779d731cfe3d",
+      "gameJsHash": null,
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "slug": "dino-dash",
+      "id": "gl-dino-dash",
+      "title": "Desert Dash",
+      "category": "Endless Runners",
+      "build": "vendored",
+      "source": "github.com/wayou/t-rex-runner (extracted from Chromium neterror resources)",
+      "implementationPresent": true,
+      "htmlHash": "c3410f210bff94c12f3e647c07785fceea69322209c2bd2245944ec849413c1a",
+      "gameJsHash": null,
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": []
+    },
+    {
+      "slug": "rock-buster",
+      "id": "gl-rock-buster",
+      "title": "Rock Buster",
+      "category": "Arcade Shooters",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "77dfa9bd29de0f0d1d5458748a171b6fba348bcbac2dfaa8a9c1e239d9045e1d",
+      "gameJsHash": "21a9ea82a46cabb4a39f605a92b4cf5e9cbb33ce1507ad8240bcf2fa4415a509",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "star-swarm",
+      "id": "gl-star-swarm",
+      "title": "Star Swarm",
+      "category": "Arcade Shooters",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "dd6f1698b7acd00c2061e2196306ff5d3c9fe60319b14f7e96dc887c8d2a2224",
+      "gameJsHash": "ab20bb9b6d89dd0b7e03dcf1044ffece8d647008b483566bc7e855e7462faf92",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "rail-rush",
+      "id": "gl-rail-rush",
+      "title": "Rail Rush",
+      "category": "Endless Runners",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "73758c7ca1dcc6643cffa5937b5a4e4912b0842e92bec2a28ef51e375a491103",
+      "gameJsHash": "7039cf85e973e9cfd283bdfed97ef9fa8e17b9f17dcdef62b22661e0832bd4a6",
+      "hasCanvas": false,
+      "hasWebGL": true,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "hill-hauler",
+      "id": "gl-hill-hauler",
+      "title": "Hill Hauler",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "4862a76e00614a2d65f42d4767c12597c55d0cbc6e00cdd760990f1f5d1bee5d",
+      "gameJsHash": "cce660b295232ed7dc9d8add0e2cc5f508b64a5754af1c1231d0c7964cce9417",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "wanted-run",
+      "id": "gl-wanted-run",
+      "title": "Most Wanted Run",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "2ce23fb5ae662fb36775b1552ed389e9b6370d4e4735fb2357ced914fa08c531",
+      "gameJsHash": "f36075939328a5443b0cb2db476cb19036455da525b7069b48555f5ec45bc0d7",
+      "hasCanvas": false,
+      "hasWebGL": true,
+      "hasTouchControlsToken": true,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "pop-defense",
+      "id": "gl-pop-defense",
+      "title": "Pop Defense",
+      "category": "Tower Defense",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "c235150ddc9a4a5b1a835aed8cb4cffd07810afc9c7e61f42f1dac75efb3de3e",
+      "gameJsHash": "a7d76216e681eb03facaec88e1c64c9097b9531e42a48680143c816861d7410a",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "cube-horde",
+      "id": "gl-cube-horde",
+      "title": "Cube Horde",
+      "category": "Survival & Horde",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "000ca8eba5f7a90e47a54fd384d7b11f8fac1e0a9d7f835534325830e11a3da8",
+      "gameJsHash": "ba683c59f8d9299344401b0428919e001fab967361b9fc583270cdab30d6593c",
+      "hasCanvas": false,
+      "hasWebGL": true,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "arrow-hero",
+      "id": "gl-arrow-hero",
+      "title": "Arrow Hero",
+      "category": "Survival & Horde",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "a9681e9cbcd0d6b4eb09c697163c2dd29654a0b1e6b64d749a37029a1d7c13d8",
+      "gameJsHash": "d53a5924bf1042e8d75c03592d4c34fd3c61892c22afba4200526f801ee24cf4",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": true,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "slug": "grid-wars",
+      "id": "gl-grid-wars",
+      "title": "Grid Wars",
+      "category": "Survival & Horde",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "6abce9c5cda2c15b6b1e37954085573121a8f787373e1970f7c9cc1fdf67c358",
+      "gameJsHash": "0a58f7b686d349c644855d5c318a33fe2022d7e23f751f03d58e74c0f1df23aa",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "moon-swarm",
+      "id": "gl-moon-swarm",
+      "title": "Moon Swarm",
+      "category": "Survival & Horde",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "a6d659e00c088a7e0712688f5e52cf038b48335a77fc089d4e4c4d663c40871e",
+      "gameJsHash": "b25977a45e142d0df3be7da301cad1c2026fd91345b3d9bd29362643cb8815e6",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "throttle-rider",
+      "id": "gl-throttle-rider",
+      "title": "Throttle Rider",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "c9d47d8ed9ebfc287081d5763113d416f84ef473f0bb5cefc1df082ef1bbeb81",
+      "gameJsHash": "617d61c1f4ef6cd8a71bf9159df565605e4a15c819f9e52892ecaf8c93b7e64a",
+      "hasCanvas": false,
+      "hasWebGL": true,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "wreck-ride",
+      "id": "gl-wreck-ride",
+      "title": "Wreck Ride",
+      "category": "Physics & Destruction",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "14976b26b50a2d76c512ae3d656f5cf4b363d45a624f4006c42b43663cdf0ee6",
+      "gameJsHash": "1d31496b39289bf3b967baa5c8e17f5e5076e0c4303792e3b5b58429c528f9e0",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "rig-rally",
+      "id": "gl-rig-rally",
+      "title": "Rig Rally",
+      "category": "Physics & Destruction",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "a261321a0a3e225afe164f3144f393b26315346c2f7cea7f0dce048b4afe5ede",
+      "gameJsHash": "c51e9d0c6d9ca3ec1cb7915dbf3ac724849bdffff37d945493be74e5bd70364b",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "goo-tower",
+      "id": "gl-goo-tower",
+      "title": "Goo Tower",
+      "category": "Physics & Destruction",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "fe36630d01c831bd2d1ca9e0ad431266daefa55e6b7e64210d29577678b05c4a",
+      "gameJsHash": "4874ba0f9958e17a7721656107aaa1fa89eacd3149aaf170fed7b109cbcec88b",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "keep-guard",
+      "id": "gl-keep-guard",
+      "title": "Keep Guard",
+      "category": "Tower Defense",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "bda816341b633a93f85c5e26913570be2a84129c407538bf70550ea6c3684b27",
+      "gameJsHash": "e5107feededfecbc0b6a2d4fde80c1da379faa159dbfa14fef03fe0a687e796b",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "node-siege",
+      "id": "gl-node-siege",
+      "title": "Node Siege",
+      "category": "Tower Defense",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "4800411da3a5bdbf9077564906c645de83715610c4cd7222bb98aff2d0ee4b73",
+      "gameJsHash": "df8bd57d5e4dfbc27c0a3a62f3f9541aa6eb1a57b2f0601940937633ef022a2a",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "orb-coil",
+      "id": "gl-orb-coil",
+      "title": "Orb Coil",
+      "category": "Puzzle & Brain",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "f358a9b51e4c2e8b670a851f75f192150d8774dc52cda320c64faf00d8634fd4",
+      "gameJsHash": "ef9fe9d5269946cd24e9b64ffdee978c565222ec0ee6def23c653e657c0b3554",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "neon-flipper",
+      "id": "gl-neon-flipper",
+      "title": "Neon Flipper",
+      "category": "Puzzle & Brain",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "7edcbab8dd1d8ce09b351281509e3d1b28c1ec3f438795dec442b78df98db864",
+      "gameJsHash": "2c9a7b12daf3bab27bf5f7168dddbf6bbf9d5cb6d43be37954dac3f58deb0572",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": true,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model"
+      ]
+    },
+    {
+      "slug": "light-cycle",
+      "id": "gl-light-cycle",
+      "title": "Light Cycle",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "882125bce598492a11a83c5caf82560c9ea23b2ba6c011dcf1be07c4ea398ad9",
+      "gameJsHash": "96645e6bf06f1219e541c234e6d2b5e683fce303d40bcb49b3c7bec15de3fddb",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "roof-runner",
+      "id": "gl-roof-runner",
+      "title": "Roof Runner",
+      "category": "Endless Runners",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "99d4efc1c1e3d68579cfe4b00731e14b0c863a9eccfccdb37ddd4ea408d6bc9f",
+      "gameJsHash": "78cdc024dd3e89d3332fa6e10e4cd3f93b7a8d1630883484341a3ef5aacb7294",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "helix-drop",
+      "id": "gl-helix-drop",
+      "title": "Helix Drop",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "219d0a256dd64fce43dc37fba6f55aaa4cc8ee15fbdfb26e75d0ab58a1ab06ab",
+      "gameJsHash": "100221b1be99d33fb553c03ff201e089b5793d3944c1a9ea97a9b2c2778a593c",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "hex-spin",
+      "id": "gl-hex-spin",
+      "title": "Hex Spin",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "0b11cbdc357205e1d213ce87b869c96e829003076db2e8a42b30eda8f53accfa",
+      "gameJsHash": "213391fc8dbb6e84a55e3858f4283fa5c2da69a91b0043bfe3d4cd558bc1da60",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "color-hop",
+      "id": "gl-color-hop",
+      "title": "Color Hop",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "ca8ef4b4d5af1bd0a319f168ce628675635fb87a752cbbe7d3e81c7cacce842a",
+      "gameJsHash": "eba74a7de8cae276ab022f297e09e39667c925762716b680ee3b1f23084b5665",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "zig-path",
+      "id": "gl-zig-path",
+      "title": "Zig Path",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "76e2b02881d388338be4132622866dcaa26b294b705f88e9bdadc6894d1e5347",
+      "gameJsHash": "e533c6dbb759dca0e0c0b97f377c09e80dea9b8e6e6dc812f8b9415cf1ad52b2",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "drift-king",
+      "id": "gl-drift-king",
+      "title": "Drift King",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "7a5612392d4c97b74113c33bef1781a7ff7ef9cdd4776a9389765b9db8b64a41",
+      "gameJsHash": "a83c65d8fd3572dc05a60086f97236bf257ed0fe024749d8ba5aeef397e6027c",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "missile-guard",
+      "id": "gl-missile-guard",
+      "title": "Missile Guard",
+      "category": "Arcade Shooters",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "12d81f79a7f753bcd58d9129fd375e03fe550bf103cc7c9fedb332039867a108",
+      "gameJsHash": "c5b1426ec2e80ab0f437ca509d9fa61989ea3fd5adb757382e89b710fec7d38c",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "bug-blaster",
+      "id": "gl-bug-blaster",
+      "title": "Bug Blaster",
+      "category": "Arcade Shooters",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "a3bb8e1b36a2b08ad5b08673166950adaf0c535975b58a4c3b006ee0479a60bd",
+      "gameJsHash": "e54ca699ab0816c8689b11d3c9952d47b0309579d6a108e9f5767ccfaf187ffb",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "bubble-pop",
+      "id": "gl-bubble-pop",
+      "title": "Bubble Pop",
+      "category": "Puzzle & Brain",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "dd1f0eebcf99ee20f7105cb71ca5a05a28cada9c18a378dcda88386bb3154043",
+      "gameJsHash": "19db42f6d8d9d749be02a773864bf38070581f8a8db453705ef490b80e80ef88",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "mine-sweep",
+      "id": "gl-mine-sweep",
+      "title": "Mine Sweep",
+      "category": "Puzzle & Brain",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "391a390e2d296fec833428bb9813c6a021a1a45940494784b90a42985479029f",
+      "gameJsHash": "a4d49cc154551825b489f84906acd051738ad8a1480a30025fa879f09992b27a",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "knife-toss",
+      "id": "gl-knife-toss",
+      "title": "Knife Toss",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "e27e4e329eb617b0228423063c829610df4f30de549f70e30ae11b5ad2d11a08",
+      "gameJsHash": "e944b680c5c936513137933f4e9c128962013f756fb33d51cbc9016515549022",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "mole-whack",
+      "id": "gl-mole-whack",
+      "title": "Mole Whack",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "cd5f2668ffc0784a45e382fe6b0750d6b77d4eac71b128beb3d578ae8d25f845",
+      "gameJsHash": "76545a1e8f7ce662bc80cde0cfc709e5b211f0d9704d4caef846cf0c2489c4b0",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "grow-op",
+      "id": "gl-grow-op",
+      "title": "Grow Op",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "049fd37e40ad5571c19e68c689bf16e321ecddd36e9819bb9a715e0b3a53b36e",
+      "gameJsHash": "29a55b8b98e327623f024d565f5d51b296b34cfaf5b4cb8e5b4276fab189ebcc",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "trim-rush",
+      "id": "gl-trim-rush",
+      "title": "Trim Rush",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "6772bfc4fc19fb51099df8a683bb51707f5fd3d0f72c3fc4b08228bc3d32f406",
+      "gameJsHash": "88c0a4a7b7a02827b28b1d266b49ebcd235dd59505b838b21700421b291d1985",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "strain-crush",
+      "id": "gl-strain-crush",
+      "title": "Strain Crush",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "0365a617477118e4a0a2b26c663a912047788be4094d4e5b2c5f999e58c9db8b",
+      "gameJsHash": "a1338ba9a4d759dbc4bed9fb4cc6d1ee8e89c96ba5dce0b6919ac2dacfab342e",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "bud-bar",
+      "id": "gl-bud-bar",
+      "title": "Bud Bar",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "a9abaa63d88aabd5301cf99fe7b6c1037a807fd7818a977dd04503aa05f9d1ad",
+      "gameJsHash": "a5ff904708a4d6b84e326d4e9596eecfa70a7dca0fd3a838bdfe12087f2d47a9",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "green-dash",
+      "id": "gl-green-dash",
+      "title": "Green Dash",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "50f19a94e379fb45b0fe2fd6c12403d7a1504346fd92a84e2b833d97d078ead3",
+      "gameJsHash": "6c6cfffa44c71a3c93253c3aa4f6228a0c64e5497bae60e46c90ff37c2e62aca",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "roll-up",
+      "id": "gl-roll-up",
+      "title": "Roll Up",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "ee910cafd671f4b93986949afeaac1f2d077d352b872eeee98a8df2ee0ab9591",
+      "gameJsHash": "f1f5d265a8be43f46f545ca8fed437d059a2782eb8638ecf68982913449f4144",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "smoke-rings",
+      "id": "gl-smoke-rings",
+      "title": "Smoke Rings",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "fcbf4b6c5f6362c92bbef8ea5e682f7769decd365cf2b2586600631e1958fbd8",
+      "gameJsHash": "1f0a6d3ffa22f1919d1fec7ca770add6bc118b71a81eadd4c48502408feb3994",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "bud-sort",
+      "id": "gl-bud-sort",
+      "title": "Bud Sort",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "88c366f6d3dc5b30ad91738634f3271f963f2febdcc3132c403ffd16e0149030",
+      "gameJsHash": "5010f5bc0313bf5bccb0d657852a1fc852eaa6d15289a2645aeedb63b0d36dbc",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "pest-patrol",
+      "id": "gl-pest-patrol",
+      "title": "Pest Patrol",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "f7a31b3a4f4d7f3df6642997fc051fb0df1051a74244fd02bc236c064822e071",
+      "gameJsHash": "c7768367b11be1790c2353805c3389d69fffc14af082070045036149533d6007",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "cup-toss",
+      "id": "gl-cup-toss",
+      "title": "Cup Toss",
+      "category": "Cannabis",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "b54614bf63ca74db2c6cc99ec39226111825c0074d87c9b7390d8d939b8d141a",
+      "gameJsHash": "c45229bb4c3d3ba85521f5cc0482c6a92ebd871be6d0ae3e7fbcd83f7dc2da68",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "beat-tiles",
+      "id": "gl-beat-tiles",
+      "title": "Beat Tiles",
+      "category": "Puzzle & Brain",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "986e741095491c64c5cc608284f7db5a43aecd3045d2addc5b9aec3272a3cba9",
+      "gameJsHash": "7b4307c0bd9dce345ff18eae69c5a977acb26e9435ff903b199ac46ef6a203c8",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "moon-lander",
+      "id": "gl-moon-lander",
+      "title": "Moon Lander",
+      "category": "Specialty",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "08a63752def6f734425dd76e2820fbea113db957aceeeb7a70515acf562fa10d",
+      "gameJsHash": "98978ed22b3547eac9e828278d46874f68b5d40fb3a5e819153115821b3c2af7",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token",
+        "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+      ]
+    },
+    {
+      "slug": "pin-strike",
+      "id": "gl-pin-strike",
+      "title": "Pin Strike",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "f837d17da542a719b770e43b0797f3cdc49cd484d760467d53fbefbd27952155",
+      "gameJsHash": "d75d7d19590d4b04539ae516b6687b0097cd086bae300a6d459f82e51ee055cd",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "bullseye",
+      "id": "gl-bullseye",
+      "title": "Bullseye",
+      "category": "Combat",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "20fcbff93afca754d36e3c7435a74f43ed2b5087ac53314293b000b37ed86a65",
+      "gameJsHash": "bb32a501f5c7209d52b2ed5f58b6a9a0678e289b441639f86c40724c7d453002",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "spot-kick",
+      "id": "gl-spot-kick",
+      "title": "Spot Kick",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "f1a7c1fe0ed5533de5a50de71b19cfa1d556036ff8b026ef70c275a9ea83807e",
+      "gameJsHash": "4eb525930df8f5c71982d97bcc30650a169d9a0de01deb61dfc3b223f520a29e",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "glow-echo",
+      "id": "gl-glow-echo",
+      "title": "Glow Echo",
+      "category": "Puzzle & Brain",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "948e8607b263d5b69e9f66df0423fe63e474a873655b532855d608e647d163b7",
+      "gameJsHash": "748e44da7caafd62753483cb082391e333318eebce97bbf3b66eb60fb33578c1",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "knockout",
+      "id": "gl-knockout",
+      "title": "Knockout Ring",
+      "category": "Combat",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "e1f3f4b867893694669d536fcdb5eaed07b02622d80874cd8e854d53842f7283",
+      "gameJsHash": "a61fdd524591e42ed8c303c67d176bc9421d362d4f792c790bf18d91c59b7194",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "putt-party",
+      "id": "gl-putt-party",
+      "title": "Putt Party",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "1f0753e8ffd4450003aa863e6708d93b572185167251707250ed84733b5001e0",
+      "gameJsHash": "efa4b564951d5f4696be174bc6120e1e12fe77c9fa5c2027a08efbc190806df8",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "cue-club",
+      "id": "gl-cue-club",
+      "title": "Cue Club",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "08c309155c5e34f7d004c551482757bbcc07c13e773a9d00cf029fbb5e007ca9",
+      "gameJsHash": "4356b3eb4fe200a7d00ab67119736bc1ae6563c3a147cb9f8b51b90127a33a6c",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "long-ball",
+      "id": "gl-long-ball",
+      "title": "Long Ball",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "ce24101e79cc40e3315137436aa2f7b1f92521c3428b7d8ccabea3f5b7dae74c",
+      "gameJsHash": "d49902ae7496f912c444182ba1e719dd18fd7587de5417283c5b3887cc855346",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "rally-court",
+      "id": "gl-rally-court",
+      "title": "Rally Court",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "70ca74d872cb7a9504ce78cc80139152446f552074b785e0392d6907e6a2b135",
+      "gameJsHash": "50de135d4a3c3167d5e9ad6401816b5629fd1f7e21b43556e249f7dc63a24022",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "ice-snipe",
+      "id": "gl-ice-snipe",
+      "title": "Ice Snipe",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "4d372064606c6cd1d6ad2bfca957a6ac2a5c4c86b2009230de3811dea9c22d7b",
+      "gameJsHash": "80d42d45351c5655973ee1ad67780ca25aaea2db24c487979bd5014a842a1a4c",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "reel-deal",
+      "id": "gl-reel-deal",
+      "title": "Reel Deal",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "81071f99b34f43a0d3ac4ff81c5feb35473623bdcba91df6e45f2f486c60e65d",
+      "gameJsHash": "a378cb3c4b9fe733fe13c44f356ba87593735ac14b8d41901a2739ff3fc27334",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "hoop-streak",
+      "id": "gl-hoop-streak",
+      "title": "Hoop Streak",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "1ba84bca76676b06fbe5a1b002bb306a8d6cc363b3fe490751f80491f1b09288",
+      "gameJsHash": "8528d95c4045fe608f6cfc33d6223905f33c961d767f2816f455ff0d705ff509",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "kickflip-city",
+      "id": "gl-kickflip-city",
+      "title": "Kickflip City",
+      "category": "Sports",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "cc965d24d047cc5ae87c7f12c9322a8fb688cd098d4c326e73e36777e69cfb79",
+      "gameJsHash": "a55f511ab819ac06d1535928d3832a386dee1aa0cbcc697732e1c656afbe5936",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "tile-twin",
+      "id": "gl-tile-twin",
+      "title": "Tile Twin",
+      "category": "Puzzle & Brain",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "e65d8cccf49efa64d4f1e715e9a1cdff0a261081b6e84f3a05df0378501c02dc",
+      "gameJsHash": "af4a2fc9f57bc64cbf3d0e417cc0b30cb5082c5151932e78862895526255ec33",
+      "hasCanvas": true,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "tunnel-hop",
+      "id": "gl-tunnel-hop",
+      "title": "Tunnel Hop",
+      "category": "Endless Runners",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "53d3790205626940f15fb010ce358e37a5d99a18fcf93e26d43a38a0c3ba54d1",
+      "gameJsHash": "1fbab19976d5dc509f269ab085acecd33a83f9b5581886d8fffbbb77af2e7e2c",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "dune-glide",
+      "id": "gl-dune-glide",
+      "title": "Dune Glide",
+      "category": "Endless Runners",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "e8ae962037e3f28164a64f3d1627bb85eaf712fc31b37409d85fb83cd16a5408",
+      "gameJsHash": "352ca7dc0b8c830880443cf56d01b2fbc966bceb3b06848721d849f4f04c80cd",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "egg-roll",
+      "id": "gl-egg-roll",
+      "title": "Egg Roll",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "ee90c05851e195a8d8b66c0ce2ed0ad039d6bd24dd47551f31b13035c8f8b1c5",
+      "gameJsHash": "c5c8dea544e0baf9fb0f5bf154f55d2f2879b03b50c40bbb2785c02b8f8cedbe",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "monster-crush",
+      "id": "gl-monster-crush",
+      "title": "Monster Crush",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "15be5213d245fe4c7d6132ff0d33b54e468b12bf1ad099aa2c35421c81236289",
+      "gameJsHash": "6487458d5e47d8e9b48cc1a3233d093b68fd2a198d9b6d244dfd77a3117f9eb5",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "no-brakes",
+      "id": "gl-no-brakes",
+      "title": "No Brakes",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "cda588bf520307b85dc7f30e594413e7cf27068487b8a57f3ad31221d22f1b32",
+      "gameJsHash": "a2e05272b355e9b3893c9ff7b7a2492abf40909c661f890c837481f854d18df9",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "cab-rush",
+      "id": "gl-cab-rush",
+      "title": "Cab Rush",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "9a265809e2f0fd48f7576188a046cbbcd563c78b3735114813b18e139a55d6bc",
+      "gameJsHash": "c7c5daab9e058dd9d62adb6277e68fafeee1bba7dee7af4d65a4a435e5a5772a",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "dirt-dash",
+      "id": "gl-dirt-dash",
+      "title": "Dirt Dash",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "a9b2f6da928872c02711591e9234b58e72b9b0f43c94d6ac0c608de4d43fd244",
+      "gameJsHash": "ca2b59584a4abdf92b35b61feeccbc3e2ac524f4917bf806b16eaeb33dbc3571",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "road-brawl",
+      "id": "gl-road-brawl",
+      "title": "Road Brawl",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "e4c46631061649a14ead654756da1f484341ccbf0c7ef8541b9def7dca97649e",
+      "gameJsHash": "77dd6b46883bcba728df7b65abf8b49f71d9bec64695b6e76d598deaaed8fb24",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "derby-smash",
+      "id": "gl-derby-smash",
+      "title": "Derby Smash",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "e874f93c2aa47e8014194f83a97a8d1e1768b30b22220552a28e4f0aed0bdb08",
+      "gameJsHash": "0d037cd6820572b428c6bc7b6a6644e376aac89dd84ab655d5e2ce209faa5c5b",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "dunk-flick",
+      "id": "gl-dunk-flick",
+      "title": "Dunk Flick",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "fdf2907933029542073802ecc3b35fa74fe3e0787564f0a62420db90d4eba7be",
+      "gameJsHash": "4862e91a15572432f263974316ab92383c3989f5d66c64a9981a57b3795fd570",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "duck-shot",
+      "id": "gl-duck-shot",
+      "title": "Duck Shot",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "944aeb49a0ed1ef3ebfae0f680f99ee7e657bda0f3b8056e502d42cbb3456775",
+      "gameJsHash": "dea4a2472ee8ac0f155dd95e7db450811416848a6a1cc7c36aa4740a0c223551",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "paper-toss",
+      "id": "gl-paper-toss",
+      "title": "Paper Toss",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "c982303f61996756c3774cce61750a8ae566ff57c1c25a427b2bd4cd9b64aac2",
+      "gameJsHash": "0b3469e896eaf38da801bba41a564aa229ba1b5366f7f79ee048287faaba0b16",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "skee-roll",
+      "id": "gl-skee-roll",
+      "title": "Skee Roll",
+      "category": "Reflex & Skill",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "997538c283a90e41bac893b712223d822b3a9358aa9b995ff22c7607809ccd1d",
+      "gameJsHash": "0173768b41ea5429a11d2cbae102d4cc612ffdda06244e242ab6223c26adaaeb",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "neon-circuit",
+      "id": "gl-neon-circuit",
+      "title": "Neon Circuit",
+      "category": "Driving",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "2e80ce57126cce2120d07b16d422474789633211db705039321e96e27dd4879f",
+      "gameJsHash": "c988f0bb57dc5124403f0df02912b229066945c920ae888222b29515a9570709",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    },
+    {
+      "slug": "rift-survival",
+      "id": "gl-rift-survival",
+      "title": "Rift Survival",
+      "category": "Survival & Horde",
+      "build": "built",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "implementationPresent": true,
+      "htmlHash": "71779a6e0418638a1978f95749196f95e7c4c000a3ca6929a12326d06a415794",
+      "gameJsHash": "831a0ced400002ff655eb364c55fc638bf5d85c9dea3b284f0033618032609c4",
+      "hasCanvas": false,
+      "hasWebGL": false,
+      "hasTouchControlsToken": false,
+      "hasKeyboardControlsToken": false,
+      "problems": [],
+      "notes": [
+        "no obvious game-loop/timer token; inspect interaction model",
+        "no obvious touch/pointer/keyboard control token"
+      ]
+    }
+  ],
+  "issues": [],
+  "warnings": [
+    {
+      "id": "jetpack-dash",
+      "title": "Jetpack Dash",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "id": "drift-rush",
+      "title": "Drift Rush",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "drift-rush",
+      "title": "Drift Rush",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "id": "plinko",
+      "title": "Plinko",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "spin-to-win",
+      "title": "Spin to Win",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "memory-match",
+      "title": "Memory Match",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "high-score",
+      "title": "High Score",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "high-score",
+      "title": "High Score",
+      "severity": "review",
+      "finding": "no obvious pointer/touch/keyboard input token"
+    },
+    {
+      "id": "blazed-roulette",
+      "title": "Blazed Roulette",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "blazed-roulette",
+      "title": "Blazed Roulette",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "id": "terp-tapper",
+      "title": "Terp Tapper",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "munchies-snake",
+      "title": "Neon Munchies",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "brick-breaker",
+      "title": "Brick Breaker",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "sky-hopper",
+      "title": "Sky Hopper",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "void-swarm",
+      "title": "Void Swarm",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "stack",
+      "title": "Stack",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "grow-guard",
+      "title": "Grow Guard",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "grow-guard",
+      "title": "Grow Guard",
+      "severity": "review",
+      "finding": "no obvious pointer/touch/keyboard input token"
+    },
+    {
+      "id": "sling-smash",
+      "title": "Sling Smash",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "haze-defense",
+      "title": "Haze Defense",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "id": "haze-defense",
+      "title": "Haze Defense",
+      "severity": "review",
+      "finding": "no obvious pointer/touch/keyboard input token"
+    },
+    {
+      "id": "haze-defense",
+      "title": "Haze Defense",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "block-drop",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "block-drop",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "maze-muncher",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "maze-muncher",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "alien-rows",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "alien-rows",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "cloud-hopper",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "cloud-hopper",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "road-hopper",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "road-hopper",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "rock-buster",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "rock-buster",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "rock-buster",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "star-swarm",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "star-swarm",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "star-swarm",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "rail-rush",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "rail-rush",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "hill-hauler",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "hill-hauler",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "wanted-run",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "wanted-run",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "pop-defense",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "pop-defense",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "cube-horde",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "cube-horde",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "arrow-hero",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "grid-wars",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "grid-wars",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "moon-swarm",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "moon-swarm",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "throttle-rider",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "throttle-rider",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "wreck-ride",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "wreck-ride",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "rig-rally",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "rig-rally",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "goo-tower",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "goo-tower",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "keep-guard",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "keep-guard",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "node-siege",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "node-siege",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "orb-coil",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "orb-coil",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "orb-coil",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "neon-flipper",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "light-cycle",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "light-cycle",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "light-cycle",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "roof-runner",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "roof-runner",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "helix-drop",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "helix-drop",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "hex-spin",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "hex-spin",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "color-hop",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "color-hop",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "zig-path",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "zig-path",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "drift-king",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "drift-king",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "missile-guard",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "missile-guard",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "missile-guard",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "bug-blaster",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "bug-blaster",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "bubble-pop",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "bubble-pop",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "mine-sweep",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "mine-sweep",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "knife-toss",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "mole-whack",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "mole-whack",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "mole-whack",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "grow-op",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "grow-op",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "trim-rush",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "trim-rush",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "strain-crush",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "strain-crush",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "bud-bar",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "bud-bar",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "bud-bar",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "green-dash",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "green-dash",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "roll-up",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "roll-up",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "smoke-rings",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "smoke-rings",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "bud-sort",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "bud-sort",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "pest-patrol",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "pest-patrol",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "cup-toss",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "cup-toss",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "beat-tiles",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "beat-tiles",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "moon-lander",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "moon-lander",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "moon-lander",
+      "severity": "review",
+      "finding": "module contains Math.random and scoring logic; inspect call sites to distinguish gameplay RNG from visual/audio effects"
+    },
+    {
+      "slug": "pin-strike",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "pin-strike",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "bullseye",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "bullseye",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "spot-kick",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "spot-kick",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "glow-echo",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "glow-echo",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "knockout",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "knockout",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "putt-party",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "putt-party",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "cue-club",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "cue-club",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "long-ball",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "long-ball",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "rally-court",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "rally-court",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "ice-snipe",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "ice-snipe",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "reel-deal",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "reel-deal",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "hoop-streak",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "hoop-streak",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "kickflip-city",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "kickflip-city",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "tile-twin",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "tile-twin",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "tunnel-hop",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "tunnel-hop",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "dune-glide",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "dune-glide",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "egg-roll",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "egg-roll",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "monster-crush",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "monster-crush",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "no-brakes",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "no-brakes",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "cab-rush",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "cab-rush",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "dirt-dash",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "dirt-dash",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "road-brawl",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "road-brawl",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "derby-smash",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "derby-smash",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "dunk-flick",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "dunk-flick",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "duck-shot",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "duck-shot",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "paper-toss",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "paper-toss",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "skee-roll",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "skee-roll",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "neon-circuit",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "neon-circuit",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    },
+    {
+      "slug": "rift-survival",
+      "severity": "review",
+      "finding": "no obvious game-loop/timer token; inspect interaction model"
+    },
+    {
+      "slug": "rift-survival",
+      "severity": "review",
+      "finding": "no obvious touch/pointer/keyboard control token"
+    }
+  ],
+  "avatar": {
+    "serverModulePresent": true,
+    "editorPresent": true,
+    "rendererPresent": true,
+    "serverChecksOwnership": true,
+    "testsCoverOwnership": true,
+    "supportsPresentationOptions": true,
+    "usesWebGLRenderer": true,
+    "warnings": []
+  },
+  "shop": {
+    "staticItemsFound": 30,
+    "staticItemIdDuplicates": [],
+    "generatorPresent": true,
+    "hasStableGeneratedIdRule": true,
+    "hasRarityModel": true,
+    "prestigeReferences": 0,
+    "warnings": []
+  },
+  "brandIcons": {
+    "canonicalSvgPresent": true,
+    "faviconMatchesCanonical": true,
+    "iconAliases": [
+      "favicon.svg",
+      "hub-mark.svg",
+      "tt-favicon.svg",
+      "tt-maskable.svg"
+    ],
+    "mismatchedAliases": [],
+    "indexUsesCanonicalSvg": true,
+    "splashUsesCanonicalSvg": true,
+    "dynamicRasterRoutePresent": true,
+    "manifestValidJson": true,
+    "manifestIcons": [
+      {
+        "src": "/assets/brand/traptech-app-icon.svg?v=tt-crown-20261014",
+        "sizes": "any",
+        "type": "image/svg+xml",
+        "purpose": "any"
+      },
+      {
+        "src": "/assets/icons/icon-192.png?v=tt-crown-20261014",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/assets/icons/icon-512.png?v=tt-crown-20261014",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/assets/icons/maskable-512.png?v=tt-crown-20261014",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "maskable"
+      }
+    ],
+    "missingManifestIconRoutes": []
+  },
+  "systemChecks": [
+    {
+      "id": "games",
+      "label": "Games and scored gameplay",
+      "checks": [
+        {
+          "name": "Every core game has a local module",
+          "pass": true
+        },
+        {
+          "name": "Every current library entry has HTML and expected game implementation",
+          "pass": true
+        },
+        {
+          "name": "Signed-run route and anti-cheat implementation exist",
+          "pass": true
+        },
+        {
+          "name": "Browser, Android and forged-score test harnesses present",
+          "pass": true
+        }
+      ],
+      "passed": 4,
+      "total": 4,
+      "e2eExecuted": false,
+      "physicalDeviceQaComplete": false
+    },
+    {
+      "id": "achievements",
+      "label": "Achievements and earned rewards",
+      "checks": [
+        {
+          "name": "All 16 configured core games define five milestones",
+          "pass": true
+        },
+        {
+          "name": "All achievement cosmetic rewards resolve to actual IDs",
+          "pass": true
+        },
+        {
+          "name": "Server-side achievement evaluation source present",
+          "pass": true
+        }
+      ],
+      "metrics": {
+        "coreGamesCovered": 16,
+        "rewardReferences": 171,
+        "missingGameAchievements": [],
+        "unresolvableRewards": []
+      },
+      "passed": 3,
+      "total": 3,
+      "e2eExecuted": false,
+      "physicalDeviceQaComplete": false
+    },
+    {
+      "id": "quests",
+      "label": "Quests, XP and player progression",
+      "checks": [
+        {
+          "name": "Server quest objectives and tiers defined",
+          "pass": true
+        },
+        {
+          "name": "Client quest reward metadata is rejected",
+          "pass": true
+        },
+        {
+          "name": "Quest progression regression harness present",
+          "pass": true
+        }
+      ],
+      "passed": 3,
+      "total": 3,
+      "e2eExecuted": false,
+      "physicalDeviceQaComplete": false
+    },
+    {
+      "id": "avatar",
+      "label": "Avatars and profile customization",
+      "checks": [
+        {
+          "name": "Avatar server, editor and 3D renderer sources present",
+          "pass": true
+        },
+        {
+          "name": "Ownership restrictions and negative API tests present",
+          "pass": true
+        },
+        {
+          "name": "Avatar SVG fallback present",
+          "pass": true
+        }
+      ],
+      "passed": 3,
+      "total": 3,
+      "e2eExecuted": false,
+      "physicalDeviceQaComplete": false
+    },
+    {
+      "id": "shop",
+      "label": "Shop, cosmetics, seasons and payments",
+      "checks": [
+        {
+          "name": "Procedural catalog and rarity model defined",
+          "pass": true
+        },
+        {
+          "name": "Economy and payment regression harnesses present",
+          "pass": true
+        },
+        {
+          "name": "Prestige originality uniqueness database constraint",
+          "pass": true
+        },
+        {
+          "name": "Achievement reward cosmetics exist",
+          "pass": true
+        }
+      ],
+      "passed": 4,
+      "total": 4,
+      "e2eExecuted": false,
+      "physicalDeviceQaComplete": false
+    },
+    {
+      "id": "giveaways",
+      "label": "Giveaways and competition integrity",
+      "checks": [
+        {
+          "name": "Public game catalog declares skill-only tie-breaking",
+          "pass": true
+        },
+        {
+          "name": "Server-derived metrics and equal-seed playoff source present",
+          "pass": true
+        },
+        {
+          "name": "Giveaway and tie-break test harnesses present",
+          "pass": true
+        }
+      ],
+      "passed": 3,
+      "total": 3,
+      "e2eExecuted": false,
+      "physicalDeviceQaComplete": false
+    }
+  ],
+  "releaseGrade": "STRUCTURAL_ONLY",
+  "fullAAAReviewComplete": false,
+  "requiredHumanGates": [
+    "Fresh desktop and real Android device playthrough for every game",
+    "Record controls, pause/resume, restart, scoring, score submission and invalid/forged-score rejection",
+    "Capture title, active gameplay and game-over UI screenshots for every game",
+    "Record physical-device P50/P95 frame time and sustained frame drops; do not treat headless GPU results as device proof",
+    "Review actual visual identity and near-duplicate mechanics/art; automate detection is triage, not final duplicate verdict",
+    "Review every avatar slot, combination, clipping, scale, pose, animation, fallback, mobile responsiveness and save/load path",
+    "Audit shop rotation, item preview, owned/equipped states, purchase atomicity, currency deductions, generated-ID stability, one-of-one prestige uniqueness and cosmetics-only fairness",
+    "Verify every asset license and source manifest before public launch"
+  ]
+}

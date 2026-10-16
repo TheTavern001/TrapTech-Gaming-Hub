@@ -8,7 +8,7 @@
 # matching prebuilt native binaries (better-sqlite3, @resvg/resvg-js). The toolchain is only a fallback.
 
 # ---------- build stage: production deps + build-time assets ----------
-FROM node:20-bookworm-slim AS build
+FROM node:24-bookworm-slim AS build
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
  && rm -rf /var/lib/apt/lists/*
@@ -20,9 +20,12 @@ COPY public ./public
 COPY docs ./docs
 COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
 COPY tools ./tools
+COPY Dockerfile ./Dockerfile
 # Replace legacy purple-controller install PNGs with the exact existing gold-crown TT vector.
 # The same files are served for PWA manifest, Android adaptive icon and iOS home screen.
-RUN node tools/build-traptech-pwa-icons.js && node tools/test-traptech-pwa-icons.js
+RUN node tools/build-traptech-pwa-icons.js && node tools/test-traptech-pwa-icons.js \
+ && node tools/build-core-game-cards.js
+RUN node tools/test-built-public-assets.js
 # Pre-gzip static text assets, pre-scale OG card art, pre-render the default share image (-> /app/build).
 # Runs without secrets (env vars are not available at build time on Deplexo).
 RUN test -s tools/games-lib-static-check.js \
@@ -48,6 +51,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node --check src/payment-settlement-proof.js \
  && node --check tools/test-payment-settlement-proof.js \
  && node tools/test-payment-settlement-proof.js \
+ && node tools/test-payment-webhook-integration.js \
  && node --check tools/test-reward-integrity.js \
  && node tools/test-reward-integrity.js \
  && node --check src/prize-score-proof.js \
@@ -138,6 +142,9 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-private-preview-readiness.js \
  && node tools/test-private-review-access.js \
  && node tools/test-owner-preview-payment-lock.js \
+ && node tools/test-cosmetic-pass-progression.js \
+ && node tools/test-prestige-cosmetic-xp.js \
+ && node tools/test-service-worker-privacy.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \
  && node --check tools/test-goo-touch-gesture.js \
@@ -163,6 +170,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-deplexo-release-evidence.js \
  && node --check tools/audit-full-game-mechanics.js \
  && node tools/audit-full-game-mechanics.js \
+ && node tools/test-audit-game-runtime-paths.js \
  && node --check tools/test-87-runtime-source-depth.js \
  && node tools/test-87-runtime-source-depth.js \
  && node --check tools/test-qa-87-browser-contract.js \
@@ -185,6 +193,7 @@ RUN test -s tools/games-lib-static-check.js \
 
 # Exercise consistent pre-start backups before any schema migration can touch a live DB.
 RUN node tools/test-prestart-db-snapshot.js
+RUN node tools/test-private-review-http.js
 
 # Run the actual server in an isolated, disposable build-time database and verify its HTTP routes.
 # This catches startup/runtime/icon/static-file regressions before the image is produced.
@@ -202,7 +211,7 @@ RUN set -eu; \
  kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true
 
 # ---------- runtime stage ----------
-FROM node:20-bookworm-slim
+FROM node:24-bookworm-slim
 ENV NODE_ENV=production \
     PORT=8787 \
     DATA_DIR=/data \
@@ -216,7 +225,7 @@ COPY --from=build --chown=root:root /app/build ./build
 COPY --chown=root:root package.json ./
 COPY --chown=root:root src ./src
 COPY --chown=root:root tools/prestart-db-snapshot.js ./tools/prestart-db-snapshot.js
-COPY --chown=root:root public ./public
+COPY --from=build --chown=root:root /app/public ./public
 # The shop uses these score ranges to expose legitimate score-gated cosmetics at runtime.
 COPY --chown=root:root docs/score-ranges.json ./docs/score-ranges.json
 # App files are owned by root and read-only for the runtime user; only /data (volume) and /tmp are written.
@@ -230,3 +239,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
 # Exec form, no npm (npm writes logs/cache and adds a second process). Heap is capped for a 128 MB container;
 # extra flags can be added with NODE_OPTIONS.
 CMD ["sh", "-c", "node --max-old-space-size=64 tools/prestart-db-snapshot.js && exec node --max-old-space-size=64 --max-semi-space-size=1 src/server.js"]
+

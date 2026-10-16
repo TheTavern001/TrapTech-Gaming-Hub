@@ -1,0 +1,1 @@
+{"pass":true,"tests":17,"scope":"real localhost HTTP, disposable Docker smoke DB","cookieIndependentMobileLogin":true,"copiedTokenRevoked":true,"passwordRotation":true,"unsupportedWebhookRejected":true,"productionAccountsTouched":false}

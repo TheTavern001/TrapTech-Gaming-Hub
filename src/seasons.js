@@ -102,8 +102,11 @@ function trackFor(n, level) {
 function seasonProgress(userId, t = Date.now()) {
   const s = seasonAt(t); const raw = userId ? XPF()(userId, s.start_at, s.end_at) : 0; const hs = userId ? headStart(userId, s.number) : 0;
   const xp = raw + hs; const L = levelOf(xp);
+  const cosmetic = userId ? require('./cosmetic-xp').cosmeticProgress(userId, s.start_at, Math.min(t,s.end_at), xp, XPF()) : {xp,base_xp:xp,bonus_xp:0,multiplier:1,starts_at:null};
+  const cosmeticLevel = levelOf(cosmetic.xp).level;
   return { ...s, xp, season_xp: raw, head_start: hs, level: L.level, tier: L.level, into: L.into, need: L.need, tier_xp: L.need, overdrive: L.overdrive, overdrive_xp: OVERDRIVE_XP,
-    track: trackFor(s.number, L.level), perks: PERKS.map(p => ({ ...p, active: L.level >= p.level })), discount: perkDiscount(L.level), max_xp: CUM[LEVELS] };
+    cosmetic_xp: cosmetic, cosmetic_level: cosmeticLevel,
+    track: trackFor(s.number, cosmeticLevel).map(r => ({...r, unlocked: r.item ? r.unlocked : L.level >= r.level})), perks: PERKS.map(p => ({ ...p, active: L.level >= p.level })), discount: perkDiscount(L.level), max_xp: CUM[LEVELS] };
 }
 const perkDiscount = (level) => PERKS.filter(p => p.discount && level >= p.level).reduce((m, p) => Math.max(m, p.discount), 0);
 const perksOf = (userId, t = Date.now()) => { if (!userId) return { level: 0, discount: 0, peek: false, vault: false, glow: false }; const p = seasonProgress(userId, t); return { level: p.level, discount: p.discount, peek: p.level >= 18, vault: p.level >= 38, glow: p.level >= 58 }; };
@@ -139,9 +142,9 @@ function claimTrack(userId, t = Date.now()) {
   db.transaction(() => {
     for (let L = 1; L <= p.level; L++) { const a = pointsAt(L); if (a && insL.run(userId, a, 'season', `${n}:L${L}`, t).changes) pts += a; }
     for (let k = 1; k <= Math.min(p.overdrive, OVERDRIVE_MAX); k++) if (insL.run(userId, OVERDRIVE_POINTS, 'season', `${n}:O${k}`, t).changes) pts += OVERDRIVE_POINTS;
-    SCHEDULE.forEach((s, i) => { if (p.level >= s[0]) { const it = trackItem(n, i); if (insI.run(userId, it.id, t).changes) items.push(it); } });
+    SCHEDULE.forEach((s, i) => { if (p.cosmetic_level >= s[0]) { const it = trackItem(n, i); if (insI.run(userId, it.id, t).changes) items.push(it); } });
   })();
-  if (items.length) try { require('./notify').notify(userId, 'season', `Season reward unlocked: ${items[items.length - 1].name}`, `Level ${p.level} in Season ${n}. Equip it from your profile.`, '/season', 'gift'); } catch {}
+  if (items.length) try { require('./notify').notify(userId, 'season', `Season reward unlocked: ${items[items.length - 1].name}`, `Cosmetic level ${p.cosmetic_level} in Season ${n}. Equip it from your profile.`, '/season', 'gift'); } catch {}
   return { points: pts, items };
 }
 
@@ -214,3 +217,4 @@ function routes(app, A, H) {
 }
 module.exports = { LEVELS, LEN_DAYS, EPOCH_DAY, CUM, PERKS, SCHEDULE, RULES, OVERDRIVE_XP, stepXp, levelOf, info, seasonAt, seasonProgress, seasonBoard, bestSeasonTier, headStart, perksOf, perkDiscount,
   trackFor, trackItem, claimTrack, archive, sweep, hallOfFame, history, adminList, adminUpdate, adminEnd, routes, nameOf, _reset() { loadOv(); boardCache.clear(); hsCache.clear(); } };
+

@@ -85,10 +85,11 @@ assert.ok(keyStart>0&&keyEnd>keyStart,'Real Kit key handler block missing');
 const keyboardBlock=src.slice(keyStart,keyEnd);
 {const f=fixture(),events={},docEvents={};
  let muted=false;const store={set(){}};
- const handlers=new Function('addEventListener','document','g','def','gamePrefs','safeStore','window','Hub','ac','clearInputs','muted',
+ const documentFixture={hidden:false,addEventListener:(name,fn)=>docEvents[name]=fn};
+ const handlers=new Function('addEventListener','document','g','def','gamePrefs','safeStore','window','Hub','ac','clearInputs','muted','gameSettingsOpen',
    keyboardBlock+';return { get muted(){return muted;} };')(
-   (name,fn)=>events[name]=fn,{hidden:false,addEventListener:(name,fn)=>docEvents[name]=fn},
-   f.g,{id:'test-kit'},null,store,{Hub:{input(){}}},{input(){}},()=>{},f.clearInputs,muted
+   (name,fn)=>events[name]=fn,documentFixture,
+   f.g,{id:'test-kit'},null,store,{Hub:{input(){}}},{input(){}},()=>{},f.clearInputs,muted,false
  );
  const key=(key,repeat=false)=>({key,repeat,preventDefault(){}});
  events.keydown(key('p'));assert.equal(f.g.paused,true);
@@ -103,9 +104,9 @@ const keyboardBlock=src.slice(keyStart,keyEnd);
  // A fresh keydown after blur must register again.
  events.keydown(key('ArrowRight'));assert.equal(f.g.keys.ArrowRight,true);
  assert.ok(docEvents.visibilitychange,'Tab-hide listener missing');
- const hiddenDoc={hidden:true}; // docEvents closure refers to registered document.
- // Visibility handler also clears input in the same actual source.
- assert.ok(keyboardBlock.includes('if(document.hidden){clearInputs();'));
+ documentFixture.hidden=true;f.g.paused=false;docEvents.visibilitychange();
+ assert.equal(f.g.keys.ArrowRight,undefined,'Hidden tab clears held keys');
+ assert.equal(f.g.paused,true,'Hidden tab pauses live physics');
  assert.ok(handlers);
 }
  // 9. Ensure global settings use same reset as blur and reconnect state cleanly.
