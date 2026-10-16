@@ -16,7 +16,7 @@ function shouldShowMobilePage(req){
  const headers=req.headers||{},ua=String(headers['user-agent']||'');
  // Crawlers need the original OG metadata for shareable URLs.
  if(PREVIEW.test(ua))return false;
- if(!DESKTOP.test(ua)||isPhone(ua))return false;
+ if(isPhone(ua) || (!DESKTOP.test(ua) && !/(?:Android|iPad|Tablet)/i.test(ua)))return false;
  const accept=String(headers.accept||'');
  if(!accept.includes('text/html'))return false;
  const route=String(req.path||'').toLowerCase();
