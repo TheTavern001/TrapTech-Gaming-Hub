@@ -12,7 +12,7 @@ var games = [
 
 func _ready() -> void:
 	play_button.pressed.connect(_on_play_pressed)
-	status_label.text = "Trap Tech Hub — free games, season pass, giveaways"
+	status_label.text = "Trap Tech Hub — free games, season, giveaways, achievements"
 	_build_grid()
 	_add_nav()
 
@@ -25,8 +25,12 @@ func _add_nav() -> void:
 	var give_btn = Button.new()
 	give_btn.text = "Giveaways"
 	give_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/giveaways.tscn"))
+	var ach_btn = Button.new()
+	ach_btn.text = "Achievements"
+	ach_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/achievements.tscn"))
 	nav.add_child(shop_btn)
 	nav.add_child(give_btn)
+	nav.add_child(ach_btn)
 	$VBox.add_child(nav)
 	$VBox.move_child(nav, 3)
 
