@@ -52,12 +52,12 @@ assert.equal(manifest.orientation,'any','Both portrait and landscape phone games
 assert.equal(manifest.scope,'/');
 assert.ok(fs.readFileSync(path.join(root,'public/index.html'),'utf8').includes('rel="manifest"'));
 const mobileCss=fs.readFileSync(path.join(root,'public/css/mobile-release.css'),'utf8');
-const shell=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
+const htmlShell=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
 const worker=fs.readFileSync(path.join(root,'public/sw.js'),'utf8');
 for(const key of ['safe-area-inset-bottom','min-height:44px','orientation:landscape',
  'prefers-reduced-motion','avatar-stage','home-intro-actions'])
  assert.ok(mobileCss.includes(key),'Missing mobile visual/touch QA contract: '+key);
-assert.ok(shell.includes('/css/mobile-release.css'),'Phone styling must load LAST in SPA shell');
+assert.ok(htmlShell.includes('/css/mobile-release.css'),'Phone styling must load LAST in SPA shell');
 assert.ok(worker.includes('/css/mobile-release.css'),'Phone styling must be cached by installable PWA');
 const app=fs.readFileSync(path.join(root,'public/js/app.js'),'utf8');
 assert.ok(!app.includes('Built for mobile and desktop.'),'Live Hub copy may not advertise desktop support');
