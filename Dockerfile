@@ -20,7 +20,7 @@ COPY public ./public
 COPY docs ./docs
 COPY scripts/deplexo-prebuild.js ./scripts/deplexo-prebuild.js
 COPY tools ./tools
-COPY Dockerfile ./Dockerfile
+# COPY Dockerfile removed: Deplexo build context excludes it via .dockerignore
 # Replace legacy purple-controller install PNGs with the exact existing gold-crown TT vector.
 # The same files are served for PWA manifest, Android adaptive icon and iOS home screen.
 RUN node tools/build-traptech-pwa-icons.js && node tools/test-traptech-pwa-icons.js \
