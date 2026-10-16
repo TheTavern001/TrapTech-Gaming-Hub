@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070812">
+<meta name="robots" content="noindex">
+<title>Mobile launch only · The Gaming Hub by Trap Tech Solutions</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{min-height:100dvh;margin:0;background:radial-gradient(ellipse at 85% 0%,#5d35bd44,transparent 55%),radial-gradient(ellipse at 0% 90%,#16799533,transparent 50%),#070812;color:#f6f4ff;display:grid;place-items:center;padding:24px}
+main{width:min(100%,520px);text-align:center;background:linear-gradient(150deg,#1c1c37,#0f1227);border:1px solid #8576c766;border-radius:26px;padding:clamp(25px,5vw,44px);box-shadow:0 24px 70px #0007}
+.brand{max-width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 0 22px #8a6aff55)}
+h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.12;margin:18px 0 12px;letter-spacing:-.03em}
+p{font-size:1rem;line-height:1.55;color:#cbc8e7;margin:0 auto 20px}
+strong{color:#f7f6ff}
+button{min-height:48px;padding:12px 20px;border:0;border-radius:12px;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;background:linear-gradient(120deg,#8756f5,#5777ed)}
+button:focus-visible{outline:3px solid #8ceaff;outline-offset:3px}
+#feedback{display:block;min-height:1.6rem;margin:14px 0 0;color:#9bead2;font-size:.86rem}
+small{color:#a5a1c2;display:block;margin:16px auto 0}
+</style>
+</head>
+<body>
+<main>
+<img class="brand" src="/assets/brand/traptech-app-icon.svg" alt="Trap Tech Solutions" width="96" height="96">
+<h1>The Gaming Hub launches on phones first.</h1>
+<p>Open this link on an <strong>Android phone or iPhone</strong> to play, customize your avatar and join official competitions. Desktop gaming is coming in a separate release.</p>
+<button type="button" id="copy-link">Copy link for your phone</button>
+<span id="feedback" role="status" aria-live="polite"></span>
+<small>Trap Tech Solutions · Mobile web first · Installable app experience next</small>
+</main>
+<script>
+document.getElementById('copy-link').addEventListener('click',async()=>{
+ const feedback=document.getElementById('feedback');
+ const url=location.href.replace(/\/mobile-only\.html(?=[?#]|$)/,'/');
+ try{
+  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(url);feedback.textContent='Link copied. Open it on your phone.';}
+  else{feedback.textContent='Copy the address from your browser and open it on your phone.';}
+ }catch{feedback.textContent='Copy the address from your browser and open it on your phone.';}
+});
+</script>
+</body>
+</html>
