@@ -10,7 +10,7 @@ const forbidden={...Math,random:()=>{throw Error('Random fallback used for valid
 Object.setPrototypeOf(forbidden,Math);
 const seeded=vm.runInNewContext(line+'\n mulberry;',{
  Math:forbidden,parseInt,String,Number},{timeout:1500});
-const seq=hex=>Array.from({length:8},()=>seeded(hex)());
+const seq=hex=>{const rng=seeded(hex);return Array.from({length:8},()=>rng());};
 assert.deepEqual(seq('0000000000000000'),seq('00000000ffffffff'),
  'Valid zero-prefix seeds must be deterministic independent of suffix');
 assert.deepEqual(seq('0000000000000000'),seq('0000000000000000'),
@@ -20,7 +20,7 @@ assert.notDeepEqual(seq('0000000000000000'),seq('0000000100000000'),
 assert.ok(seq('0000000000000000').every(x=>Number.isFinite(x)&&x>=0&&x<1));
 assert.ok(seq('ABCDEF1234567890').every(x=>Number.isFinite(x)&&x>=0&&x<1));
 const noSeed=vm.runInNewContext(line+'\n mulberry;',{
- Math:{...Math,random:()=>0.5},parseInt,String,Number},{timeout:1500});
+ Math:Object.assign(Object.create(Math),{random:()=>0.5}),parseInt,String,Number},{timeout:1500});
 assert.equal(typeof noSeed(null)(),'number','Offline non-ranking guest preview can seed locally');
 assert.match(source,/let vignetteGradient = null/);
 assert.match(source,/if \(!vignetteGradient\) \{/);
