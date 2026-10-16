@@ -55,7 +55,8 @@ const mobileCss=fs.readFileSync(path.join(root,'public/css/mobile-release.css'),
 const htmlShell=fs.readFileSync(path.join(root,'public/index.html'),'utf8');
 const worker=fs.readFileSync(path.join(root,'public/sw.js'),'utf8');
 for(const key of ['safe-area-inset-bottom','min-height:44px','orientation:landscape',
- 'prefers-reduced-motion','avatar-stage','home-intro-actions'])
+ 'prefers-reduced-motion','avatar-stage','home-intro-actions',
+ '(min-width:900px)','desk-nav{display:none!important}'])
  assert.ok(mobileCss.includes(key),'Missing mobile visual/touch QA contract: '+key);
 assert.ok(htmlShell.includes('/css/mobile-release.css'),'Phone styling must load LAST in SPA shell');
 assert.ok(worker.includes('/css/mobile-release.css'),'Phone styling must be cached by installable PWA');
