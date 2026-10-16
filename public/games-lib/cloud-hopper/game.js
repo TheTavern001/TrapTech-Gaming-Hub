@@ -6,10 +6,10 @@ Kit.run({ id: 'gl-cloud-hopper', title: 'CLOUD HOPPER', help: 'Tilt with arrows 
     const p = g.p; let ax = g.ax(); if (g.ptr.down) ax = g.ptr.x < g.W / 2 ? -1 : 1; p.vx = Kit.lerp(p.vx, ax * 300, Math.min(1, dt * 10)); p.x += p.vx * dt; if (p.x < -15) p.x = g.W + 15; if (p.x > g.W + 15) p.x = -15;
     p.vy += 1100 * dt; const oy = p.y; p.y += p.vy * dt;
     if (p.vy > 0) for (const q of g.pl) if (!q.gone && p.x > q.x - 10 && p.x < q.x + q.w + 10 && oy + 14 <= q.y && p.y + 14 >= q.y) {
-      if (q.t === 2) { q.gone = true; g.sfx('hit'); g.burst(q.x + q.w / 2, q.y, '#a16207', 16, 120); continue; }
-      p.vy = q.spring ? -1250 : -640; g.sfx(q.spring ? 'power' : 'jump'); g.burst(p.x, q.y, q.spring ? '#fbbf24' : '#fff', 8, 90, 0.4); if (q.spring) { g.shake(4); q.sprT = 0.3; } if (q.t === 3) q.gone = true; }
+      if (q.t === 2) { q.gone = true; g.sfx('hit'); g.burst(q.x + q.w / 2, q.y, '#a16207', 16, 120); break; }
+      p.vy = q.spring ? -1250 : -640; g.sfx(q.spring ? 'power' : 'jump'); g.burst(p.x, q.y, q.spring ? '#fbbf24' : '#fff', 8, 90, 0.4); if (q.spring) { g.shake(4); q.sprT = 0.3; } if (q.t === 3) q.gone = true; break; }
     if (g.ptr.pressed || g.tap()) {} // tilt game: no tap action
-    for (const q of g.pl) if (q.sprT > 0) q.sprT -= dt; for (const q of g.pl) if (q.t === 1) { q.x += q.d * 80 * dt; if (q.x < 0 || q.x + q.w > g.W) q.d *= -1; }
+    for (const q of g.pl) if (q.sprT > 0) q.sprT -= dt; for (const q of g.pl) if (q.t === 1) { q.x += q.d * 80 * dt; if (q.x < 0 || q.x + q.w > g.W) { q.x = Kit.clamp(q.x, 0, g.W - q.w); q.d *= -1; } }
     const target = p.y - 300; if (target < g.cam) g.cam = target; const h = Math.floor(-g.cam / 10); if (h > g.top) { g.add(h - g.top, 'h'); g.top = h; }
     while (g.hi > g.cam - 100) gen(g); g.pl = g.pl.filter(q => q.y < g.cam + g.H + 50);
     for (const e of g.en) { e.x += Math.sin(g.t * 2 + e.ph) * 60 * dt; if (Math.hypot(e.x - p.x, e.y - p.y) < 26) { if (p.vy > 0 && p.y < e.y) { e.dead = true; p.vy = -800; g.add(50, 'e'); g.float(e.x, e.y - g.cam, '+50', '#f472b6'); g.burst(e.x, e.y - g.cam, '#f472b6', 20); g.sfx('pop'); } else { g.burst(p.x, p.y - g.cam, '#ef4444', 30); return g.end('Caught by a cloud monster'); } } }
