@@ -59,6 +59,16 @@
  .home-redesign .feat-gw{grid-auto-columns:minmax(0,82vw)}
  .topbar .hub-brand-mark{width:32px;height:32px;max-width:32px;min-width:32px}
 }
+/* Landscape phone browsers can exceed the desktop width breakpoint. */
+@media(hover:none) and (pointer:coarse) and (min-width:900px){
+ .desk-nav{display:none!important}
+ .menu-btn,.more-btn{display:inline-flex}
+ .bottomnav{display:flex;z-index:40}
+ .page{padding-inline:var(--phone-edge);
+  padding-bottom:calc(var(--nav-h,70px) + 22px + env(safe-area-inset-bottom,0px))}
+ .topbar{min-height:58px;padding-inline:var(--phone-edge);
+  padding-top:max(7px,env(safe-area-inset-top,0px))}
+}
 @media(orientation:landscape) and (max-height:480px) and (pointer:coarse){
  .topbar{min-height:48px;padding-top:max(4px,env(safe-area-inset-top,0px))}
  .bottomnav{min-height:48px}
