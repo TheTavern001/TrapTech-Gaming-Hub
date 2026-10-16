@@ -19,6 +19,9 @@ for(const p of ['Dockerfile','.dockerignore'])assert.ok(!excluded.has(p),'Reintr
 for(const t of ['tools/test-docker-audit-context.js','tools/test-r1-incident-gates.js',
  'tools/test-booking-stripe-settlement.js','tools/test-sponsor-webhook-signature.js',
  'tools/test-qa-frame-pacing.js','tools/test-giveaway-booking-release-gates.js',
+ 'tools/test-kit-mobile-loop.js','tools/test-kit-official-run-start.js',
+ 'tools/test-avatar-editor-mobile-save.js','tools/test-three-gameplay-fixes.js',
+ 'tools/test-mobile-only-entry.js',
  'tools/test-unified-release-candidate.js']){
  assert.ok(fs.statSync(path.join(root,t)).isFile(),'Missing cross-feature guard: '+t);
  assert.ok(build.includes('node '+t),'Docker stage skips '+t);
@@ -42,6 +45,10 @@ assert.ok(!positive.positiveFee({total_cents:0}), 'Free bookings cannot count');
 assert.ok(!positive.paidFeeRecorded({status:'paid',total_cents:5000}), 'Missing payment timestamp cannot count');
 assert.ok(positive.paidFeeRecorded({status:'paid',total_cents:5000,paid_at:1,provider:'stripe',provider_ref:'cs_test_abc',provider_payment_id:'pi_abc',settled_cents:5000,refunded_at:null}),
  'Valid positive paid event must still be representable');
+const kit=read('public/games-lib/kit.js');
+assert.ok(kit.includes('g.practice = !signed'),'Unranked practice must be explicit');
+assert.ok(kit.includes('PRACTICE · NOT RANKED'),'Free practice must visibly show its rank status');
+assert.ok(kit.includes("const official = ['event','event_code','giveaway_id','giveaway','playoff']"),'Unsigned giveaways must fail before gameplay');
 const qa=read('tools/qa-87-browser.js');
 for(const x of ['summarizeFramePacing','QA_REQUIRE_PACING','browserFrameP95Ms',
  'browserPacingStatus','emulatedFramePacingNotHardwareCertification']){
