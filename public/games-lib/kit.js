@@ -158,6 +158,17 @@
     async function begin() { g.state = 'starting'; g.startError = ''; g.runSerial = (g.runSerial || 0) + 1; let seed;
       try { seed = window.Hub ? await Hub.start(def.id) : null; }
       catch (_) { g.state = 'title'; g.startError = 'Could not start game. Check connection and retry.'; return; }
+      // Official giveaway/playoff runs must never downgrade silently into
+      // offline practice: a green local score with no server run is deceptive.
+      const query = new URLSearchParams(location.search);
+      const official = ['event','event_code','giveaway_id','giveaway','playoff'].some(k => query.has(k));
+      const signed = !!(window.Hub && Hub.token);
+      const validSeed = typeof seed === 'string' && /^[0-9a-f]{8,}$/i.test(seed);
+      if ((official && (!signed || !validSeed)) || (signed && !validSeed)) {
+        g.state = 'title';
+        g.startError = official ? 'Official run unavailable. Sign in or check the event.' : 'Score run unavailable. Retry.';
+        return;
+      }
       g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = document.hidden || gameSettingsOpen; def.init(g); g.state = 'play'; if (!g.paused) K.sfx('power'); }
     g.rnd = mulberry(); def.init(g);
     let last = performance.now(), acc = 0, fpsT = 0, fpsN = 0;
