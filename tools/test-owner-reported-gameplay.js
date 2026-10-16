@@ -90,11 +90,44 @@ assert.ok(read('public/games-lib/assets3d/LICENSE-Kenney-CC0.txt').includes('CC0
   'Source licensing notice for real car models missing');
 // Actual Kit's touch stick normally consumes pointerdown. Pointer mirroring is
 // required so Arrow Hero can detect a touch on a skill card.
-// Exercise the actual input handlers: formatting checks previously rejected
-// the correct multi-touch implementation without testing its behavior.
-const inputCheck=cp.spawnSync(process.execPath,[path.join(root,'tools/test-kit-input-lifecycle.js')],
-  {encoding:'utf8',timeout:15000});
-assert.equal(inputCheck.status,0,'Stick and pointer lifecycle: '+inputCheck.stderr+inputCheck.stdout);
+// Exercise Kit's actual input handlers instead of searching for a stale
+// source-code literal. Arrow Hero needs touch to move its stick AND tap cards.
+const pointerStart=kit.indexOf('    function onDown(e) {');
+const pointerEnd=kit.indexOf("    cv.addEventListener('pointerdown', onDown)",pointerStart);
+assert.ok(pointerStart>=0&&pointerEnd>pointerStart,'Kit pointer handlers missing');
+const pointerHandler=new Function('g','def','btns','toL','touches','K','ac','window','Hub','gameSettingsOpen',
+ kit.slice(pointerStart,pointerEnd)+String.fromCharCode(10)+'return {onDown,onMove,onUp};');
+function pointerSample(mirror,endType='pointerup') {
+ const g={state:'play',ptr:{x:0,y:0,down:false,pressed:false,released:false},
+  stick:{x:0,y:0,on:false},btn:{},keys:{},inputs:0};
+ const touches=new Map(),Hub={input(){}};
+ const {onDown,onMove,onUp}=pointerHandler(g,{stick:true,stickAlsoPtr:mirror},[],
+  e=>[e.clientX,e.clientY],touches,{clamp:(n,a,b)=>Math.max(a,Math.min(b,n))},
+  ()=>{},{Hub},Hub,false);
+ const ev=(type,x,y)=>({type,pointerType:'touch',pointerId:21,
+  clientX:x,clientY:y,preventDefault(){}});
+ onDown(ev('pointerdown',100,140));
+ const start={kind:touches.get(21)?.k,pressed:g.ptr.pressed,down:g.ptr.down,stick:g.stick.on};
+ onMove(ev('pointermove',125,140));
+ const move={stickX:g.stick.x,ptrX:g.ptr.x};
+ onUp(ev(endType,125,140));
+ return {start,move,released:g.ptr.released,pressed:g.ptr.pressed,stickOn:g.stick.on};
+}
+const mirrored=pointerSample(true),exclusive=pointerSample(false),
+ canceledTouch=pointerSample(true,'pointercancel');
+assert.equal(mirrored.start.kind,'stick-ptr','Mirrored touch feeds the stick and pointer');
+assert.equal(mirrored.start.pressed,true,'Skill card must receive mirrored down');
+assert.equal(mirrored.move.stickX,0.5,'Mirror must still steer normally');
+assert.equal(mirrored.move.ptrX,125,'Mirrored pointer must track finger movement');
+assert.equal(mirrored.released,true,'Real finger-up must release skill-card tap');
+assert.equal(exclusive.start.kind,'stick','Default virtual stick must stay exclusive');
+assert.equal(exclusive.start.pressed,false,'Exclusive stick must not tap card');
+assert.equal(exclusive.released,false,'Exclusive stick cannot click card on lift');
+assert.equal(canceledTouch.released,false,'Canceled gesture must not click card');
+assert.equal(canceledTouch.pressed,false,'Canceled pointer must clear pending press');
+
+const inputCheck=cp.spawnSync(process.execPath,[path.join(root,'tools/test-kit-input-lifecycle.js')],{encoding:'utf8',timeout:15000});
+assert.equal(inputCheck.status,0,'Complete Kit input lifecycle: '+inputCheck.stderr+inputCheck.stdout);
 assert.ok(arrow.includes("stickAlsoPtr: true"),'Arrow Hero skill cards must receive touch taps');
 assert.ok(arrow.includes('g.ptr.x >= 40 && g.ptr.x <= 360'),'Skills need explicit x hitboxes');
 assert.ok(arrow.includes('g.ptr.y < 250 + i * 90 + 76'),'Only visible cards are selectable');

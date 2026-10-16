@@ -764,6 +764,19 @@ Upgraded the expired Node 20 Docker line to Node 24 with pinned better-sqlite3 1
 
 Initial 87-title browser run caught missing game covers and Hex Stack tracking; both fixed. Slow emulated frame times are retained as failures, never converted to device approval. Final Node 24 87-title and mobile-page checks running at this checkpoint. Source/runtime fingerprint 4d35a6d7dc30502f58d85893. Detailed verified/partial/unverified status and safe same-app manual review steps: docs/audit/PRIVATE-CANDIDATE-2026-10-16.md. Auto-deploy remains OFF; no production host or database action performed.
 
+
+## 2026-10-16 — Final Node 24 results, exact runtime source binding, public gate stays blocked
+
+Code checkpoint 5c2c1d40b75ae15a078a4e4d1b5996752bfd21a1 is on PR #35. Final native run used Node 24.19.0 / better-sqlite3 12.11.1 / SQLite 3.53.2 and matched 1,029 runtime files to their staged Git blob hashes. Runtime fingerprint 4d35a6d7dc30502f58d85893. All 82 Docker-source checks, 34 HTTP asset/deployment checks, 17 session checks, 21 private-review checks, 25 synthetic signed payment/refund checks, backup/corruption checks and 49 economy assertions passed. Clean lockfile npm ci completed and both fresh native modules executed. npm production audit reported zero known vulnerabilities. Actual Docker image/Deplexo volume/provider transactions remain unverified.
+
+Final full-catalog result: all 87 observed in play; 87 functional smoke passes, 0 JavaScript exceptions/console errors/missing assets. Strict overall browser exit 1 is preserved because 79 exceeded the 25ms emulated frame budget (8 combined rows passed). This is NOT an AAA, collision, fairness or real Android/iPhone performance approval. Separate 360px/430px browser layout smoke passed 20/20. One supplemental multi-title timing diagnostic timed out waiting for a title to start; this is a harness attempt, not additional catalog acceptance. Isolated diagnostic evidence is retained separately when available.
+
+Caught an additional materialization mismatch: eight license files were LF copies of CRLF Git originals and therefore would change the runtime fingerprint despite identical text. Original Git bytes were fetched, hashes validated and whitespace-only differences checked; the word-for-word license notices are retained with tested LF bytes in this follow-up. The native verifier now compares actual runtime file bytes with the Git index to prevent a source-vs-tested-artifact mismatch from recurring.
+
+Persisted raw evidence under docs/audit/reports/2026-10-16/, including exact runtime source manifest, native logs, full catalog rows, layout rows, dependency audit and the failing public-launch gate. Public gate still lacks all nine acceptance records; 0/87 full quality approvals, 0 certified 3D wearables and no approved neutral starter. No production settings, live data, real scores or actual payments changed. Auto-deploy remains OFF; next host action is one controlled same-app private build with existing reviewer authentication and payment/prize gates closed.
+
+Supplemental isolated probe completed: ANGLE/SwiftShader software renderer; Void Swarm 178 active frames, median 50ms / p95 about 100ms, DPR 1.5. This is not phone clearance and does not remove any of the 79 performance failures. Read-only Deplexo browser inspection reached the sign-in screen; no authenticated host state available and no deployment/settings action performed. Relevant plugin search returned no Deplexo integration.
+
 ## 2026-10-16 — Independent verification snapshot preserved after concurrent candidate update
 
 - This session independently executed Node 20 native/offline checks (68/68 plus native booking HTTP), mocked payment HTTP (37/37), avatar HTTP (29/29), auth HTTP (17/17), and packaged localhost HTTP (34/34) on its repair snapshot. Its final source fingerprint was `84e9e4f2718a51b78c72a3bb`; all 87 browser records and failures are preserved in `docs/audit/EXECUTED-NATIVE-AND-BROWSER-VERIFICATION-2026-10-16.json`.
@@ -772,3 +785,69 @@ Initial 87-title browser run caught missing game covers and Hex Stack tracking; 
 - The newer candidate uses Node 24, additional refund/order protections, generated source-art cards and its own native verifier. Read `docs/audit/PRIVATE-CANDIDATE-2026-10-16.md` for that candidate's reported evidence. This session has inspected that report but has **not independently rerun** its Node 24 application. Older snapshot results must not be presented as verification of the newer source.
 - This follow-up adds only historical evidence and this journal entry to the newer branch. Source, dependencies, assets and approval flags from the concurrent candidate are preserved. No production deployment, main merge or auto-deploy change.
 - Public release remains blocked. Complete current-candidate browser/device evidence, avatar/wearable work, actual provider/security/host acceptance and the 500-game quality scope before any public approval. An isolated unpaid private review has separate explicit restrictions; automatic deployment remains OFF.
+
+Concurrent evidence checkpoint fda0c9fad7ba2f3cc589495aa9c7c15a719b2798 is preserved together with this final verification; its independent initial test results do not replace the final Node 24 reports above.
+
+
+## Historical R1 branch evidence recovered during final reconciliation
+## 2026-10-15 — R1 61fec416 icon alias/URL prelaunch check failure
+
+Owner confirmed Deplexo checked out `61fec41636ea418c71765a21f7f6d3dd224bd22a`. Prestart wallet/payment/anti-cheat contracts, mobile source tests, **93-title game dependency auditor** (`runtimeGraphComplete:true`, 87 active, 139 runtime source graph files), 87-runtime source-depth and browser source-level test contracts passed. Docker `STEP 12/14` then failed four brand tests in `tools/verify-prelaunch.js`. Three SVG aliases (`hub-mark.svg`, `tt-favicon.svg`, `tt-maskable.svg`) still carried older artwork, because the TT-crown generator did not write them; separately the HTML favicon used `?v=tt-crown-20261014` but the release regex only matched queryless `.svg`.
+
+Fix: extend the canonical TT asset generator to own *all* four SVG aliases, keep the three committed legacy aliases identical to the current approved `traptech-app-icon.svg`, update release favicon selector to accept optional version query, and enforce all these exact constraints in the earlier `tools/test-traptech-pwa-icons.js` gate. Do not relax brand identity or score/security checks. Verification before push: exact generated SVG equals canonical; source HTML passes updated favicon/splash regex; generated alias list complete. Actual Node20/Docker build and 87-device QA not yet verified; public release remains closed.
+
+
+## 2026-10-15 — R1 c5874566 failed in 93-title source-audit function (core entry has no slug)
+
+Owner posted Deplexo error screenshot and Node20 Docker log for the **correct auto-deployed QA SHA** `c587456628e34b89aa65e83a44be66d5b9f09adf`. Wallet, bookings, session, source syntax, Kit, physics, mobile lifecycle, game catalog, owner duplicate policy and release-evidence tests passed. Build stopped at `tools/audit-full-game-mechanics.js:35`: `path.join(base,g.slug,'index.html')` executed unconditionally even for **core** records, which have `module` but no `slug`. This is an auditor bug, not proof of gameplay failure.
+
+R1 source fix: construct `index.html` only for `type==='library'`, strictly validate library slug before path resolution, and add `tools/test-audit-game-runtime-paths.js` to Dockerfile **before** the full auditor. The new isolated test executes the actual source-auditor `runtimeScripts` function on a slugless core title and a library title and verifies invalid and traversal slugs are rejected. Validation of the corrected function in the tool runtime: PASS. No game runtime, player database or score/monetization logic modified. R1 host READY remains unconfirmed, 87/87 AAA/device certifications pending, R2–R5 paused.
+
+
+## 2026-10-15 — R1 53efd4b1 Docker preflight progressed to release-evidence status contract
+
+Owner's Deplexo log confirms the exact commit `53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc` checked out. Payment, wallet, settlement holds, catalog, 96 JS game scripts, physical/collision source tests, Kit score/async, mobile lifecycle, avatar, quests and private-preview tests all PASS in native Node20 build. Docker stage 1/2 STEP12 failed at `tools/test-deplexo-release-evidence.js:32`: it correctly expected the source status `SOURCE_ONLY_NOT_DEPLOYED` but prior audit updates had overwritten that semantic field with `R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED`.
+
+Both facts are preserved separately: the **current candidate has not deployed** and its **latest build FAILED**. Restore canonical source status, retain failed attempt in `reportedFailedDeployments20261015`, and expose owner-reported recent build failure separately from historical screenshot-confirmed Deplexo CURRENT/READY `278af07` in `release-status.js`. A separate invariant test checks the failure ledger, that nobody promotes failed commits to READY, and the owner-confirmed Auto Deploy ON setting. Executed the original release-status and release-evidence scripts in read-only isolated JS using the actual fetched repository fixtures: PASS. Full native Docker and live health require the next R1 recovery build.
+
+**No changes to game runtime, payments, secrets, /data or public prize eligibility.** No AAA/game acceptance signoff; R2-R5 remain paused.
+
+
+
+## 2026-10-15 — R1 `a6afa9cf`: score submit source-test mismatch; actual handler verified
+
+Owner-pasted new Deplexo build log confirmed correct checkout `a6afa9cff3190399c939bbaee054267b7068a9f4`, successful native financial tests, signed prize holds, avatar/quests, game syntax, 96 script parses, physics/obstacle reachability, touch mirroring, and many mobile lifecycle checks. Docker STEP 12/14 failed at `tools/test-kit-score-submit-error.js:11`: legacy regex demanded `Promise.resolve().then(() => Hub.submit(g.score))`. Current Kit intentionally snapshots `const finalScore=g.score` before asynchronous submission and uses `Hub.submit(finalScore)`; the separate run-serial regression independently requires this frozen score.
+
+R1 test-only repair: execute the extracted `g.end` function with isolated fake Hub/local storage to confirm sync submission throw yields visible failure, final score remains snapshotted after later mutation, and stale completion doesn't replace current-run state. All **three** handler scenarios passed isolated execution. No Kit/runtime score logic touched; full Docker and host READY unverified until the next QA-branch build. Public prize gate and 87-game AAA approval remain unchanged (0).
+
+
+
+## 2026-10-15 — R1 second Docker build: native finance passed; pointer mirror regression test stale
+
+Deplexo owner's new log confirms the correct `d455ac26395904cdc1cd9f388a86c4db929cb6a4` was checked out; immutable purchase snapshot and refund test `pass:true,quotedUnits:500,refundExact:true` now succeeded, followed by native security, quest, wallet, avatar, vehicle, game-source and pseudo-load tests.
+
+Docker 1/2 STEP12 failed at `tools/test-owner-reported-gameplay.js:93`: an exact `kit.includes('if (!def.stickAlsoPtr) return;')` source check. The **actual** Kit implementation uses `if(!def.stickAlsoPtr){touches.set(e.pointerId,{k:'stick'});return;}` then `{k:'stick-ptr'}` for mirrored touch. The source engine already behaved correctly. Executed the original Kit onDown/onMove/onUp handlers in isolation: mirrored stick+pointers, exclusive stick-only, pointercancel suppression all PASS. Replaced stale text check with real handler assertions in the test. No gameplay or payments code touched.
+
+This is still R1 recovery; do not push R2-R5 until Deplexo new exact SHA reaches READY and private runtime verified. Physical 87 game QA and prize replay certification remain unverified.
+
+
+## 2026-10-15 — R1 Docker failure 6560740, precise test-fixture reference correction
+
+**Host:** User pasted full current R1 Deplexo Docker log proving `Checked out commit 656074076ea4240e450452aa658ccf2697a54a58` on QA branch (first time latest intended source checkout independently confirmed). Builder Node 20.20.2 ran base image/compiler, installed 113 production packages, generated and verified Trap Tech 192/512/maskable/iOS icon assets, passed secret initialization, revoked session and new single-wallet/atomic wallet tests. This is **not READY**: Docker stage 1/2 STEP 12/14 stopped on `tools/test-payment-order-snapshots.js:38` with `ledger.delta` undefined.
+
+**Root cause:** The disposable SQLite fixture inserted an order with `ref='QUOTE_PINNED'`. The test then queried `crown_ledger` using `ref='QUOTE_PINN'`, and repeated the wrong reference for refund and duplicate-refund assertions. The provider grant and wallet assertions directly preceding this lookup passed, indicating a mismatched test lookup. There is **no evidence** that actual payments were lost. Verified with isolated SQLite that the truncated query returns no row, whereas the exact reference returns the expected delta.
+
+**Source-only R1 recovery:** Reuse `pinnedRef` read from the immutable stored order and parameterize the purchase/refund ledger lookup; fail with an explicit missing-ledger message if absent. Leave `src/monetize.js`, wallet arithmetic, immutable ledger, settlement checks and production environment unchanged. Syntax inspected; full production dependency test and Docker rest of the suite **not yet rerun**. One QA branch recovery push is authorized; no R2–R5 pushes until it reaches host READY and private smoke confirms health, fingerprint, guest denial and /data continuity.
+
+**Safety:** Historic failed deployments remain in chronological audit. A failed build is not evidence of corrupt live data or proof of successful deployment. Public launch and 87 individual AAA/prize replay approvals remain at 0.
+
+
+
+Historical auto-deploy ON text above does not authorize a new deployment; the latest request is to finish before re-enabling it. The live dashboard is not authenticated in this session.
+
+
+## 2026-10-16 — Watched QA branch reconciled with private runtime candidate
+
+Compared main 0ff73e6626be974c78bad7e40563dbd0b6b4f8ef with watched QA head 5fb461c077bfa42fe17f8a4333c730c7d73af2a8: eight R1 commits ahead. Preserved all historical host/failure records and combined their auditor path/traversal regression, immutable payment-reference fixture, actual pointer/submission behavior tests, canonical aliases and versioned favicon check with the current Node 24 fixes. The legacy SVG alias bytes already matched. Preserved both independent evidence histories (including fda0c9fad7ba2f3cc589495aa9c7c15a719b2798).
+
+Re-executed the complete reconciled native pipeline: 83 Docker-block source checks PASS, all native/backup/private/34 asset HTTP/17 session checks PASS, runtime 4d35a6d7dc30502f58d85893, 1,029 runtime inputs still match the staged Git blobs. Browser results remain 87 functional passes but 79 frame-budget failures; mobile page checks 20/20. No public-quality or production-host approval was added. Historical auto-deploy ON statements do not supersede the latest owner request to finish before turning it back on. No dashboard setting was changed.

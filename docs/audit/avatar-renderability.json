@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "scope": "Static asset source audit; no owner visual signoff",
+  "existingRigFiles": [
+    {
+      "path": "public/assets/avatars/rigged/male-adventurer.gltf",
+      "bytes": 2545794
+    },
+    {
+      "path": "public/assets/avatars/rigged/female-adventurer.gltf",
+      "bytes": 2077733
+    }
+  ],
+  "includedLicense": true,
+  "neutralStarterConfigured": true,
+  "neutralStarterCanUseLicensedRig": false,
+  "neutralSourceRigQaCandidate": true,
+  "neutralSourceRigQaOnly": true,
+  "authoredNeutralModularRigCertified": false,
+  "onCharacter3DWearablesCertified": 0,
+  "generatedShopItemTypes": [
+    "banner",
+    "frame",
+    "color",
+    "title",
+    "badge",
+    "effect"
+  ],
+  "generatedShopIsProfileDecorationOnly": true,
+  "missingFiles": [],
+  "visualAAAApproved": false,
+  "required": [
+    "official modular neutral body import",
+    "free real facial shaping",
+    "compatible clothing and hair meshes",
+    "skeletal emotes",
+    "PBR/LOD and Android GPU test",
+    "preview/ownership/purchase verification",
+    "owner image signoff"
+  ]
+}

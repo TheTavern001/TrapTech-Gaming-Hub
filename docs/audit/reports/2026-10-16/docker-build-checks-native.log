@@ -1,0 +1,346 @@
+Required prelaunch audit inputs present
+{"passed":true,"missingSecretsFailExplicitly":true,"independentRuntimeSecretsSupported":true,"dockerAndHostNotTested":true}
+{"pass":true,"scope":"actual server session and signout code + in-memory DB","scenarios":14,"source":"Node isolated auth contract, not full HTTP/mobile pentest","serverSideRevocation":true,"oldSessionsForceRelogin":true}
+{"pass":true,"behaviorChecks":3,"endpointChecks":3,"atomicPurchase":true,"runReview":true,"legacyAlias":true,"actualNodeRuntime":true,"appDatabaseUsed":false}
+{"pass":true,"checks":21,"credits":5004200,"migratedRows":6,"atomicPurchase":true,"refundReplaySafe":true,"legacyHistoryRetained":true,"paymentNetworkUsed":false,"repositoryDatabaseTouched":false}
+{"pass":true,"quotedUnits":500,"catalogChanged":true,"refundExact":true,"legacyUnsnappedBlocked":true,"unpaidBlocked":true,"immutableHistoryRetained":true,"physicalDeviceQA":false}
+{"pass":true,"assertions":30,"financialProviders":["bitcoin","stripe","manual gift"],"unpaidAndUnderpaidDenied":true,"fullHttpTestsStillRequired":true}
+[payments] Stripe event failed owner, exact amount, or currency validation: HTTP_16
+[payments] Refund ledger reconciliation failed: Missing immutable paid Credit grant; manual refund reconciliation required
+{"pass":true,"checks":25,"nativeSQLite":true,"localhostHTTP":true,"signedSyntheticWebhooks":true,"retrySafe":true,"outOfOrderRefundSafe":true,"prestige2xPreserved":true,"earnedRewardsPreserved":true,"realProviderTransactions":false}
+{"pass":true,"reviewTransitions":4,"lateReviewRestored":true,"duplicateEarnings":0,"heldCanMint":false,"source":"native disposable better-sqlite3","hostTouched":false,"paymentsTouched":false}
+{"ok":true,"freePlayUnaffected":true,"prizeApprovedGames":0,"officialRunsHeld":true,"manualClearanceNotProof":true}
+Rotating quest engine checks passed: 3150 templates
+{"ok":true,"firstSeasonDays":56,"futureSeasonDays":42,"firstSeasonEnds":"2026-11-25T23:59:59.999Z","overridePreserved":true,"playerHistoryTouched":false}
+{"passed":true,"freeFaceParts":30,"freeHair":7,"lockedEmotes":5}
+{"pass":true,"source":"Quaternius Universal Base Characters CC0","bytes":741320,"joints":65,"meshes":3,"qaOnly":true,"completedModularAvatar":false,"deviceTested":false}
+{"pass":true,"revokedEquipmentReplaced":true,"validBaseRetained":true,"fullIntegrationVerified":false}
+{"pass":true,"oneCustomerCurrency":"Hub Credits","legacyCrownPurchaseDisabled":true,"prestigeRequiresEntitlement":true,"sourceContractOnly":true}
+{"pass":true,"creditsAfterOnePurchase":300,"ledgerDebits":1,"prestigeSold":false,"nativeSqliteTest":false}
+{"pass":true,"profileShopAvatarLinked":true,"oneWalletInWardrobe":true,"realBrowserVerified":false}
+{"pass":true,"registered":93,"playable":87,"retired":6,"overlapClusters":13,"deviceApproved":0,"scope":"source inventory, not full gameplay review"}
+{
+  "test": "isolated-read-only-10k-visitor",
+  "target": "loopback-only",
+  "simulatedAnonymousVisitors": 100,
+  "peakWorkers": 8,
+  "notAuthenticatedUsers": true,
+  "notSimultaneous10kConnections": true,
+  "writeEndpointsExercised": false,
+  "requests": 200,
+  "failed": 0,
+  "serverErrors": 0,
+  "failureRate": 0,
+  "requestsPerSecond": 1618.83,
+  "durationMs": 124,
+  "latencyMs": {
+    "p50": 4,
+    "p95": 11,
+    "p99": 24
+  },
+  "routes": {
+    "/healthz": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/api/build": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/api/games": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/api/games-lib": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/api/shop/catalog?limit=12": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/api/shop/rules": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/api/leaderboard?game=jetpack-dash": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/manifest.webmanifest": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/games": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    },
+    "/": {
+      "requests": 20,
+      "errors": 0,
+      "serverErrors": 0
+    }
+  },
+  "sampleErrors": [],
+  "pass": true,
+  "requires": "separate 10k authenticated/concurrent DB, score replay, checkout and prize tests"
+}
+{"pass":true,"remoteHostRejected":true,"localMockVisitors":100,"localMockRequests":200,"writes":0,"actualHubCapacityTested":false}
+{"pass":true,"unpaidBlocked":true,"uncertifiedBlocked":true,"draftRequired":true,"unapprovedEventCodesHidden":true,"realPaymentIntegrationTested":false}
+{"pass":true,"scoreOnlyBooking":true,"randomProposalsRejected":true,"clearOneGameAndMultiGameModes":true,"serverTimeTiebreak":true,"exactTieSkillPlayoff":true,"nativeDatabaseAndDeviceTested":false}
+{"pass":true,"gameQuoteSelector":"core and library","maxSelected":13,"retiredExcluded":true,"prizeApprovalRetained":true,"realBrowserAndSqliteTested":false}
+{"pass":true,"optionalChannelOnly":true,"goalTrackingRemoved":true,"unverifiedFollowsNotRequired":true,"realBrowserTested":false}
+{"pass":true,"contract":"latest-wardrobe-request-wins","deviceQA":false}
+{"pass":true,"contract":"mobile rig GPU resource budget","realDeviceP95Measured":false}
+{"pass":true,"contract":"fallback 3D offscreen renderer suspend","deviceTested":false}
+{"pass":true,"profileNavigationCleanup":true,"staleRequestGuard":true,"realBrowserTested":false}
+{"pass":true,"stalePageBlocked":true,"currentPageRenders":true,"avatarAndStoreRoutesRestored":true,"liveBrowserVerified":false}
+{"pass":true,"outOfOrderResponsesRejected":true,"fullHTTPQA":false}
+{"pass":true,"proofIsolated":true,"newRunCannotMutateOldSubmission":true,"hostVerified":false}
+{"pass":true,"invalidScoresRejected":7,"validScoreSubmitted":true,"serverQA":false}
+{"rigs":2,"profileTypes":["banner","frame","color","title","badge","effect"],"neutralReady":false,"certified3DWearables":0,"missing":0}
+PASS avatar source renderability report: 2 clothed rigs; 0 approved neutral rigs/3D wearables
+PASS public/games-lib/adapter.js
+PASS public/games-lib/alien-rows/game.js
+PASS public/games-lib/arrow-hero/game.js
+PASS public/games-lib/beat-tiles/game.js
+PASS public/games-lib/block-drop/game.js
+PASS public/games-lib/bubble-pop/game.js
+PASS public/games-lib/bud-bar/game.js
+PASS public/games-lib/bud-sort/game.js
+PASS public/games-lib/bug-blaster/game.js
+PASS public/games-lib/bullseye/game.js
+PASS public/games-lib/cab-rush/game.js
+PASS public/games-lib/cloud-hopper/game.js
+PASS public/games-lib/color-hop/game.js
+PASS public/games-lib/cube-horde/game.js
+PASS public/games-lib/cue-club/game.js
+PASS public/games-lib/cup-toss/game.js
+PASS public/games-lib/derby-smash/game.js
+PASS public/games-lib/dirt-dash/game.js
+PASS public/games-lib/drift-king/game.js
+PASS public/games-lib/duck-shot/game.js
+PASS public/games-lib/dune-glide/game.js
+PASS public/games-lib/dunk-flick/game.js
+PASS public/games-lib/egg-roll/game.js
+PASS public/games-lib/glow-echo/game.js
+PASS public/games-lib/goo-tower/game.js
+PASS public/games-lib/green-dash/game.js
+PASS public/games-lib/grid-wars/game.js
+PASS public/games-lib/grow-op/game.js
+PASS public/games-lib/helix-drop/game.js
+PASS public/games-lib/hex-spin/game.js
+PASS public/games-lib/hill-hauler/game.js
+PASS public/games-lib/hoop-streak/game.js
+PASS public/games-lib/ice-snipe/game.js
+PASS public/games-lib/keep-guard/game.js
+PASS public/games-lib/kickflip-city/game.js
+PASS public/games-lib/kit.js
+PASS public/games-lib/knife-toss/game.js
+PASS public/games-lib/knockout/game.js
+PASS public/games-lib/light-cycle/game.js
+PASS public/games-lib/long-ball/game.js
+PASS public/games-lib/maze-muncher/game.js
+PASS public/games-lib/mine-sweep/game.js
+PASS public/games-lib/missile-guard/game.js
+PASS public/games-lib/mole-whack/game.js
+PASS public/games-lib/monster-crush/game.js
+PASS public/games-lib/moon-lander/game.js
+PASS public/games-lib/moon-swarm/game.js
+PASS public/games-lib/neon-circuit/game.js
+PASS public/games-lib/neon-flipper/game.js
+PASS public/games-lib/no-brakes/game.js
+PASS public/games-lib/node-siege/game.js
+PASS public/games-lib/orb-coil/game.js
+PASS public/games-lib/paper-toss/game.js
+PASS public/games-lib/pest-patrol/game.js
+PASS public/games-lib/pin-strike/game.js
+PASS public/games-lib/pop-defense/game.js
+PASS public/games-lib/putt-party/game.js
+PASS public/games-lib/rail-rush/game.js
+PASS public/games-lib/rally-court/game.js
+PASS public/games-lib/reel-deal/game.js
+PASS public/games-lib/rift-survival/game.js
+PASS public/games-lib/rig-rally/game.js
+PASS public/games-lib/road-brawl/game.js
+PASS public/games-lib/road-hopper/game.js
+PASS public/games-lib/rock-buster/game.js
+PASS public/games-lib/roll-up/game.js
+PASS public/games-lib/roof-runner/game.js
+PASS public/games-lib/skee-roll/game.js
+PASS public/games-lib/smoke-rings/game.js
+PASS public/games-lib/spot-kick/game.js
+PASS public/games-lib/star-swarm/game.js
+PASS public/games-lib/strain-crush/game.js
+PASS public/games-lib/throttle-rider/game.js
+PASS public/games-lib/tile-twin/game.js
+PASS public/games-lib/trim-rush/game.js
+PASS public/games-lib/tunnel-hop/game.js
+PASS public/games-lib/wanted-run/game.js
+PASS public/games-lib/wreck-ride/game.js
+PASS public/games-lib/zig-path/game.js
+PASS public/js/games/blazed-roulette.js
+PASS public/js/games/brick-breaker.js
+PASS public/js/games/drift-rush.js
+PASS public/js/games/engine.js
+PASS public/js/games/grow-guard.js
+PASS public/js/games/haze-defense.js
+PASS public/js/games/high-score.js
+PASS public/js/games/memory-match.js
+PASS public/js/games/munchies-snake.js
+PASS public/js/games/plinko.js
+PASS public/js/games/sky-hopper.js
+PASS public/js/games/sling-smash.js
+PASS public/js/games/spin-to-win.js
+PASS public/js/games/stack-core.js
+PASS public/js/games/stack.js
+PASS public/js/games/terp-tapper.js
+PASS public/js/games/void-swarm.js
+{
+  "checked": 96,
+  "failures": 0,
+  "details": []
+}
+{
+  "test": "source physics/memory regression only",
+  "tunnel": {
+    "seconds": 7200,
+    "maxRetainedRows": 64,
+    "meters": 157839
+  },
+  "drift": {
+    "steps": 4000,
+    "maxRoadPoints": 42,
+    "drawNodes": 64,
+    "score": 13659
+  },
+  "dirt": {
+    "distance": 2663400,
+    "maxBuffered": 11
+  },
+  "hill": {
+    "spawnThrough": 362448,
+    "maxBuffered": 9,
+    "fuelPast60000": 1546
+  },
+  "passed": true
+}
+{
+  "ok": true,
+  "counts": {
+    "registry": 80,
+    "catalog": 80,
+    "docsRows": 80,
+    "gamePages": 80,
+    "localScriptRefs": 286,
+    "artAssets": 80
+  },
+  "failures": []
+}
+{"audit":"game-source-mechanics","registered":93,"core":13,"library":80,"errors":0,"missingArtwork":0,"identicalSourceCandidates":0,"AAAApproved":0}
+{"ok":true,"registered":93,"negativeTest":"public/games-lib/bud-merge/js/game_manager.js","missingDependencyRejected":true,"artDefects":0}
+{"ok":true,"vehicles":6,"gameplayModified":false}
+{"passed":true,"libraryGamesChecked":80,"built":77,"vendored":3,"globalOptions":5,"gameOverrides":3,"scope":"visual and sound only"}
+{"passed":true,"trainModels":5,"visualOnly":true,"AAAApproved":false}
+{"ok":true,"tests":["train side hit is fatal","train roof landing safe","scenery stops car without ending run","police arrest only when immobilized","single rolling police contact survives","six local licensed vehicle assets","same default car with QA-only preview","touch power-up selection receives pointer"],"scope":"source+simulated physics/input only; no AAA or physical Android certificate"}
+{"pass":true,"groundBlocks":true,"meleeDamage":true,"defenderDamageAndRespawn":true,"flyingEnemyNotBlocked":true,"realPhoneQA":false}
+{"pass":true,"keyboardsManuallyPlace":true,"autoPlacementRemoved":true,"touchPlacementPreserved":true,"realTouchDeviceQA":false}
+{"pass":true,"tested":["Trim Rush init/fair drag","Bud Bar one-tap lanes","Grow Op honest endless rules + 12-minute bounded pest sim","Strain Crush 40 seeds + deadlock reshuffle","Dunk Flick manual keyboard/touch launch parity"],"simulatedFramesOnly":true,"AAAApproved":false,"realDeviceTested":false}
+{"pass":true,"checks":4,"testType":"deterministic real update callback","physicalPhoneQA":false}
+{"pass":true,"cases":4,"realGameplayCallback":true,"physicalPhoneQA":false}
+{"pass":true,"contactAfterEnemyMove":true,"near":{"damage":9,"finalY":424.5},"far":{"damage":0,"finalY":456.5},"physicalPhoneQA":false}
+{"pass":true,"rooms":1000,"obstaclesChecked":4988,"minClearancePx":46.66822629887611,"physicalDeviceQA":false}
+{"pass":true,"early":{"pestTimer":4.4994736842105265,"pests":1},"late":{"pestTimer":2.9205263157894734,"pests":1},"veryLate":{"pestTimer":0.75,"pests":1},"deviceQA":false}
+{"pass":true,"normal":{"pests":0,"timer":0.1},"owed":{"pests":3,"timer":0.25},"suspended":{"pests":4,"timer":0.75},"physicalPhoneQA":false}
+{"pass":true,"stalledFrameSeconds":10,"newbornPests":3,"ages":[0,0,0],"deviceQA":false}
+{"pass":true,"swatted":{"earned":5,"healthGain":0.0040000000000000036,"pests":0},"unswatted":{"earned":0,"healthGain":0.0010000000000000009,"pests":1},"physicalPhoneQA":false}
+{"pass":true,"expired":{"healthDelta":0.0040000000000000036,"pestCount":0},"active":{"healthDelta":0.0010000000000000009,"pestCount":1},"physicalPhoneQA":false}
+{"pass":true,"steady":{"health":0.52,"water":0.38875000000000004,"deaths":0,"time":0.25},"suspended":{"health":0.52,"water":0.38875000000000004,"deaths":0,"time":600},"physicalDeviceQA":false}
+{"pass":true,"events":["blur","pagehide","freeze","visibilitychange"],"scope":"static lifecycle contract","physicalPhoneQA":false}
+{"pass":true,"checks":4,"contract":"executed Kit score submission: sync rejection, final-score snapshot, stale-run isolation","browserHTTPVerified":false,"prizeCertified":false}
+{"pass":true,"contract":"start rejection recovery","browserHTTPVerified":false}
+{"pass":true,"contract":"run-isolated score callbacks","fullBrowserQA":false}
+{"pass":true,"contract":"async start obeys background pause","deviceQA":false}
+{"pass":true,"privatePreviewCannotApproveDeployment":true,"strictPublicGatePreserved":true,"sourceContractOnly":true}
+{"pass":true,"productionDefaultUnchanged":true,"ownerOnly":true,"admin2FAIntegration":true,"noClientRoleOverride":true,"publicPaymentScoreWritesBlocked":true,"reviewerGameScoresAllowed":true,"scopeBootstrapMethods":true,"adminCookieCannotReplacePlayerAccount":true,"existingAccountValidation":true,"realDeplexoEnvironmentTested":false}
+{"pass":true,"reviewDisablesPaymentEvenWhenPreviouslyEnabled":true,"stripeLiveAndTestBlocked":true,"liveOrderWebhooksRemainSeparate":true,"actualStripeChargesTested":false}
+{"ok":true,"legacyBoostIgnored":true,"equalProgression":true,"cosmeticClaimsStillRequirePass":true}
+{"ok":true,"permanentNonStacking2x":true,"questAndAchievementXpIncluded":true,"competitiveXpUnchanged":true,"refundRevokes":true}
+{"ok":true,"noHtmlPersistence":true,"oldCachePurged":true,"offlineAssets":true,"privateAssetsExcluded":true}
+{"pass":true,"gameIds":93,"archived":6,"playable":87,"manualMechanicClusters":13,"highRiskDuplication":["haze-defense","gl-pop-defense"],"qualityCertified":0,"tests":"full metadata/known source checks; AAA and physical iPhone/Android remain blocked"}
+{"pass":true,"phantomPickupRejected":true,"pointerCancelCannotScore":true,"realTouchWorks":true,"mobileReticleHidden":true}
+{"passed":true,"vendorGames":3,"serverSignedStartRequired":true,"gameplayClockGatedForDesertDash":true,"offlineGuestScoredRunCannotStart":true,"browserDeviceBehaviorNotYetTested":true}
+{"pass":true,"assertions":10,"game":"gl-grow-op","controls":"one phone touch = one live pest or one plant selection","device":"not measured"}
+{"pass":true,"gamePaths":["public/games-lib/cup-toss/game.js","public/games-lib/wanted-run/game.js"],"checks":11,"impact":"removed no-op Cup Toss scheduling and chase frame transform allocations","scope":"source only; full Docker and physical 60fps hardware QA pending"}
+{"pass":true,"kenneyModels":10,"license":"CC0","scoreEffects":false,"qualityApproved":false}
+{"pass":true,"registeredHistory":80,"libraryPlayable":74,"corePlayable":13,"totalPlayable":87,"archivedDuplicates":6,"playerDatabaseTouched":false,"eligibility":"retired new runs/giveaways off, original game IDs and historical attribution kept"}
+{"pass":true,"workstreams":26,"externalPackSources":12,"defaultAvatarIdentical":true,"forbiddenCosmeticStatsRejected":true,"cosmeticTrackOnlyBoost":true,"competitiveServicesIndependentOfPayModules":true,"level":"source architecture contract, not integrated gameplay QA"}
+{"pass":true,"candidates":5,"admitted":0,"uniqueMechanics":5,"source":"research only; no imports, gameplay, rights-media or anti-cheat certification"}
+{"pass":true,"hostCurrent":"278af07ebfbc0eb2e783d8294cb1707c528c0163","sourceOnly":"61fec41636ea418c71765a21f7f6d3dd224bd22a","historicalRegistered":93,"playable":87,"releaseHistoryRows":29,"validation":"Owner host evidence vs GitHub source separated; no Deplexo API call"}
+{"audit":"SOURCE_ONLY_NOT_AAA","core":13,"library":80,"historical":93,"playable":87,"archived":6,"sourceFiles":118,"unresolved":0,"runtimeSourceFiles":139,"runtimeGraphComplete":true,"dependencyErrors":0,"report":"docs/audit/ALL-GAME-MECHANICS-SOURCE-LEDGER.json"}
+{"pass":true,"cases":4,"coreWithoutSlug":true,"libraryWithSlug":true,"invalidLibrarySlugRejected":true,"traversalRejected":true,"scope":"actual auditor function; mocked filesystem"}
+{"passed":true,"registered":93,"active":87,"archived":6,"shared3dAndTDEnginesTracked":true,"openSourceMultifileTracked":true,"certifiedAAA":0}
+{"passed":true,"core":13,"library":74,"tests":"source-level guardrails only","physicalPhonesTested":false,"gameplayCertified":0}
+{"pass":true,"issue":"5932ba6","actualAppImportValidated":true,"phantomVerifierImportRejected":true,"missingStaticAndDynamicImportRejected":true,"runtimeSmokeChecksPreserved":true}
+{
+  "ok": true,
+  "counts": {
+    "javascriptFiles": 382,
+    "localModuleImports": 56,
+    "jsonFiles": 2,
+    "manifestIcons": 4,
+    "coreGames": 16,
+    "libraryGames": 80
+  },
+  "failures": []
+}
+{
+  "output": "docs/audit/prelaunch-structural-audit.json",
+  "summary": {
+    "registryGames": 80,
+    "releaseSystemContractsPassed": 20,
+    "releaseSystemContractsTotal": 20,
+    "missingAchievementGameCount": 0,
+    "unresolvedAchievementRewardCount": 0,
+    "coreGamesRegistered": 13,
+    "coreGamesWithBlockers": 0,
+    "coreGamesWithReviewNotes": 16,
+    "gamesWithBlockers": 0,
+    "gamesWithReviewNotes": 77,
+    "duplicateReviewFindings": 0,
+    "activeRegistryReferences": 80,
+    "avatar": {
+      "editorPresent": true,
+      "rendererPresent": true,
+      "ownershipTestsDetected": true
+    },
+    "shop": {
+      "staticItemsFound": 30,
+      "duplicateStaticIds": 0,
+      "generatorPresent": true
+    }
+  },
+  "coreGamesAudited": 16,
+  "libraryGamesAudited": 80,
+  "brandIcons": {
+    "canonicalSvgPresent": true,
+    "manifestValidJson": true,
+    "missingManifestIconRoutes": 0
+  },
+  "blockers": 0,
+  "reviewNotes": 181
+}
+gz: 249 files, 5.18 MB -> 1.98 MB
+og-art: 16 images, 2.72 MB
+og/default.png: 474 KB
+deplexo-prebuild done in 832 ms -> /workspace/scratch/659ae5194525/reconciled-release/build
+native modules OK linux x64

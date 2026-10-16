@@ -170,6 +170,7 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-deplexo-release-evidence.js \
  && node --check tools/audit-full-game-mechanics.js \
  && node tools/audit-full-game-mechanics.js \
+ && node tools/test-audit-game-runtime-paths.js \
  && node --check tools/test-87-runtime-source-depth.js \
  && node tools/test-87-runtime-source-depth.js \
  && node --check tools/test-qa-87-browser-contract.js \

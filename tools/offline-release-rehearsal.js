@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // ZERO Github Actions usage; ZERO Deplexo deployments. Requires checked-out
-// repository and Node 20 + production dependencies (for --full, Docker).
+// repository and Node 24 + production dependencies (for --full, Docker).
 // Writes evidence outside the repo in OS tmp; never certifies the R1-R5 gate
 // without matching successful tests, release acceptance and a host fingerprint.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
@@ -81,6 +81,7 @@ const tests=[
  'tools/verify-game-syntax.js',
  'tools/games-lib-static-check.js',
  'tools/audit-full-game-mechanics.js',
+ 'tools/test-audit-game-runtime-paths.js',
  'tools/verify-prelaunch.js',
  'tools/prelaunch-deep-audit.js'
 ];

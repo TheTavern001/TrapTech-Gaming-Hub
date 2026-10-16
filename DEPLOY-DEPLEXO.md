@@ -66,7 +66,7 @@ Past roughly 300k runs, lower `BACKUP_KEEP` (for example 3) or rely on the GitHu
 
 ## 3. The Dockerfile
 
-- Multi-stage on `node:20-bookworm-slim`.
+- Multi-stage on `node:24-bookworm-slim` with the lockfile-pinned native SQLite dependency.
 - **Build stage**:
   - `npm ci --omit=dev`, which installs the **prebuilt native binaries for the builder's architecture** (better-sqlite3, @resvg/resvg-js). A python3/make/g++ toolchain is there only as a fallback.
   - v7 added one pure-JS dependency, `qrcode-generator` (it renders the admin authenticator QR code on the server, so the QR never goes through a third party). It is in `package.json`/`package-lock.json`, so `npm ci` installs it. There is nothing extra to do on Deplexo.

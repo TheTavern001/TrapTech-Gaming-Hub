@@ -84,7 +84,7 @@
       "sourceCommittedAtUTC": "2026-10-13T06:34:58Z",
       "status": "FAILED",
       "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: Deplexo ERROR/build failed after 164s (deployment-journal and asset-credit-builder change)",
-      "firstError": "UNKNOWN — Docker build log not available",
+      "firstError": "UNKNOWN \u2014 Docker build log not available",
       "rootCause": "inherits source-level Docker build guard runtime-config import from b7be1ec; exact Deplexo first failing command not supplied",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -95,7 +95,7 @@
       "sourceCommittedAtUTC": "2026-10-13T06:40:24Z",
       "status": "FAILED",
       "evidence": "owner screenshot supplied 2026-10-13 ~02:44 America/New_York: Deplexo ERROR/build failed after 218s (scalable registry count and game-admissions change)",
-      "firstError": "UNKNOWN — Docker build log not available",
+      "firstError": "UNKNOWN \u2014 Docker build log not available",
       "rootCause": "inherits source-level Docker build guard runtime-config import from b7be1ec; exact Deplexo first failing command not supplied",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -108,7 +108,7 @@
       "buildDurationSeconds": 113,
       "branchReportedByHost": "audit/phase1-brand-qa-ledger-20261013",
       "evidence": "owner Deplexo deployment list supplied 2026-10-13 morning EDT: ERROR after 113s",
-      "firstError": "UNKNOWN — first failing Docker command/log not provided",
+      "firstError": "UNKNOWN \u2014 first failing Docker command/log not provided",
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -136,7 +136,7 @@
       "buildDurationSeconds": 309,
       "branchReportedByHost": "audit/phase1-brand-qa-ledger-20261013",
       "evidence": "owner Deplexo deployment list supplied 2026-10-13 morning EDT: ERROR after 309s",
-      "firstError": "UNKNOWN — first failing Docker command/log not provided",
+      "firstError": "UNKNOWN \u2014 first failing Docker command/log not provided",
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -149,7 +149,7 @@
       "buildDurationSeconds": 156,
       "branchReportedByHost": "audit/phase1-brand-qa-ledger-20261013",
       "evidence": "owner Deplexo deployment list supplied 2026-10-13 morning EDT: ERROR after 156s",
-      "firstError": "UNKNOWN — first failing Docker command/log not provided",
+      "firstError": "UNKNOWN \u2014 first failing Docker command/log not provided",
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -162,7 +162,7 @@
       "buildDurationSeconds": 317,
       "branchReportedByHost": "audit/phase1-brand-qa-ledger-20261013",
       "evidence": "owner Deplexo deployment list supplied 2026-10-13 morning EDT: ERROR after 317s",
-      "firstError": "UNKNOWN — first failing Docker command/log not provided",
+      "firstError": "UNKNOWN \u2014 first failing Docker command/log not provided",
       "rootCause": "first failing command unknown; exact earlier prelaunch build guard defect present in GitHub source until this candidate fix",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -193,7 +193,7 @@
       "commit": "b5c9783fd198b6ac67799a6849b87605a5bd1c7d",
       "status": "FAILED",
       "evidence": "owner screenshot ~11:11 EDT: Deplexo ERROR after 202s (starter avatar source branch). First-error logs not supplied for this individual commit.",
-      "firstError": "UNKNOWN — error log not supplied for this commit",
+      "firstError": "UNKNOWN \u2014 error log not supplied for this commit",
       "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -203,7 +203,7 @@
       "commit": "1a2b7753c694f1cf4589ddf05231672d50c91a3b",
       "status": "FAILED",
       "evidence": "owner screenshot ~11:11 EDT: Deplexo ERROR after 124s (payment safe-off source branch). First-error logs not supplied for this individual commit.",
-      "firstError": "UNKNOWN — error log not supplied for this commit",
+      "firstError": "UNKNOWN \u2014 error log not supplied for this commit",
       "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -213,7 +213,7 @@
       "commit": "61c1b9d38d0d0e9e73a89754910fb92bec8c19d5",
       "status": "FAILED",
       "evidence": "owner screenshot ~11:11 EDT: Deplexo ERROR after 65s (bitcoin live-payment approval branch). First-error logs not supplied for this individual commit.",
-      "firstError": "UNKNOWN — error log not supplied for this commit",
+      "firstError": "UNKNOWN \u2014 error log not supplied for this commit",
       "rootCause": "LIKELY shared build-context ignore present from d5de300, but not confirmed for this specific deployment",
       "fixCommit": null,
       "verifiedAfterFix": false,
@@ -478,13 +478,13 @@
       "commit": "c2e6e9fbdd12b64f0a4b56bec16274b2640a8abf",
       "reason": "Remove fixed 93/80 game-count assertions that prevent legitimate growth; preserve baseline, require per-title source report and engine-specific settings adapter",
       "validation": "Registry/test JavaScript parsed and 13+80 baseline checked; full Docker/Android testing not yet done.",
-      "host": "NOT DEPLOYED — isolated feature branch"
+      "host": "NOT DEPLOYED \u2014 isolated feature branch"
     },
     {
       "commit": "70c018b9389edfc1d15183905861fa015cb55bf7",
       "reason": "Pause-safe Kit game settings: block title/restart taps while overlay open and clear pending inputs",
       "validation": "Source parsed and automated source-level regression added; Docker and mobile pending",
-      "host": "NOT DEPLOYED — isolated PR26"
+      "host": "NOT DEPLOYED \u2014 isolated PR26"
     },
     {
       "commit": "8390117a940a5d1b2a5ad07158cb986ffbef335e",
@@ -496,7 +496,7 @@
       "commit": "36b5ed3960a8b35c1bf308f198c2974a37950905",
       "reason": "Owner confirms Deplexo auto deployment OFF; whole-hub five-release master handoff and evidence-based 26-workstream/93-game scope added to isolated dev branch.",
       "validation": "New fairness test from GitHub fetched source executed 202 V8 assertions under in-memory file/path shim PASS; 93 code paths + 80 credits verified from GitHub recursive tree. Full Node/Docker/gameplay/3D asset manual/mobile unrun.",
-      "host": "NOT DEPLOYED — existing owner-confirmed READY 03119b9 preserved",
+      "host": "NOT DEPLOYED \u2014 existing owner-confirmed READY 03119b9 preserved",
       "branch": "program/five-release-full-hub-overhaul-20261013",
       "historicalSourceCommit": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
       "sourceFiles": [
@@ -809,9 +809,98 @@
       ],
       "ownerAAACertified": 0,
       "manualReleaseGate": "BLOCKED_HOST_AND_INDEPENDENT_QA"
+    },
+    {
+      "commit": "R1_RECOVERY_SINGLE_PUSH_PENDING",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Correct payment order snapshot test to use actual persisted order ref; preserve production code, rollback safety and payer balances.",
+      "validation": "Test source JS parsed; isolated SQLite wrong/correct-ref differential confirmed. Real better-sqlite3 test and complete Deplexo Docker re-run NOT YET OBSERVED.",
+      "host": "PREVIOUS_R1_FAILED_NEXT_R1_RECOVERY_UNVERIFIED",
+      "evidenceFiles": [
+        "tools/test-payment-order-snapshots.js",
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_BLOCKED_UNTIL_DOCKER_READY"
+    },
+    {
+      "commit": "R1_RECOVERY_TEST_PATCH_IN_NEXT_SHA",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Executed real mobile pointer handlers instead of comparing obsolete if(!def.stickAlsoPtr) source string",
+      "validation": "V8 JS source syntax and isolated actual Kit handler simulation PASS for mirrored, stick-only, pointercancel. Full native Docker not rerun.",
+      "host": "R1_D455AC_FAILED_NEXT_BUILD_PENDING",
+      "evidenceFiles": [
+        "tools/test-owner-reported-gameplay.js",
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_BLOCKED_HOST_READY"
+    },
+    {
+      "commit": "R1_SCORE_ERROR_TEST_FIX_NEXT_SHA",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Correct stale end-of-run regression expecting Hub.submit(g.score) although Kit snapshots finalScore; behaviorally assert submit error, score and run isolation.",
+      "validation": "Actual Kit callback extracted/executed PASS for 3 scenarios; JS syntax checked. Native Docker future run not yet available.",
+      "host": "R1_A6AFA9_FAILED_NEXT_QA_PUSH_PENDING",
+      "evidenceFiles": [
+        "tools/test-kit-score-submit-error.js",
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_BLOCKED_HOST_AND_DEVICE"
+    },
+    {
+      "commit": "R1_RELEASE_EVIDENCE_FIX_NEXT_SHA",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Separate source-not-deployed from failed-R1-build evidence; preserve owner observed historic current READY and correct auto-deploy ON status.",
+      "validation": "V8 syntax PASS and original release-status+release-evidence tests PASS using fetched source and isolated virtual FS; next native Deplexo Docker pending",
+      "host": "LATEST_R1_53EFD4_FAILED_HOST_LAST_SCREENSHOT_READY_278AF07",
+      "evidenceFiles": [
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "tools/release-status.js",
+        "tools/test-deplexo-release-evidence.js",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_BLOCKED_UNTIL_SUCCESSFUL_HOST_BUILD"
+    },
+    {
+      "commit": "R1_AUDIT_CORE_SLUG_FIX_NEXT_SHA",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Fix crashing actual 93-game source runtime dependency audit on slugless core; do not weaken audit or QA gates",
+      "validation": "Tested patched auditor in function-execution simulation across core/library/missing/unsafe slug. Docker suite and physical device unverified until next build.",
+      "host": "OWNER_C587456_BUILD_FAILED_AT_SOURCE_AUDITOR",
+      "evidenceFiles": [
+        "tools/audit-full-game-mechanics.js",
+        "tools/test-audit-game-runtime-paths.js",
+        "Dockerfile",
+        "docs/audit/DEPLOYMENT-JOURNAL.json",
+        "docs/DEPLOYMENT-JOURNAL.md"
+      ],
+      "ownerAAACertified": 0,
+      "manualReleaseGate": "R1_PENDING_NEW_BUILD"
+    },
+    {
+      "commit": "R1_FAVICON_ALIAS_FIX_PENDING",
+      "branch": "qa/gameplay-distinctness-and-collision-20261013",
+      "reason": "Fix four deterministic Trap Tech icon prelaunch blockers without altering payment/score/game flow",
+      "validation": "Verified code/html/asset matches in isolated JavaScript check; actual Docker pending",
+      "host": "R1_61FEC416_FAILED",
+      "evidenceFiles": [
+        "public/assets/brand/hub-mark.svg",
+        "public/assets/brand/tt-favicon.svg",
+        "public/assets/brand/tt-maskable.svg",
+        "tools/build-traptech-pwa-icons.js",
+        "tools/test-traptech-pwa-icons.js",
+        "tools/verify-prelaunch.js"
+      ],
+      "ownerAAACertified": 0
     }
   ],
-  "lastEvidenceReconciliation": "2026-10-15: source candidate 5aac573c includes zero-cost 87-title Playwright smoke (13 core, 74 library), improved console/asset/canvas checks, no reviewer cookie materialization, Docker safety contract. Browser syntax parsed, synthetic Chromium fixture passed. Actual 87-game browser run, full Docker, host READY and Android/iOS physical certification NOT performed. Deplexo auto-deploy not controlled in this chat.",
+  "lastEvidenceReconciliation": "2026-10-15 R1 61fec416 Deplexo log: all 93-game audit / 87 active graph validations passed; fail four logo checks (3 stale aliases and favicon regex not handling PWA version query). Fix in candidate. Host deployment remains unsuccessful until new READY and live endpoint checks.",
   "latestOwnerObservedHost": {
     "app": "glassy-drifter-9532",
     "currentReadySha": "278af07ebfbc0eb2e783d8294cb1707c528c0163",
@@ -826,13 +915,15 @@
     "screenshotSHA256": "b780eb36e28e1e4468fdb6464b5c1da0652ec37edf486fc5b8d99b9d407139ad"
   },
   "currentWorkingSource": {
-    "branch": "main; QA fast-forward awaiting this journal update",
-    "headAtReconciliation": "5aac573c5d4f12cf89719d9144fb72e0fbe33331",
+    "branch": "qa/gameplay-distinctness-and-collision-20261013",
+    "headAtReconciliation": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
     "sourceStatus": "SOURCE_ONLY_NOT_DEPLOYED",
-    "note": "87-title Playwright runner staged source-only; wait for controlled webhook deploy after account owner turns auto-deploy ON. No verified host READY on this SHA; 0 games AAA/score certified.",
+    "note": "R1 61fec416 failed after 93-game audit PASS on 4 icon alias/favicon audit checks; patch generator and checks in next SHA, no live verification.",
     "firstUnreleasedSourceSha": "df091e892e6e6575846940630530897eb79fb650",
     "reconciledScope": "HEAD immediately before this journal commit; all on development branch, no host evidence.",
-    "lastAuditedGitHubHead": "5aac573c5d4f12cf89719d9144fb72e0fbe33331"
+    "lastAuditedGitHubHead": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
+    "buildAttemptStatus": "FAILED",
+    "lastFailedBuildSha": "61fec41636ea418c71765a21f7f6d3dd224bd22a"
   },
   "ownerConfirmedAutoDeployOff": true,
   "dashboardEvidence20261015": {
@@ -861,12 +952,88 @@
     "notProven": "Exact current /api/build fingerprint; full Deplexo build of 1796b826/eb4551a; Android game QA; live payments; external data backup"
   },
   "lastReportedFailedDeployment20261015": {
-    "commit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+    "commit": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
     "status": "FAILED",
-    "error": "Docker STEP 11: ERR_INVALID_ARG_TYPE cryptographic HMAC key undefined in src/config.js:23",
-    "cause": "Old tools/verify-prelaunch.js imports runtime config without secrets available during Docker build",
-    "sourceCorrection": "2db3f2b7a8703a21575306daa5d07b43e1607bf6 (both main and QA contain fixed source and new regression guard)",
-    "sourceTests": "Compared old broken verifier and new verifier; new regression guard rejects old source, accepts fixed source; 81 Docker tool references exist in repository tree; full Docker/host NOT tested",
-    "deploymentState": "AUTO DEPLOY OFF; no host READY for corrected source observed"
-  }
+    "error": "Node20 Docker image build [1/2] STEP12/14: node tools/verify-prelaunch.js returns 4 failures (favicon querystring regex false negative, three old SVG brand aliases mismatch).",
+    "cause": "Original TT crown icon generator created canonical SVG and PNGs but not hub-mark.svg, tt-favicon.svg and tt-maskable.svg. Three obsolete twin-T icon SVG files remained. The verify-prelaunch favicon regex required an unversioned .svg URL, while the PWA browser used a correctly cache-busted '?v=tt-crown-20261014' URL.",
+    "evidence": "Owner-supplied Deplexo build log shows complete 93-game audit succeeded (source graph complete 139, all 87 active script graphs traced), along with 87 runtime test and qa browser contract. Only 4 brand prelaunch checks failed; no build image / host READY.",
+    "correction": "Generate all 4 SVG aliases byte-for-byte from existing approved tt-mono.svg crown; normalize three legacy alias repository files; accept favicon URL query cache-busting in prelaunch; extend prebuild icon test to assert exact SVG aliases + favicon + splash canonical paths.",
+    "verification": "Verified exact SVG produced by generator matches committed canonical source; compiled HTML favicon and splash selectors match existing homepage and generator covers aliases. Full production image & mobile QA require Deplexo build."
+  },
+  "reportedFailedDeployments20261015": [
+    {
+      "commit": "570a9feba0f17aa1de120c67b57f3a8a6c0f5930",
+      "status": "FAILED",
+      "error": "Docker STEP 11: ERR_INVALID_ARG_TYPE cryptographic HMAC key undefined in src/config.js:23",
+      "cause": "Old tools/verify-prelaunch.js imports runtime config without secrets available during Docker build",
+      "sourceCorrection": "2db3f2b7a8703a21575306daa5d07b43e1607bf6 (both main and QA contain fixed source and new regression guard)",
+      "sourceTests": "Compared old broken verifier and new verifier; new regression guard rejects old source, accepts fixed source; 81 Docker tool references exist in repository tree; full Docker/host NOT tested",
+      "deploymentState": "AUTO DEPLOY OFF; no host READY for corrected source observed"
+    },
+    {
+      "commit": "656074076ea4240e450452aa658ccf2697a54a58",
+      "status": "FAILED",
+      "error": "Docker [1/2] STEP 12/14: tools/test-payment-order-snapshots.js:38 TypeError cannot read undefined.delta",
+      "cause": "Test fixture created store_orders.ref=QUOTE_PINNED but ledger queries and refund calls incorrectly used QUOTE_PINN, returning no ledger row despite preceding successful grant and balance assertions.",
+      "evidence": "Owner-pasted Deplexo build log, checkout 656074076ea4240e450452aa658ccf2697a54a58; native Node v20.20.2 + production modules; icon/preflight success through wallet test; failed test-payment-order-snapshots.js.",
+      "correctedSource": "tools/test-payment-order-snapshots.js now derives pinnedRef from order record, queries purchase/refund by parameterized ref and checks explicit presence; no production financial logic changed.",
+      "fixVerification": "JS syntax inspected; SQLite :memory: query repro confirms QUOTE_PINN => no row and QUOTE_PINNED => stored delta; next native Docker build still NOT RUN.",
+      "deploymentState": "R1 RECOVERY SOURCE PREPARATION ONLY: will push QA branch once, await Deplexo final status; R2-R5 BLOCKED"
+    },
+    {
+      "commit": "d455ac26395904cdc1cd9f388a86c4db929cb6a4",
+      "status": "FAILED",
+      "error": "Docker STEP 12/14 tools/test-owner-reported-gameplay.js:93 stale literal Kit pointer mirroring assertion",
+      "cause": "Exact source-string test expected if (!def.stickAlsoPtr) return;, but Kit implements equivalent exclusive stick and stick-ptr mirroring with pointer tracking and cancel safety.",
+      "evidence": "User pasted Deplexo native Node20 build: payment ledger snapshot fixed and passed, dozens of wallet, settlement, quest, avatar, game source tests passed; first assertion failure at line 93.",
+      "correction": "Change brittle source-contains assertion into executed input-handler behavior checks covering mirrored touch, stick-only touch, movement, touch release and pointercancel",
+      "qualification": "Actual source handlers executed independently and passed; Docker still awaiting next build."
+    },
+    {
+      "commit": "a6afa9cff3190399c939bbaee054267b7068a9f4",
+      "status": "FAILED",
+      "error": "Docker STEP 12/14 tools/test-kit-score-submit-error.js:11 stale regex expected Hub.submit(g.score) instead of frozen finalScore",
+      "cause": "The actual Kit captures const finalScore=g.score at game end, and asynchronously submits Hub.submit(finalScore) to avoid changed scores or cross-run races. The existing source-string-only test expected older unsafe code.",
+      "evidence": "Owner Deplexo log checkout a6afa9cff3190399c939bbaee054267b7068a9f4, Node 20.20.2; all previous checks, Kit touch controls, collision, Grow Op and lifecycle passed before failure.",
+      "correction": "Replace brittle static expectation with real Kit game-end handler execution: sync submit throw becomes resolved error state, frozen score stays 42 after mutation, stale completion stays isolated.",
+      "verification": "Actual Kit handler independently executed for 3 scenarios PASS; next full Docker build and live host NOT verified."
+    },
+    {
+      "commit": "53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc",
+      "status": "FAILED",
+      "error": "Docker stage [1/2] STEP 12/14 tools/test-deplexo-release-evidence.js:32 asserts SOURCE_ONLY_NOT_DEPLOYED but journal field was overloaded with R1_A6AFA9_FAILED_TEST_ASSERTION_RECOVERY_PREPARED",
+      "cause": "Both are true: candidate source is not deployed, and most recent R1 Docker build failed. Putting failed-build diagnostics inside canonical sourceStatus broke release contract.",
+      "evidence": "Owner supplied Deplexo Docker log for exact SHA 53efd4b15c9cd61dbe583637b9a00dd9ea34f2cc; Node20 build passes finance, gameplay, source audit, Kit tests and simulated mobile QA through this release-validator assertion.",
+      "correction": "Keep sourceStatus=SOURCE_ONLY_NOT_DEPLOYED, store build failure in separate buildAttemptStatus and lastReportedFailedDeployment20261015; preserve older screenshot CURRENT/READY and chronological failed attempts.",
+      "verification": "Release-status and release-evidence scripts both passed isolated read-only V8 fixture execution, not full native Docker."
+    },
+    {
+      "commit": "c587456628e34b89aa65e83a44be66d5b9f09adf",
+      "status": "FAILED",
+      "error": "Node20 Docker build [1/2] STEP12/14 tools/audit-full-game-mechanics.js:35 path.join() received undefined in runtimeScripts('core')",
+      "cause": "core entries are parsed from src/config.js as {id,title,module} with no slug; runtimeScripts eagerly computed htmlPath=path.join(base,g.slug,'index.html') before branching for library HTML. This crashed on first core title, unrelated to game mechanics.",
+      "evidence": "Owner-supplied Deplexo error log and Deployments screenshot 2026-10-15: auto deployed c587456628e34b89aa65e83a44be66d5b9f09adf from QA branch; all preceding financial, game syntax, physics, 87-game contracts, release-history tests passed before audit-full-game-mechanics error.",
+      "correction": "Compute HTML path only for library entries, validate library slugs, add real auditor runtimeScripts mock-FS regression covering slugless core, library HTML, missing/unsafe slug and invoke it before full 93-game audit.",
+      "verification": "Patched actual runtimeScripts function executed for slugless core, valid library, missing slug, unsafe slug in isolated V8; full Docker/Deplexo still pending."
+    },
+    {
+      "commit": "61fec41636ea418c71765a21f7f6d3dd224bd22a",
+      "status": "FAILED",
+      "error": "Node20 Docker image build [1/2] STEP12/14: node tools/verify-prelaunch.js returns 4 failures (favicon querystring regex false negative, three old SVG brand aliases mismatch).",
+      "cause": "Original TT crown icon generator created canonical SVG and PNGs but not hub-mark.svg, tt-favicon.svg and tt-maskable.svg. Three obsolete twin-T icon SVG files remained. The verify-prelaunch favicon regex required an unversioned .svg URL, while the PWA browser used a correctly cache-busted '?v=tt-crown-20261014' URL.",
+      "evidence": "Owner-supplied Deplexo build log shows complete 93-game audit succeeded (source graph complete 139, all 87 active script graphs traced), along with 87 runtime test and qa browser contract. Only 4 brand prelaunch checks failed; no build image / host READY.",
+      "correction": "Generate all 4 SVG aliases byte-for-byte from existing approved tt-mono.svg crown; normalize three legacy alias repository files; accept favicon URL query cache-busting in prelaunch; extend prebuild icon test to assert exact SVG aliases + favicon + splash canonical paths.",
+      "verification": "Verified exact SVG produced by generator matches committed canonical source; compiled HTML favicon and splash selectors match existing homepage and generator covers aliases. Full production image & mobile QA require Deplexo build."
+    }
+  ],
+  "autoDeployOwnerConfirmedOn": false,
+  "ownerLastAutoDeployConfirmation": "Latest owner request is to finish before turning deployments on; saved owner OFF state retained. Current dashboard could not be verified because sign-in is required.",
+  "autoDeployConfirmationHistory": [
+    {
+      "state": "ON",
+      "evidence": "2026-10-15 owner reports Auto Deploy on Push ON; verified via correct QA branch checkout in successive Deplexo build logs",
+      "historical": true
+    }
+  ],
+  "currentDashboardVerified": false
 }

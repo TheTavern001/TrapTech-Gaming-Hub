@@ -31,7 +31,8 @@ for(const {rel,size,bytes} of files){
   assert.equal(installed.readUInt32BE(20),size,'PNG height: '+rel);
  }
 }
-assert.equal(fs.readFileSync(path.join(pub,'assets/brand/traptech-app-icon.svg'),'utf8'),
- fs.readFileSync(path.join(pub,'assets/brand/favicon.svg'),'utf8'));
+const canonical=fs.readFileSync(path.join(pub,'assets/brand/traptech-app-icon.svg'),'utf8').trim();
+for(const alias of ['favicon.svg','hub-mark.svg','tt-favicon.svg','tt-maskable.svg'])
+ assert.equal(fs.readFileSync(path.join(pub,'assets/brand',alias),'utf8').trim(),canonical,'SVG alias drift: '+alias);
 assert.ok(icon.svg().includes('ttg')&&icon.svg().includes('<polygon'),'Must use existing TT crown/monogram vectors');
 console.log(JSON.stringify({pass:true,assetFiles:files.length,icons:['192','512','maskable-512','apple-180'],source:'existing tt-mono.svg',oldControllerPngsRejected:true,deviceInstallTested:false}));

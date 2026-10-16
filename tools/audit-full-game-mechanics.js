@@ -31,8 +31,12 @@ function collectJs(dir,max=28){
 function runtimeScripts(type,g,primary,localPaths){
  const publicRoot=path.join(ROOT,'public')+path.sep;
  const seen=new Set(),queue=[...localPaths],missing=[],external=[];
- const html=type==='library'?read(path.join(base,g.slug,'index.html')):'';
- const htmlPath=type==='library'?path.join(base,g.slug,'index.html'):primary;
+ // The 13 core games have a module path but no slug/index.html.
+ // Never construct the library HTML path for a core entry.
+ if(type==='library'&&(!g||typeof g.slug!=='string'||!/^[a-z0-9-]+$/.test(g.slug)))
+  throw Error('Invalid library game slug: '+String(g?.slug));
+ const htmlPath=type==='library'?path.join(base,g.slug,'index.html'):null;
+ const html=htmlPath?read(htmlPath):'';
  function add(spec,from){
   const raw=String(spec||'').split(/[?#]/)[0];
   if(!raw || /^(?:https?:|data:|\/\/)/i.test(raw)){if(raw)external.push(raw);return;}

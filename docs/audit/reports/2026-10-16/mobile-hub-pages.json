@@ -1,0 +1,232 @@
+{
+  "testedAtUTC": "2026-10-16T04:21:40.265Z",
+  "fingerprint": "4d35a6d7dc30502f58d85893",
+  "engine": "Chromium",
+  "emulated": true,
+  "attempted": 20,
+  "passed": 20,
+  "physicalAndroid": false,
+  "physicalIphone": false,
+  "rows": [
+    {
+      "width": 360,
+      "route": "/",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 2533,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/games",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 5336,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/shop",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 6858,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/store",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 10277,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/avatar",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 1484,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/season",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 3431,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/quests",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 1785,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/achievements",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 28897,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/sponsor",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 6942,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 360,
+      "route": "/leaderboard",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 1599,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 2534,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/games",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 5336,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/shop",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 6858,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/store",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 10277,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/avatar",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 1484,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/season",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 3431,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/quests",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 1785,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/achievements",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 28897,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/sponsor",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 6942,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    },
+    {
+      "width": 430,
+      "route": "/leaderboard",
+      "status": 200,
+      "horizontalOverflow": false,
+      "loadedText": 1599,
+      "brokenImages": [],
+      "errors": [],
+      "badAssets": [],
+      "passed": true
+    }
+  ]
+}

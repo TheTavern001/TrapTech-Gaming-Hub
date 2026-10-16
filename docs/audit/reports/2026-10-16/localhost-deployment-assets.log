@@ -1,0 +1,45 @@
+Live target: http://127.0.0.1:35355
+PASS Homepage responds 200 — {"status":200,"type":"text/html; charset=utf-8"}
+PASS Homepage references canonical Trap Tech icon
+PASS Homepage loads launch redesign stylesheet
+PASS Homepage links the PWA manifest
+PASS Health endpoint responds healthy — {"status":200,"body":{"ok":true,"product":"The Gaming Hub","version":"V1"}}
+PASS Build endpoint returns catalog counts — {"status":200,"expectedCore":13,"actualCore":13,"expectedLibrary":80,"actualLibrary":80}
+PASS Library playable/retired counters match registry — {"playable":74,"archived":6,"expectedPlayable":74,"expectedArchived":6}
+PASS Archived duplicate games remain historical but not playable
+PASS Both hub and library pages omit retired games from discovery
+PASS Deployed source fingerprint matches this checkout — {"expected":"4d35a6d7dc30502f58d85893","deployed":"4d35a6d7dc30502f58d85893"}
+PASS Deep structural audit report is available on the deployed build — {"status":200,"coreGames":13,"libraryGames":80,"blockers":0,"coreBlockers":0,"issues":0,"warnings":181}
+PASS Audit explicitly retains human visual/gameplay gates — {"gateCount":8}
+PASS Full-system source audit retains the manual AAA release gate — {"systems":6,"passed":20,"total":20,"grade":"STRUCTURAL_ONLY"}
+PASS Mobile release-control dashboard is served from the same revision — {"status":200,"bytes":15531}
+PASS Shared game settings ESM serves valid source
+PASS Responsive game settings CSS loads
+PASS Hub Settings and 13 core games import shared preferences
+PASS Library Kit game settings pause integration is served
+PASS Three independent licensed games share a source settings adapter
+PASS All three vendor game pages link their settings adapter
+PASS Rail Rush uses real GLB trains and modular saloon
+PASS Vehicle 3D QA page HTTP 200
+PASS Vehicle QA manifest has six original models
+PASS Vehicle viewer ESM is served
+PASS Most Wanted uses CC0 vehicle source and police bust instead of scenery instant death
+PASS Vehicle source GLB loads through Express
+PASS Licensed neutral avatar source GLB serves intact for in-Hub QA only
+PASS Single earn-or-buy Hub Credits store API with no second spendable balance — {"status":200,"packs":4,"currency":"Hub Credits"}
+PASS Store returns 12 one-of-one originals priced at $1,000+ — {"status":200,"count":12,"unique":12,"invalid":[]}
+PASS Prestige sales remain preview-only until wearable release approval — {"status":200,"enabled":false}
+PASS Store UI loads the Prestige preview-only gate — {"status":200}
+PASS Rotating cosmetics catalog returns 1,200 items and a valid first page — {"status":200,"catalogSize":1200,"total":1200,"pageItems":24,"uniqueIds":24}
+PASS Cosmetic pagination returns non-overlapping middle and final pages — {"middleStatus":200,"middleItems":24,"finalStatus":200,"finalItems":24,"crossPageOverlaps":0}
+PASS PWA manifest responds with valid JSON — {"status":200,"icons":4}
+\nBUILD SMOKE VERIFICATION SUMMARY\n{
+  "mode": "build-smoke",
+  "base": "http://127.0.0.1:35355",
+  "expectedFingerprint": "4d35a6d7dc30502f58d85893",
+  "deployedFingerprint": "4d35a6d7dc30502f58d85893",
+  "checks": 34,
+  "passed": 34,
+  "failed": 0,
+  "failures": []
+}

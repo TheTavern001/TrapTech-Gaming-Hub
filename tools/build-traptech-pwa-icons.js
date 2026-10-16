@@ -32,6 +32,7 @@ function svg(maskable=false){
 const expected=[
   ['assets/brand/traptech-app-icon.svg',svg(false),false],
   ['assets/brand/favicon.svg',svg(false),false],
+  // Keep legacy file names byte-identical to the canonical Trap Tech mark.
   ['assets/brand/hub-mark.svg',svg(false),false],
   ['assets/brand/tt-favicon.svg',svg(false),false],
   ['assets/brand/tt-maskable.svg',svg(false),false],
