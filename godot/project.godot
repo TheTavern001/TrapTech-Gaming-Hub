@@ -21,6 +21,8 @@ config/icon="res://icon.svg"
 PlayerData="*res://scripts/player_data.gd"
 Achievements="*res://scripts/achievements.gd"
 Quests="*res://scripts/quests.gd"
+Leaderboard="*res://scripts/leaderboard.gd"
+Notifications="*res://scripts/notifications.gd"
 
 [display]
 
