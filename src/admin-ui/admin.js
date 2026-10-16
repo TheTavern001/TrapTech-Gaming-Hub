@@ -582,7 +582,7 @@ async function sponsorAdmin(id) {
         ${Q.status === 'paid' ? (q.event_id ? `<a class="btn ghost" href="${AP}/official/${q.event_id}">${icon('settings')} Manage event</a> <a class="btn ghost" href="/event/${esc(q.event_code || '')}" target="_blank">${icon('badge-check')} Event ${esc(q.event_code || '')}</a>` : `<button class="btn" id="q-event">${icon('badge-check')} Create official event</button>`) : ''}
         ${['draft', 'sent'].includes(Q.status) ? `<button class="btn danger sm" id="q-dec">Mark declined</button>` : ''}
         <button class="btn ghost sm" id="q-link" title="${esc(statusUrl)}">${icon('copy')} Copy sponsor status link</button>
-        <button class="btn danger sm" id="q-del">${icon('trash-2')}</button></div>
+        ${!locked && !q.event_id ? `<button class="btn danger sm" id="q-del">${icon('trash-2')} Delete uncommitted request</button>` : ''}</div>
       <p class="tiny muted">${Q.sent_at ? `Sent ${dt(Q.sent_at)}. ` : ''}${Q.responded_at ? `Answered ${dt(Q.responded_at)}. ` : ''}${Q.paid_at ? `Paid ${dt(Q.paid_at)}. ` : ''}Saving a draft after sending takes the quote back to draft until you send again. Accepted quotes are locked.</p></div>`;
     frame('sponsor', 'Sponsor requests', `${tabs}<div class="cols" style="margin-top:0;grid-template-columns:1fr 1.3fr"><div class="card wrap-x"><table class="tbl"><thead><tr><th>#</th><th>Brand</th><th class="num">Features</th><th>Quote</th><th class="num">Total</th></tr></thead><tbody>${list.map(row).join('')}</tbody></table></div>${editor}</div>`,
       `<a class="btn ghost sm" href="/api/admin/export/bookings.csv" target="_blank">${icon('download')} CSV</a>`);
