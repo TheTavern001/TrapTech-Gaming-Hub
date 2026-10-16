@@ -9,7 +9,11 @@
     "demo:wipe": "node src/demo.js wipe",
     "test": "node tools/e2e-api.js",
     "test:browser": "node tools/e2e-browser.js",
-    "verify:prelaunch": "node tools/verify-prelaunch.js && node tools/prelaunch-deep-audit.js",
+    "verify:prelaunch": "npm run assets:build && node tools/verify-prelaunch.js && node tools/prelaunch-deep-audit.js",
+    "assets:build": "node tools/build-traptech-pwa-icons.js && node tools/build-core-game-cards.js",
+    "test:payments:integration": "node tools/test-payment-webhook-integration.js",
+    "test:private:http": "node tools/test-private-review-http.js",
+    "verify:candidate:native": "node tools/verify-candidate-native.js",
     "test:games-lib-batches": "node tools/e2e-games-lib-batches.js",
     "test:mobile": "node tools/e2e-mobile.js",
     "verify:live": "node tools/verify-live-deployment.js",
@@ -29,13 +33,13 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^11.10.0",
+    "better-sqlite3": "12.11.1",
     "compression": "^1.8.2",
     "express": "^4.22.3",
     "qrcode-generator": "^2.0.4"
   },
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": "24.x"
   }
 }

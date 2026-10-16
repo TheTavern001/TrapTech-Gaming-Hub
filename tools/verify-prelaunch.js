@@ -72,6 +72,13 @@ const core = [...block.matchAll(/\{\s*id:\s*'([^']+)',\s*title:\s*'([^']+)'[\s\S
 counts.coreGames = core.length;
 if (!core.length) fail('src/config.js', 'No core games were parsed from the registry');
 const ids = new Set();
+// Covers appear in the lobby, detail page and boot overlay. A missing cover
+// used to pass source checks and produce a 404 in every actual game launch.
+for(const match of block.matchAll(/\bart(?:Tall)?:\s*'([^']+)'/g)) {
+  const art=match[1],file=path.resolve(ROOT,'public','.'+art);
+  if(!file.startsWith(path.resolve(ROOT,'public')+path.sep)||!fs.existsSync(file))
+    fail('src/config.js','Missing registered game cover: '+art);
+}
 for (const [, id, title, module] of core) {
   if (ids.has(id)) fail('src/config.js', 'Duplicate core game id: ' + id);
   ids.add(id);

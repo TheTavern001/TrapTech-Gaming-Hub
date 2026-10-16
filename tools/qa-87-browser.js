@@ -16,6 +16,7 @@ const ENGINE=process.env.BROWSER_ENGINE||'chromium';
 const OUT=path.resolve(process.env.QA_REPORT_DIR||path.join(os.tmpdir(),'traptech-qa-87'));
 const SCREENSHOTS=path.join(OUT,'screenshots');
 const stateFile=process.env.QA_STORAGE_STATE||'';
+const ONLY=new Set(String(process.env.QA_GAMES||'').split(',').map(x=>x.trim()).filter(Boolean));
 const INTERACTIVE=process.env.QA_INTERACTIVE_AUTH==='1';
 const TAKE_ALL=process.env.QA_ALL_SCREENSHOTS==='1';
 const HEADLESS=process.env.QA_HEADLESS!=='0'&&!INTERACTIVE;
@@ -40,7 +41,8 @@ const games=[...core,...library];
 if(core.length!==13||library.length!==74||games.length!==87||new Set(games.map(g=>g.id)).size!==87){
  console.error('Active game catalog changed; rebaseline before claiming QA coverage',core.length,library.length);process.exit(2);
 }
-const targets=games.slice(0,MAX_GAMES),results=[];
+const targets=games.filter(g=>!ONLY.size||ONLY.has(g.id)).slice(0,MAX_GAMES),results=[];
+if(!targets.length){console.error('No registered active games matched QA_GAMES');process.exit(2);}
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function filename(name){return name.replace(/[^a-z0-9._-]/gi,'_');}
 async function interactiveSignIn(browserOptions){
@@ -88,53 +90,64 @@ async function main(){
    throw Error('Not signed in: configure QA_STORAGE_STATE or QA_INTERACTIVE_AUTH=1; no private-review bypass');
   const monitor=async(g)=>{
    const page=await context.newPage();
-   const failures=[],consoleErrors=[],badHttp=[],started=Date.now();let status=null,hasCanvas=false;
+   const failures=[],consoleErrors=[],badHttp=[],networkFailures=[],started=Date.now();let status=null,hasCanvas=false;
+   let startedState=null;
    page.on('pageerror',error=>failures.push(String(error.message).slice(0,360)));
    page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text().slice(0,360));});
+   page.on('requestfailed',req=>networkFailures.push({url:req.url(),error:req.failure()?.errorText||'failed'}));
    page.on('response',res=>{try{
      const url=new URL(res.url());if(url.origin===BASE&&res.status()>=400&&
        /\.(?:js|mjs|css|png|svg|jpg|jpeg|webp|glb|wasm)(?:\?|$)/i.test(url.pathname))
        badHttp.push({url:url.pathname,status:res.status()});
    }catch{}});
    // Never submit a real score, buy an item, issue prize payment or place an order.
-   await page.route('**/api/score',route=>route.fulfill({status:403,contentType:'application/json',
-      body:JSON.stringify({ok:false,error:'Non-destructive QA: score submission disabled'})}));
+   await page.route('**/api/score',route=>route.fulfill({status:200,contentType:'application/json',
+      body:JSON.stringify({ok:false,qa_intercepted:true,error:'Non-destructive QA: score submission disabled'})}));
    await page.route(/\/api\/(?:store|shop|giveaways|admin)\/(?:checkout|buy|purchase|award|refund|send)/,
       route=>route.fulfill({status:403,body:'QA write denied'}));
    try{
     const response=await page.goto(BASE+g.route,{waitUntil:'domcontentloaded',timeout:25000});
     status=response?.status()||null;
     if(status===200){
-     await page.waitForTimeout(500);
+     await page.waitForFunction(()=>window.__GL||window.__game||document.querySelector('.grid-container')||document.querySelector('canvas'),null,{timeout:12000});
+     if(g.kind==='core')await page.locator('#boot').waitFor({state:'hidden',timeout:15000});
+     await page.waitForTimeout(200);
      hasCanvas=await page.locator('canvas').count()>0;
      // "Title loaded" is not a claim that the game's whole physics loop works.
      if(hasCanvas){
       const canvas=page.locator('canvas').first();
       if(await canvas.isVisible().catch(()=>false))await canvas.tap({force:true,timeout:2500}).catch(()=>{});
      }
+     const knownState=await page.evaluate(()=>window.__GL?.state||window.__game?.state||null);
+     if(knownState){
+      await page.waitForFunction(()=>['play','over','paused'].includes(window.__GL?.state||window.__game?.state),null,{timeout:10000});
+      startedState=await page.evaluate(()=>window.__GL?.state||window.__game?.state||null);
+     }
      await page.waitForTimeout(RUNS*1000);
     }
    }catch(e){failures.push('Navigation/interaction: '+String(e.message).slice(0,350));}
    const metrics=await page.evaluate(()=>{
-    const gl=window.__GL||null;
+    const gl=window.__GL||null,core=window.__game||null;
     const cv=document.querySelector('canvas'),bounds=cv?.getBoundingClientRect();
     const grid=document.querySelector('.grid-container');
-    return {domPuzzleDetected:!!grid,kitState:gl?.state||null,frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:null,
-      fps:typeof gl?.fps==='number'?gl.fps:null,viewportWidth:innerWidth,
+    return {domPuzzleDetected:!!grid,kitState:gl?.state||core?.state||null,frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:typeof core?.frameMsP95==='number'?core.frameMsP95:null,
+      fps:typeof gl?.fps==='number'?gl.fps:typeof core?.fps==='number'?core.fps:null,viewportWidth:innerWidth,
       viewportHeight:innerHeight,canvasSize:bounds?{width:Math.round(bounds.width),height:Math.round(bounds.height)}:null,
       horizontalOverflow:document.documentElement.scrollWidth>innerWidth+3};
    }).catch(()=>null);
    const title=(await page.title().catch(()=>''))||'';
    const runtimeSurface=hasCanvas||metrics?.domPuzzleDetected===true;
    const stuckInStartup=metrics?.kitState==='starting';
-   const failed=status!==200||failures.length>0||consoleErrors.length>0||badHttp.length>0||
-     !runtimeSurface||stuckInStartup||metrics?.horizontalOverflow===true||
-     (metrics?.frameP95Ms>25&&metrics?.kitState==='play');
+   const functionalFailed=status!==200||failures.length>0||consoleErrors.length>0||badHttp.length>0||
+     !runtimeSurface||stuckInStartup||metrics?.horizontalOverflow===true;
+   const frameBudgetMet=typeof metrics?.frameP95Ms==='number'&&metrics.frameP95Ms>0&&metrics?.kitState==='play'
+     ? metrics.frameP95Ms<=25 : null;
+   const failed=functionalFailed||frameBudgetMet===false;
    if(TAKE_ALL||failed)try{await page.screenshot({path:path.join(SCREENSHOTS,filename(g.id)+'.png'),timeout:4500});}catch{}
    await page.close();
    return {id:g.id,title:g.title,kind:g.kind,route:g.route,status,titleLoaded:!!title,canvasDetected:hasCanvas,
-    ...metrics,runtimeSurfaceDetected:runtimeSurface,jsExceptions:failures,consoleErrors,badAssets:badHttp,
-    durationMs:Date.now()-started,smokePassed:!failed,
+    ...metrics,startupStateObserved:startedState,runtimeSurfaceDetected:runtimeSurface,jsExceptions:failures,consoleErrors,badAssets:badHttp,networkFailures,
+    durationMs:Date.now()-started,functionalSmokePassed:!functionalFailed,frameBudgetMet,smokePassed:!failed,
     androidPhysical:'NOT_TESTED',iosSafariPhysical:'NOT_TESTED',
     scoreReplayCertified:false,visualAAAApproved:false};
   };
@@ -143,12 +156,18 @@ async function main(){
    console.log((row.smokePassed?'PASS ':'FAIL ')+(i+1)+'/'+targets.length+' '+row.id+
      ' HTTP:'+row.status+' p95:'+row.frameP95Ms+'ms errors:'+row.jsExceptions.length+
      ' assetErrors:'+row.badAssets.length);
+   if(!row.functionalSmokePassed)console.log('DETAIL '+JSON.stringify({id:row.id,state:row.kitState,
+     js:row.jsExceptions,console:row.consoleErrors,assets:row.badAssets,network:row.networkFailures,overflow:row.horizontalOverflow}));
+   fs.writeFileSync(path.join(OUT,'progress.json'),JSON.stringify({attempted:results.length,results},null,2));
   }
   const failed=results.filter(r=>!r.smokePassed),report={schema:1,
    testedAtUTC:new Date().toISOString(),engine:ENGINE,emulationOnly:true,host:BASE,
    fingerprint,authenticatedReviewer:signedIn,submittedRealScores:false,processedPayments:false,
    expectedActiveTitles:87,attempted:results.length,passed:results.length-failed.length,
    failed:failed.map(x=>x.id),fullCoverage:results.length===87,
+   functionalPassed:results.filter(x=>x.functionalSmokePassed).length,
+   functionalFailed:results.filter(x=>!x.functionalSmokePassed).map(x=>x.id),
+   emulatedFrameBudgetFailures:results.filter(x=>x.frameBudgetMet===false).map(x=>x.id),
    certifiedAAA:0,physicalAndroidApproved:0,physicalIphoneApproved:0,
    note:'Page/error/asset/limited frame-time smoke; not physical phone or end-to-end game-completion certification.',
    games:results};

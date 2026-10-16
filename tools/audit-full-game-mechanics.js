@@ -32,7 +32,7 @@ function runtimeScripts(type,g,primary,localPaths){
  const publicRoot=path.join(ROOT,'public')+path.sep;
  const seen=new Set(),queue=[...localPaths],missing=[],external=[];
  const html=type==='library'?read(path.join(base,g.slug,'index.html')):'';
- const htmlPath=path.join(base,g.slug,'index.html');
+ const htmlPath=type==='library'?path.join(base,g.slug,'index.html'):primary;
  function add(spec,from){
   const raw=String(spec||'').split(/[?#]/)[0];
   if(!raw || /^(?:https?:|data:|\/\/)/i.test(raw)){if(raw)external.push(raw);return;}

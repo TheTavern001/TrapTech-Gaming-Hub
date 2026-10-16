@@ -68,8 +68,13 @@ for(const f of ['src/anticheat.js','src/ac-levels.js','src/eligibility.js','src/
   'Scoring/eligibility imports purchases or avatar equipment: '+f);
 }
 const pay=read('src/monetize.js');
-assert.ok(pay.includes('premium XP boost: ONLY the premium-track level'));
-assert.ok(pay.includes('Math.floor(sp.xp * (owned ? 1 + boost / 100 : 1))'));
+assert.ok(pay.includes('const cosmetic = sp ? sp.cosmetic_xp'));
+const cosmetic=read('src/cosmetic-xp.js');
+assert.ok(cosmetic.includes('o.usd_cents>=100000'));
+assert.ok(cosmetic.includes('verifiedSettlement'));
+assert.ok(cosmetic.includes("o.provider !== 'manual'"));
+assert.ok(pay.includes('const pxp = cosmetic.xp'));
+assert.ok(!pay.includes('Math.floor(sp.xp * (owned ? 1 + boost / 100 : 1))'));
 assert.ok(read('src/shop.js').includes('Hub Credits are COSMETIC ONLY'));
 assert.ok(read('src/shop.js').includes("WALLET.balance(userId)"),'Points Shop must use one Credits balance');
 assert.ok(pay.includes("const WALLET = require('./unified-wallet')"),'Paid packs must credit same wallet');

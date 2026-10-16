@@ -903,8 +903,8 @@ app.get(Object.keys(HUB_ICON_ROUTES), (req, res) => {
   }
 });
 // Public, read-only release review. Uses the same generated report as /api/audit/report.
-app.get(['/audit', '/audit/'], (req, res) => res.sendFile(path.join(PUB, 'audit', 'index.html')));
-app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
+app.get(['/audit', '/audit/'], (req, res) => { res.setHeader('Cache-Control','no-store');res.sendFile(path.join(PUB, 'audit', 'index.html')); });
+app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')||process.env.HUB_PRIVATE_REVIEW==='1') res.setHeader('Cache-Control', 'no-store'); } }));
 // Per-page <title> / description / Open Graph + Twitter card tags for share links (crawlers don't run JS).
 const INDEX_FILE = path.join(PUB, 'index.html');
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -931,7 +931,7 @@ function pageMeta(p, origin) {
 }
 app.get('*', (req, res) => {
   if (path.extname(req.path)) return res.status(404).send('Not found');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-store');
   let html = fs.readFileSync(INDEX_FILE, 'utf8');
   const origin = PU.originOf(req); // v7: PUBLIC_URL when set
   const meta = (() => { try { return pageMeta(req.path.replace(/\/+$/, '') || '/', origin); } catch (e) { console.error(e); return null; } })();

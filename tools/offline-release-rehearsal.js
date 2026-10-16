@@ -21,6 +21,8 @@ const tests=[
  'tools/test-reward-integrity.js',
  'tools/test-session-revocation.js',
  'tools/test-payment-settlement-proof.js',
+ 'tools/test-payment-webhook-integration.js',
+ 'tools/test-private-review-http.js',
  'tools/test-prize-score-proof.js',
  'tools/test-owner-reported-gameplay.js',
  'tools/test-keep-guard-barracks.js',

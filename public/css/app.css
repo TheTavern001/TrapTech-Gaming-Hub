@@ -479,6 +479,13 @@ textarea.input { height: auto; min-height: 96px; padding: 12px 14px; resize: ver
 .play-top .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .play-top .who-chip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 @media (max-width: 420px) { .play-top .title { font-size: .76rem; } .play-top .who-chip { font-size: .7rem; max-width: 34vw; } }
+/* Keep the game name and four thumb-sized controls readable on phones. */
+@media (max-width: 600px) {
+  .play-top { gap: 4px; padding-left: max(6px, env(safe-area-inset-left)); padding-right: max(6px, env(safe-area-inset-right)); }
+  .play-top .title { flex: 1; font-size: clamp(.66rem, 2.7vw, .9rem); }
+  .play-top .who-chip { display: none; }
+  .play-top .iconbtn { flex: 0 0 44px; width: 44px; height: 44px; padding: 10px; }
+}
 
 /* keep anchored sections clear of the sticky top bar */
 .pk, .cmp-wrap, #faq, #customize { scroll-margin-top: 84px; }

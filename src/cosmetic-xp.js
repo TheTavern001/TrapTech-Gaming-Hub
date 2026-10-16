@@ -4,6 +4,10 @@
 const { verifiedSettlement } = require('./payment-settlement-proof');
 function cosmeticProgress(userId, since, until, baseXp, xpFor) {
   const db = require('./db');
+  // Seasons are also initialized before the optional store on fresh installs
+  // and in standalone economy tools. No store schema means no paid bonus.
+  const schema=db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('prestige_owned','store_orders','store_products')").get();
+  if(schema.n!==3)return {xp:baseXp,base_xp:baseXp,bonus_xp:0,multiplier:1,starts_at:null};
   const orders = db.prepare(`SELECT o.*, po.created_at AS owned_at
     FROM prestige_owned po JOIN store_orders o ON o.id=po.order_id
     JOIN store_products p ON p.id=po.item_id

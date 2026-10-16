@@ -21,11 +21,12 @@ module.exports = function staticGz(pubDir) {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     let p; try { p = decodeURIComponent(req.path); } catch { return next(); }
     const gz = map.get(p); if (!gz) return next();
-    res.setHeader('Vary', 'Accept-Encoding');
+    res.vary('Accept-Encoding');
     if (!/\bgzip\b/.test(String(req.headers['accept-encoding'] || ''))) return next();
     const type = send.mime.lookup(p); const cs = send.mime.charsets.lookup(type);
     res.setHeader('Content-Type', type + (cs ? '; charset=' + cs : ''));
     res.setHeader('Content-Encoding', 'gzip');
+    if(p.endsWith('.html')||process.env.HUB_PRIVATE_REVIEW==='1')res.setHeader('Cache-Control','no-store');
     res.sendFile(gz, { maxAge: '1h', acceptRanges: false, dotfiles: 'allow' }, (err) => { if (err && !res.headersSent) { res.removeHeader('Content-Encoding'); next(); } });
   };
 };

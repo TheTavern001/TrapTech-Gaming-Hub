@@ -2,7 +2,8 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const {verifiedSettlement}=require('../src/payment-settlement-proof');
 let rows=[];
-const db={prepare(sql){assert.match(sql,/po.revoked_at IS NULL/);assert.match(sql,/o.refunded_at IS NULL/);assert.match(sql,/o.usd_cents>=100000/);return {all(){return rows}};}};
+let schemaPresent=true;
+const db={prepare(sql){if(sql.includes('sqlite_master'))return {get:()=>({n:schemaPresent?3:0})};assert.match(sql,/po.revoked_at IS NULL/);assert.match(sql,/o.refunded_at IS NULL/);assert.match(sql,/o.usd_cents>=100000/);return {all(){return rows}};}};
 const mod={exports:{}};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/cosmetic-xp.js'),'utf8'),{module:mod,require(n){if(n==='./db')return db;if(n==='./payment-settlement-proof')return {verifiedSettlement};throw Error(n);}});
 const calc=mod.exports.cosmeticProgress;
@@ -12,6 +13,7 @@ const events=[{at:5,xp:10},{at:30,xp:60},{at:40,xp:100}];
 const xpFor=(id,since,until)=>events.filter(e=>e.at>=since&&e.at<=until).reduce((a,e)=>a+e.xp,0);
 const state=(since=0,until=50)=>calc(7,since,until,xpFor(7,since,until),xpFor);
 assert.equal(state().xp,170);
+schemaPresent=false;assert.equal(state().xp,170,'Season economy works before store schema exists');schemaPresent=true;
 rows=[order];let p=state();assert.equal(p.xp,330);assert.equal(p.bonus_xp,160);assert.equal(p.multiplier,2);
 assert.equal(xpFor(7,0,50),170,'Competition XP source is unchanged');
 rows=[order,{...order,granted_at:25,owned_at:25}];assert.equal(state().xp,330,'Two items must not stack');

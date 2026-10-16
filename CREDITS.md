@@ -137,3 +137,7 @@ illustrations with a baked-in checkerboard. Kenney 2D hero/saw/flame sprites are
 - Quaternius (@Quaternius), **Ultimate Modular Men Adventurer**, CC0 1.0 Universal. Canonical pack https://quaternius.com/packs/ultimatemodularcharacters.html ; source mirror https://github.com/agentkaerf/FreeModels ; original Git blob a6743e9b397efb7ee3e3175459d503783e39ef4c. Self-contained optimized minified glTF under `public/assets/avatars/rigged/male-adventurer.gltf`.
 - Quaternius (@Quaternius), **Ultimate Modular Women Adventurer**, CC0 1.0 Universal. Canonical pack https://quaternius.com/packs/ultimatemodularwomen.html ; source mirror https://github.com/agentkaerf/FreeModels ; original Git blob 360f7653a875945f97818aa60416f0ddb7ec2c42. Self-contained optimized minified glTF under `public/assets/avatars/rigged/female-adventurer.gltf`.
 - Kenney, **Medals shaded_medal1–9.png**, CC0 1.0 Universal. https://kenney.nl/assets/medals ; source mirror https://github.com/shorepine/kenney/tree/main/2d/Medals ; files under `public/assets/vendor/kenney/medals/`. Used on achievement artwork.
+
+
+### Core game cover repair — October 2026
+The Void Swarm, Grow Guard, Sling Smash and Haze Defense cards reuse the same original shipped Blender sprite atlases under public/assets/v7 used by those games. Glass Stack uses original vector slab artwork. tools/build-core-game-cards.js creates self-contained SVG cards without external downloads. Existing source artwork attribution above remains applicable.

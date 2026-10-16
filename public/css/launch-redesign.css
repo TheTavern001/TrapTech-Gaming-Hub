@@ -13,6 +13,7 @@ body { background:
   radial-gradient(ellipse at 3% 32%,rgba(60,165,255,.08),transparent 36%),
   linear-gradient(180deg,#080914 0%,#090a17 48%,#080914 100%); }
 h1,h2,h3,.orb { letter-spacing:-.025em; }
+.home-player { max-width:100%; margin:10px 0 16px; overflow-wrap:anywhere; color:#a5f3fc; font-size:1.05rem; font-weight:700; }
 h1 { font-size:clamp(1.55rem,3vw,2.35rem); line-height:1.12; }
 h2 { font-size:1rem; letter-spacing:.035em; }
 a { transition:color .18s ease, border-color .18s ease, transform .18s ease, filter .18s ease; }

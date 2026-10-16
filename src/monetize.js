@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS store_orders (id INTEGER PRIMARY KEY AUTOINCREMENT, r
   refunded_at INTEGER, note TEXT NOT NULL DEFAULT '', season INTEGER);
 CREATE UNIQUE INDEX IF NOT EXISTS store_orders_txid ON store_orders(txid) WHERE txid IS NOT NULL;
 CREATE INDEX IF NOT EXISTS store_orders_status ON store_orders(status);
+CREATE TABLE IF NOT EXISTS store_payment_refunds (
+  provider TEXT NOT NULL, payment_id TEXT NOT NULL, amount INTEGER NOT NULL,
+  currency TEXT NOT NULL, refunded_at INTEGER NOT NULL,
+  PRIMARY KEY(provider,payment_id));
 CREATE TABLE IF NOT EXISTS pass_owned (user_id INTEGER NOT NULL, season INTEGER NOT NULL, source TEXT NOT NULL, order_id INTEGER, created_at INTEGER NOT NULL, PRIMARY KEY (user_id, season));
 CREATE TABLE IF NOT EXISTS pass_claims (user_id INTEGER NOT NULL, season INTEGER NOT NULL, level INTEGER NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (user_id, season, level));
 CREATE TABLE IF NOT EXISTS prestige_owned (item_id TEXT NOT NULL, serial INTEGER NOT NULL, user_id INTEGER, order_id INTEGER, created_at INTEGER NOT NULL, revoked_at INTEGER, PRIMARY KEY (item_id, serial));
@@ -223,6 +227,9 @@ function grant(o, how = 'auto', t = Date.now()) {
     const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(o.id);
     if (!fresh) return { ok:false, error:'Missing order' };
     if (fresh.refunded_at) return { ok:false, error:'Refunded orders cannot grant entitlements' };
+    if(fresh.provider==='stripe'&&fresh.provider_payment_id&&
+       db.prepare("SELECT 1 FROM store_payment_refunds WHERE provider='stripe' AND payment_id=?").get(fresh.provider_payment_id))
+      return {ok:false,error:'Refunded provider payment cannot grant entitlements'};
     if (fresh.granted_at) return { ok:true, already:true };
     // Never fulfill on admin-forced paid status, missing Stripe intent, or
     // insufficient BTC confirmations/amount; no unsigned client claims.
@@ -316,13 +323,15 @@ function reverseEntitlements(incoming, actor, note = '', t = Date.now()) {
         if (!addCrowns(o.user_id,-recorded.delta,'refund',o.ref,t))
           throw new Error('Refund ledger entry already exists');
       }
-      if (p.kind === 'pass') {
+      if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND order_id=?').get(o.user_id,o.id)) {
         const season = o.season || curSeason(t);
         const claimed = new Set(db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(o.user_id, season).map(x => x.level));
         let earnedCrowns = 0;
         for (const reward of premiumTrack(season)) if (claimed.has(reward.level)) {
           if (reward.item) db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(o.user_id, reward.item.id);
-          earnedCrowns += reward.crowns || 0;
+          const awarded=db.prepare("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='pass' AND ref=?")
+            .get(o.user_id,`S${season}L${reward.level}`);
+          earnedCrowns += awarded&&awarded.delta>0?awarded.delta:0;
         }
         if (earnedCrowns) addCrowns(o.user_id, -earnedCrowns, 'refund', o.ref, t);
         db.prepare('DELETE FROM pass_claims WHERE user_id=? AND season=?').run(o.user_id, season);
@@ -332,6 +341,8 @@ function reverseEntitlements(incoming, actor, note = '', t = Date.now()) {
     }
       db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=? AND refunded_at IS NULL")
         .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, o.id);
+      if(p.kind==='pass'||p.kind==='prestige')
+        require('./cosmetic-rewards').reconcileCosmeticRewards(o.user_id,t);
       return { ok:true };
     })();
   } catch (err) {
@@ -382,10 +393,17 @@ function passState(user, t = Date.now()) {
 }
 function claimPass(user, t = Date.now()) {
   const st = passState(user, t); if (!st.owned) return { ok: false, error: 'Get the Season Pass to claim premium rewards.' };
-  const got = []; db.transaction(() => { for (const r of st.track) if (r.unlocked && !r.claimed) {
-    db.prepare('INSERT OR IGNORE INTO pass_claims (user_id, season, level, created_at) VALUES (?,?,?,?)').run(user.id, st.season, r.level, t);
-    if (r.item) db.prepare('INSERT OR IGNORE INTO user_items (user_id, item_id, price, acquired_at) VALUES (?,?,0,?)').run(user.id, r.item.id, t);
-    if (r.crowns) addCrowns(user.id, r.crowns, 'pass', `S${st.season}L${r.level}`, t); got.push(r); } })();
+  const got = []; db.transaction(() => { for (const r of st.track) {
+    if(r.unlocked && !r.claimed) {
+      db.prepare('INSERT OR IGNORE INTO pass_claims (user_id, season, level, created_at) VALUES (?,?,?,?)').run(user.id, st.season, r.level, t);
+      if (r.item) db.prepare('INSERT OR IGNORE INTO user_items (user_id, item_id, price, acquired_at) VALUES (?,?,0,?)').run(user.id, r.item.id, t);
+      got.push(r);
+    }
+    // Prestige accelerates cosmetics only. A previously claimed cosmetic must
+    // not suppress the Credit grant when raw earned XP later reaches its level.
+    if(r.crowns && st.free_level>=r.level)
+      addCrowns(user.id,r.crowns,'pass',`S${st.season}L${r.level}`,t);
+  } })();
   return { ok: true, claimed: got };
 }
 
@@ -431,20 +449,43 @@ function routes(app, A, H) {
         db.prepare("UPDATE store_orders SET status='underpaid', note='Stripe payment owner/amount/currency mismatch; manual review required' WHERE id=? AND granted_at IS NULL").run(order.id);
         console.error('[payments] Stripe event failed owner, exact amount, or currency validation:', ref); return res.json({ received: true });
       }
-      db.prepare("UPDATE store_orders SET status='paid', paid_at=COALESCE(paid_at,?), provider_payment_id=COALESCE(?,provider_payment_id) WHERE id=? AND granted_at IS NULL")
-        .run(Date.now(), typeof obj.payment_intent === 'string' ? obj.payment_intent : null, order.id);
+      const paymentId=typeof obj.payment_intent==='string'?obj.payment_intent:null;
+      if(!/^pi_/.test(paymentId||''))return res.status(503).json({received:false,error:'Payment identity pending'});
+      if(order.provider_payment_id&&order.provider_payment_id!==paymentId)
+        return res.status(409).json({received:false,error:'Payment identity mismatch'});
+      if(order.refunded_at)return res.json({received:true});
+      db.prepare("UPDATE store_orders SET status='paid', paid_at=COALESCE(paid_at,?), provider_payment_id=COALESCE(provider_payment_id,?) WHERE id=? AND granted_at IS NULL AND refunded_at IS NULL")
+        .run(Date.now(),paymentId,order.id);
       const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(order.id);
+      const priorRefund=db.prepare("SELECT * FROM store_payment_refunds WHERE provider='stripe' AND payment_id=?").get(paymentId);
+      if(priorRefund) {
+        if(priorRefund.currency!=='usd'||priorRefund.amount!==fresh.usd_cents)
+          return res.status(503).json({received:false,error:'Refund reconciliation pending'});
+        const reversed=reverseEntitlements(fresh,'Stripe webhook','full refund received before checkout fulfillment');
+        return res.status(reversed.ok?200:503).json({received:reversed.ok});
+      }
       const result = grant(fresh, 'Stripe webhook');
-      if (!result.ok) console.error('[payments] Stripe payment received but fulfillment needs review:', ref, result.error);
+      if (!result.ok) {
+        console.error('[payments] Stripe payment received but fulfillment needs review:', ref, result.error);
+        return res.status(503).json({received:false,error:'Payment reconciliation pending'});
+      }
     } else if (event.type === 'checkout.session.expired') {
       db.prepare("UPDATE store_orders SET status='expired' WHERE provider='stripe' AND provider_ref=? AND granted_at IS NULL AND status='pending'").run(obj.id);
     } else if (event.type === 'checkout.session.async_payment_failed') {
       db.prepare("UPDATE store_orders SET status='failed', note='Stripe payment failed' WHERE provider='stripe' AND provider_ref=? AND granted_at IS NULL AND status='pending'").run(obj.id);
     } else if (event.type === 'charge.refunded') {
       const paymentId = typeof obj.payment_intent === 'string' ? obj.payment_intent : (obj.payment_intent && obj.payment_intent.id) || '';
+      const amount=Number(obj.amount),refunded=Number(obj.amount_refunded),currency=String(obj.currency||'').toLowerCase();
+      const full=/^pi_/.test(paymentId)&&Number.isSafeInteger(amount)&&amount>0&&
+        Number.isSafeInteger(refunded)&&refunded>=amount&&currency==='usd';
+      // Webhooks can arrive out of order. Keep a signed refund tombstone even
+      // when Checkout completion has not yet bound the intent to its order.
+      if(full)db.prepare("INSERT OR IGNORE INTO store_payment_refunds(provider,payment_id,amount,currency,refunded_at) VALUES('stripe',?,?,?,?)")
+        .run(paymentId,amount,currency,Date.now());
       const order = paymentId ? db.prepare("SELECT * FROM store_orders WHERE provider='stripe' AND provider_payment_id=?").get(paymentId) : null;
-      if (order && String(obj.currency || '').toLowerCase() === 'usd' && Number(obj.amount) === Number(order.usd_cents) && (obj.refunded === true || Number(obj.amount_refunded) >= Number(obj.amount))) {
-        reverseEntitlements(order, 'Stripe webhook', 'full refund confirmed by Stripe');
+      if (order && full && amount===order.usd_cents) {
+        const reversed=reverseEntitlements(order, 'Stripe webhook', 'full refund confirmed by Stripe');
+        if(!reversed.ok)return res.status(503).json({received:false,error:'Refund reconciliation pending'});
       } else if (order) {
         db.prepare("UPDATE store_orders SET note='Partial Stripe refund received; review required' WHERE id=?").run(order.id);
       }
@@ -521,5 +562,5 @@ function routes(app, A, H) {
     if (b.crowns) { const delta=Number(b.crowns); if(!Number.isSafeInteger(delta)||Math.abs(delta)>100000000) return bad(res,400,'Invalid legacy amount'); addCrowns(u.id, delta, 'admin', 'A' + Date.now(), Date.now()); return res.json({ ok: true, credits: reviewedCredits(u.id) }); }
     res.json(manualGrant(u.id, String(b.product_id || ''), (req.admin && req.admin.username) || 'admin', String(b.note || ''))); });
 }
-module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, prestigeSalesEnabled, _stripeSignatureOk: stripeSignatureOk };
+module.exports = { routes, checkoutState, createOrder, check, sweep, grant, refund, manualGrant, crowns, addCrowns, buyWithCrowns, passState, claimPass, hasPass, premiumTrack, prestigeWall, prestigeOf, products, prod, NON_ADVANTAGE, TERMS, PRESTIGE, ORDER_TTL_MS, crownPrice, setSetting, prestigeSalesEnabled, _stripeSignatureOk: stripeSignatureOk };
 

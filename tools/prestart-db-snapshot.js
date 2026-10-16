@@ -11,15 +11,21 @@ const Database=require('better-sqlite3');
 
 const root=path.resolve(__dirname,'..');
 const DB=process.env.DB_PATH || path.join(process.env.DATA_DIR||path.join(root,'data'),'hub.db');
-const PREVIOUS_FILES=[
-  'src/db.js','src/server.js','src/admin-giveaways.js','src/admin-v7.js',
-  'src/sponsor.js','src/events.js','src/eligibility.js',
-  'src/giveaway-linked.js','src/avatars.js','src/shop.js',
-  'src/results.js','src/admin-scoring.js','src/config.js'
-];
 function releaseKey(base=root){
+  // Every server module can carry an additive migration. A hand-maintained
+  // list missed payment and wallet schemas, reusing an older snapshot key.
+  const files=['package.json','tools/prestart-db-snapshot.js'];
+  function collect(dir){
+    if(!fs.existsSync(dir))return;
+    for(const ent of fs.readdirSync(dir,{withFileTypes:true})){
+      const full=path.join(dir,ent.name);
+      if(ent.isDirectory())collect(full);
+      else if(ent.isFile()&&/\.(?:js|json)$/.test(ent.name))files.push(path.relative(base,full).split(path.sep).join('/'));
+    }
+  }
+  collect(path.join(base,'src'));
   const h=crypto.createHash('sha256');
-  for(const name of PREVIOUS_FILES){
+  for(const name of files.sort()){
     const full=path.join(base,name);
     h.update(name).update('\0');
     h.update(fs.existsSync(full)?fs.readFileSync(full):Buffer.from('MISSING'));
