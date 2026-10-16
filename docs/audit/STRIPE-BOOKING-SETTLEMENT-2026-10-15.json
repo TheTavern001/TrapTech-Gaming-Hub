@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "date": "2026-10-15",
-  "status": "SOURCE_IMPLEMENTED_OFFLINE_INTEGRATION_UNVERIFIED",
+  "status": "SOURCE_IMPLEMENTED_AND_MOCK_CHECKS_PASSED_DOCKER_AND_STRIPE_LIVE_UNVERIFIED",
   "releaseEligible": false,
   "summary": "Replace manual admin-paid vendor event trust with Stripe Checkout and endpoint-specific signed webhook settlement. Preserve fail-closed event sharing, game certification, and admin activation.",
   "fixes": [
@@ -12,7 +12,8 @@
     "Charge refund/dispute freezes booking and deactivates linked giveaway",
     "Charge-only Stripe dispute with nullable payment_intent resolves Stripe Charge by API and requests retry on verification failure",
     "Durable payment-intent revocation marker prevents out-of-order refund and subsequent checkout-success from reactivating prizes",
-    "Checkout HTTP uncertainty retries preserve Stripe idempotency key"
+    "Checkout HTTP uncertainty retries preserve Stripe idempotency key",
+    "Accepted sponsor quotes cannot be reset or declined by admin after authorization of checkout; prevents payment-reference drift"
   ],
   "tests": {
     "sourceSyntax": "PASS for changed JavaScript files",
@@ -24,7 +25,23 @@
     "fullDockerImage": "NOT_RUN",
     "stripeTestModeWebhook": "NOT_TESTED_WITH_ACTUAL_PROVIDER",
     "phoneQA": "NOT_RUN",
-    "productionHost": "UNTOUCHED"
+    "productionHost": "UNTOUCHED",
+    "vmExecutedOnActualFetchedSource": {
+      "runner": "tools/test-booking-stripe-settlement.js",
+      "result": "PASS",
+      "notes": "Real repo test program evaluated in V8 with mocked Node builtins and in-memory provider; not a native Node test or Stripe provider integration."
+    },
+    "acceptedQuoteTransitions": {
+      "runner": "tools/test-giveaway-booking-release-gates.js",
+      "result": "PASS",
+      "notes": "Actual exported sponsor setStatus function exercised in V8 mock; draft, sent, declined, paid actions on accepted quote all return ok:false; no database writes."
+    },
+    "unifiedCandidateContract": {
+      "runner": "tools/test-unified-release-candidate.js",
+      "result": "PASS",
+      "notes": "Executed from current retrieved GitHub source with mocked fs; validates Docker and offline runner references, separate vendor signing secret, fee guard, and release goal."
+    },
+    "liveHostHealth": "NOT_VERIFIED: remote health and API build endpoint could not be accessed from available web tool"
   },
   "configurationNeeds": [
     "STRIPE_SECRET_KEY",
