@@ -55,6 +55,7 @@ const tests=[
  'tools/test-kit-run-serial.js',
  'tools/test-kit-hidden-start.js',
  'tools/test-private-preview-readiness.js',
+ 'tools/test-private-preview-rehearsal-mode.js',
  'tools/test-private-review-access.js',
  'tools/test-owner-preview-payment-lock.js',
  'tools/test-owner-gameplay-distinctness.js',
