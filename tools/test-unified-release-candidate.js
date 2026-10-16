@@ -27,6 +27,11 @@ for(const t of ['tools/test-docker-audit-context.js','tools/test-r1-incident-gat
 }
 const event=read('src/events.js'),sponsor=read('src/sponsor.js'),server=read('src/server.js');
 assert.ok(server.includes("'/api/sponsor/webhook/stripe'"),'Signed webhook must capture exact raw body');
+const admin=read('src/admin-ui/admin.js');
+assert.ok(!admin.includes('id="q-paid"'),'Admin UI may not offer unverified mark-paid');
+assert.ok(!admin.includes("status('paid', 'Marked paid')"),'Admin UI cannot assert a payment');
+assert.ok(admin.includes('Delete uncommitted request'),'Admin deletion must be restricted');
+assert.ok(server.includes('event-linked bookings must be retained for audit'),'Financial and prize evidence cannot be deleted');
 assert.ok(event.includes("require('./booking-fee-guard').paidFeeRecorded(q)"),'Event release must check paid booking fee');
 assert.ok(sponsor.includes("if (status === 'paid') return"),'Admin may not assert payment settlement');
 assert.ok(sponsor.includes('BOOKING_STRIPE.register(app,db,h,'),'Stripe provider routes must be registered');
