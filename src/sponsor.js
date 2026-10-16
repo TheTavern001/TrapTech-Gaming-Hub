@@ -154,6 +154,7 @@ function setStatus(id, status, by) {
   const q = quoteRow(id); const t = Date.now();
   if (status === 'paid') return { ok:false,error:'Payments are verified through signed Stripe webhooks, not by an admin status button.' };
   if (q.status === 'paid' || q.status === 'refunded') return { ok:false,error:'A settled or refunded booking cannot be manually reset.' };
+  if (q.status === 'accepted' && status !== 'accepted') return { ok:false,error:'An accepted quote cannot be reset or declined after checkout authorization. Contact support for a verified refund or replacement booking.' };
   if (status === 'sent' && ['accepted', 'paid'].includes(q.status)) return { ok: false, error: 'Already accepted.' };
   db.prepare(`UPDATE sponsor_quotes SET status=?, updated_at=?, updated_by=?, sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END, responded_at=CASE WHEN ? IN ('accepted','declined') THEN ? ELSE responded_at END, paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END WHERE booking_id=?`)
     .run(status, t, by || null, status, t, status, t, status, t, id);
