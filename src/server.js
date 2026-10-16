@@ -748,7 +748,16 @@ A.put('/bookings/:id', (req, res) => {
   db.prepare('UPDATE bookings SET status=?, admin_note=? WHERE id=?').run(status, str(req.body.admin_note, 2000), req.params.id);
   res.json({ ok: true });
 });
-A.delete('/bookings/:id', (req, res) => { db.prepare("DELETE FROM activity WHERE type='booking' AND ref_id=?").run(req.params.id); db.prepare('DELETE FROM bookings WHERE id=?').run(req.params.id); res.json({ ok: true }); });
+A.delete('/bookings/:id', (req, res) => {
+  const b = db.prepare('SELECT id,event_id FROM bookings WHERE id=?').get(req.params.id);
+  if (!b) return bad(res, 404, 'Booking not found.');
+  const q = db.prepare('SELECT status,provider_ref,provider_payment_id,paid_at FROM sponsor_quotes WHERE booking_id=?').get(b.id);
+  if (b.event_id || (q && (['accepted','paid','refunded'].includes(q.status) ||
+      q.provider_ref || q.provider_payment_id || q.paid_at)))
+    return bad(res, 409, 'Accepted, paid, refunded and event-linked bookings must be retained for audit.');
+  const result = db.prepare('DELETE FROM bookings WHERE id=?').run(b.id);
+  res.json({ ok: result.changes === 1 });
+});
 
 A.get('/announcements', (req, res) => res.json({ ok: true, announcements: db.prepare('SELECT * FROM announcements ORDER BY created_at DESC').all() }));
 A.post('/announcements', (req, res) => {
