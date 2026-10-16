@@ -61,6 +61,7 @@ run full-meta-fairness node tools/test-full-hub-meta-contract.js
 run game-owner-mechanics node tools/test-owner-reported-gameplay.js
 run three-real-games node tools/test-three-gameplay-fixes.js
 run shared-game-engine-seed-and-frame node tools/test-kit-mobile-loop.js
+run official-game-run-start node tools/test-kit-official-run-start.js
 run mobile-phone-entry node tools/test-mobile-only-entry.js
 run keep-guard-barracks-real-mechanics node tools/test-keep-guard-barracks.js
 run td-keyboard-touch-parity node tools/test-td-keyboard-touch-parity.js
