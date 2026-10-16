@@ -169,7 +169,7 @@
         g.startError = official ? 'Official run unavailable. Sign in or check the event.' : 'Score run unavailable. Retry.';
         return;
       }
-      g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = document.hidden || gameSettingsOpen; def.init(g); g.state = 'play'; if (!g.paused) K.sfx('power'); }
+      g.practice = !signed; g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = document.hidden || gameSettingsOpen; def.init(g); g.state = 'play'; if (!g.paused) K.sfx('power'); }
     g.rnd = mulberry(); def.init(g);
     let last = performance.now(), acc = 0, fpsT = 0, fpsN = 0;
     function frame(now) {
@@ -244,6 +244,7 @@
           if(g.hud){c.font='800 12px system-ui,sans-serif';const hw=Math.min(W-36,c.measureText(g.hud).width+26);panel((W-hw)/2,58,hw,27,10,'rgba(8,11,30,.78)','rgba(255,255,255,.12)');label(g.hud,W/2,71,11,'#d9d4ff');}
         }
         if(g.state==='play'){
+          if(g.practice) label('PRACTICE · NOT RANKED',W/2,108,10,'#ffe6a3');
           for(const b of btns){const active=!!g.btn[b.id],r=b.r+3;c.save();c.shadowColor=active?'#8e75ff':'#36d9f5';c.shadowBlur=active?18:7;
             K.circ(c,b.x,b.y,r,active?'rgba(143,105,255,.86)':'rgba(12,20,49,.78)');c.restore();
             K.circ(c,b.x,b.y,r-3,active?'rgba(232,222,255,.20)':'rgba(100,220,255,.12)');
