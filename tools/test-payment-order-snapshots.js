@@ -34,13 +34,13 @@ try {
   assert.equal(funds(),quote*10,'After a pack edit, no newly advertised price may inflate prior grants');
   assert.equal(M.grant(order(priceChanged),'replay',t+2).already,true);
   assert.equal(funds(),quote*10,'Duplicate fulfillment must be idempotent');
-  const ledger=db.prepare("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='purchase' AND ref='QUOTE_PINN'").get(user);
+  const ledger=db.prepare("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='purchase' AND ref='QUOTE_PINNED'").get(user);
   assert.equal(ledger.delta,quote,'Immutable payment ledger stores original quantity');
-  assert.equal(M.refund('QUOTE_PINN','local QA').ok,true);
+  assert.equal(M.refund('QUOTE_PINNED','local QA').ok,true);
   assert.equal(funds(),0,'Refund must reverse original grant, not updated catalog quantity');
-  const refund=db.prepare("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='refund' AND ref='QUOTE_PINN'").get(user);
+  const refund=db.prepare("SELECT delta FROM crown_ledger WHERE user_id=? AND reason='refund' AND ref='QUOTE_PINNED'").get(user);
   assert.equal(refund.delta,-quote);
-  assert.equal(M.refund('QUOTE_PINN','duplicate QA').ok,false);
+  assert.equal(M.refund('QUOTE_PINNED','duplicate QA').ok,false);
   assert.equal(funds(),0,'Duplicate refunds must not subtract twice');
   const noQuote=purchase('LEGACY_NO_QUOTE','paid',null);
   const held=M.grant(order(noQuote),'QA');

@@ -105,27 +105,27 @@ const GAMES = [
     ac: { perSec: 1.6, ramp: 0, grace: 5, max: MAX_SCORE, coinsPerSec: 1.5 }, tiers: [5, 59, 130] },
   // v7 additions (all endless)
   { id: 'void-swarm', title: 'Void Swarm', category: 'Arcade', tags: ['Arcade', 'Shooter', 'Endless', 'New'], playable: true, unit: 'pts', module: 'games/void-swarm.js', cls: 'VoidSwarm',
-    art: '/assets/cards/v7/void-swarm.webp', artTall: '/assets/cards/v7/void-swarm-tall.webp', desc: 'Endless space shooter. Alien drone swarms fly in formation and dive at you. Blast them, grab power-ups, survive.',
+    art: '/assets/cards/v7/void-swarm.png', artTall: '/assets/cards/v7/void-swarm-tall.png', desc: 'Endless space shooter. Alien drone swarms fly in formation and dive at you. Blast them, grab power-ups, survive.',
     howto: 'Drag anywhere to fly your fighter (it fires automatically). Drone swarms fly into formation, then peel off and dive at you. Shoot divers for double points. Capsules give a spread shot, rapid fire, a shield or an extra life. Every 5th wave a mothership arrives. You have 3 lives; the waves never end and get faster and meaner.',
     scoring: 'Score = 50 / 80 / 150 per drone type (x2 while diving) x wave bonus (+10% per wave, up to x5) + 2,000 per mothership + 100 x wave for each wave cleared. No cap.',
     ac: { perSec: 700, ramp: 10, grace: 3000, max: MAX_SCORE, coinsPerSec: 1.5 }, tiers: [17650, 238750, 632750] },
   { id: 'stack', title: 'Stack', category: 'Arcade', tags: ['Arcade', 'One-Tap', 'Timing', 'New'], playable: true, unit: 'pts', module: 'games/stack.js', cls: 'Stack',
-    art: '/assets/cards/v7/stack.webp', artTall: '/assets/cards/v7/stack-tall.webp', desc: 'Drop sliding glass slabs onto the tower. Nail perfect drops and climb forever.',
+    art: '/assets/cards/v7/stack.png', artTall: '/assets/cards/v7/stack-tall.png', desc: 'Drop sliding glass slabs onto the tower. Nail perfect drops and climb forever.',
     howto: 'A slab slides across the top of the tower. Tap (or press Space) to drop it. Whatever hangs over the edge is sliced off, so the next slab is smaller. Land 3 perfect drops in a row and the slab grows back. The slabs speed up as the tower climbs. Miss the tower completely and the run ends.',
     scoring: 'Score = 10 per slab + a perfect bonus of 10 x your perfect streak (up to +100). No cap: the tower never ends.',
     ac: { perSec: 300, ramp: 0, grace: 200, max: MAX_SCORE, coinsPerSec: 1.5 }, tiers: [210, 2250, 5600] },
   { id: 'grow-guard', title: 'Grow Guard', category: 'Strategy', tags: ['Strategy', 'Lane Defense', 'Endless', 'New'], playable: true, unit: 'pts', module: 'games/grow-guard.js', cls: 'GrowGuard',
-    art: '/assets/cards/v7/grow-guard.webp', artTall: '/assets/cards/v7/grow-guard-tall.webp', desc: 'Defend your grow room from endless waves of pests with bug-fighting gadgets.',
+    art: '/assets/cards/v7/grow-guard.png', artTall: '/assets/cards/v7/grow-guard-tall.png', desc: 'Defend your grow room from endless waves of pests with bug-fighting gadgets.',
     howto: 'Pests crawl in from the right along 5 rows. Collect falling light drops (tap them), then tap a gadget card and tap a tile to place it: Ladybug Launchers shoot, Sticky Traps block, Neem Misters slow a whole row, UV Zappers hit hard and Solar Panels make extra light. A pest that reaches the plants on the left costs a plant; lose all 3 plants and the run ends. Waves never stop and get bigger and tougher.',
     scoring: 'Score = points per pest (aphid 10, mite 15, gnat 20, caterpillar 30, beetle 60) + 100 x wave number for every wave you clear.',
     ac: { perSec: 140, ramp: 1.2, grace: 600, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [7950, 42650, 63050] },
   { id: 'sling-smash', title: 'Sling Smash', category: 'Physics', tags: ['Physics', 'Slingshot', 'Endless', 'New'], playable: true, unit: 'pts', module: 'games/sling-smash.js', cls: 'SlingSmash',
-    art: '/assets/cards/v7/sling-smash.webp', artTall: '/assets/cards/v7/sling-smash-tall.webp', desc: 'Pull back the slingshot and topple towers of wood, glass and stone to knock out the Glitch Bots.',
+    art: '/assets/cards/v7/sling-smash.png', artTall: '/assets/cards/v7/sling-smash-tall.png', desc: 'Pull back the slingshot and topple towers of wood, glass and stone to knock out the Glitch Bots.',
     howto: 'Drag back from the slingshot to aim (the dotted arc shows the first part of the flight) and let go to fire a steel ball. Knock out every Glitch Bot in the tower to clear it. Each cleared tower refunds a ball plus one for every ball you did not need. Towers get taller, stronger and windier forever. Run out of balls with bots still standing and the run ends.',
     scoring: 'Score = 500 per Glitch Bot, 10 per wood / 20 per glass / 40 per stone block destroyed, + 1,000 per tower cleared x tower number bonus (up to x5) for unused balls.',
     ac: { perSec: 1500, ramp: 0, grace: 3000, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [1750, 27400, 51400] },
   { id: 'haze-defense', title: 'Haze Defense', category: 'Strategy', tags: ['Strategy', 'Tower Defense', 'Endless', 'New'], playable: true, unit: 'pts', module: 'games/haze-defense.js', cls: 'HazeDefense',
-    art: '/assets/cards/v7/haze-defense.webp', artTall: '/assets/cards/v7/haze-defense-tall.webp', desc: 'Build neon turrets along the track and pop the drifting smoke orbs before they slip through.',
+    art: '/assets/cards/v7/haze-defense.png', artTall: '/assets/cards/v7/haze-defense-tall.png', desc: 'Build neon turrets along the track and pop the drifting smoke orbs before they slip through.',
     howto: 'Smoke orbs drift along the glowing track. Tap a gadget at the bottom, then tap an empty pad beside the track to build it: Dart Coils shoot fast, Fan Blasters push and pop groups, Prism Lasers burn through layers and Frost Misters slow everything near them. Tap a built turret to upgrade it. Big orbs split into smaller ones when popped. Each orb that escapes costs lives; at 0 lives the run ends. Waves never stop.',
     scoring: 'Score = 1 per layer popped (x wave tier) + 50 x wave number for every wave cleared. Cash is separate and only buys turrets.',
     ac: { perSec: 160, ramp: 1.4, grace: 600, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [6950, 42800, 67800] },
@@ -133,7 +133,7 @@ const GAMES = [
 // v7: retired games. Not in the catalog, can't be started or linked, but old runs/challenges still resolve a title and
 // their final board is archived (src/games-v7.js -> leaderboard_archive, GET /api/games/archive/:id).
 const RETIRED = [
-  { id: 'stack-2048', title: 'Stack 2048 (retired)', retired: true, playable: false, replacedBy: 'stack', unit: 'pts', art: '/assets/cards/v7/stack.webp', ac: { perSec: 150, ramp: 0, grace: 400, max: 10_000_000, coinsPerSec: 1 }, tiers: [2500, 8000, 20000] },
+  { id: 'stack-2048', title: 'Stack 2048 (retired)', retired: true, playable: false, replacedBy: 'stack', unit: 'pts', art: '/assets/cards/v7/stack.png', ac: { perSec: 150, ramp: 0, grace: 400, max: 10_000_000, coinsPerSec: 1 }, tiers: [2500, 8000, 20000] },
 ];
 // v7 (item 21): pure-chance games stay playable "just for fun" but can never be linked to (or count for) a giveaway.
 // Every giveaway-eligible game is skill-based, endless and uncapped.

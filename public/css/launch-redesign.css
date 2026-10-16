@@ -178,3 +178,11 @@ a { transition:color .18s ease, border-color .18s ease, transform .18s ease, fil
   .topbar .hub-brand-name { font-size:.68rem;letter-spacing:0; }
   .topbar .iconbtn { width:36px;height:40px; }
 }
+
+/* Phone game controls keep the game name readable and every control tappable. */
+@media (max-width: 600px) {
+  .play-top { gap: 4px; padding: 5px max(6px, env(safe-area-inset-right)) 5px max(6px, env(safe-area-inset-left)); }
+  .play-top .iconbtn { flex: 0 0 44px; width: 44px; min-width: 44px; height: 44px; }
+  .play-top .title { flex: 1; white-space: normal; line-height: 1.35; overflow-wrap: anywhere; font-size: .72rem; }
+  .play-top .who-chip { display: none; }
+}

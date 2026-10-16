@@ -11,6 +11,12 @@ const { games } = require('../src/games-lib');
 const BASE = String(process.env.BASE || 'https://glassy-drifter-9532.de.deplexo.com').replace(/\/$/, '');
 const ROOT = path.resolve(__dirname, '..');
 const failures = [];
+// Keep the verifier alive until the awaited audit and final report complete.
+// A timeout or truncated pipe must not be mistaken for a verified image.
+const watchdog = setTimeout(() => {
+  console.error('Verification timed out before the final summary');
+  process.exit(1);
+}, process.env.BUILD_SMOKE === '1' ? 120000 : 900000);
 const results = [];
 const check = (name, ok, detail) => {
   const passed = !!ok;
@@ -229,7 +235,8 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
     const uniqueFailures = [...new Set(failures)];
     const summary = { mode: 'build-smoke', base: BASE, expectedFingerprint: expected, deployedFingerprint: buildJson?.build_fingerprint || null, checks: results.length, passed: results.filter(x => x.ok).length, failed: uniqueFailures.length, failures: uniqueFailures };
     console.log('\\nBUILD SMOKE VERIFICATION SUMMARY\\n' + JSON.stringify(summary, null, 2));
-    process.exit(failures.length ? 1 : 0);
+    process.exitCode = failures.length ? 1 : 0;
+    return;
   }
 
   const svgPaths = ['/assets/brand/traptech-app-icon.svg', '/assets/brand/favicon.svg', '/assets/brand/hub-mark.svg', '/assets/brand/tt-favicon.svg', '/assets/brand/tt-maskable.svg'];
@@ -364,4 +371,4 @@ function fail(name, detail) { check(name, false, detail); failures.push(name); }
   const summary = { base: BASE, expectedFingerprint: expected, deployedFingerprint: buildJson?.build_fingerprint || null, checks: results.length, passed: results.filter(x => x.ok).length, failed: uniqueFailures.length, failures: uniqueFailures };
   console.log('\nLIVE VERIFICATION SUMMARY\n' + JSON.stringify(summary, null, 2));
   process.exitCode = failures.length ? 1 : 0;
-})().catch(e => { console.error('Live verification aborted:', e); process.exitCode = 2; });
+})().catch(e => { console.error('Live verification aborted:', e); process.exitCode = 2; }).finally(() => clearTimeout(watchdog));

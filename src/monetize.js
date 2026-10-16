@@ -321,7 +321,21 @@ function reverseEntitlements(incoming, actor, note = '', t = Date.now()) {
         const claimed = new Set(db.prepare('SELECT level FROM pass_claims WHERE user_id=? AND season=?').all(o.user_id, season).map(x => x.level));
         let earnedCrowns = 0;
         for (const reward of premiumTrack(season)) if (claimed.has(reward.level)) {
-          if (reward.item) db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(o.user_id, reward.item.id);
+          if (reward.item) {
+            db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(o.user_id, reward.item.id);
+            // Remove stale equipment in the same transaction as ownership.
+            // Generated profile IDs use shop: prefixes; badges may too.
+            const key = 'shop:' + reward.item.id;
+            db.prepare(`UPDATE users SET
+              eq_banner=CASE WHEN eq_banner IN (?,?) THEN '' ELSE eq_banner END,
+              eq_frame=CASE WHEN eq_frame IN (?,?) THEN '' ELSE eq_frame END,
+              eq_title=CASE WHEN eq_title IN (?,?) THEN '' ELSE eq_title END,
+              eq_badge=CASE WHEN eq_badge IN (?,?) THEN '' ELSE eq_badge END,
+              eq_color=CASE WHEN eq_color IN (?,?) THEN '' ELSE eq_color END,
+              eq_effect=CASE WHEN eq_effect IN (?,?) THEN '' ELSE eq_effect END
+              WHERE id=?`).run(reward.item.id,key,reward.item.id,key,reward.item.id,key,
+                reward.item.id,key,reward.item.id,key,reward.item.id,key,o.user_id);
+          }
           earnedCrowns += reward.crowns || 0;
         }
         if (earnedCrowns) addCrowns(o.user_id, -earnedCrowns, 'refund', o.ref, t);
@@ -435,7 +449,10 @@ function routes(app, A, H) {
         .run(Date.now(), typeof obj.payment_intent === 'string' ? obj.payment_intent : null, order.id);
       const fresh = db.prepare('SELECT * FROM store_orders WHERE id=?').get(order.id);
       const result = grant(fresh, 'Stripe webhook');
-      if (!result.ok) console.error('[payments] Stripe payment received but fulfillment needs review:', ref, result.error);
+      if (!result.ok) {
+        console.error('[payments] Stripe payment received but fulfillment needs review:', ref, result.error);
+        return res.status(503).json({received:false,error:'Payment fulfillment requires reconciliation'});
+      }
     } else if (event.type === 'checkout.session.expired') {
       db.prepare("UPDATE store_orders SET status='expired' WHERE provider='stripe' AND provider_ref=? AND granted_at IS NULL AND status='pending'").run(obj.id);
     } else if (event.type === 'checkout.session.async_payment_failed') {
@@ -444,7 +461,8 @@ function routes(app, A, H) {
       const paymentId = typeof obj.payment_intent === 'string' ? obj.payment_intent : (obj.payment_intent && obj.payment_intent.id) || '';
       const order = paymentId ? db.prepare("SELECT * FROM store_orders WHERE provider='stripe' AND provider_payment_id=?").get(paymentId) : null;
       if (order && String(obj.currency || '').toLowerCase() === 'usd' && Number(obj.amount) === Number(order.usd_cents) && (obj.refunded === true || Number(obj.amount_refunded) >= Number(obj.amount))) {
-        reverseEntitlements(order, 'Stripe webhook', 'full refund confirmed by Stripe');
+        const reversed = reverseEntitlements(order, 'Stripe webhook', 'full refund confirmed by Stripe');
+        if (!reversed.ok) return res.status(503).json({received:false,error:'Refund reconciliation incomplete'});
       } else if (order) {
         db.prepare("UPDATE store_orders SET note='Partial Stripe refund received; review required' WHERE id=?").run(order.id);
       }

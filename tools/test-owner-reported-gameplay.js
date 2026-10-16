@@ -90,7 +90,8 @@ assert.ok(read('public/games-lib/assets3d/LICENSE-Kenney-CC0.txt').includes('CC0
   'Source licensing notice for real car models missing');
 // Actual Kit's touch stick normally consumes pointerdown. Pointer mirroring is
 // required so Arrow Hero can detect a touch on a skill card.
-assert.ok(kit.includes('if (!def.stickAlsoPtr) return;'),'Kit must support pointer mirroring alongside stick');
+assert.match(kit,/if\s*\(!def\.stickAlsoPtr\)/,'Kit must support pointer mirroring alongside stick');
+assert.ok(kit.includes("isStick?'stick-ptr':'ptr'"),'Mirrored touch must track both pointer and stick');
 assert.ok(arrow.includes("stickAlsoPtr: true"),'Arrow Hero skill cards must receive touch taps');
 assert.ok(arrow.includes('g.ptr.x >= 40 && g.ptr.x <= 360'),'Skills need explicit x hitboxes');
 assert.ok(arrow.includes('g.ptr.y < 250 + i * 90 + 76'),'Only visible cards are selectable');

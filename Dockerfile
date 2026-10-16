@@ -137,9 +137,12 @@ RUN test -s tools/games-lib-static-check.js \
  && node tools/test-kit-hidden-start.js \
  && node tools/test-private-preview-readiness.js \
  && node tools/test-private-review-access.js \
+ && node tools/test-private-review-http.js \
+ && node tools/test-booking-flow-http.js \
  && node tools/test-owner-preview-payment-lock.js \
  && node tools/test-cosmetic-pass-progression.js \
  && node tools/test-prestige-cosmetic-xp.js \
+ && node tools/test-native-cosmetic-refunds.js \
  && node tools/test-service-worker-privacy.js \
  && node --check tools/test-owner-gameplay-distinctness.js \
  && node tools/test-owner-gameplay-distinctness.js \

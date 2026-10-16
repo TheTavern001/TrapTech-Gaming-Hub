@@ -16,7 +16,8 @@ for(const marker of ['QA_REQUIRE_LOGIN','QA_STORAGE_STATE','QA_INTERACTIVE_AUTH'
  'window.__GL','frameMsP95','badAssets','jsExceptions','scoreReplayCertified:false',
  'visualAAAApproved:false','physicalAndroidApproved:0','physicalIphoneApproved:0',
  'fullCoverage:results.length===87','page.route(\'**/api/score\'',
- 'runtimeSurfaceDetected:runtimeSurface','consoleErrors.length>0']){
+ 'runtimeSurfaceDetected:runtimeSurface','consoleErrors.length>0',
+ 'browser-progress.json','window.__game?.running===true','QA_GAME_IDS','coreState' ]){
  assert.ok(src.includes(marker),'Missing browser safety/evidence invariant: '+marker);
 }
 assert.ok(!src.includes('context.storageState({path:'),

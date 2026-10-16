@@ -17,7 +17,7 @@ assert.ok(manifest.icons.some(x=>x.purpose==='maskable'));
 assert.ok(manifest.icons.every(x=>x.src.includes('v=tt-crown-20261014')));
 assert.ok(html.includes('traptech-app-icon.svg?v=tt-crown-20261014'));
 assert.ok(html.includes('apple-touch-icon.png?v=tt-crown-20261014'));
-assert.ok(sw.includes('gh-shell-v9-tt-crown-20261014'));
+assert.ok(sw.includes('gh-shell-v10-private-navigation-20261015'));
 const files=icon.generated();
 for(const {rel,size,bytes} of files){
  const installed=fs.readFileSync(path.join(pub,rel));

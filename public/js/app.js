@@ -446,7 +446,7 @@ route(/^\/(home)?$/, async () => {
       <div class="home-intro-copy">
         <div class="home-eyebrow"><span class="home-live-dot"></span> THE GAMING HUB <span class="home-eyebrow-sep">/</span> BY TRAP TECH SOLUTIONS</div>
         <h1>${S.me ? `Welcome back, ${esc(S.me.username)}.` : 'Ready. Set. Play.'}</h1>
-        <p>Jump into a quick run, climb the boards, and keep an eye on official competitions. Free to play. Built for mobile and desktop.</p>
+        <p>Jump into a quick run, climb the boards, and keep an eye on official competitions. Free to play. Built for Android phones and iPhone.</p>
         <div class="home-intro-actions"><a class="btn" href="/games">${icon('gamepad-2')} Explore Games</a><a class="btn ghost" href="/giveaways">${icon('gift')} Official Giveaways</a></div>
         <div class="home-points"><span>${icon('trophy')} Skill-based leaderboards</span><span>${icon('zap')} Daily quests &amp; XP</span><span>${icon('shield-check')} Official event listings</span></div>
       </div>
@@ -593,7 +593,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
     <div class="play-top">
       <button class="iconbtn" id="exit" aria-label="Exit">${icon('chevron-left')}</button>
       <span class="title">${esc(g.title.toUpperCase())}</span>
-      <span class="who-chip">${S.me ? `Playing as <b style="color:var(--text)">${esc(S.me.username)}</b>` : 'Guest (practice)'}</span>
+      <span class="who-chip" title="${S.me ? esc(S.me.username) : 'Guest practice'}">${S.me ? 'Your run' : 'Practice'}</span>
       <button class="iconbtn" id="mute" aria-label="Sound"></button>
       <button class="iconbtn" id="pause" aria-label="Pause">${icon('pause')}</button><button class="iconbtn" id="game-settings" aria-label="Game settings">${icon('settings')}</button>
     </div>
@@ -1510,7 +1510,7 @@ route(/^\/settings$/, () => {
       <form id="potf" class="potato-set"><label class="lbl" for="pot">Potato username <span class="muted small">(private - only Trap Tech sees it, to contact you if you win)</span></label><div class="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="pot" value="${esc(S.me.potato || '')}" placeholder="yourhandle" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></div></form>
       <button class="btn danger block" data-act="signout" style="margin-top:10px">${icon('log-out')} Sign out</button></div>${V7.brandCard()}` : `<div class="card pad cta-card"><div style="flex:1"><b>Not signed in</b><div class="small muted">Sign in to manage your account.</div></div><a class="btn sm" href="/signin?next=/settings">Sign in</a></div>`}
     <div class="card pad" id="set-app"><h2 style="margin-bottom:10px">Device & game preferences</h2>
-      <div class="set-row"><div><b>${icon('smartphone')} Install the app</b><div class="small muted">${standalone ? 'Installed - you are using the app.' : 'Add The Gaming Hub to your home screen. Works offline for the app shell.'}</div></div><button class="btn sm" id="install" ${standalone ? 'disabled' : ''}>${standalone ? 'Installed' : 'Install app'}</button></div>
+      <div class="set-row"><div><b>${icon('smartphone')} Install the app</b><div class="small muted">${standalone ? 'Installed - you are using the app.' : 'Add The Gaming Hub to your home screen. Connect to play and save progress.'}</div></div><button class="btn sm" id="install" ${standalone ? 'disabled' : ''}>${standalone ? 'Installed' : 'Install app'}</button></div>
       ${!standalone ? '<p class="tiny muted" style="margin:0 0 8px">On iPhone: tap Share, then "Add to Home Screen".</p>' : ''}
       <div class="set-row"><div><b>${icon('accessibility')} Reduce motion</b><div class="small muted">Minimize decorative animation without changing game mechanics.</div></div><label class="toggle"><input type="checkbox" id="rm" ${prefs.reducedMotion ? 'checked' : ''}><span></span></label></div>
       <div class="set-row"><div><b>${icon('volume-2')} Sound effects</b><div class="small muted">Default sound for every game on this device.</div></div><label class="toggle"><input type="checkbox" id="gp-sound" ${prefs.sound ? 'checked' : ''}><span></span></label></div>

@@ -40,7 +40,9 @@ const games=[...core,...library];
 if(core.length!==13||library.length!==74||games.length!==87||new Set(games.map(g=>g.id)).size!==87){
  console.error('Active game catalog changed; rebaseline before claiming QA coverage',core.length,library.length);process.exit(2);
 }
-const targets=games.slice(0,MAX_GAMES),results=[];
+const selectedIds=String(process.env.QA_GAME_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
+if(selectedIds.some(id=>!games.some(g=>g.id===id)))throw Error('Unknown QA_GAME_IDS entry');
+const targets=(selectedIds.length?games.filter(g=>selectedIds.includes(g.id)):games).slice(0,MAX_GAMES),results=[];
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function filename(name){return name.replace(/[^a-z0-9._-]/gi,'_');}
 async function interactiveSignIn(browserOptions){
@@ -90,7 +92,14 @@ async function main(){
    const page=await context.newPage();
    const failures=[],consoleErrors=[],badHttp=[],started=Date.now();let status=null,hasCanvas=false;
    page.on('pageerror',error=>failures.push(String(error.message).slice(0,360)));
-   page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text().slice(0,360));});
+   page.on('console',msg=>{
+     if(msg.type()!=='error')return;
+     const source=msg.location().url||'';
+     // The harness deliberately denies score writes; a resulting browser
+     // resource warning is test policy, not a game exception or asset failure.
+     if(source===BASE+'/api/score'&&/status of 403/.test(msg.text()))return;
+     consoleErrors.push((source+' '+msg.text()).trim().slice(0,360));
+   });
    page.on('response',res=>{try{
      const url=new URL(res.url());if(url.origin===BASE&&res.status()>=400&&
        /\.(?:js|mjs|css|png|svg|jpg|jpeg|webp|glb|wasm)(?:\?|$)/i.test(url.pathname))
@@ -106,6 +115,7 @@ async function main(){
     status=response?.status()||null;
     if(status===200){
      await page.waitForTimeout(500);
+     if(g.kind==='core')await page.waitForFunction(()=>window.__game?.running===true&&!document.getElementById('boot'),{},{timeout:15000});
      hasCanvas=await page.locator('canvas').count()>0;
      // "Title loaded" is not a claim that the game's whole physics loop works.
      if(hasCanvas){
@@ -116,20 +126,20 @@ async function main(){
     }
    }catch(e){failures.push('Navigation/interaction: '+String(e.message).slice(0,350));}
    const metrics=await page.evaluate(()=>{
-    const gl=window.__GL||null;
+    const gl=window.__GL||null,core=window.__game||null;
     const cv=document.querySelector('canvas'),bounds=cv?.getBoundingClientRect();
     const grid=document.querySelector('.grid-container');
-    return {domPuzzleDetected:!!grid,kitState:gl?.state||null,frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:null,
-      fps:typeof gl?.fps==='number'?gl.fps:null,viewportWidth:innerWidth,
+    return {domPuzzleDetected:!!grid,kitState:gl?.state||null,coreState:core?.state||null,frameP95Ms:typeof gl?.frameMsP95==='number'?gl.frameMsP95:typeof core?.frameMsP95==='number'?core.frameMsP95:null,
+      fps:typeof gl?.fps==='number'?gl.fps:typeof core?.fps==='number'?core.fps:null,viewportWidth:innerWidth,
       viewportHeight:innerHeight,canvasSize:bounds?{width:Math.round(bounds.width),height:Math.round(bounds.height)}:null,
       horizontalOverflow:document.documentElement.scrollWidth>innerWidth+3};
    }).catch(()=>null);
    const title=(await page.title().catch(()=>''))||'';
    const runtimeSurface=hasCanvas||metrics?.domPuzzleDetected===true;
-   const stuckInStartup=metrics?.kitState==='starting';
+   const stuckInStartup=['starting','title'].includes(metrics?.kitState)||metrics?.coreState==='ready';
    const failed=status!==200||failures.length>0||consoleErrors.length>0||badHttp.length>0||
      !runtimeSurface||stuckInStartup||metrics?.horizontalOverflow===true||
-     (metrics?.frameP95Ms>25&&metrics?.kitState==='play');
+     (metrics?.frameP95Ms>25&&(metrics?.kitState==='play'||metrics?.coreState==='play'));
    if(TAKE_ALL||failed)try{await page.screenshot({path:path.join(SCREENSHOTS,filename(g.id)+'.png'),timeout:4500});}catch{}
    await page.close();
    return {id:g.id,title:g.title,kind:g.kind,route:g.route,status,titleLoaded:!!title,canvasDetected:hasCanvas,
@@ -140,6 +150,7 @@ async function main(){
   };
   for(let i=0;i<targets.length;i++){
    const row=await monitor(targets[i]);results.push(row);
+   fs.writeFileSync(path.join(OUT,'browser-progress.json'),JSON.stringify({schema:1,testedAtUTC:new Date().toISOString(),fingerprint,engine:ENGINE,emulationOnly:true,expectedActiveTitles:87,attempted:results.length,fullCoverage:false,completed:false,games:results},null,2)+'\n');
    console.log((row.smokePassed?'PASS ':'FAIL ')+(i+1)+'/'+targets.length+' '+row.id+
      ' HTTP:'+row.status+' p95:'+row.frameP95Ms+'ms errors:'+row.jsExceptions.length+
      ' assetErrors:'+row.badAssets.length);
@@ -155,7 +166,7 @@ async function main(){
   const target=path.join(OUT,'87-game-browser-smoke.json');
   fs.writeFileSync(target,JSON.stringify(report,null,2)+'\n');
   console.log('REPORT '+target);
-  if(failed.length||results.length!==87)process.exitCode=1;
+  if(failed.length||results.length!==targets.length)process.exitCode=1;
   await context.close();
  }finally{await browser.close();}
 }

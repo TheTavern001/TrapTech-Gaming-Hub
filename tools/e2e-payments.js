@@ -27,6 +27,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const ADM = require('./admin-auth').adminClient(BASE); await ADM.login();
   const mk = async () => { const c = client(); c.u = 'pay_' + Math.random().toString(36).slice(2, 8); await c('/api/auth/signup', { body: { username: c.u, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); return c; };
   const [P1, P2, F] = [await mk(), await mk(), await mk()];
+  const p1Initial=(await P1('/api/me/crowns')).body.credits, fInitial=(await F('/api/me/crowns')).body.credits;
   const whopAttempt = await client()('/api/pay/whop/webhook', { body: {
     action:'payment.succeeded',data:{ metadata:{ order_ref:'FAKESETTLEMENT' } }
   }});
@@ -43,11 +44,11 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await ADM(`/api/admin/store/orders/${o1.ref}/grant`, { body: {} }); ok(r.status === 409, 'admin grant cannot turn a pending unpaid order into paid Credits');
   r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending', 'nothing on chain yet -> pending');
   const t1 = txid(); M.txs.push({ txid: t1, sats: o1.sats });
-  r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'seen' && r.body.order.txid === t1 && r.body.credits === 0, 'exact amount in the mempool -> seen, not granted yet (0 conf)', r.body.order);
+  r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'seen' && r.body.order.txid === t1 && r.body.credits === p1Initial, 'exact amount in the mempool -> seen, not granted yet (0 conf)', r.body.order);
   M.txs.find(x => x.txid === t1).height = M.tip; r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} });
-  ok(r.body.order.status === 'granted' && r.body.credits === 11000, '1 confirmation grants 11,000 unified Hub Credits automatically', r.body);
+  ok(r.body.order.status === 'granted' && r.body.credits === p1Initial + 11000, '1 confirmation grants 11,000 unified Hub Credits automatically', r.body);
   r = await ADM(`/api/admin/store/orders/${o1.ref}/grant`, { body: {} }); ok(r.body.ok && r.body.already, 'already settled and granted order is idempotent on admin verification');
-  r = await P1('/api/me/crowns'); ok(r.body.credits === 11000, 'admin duplicate grant did not mint extra Credits');
+  r = await P1('/api/me/crowns'); ok(r.body.credits === p1Initial + 11000, 'admin duplicate grant did not mint extra Credits');
   r = await P2(`/api/store/orders/${o2.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending' && !r.body.order.txid, "another order cannot claim P1's transaction");
   // txid paste for a non-exact (overpaid) amount
   const t2 = txid(); M.txs.push({ txid: t2, sats: o2.sats + 5000, height: M.tip });
@@ -55,10 +56,10 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await P2(`/api/store/orders/${o2.ref}/check`, { body: { txid: t2 } }); ok(r.body.order.status === 'granted' && r.body.order.flags.includes('overpaid'), 'pasted txid with an overpayment -> granted and flagged "overpaid" for a manual refund of the difference', r.body.order);
   // underpayment
   r = await F('/api/store/orders', { body: { product_id: 'crowns-500' } }); const o3 = r.body.order; const t3 = txid(); M.txs.push({ txid: t3, sats: o3.sats - 2000, height: M.tip });
-  r = await F(`/api/store/orders/${o3.ref}/check`, { body: { txid: t3 } }); ok(r.body.order.status === 'underpaid' && r.body.credits === 0, 'underpayment -> "underpaid", nothing granted', r.body.order);
+  r = await F(`/api/store/orders/${o3.ref}/check`, { body: { txid: t3 } }); ok(r.body.order.status === 'underpaid' && r.body.credits === fInitial, 'underpayment -> "underpaid", nothing granted', r.body.order);
   r = await ADM(`/api/admin/store/orders/${o3.ref}/grant`, { body: {} }); ok(r.status === 409, 'admin cannot override blockchain underpayment by marking paid');
-  r = await F('/api/me/crowns'); ok(r.body.credits === 0, 'underpaid order remains zero Credits after an admin grant attempt');
-  r = await ADM(`/api/admin/store/orders/${o3.ref}/refund`, { body: { note: 'test' } }); r = await F('/api/me/crowns'); ok(r.body.credits === 0, 'admin refund reverses full migrated Hub Credits');
+  r = await F('/api/me/crowns'); ok(r.body.credits === fInitial, 'underpaid order remains zero Credits after an admin grant attempt');
+  r = await ADM(`/api/admin/store/orders/${o3.ref}/refund`, { body: { note: 'test' } }); r = await F('/api/me/crowns'); ok(r.body.credits === fInitial, 'admin refund reverses full migrated Hub Credits');
   // expiry
   const db = new (require('better-sqlite3'))(process.env.DB_PATH);
   r = await F('/api/store/orders', { body: { product_id: 'crowns-500' } }); const o4 = r.body.order; db.prepare('UPDATE store_orders SET created_at=created_at-3600e3, expires_at=expires_at-3600e3 WHERE ref=?').run(o4.ref);
@@ -87,11 +88,13 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const t0 = Date.now(); r = await ADM('/api/admin/giveaways', { body: { title: 'Pay-to-win check', host: 'T', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true } }); const gid = r.body.id;
   const [eP, eF] = await Promise.all([P1(`/api/giveaways/${gid}/eligibility`), F(`/api/giveaways/${gid}/eligibility`)]);
   ok(JSON.stringify(eP.body.checks.map(c => [c.id, c.ok])) === JSON.stringify(eF.body.checks.map(c => [c.id, c.ok])), 'eligibility checks are identical for paid and free players');
-  const play = async (c, score) => { const s = await c('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); await sleep(2300); return c('/api/score', { body: { token: s.body.token, score, coins: 0, duration_ms: 2300 } }); };
+  const [blockedPaid,blockedFree]=await Promise.all([P1('/api/run/start',{body:{game_id:'jetpack-dash',event:gid}}),F('/api/run/start',{body:{game_id:'jetpack-dash',event:gid}})]);
+  ok(blockedPaid.status===403 && blockedFree.status===403 && blockedPaid.body.error===blockedFree.body.error,'Unapproved event rejects paid and free players identically');
+  const play = async (c, score) => { const s = await c('/api/run/start', { body: { game_id: 'jetpack-dash' } }); if(!s.body.token)return s; await sleep(2300); return c('/api/score', { body: { token: s.body.token, score, coins: 0, duration_ms: 2300 } }); };
   const [sp, sf] = await Promise.all([play(P1, 40), play(F, 40)]);
-  ok(sp.body.ok && sf.body.ok && sp.body.held === sf.body.held && sp.body.verified === sf.body.verified && sp.body.held === true, 'same paid/free run -> same fair-play proof hold while no giveaway game is certified');
+  ok(sp.body.ok && sf.body.ok && sp.body.held === sf.body.held && sp.body.verified === sf.body.verified && sp.body.held === false, 'same paid/free casual run receives identical treatment while official events stay closed', {paid:sp,free:sf});
   r = await client()(`/api/leaderboard?giveaway=${gid}`); const rows = r.body.rows; ok(rows.length === 0, 'no uncertified run can enter official giveaway standings even when paid and free players submit equal scores');
-  const [hp, hf] = await Promise.all([play(P1, 99999), play(F, 99999)]); ok(hp.status === 422 && hf.status === 422, 'impossible score rejected for paid and free alike');
+  const [hp, hf] = await Promise.all([play(P1, 99999), play(F, 99999)]); ok(hp.status === 422 && hf.status === 422, 'impossible score rejected for paid and free alike',{paid:hp,free:hf});
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'server.js'), 'utf8').split("app.post('/api/score'")[1].split('\napp.')[0];
   ok(!/monetize|crown|prestige|pass_owned|store_/.test(src) && !/monetize|crown|pass_owned/i.test(require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'results.js'), 'utf8')), 'score submission and results code never read store data');
   await ADM('/api/admin/giveaways/' + gid, { method: 'DELETE' });
