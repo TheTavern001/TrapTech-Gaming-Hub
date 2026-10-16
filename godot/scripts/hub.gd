@@ -29,12 +29,16 @@ func _add_nav() -> void:
 	var ach_btn = Button.new()
 	ach_btn.text = "Achievements"
 	ach_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/achievements.tscn"))
+	var quest_btn = Button.new()
+	quest_btn.text = "Quests"
+	quest_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/quests.tscn"))
 	var profile_btn = Button.new()
 	profile_btn.text = "Profile"
 	profile_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/profile.tscn"))
 	nav.add_child(shop_btn)
 	nav.add_child(give_btn)
 	nav.add_child(ach_btn)
+	nav.add_child(quest_btn)
 	nav.add_child(profile_btn)
 	$VBox.add_child(nav)
 	$VBox.move_child(nav, 3)
