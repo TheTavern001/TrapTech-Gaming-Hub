@@ -25,7 +25,7 @@ function shouldShowMobilePage(req){
    return false;
  // Navigation routes and static HTML game entrypoints, not scripts/assets.
  return route==='/'||route.endsWith('/')||route.endsWith('.html')||
-   !/\.[a-z0-9]{1,8}$/.test(route);
+   !/\.[a-z0-9]{1,16}$/.test(route);
 }
 function gate(req,res,next){
  if(!shouldShowMobilePage(req))return next();
