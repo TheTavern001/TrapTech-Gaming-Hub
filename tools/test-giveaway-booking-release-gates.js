@@ -43,10 +43,29 @@ assert.equal(status(g,6000),'ended');
 g.active=0;assert.equal(status(g,2000),'draft','Event must still be explicitly activated by owner');
 assert.match(sponsor,/if \(!BOOKING_FEE\.paidFeeRecorded\(q\)\)/,'Event creation requires a positive-fee paid booking');
 assert.match(sponsor,/if \(status === 'paid'\) return/,'Admin cannot mark ANY unverified quote as paid');
+assert.match(sponsor,/q\.status === 'accepted' && status !== 'accepted'/,
+ 'An accepted sponsor quote cannot be canceled or reset while Stripe Checkout may be open');
+// Run the actual status handler with the quote already accepted. No write may occur.
+const statusStart=sponsor.indexOf('function setStatus(id, status, by) {');
+const statusEnd=sponsor.indexOf('\n// what the sponsor sees',statusStart);
+assert.ok(statusStart>0 && statusEnd>statusStart,'Actual booking transition handler exists');
+const acceptedQuote={status:'accepted',total_cents:4900};
+let writes=0;
+const sponsorStatus=vm.runInNewContext(sponsor.slice(statusStart,statusEnd)+'\nsetStatus;',{
+ db:{prepare:()=>({get:()=>({id:99}),run:()=>{writes++;return {changes:1};}})},
+ quoteRow:()=>acceptedQuote,saveQuote:()=>{throw Error('Accepted quote cannot be recreated');},
+ BOOKING_FEE:bookingFee,Date,
+},{timeout:2000});
+for(const action of ['draft','sent','declined','paid']){
+ const result=sponsorStatus(99,action,'test');
+ assert.equal(result.ok,false,'Accepted booking must reject admin action '+action);
+}
+assert.equal(writes,0,'Accepted quote transitions must perform no status writes');
+
 assert.match(sponsor,/BOOKING_STRIPE\.register\(app,db,h,\{byToken,quoteRow,sponsorView\}\)/,'Stripe checkout and webhook must be mounted');
 assert.match(sponsor,/VALUES \(\?,\?,\?,\?,\?,\?,'play',\?,\?,0,/,'Created event must start inactive');
 assert.match(sponsor,/share_ready: false, active: false/,'No unapproved share URL on prepare');
 assert.match(events,/g\.booking_id \? g\.payment_status : pick\(b\.payment_status/,'Meta route must not bypass booked payment state');
 assert.match(events,/not authorized for sharing until booking payment and game scoring certification/);
 assert.match(events,/That is not an authorized, publicly shareable Gaming Hub event/);
-console.log(JSON.stringify({pass:true,unpaidBlocked:true,uncertifiedBlocked:true,draftRequired:true,unapprovedEventCodesHidden:true,zeroFeeBlocked:true,missingPaidAtBlocked:true,manualPaidBlocked:true,refundBlocked:true,realPaymentIntegrationTested:false}));
+console.log(JSON.stringify({pass:true,unpaidBlocked:true,uncertifiedBlocked:true,draftRequired:true,unapprovedEventCodesHidden:true,zeroFeeBlocked:true,missingPaidAtBlocked:true,manualPaidBlocked:true,acceptedQuoteImmutable:true,refundBlocked:true,realPaymentIntegrationTested:false}));
