@@ -15,6 +15,20 @@ const env={...process.env,PATH:path.dirname(process.execPath)+path.delimiter+pro
 for(const key of ['SECRET','SESSION_SECRET','RUN_SECRET','ADMIN_PASSWORD','ADMIN_PATH','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BTC_ADDRESS','HUB_PRIVATE_REVIEW','HUB_PREVIEW_USERNAMES','NODE_OPTIONS'])delete env[key];
 Object.assign(env,{BUILD_DIR:build,DATA_DIR:path.join(OUT,'isolated-build-db'),DB_PATH:path.join(OUT,'isolated-build-db','hub.db'),PAY_NO_SWEEP:'1'});
 const records=[];let server,serverLog;
+function runtimeTree(){
+ const git=cp.spawnSync('git',['ls-files','--stage','-z','--','src','public','package.json','package-lock.json'],{cwd:ROOT,encoding:'utf8'});
+ if(git.status!==0)return {gitAvailable:false};
+ const mismatches=[];let files=0;
+ for(const entry of git.stdout.split('\0').filter(Boolean)){
+  const [meta,name]=entry.split('\t'),sha=meta.split(' ')[1];files++;
+  const file=path.join(ROOT,name);
+  if(!fs.existsSync(file)){mismatches.push(name);continue;}
+  const bytes=fs.readFileSync(file),actual=crypto.createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
+  if(actual!==sha)mismatches.push(name);
+ }
+ if(mismatches.length)throw Error('Tested runtime files differ from the staged candidate: '+mismatches.join(', '));
+ return {gitAvailable:true,runtimeFilesMatchedToGitIndex:files};
+}
 function run(label,command,args=[],extra={}){
  const file=path.join(OUT,label+'.log'),fd=fs.openSync(file,'w'),at=Date.now();
  let result;
@@ -32,6 +46,7 @@ async function main(){
  node('install-covers','tools/build-core-game-cards.js');
  node('installed-icons','tools/test-traptech-pwa-icons.js');
  node('runtime-public-copy','tools/test-built-public-assets.js');
+ const sourceIntegrity=runtimeTree();
  const docker=fs.readFileSync(path.join(ROOT,'Dockerfile'),'utf8');
  const from=docker.indexOf('RUN test -s tools/'),to=docker.indexOf('\n\n# Exercise consistent',from);
  if(from<0||to<from)throw Error('Docker build audit block cannot be resolved');
@@ -54,7 +69,7 @@ async function main(){
  const fingerprint=await fetch(BASE+'/api/build').then(r=>r.json());
  node('localhost-deployment-assets','tools/verify-live-deployment.js',{...runtimeEnv,BASE,BUILD_SMOKE:'1'});
  node('localhost-auth-sessions','tools/test-auth-session-live.js',{...runtimeEnv,BASE,BUILD_SMOKE:'1'});
- return {runtimeFingerprint:fingerprint.build_fingerprint,
+ return {runtimeFingerprint:fingerprint.build_fingerprint,...sourceIntegrity,
   sourceChecksInDockerBlock:[...new Set([...block.matchAll(/node (tools\/[\w-]+\.js)/g)].map(m=>m[1]))].length,
   runtimeHeapLimitMb:64,nativeModules:true,localhostHTTP:true};
 }

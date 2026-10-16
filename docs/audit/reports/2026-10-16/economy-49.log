@@ -1,0 +1,59 @@
+# rotations are deterministic (same shop in any process, any query order)
+  PASS two processes, opposite query order: identical daily / weekly / season shops
+  PASS this process agrees with both
+# timers roll over at local midnight / Monday / season end
+  PASS Sunday 11:59 PM ET: daily and weekly both end at Monday 12:00 AM ET
+  PASS at midnight Monday both the daily and weekly sections change
+  PASS Tuesday: new daily picks, same weekly featured
+  PASS Season 1 (8 weeks) ends Wed Nov 25 11:59:59 PM ET, Season 2 starts at midnight
+  PASS season shop items change with the season
+  PASS seasons keep rolling forever (June 2031 = Season 41)
+# 2-year simulation: the generator never runs out and the retire / Vault rules hold
+  PASS every day has 6 daily + 4 weekly items, no duplicates, daily never repeats a weekly item (730 days)
+  PASS 2 brand-new daily items every single day (1460 over 730 days)
+  PASS 1670 generated items introduced in 2 years (never runs out)
+  PASS catalog picks respect the per-rarity cooldown (6 relaxed picks)
+  PASS no item is listed more times than its retire cap before going to the Vault
+  PASS Vault returns happen (383) and always after 90+ days away (min 90)
+  PASS calendar events run on their dates (142 event days in 2 years)
+  PASS year-two events bring 4 new items + 2 returning from last year
+  PASS 2-year simulation in 1291 ms
+  PASS generated names, CSS and banner SVGs are well-formed (no undefined / NaN, < 16 KB each)
+  PASS variety: 398 distinct names in 400 items, 14 banner motifs
+  PASS an id always rebuilds the same item; junk ids resolve to nothing
+  PASS generated items resolve in the cosmetics lookup (equip + leaderboards)
+# prices: rarity x type x demand x scarcity x appearances (no fixed tiers)
+  PASS 15 different prices across 16 items on sale
+  PASS every price is within 0.6x-2.2x of its base and rounded to 5
+  PASS demand: 12 recent buys raise the demand factor 1 -> 1.35
+  PASS today's price holds all day: 18 buys today only count from tomorrow
+# earned (score / leaderboard gated) items
+  PASS jetpack-dash: Pro at 3400 (strong player best 3400), Elite at 5300 (top 1% 5300) from docs/score-ranges.json
+  PASS a Pro-level score unlocks the Pro banner, not the Elite frame
+  PASS earned items cannot be bought
+  PASS weekly leaderboard rewards: Weekly Podium badge + Weekly Top 10 title
+  PASS last week's #1 on a game board gets the Weekly Podium badge
+  PASS weekly grants run once per week
+  PASS EARN: a casual run pays 5, a top-1% personal best pays 30
+# buying
+  PASS season shop item bought for 515
+  PASS items not on sale today cannot be bought
+  PASS season track rewards cannot be bought
+# seasons: track, rewards, perks, end -> archive -> hall of fame -> head start
+  PASS 60 levels / 30,300 XP, Overdrive stars every 2,000 XP after
+  PASS track: 13 season-exclusive cosmetics, Hub Points on every other level, 6 perks
+  PASS level 32: claimed 1600 pts + 7 cosmetics once (idempotent)
+  PASS season perk discount applies (10% off: 515 -> 465)
+  PASS admin extends the live season by a week: the next season moves with it
+  PASS guards: no end inside the next hour, end-now needs the season name
+  PASS end season now: 3 players archived, Season 2 live
+  PASS hall of fame lists the top players of the ended season
+  PASS #1 gets the Champion and Top 10 titles
+  PASS soft reset: season XP back to 0 with a head start of 1200 (10% of 12000, max 2,000)
+  PASS bestSeasonTier keeps the 20-step achievement scale
+  PASS progress.js seasonAt / seasonProgress / seasonBoard delegate to the engine
+  PASS admin hook adminList() (used by the admin panel)
+# generated CSS stays small
+  PASS cosmetics CSS for the live generated set: 18.2 KB (banner art is served as separate SVG files)
+
+49 passed, 0 failed

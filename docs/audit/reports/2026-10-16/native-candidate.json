@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "testedAtUTC": "2026-10-16T04:28:58.733Z",
+  "node": "v24.19.0",
+  "passed": true,
+  "runtimeFingerprint": "4d35a6d7dc30502f58d85893",
+  "gitAvailable": true,
+  "runtimeFilesMatchedToGitIndex": 1029,
+  "sourceChecksInDockerBlock": 82,
+  "runtimeHeapLimitMb": 64,
+  "nativeModules": true,
+  "localhostHTTP": true,
+  "records": [
+    {
+      "label": "install-icons",
+      "passed": true,
+      "durationMs": 137,
+      "log": "install-icons.log"
+    },
+    {
+      "label": "install-covers",
+      "passed": true,
+      "durationMs": 70,
+      "log": "install-covers.log"
+    },
+    {
+      "label": "installed-icons",
+      "passed": true,
+      "durationMs": 114,
+      "log": "installed-icons.log"
+    },
+    {
+      "label": "runtime-public-copy",
+      "passed": true,
+      "durationMs": 67,
+      "log": "runtime-public-copy.log"
+    },
+    {
+      "label": "docker-build-checks-native",
+      "passed": true,
+      "durationMs": 52271,
+      "log": "docker-build-checks-native.log"
+    },
+    {
+      "label": "consistent-sqlite-backup",
+      "passed": true,
+      "durationMs": 92,
+      "log": "consistent-sqlite-backup.log"
+    },
+    {
+      "label": "private-review-http",
+      "passed": true,
+      "durationMs": 701,
+      "log": "private-review-http.log"
+    },
+    {
+      "label": "localhost-deployment-assets",
+      "passed": true,
+      "durationMs": 632,
+      "log": "localhost-deployment-assets.log"
+    },
+    {
+      "label": "localhost-auth-sessions",
+      "passed": true,
+      "durationMs": 637,
+      "log": "localhost-auth-sessions.log"
+    }
+  ],
+  "error": null,
+  "dockerImageBuilt": false,
+  "deployed": false,
+  "physicalPhoneCertified": false,
+  "publicLaunchApproved": false
+}
