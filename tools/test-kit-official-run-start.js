@@ -7,6 +7,7 @@ assert.ok(start>0&&stop>start,'Cannot locate the actual shared Kit run-start fun
 const actual=file.slice(start,stop);
 assert.match(actual,/\['event','event_code','giveaway_id','giveaway','playoff'\]/);
 assert.match(actual,/signed && !validSeed/);
+assert.match(file,/PRACTICE · NOT RANKED/,'Guest gameplay must communicate unranked status');
 async function test(search,token,seed,expectRun,label){
  let initCalls=0;
  const g={state:'title',runSerial:0,parts:[],texts:[],score:0};
@@ -21,6 +22,7 @@ async function test(search,token,seed,expectRun,label){
  assert.equal(g.state,expectRun?'play':'title',label);
  assert.equal(initCalls,expectRun?1:0,'No game world may start without valid official token: '+label);
  if(!expectRun)assert.ok(g.startError,'Blocked run explains failure: '+label);
+ if(expectRun)assert.equal(g.practice,!token,'Live game must identify unsigned runs as practice: '+label);
 }
 (async()=>{
  await test('?event=OFFICIAL',null,null,false,'Rejected giveaway run');
@@ -34,6 +36,6 @@ async function test(search,token,seed,expectRun,label){
  await test('?playoff=abc','signed-run','abcdef0123456789',true,'Valid playoff seed');
  await test('',null,null,true,'Unsigned free practice remains available');
  console.log(JSON.stringify({pass:true,actualKitStartExecuted:true,
-  blockedUnscoredCompetitionStarts:7,validSignedStarts:2,guestPracticePreserved:true,
+  blockedUnscoredCompetitionStarts:7,validSignedStarts:2,guestPracticePreserved:true,guestModeLabeled:true,
   mobilePhoneVerified:false}));
 })().catch(error=>{console.error(error);process.exitCode=1;});
