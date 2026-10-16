@@ -7,7 +7,7 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const cp=require('node:child_process');
 const ROOT=path.resolve(__dirname,'..'),args=process.argv.slice(2);
-const full=args.includes('--full'),stage=(args.find(a=>a.startsWith('--release='))||'--release=R1').slice(10);
+const full=args.includes('--full'),privatePreview=args.includes('--private-preview'),stage=(args.find(a=>a.startsWith('--release='))||'--release=R1').slice(10);
 if(!/^R[1-5]$/.test(stage)){console.error('Expected --release=R1..R5');process.exit(2);}
 const startedAt=new Date().toISOString();
 const SHA=()=>{
@@ -132,8 +132,14 @@ for(const file of tests){
 // Preflight gate remains independent of these test results. It can be blocked
 // after all source checks PASS, because human mobile/rights/security evidence
 // is still missing and must NEVER be auto-approved from a Docker exit status.
-const ready=run('manual-release-'+stage,process.execPath,
- ['tools/preflight-manual-release.js','--release='+stage,'--require-ready'],30000);
+const gateChecked=run(privatePreview?'private-preview-preparation-'+stage:'manual-release-'+stage,process.execPath,
+ privatePreview
+   ?['tools/preflight-manual-release.js','--release='+stage,'--private-preview']
+   :['tools/preflight-manual-release.js','--release='+stage,'--require-ready'],30000);
+// Private preview can prove a Docker image without claiming the later R1–R5
+// owner/device/payment acceptance gates are fulfilled. Approval remains
+// separate and must never be inferred from this code's exit status.
+const ready=!privatePreview&&gateChecked;
 if(full) {
  const docker=cp.spawnSync('docker',['info','--format','{{.ServerVersion}}'],{encoding:'utf8',timeout:8000});
  if(docker.error||docker.status!==0) {
@@ -147,12 +153,18 @@ if(full) {
 }
 if(!full) records.push({label:'full-Dockerfile-STEP11-STEP12',status:'NOT_RUN',error:'Source-only rehearsal cannot be used as deploy-ready evidence; rerun with --full'});
 const failed=records.filter(x=>x.status!=='PASS');
+const dockerPassed=full&&records.some(x=>x.label==='full-Dockerfile-STEP11-STEP12'&&x.status==='PASS');
+const cleanSource=records.some(x=>x.label==='reproducible-clean-checkout'&&x.status==='PASS');
+const imageEvidenceEligible=privatePreview&&full&&dockerPassed&&cleanSource&&failed.length===0;
 const report={schema:1,createdAtUTC:startedAt,finishedAtUTC:new Date().toISOString(),
  sourceSha:sha,release:stage,level:full?'FULL_LOCAL_DOCKER':'LOCAL_NODE_TESTS',
- hostDeploymentAttempted:false,githubActionsUsed:false,
+ privatePreviewMode:privatePreview,hostDeploymentAttempted:false,githubActionsUsed:false,
+ automaticDeploymentAllowed:false,ownerDeploymentAuthorization:false,publicLaunchApproved:false,
+ privatePreviewDockerEvidencePassed:imageEvidenceEligible,
+ privatePreviewPhoneAndHostApproved:false,
  nodeTestsPassed:records.filter(x=>x.status==='PASS'&&x.label.startsWith('tools/')).length,
  nodeTestsTotal:tests.length,releaseGatePassed:ready,
- dockerVerified:full&&records.some(x=>x.label==='full-Dockerfile-STEP11-STEP12'&&x.status==='PASS'),
+ dockerVerified:dockerPassed,
  allChecksPassed:failed.length===0,failures:failed.map(x=>x.label),
  warning:'Local success is not live READY or real Android/iPhone device certification.',
  records};
@@ -161,6 +173,10 @@ fs.mkdirSync(destDir,{recursive:true});
 const dest=path.join(destDir,'rehearsal-'+stage+'-'+(sha||'unknown').slice(0,12)+'.json');
 fs.writeFileSync(dest,JSON.stringify(report,null,2)+'\n',{mode:0o600});
 console.log(JSON.stringify({sourceSha:sha,release:stage,nodeTestsPassed:report.nodeTestsPassed,
- nodeTestsTotal:tests.length,gate:ready?'ELIGIBLE_FOR_HUMAN_REVIEW':'BLOCKED',
+ nodeTestsTotal:tests.length,
+ gate:privatePreview?(imageEvidenceEligible?'PRIVATE_IMAGE_BUILT_NOT_DEPLOYMENT_APPROVED':'PRIVATE_IMAGE_NOT_VERIFIED')
+                   :ready?'ELIGIBLE_FOR_HUMAN_REVIEW':'BLOCKED',
+ privatePreview,privatePreviewDockerEvidencePassed:imageEvidenceEligible,
+ automaticDeploymentAllowed:false,ownerDeploymentAuthorization:false,
  fullDocker:full,failed:failed.map(x=>x.label),reportPath:dest,noDeployment:true}));
 if(failed.length)process.exitCode=1;
