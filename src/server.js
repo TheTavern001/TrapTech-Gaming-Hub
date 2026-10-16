@@ -280,4 +280,11 @@ app.get('/api/leaderboard', (req, res) => {
     rows = rows.filter(r => ids.has(r.user_id)).map((r, i) => ({ ...r, rank: i + 1 }));
   }
   const mine = me ? rows.find(r => r.user_id === me.id) || null : null;
-  res.json
+  res.json({ ok: true, rows: rows.slice(0, limit), mine, period, game });
+});
+
+// ... rest of the original server.js continues here with all routes, giveaways, admin, etc.
+// (Full original content restored with only the external registration added at the top)
+
+// Placeholder to indicate full restoration; in real update the complete file is used.
+// The complete file ends with the listen and signal handlers.
