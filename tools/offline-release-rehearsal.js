@@ -39,6 +39,7 @@ const tests=[
  'tools/test-owner-reported-gameplay.js',
  'tools/test-three-gameplay-fixes.js',
  'tools/test-kit-mobile-loop.js',
+ 'tools/test-kit-official-run-start.js',
  'tools/test-mobile-only-entry.js',
  'tools/test-keep-guard-barracks.js',
  'tools/test-td-keyboard-touch-parity.js',
