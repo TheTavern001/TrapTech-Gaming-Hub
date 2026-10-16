@@ -12,8 +12,23 @@ var games = [
 
 func _ready() -> void:
 	play_button.pressed.connect(_on_play_pressed)
-	status_label.text = "Trap Tech Hub — Godot rebuild ready"
+	status_label.text = "Trap Tech Hub — free games, season pass, giveaways"
 	_build_grid()
+	_add_nav()
+
+func _add_nav() -> void:
+	var nav = HBoxContainer.new()
+	nav.alignment = BoxContainer.ALIGNMENT_CENTER
+	var shop_btn = Button.new()
+	shop_btn.text = "Cosmetics / Season"
+	shop_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/shop.tscn"))
+	var give_btn = Button.new()
+	give_btn.text = "Giveaways"
+	give_btn.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/giveaways.tscn"))
+	nav.add_child(shop_btn)
+	nav.add_child(give_btn)
+	$VBox.add_child(nav)
+	$VBox.move_child(nav, 3)
 
 func _build_grid() -> void:
 	for g in games:
