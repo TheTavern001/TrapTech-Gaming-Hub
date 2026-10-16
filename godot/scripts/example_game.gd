@@ -56,14 +56,14 @@ func _spawn_obstacle() -> void:
 
 func _game_over() -> void:
 	game_over = true
+	var pd = get_node("/root/PlayerData")
+	if pd:
+		pd.add_score("sky_hopper", score)
 	var label = Label.new()
 	label.text = "Game Over\nScore: %d\nClick to return" % score
 	label.position = Vector2(500, 300)
 	label.add_theme_font_size_override("font_size", 40)
 	add_child(label)
-	await get_tree().create_timer(0.1).timeout
-	# Simple return on next click
-	get_tree().get_root().get_node("Hub").visible = true if get_tree().get_root().has_node("Hub") else null
 
 func _input(event: InputEvent) -> void:
 	if game_over and event is InputEventMouseButton and event.pressed:
