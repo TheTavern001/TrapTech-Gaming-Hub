@@ -1,3 +1,12 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W;
+  // referee beside the spot
+  c.save(); c.translate(324, 512); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(3, 26, 14, 4, 0, 0, 7); c.fill(); c.fillStyle = '#facc15'; Kit.rr(c, -8, -8, 16, 24, 5); c.fill(); c.fillStyle = '#111'; c.fillRect(-8, 5, 16, 2); c.fillRect(-6, 16, 5, 10); c.fillRect(1, 16, 5, 10); c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(0, -14, 6, 0, 7); c.fill(); c.fillStyle = '#222'; c.beginPath(); c.arc(0, -16, 6.4, Math.PI, 0); c.fill(); c.strokeStyle = '#f0c8a0'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(-7, -3); c.lineTo(-13, 6); c.moveTo(7, -3); c.lineTo(12, -9 + Math.sin(t * 2) * 2); c.stroke(); c.restore();
+  // photographers behind the goal with flashes
+  for (let i = 0; i < 5; i++) { const x = 40 + i * 78, y = 300; c.fillStyle = '#10151f'; c.beginPath(); c.arc(x, y, 6, 0, 7); c.fill(); Kit.rr(c, x - 7, y + 4, 14, 14, 4); c.fill(); c.fillStyle = '#334'; c.fillRect(x + 3, y - 3, 10, 6); c.fillStyle = '#889'; c.beginPath(); c.arc(x + 14, y, 3, 0, 7); c.fill(); const ph = (t * 0.7 + i * 0.41) % 3; if (ph < 0.1) { c.globalCompositeOperation = 'lighter'; const gl = c.createRadialGradient(x + 14, y, 1, x + 14, y, 30); gl.addColorStop(0, 'rgba(255,255,255,.9)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gl; c.beginPath(); c.arc(x + 14, y, 30, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over'; } }
+  // corner flag
+  c.strokeStyle = '#eee'; c.lineWidth = 2; c.beginPath(); c.moveTo(24, 262); c.lineTo(24, 318); c.stroke(); c.fillStyle = '#ef4444'; c.beginPath(); c.moveTo(24, 262); c.lineTo(38 + Math.sin(t * 4) * 2, 267); c.lineTo(24, 274); c.fill();
+} })(); // v8 scenery+sprite overlay
 // Spot Kick - original penalty shootout (Hub build, Sports). Swipe the ball: direction aims, swipe speed = power (and height),
 // a bent swipe adds curl. The keeper reads your swipe after a reaction delay and dives; shots near the posts and bar beat him more often
 // but risk going wide. Glowing target rings in the corners pay bonuses. Endless: the keeper gets faster; 3 misses/saves end the run.
