@@ -457,7 +457,11 @@ async function channels(editId) {
         <div class="field"><label class="lbl">Business type</label><input class="input" id="c-bt" value="${esc(f.business_type)}" maxlength="80"></div>
         <label class="check"><input type="checkbox" id="c-active" ${f.active ? 'checked' : ''}> Visible</label>
         <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" style="flex:1">${icon('check')} ${c ? 'Save' : 'Create brand'}</button>${c ? `<button class="btn danger" type="button" id="c-del">${icon('trash-2')}</button>` : ''}</div>
-      </form></div>`, `<a class="btn sm" href="/admin/channels/new">${icon('plus')} New brand</a>`);
+      </form>${c ? `<div class="card pad" id="pubpage" style="margin-top:12px"><h2 style="margin-bottom:6px">Public brand page</h2><p class="muted small" style="margin-top:0">Shown at /brand/${esc(f.slug)} and in Featured Brands. Facts only: never promise followers, subscribers, traffic or sales.</p>
+        <label class="check"><input type="checkbox" id="c-feat" ${(BI[c.id] || {}).featured ? 'checked' : ''}> Featured Brand (Home + Giveaways carousel)</label>
+        <div class="field"><label class="lbl">About (public, up to 600 characters)</label><textarea class="input" id="c-about" rows="4" maxlength="600">${esc((BI[c.id] || {}).about || '')}</textarea></div>
+        <button class="btn sm" type="button" id="c-pubsave">${icon('check')} Save page</button></div>` : ''}</div>`, `<a class="btn sm" href="/admin/channels/new">${icon('plus')} New brand</a>`);
+  { const ps = $('#c-pubsave'); if (ps) ps.onclick = async () => { const a = await api(`/api/admin/brands/${c.id}/featured`, { method: 'PUT', body: { featured: $('#c-feat').checked } }); const b = await api(`/api/admin/brands/${c.id}/about`, { method: 'PUT', body: { about: $('#c-about').value } }); toast(a.ok && b.ok ? 'Brand page saved' : (a.error || b.error)); }; }
   $('#ch-tbl').onclick = async (e) => {
     const inv = e.target.closest('[data-inv]'); if (inv) { try { await navigator.clipboard.writeText(inv.dataset.inv); toast('Invite link copied'); } catch { toast(inv.dataset.inv); } return; }
     const nc = e.target.closest('[data-newcode]'); if (nc && confirm('Make a new invite code? The old link stops working.')) { const x = await api(`/api/admin/brands/${nc.dataset.newcode}/new-code`, { method: 'POST' }); toast(x.ok ? 'New code: ' + x.invite_code : x.error); channels(editId); }

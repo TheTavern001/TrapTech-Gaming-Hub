@@ -68,10 +68,10 @@ const FEATURES = [
   ['tournament', 'Tournament mode (linked timed tournament)', 'Competition', 'Creates a tournament for the same window and first game.'],
   ['live_standings', 'Live standings page', 'Competition', 'Players see "You are #X of N" while it runs.'],
   ['hidden_board', 'Hide the leaderboard until the end', 'Competition', 'Ranks stay secret until the standings lock.'],
-  ['share_cards', 'Share cards + share buttons', 'Growth', 'OG image + share button on the giveaway.'],
-  ['referral_bonus', 'Referral bonus entries (free)', 'Growth', 'Friends you invite who play add draw entries. Never bought.'],
+  ['share_cards', 'Share cards + share buttons', 'Sharing', 'OG image + share button on the giveaway.'],
+  ['referral_bonus', 'Referral bonus entries (free)', 'Sharing', 'Friends you invite who play add draw entries. Never bought.'],
   ['notify_announce', 'Announce to all players at launch', 'Notifications', 'Was Elite push/in-app alert.'],
-  ['notify_followers', 'Alert the sponsor\'s followers at launch', 'Notifications', 'Was Premium.'],
+  ['notify_followers', 'Alert players affiliated with this brand at launch', 'Notifications', 'In-app alert to Hub players who joined the brand. Facts only; no reach promised.'],
   ['notify_reminder', 'Reminder (24 h before the end)', 'Notifications', 'Was Elite final-week reminder.'],
   ['notify_ending', 'Ending-soon alert', 'Notifications', 'Sent shortly before the end (scaled to the length).'],
   ['analytics_live', 'Live stats for the sponsor', 'Reporting', 'Plays, unique players, entrants, link clicks.'],
@@ -157,7 +157,7 @@ function normalize(c) {
     v: 7,
     basics: { title: str(b.title, 120), subtitle: str(b.subtitle, 160), description: sanitizeHtml(b.description, 8000), slug: slugify(b.slug || ''),
       sponsor: str(b.sponsor, 80), sponsor_logo: IMG_RE.test(str(b.sponsor_logo, 300)) ? str(b.sponsor_logo, 300) : '', channel_id: parseInt(b.channel_id, 10) || null,
-      brand_id: parseInt(b.brand_id, 10) || null, hub_wide: b.hub_wide !== false },
+      brand_id: parseInt(b.brand_id, 10) || null, hub_wide: b.hub_wide !== false, invite_only: !!b.invite_only },
     media: { source: ['upload', 'preset', 'game', 'url'].includes(m.source) ? m.source : 'preset', image: IMG_RE.test(str(m.image, 300)) ? str(m.image, 300) : '',
       image_tall: IMG_RE.test(str(m.image_tall, 300)) ? str(m.image_tall, 300) : '', image_square: IMG_RE.test(str(m.image_square, 300)) ? str(m.image_square, 300) : '',
       banner: IMG_RE.test(str(m.banner, 300)) ? str(m.banner, 300) : '', game_thumb: cfgApp.GAME_MAP[m.game_thumb] ? m.game_thumb : '', theme,
@@ -173,10 +173,11 @@ function normalize(c) {
       type: PRIZE_TYPES[p.type] ? p.type : 'physical', award: p.award === 'random' ? 'random' : 'rank' })),
     winners: { alternates: int(w.alternates, 0, 50, 2), claim_hours: int(w.claim_hours, 1, 24 * 90, 72), auto_forfeit: !!w.auto_forfeit, announce: w.announce !== false, review: w.review !== false },
     entry: { require_join: e.require_join ? 1 : 0, elig_min_runs7: int(e.elig_min_runs7, 0, 100), elig_min_xp7: int(e.elig_min_xp7, 0, 100000), elig_account_age_days: int(e.elig_account_age_days, 0, 365),
-      elig_max_active: int(e.elig_max_active, 0, 50), elig_win_cooldown_days: int(e.elig_win_cooldown_days, 0, 365), elig_brand_month: e.elig_brand_month ? 1 : 0, elig_followers_only: (e.elig_followers_only || e.follow_sponsor) ? 1 : 0,
+      elig_max_active: int(e.elig_max_active, 0, 50), elig_win_cooldown_days: int(e.elig_win_cooldown_days, 0, 365), elig_brand_month: e.elig_brand_month ? 1 : 0, elig_followers_only: 0, // retired: no follower requirements or promises
+     
       weight_mode: e.activity_weight ? 'activity' : '', age21: e.age21 !== false, activity_weight: !!e.activity_weight, max_entrants: int(e.max_entrants, 0, 1e6),
       regions_mode: ['all', 'allow', 'exclude'].includes(e.regions_mode) ? e.regions_mode : 'all', regions: (Array.isArray(e.regions) ? e.regions : []).map(x => String(x).toUpperCase()).filter(x => REGIONS.includes(x)),
-      brand_only: !!e.brand_only, follow_sponsor: !!(e.follow_sponsor || e.elig_followers_only),
+      brand_only: !!e.brand_only, follow_sponsor: false, // retired: following a brand is never an entry requirement
       quest_bonus: { on: !!(e.quest_bonus && e.quest_bonus.on), per: int(e.quest_bonus && e.quest_bonus.per, 1, 10, 1), max: int(e.quest_bonus && e.quest_bonus.max, 1, 20, 3) },
       referral_bonus: { on: !!((e.referral_bonus && e.referral_bonus.on) || f.referral_bonus), max: int(e.referral_bonus && e.referral_bonus.max, 1, 20, 3) },
       checklist: (Array.isArray(e.checklist) ? e.checklist : []).slice(0, 8).map((x, i) => ({ id: str(x.id, 24) || ('step' + (i + 1)), label: str(x.label, 120), url: /^https:\/\/[^\s"'<>]{4,300}$/.test(str(x.url, 300)) ? str(x.url, 300) : '', required: x.required !== false, verify: x.verify === 'hub_run' ? 'hub_run' : 'external' })) },
@@ -263,9 +264,9 @@ function derive(c) {
     entry_method: 'play', game_id: c.games.ids[0], rules: (c.rules.house || 'See the Official Rules.').slice(0, 4000), tier: '', placements: JSON.stringify(placesOf(c)),
     brand_color: f.branding ? c.media.accent : '', brand_logo: f.branding ? c.basics.sponsor_logo : '', featured: (f.featured || f.pinned_home) ? 1 : 0,
     min_score: c.games.min_score, prize_tiers: pl.tiers.join('\n').slice(0, 1000), win_method: pl.method === 'hybrid' ? 'hybrid' : pl.method, winner_count: pl.winners,
-    channel_id: c.basics.channel_id || null, open_to_all: !c.basics.channel_id || c.basics.hub_wide ? 1 : 0, link_url: anyLink ? f.link_url : '', link_label: anyLink ? f.link_label : '',
-    require_join: ((c.basics.channel_id && !c.basics.hub_wide) || e.age21 || e.regions_mode !== 'all' || e.max_entrants || e.checklist.some(x => x.required !== false && x.label)) ? 1 : e.require_join, elig_min_runs7: e.elig_min_runs7, elig_min_xp7: e.elig_min_xp7, elig_account_age_days: e.elig_account_age_days, elig_max_active: e.elig_max_active,
-    elig_win_cooldown_days: e.elig_win_cooldown_days, elig_brand_month: e.elig_brand_month, elig_followers_only: e.elig_followers_only,
+    channel_id: c.basics.channel_id || null, open_to_all: !c.basics.channel_id || c.basics.hub_wide || c.basics.invite_only ? 1 : 0, audience: c.basics.invite_only ? 'invite' : '', link_url: anyLink ? f.link_url : '', link_label: anyLink ? f.link_label : '',
+    require_join: ((c.basics.channel_id && !c.basics.hub_wide) || c.basics.invite_only || e.age21 || e.regions_mode !== 'all' || e.max_entrants || e.checklist.some(x => x.required !== false && x.label)) ? 1 : e.require_join, elig_min_runs7: e.elig_min_runs7, elig_min_xp7: e.elig_min_xp7, elig_account_age_days: e.elig_account_age_days, elig_max_active: e.elig_max_active,
+    elig_win_cooldown_days: e.elig_win_cooldown_days, elig_brand_month: e.elig_brand_month, elig_followers_only: 0,
     weight_mode: (e.activity_weight || e.quest_bonus.on || e.referral_bonus.on) && pl.method !== 'score' ? 'activity' : '',
     v7: 1, slug: c.basics.slug || null, score_rule: c.games.score_rule, score_top_n: c.games.top_n, min_runs: c.games.min_runs,
     win_split: pl.method === 'hybrid' ? pl.split : 0,
@@ -273,7 +274,7 @@ function derive(c) {
 }
 const COLS = ['title', 'host', 'prize', 'image', 'start_at', 'end_at', 'entry_method', 'game_id', 'rules', 'tier', 'brand_color', 'brand_logo', 'featured', 'min_score', 'prize_tiers', 'win_method', 'winner_count',
   'channel_id', 'link_url', 'link_label', 'require_join', 'elig_min_runs7', 'elig_min_xp7', 'elig_account_age_days', 'elig_max_active', 'elig_win_cooldown_days', 'elig_brand_month', 'elig_followers_only', 'weight_mode',
-  'v7', 'slug', 'score_rule', 'score_top_n', 'min_runs', 'win_split', 'open_to_all', 'placements'];
+  'v7', 'slug', 'score_rule', 'score_top_n', 'min_runs', 'win_split', 'open_to_all', 'audience', 'placements'];
 function setGames(gid, c) {
   db.transaction(() => {
     db.prepare('DELETE FROM giveaway_games WHERE giveaway_id=?').run(gid);
@@ -340,12 +341,12 @@ function cfgFromRow(g) {
     : [{ id: 'p1', name: g.prize || g.title, desc: '', image: '', qty: Math.max(1, g.winner_count || 1), value: 0, type: 'physical', award: g.win_method === 'random' ? 'random' : 'rank' }];
   const st = g.finalized_at || g.end_at < now() ? 'ended' : 'live';
   const c = normalize({
-    basics: { title: g.title, subtitle: '', description: '', slug: '', sponsor: g.host, sponsor_logo: g.brand_logo, channel_id: g.channel_id, hub_wide: !g.channel_id || !!g.open_to_all },
+    basics: { title: g.title, subtitle: '', description: '', slug: '', sponsor: g.host, sponsor_logo: g.brand_logo, channel_id: g.channel_id, hub_wide: !g.channel_id || !!g.open_to_all, invite_only: g.audience === 'invite' },
     media: { source: String(g.image || '').startsWith('/assets/cards/') ? 'game' : 'preset', image: g.image, theme: 'neon', accent: g.brand_color || THEMES.neon[0] },
     schedule: { start_at: g.start_at, end_at: g.end_at, tz: 'America/New_York', publish_mode: 'now' },
     games: { ids, weights: {}, score_rule: 'sum_best', top_n: 3, min_score: g.min_score || 0, min_runs: 0 }, prizes,
     winners: { alternates: 2, claim_hours: 168, announce: true, review: true },
-    entry: { ...E.rulesOf(g), require_join: g.require_join, activity_weight: g.weight_mode === 'activity', age21: true, follow_sponsor: !!g.elig_followers_only },
+    entry: { ...E.rulesOf(g), require_join: g.require_join, activity_weight: g.weight_mode === 'activity', age21: true, follow_sponsor: false },
     features: (() => { const P = (() => { try { return require('./sponsor').placementsOf(g); } catch { return []; } })();
       return { featured: !!g.featured || P.includes('featured'), pinned_home: P.includes('hero'), game_skin: P.includes('skin'), branding: !!(g.brand_color || g.brand_logo), link_giveaway: !!g.link_url && P.includes('giveaway'),
         link_game: !!g.link_url && P.includes('game'), link_announcement: !!g.link_url && P.includes('announcement'), link_url: g.link_url, link_label: g.link_label,
