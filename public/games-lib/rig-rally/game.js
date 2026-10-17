@@ -30,7 +30,7 @@
   function pilot(c, g) { const b = g.core; if (!b) return; const p = g.prev && g.prev.get(b); const x = p ? lerp(p.x, b.position.x, g.alpha) : b.position.x, y = p ? lerp(p.y, b.position.y, g.alpha) : b.position.y; c.save(); c.translate(x, y - CS / 2 - 12); c.rotate(b.angle * 0.5);
     c.fillStyle = '#7ad04a'; c.strokeStyle = OL; c.lineWidth = 2.5; c.beginPath(); c.arc(0, 0, 14, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-5, -3, 4.5, 0, 7); c.arc(6, -3, 4.5, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(-4, -3, 2, 0, 7); c.arc(7, -3, 2, 0, 7); c.fill(); c.fillStyle = '#4a8a2a'; c.beginPath(); c.ellipse(1, 5, 6, 4, 0, 0, 7); c.fill(); c.fillStyle = '#e8343a'; c.beginPath(); c.arc(0, -10, 14, Math.PI, 0); c.fill(); c.stroke(); c.restore(); }
   function editorRect(g) { const s = Math.min(54, (g.W - 40) / GW, (g.H * 0.5) / GH); return { s, x: g.W / 2 - GW * s / 2, y: g.H * 0.22 }; }
-  Kit.run({ id: 'gl-rig-rally', title: 'RIG RALLY', orient: 'l', help: 'BUILD: tap a slot to cycle parts, then GO\nRIDE: hold right = motors, hold left = fan. Collect stars, go far!', bg: '#9fd8ff',
+  Kit.run({ id: 'gl-rig-rally', title: 'RIG RALLY', fill: true, minH: 560, maxH: 900, help: 'BUILD: tap a slot to cycle parts, then GO\nRIDE: hold right = motors, hold left = fan. Collect stars, go far!', bg: '#9fd8ff',
     buttons: [{ id: 'F', key: 'ArrowLeft', label: 'FAN' }, { id: 'G', key: 'ArrowRight', label: 'MOTOR' }],
     init(g) { g.grid = (window.__rigGrid || DEF).slice(); g.mode = 'build'; g.cam = 0; g.camY = 0; g.dist = 0; g.acc = 0; g.alpha = 1; g.prev = new Map(); g.stall = 0; g.t0 = 0; },
     update(g, dt) {

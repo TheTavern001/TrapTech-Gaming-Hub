@@ -30,7 +30,7 @@
   function body(c, g, b, f) { const p = g.prev && g.prev.get(b); const x = p ? lerp(p.x, b.position.x, g.alpha) : b.position.x, y = p ? lerp(p.y, b.position.y, g.alpha) : b.position.y, a = p ? lerp(p.a, b.angle, g.alpha) : b.angle; c.save(); c.translate(x, y); c.rotate(a); f(); c.restore(); }
   const OL = '#1d1a24';
   function limb(c, w, h, col) { c.fillStyle = col; c.strokeStyle = OL; c.lineWidth = 2.5; Kit.rr(c, -w / 2, -h / 2, w, h, w / 2); c.fill(); c.stroke(); }
-  Kit.run({ id: 'gl-wreck-ride', title: 'WRECK RIDE', orient: 'l', help: 'Right side / Right = pedal, Left side / Left = brake & lean back\nUp / Down lean in the air. Keep your head off the ground!', bg: '#9fd8ff',
+  Kit.run({ id: 'gl-wreck-ride', title: 'WRECK RIDE', fill: true, minH: 560, maxH: 900, help: 'Right side / Right = pedal, Left side / Left = brake & lean back\nUp / Down lean in the air. Keep your head off the ground!', bg: '#9fd8ff',
     buttons: [{ id: 'B', key: 'ArrowLeft', label: 'BACK' }, { id: 'G', key: 'ArrowRight', label: 'GO' }],
     init(g) { build(g); g.cam = 0; g.camY = 0; g.dist = 0; g.acc = 0; g.alpha = 1; g.prev = new Map(); g.rot = 0; g.lastA = null; g.air = 0; g.headHit = 0; g.spiked = false; g.crates = 0; g.paid = 0; g.stars = []; },
     update(g, dt) { let gas = g.keys.ArrowRight || g.keys.d ? 1 : 0, back = g.keys.ArrowLeft || g.keys.a ? 1 : 0; const up = g.keys.ArrowUp || g.keys.w, dn = g.keys.ArrowDown || g.keys.s; if (g.ptr.down) { if (g.ptr.x > g.W / 2) gas = 1; else back = 1; }
@@ -45,7 +45,7 @@
         const m = Math.floor((cx - 200) / 10); if (m > g.dist) { g.add(m - g.dist, 'm'); g.dist = m; } if (g.crates > g.paid) { g.add(25 * (g.crates - g.paid), 'k'); g.float(g.W / 2, 140, 'SMASH +25', '#ff9a4a', 16); g.paid = g.crates; g.sfx('pop'); }
         if (gas && g.frames % 6 === 0) Kit.sfx('engine', Math.min(1, Math.hypot(fr.velocity.x, fr.velocity.y) / 12)); }
       else { g.endT -= dt; if (g.endT <= 0) return g.end(g.why); }
-      const fx = g.onBike ? cx : g.rag.torso.position.x, fy = g.onBike ? cy : g.rag.torso.position.y; terrain(g, fx); g.cam = Kit.lerp(g.cam, fx - g.W * 0.36 - Math.min(140, fr.velocity.x * 10), Math.min(1, dt * 4)); g.camY = Kit.lerp(g.camY, fy - g.H * 0.55, Math.min(1, dt * 3));
+      const fx = g.onBike ? cx : g.rag.torso.position.x, fy = g.onBike ? cy : g.rag.torso.position.y; terrain(g, fx); g.cam = Kit.lerp(g.cam, fx - g.W * 0.3 - Math.min(90, fr.velocity.x * 10), Math.min(1, dt * 4)); g.camY = Kit.lerp(g.camY, fy - g.H * 0.55, Math.min(1, dt * 3));
       g.hud = ''; },
     draw(g, c) { const W = g.W, H = g.H, cam = g.cam, cy = g.camY;
       const sky = c.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#5fb8ff'); sky.addColorStop(1, '#d8f0ff'); c.fillStyle = sky; c.fillRect(0, 0, W, H);
