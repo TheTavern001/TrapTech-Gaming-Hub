@@ -14,7 +14,6 @@ window.CarArt = (function () {
     c.fillStyle = '#0d1014'; for (const y of [H * 0.2, H * 0.74]) { rr(c, -2.2, y - 6, 5, 12, 2); c.fill(); rr(c, W - 2.8, y - 6, 5, 12, 2); c.fill(); }
     const gx = c.createLinearGradient(0, 0, W, 0); gx.addColorStop(0, dk(body, 0.38)); gx.addColorStop(0.28, lt(body, 0.12)); gx.addColorStop(0.5, lt(body, 0.2)); gx.addColorStop(0.78, body); gx.addColorStop(1, dk(body, 0.45)); c.fillStyle = gx; rr(c, 0, 0, W, H, K.r); c.fill(); c.strokeStyle = dk(body, 0.6); c.lineWidth = 1; c.stroke();
     if (kind === 'cop') { c.fillStyle = '#111827'; rr(c, 1, H * 0.46, W - 2, H * 0.12, 2); c.fill(); rr(c, 3, 3, W - 6, H * 0.12, 4); c.fill(); }
-    if (kind === 'derby') { c.fillStyle = 'rgba(255,255,255,.9)'; rr(c, W * 0.38, 4, W * 0.24, H - 8, 2); c.fill(); c.fillStyle = 'rgba(0,0,0,.65)'; c.font = 'bold 13px system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.save(); c.translate(W / 2, H * 0.5); c.rotate(-Math.PI / 2); c.fillText(String(1 + (color.charCodeAt(2) % 9)), 0, 0); c.restore(); }
     // glass: windshield, roof, rear window
     const [c0, c1] = K.cab, wy = H * c0, wh = H * (c1 - c0);
     if (kind !== 'derby') { const gl = c.createLinearGradient(0, wy, 0, wy + wh); gl.addColorStop(0, '#9ed4ff'); gl.addColorStop(0.35, '#1b2a3d'); gl.addColorStop(1, '#0c1420'); c.fillStyle = gl; c.beginPath(); c.moveTo(W * 0.12, wy + wh * 0.28); c.lineTo(W * 0.2, wy); c.lineTo(W * 0.8, wy); c.lineTo(W * 0.88, wy + wh * 0.28); c.closePath(); c.fill();
@@ -27,6 +26,19 @@ window.CarArt = (function () {
     c.fillStyle = dk(body, 0.3); rr(c, -3, wy + 2, 4, 5, 1.5); c.fill(); rr(c, W - 1, wy + 2, 4, 5, 1.5); c.fill();
     c.strokeStyle = 'rgba(0,0,0,.22)'; c.lineWidth = 1; c.beginPath(); c.moveTo(W * 0.5, 3); c.lineTo(W * 0.5, wy - 2); c.stroke();
     c.fillStyle = '#fff6c4'; rr(c, 2.5, 1.2, 6.5, 3.8, 1.8); c.fill(); rr(c, W - 9, 1.2, 6.5, 3.8, 1.8); c.fill(); c.fillStyle = '#d6191b'; rr(c, 2.5, H - 5, 7, 3.4, 1.6); c.fill(); rr(c, W - 9.5, H - 5, 7, 3.4, 1.6); c.fill();
+    if (kind === 'taxi') { // checker side stripes, roof sign box, bumper plate
+      for (const sx of [0, W - 4.5]) for (let i = 0; i < 9; i++) { c.fillStyle = i % 2 ? '#111' : '#fafafa'; c.fillRect(sx, H * 0.2 + i * (H * 0.5 / 9), 4.5, H * 0.5 / 9); }
+      c.fillStyle = 'rgba(0,0,0,.35)'; rr(c, W * 0.2 + 1.5, H * 0.4 + 2, W * 0.6, H * 0.14, 3); c.fill();
+      const sg = c.createLinearGradient(0, H * 0.4, 0, H * 0.54); sg.addColorStop(0, '#fff7c2'); sg.addColorStop(1, '#fbbf24'); c.fillStyle = sg; rr(c, W * 0.2, H * 0.4, W * 0.6, H * 0.14, 3); c.fill(); c.strokeStyle = '#7c4a03'; c.lineWidth = 1; c.stroke();
+      c.fillStyle = '#111'; c.font = 'bold 6px system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.save(); c.translate(W / 2, H * 0.47); c.rotate(-Math.PI / 2); c.fillText('TAXI', 0, 0); c.restore();
+      c.fillStyle = '#f8fafc'; rr(c, W * 0.3, H - 3.5, W * 0.4, 2.6, 1); c.fill(); }
+    if (kind === 'derby') { let sd = color.charCodeAt(1) * 31 + color.charCodeAt(3); const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 7; i++) { c.fillStyle = R() < .5 ? 'rgba(120,60,20,.55)' : 'rgba(40,40,40,.35)'; const px = R() * (W - 8), py = R() * (H - 10); c.beginPath(); c.ellipse(px + 4, py + 5, 3 + R() * 4, 2 + R() * 4, R() * 3, 0, TAU); c.fill(); }
+      c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 1; for (let i = 0; i < 5; i++) { const px = R() * W, py = R() * H; c.beginPath(); c.moveTo(px, py); c.lineTo(px + (R() - .5) * 12, py + (R() - .5) * 14); c.stroke(); }
+      c.fillStyle = 'rgba(0,0,0,.45)'; c.beginPath(); c.moveTo(0, 5); c.lineTo(W * .3, 2); c.lineTo(W * .45, 6); c.lineTo(W * .2, 9); c.closePath(); c.fill(); c.beginPath(); c.moveTo(W, H - 8); c.lineTo(W * .72, H - 3); c.lineTo(W * .6, H - 8); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(W * .1, 6); c.lineTo(W * .26, 3.5); c.lineTo(W * .22, 7); c.closePath(); c.fill();
+      c.strokeStyle = '#9ca3af'; c.lineWidth = 2; c.beginPath(); c.moveTo(W * .12, H * .36); c.lineTo(W * .88, H * .36); c.moveTo(W * .12, H * .66); c.lineTo(W * .88, H * .66); c.stroke(); c.strokeStyle = '#374151'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(2, H - 2); c.lineTo(W - 2, H - 2); c.moveTo(2, 2); c.lineTo(W - 2, 2); c.stroke();
+      c.fillStyle = '#f8fafc'; c.beginPath(); c.arc(W / 2, H * .5, 8.5, 0, TAU); c.fill(); c.strokeStyle = '#111'; c.lineWidth = 1.5; c.stroke(); c.fillStyle = '#111'; c.font = 'bold 11px system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.save(); c.translate(W / 2, H * .5 + .5); c.rotate(-Math.PI / 2); c.fillText(String(1 + (color.charCodeAt(2) * 7 + color.charCodeAt(4)) % 99), 0, 0); c.restore(); }
     c.fillStyle = 'rgba(255,255,255,.12)'; rr(c, 3, 6, W * 0.22, H - 12, 5); c.fill(); }); }
   function car(c, x, y, color, o) { o = o || {}; const kind = o.kind || 'sedan', K = KINDS[kind] || KINDS.sedan, sc = o.scale || 1, s = carSprite(color, kind), a = o.angle || 0; c.save(); c.translate(x, y); c.rotate(a);
     c.fillStyle = 'rgba(0,0,0,.32)'; rr(c, -K.w * sc / 2 + 3, -K.h * sc / 2 + 5, K.w * sc, K.h * sc, 10 * sc); c.fill(); c.fillStyle = 'rgba(0,0,0,.18)'; rr(c, -K.w * sc / 2 + 1, -K.h * sc / 2 + 2, K.w * sc + 4, K.h * sc + 5, 12 * sc); c.fill();

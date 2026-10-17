@@ -1,5 +1,16 @@
 // Neon Circuit — original endless arcade racer for The Gaming Hub.
 // Controls: left/right arrows or A/D; touch the left/right sides on mobile.
+// original rear-view synthwave car art (code-drawn)
+function rearCar(c, hue, t, me) { const H = (l, a) => 'hsla(' + hue + ',100%,' + l + '%,' + (a == null ? 1 : a) + ')';
+  c.save(); c.globalCompositeOperation = 'lighter'; const ug = c.createRadialGradient(0, 20, 4, 0, 20, 44); ug.addColorStop(0, H(60, .55)); ug.addColorStop(1, H(60, 0)); c.fillStyle = ug; c.beginPath(); c.ellipse(0, 20, 44, 18, 0, 0, 7); c.fill(); c.restore();
+  c.fillStyle = '#05060f'; for (const sx of [-1, 1]) { c.beginPath(); c.roundRect(sx * 22 - 5, 2, 10, 20, 3); c.fill(); }
+  c.shadowColor = H(60); c.shadowBlur = 14; const bg = c.createLinearGradient(0, -24, 0, 20); bg.addColorStop(0, '#2b2d52'); bg.addColorStop(.5, '#14152b'); bg.addColorStop(1, '#0a0a18'); c.fillStyle = bg; c.strokeStyle = H(65); c.lineWidth = 2;
+  c.beginPath(); c.moveTo(-26, 16); c.lineTo(-24, 0); c.lineTo(-15, -10); c.lineTo(-11, -22); c.lineTo(11, -22); c.lineTo(15, -10); c.lineTo(24, 0); c.lineTo(26, 16); c.closePath(); c.fill(); c.stroke(); c.shadowBlur = 0;
+  const gl = c.createLinearGradient(0, -20, 0, -6); gl.addColorStop(0, H(75, .9)); gl.addColorStop(1, H(30, .9)); c.fillStyle = gl; c.beginPath(); c.moveTo(-9, -19); c.lineTo(9, -19); c.lineTo(12, -8); c.lineTo(-12, -8); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.moveTo(-7, -18); c.lineTo(-2, -18); c.lineTo(-6, -9); c.lineTo(-10, -9); c.closePath(); c.fill();
+  c.fillStyle = '#ff2a4d'; c.shadowColor = '#ff2a4d'; c.shadowBlur = me ? 16 : 10; c.fillRect(-23, 1, 15, 4); c.fillRect(8, 1, 15, 4); c.fillRect(-8, 2, 16, 2); c.shadowBlur = 0;
+  c.fillStyle = H(60); c.fillRect(-22, 8, 44, 2); c.fillStyle = '#e8fbff'; c.fillRect(-9, 11, 18, 5); c.fillStyle = '#111'; c.fillRect(-7, 12, 14, 3);
+  if (me) { c.fillStyle = H(65); c.beginPath(); c.moveTo(-20, -2); c.lineTo(-30, -9); c.lineTo(-27, 4); c.closePath(); c.fill(); c.beginPath(); c.moveTo(20, -2); c.lineTo(30, -9); c.lineTo(27, 4); c.closePath(); c.fill(); c.save(); c.globalCompositeOperation = 'lighter'; for (const sx of [-7, 7]) { const fl = 10 + Math.sin(t * 40 + sx) * 4; const fg = c.createLinearGradient(0, 16, 0, 16 + fl); fg.addColorStop(0, 'rgba(255,200,80,.9)'); fg.addColorStop(1, 'rgba(255,60,200,0)'); c.fillStyle = fg; c.fillRect(sx - 3, 16, 6, fl); } c.restore(); } }
 Kit.run({
   id: 'gl-neon-circuit', title: 'NEON CIRCUIT', help: 'DODGE TRAFFIC · COLLECT ENERGY · SURVIVE THE CIRCUIT',
   fill: true, minH: 560, maxH: 900, bg: '#050816',
@@ -58,15 +69,11 @@ Kit.run({
     // traffic objects scale toward the player
     for(const o of g.traffic){const z=o.z,x=W*(.25+o.lane*.25),y=H*(.15+z*.75),s=.2+z*.95;
       if(o.kind==='energy'){c.save();c.translate(x,y);c.rotate(g.t*2);c.shadowColor='#b6ff42';c.shadowBlur=18;c.strokeStyle='#b6ff42';c.lineWidth=3*s;c.beginPath();c.moveTo(0,-15*s);c.lineTo(12*s,0);c.lineTo(0,15*s);c.lineTo(-12*s,0);c.closePath();c.stroke();c.restore();}
-      else {c.save();c.translate(x,y);c.scale(s,s);c.shadowColor='hsl('+o.hue+' 100% 60%)';c.shadowBlur=16;c.fillStyle='#17172c';c.strokeStyle='hsl('+o.hue+' 100% 65%)';c.lineWidth=2;c.beginPath();c.moveTo(-18,-24);c.lineTo(18,-24);c.lineTo(24,18);c.lineTo(-24,18);c.closePath();c.fill();c.stroke();c.fillStyle='hsl('+o.hue+' 100% 65%)';c.fillRect(-17,-18,34,4);c.fillStyle='#e8fbff';c.fillRect(-17,12,8,3);c.fillRect(9,12,8,3);c.restore();}
+      else { c.save(); c.translate(x, y); c.scale(s, s); rearCar(c, o.hue, g.t, false); c.restore(); }
     }
     // player hover racer
     const x=W*(.25+g.player.lane*.25),y=H*.78;
-    c.save();c.translate(x,y);c.rotate(g.player.tilt*.08);c.shadowColor='#36f7ff';c.shadowBlur=28;
-    c.fillStyle='rgba(54,247,255,.16)';c.beginPath();c.ellipse(0,22,32,12,0,0,Math.PI*2);c.fill();
-    const body=c.createLinearGradient(-20,-28,20,25);body.addColorStop(0,'#f6fbff');body.addColorStop(.35,'#36f7ff');body.addColorStop(1,'#6d28d9');
-    c.fillStyle=body;c.strokeStyle='#e9ffff';c.lineWidth=2;c.beginPath();c.moveTo(0,-34);c.lineTo(19,-7);c.lineTo(24,19);c.lineTo(0,11);c.lineTo(-24,19);c.lineTo(-19,-7);c.closePath();c.fill();c.stroke();
-    c.fillStyle='#fff';c.fillRect(-14,4,7,4);c.fillRect(7,4,7,4);c.fillStyle='#ff37e1';c.fillRect(-9,20,18,4);c.restore();
+    c.save(); c.translate(x, y); c.rotate(g.player.tilt * .08); c.scale(1.25, 1.25); rearCar(c, 185, g.t, true); c.restore();
     c.fillStyle='rgba(4,7,25,.7)';c.fillRect(14,14,160,6);c.fillStyle='#b6ff42';c.fillRect(14,14,160*Math.min(1,g.energy/10),6);
     c.fillStyle='#c9faff';c.font='bold 12px sans-serif';c.fillText('ENERGY CELLS',14,10);
     c.fillStyle='rgba(255,255,255,.65)';c.font='11px sans-serif';c.fillText('← / A',W*.08,H-18);c.fillText('D / →',W*.82,H-18);
