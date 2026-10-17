@@ -12,7 +12,7 @@
   function shade(h) { const n = parseInt(h.slice(1), 16); const f = (v) => Math.floor(v * 0.35); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; }
   function nextRound(g) { g.round++; g.mark('r', g.round); if (g.round >= 8) g.n5 = true; g.seq.push(g.RI(0, g.n5 ? 4 : 3)); if (g.round >= 14) { const m = g.map.slice(); for (let i = 3; i > 0; i--) { const j = g.RI(0, i); [m[i], m[j]] = [m[j], m[i]]; } g.map = m; g.swapT = 0.8; }
     g.phase = 'show'; g.si = 0; g.st = 0.7; g.step = Math.max(0.24, 0.62 - g.round * 0.018); g.inp = 0; }
-  Kit.run({ id: 'gl-glow-echo', title: 'GLOW ECHO', help: 'Watch the pads light up, then tap them back in the same order (keys 1-5)\nEach round adds a step and speeds up. Pads move from round 14', bg: '#05060f',
+  Kit.run({ id: 'gl-glow-echo', fill: true, title: 'GLOW ECHO', help: 'Watch the pads light up, then tap them back in the same order (keys 1-5)\nEach round adds a step and speeds up. Pads move from round 14', bg: '#05060f',
     init(g) { g.round = 0; g.seq = []; g.map = [0, 1, 2, 3]; g.n5 = false; g.lit = -1; g.litT = 0; g.fx = []; g.hud = ''; nextRound(g); },
     update(g, dt) { g.litT -= dt; if (g.litT <= 0) g.lit = -1; if (g.swapT > 0) g.swapT -= dt;
       if (g.phase === 'show') { g.st -= dt; if (g.st <= 0) { if (g.si >= g.seq.length) { g.phase = 'input'; g.inT = 0; return; } const p = g.seq[g.si++]; g.lit = p; g.litT = g.step * 0.7; tone(NOTES[p], g.step * 0.7); g.st = g.step; } return; }
