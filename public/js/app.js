@@ -1032,7 +1032,7 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
   if (!p.demo) hydrateProfileAvatar(p.username);
   achToast(r.unlocked);
   setTitle(`${p.username}'s profile`);
-  api('/api/users/' + encodeURIComponent(p.username) + '/prestige').then(x => { const el = document.getElementById('px-show'); if (el && x.ok && x.items.length) el.innerHTML = `<div class="px-showcase">${x.items.map(it => `<a href="/prestige" class="pill gold" title="${esc(it.name)}">${icon('gem')} ${esc(it.name)} #${it.serial}/${it.supply}</a>`).join('')}</div>`; });
+  api('/api/users/' + encodeURIComponent(p.username) + '/prestige').then(x => { const el = document.getElementById('px-show'); if (el && x.ok && x.items.length) el.innerHTML = `<div class="px-showcase">${x.items.map(it => `<a href="/prestige" class="pill gold" title="${esc(it.name)}">${icon('gem')} ${esc(it.name)}</a>`).join('')}</div>`; });
   api(`/api/users/${encodeURIComponent(p.username)}/special-badges`).then(sb => { const el = document.getElementById('special-badges'); if (!el || !sb.ok || !sb.granted.length) return;
     el.innerHTML = `<div class="special-row" aria-label="Special badges">${sb.granted.map(b => `<span class="special-b" title="${esc(b.desc)}">${badgeArt('adm:' + b.id, 'sm')}<b>${esc(b.name)}</b></span>`).join('')}</div>`; });
   document.getElementById('share-prof').onclick = () => shareLink({ kind: 'profile', ref: p.username, url: `/u/${encodeURIComponent(p.username)}`, title: `${p.username} on The Gaming Hub`, text: `Level ${p.level.level} on The Gaming Hub - come play!` });
