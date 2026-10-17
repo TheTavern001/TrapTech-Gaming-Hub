@@ -37,7 +37,7 @@
     c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(352, 250, 24, 440); return (TABLE = cv); }
   addEventListener('pointerdown', e => { const cv = document.getElementById('gl'); if (!cv) return; const r = cv.getBoundingClientRect(); (e.clientX < r.left + r.width / 2 ? touch.l : touch.r).add(e.pointerId); });
   const up = e => { touch.l.delete(e.pointerId); touch.r.delete(e.pointerId); }; addEventListener('pointerup', up); addEventListener('pointercancel', up);
-  Kit.run({ id: 'gl-neon-flipper', title: 'NEON FLIPPER', help: 'Left / right side of the screen (or Z and M / arrow keys) flip\nHold, then release to launch. Light the lanes for a multiplier', bg: '#0b0620',
+  Kit.run({ fill: true, id: 'gl-neon-flipper', title: 'NEON FLIPPER', help: 'Left / right side of the screen (or Z and M / arrow keys) flip\nHold, then release to launch. Light the lanes for a multiplier', bg: '#0b0620',
     init(g) { g.balls = 3; g.mult = 1; g.tgt = [false, false, false]; g.roll = [false, false, false]; g.nextXB = 40000; for (const f of FL) { f.ang = f.rest; f.w = 0; } for (const b of bumps) b.lit = 0; newBall(g); g.hud = ''; },
     update(g, dt) { const L = touch.l.size > 0 || g.keys.ArrowLeft || g.keys.z || g.keys.Z || g.keys.a, Rt = touch.r.size > 0 || g.keys.ArrowRight || g.keys.m || g.keys.M || g.keys.d; const b = g.ball;
       if (b.lane) { const hold = g.held() || L || Rt; if (hold) g.charge = Math.min(1, g.charge + dt * 1.2); else if (g.charge > 0.05) { b.vy = -(900 + g.charge * 700); b.lane = false; g.sfx('whoosh'); g.charge = 0; } }
