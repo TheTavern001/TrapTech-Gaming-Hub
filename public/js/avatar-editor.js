@@ -3,7 +3,7 @@ import { mountAvatar3D, supportsRiggedAvatar } from './avatar-3d.js';
 let avatarCleanup = null;
 let C = null;
 const KL = { bg: 'Background', skin: 'Skin · free', face: 'Face · free', hair: 'Hair', hairc: 'Hair color', eyes: 'Eyes · free', mouth: 'Mouth · free', beard: 'Facial hair · free', build: 'Body build', outfit: 'Outfit', hat: 'Hat', acc: 'Accessory', held: 'Held item', emote: 'Emotes' };
-const lockText = (p) => p.owned ? '' : p.unlock.prestige ? 'One-of-one Prestige: not available until certified' : p.unlock.ach ? `${p.unlock.ach} achievements or ${p.credits} Credits` : `Unlock for ${p.credits} Hub Credits (earn or buy optional Credits)`;
+const lockText = (p) => p.owned ? '' : p.unlock.prestige ? 'Prestige: not available until certified' : p.unlock.ach ? `${p.unlock.ach} achievements or ${p.credits} Credits` : `Unlock for ${p.credits} Hub Credits (earn or buy optional Credits)`;
 // The selection grid must spotlight the ITEM, not reproduce an almost-identical smiley
 // head 150 times. Reuse licensed first-party game artwork for suitable props, then
 // show a clearly labeled slot icon/material; the live 3D stage remains the actual preview.
@@ -44,7 +44,7 @@ async function editor() {
     const rigAvailable = supportsRiggedAvatar(cfg);
     const modelStatus = rigAvailable
       ? '<span class="av-model-status source">Licensed rigged 3D model · animated source art</span>'
-      : '<span class="av-model-status compat">Compatibility preview · rigged wardrobe asset pending</span>';
+      : '';
     const showStarter = JSON.stringify(cfg) !== JSON.stringify(r.starter);
     C.shell('/settings', `<div class="narrow avatar-ed">${C.pageHead('Your avatar', 'Shown on boards, profiles and winner lists. Cosmetic only.')}
       <div class="av-ed"><div class="av-prev card pad"><div id="avatar-stage" class="avatar-stage" aria-label="Interactive 3D avatar preview"></div><img id="av-prev" src="${prev(cfg)}" alt="Avatar preview" width="220" height="220" style="display:none"><p class="tiny muted">Drag the 3D character to rotate it. Cosmetic only.</p>${modelStatus}<div class="av-selection"><b>${esc(selected?.label || 'Starter option')}</b><span class="tiny ${selected?.owned ? 'ok' : 'lock'}">${esc(details)}</span></div>${showStarter ? '<button class="btn sm ghost" type="button" id="av-reset-starter">Preview shared starter avatar</button>' : ''}<div class="av-balances"><span>Hub Credits <b>${C.fmt(credits)}</b></span><a href="/store" class="small">Get Credits</a></div>${selected && !selected.owned && Number.isFinite(selected.credits) && selected.credits > 0 ? `<button class="btn av-buy-credits" id="av-buy-credits" type="button">${icon('gamepad-2')} Unlock for ${C.fmt(selected.credits)} Credits</button>` : ''}<button class="btn" id="av-save" type="button" ${locked.length ? 'disabled aria-disabled="true"' : ''}>${icon('check')} Save avatar</button>${locked.length ? '<p class="tiny muted">Save is available after you equip only unlocked items.</p>' : ''}<div id="av-msg">${msg}</div></div>

@@ -43,4 +43,11 @@ for (const q of SK.board(uid).daily.quests) { if (q.done) { const r = SK.claim(u
 ok(!SK.claim(uid, 'q2.daily.D1.0.score.' + game.id + '.0').ok, 'expired/foreign quest ids are rejected'); ok(!SK.claim(uid, "q2.daily.D1';DROP TABLE users;--").ok, 'malformed quest id rejected');
 ok(!!db.prepare('SELECT 1 FROM users WHERE id=?').get(uid), 'users table intact');
 const other = db.prepare("INSERT INTO users(username,pass_hash,created_at,birth_date) VALUES('SkillQB','x',?,'1990-01-01')").run(t - D).lastInsertRowid; const ob = SK.board(other); ok(ob.daily.quests.length >= 4, 'brand-new player still gets a full board'); ok(!SK.claim(other, board.daily.quests[0].id).ok, "players cannot claim someone else's quest");
+console.log('# css growth');
+{ const heavy = db.prepare("INSERT INTO users(username,pass_hash,created_at,birth_date) VALUES('CssHoarder','x',?,'1990-01-01')").run(t - D).lastInsertRowid;
+  const ins = db.prepare('INSERT OR IGNORE INTO user_items(user_id,item_id,price,acquired_at) VALUES(?,?,0,?)'); let n = 0;
+  for (let i = 0; i < 6000; i++) { const r = ins.run(heavy, U.idOf(i), t - i); n += r.changes; }
+  const before = SHOP.css().length; const mine = SHOP.cssMine(heavy);
+  ok(n > 5000 && SHOP.css().length === before, 'owning thousands of designs does not grow the global /cosmetics.css', { n, before });
+  ok(mine.split('\n').length <= 420, 'per-player CSS is capped at 400 designs', mine.split('\n').length); }
 console.log(`\nsystems v8: ${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
