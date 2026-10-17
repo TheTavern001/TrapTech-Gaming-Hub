@@ -1,3 +1,6 @@
 # Cube Horde - credits
 - Code and art: original Hub code. The voxel 3D presentation is built in three.js (MIT, ../vendor) through ../runner3x.js. Rules come from the shared ../arena.js engine. All models are code-built.
 - Rejected: Zombie Cubes is closed-source. The voxel shooter repos on GitHub are Unity or have no licence.
+- 2026-10-17 rebuild: original gameplay code (weapons, grenades, barrels, bosses, upgrade picks) and original code-built voxel models. No third-party art/audio/code added. SFX synthesized (WebAudio) + shared Hub juice layer.
+- Source search (EN/ZH/RU + itch/OpenGameArt/GitHub) for a free voxel zombie-shooter base: nothing both voxel-style and clearly commercial-use-OK. Candidates seen and NOT used: aminwoo/last-ethics (MIT, top-down but non-voxel, multiplayer stack), Mr-Salticidae/zombie-world (no licence stated), apoorvdarshan/zombie-game & petergyang/zombie-survival (MIT, first-person), rishipr/der-koloss-ce (code MIT, assets mixed incl. copyrighted song), BittersweetGames voxel zombies (no redistribution), monogon voxel zombie pack (CC BY-ND, paid). Quaternius Zombie Apocalypse Kit is CC0 (low-poly, not voxel) - not needed, so not included.
+- Not a copy of any commercial game: no art, code, names or audio from "Zombie Cubes" (Mayo Games) are used.
