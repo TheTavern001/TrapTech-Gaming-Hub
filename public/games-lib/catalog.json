@@ -3206,21 +3206,21 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Bird 100 + 20 x round, gold +400",
+      "scoring": "Duck 100 + 20 x round x streak, gold +400, perfect bonus",
       "event_length": "3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
       "ac": {
-        "perSec": 400,
+        "perSec": 900,
         "ramp": 0,
-        "grace": 8000,
+        "grace": 18000,
         "max": 1000000000000,
         "coinsPerSec": 1
       },
       "tiers": [
-        8000,
-        36000,
-        96000
+        18000,
+        81000,
+        216000
       ],
       "source": "Original Hub build (public/games-lib/kit.js engine)",
       "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
