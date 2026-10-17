@@ -169,7 +169,7 @@ function shell(path, inner, { cls = '', title } = {}) {
   const alias = (path === '/settings' && activePath === '/avatar') ||
     (path === '/shop' && (activePath === '/store' || activePath === '/prestige' || activePath === '/shop/how-it-works' || /^\/store\/order\/[A-Z0-9]{8,20}$/.test(activePath))) ||
     (path === '/sponsor' && /^\/sponsor\/status\/[A-Za-z0-9_-]{20,40}$/.test(activePath)) ||
-    (path === '/giveaways' && (/^\/join\/[A-Za-z0-9-]{3,40}$/.test(activePath) || /^\/event\/TT-[0-9A-Za-z]{5}$/i.test(activePath) || /^\/giveaways\/\d+(?:\/(?:rules|live|results))?$/.test(activePath) || activePath === '/me/entries')) ||
+    (path === '/giveaways' && (/^\/brand\/[a-z0-9-]{1,60}$/i.test(activePath) || /^\/join\/[A-Za-z0-9-]{3,40}$/.test(activePath) || /^\/event\/TT-[0-9A-Za-z]{5}$/i.test(activePath) || /^\/giveaways\/\d+(?:\/(?:rules|live|results))?$/.test(activePath) || activePath === '/me/entries')) ||
     (path === '/games' && /^\/games\/[A-Za-z0-9_-]+$/.test(activePath)) ||
     (path === '/profile' && /^\/u\/[^/]{1,80}$/.test(activePath)) ||
     (path === '/tournaments' && /^\/tournaments\/\d+$/.test(activePath)) ||

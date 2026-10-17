@@ -60,3 +60,23 @@ Legend: DONE-verified = I read the code and exercised it; PARTIAL; MISSING; CONF
 ## D. Work order (this stream)
 S0 plan (this file) -> S1 cosmetic universe + renderer + shop integration + quest/achievement engine -> S2 hub/avatar UI fixes -> S3 admin settings -> S4 booking/brands/audience -> S5 payments -> S6 security/privacy -> full regression, push every few chunks.
 Constraints honoured: never push main; game folders (public/games*) untouched; memory: everything generated on demand from seeds with tiny LRU caches.
+
+## E. Results (updated 2026-10-17, ET) - systems stream, branch v8-games-upgrade
+Node v20.19.2. `npm audit --omit=dev`: 0 vulnerabilities.
+
+| Area | Result | Evidence |
+|---|---|---|
+| 12,000-design cosmetic universe, per-player CSS (`/cosmetics-mine.css`, cap 400), small global sheet | DONE | tools/test-systems-v8.js (52) |
+| Skill achievements (11.5k) and quests | DONE | same |
+| Security: public CSP (hash-pinned import map), cross-site/Origin guard, account export + deletion, privacy policy | DONE | tools/test-security-v8.js (30); 0 CSP violations in a real browser across core pages and games |
+| Giveaway audiences open / affiliated / invite-only, redeem UI, admin invite codes | DONE | tools/test-audience-v8.js (26), tools/test-admin-v8.js (12) |
+| Brand profile pages `/brand/<slug>`, Featured Brands (Home + Giveaways), admin feature/about controls | DONE | test-audience-v8; browser check at 320/390/1280 px, no horizontal overflow |
+| Follower-promise copy removed; copy-guard test | DONE (legacy DB column `elig_followers_only` is forced false, never shown) | test-audience-v8 |
+| Cosmetic cash orders (`cos:<id>`: USD = Credits/10 cents, 99c-$99.99; BTC or Stripe), refunds reverse the item, reconciliation test | DONE, checkout stays OFF until the owner enables it | tools/e2e-cosmetic-orders.js (22), e2e-payments (32) |
+| Admin "Systems" page (catalog, quests, brands, orders, security, privacy) | DONE | test-admin-v8 |
+| Shop page, "How is this priced?" (collapsed by default), 6-tab bottom nav at 320 px | VERIFIED in browser | no overflow at 320/390/1280 |
+| Memory (production flags, `--max-old-space-size=64`) | idle 101 MB, peak 111 MB after 3 x 94 parallel requests (baseline before this work: 125 MB) | tools/mem-check.sh |
+
+Previously failing suites (e2e-api, avatars, payments, admin, tiebreak, sponsor-brands) were stale tests, not product bugs: removed Hub ID/founder flags, event prizes locked until games are certified, Credits are 10x old Crowns, 12 unlimited prestige originals, manual grants need settled payments. One real bug found and fixed: star eyes were free (now 15 achievements). Real bug found in this pass: `/brand/<slug>` rendered nothing because the shell path whitelist did not know the route.
+
+Test-only hook: `NODE_ENV=test` + `PRIZE_PROOF_TEST_APPROVE=<game ids>` (ignored when `PUBLIC_URL` is set) lets event tests run. Prize events stay locked in production.
