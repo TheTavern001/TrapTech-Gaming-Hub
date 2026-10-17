@@ -24,7 +24,7 @@
       c.fillStyle = s.d; Kit.rr(c, -12, -6, 24, 22, 5); c.fill(); c.fillStyle = s.c; for (const [x, y, r] of [[-4, 0, 6], [5, 4, 5], [-2, 9, 5], [4, -3, 4]]) { c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); } c.fillStyle = 'rgba(255,255,255,.5)'; for (const [x, y] of [[-5, -2], [4, 3], [0, 8]]) c.fillRect(x, y, 1.5, 1.5);
       c.fillStyle = s.c; Kit.rr(c, -17, -24, 34, 8, 3); c.fill(); c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(-17, -18, 34, 2); c.fillStyle = 'rgba(255,255,255,.7)'; c.fillRect(-12, -14, 2, 30); }
     c.restore(); }
-  Kit.run({ id: 'gl-bud-sort', title: 'BUD SORT', help: '21+ only. Swipe each jar toward the bin of its colour (or tap the bin / arrows + Q/E)\nStems & seeds: swipe DOWN to reject. Don\'t let the gate jam', bg: '#0b1410',
+  Kit.run({ fill: true, id: 'gl-bud-sort', title: 'BUD SORT', help: '21+ only. Swipe each jar toward the bin of its colour (or tap the bin / arrows + Q/E)\nStems & seeds: swipe DOWN to reject. Don\'t let the gate jam', bg: '#0b1410',
     init(g) { g.items = []; g.fly = []; g.lit = [0, 0, 0, 0]; g.lives = 3; g.combo = 0; g.sorted = 0; g.spawnT = 0.5; g.belt = 0; g.hud = ''; },
     update(g, dt) { const lvl = g.sorted / 15, sp = 70 + lvl * 9, nk = Math.min(4, 2 + Math.floor(g.sorted / 10)); g.belt = (g.belt + sp * dt) % 24;
       g.spawnT -= dt; if (g.spawnT <= 0) { g.spawnT = Math.max(0.55, 1.6 - lvl * 0.08); g.items.push({ x: GX + g.R(-10, 10), y: -30, k: g.rnd() < 0.12 ? -1 : g.RI(0, nk - 1), rot: g.R(-0.2, 0.2) }); }
