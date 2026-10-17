@@ -97,7 +97,7 @@ export default async function Racer(cfg) {
   const traffic = []; const pl = { x: 0, vx: 0, steer: 0 };
   window.__LR = { traffic, pl, get g() { return window.__GL && __GL.g; } };
   const laneX = (l) => -LW * 1.5 + l * LW;
-  K.run({ id: cfg.id, title: cfg.title, help: cfg.help, bg: 'transparent', overText: 'CRASHED',
+  K.run({ id: cfg.id, title: cfg.title, help: cfg.help, bg: 'transparent', fill: true, overText: 'CRASHED',
     init(g) { gref = g; if (g.fpv === undefined) g.fpv = !!(cfg.bike && cfg.fpv); for (const t of traffic) scene.remove(t.o); traffic.length = 0; Object.assign(pl, { x: laneX(1), vx: 0, steer: 0 }); g.z = 0; if (cfg.bike) for (const [ln, z] of [[0, -22], [2, -34], [3, -48], [0, -60]]) addCar(g, ln, z, (cfg.speed || 22) * g.R(0.55, 0.7)); g.sp = cfg.speed || 22; g.lastM = 0; g.next = 2; g.combo = 0; g.comboT = 0; g.nm = 0; g.camX = pl.x; },
     update(g, dt) { if (g.state !== 'play') return; if (g.ptr.pressed && g.ptr.x < 64 && g.ptr.y < 64) { g.paused = true; return; }
       let st = g.ax(); if (g.ptr.down && !(g.ptr.x < 64 && g.ptr.y < 64)) st = g.ptr.x < g.W / 2 ? -1 : 1; pl.steer = K.lerp(pl.steer, st, Math.min(1, dt * 10));
