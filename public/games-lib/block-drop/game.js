@@ -16,7 +16,7 @@
     // faint leaf watermark (21+ theme)
     c.save(); c.translate(W / 2 - 60, H * 0.5); c.globalAlpha = 0.05; c.fillStyle = '#7dffb0'; for (let i = -3; i <= 3; i++) { c.save(); c.rotate(i * 0.38); c.beginPath(); c.ellipse(0, -70 + Math.abs(i) * 12, 11 - Math.abs(i), 70 - Math.abs(i) * 12, 0, 0, 7); c.fill(); c.restore(); } c.restore(); return (BGC = cv); }
   const rot = (cells, k, n) => cells.map(([x, y]) => { for (let i = 0; i < k; i++) [x, y] = [n - 1 - y, x]; return [x, y]; });
-  Kit.run({ id: 'gl-block-drop', title: 'BLOCK DROP', help: 'Arrows / swipe to move, Up / tap to rotate\nDown soft drop, Space hard drop, C hold', bg: '#060920',
+  Kit.run({ id: 'gl-block-drop', fill: true, title: 'BLOCK DROP', help: 'Arrows / swipe to move, Up / tap to rotate\nDown soft drop, Space hard drop, C hold', bg: '#060920',
     init(g) { g.bd = Array.from({ length: R }, () => Array(C).fill(null)); g.bag = []; g.lines = 0; g.lv = 1; g.fall = 0; g.hold = null; g.canHold = true; g.lock = 0; g.clr = []; g.nextQ = []; for (let i = 0; i < 3; i++) g.nextQ.push(take(g)); spawn(g); g.das = 0; },
     update(g, dt) {
       if (g.clr.length) { g.clrT -= dt; if (g.clrT <= 0) { for (const y of g.clr) { g.bd.splice(y, 1); g.bd.unshift(Array(C).fill(null)); } g.clr = []; spawn(g); } return; }
