@@ -43,8 +43,8 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await P1(`/api/store/orders/${o.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending' && !(await owns(P1, item.id)), 'nothing paid -> not owned');
   const t1 = txid(); M.txs.push({ txid: t1, sats: o.sats });
   r = await P1(`/api/store/orders/${o.ref}/check`, { body: {} }); ok(r.body.order.status === 'seen' && !(await owns(P1, item.id)), '0-conf -> seen, not granted');
-  // underpay by 2000 sats on a second order by P2 first (separate tx)
-  r = await P3('/api/store/orders', { body: { product_id: pid } }); const o3 = r.body.order; const t2 = txid(); M.txs.push({ txid: t2, sats: o3.sats - 2000, height: M.tip });
+  // underpay (60% of the quote) on a second order by P2 first (separate tx)
+  r = await P3('/api/store/orders', { body: { product_id: pid } }); const o3 = r.body.order; const t2 = txid(); M.txs.push({ txid: t2, sats: Math.max(1, Math.floor(o3.sats * 0.6)), height: M.tip });
   r = await P3(`/api/store/orders/${o3.ref}/check`, { body: { txid: t2 } }); ok(r.body.order.status === 'underpaid' && !(await owns(P3, item.id)), 'underpaid -> flagged, not granted', r.body.order);
   M.txs.find(x => x.txid === t1).height = M.tip; r = await P1(`/api/store/orders/${o.ref}/check`, { body: {} });
   ok(r.body.order.status === 'granted' && await owns(P1, item.id), 'confirmed exact payment -> cosmetic granted', r.body.order);

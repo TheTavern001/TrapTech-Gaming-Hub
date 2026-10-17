@@ -15,6 +15,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
   ok(cfg.GAMES.every(g => P.metricsFor(g.id).length === 2 && P.metricsFor(g.id)[0].id === 'faster'), 'every core game has a skill metric (faster run + game metric)');
   const R = require('../src/results'); const txt = R.TIEBREAK_RULES.join(' ');
   ok(!/first wins|reached that score first|fewer attempts|lower run ID|earlier-submitted/i.test(txt) && /server-timed/.test(txt) && /playoff/.test(txt), 'published tie-break rules are skill-only');
+  if (!/munchies-snake/.test(process.env.PRIZE_PROOF_TEST_APPROVE || '') || process.env.NODE_ENV !== 'test') { console.error('e2e-tiebreak needs the prize-proof test hook: run the SERVER and this test with NODE_ENV=test PRIZE_PROOF_TEST_APPROVE=munchies-snake (official events stay locked for uncertified games by design).'); process.exit(2); }
   const db = new Database(process.env.DB_PATH || path.join(__dirname, '..', 'data', 'hub.db'));
   const ADM = require('./admin-auth').adminClient(BASE); await ADM.login();
   const mk = () => { const c = client(); c.u = 'tb_' + Math.random().toString(36).slice(2, 8); return c; };
