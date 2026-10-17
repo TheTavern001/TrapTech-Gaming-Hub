@@ -113,7 +113,10 @@ const LIST = [
   T('silent-asylum', 'Silent Asylum', 'Horror Survival', 4, 'A', 'endless', 90, true, 'Survival time + escapes', '3 days', 'opensource'),
 ];
 const OWNER_RETIRED = Object.freeze({});
-const games = LIST.map(x => {
+// Only list games whose playable files actually exist in this build. The registry advertised 20 titles with no
+// public/games-lib/<slug>/ folder (404 on click, and they inflated the game count); they come back automatically once built.
+const HAS_FILES = (slug) => require('fs').existsSync(require('path').join(__dirname, '..', 'public', 'games-lib', slug, 'index.html'));
+const games = LIST.filter(x => HAS_FILES(x.slug)).map(x => {
   const s = SOURCES[x.src] || SOURCES.built;
   return {
     id: 'gl-' + x.slug, slug: x.slug, title: x.title, ref_internal: x.ref, category: CATS[x.cat], lib: true,

@@ -5,7 +5,6 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "start:external": "node src/start-with-external.js",
     "demo:seed": "node src/demo.js seed",
     "demo:wipe": "node src/demo.js wipe",
     "test": "node tools/e2e-api.js",
@@ -26,7 +25,8 @@
     "icons:sync": "node tools/build-traptech-pwa-icons.js",
     "icons:verify": "node tools/test-traptech-pwa-icons.js",
     "verify:private": "node tools/verify-private-preview-live.js",
-    "qa:87:browser": "node tools/qa-87-browser.js"
+    "qa:87:browser": "node tools/qa-87-browser.js",
+    "test:cosmetics": "node tools/test-cosmetic-rewards.js"
   },
   "keywords": [],
   "author": "",
@@ -41,6 +41,6 @@
   },
   "private": true,
   "engines": {
-    "node": "24.x"
+    "node": ">=20 <21"
   }
 }
