@@ -170,7 +170,7 @@
       try { seed = window.Hub ? await Hub.start(def.id) : null; }
       catch (_) { g.state = 'title'; g.startError = 'Could not start game. Check connection and retry.'; return; }
       g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = document.hidden || gameSettingsOpen; def.init(g); g.state = 'play'; if (!g.paused) K.sfx('power'); }
-    g.rnd = mulberry(); def.init(g);
+    resize(); g.rnd = mulberry(); def.init(g);
     let last = performance.now(), acc = 0, fpsT = 0, fpsN = 0;
     function frame(now) {
       requestAnimationFrame(frame); const js0 = performance.now();
