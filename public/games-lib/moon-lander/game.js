@@ -1,3 +1,10 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W, H = g.H;
+  // lunar rover crawling on the lower regolith
+  const rx = ((t * 18) % (W + 100)) - 50, ry = H - 112; c.save(); c.translate(rx, ry); c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(2, 12, 22, 4, 0, 0, 7); c.fill(); c.fillStyle = '#cfd6e2'; Kit.rr(c, -16, -8, 32, 12, 3); c.fill(); c.fillStyle = '#6a7384'; c.fillRect(-16, -2, 32, 3); c.fillStyle = '#ffd23f'; c.fillRect(8, -12, 6, 5); c.strokeStyle = '#9aa3b4'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-10, -8); c.lineTo(-14, -18); c.stroke(); c.fillStyle = '#e8eef9'; c.beginPath(); c.arc(-14, -19, 4, Math.PI, 0); c.fill(); for (const wx of [-12, 0, 12]) { c.fillStyle = '#20242c'; c.beginPath(); c.arc(wx, 6, 5, 0, 7); c.fill(); c.strokeStyle = '#8b94a6'; c.lineWidth = 1; c.beginPath(); c.moveTo(wx, 6); c.lineTo(wx + Math.cos(t * 6) * 4, 6 + Math.sin(t * 6) * 4); c.stroke(); } c.restore();
+  // orbiting satellite
+  const sx = 40 + ((t * 9) % (W - 80)), sy = 92 + Math.sin(t * 0.7) * 12; c.save(); c.translate(sx, sy); c.rotate(Math.sin(t) * 0.3); c.fillStyle = '#b8c4d8'; c.fillRect(-4, -3, 8, 6); c.fillStyle = '#2b5fd9'; c.fillRect(-18, -2, 12, 4); c.fillRect(6, -2, 12, 4); c.strokeStyle = '#9fb3e8'; c.lineWidth = 0.6; for (const o of [-14, -10, 10, 14]) { c.beginPath(); c.moveTo(o, -2); c.lineTo(o, 2); c.stroke(); } c.fillStyle = Math.sin(t * 5) > 0 ? '#ff4d4d' : '#552222'; c.fillRect(-1, -6, 2, 3); c.restore();
+} })(); // v8 scenery+sprite overlay
 // Moon Lander - original Lunar Lander-style game (Hub build). Rotate and thrust to land on a pad, softly and upright.
 // Pads have x2..x5 multipliers (smaller pads pay more). Each landing scores (50 + softness + uprightness) x pad, adds a fuel bonus,
 // and flies you to a new, rougher stretch of terrain with stronger gravity. A crash costs a lander (3). Fuel empty plus a crash ends the run.

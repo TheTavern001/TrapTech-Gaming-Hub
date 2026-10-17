@@ -1,3 +1,10 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W;
+  // patrol helicopter crossing the sky
+  const hx = ((t * 22) % (W + 120)) - 60, hy = 140 + Math.sin(t * 1.3) * 10; c.save(); c.translate(hx, hy); c.fillStyle = '#1b2433'; c.beginPath(); c.ellipse(0, 0, 14, 7, 0, 0, 7); c.fill(); c.fillRect(-26, -2, 14, 3); c.fillStyle = '#6bb6ff'; c.beginPath(); c.ellipse(6, -1, 6, 4, 0, 0, 7); c.fill(); c.strokeStyle = '#9aa7b8'; c.lineWidth = 1.5; const rl = Math.cos(t * 40) * 24; c.beginPath(); c.moveTo(-rl, -8); c.lineTo(rl, -8); c.moveTo(0, -7); c.lineTo(0, -8); c.stroke(); c.fillStyle = Math.sin(t * 6) > 0 ? '#ff3b3b' : '#401010'; c.beginPath(); c.arc(-26, -1, 1.8, 0, 7); c.fill(); c.restore();
+  // rotating radar dish on the skyline
+  c.save(); c.translate(335, 566); c.fillStyle = '#243044'; c.fillRect(-2, 0, 4, 18); c.rotate(Math.sin(t * 1.5) * 0.6 - 0.4); c.strokeStyle = '#c5d2e6'; c.lineWidth = 2.5; c.beginPath(); c.arc(0, 0, 11, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); c.fillStyle = '#ff5a3a'; c.beginPath(); c.arc(0, -8, 1.8, 0, 7); c.fill(); c.restore();
+} })(); // v8 scenery+sprite overlay
 // Missile Guard - original city-defense interceptor (Hub build, Missile Command-style). Tap the sky to detonate interceptors.
 // Art: code-painted night sky, moon, ridge line, lit skyline cities, armoured silos with missile racks, smoky trails, layered fireballs.
 let MG_BG = null; const MG_CITY = {};

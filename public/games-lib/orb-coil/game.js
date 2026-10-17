@@ -1,3 +1,9 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W, H = g.H;
+  // butterflies fluttering over the temple floor
+  for (let i = 0; i < 4; i++) { const x = W / 2 + Math.cos(t * 0.5 + i * 1.7) * (110 + i * 25), y = H / 2 + Math.sin(t * 0.7 + i * 2.1) * (180 - i * 20), fl = Math.abs(Math.sin(t * 14 + i * 3)), col = ['#ff7ab8', '#ffd23f', '#7ad7ff', '#c79bff'][i]; c.save(); c.translate(x, y); c.rotate(Math.cos(t * 0.5 + i * 1.7) * 0.6); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(5, 10, 8 * fl + 1, 3, 0, 0, 7); c.fill(); c.fillStyle = col; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * 5 * fl, -2, 6 * fl + 0.8, 8, s * 0.5, 0, 7); c.fill(); c.beginPath(); c.ellipse(s * 4 * fl, 5, 4 * fl + 0.6, 5, -s * 0.4, 0, 7); c.fill(); } c.fillStyle = '#222'; c.fillRect(-1, -8, 2, 15); c.restore(); }
+  c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 12; i++) { const x = (i * 97 + Math.sin(t + i) * 20) % W, y = (i * 61 + t * 12) % H; c.fillStyle = 'rgba(255,240,150,' + (0.3 + 0.3 * Math.sin(t * 3 + i)) + ')'; c.beginPath(); c.arc(x, y, 2, 0, 7); c.fill(); }
+} })(); // v8 scenery+sprite overlay
 // Orb Coil - original marble-chain shooter (Hub build, Zuma-style). Code-drawn temple art, glossy orbs.
 (function () { const D = 26, COLS = ['#e8343a', '#2f7fe8', '#2fbf4a', '#ffc21f', '#b26bff', '#ff8a2a'];
   let PATH = null, LEN = 0, CUM = null; function mkPath(W, H) { const pts = [], cx = W / 2, cy = H * 0.5; const turns = 2.35, R0 = Math.min(W, H) * 0.47, R1 = 70; for (let i = 0; i <= 1600; i++) { const t = i / 1600, a = -Math.PI / 2 + t * turns * 6.283, r = R0 + (R1 - R0) * t; pts.push([cx + Math.cos(a) * r * (W / Math.min(W, H) * 0.98), cy + Math.sin(a) * r * 0.98]); }
