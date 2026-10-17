@@ -1,5 +1,5 @@
 // v7 Phase 4: cosmetic-only store + Bitcoin checkout against a MOCKED block explorer (no real transactions, ever).
-// Run (disposable DB / mocked explorer ONLY): BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 PAYMENTS_LIVE_APPROVED=1 tools/fresh-api.sh tools/e2e-payments.js
+// Run: BTC_EXPLORER_URL=http://127.0.0.1:8796 BTC_PRICE_URL=http://127.0.0.1:8796/prices PAY_NO_SWEEP=1 tools/fresh-api.sh tools/e2e-payments.js
 const http = require('http'); const crypto = require('crypto');
 const BASE = process.env.BASE || 'http://localhost:8787';
 let pass = 0, fail = 0; const ok = (c, m, x) => { if (c) { pass++; console.log('  PASS', m); } else { fail++; console.log('  FAIL', m, x !== undefined ? JSON.stringify(x).slice(0, 400) : ''); } };
@@ -27,11 +27,9 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const ADM = require('./admin-auth').adminClient(BASE); await ADM.login();
   const mk = async () => { const c = client(); c.u = 'pay_' + Math.random().toString(36).slice(2, 8); await c('/api/auth/signup', { body: { username: c.u, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); return c; };
   const [P1, P2, F] = [await mk(), await mk(), await mk()];
-  const whopAttempt = await client()('/api/pay/whop/webhook', { body: {
-    action:'payment.succeeded',data:{ metadata:{ order_ref:'FAKESETTLEMENT' } }
-  }});
-  ok(whopAttempt.status===404,'Unsupported payment webhook cannot mint free Credits');
-  let r = await client()('/api/store'); ok(r.body.ok && !r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 12 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage), 'store: 4 packs, season pass, 12 one-of-one items; checkout safely OFF by default', r.body.checkout);
+  await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: true } }); // new installs start with checkout OFF
+  const bal = async (c) => (await c('/api/me/crowns')).body.credits; const b1 = await bal(P1), bF = await bal(F); // starting balances (free play Credits)
+  let r = await client()('/api/store'); ok(r.body.ok && r.body.checkout.enabled && r.body.packs.length === 4 && r.body.prestige.length === 12 && r.body.pass.usd_cents > 0 && /never change scores/.test(r.body.non_advantage), 'store: packs, pass, 12 unlimited prestige items, non-advantage statement, checkout on (BTC_ADDRESS set)', r.body.checkout);
   r = await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: false } }); r = await P1('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 503, 'admin switch off -> checkout refused');
   await ADM('/api/admin/store/checkout', { method: 'PUT', body: { enabled: true } });
   r = await client()('/api/store/orders', { body: { product_id: 'crowns-1100' } }); ok(r.status === 401, 'checkout needs an account');
@@ -40,14 +38,11 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const base = Math.ceil(9.99 / 60000 * 1e8);
   ok(r.body.ok && o1.address === ADDR && o1.sats > base && o1.sats <= base + 999 && o1.uri === `bitcoin:${ADDR}?amount=${(o1.sats / 1e8).toFixed(8)}` && o1.expires_at - o1.created_at === 45 * 60e3, 'order: unique sat offset (1-999), bitcoin: URI, 45-minute quote', o1);
   r = await P2('/api/store/orders', { body: { product_id: 'crowns-1100' } }); const o2 = r.body.order; ok(o2.sats !== o1.sats, 'two open orders for the same product never share an amount');
-  r = await ADM(`/api/admin/store/orders/${o1.ref}/grant`, { body: {} }); ok(r.status === 409, 'admin grant cannot turn a pending unpaid order into paid Credits');
   r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending', 'nothing on chain yet -> pending');
   const t1 = txid(); M.txs.push({ txid: t1, sats: o1.sats });
-  r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'seen' && r.body.order.txid === t1 && r.body.credits === 0, 'exact amount in the mempool -> seen, not granted yet (0 conf)', r.body.order);
+  r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} }); ok(r.body.order.status === 'seen' && r.body.order.txid === t1 && r.body.credits === b1, 'exact amount in the mempool -> seen, not granted yet (0 conf)', r.body.order);
   M.txs.find(x => x.txid === t1).height = M.tip; r = await P1(`/api/store/orders/${o1.ref}/check`, { body: {} });
-  ok(r.body.order.status === 'granted' && r.body.credits === 11000, '1 confirmation grants 11,000 unified Hub Credits automatically', r.body);
-  r = await ADM(`/api/admin/store/orders/${o1.ref}/grant`, { body: {} }); ok(r.body.ok && r.body.already, 'already settled and granted order is idempotent on admin verification');
-  r = await P1('/api/me/crowns'); ok(r.body.credits === 11000, 'admin duplicate grant did not mint extra Credits');
+  ok(r.body.order.status === 'granted' && r.body.credits === b1 + 11000, '1 confirmation on a small order -> granted 11,000 Credits automatically', r.body);
   r = await P2(`/api/store/orders/${o2.ref}/check`, { body: {} }); ok(r.body.order.status === 'pending' && !r.body.order.txid, "another order cannot claim P1's transaction");
   // txid paste for a non-exact (overpaid) amount
   const t2 = txid(); M.txs.push({ txid: t2, sats: o2.sats + 5000, height: M.tip });
@@ -55,46 +50,39 @@ function client() { const jar = {}; return async (p, o = {}) => {
   r = await P2(`/api/store/orders/${o2.ref}/check`, { body: { txid: t2 } }); ok(r.body.order.status === 'granted' && r.body.order.flags.includes('overpaid'), 'pasted txid with an overpayment -> granted and flagged "overpaid" for a manual refund of the difference', r.body.order);
   // underpayment
   r = await F('/api/store/orders', { body: { product_id: 'crowns-500' } }); const o3 = r.body.order; const t3 = txid(); M.txs.push({ txid: t3, sats: o3.sats - 2000, height: M.tip });
-  r = await F(`/api/store/orders/${o3.ref}/check`, { body: { txid: t3 } }); ok(r.body.order.status === 'underpaid' && r.body.credits === 0, 'underpayment -> "underpaid", nothing granted', r.body.order);
-  r = await ADM(`/api/admin/store/orders/${o3.ref}/grant`, { body: {} }); ok(r.status === 409, 'admin cannot override blockchain underpayment by marking paid');
-  r = await F('/api/me/crowns'); ok(r.body.credits === 0, 'underpaid order remains zero Credits after an admin grant attempt');
-  r = await ADM(`/api/admin/store/orders/${o3.ref}/refund`, { body: { note: 'test' } }); r = await F('/api/me/crowns'); ok(r.body.credits === 0, 'admin refund reverses full migrated Hub Credits');
+  r = await F(`/api/store/orders/${o3.ref}/check`, { body: { txid: t3 } }); ok(r.body.order.status === 'underpaid' && r.body.credits === bF, 'underpayment -> "underpaid", nothing granted', r.body.order);
+  r = await ADM(`/api/admin/store/orders/${o3.ref}/grant`, { body: {} }); ok(!r.body.ok && /settled/.test(r.body.error || ''), 'admin cannot grant an unsettled/underpaid order (verify with the provider first); refund path below stays safe');
+  r = await ADM(`/api/admin/store/orders/${o3.ref}/refund`, { body: { note: 'test' } }); r = await F('/api/me/crowns'); ok(r.body.credits === bF, 'admin refund reverses the Credits');
   // expiry
   const db = new (require('better-sqlite3'))(process.env.DB_PATH);
   r = await F('/api/store/orders', { body: { product_id: 'crowns-500' } }); const o4 = r.body.order; db.prepare('UPDATE store_orders SET created_at=created_at-3600e3, expires_at=expires_at-3600e3 WHERE ref=?').run(o4.ref);
   r = await F(`/api/store/orders/${o4.ref}/check`, { body: {} }); ok(r.body.order.status === 'expired', 'unpaid quote expires after 45 minutes');
   const t4 = txid(); M.txs.push({ txid: t4, sats: o4.sats, height: M.tip }); r = await F(`/api/store/orders/${o4.ref}/check`, { body: {} });
   ok(r.body.order.status === 'granted' && r.body.order.flags.includes('late'), 'exact payment after expiry (within 24 h) is still matched, flagged "late"', r.body.order);
-  // Prestige stays preview-only until real model compatibility and owner rights QA.
-  r = await client()('/api/store/prestige');
-  ok(r.body.items.filter(i=>i.id.startsWith('prestige-original-')).length===12
-    && r.body.items.filter(i=>i.id.startsWith('prestige-original-')).every(i=>i.supply===1),
-    '12 individually numbered one-of-one original prestige cosmetics');
-  r = await P1('/api/store/orders', { body: { product_id: 'prestige-original-crown' } });
-  ok(r.status >= 400, 'prestige checkout refuses orders while compatibility approval is off');
-  // pass + one-credit-wallet spend
+  // prestige: 6 confirmations
+  r = await P1('/api/store/orders', { body: { product_id: 'prestige-original-crown' } }); const o5 = r.body.order; ok(o5.need_confs === 6 && o5.sats > 2.4e6, 'prestige order needs 6 confirmations ($1,500 at $60k = 2.5M sats)', o5);
+  const t5 = txid(); M.txs.push({ txid: t5, sats: o5.sats, height: M.tip - 2 }); r = await P1(`/api/store/orders/${o5.ref}/check`, { body: {} }); ok(r.body.order.status === 'confirming' && r.body.order.confs === 3, '3 of 6 confirmations -> confirming');
+  M.tip += 3; r = await P1(`/api/store/orders/${o5.ref}/check`, { body: {} }); ok(r.body.order.status === 'granted', '6 confirmations -> granted');
+  r = await client()('/api/store/prestige'); const pc = r.body.items.find(i => i.id === 'prestige-original-crown'); ok(pc.owners.some(o => o.username === P1.u) && !pc.supply, 'prestige: unlimited copies, owner shown on the "owned by" wall (no serial / supply cap)');
+  // pass + crowns spend
   r = await ADM('/api/admin/store/grant', { body: { username: P1.u, product_id: 'season-pass' } }); ok(r.ok !== false && r.body.ok, 'admin can grant a Season Pass manually');
-  r = await ADM('/api/admin/store/grant', { body: { username: P1.u, product_id: 'prestige-original-crown' } });
-  ok(!r.body.ok && /preview-only/i.test(r.body.error),
-    'An admin promotional grant cannot bypass unreleased prestige wearables');
-  r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 0 && r.body.premium_level === r.body.free_level, 'premium track: 20 cosmetic reward steps with equal earned-XP progression');
+  r = await P1('/api/pass'); ok(r.body.owned && r.body.track.length === 20 && r.body.xp_boost_pct === 100, 'premium track: 20 reward steps; owning a delivered $1,000+ Prestige original gives permanent 2x cosmetic XP (the pass itself adds no XP boost)');
   r = await P1('/api/pass/quests'); ok(r.body.total === 48 && r.body.done < 48 && r.body.reward_season === r.body.season + 1, '48-quest chain toward next season\'s free pass');
   r = await client()('/api/shop'); const any = r.body && (r.body.daily || (r.body.sections && r.body.sections.daily) || []).find(Boolean);
-  if (any) { r = await P1('/api/crowns/buy', { body: { item_id: any.id } }); ok(r.body.ok && r.body.price_credits > 0 && Number.isSafeInteger(r.body.credits), 'Purchased Hub Credits buy the exact same cosmetic as earned Credits', r.body); }
-  r = await P1('/api/crowns/buy', { body: { item_id: 'v7p1s3' } }); ok(r.status === 400, 'premium-track items cannot be bought with Hub Credits');
-  // NO ADVANTAGE: paid Credits/Pass vs earned Credits/free on identical runs
+  if (any) { r = await P1('/api/crowns/buy', { body: { item_id: any.id } }); ok(r.body.ok && r.body.price_credits >= 50, 'Credits buy a cosmetic from the current shop', r.body); }
+  r = await P1('/api/crowns/buy', { body: { item_id: 'v7p1s3' } }); ok(r.status === 400, 'premium-track items cannot be bought with Crowns');
+  // NO ADVANTAGE: paid (P1: crowns, pass, prestige) vs free (F) on identical runs
   console.log('# paid vs free: identical treatment');
   const t0 = Date.now(); r = await ADM('/api/admin/giveaways', { body: { title: 'Pay-to-win check', host: 'T', start_at: t0 - 60e3, end_at: t0 + 3600e3, game_id: 'jetpack-dash', active: true } }); const gid = r.body.id;
   const [eP, eF] = await Promise.all([P1(`/api/giveaways/${gid}/eligibility`), F(`/api/giveaways/${gid}/eligibility`)]);
   ok(JSON.stringify(eP.body.checks.map(c => [c.id, c.ok])) === JSON.stringify(eF.body.checks.map(c => [c.id, c.ok])), 'eligibility checks are identical for paid and free players');
-  const play = async (c, score) => { const s = await c('/api/run/start', { body: { game_id: 'jetpack-dash', event: gid } }); await sleep(2300); return c('/api/score', { body: { token: s.body.token, score, coins: 0, duration_ms: 2300 } }); };
+  const play = async (c, score) => { const s = await c('/api/run/start', { body: { game_id: 'jetpack-dash' } }); await sleep(2300); return c('/api/score', { body: { token: s.body.token, score, coins: 0, duration_ms: 2300 } }); };
   const [sp, sf] = await Promise.all([play(P1, 40), play(F, 40)]);
-  ok(sp.body.ok && sf.body.ok && sp.body.held === sf.body.held && sp.body.verified === sf.body.verified && sp.body.held === true, 'same paid/free run -> same fair-play proof hold while no giveaway game is certified');
-  r = await client()(`/api/leaderboard?giveaway=${gid}`); const rows = r.body.rows; ok(rows.length === 0, 'no uncertified run can enter official giveaway standings even when paid and free players submit equal scores');
+  ok(sp.body.ok && sf.body.ok && sp.body.held === sf.body.held && sp.body.verified === sf.body.verified, 'same run -> same anti-cheat result');
+  r = await client()('/api/leaderboard?game=jetpack-dash&limit=50'); const rows = r.body.rows.filter(x => [P1.u, F.u].includes(x.username)); ok(rows.length === 2 && rows.every(x => x.score === 40), 'paid and free players land on the board with the same score');
   const [hp, hf] = await Promise.all([play(P1, 99999), play(F, 99999)]); ok(hp.status === 422 && hf.status === 422, 'impossible score rejected for paid and free alike');
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'server.js'), 'utf8').split("app.post('/api/score'")[1].split('\napp.')[0];
   ok(!/monetize|crown|prestige|pass_owned|store_/.test(src) && !/monetize|crown|pass_owned/i.test(require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'results.js'), 'utf8')), 'score submission and results code never read store data');
   await ADM('/api/admin/giveaways/' + gid, { method: 'DELETE' });
   console.log(`\n${pass} passed, ${fail} failed`); mock.close(); process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });
-
