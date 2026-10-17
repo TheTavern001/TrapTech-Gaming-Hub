@@ -64,6 +64,10 @@ function check(user, g, t = now()) {
     const ready = u.created_at + r.elig_account_age_days * D; const ok = t >= ready;
     checks.push({ id: 'age', ok, label: `Account ${r.elig_account_age_days}+ days old`, hint: ok ? 'Account age OK' : `New accounts can enter from ${fmtDate(ready)}` });
   }
+  if (g.audience === 'invite') { // v8: invite-only audience
+    const ok = require('./brands').invited(g.id, u.id);
+    checks.push({ id: 'invited', ok, label: 'Invite code redeemed', hint: ok ? 'You are on the invite list' : 'This giveaway is invite only. Enter the code the host gave you on the giveaway page.' });
+  }
   if (channel && !g.open_to_all) { // v7: brand giveaways are for that brand's members (one brand per player)
     const mine = db.prepare('SELECT c.id, c.name FROM users u JOIN channels c ON c.id=u.brand_id WHERE u.id=?').get(u.id); const ok = !!(mine && mine.id === channel.id);
     const sw = require('./brands').status(u.id, t);
@@ -153,6 +157,7 @@ function boardsStatus(g) { const t = now(); return t < g.start_at ? 'upcoming' :
 const weightOf = (g, attempts) => (g.win_method === 'random' && g.weight_mode === 'activity') ? Math.min(WEIGHT.max, 1 + Math.floor((attempts || 0) / WEIGHT.per)) : 1;
 // at lock time: winners who became ineligible (won elsewhere meanwhile) are skipped with a logged reason
 function lockViolation(g, userId, t = now()) {
+  if (g.audience === 'invite' && !require('./brands').invited(g.id, userId)) return 'Not on the invite list for this invite-only giveaway';
   if (g.channel_id && !g.open_to_all) { const m = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId); if (!m || m.brand_id !== g.channel_id) return 'Not a member of this brand when the giveaway ended (brand giveaways are for members only)'; }
   if (g.elig_win_cooldown_days) { const w = lastWin(userId, t - g.elig_win_cooldown_days * D); if (w) return `Win cooldown: already won a giveaway on ${fmtDate(w)} (${g.elig_win_cooldown_days}-day cooldown)`; }
   if (g.elig_brand_month && g.channel_id) { const w = lastWin(userId, t - 30 * D, g.channel_id); if (w) return `One win per brand per 30 days: already won this brand on ${fmtDate(w)}`; }

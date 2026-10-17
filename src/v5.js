@@ -26,7 +26,7 @@ module.exports = function v5(app, A, h) {
   h.v5Giveaway = (g) => {
     const c = h.channelOf(g); const au = B.audience(g); const places = SP.placementsOf(g);
     return { channel: c ? { slug: c.slug, name: c.name, logo: c.logo, color: c.color } : null, require_join: !!g.require_join,
-      brand: au.brand, open_to_all: au.open, placements: places, featured: !!g.featured || places.includes('featured'), tier: undefined,
+      brand: au.brand, open_to_all: au.open, audience: au.mode, placements: places, featured: !!g.featured || places.includes('featured'), tier: undefined,
       eligibility_rules: E.describe(g, c), rules_cfg: E.rulesOf(g), joined_count: g.require_join ? db.prepare('SELECT COUNT(*) AS c FROM giveaway_entries WHERE giveaway_id=? AND left_at IS NULL').get(g.id).c : null,
       link: (g.link_url || (c && c.link_url)) && allows(g, 'giveaway') ? { url: `/go/g/${g.id}?p=giveaway`, label: g.link_label || `Visit ${g.host || 'sponsor'}` } : null };
   };
