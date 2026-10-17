@@ -40,7 +40,7 @@ About **50 MB of RSS is file-backed** (the node binary and ICU data mapped from 
   - Live-standings cache entries expire.
   - Achievements reuse leaderboard queries within one evaluation.
   - **CSV exports are streamed** with keyset paging (1,000 rows at a time, same bytes as before).
-- **Node flags**: `--max-old-space-size=64 --max-semi-space-size=1`, plus `MALLOC_ARENA_MAX=2` and `UV_THREADPOOL_SIZE=2`. They are set in the Dockerfile `CMD`/`ENV`.
+- **Node flags**: `--max-old-space-size=64 --max-semi-space-size=1 --single-threaded --no-opt` (--single-threaded saves ~10 MB RSS, --no-opt about 13 MB more by skipping the optimizing JIT; this app is I/O bound so the CPU cost is negligible), plus `MALLOC_ARENA_MAX=2` and `UV_THREADPOOL_SIZE=2`. They are set in the Dockerfile `CMD`/`ENV`.
 - HTTP keep-alive is 65 s, so a reverse proxy never reuses a socket the app just closed. That race caused sporadic `ECONNRESET` at 0.25 CPU.
 
 ## 2. Disk budget (250 MB)
@@ -76,7 +76,7 @@ Past roughly 300k runs, lower `BACKUP_KEEP` (for example 3) or rely on the GitHu
   - Only `node_modules`, `build/`, `src/`, `public/` and `package.json`, all owned by root and read-only to the app.
   - Runs as the unprivileged `node` user (uid 1000).
   - `ENV NODE_ENV=production PORT=8787 DATA_DIR=/data BUILD_DIR=/app/build TMPDIR=/tmp MALLOC_ARENA_MAX=2 UV_THREADPOOL_SIZE=2`.
-  - Exec-form `CMD ["node","--max-old-space-size=64","--max-semi-space-size=1","src/server.js"]`. It does not use `npm start`, because npm writes logs and adds a process.
+  - Exec-form `CMD ["node","--max-old-space-size=64","--max-semi-space-size=1","--single-threaded","--no-opt","src/server.js"]`. It does not use `npm start`, because npm writes logs and adds a process.
 - `HEALTHCHECK` hits `GET /healthz` through bash `/dev/tcp`, so there is no second node process (that would cost about 40 MB).
 - The app writes **only** to `$DATA_DIR` (DB, WAL, `tmp/`, `og-cache/`, `backups/`) and nothing to `/tmp`. If `/data` is not writable it exits with a clear `FATAL: database directory /data is not writable by uid 1000…` message.
 - No `--platform` pin: Deplexo doesn't document its runtime CPU architecture. The image builds natively on amd64 or arm64, and the startup log prints `linux/x64` or `linux/arm64` so you can see which one you got.
