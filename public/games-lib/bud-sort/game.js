@@ -5,7 +5,16 @@
   const ST = [{ n: 'SATIVA', c: '#ffd23f', d: '#b8860b' }, { n: 'INDICA', c: '#a78bfa', d: '#6d28d9' }, { n: 'HYBRID', c: '#4ade80', d: '#15803d' }, { n: 'CBD', c: '#38bdf8', d: '#0369a1' }];
   const BINS = [{ x: 70, y: 210, k: 0 }, { x: 330, y: 210, k: 1 }, { x: 70, y: 560, k: 2 }, { x: 330, y: 560, k: 3 }]; const GX = 200, GY = 385;
   let BG = null;
-  function bg(W, H) { if (BG) return BG; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d'); const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1b2a24'); g.addColorStop(1, '#0b1410'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  let BG2 = null; function bg(W, H) { if (BG2) return BG2; const cv = bg0(W, H); decor(cv.getContext('2d'), cv.width, cv.height); return (BG2 = cv); }
+function decor(c, W, H) { const rr = Kit.rr;
+  const pipe = (x0, y0, x1, y1, w) => { const g2 = c.createLinearGradient(0, y0 - w, 0, y0 + w); g2.addColorStop(0, '#8aa0a8'); g2.addColorStop(.5, '#4c5f66'); g2.addColorStop(1, '#222d33'); c.strokeStyle = g2; c.lineWidth = w; c.lineCap = 'butt'; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); };
+  pipe(0, 8, W, 8, 9); pipe(0, 22, W, 22, 5); c.fillStyle = '#2c383e'; for (let x = 30; x < W; x += 70) { c.fillRect(x - 3, 3, 6, 25); c.fillStyle = '#9fb3b9'; c.fillRect(x - 3, 3, 2, 25); c.fillStyle = '#2c383e'; }
+  for (const x of [80, 310]) { c.fillStyle = '#c0392b'; c.beginPath(); c.arc(x, 15, 7, 0, 7); c.fill(); c.fillStyle = '#e8e8e8'; c.fillRect(x - 1, 8, 2, 14); c.fillRect(x - 8, 14, 16, 2); }
+  for (let y = 40; y < H - 60; y += 70) for (const x of [4, W - 12]) { pipe(x + 4, y, x + 4, y + 70, 7); }
+  for (const [x, y] of [[196, 480], [196, 540]]) { c.fillStyle = 'rgba(255,255,255,.04)'; c.fillRect(x - 30, y, 60, 3); }
+  c.save(); c.beginPath(); c.rect(0, H - 52, W, 52); c.clip(); c.fillStyle = '#1b1f22'; c.fillRect(0, H - 52, W, 52); c.fillStyle = '#e1b21f'; for (let x = -60; x < W + 60; x += 30) { c.beginPath(); c.moveTo(x, H - 52); c.lineTo(x + 15, H - 52); c.lineTo(x - 15 + 52, H); c.lineTo(x - 15 + 37, H); c.closePath(); c.fill(); } c.restore();
+  c.save(); c.globalCompositeOperation = 'lighter'; for (const x of [60, 195, 330]) { const lg = c.createRadialGradient(x, 28, 2, x, 28, 160); lg.addColorStop(0, 'rgba(210,255,225,.22)'); lg.addColorStop(1, 'rgba(210,255,225,0)'); c.fillStyle = lg; c.fillRect(x - 160, 0, 320, 260); c.fillStyle = 'rgba(230,255,235,.9)'; rr(c, x - 22, 24, 44, 6, 3); c.fill(); } c.restore(); }
+function bg0(W, H) { if (BG) return BG; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d'); const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1b2a24'); g.addColorStop(1, '#0b1410'); c.fillStyle = g; c.fillRect(0, 0, W, H);
     c.strokeStyle = 'rgba(157,255,122,.05)'; for (let y = 0; y < H; y += 24) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
     // belt from top centre to gate
     c.fillStyle = '#20262c'; c.fillRect(GX - 46, 0, 92, GY); c.fillStyle = '#9ca3af'; c.fillRect(GX - 50, 0, 6, GY); c.fillRect(GX + 44, 0, 6, GY);
