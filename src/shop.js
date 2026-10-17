@@ -120,8 +120,12 @@ function eventItems(ev) {
 }
 
 // ---------- the rotation simulation (deterministic from Oct 1 2026, one day at a time) ----------
-const CAP = { common: 8, rare: 6, epic: 4, legendary: 3 };             // appearances before an item retires to the Vault
-const COOL = { common: 10, rare: 14, epic: 21, legendary: 28 };        // min days between daily appearances
+const CAP = { common: 8, rare: 6, epic: 4, legendary: 3 };             // LEGACY (days before CUTOVER_DAY only): appearances before an item retires to the Vault
+const COOL_LEGACY = { common: 10, rare: 14, epic: 21, legendary: 28 };  // pre-v8 min days between daily appearances (days before CUTOVER_DAY)
+// v8: nothing retires any more. After ANY appearance an item rests for a long, rarity-scaled cooldown, then it is eligible again.
+const COOL = { common: 60, rare: 120, epic: 180, legendary: 270 };
+const CUTOVER_DAY = EPOCH_DAY + 17;                                      // 2026-10-18: earlier shop days stay exactly as they were shown
+const post = (day) => day >= CUTOVER_DAY;
 const RW = { common: 50, rare: 32, epic: 14, legendary: 4 };          // daily pick weights
 const VAULT_GAP = 90, VAULT_REPEAT = 180, SEASON_VAULT_AFTER = 365;
 const DAILY_SLOTS = 6, WEEKLY_SLOTS = 4;
@@ -135,29 +139,40 @@ function stepWeek(w, day) {
   const r = G.rng(G.hash('weekly', w)); const out = []; const tags = {};
   for (const s of [0, 1]) { const it = resolve(G.make('w', w, s).id); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); }
   const endDay = weekStartDay(w) + 6;
-  const cand = () => SIM.pool.filter(id => !out.includes(id) && !SIM.vaulted.has(id) && /epic|legendary/.test(rarOf(id)) && meta(id).last <= day - 42);
-  while (out.length < WEEKLY_SLOTS) { const c = cand(); const id = wpickIds(r, c.length ? c : SIM.pool.filter(id => !out.includes(id) && /epic|legendary/.test(rarOf(id))), (id) => 1 + Math.min(120, day - meta(id).last) / 20); if (!id) break; out.push(id); }
-  for (const id of out) { appear(id, day, endDay); const m = meta(id); if (m.days.length >= CAP[rarOf(id)] && !SIM.vaulted.has(id)) SIM.vaulted.set(id, endDay); }
+  const cand = () => SIM.pool.filter(id => !out.includes(id) && !SIM.vaulted.has(id) && /epic|legendary/.test(rarOf(id)) && meta(id).last <= day - (post(day) ? COOL[rarOf(id)] : 42));
+  let wslot = 2;
+  while (out.length < WEEKLY_SLOTS) {
+    const c = cand();
+    // v8: when nothing has finished its cooldown yet, mint a fresh item instead of repeating one early (the generator never runs out)
+    if (post(day) && !c.length) { const it = resolve(G.make('w', w, wslot++).id); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); continue; }
+    const id = wpickIds(r, c.length ? c : SIM.pool.filter(id => !out.includes(id) && /epic|legendary/.test(rarOf(id))), (id) => 1 + Math.min(120, day - meta(id).last) / 20); if (!id) break; out.push(id);
+  }
+  for (const id of out) { appear(id, day, endDay); const m = meta(id); if (!post(day) && m.days.length >= CAP[rarOf(id)] && !SIM.vaulted.has(id)) SIM.vaulted.set(id, endDay); }
   SIM.weeks.set(w, { ids: out, tags });
 }
 function stepDay(day) {
   const w = weekOf(day); if (!SIM.weeks.has(w)) stepWeek(w, day);
+  if (day === CUTOVER_DAY) SIM.vaulted.clear(); // v8: the Vault is gone; formerly retired items rejoin the pool (cooldown counts from their last appearance)
   const week = SIM.weeks.get(w).ids; const r = G.rng(G.hash('daily', day)); const out = []; const tags = {};
   for (const s of [0, 1]) { const it = resolve(G.make('d', day, s).id); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); }
   // season shop items join the Vault a year after their season ends
   const sn = SE().seasonAt(PR().dayStart(day) + 3600e3).number;
-  for (let n = 1; n < sn; n++) { const endDay = EPOCH_DAY + n * 56 - 1; if (day === endDay + SEASON_VAULT_AFTER) for (let s = 0; s < 6; s++) { const id = resolve(G.make('s', n, s, G.parse.contexts.s(n, s)).id).id; SIM.vaulted.set(id, endDay); } }
-  // Vault return slot
-  const vault = [...SIM.vaulted.entries()].filter(([id, v]) => day - Math.max(v, meta(id).last) >= VAULT_GAP && day - (SIM.lastReturn.get(id) ?? -1e9) >= VAULT_REPEAT && !week.includes(id)).map(([id]) => id);
+  for (let n = 1; n < sn; n++) { const endDay = EPOCH_DAY + n * 56 - 1; if (day === endDay + SEASON_VAULT_AFTER) for (let s = 0; s < 6; s++) { const id = resolve(G.make('s', n, s, G.parse.contexts.s(n, s)).id).id; if (post(day)) { if (!SIM.pool.includes(id)) SIM.pool.push(id); } else SIM.vaulted.set(id, endDay); } }
+  // Return slot: before v8 this was the Vault return; now it is the longest-rested item whose cooldown has elapsed.
+  let vault;
+  if (post(day)) vault = SIM.pool.filter(id => { const m = SIM.seen.get(id); return m && m.days.length && !out.includes(id) && !week.includes(id) && day - m.last >= COOL[rarOf(id)]; });
+  else vault = [...SIM.vaulted.entries()].filter(([id, v]) => day - Math.max(v, meta(id).last) >= VAULT_GAP && day - (SIM.lastReturn.get(id) ?? -1e9) >= VAULT_REPEAT && !week.includes(id)).map(([id]) => id);
   const vid = wpickIds(r, vault, (id) => 1 + (day - meta(id).last) / 30);
-  if (vid) { out.push(vid); tags[vid] = 'vault'; SIM.lastReturn.set(vid, day); }
-  const ok = (id, cool) => !out.includes(id) && !week.includes(id) && !SIM.vaulted.has(id) && day - meta(id).last >= (cool ? COOL[rarOf(id)] : 1);
+  if (vid) { out.push(vid); tags[vid] = post(day) ? 'returning' : 'vault'; SIM.lastReturn.set(vid, day); }
+  const ok = (id, cool) => !out.includes(id) && !week.includes(id) && !SIM.vaulted.has(id) && day - meta(id).last >= (cool ? (post(day) ? COOL : COOL_LEGACY)[rarOf(id)] : 1);
+  let dslot = 2;
   while (out.length < DAILY_SLOTS) {
     let c = SIM.pool.filter(id => ok(id, true) && (rarOf(id) !== 'legendary' || r() < 0.15));
+    if (!c.length && post(day)) { const it = resolve(G.make('d', day, dslot++).id); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); continue; }
     if (!c.length) c = SIM.pool.filter(id => ok(id, false));
     const id = wpickIds(r, c, (id) => RW[rarOf(id)] * (1 + Math.min(60, day - meta(id).last) / 15)); if (!id) break; out.push(id);
   }
-  for (const id of out) { if (tags[id] === 'vault') { meta(id).last = day; meta(id).days.push(day); continue; } appear(id, day); const m = meta(id); if (m.days.length >= CAP[rarOf(id)] && !SIM.vaulted.has(id)) SIM.vaulted.set(id, day); }
+  for (const id of out) { if (tags[id] === 'vault' || tags[id] === 'returning') { meta(id).last = day; meta(id).days.push(day); continue; } appear(id, day); const m = meta(id); if (!post(day) && m.days.length >= CAP[rarOf(id)] && !SIM.vaulted.has(id)) SIM.vaulted.set(id, day); }
   SIM.days.set(day, { ids: out, tags });
 }
 function ensure(day) { while (SIM.day < day) { SIM.day++; stepDay(SIM.day); } }
@@ -230,19 +245,20 @@ function grantWeekly(t = Date.now()) {
 // ---------- pricing: rarity x type x demand x scarcity x appearances x section (no fixed tiers) ----------
 const TYPE_MULT = { banner: 1, frame: 1.1, color: 0.9, title: 0.7, badge: 0.8, effect: 1.25 };
 const PRICE_FLOOR = 50;
+const MIN_ACTIVE_FOR_SCARCITY = 500;
 let PSTAT = { day: null };
 function priceStats(day) {
   if (PSTAT.day === day && Date.now() - PSTAT.at < 3600e3) return PSTAT;
   const start = PR().dayStart(day), from = start - 14 * 864e5;
   const buys = new Map(db.prepare('SELECT item_id, COUNT(*) AS n FROM user_items WHERE price>0 AND acquired_at>=? AND acquired_at<? GROUP BY item_id').all(from, start).map(r => [r.item_id, r.n]));
   const owners = new Map(db.prepare('SELECT item_id, COUNT(*) AS n FROM user_items WHERE acquired_at<? GROUP BY item_id').all(start).map(r => [r.item_id, r.n]));
-  const active = Math.max(20, db.prepare('SELECT COUNT(DISTINCT user_id) AS n FROM runs WHERE created_at>=? AND created_at<?').get(start - 30 * 864e5, start).n);
+  const activeRaw = db.prepare('SELECT COUNT(DISTINCT user_id) AS n FROM runs WHERE created_at>=? AND created_at<?').get(start - 30 * 864e5, start).n; const active = Math.max(20, activeRaw);
   // demand is relative: an item's buys vs the average buys per listed item of its type over the same 14 days
   ensure(day); const listed = new Set(); for (let d = day - 14; d < day; d++) { const x = SIM.days.get(d); if (x) x.ids.forEach(i => listed.add(i)); const w = SIM.weeks.get(weekOf(d)); if (w) w.ids.forEach(i => listed.add(i)); }
   for (const id of buys.keys()) listed.add(id);
   const avg = {}; const cnt = {}; for (const id of listed) { const it = resolve(id); if (!it) continue; cnt[it.type] = (cnt[it.type] || 0) + 1; avg[it.type] = (avg[it.type] || 0) + (buys.get(id) || 0); }
   for (const k in avg) avg[k] /= Math.max(1, cnt[k]);
-  PSTAT = { day, at: Date.now(), buys, owners, active, avg, cache: new Map() }; return PSTAT;
+  PSTAT = { day, at: Date.now(), buys, owners, active, activeRaw, avg, cache: new Map() }; return PSTAT;
 }
 function priceParts(it, t = Date.now()) {
   const day = Math.max(EPOCH_DAY, dayNum(t)); const st = priceStats(day);
@@ -252,9 +268,12 @@ function priceParts(it, t = Date.now()) {
   const share = (st.owners.get(it.id) || 0) / st.active;
   ensure(day); const m = SIM.seen.get(it.id); const before = m ? m.days.filter(d => d < day).length : 0;
   // scarcity only counts once an item has been on sale before (a debut has no ownership signal yet)
-  const scarcity = before === 0 ? 1 : share < 0.01 ? 1.1 : share < 0.05 ? 1.04 : share > 0.25 ? 0.88 : share > 0.12 ? 0.95 : 1;
+  // v8: scarcity is a gentle nudge only - ignored until there are at least MIN_ACTIVE_FOR_SCARCITY active players (tiny
+  // counts must never spike or cap a price) and always clamped to +/-15%.
+  const scarcityRaw = before === 0 || st.activeRaw < MIN_ACTIVE_FOR_SCARCITY ? 1 : share < 0.01 ? 1.1 : share < 0.05 ? 1.04 : share > 0.25 ? 0.88 : share > 0.12 ? 0.95 : 1;
+  const scarcity = Math.min(1.15, Math.max(0.85, scarcityRaw));
   const tag = currentTag(it.id, day);
-  const appear = tag === 'vault' ? 1.25 : before === 0 ? 1.08 : before <= 2 ? 1 : before <= 4 ? 0.94 : 0.88;
+  const appear = tag === 'vault' ? 1.25 : tag === 'returning' ? 1 : before === 0 ? 1.08 : before <= 2 ? 1 : before <= 4 ? 0.94 : 0.88;
   const section = it.src === 's' || it.src === 'e' ? 1.15 : 1;
   const jitter = 0.96 + (G.hash('px', it.id) % 81) / 1000;
   const raw = base * demand * scarcity * appear * section * jitter;
@@ -401,12 +420,12 @@ const cssKey = () => realToday() + ':' + liveGenerated().length;
 // ---------- views for the player pages ----------
 const DISCLAIMER = 'Hub Credits can be earned by playing or optionally purchased. They unlock cosmetics only, have no cash value, cannot be sold, traded, transferred or withdrawn, and cannot buy giveaway entries or game advantages.';
 const RULES = [
-  'Daily picks change every day at midnight (hub time, America/New_York): 2 brand-new items, 1 Vault return when one is due, and 3 items from the catalog.',
+  'Daily picks change every day at midnight (hub time, America/New_York): 2 brand-new items, 1 returning item whose rest period is over, and 3 items from the catalog.',
   'Weekly featured changes every Monday at midnight: 2 brand-new epic or legendary items plus 2 picks from the catalog.',
   'The season shop sells 6 season-themed items for the whole 8-week season. Events (Launch Week, Spooky Haze, 4/20 Week and more) add 4 themed items while they run, and last year\'s event items return.',
-  'New items are generated forever, so the catalog never runs out. Each item retires to the Vault after a few appearances (common 8, rare 6, epic 4, legendary 3).',
-  'Vault items can come back after at least 90 days (at most once every 180 days) for 25% more. Season shop items join the Vault a year after their season ends. Season track rewards and earned items never come back.',
-  'There are no fixed price tiers. A price starts from rarity and item type, then moves with demand (purchases over the last 14 days), scarcity (how many active players own it) and how often it has appeared. Prices are set at midnight and hold all day.',
+  'New items are generated forever, so the catalog never runs out. Nothing is ever retired: after an item appears it rests for a long cooldown that grows with rarity (common 60 days, rare 120, epic 180, legendary 270), then it can return.',
+  'Season shop items rejoin the regular rotation a year after their season ends. Season track rewards and earned items never come back to the shop.',
+  'There are no fixed price tiers. A price starts from rarity and item type, then moves with demand (purchases over the last 14 days), scarcity (a small adjustment, at most 15%, and only once the hub has enough active players) and how often it has appeared. Prices are set at midnight and hold all day.',
   'Earned items cannot be bought: reach a score target or finish on a weekly leaderboard to unlock them.',
 ];
 function view(user, t = Date.now()) {
@@ -416,7 +435,7 @@ function view(user, t = Date.now()) {
   const out = { daily: rot.daily.map(card), weekly: rot.weekly.map(card), season: { ...rot.season, items: rot.season.items.map(i => ({ ...card(i), tag: 'season', tag_label: 'Season' })) },
     events: rot.events.map(e => ({ ...e, items: e.items.map(card) })), daily_ends: rot.daily_ends, weekly_ends: rot.weekly_ends, season_ends: rot.season_ends, perks, rules: RULES };
   if (perks.peek) { const tm = module.exports.rotation(PR().dayStart(rot.day + 1) + 3600e3); out.peek = tm.daily.map(i => ({ ...P(i), tag: tm.tags[i.id], tag_label: TAG_LABEL[tm.tags[i.id]] })); }
-  if (perks.vault) { const list = []; for (let d = rot.day + 1; d <= rot.day + 7; d++) { ensure(d); const x = SIM.days.get(d); for (const id of x.ids) if (x.tags[id] === 'vault') list.push({ day: d, at: PR().dayStart(d), item: P(resolve(id)) }); } out.vault_radar = list; }
+  if (perks.vault) { const list = []; for (let d = rot.day + 1; d <= rot.day + 7; d++) { ensure(d); const x = SIM.days.get(d); for (const id of x.ids) if (x.tags[id] === 'vault' || x.tags[id] === 'returning') list.push({ day: d, at: PR().dayStart(d), item: P(resolve(id)) }); } out.vault_radar = list; }
   const best = user ? new Map(db.prepare('SELECT game_id, MAX(score) AS b FROM runs WHERE user_id=? AND held=0 GROUP BY game_id').all(user.id).map(r => [r.game_id, r.b])) : new Map();
   out.earned_items = GATES.map(gt => { const it = gateItem(gt); return { ...P(it), requirement: gateText(gt), game: gt.game || null, need: gt.kind === 'score' ? gt.need : null, best: gt.kind === 'score' ? best.get(gt.game) || 0 : null, kind: gt.kind }; });
   return out;
@@ -425,7 +444,7 @@ function history(id) {
   const it = resolve(id); if (!it) return null; ensure(realToday() + 1); const m = SIM.seen.get(it.id);
   const today = realToday(); const days = m ? m.days.filter(d => d <= today) : []; const next = m ? m.days.filter(d => d > today) : [];
   const v = SIM.vaulted.get(it.id);
-  return { first_seen: days.length ? PR().dayStart(days[0]) : null, appearances: days.length, last_seen: days.length ? PR().dayStart(days[days.length - 1]) : null, vaulted: v !== undefined && v <= today, vaulted_at: v !== undefined && v <= today ? PR().dayStart(v) : null, retire_after: CAP[it.rarity], tomorrow: next.includes(today + 1) };
+  return { first_seen: days.length ? PR().dayStart(days[0]) : null, appearances: days.length, last_seen: days.length ? PR().dayStart(days[days.length - 1]) : null, vaulted: false, vaulted_at: null, retire_after: null, cooldown_days: COOL[it.rarity], tomorrow: next.includes(today + 1) };
 }
 function detail(user, id, t = Date.now()) {
   const it = resolve(id); if (!it) return null; const rot = module.exports.rotation(t); const own = user ? owned(user.id).has(it.id) : false;
@@ -494,7 +513,7 @@ function routes(app, A, H) {
     res.json({ ok: true, catalog_size: CATALOG_UNIVERSE_SIZE, ...page });
   });
   app.get('/api/shop/item/:id', (req, res) => { const me = H.currentUser(req); const d = detail(me, req.params.id); if (!d) return res.status(404).json({ ok: false, error: 'No such item.' }); res.json({ ok: true, ...d }); });
-  app.get('/api/shop/rules', (req, res) => res.json({ ok: true, rules: RULES, earn: EARN, rarity: RARITY, type_mult: TYPE_MULT, caps: CAP, cooldowns: COOL, seasons: SE().RULES, perks: SE().PERKS, disclaimer: DISCLAIMER }));
+  app.get('/api/shop/rules', (req, res) => res.json({ ok: true, rules: RULES, earn: EARN, rarity: RARITY, type_mult: TYPE_MULT, caps: null, cooldowns: COOL, seasons: SE().RULES, perks: SE().PERKS, disclaimer: DISCLAIMER }));
   app.get('/api/shop/upcoming', (req, res) => res.json({ ok: true, events: upcomingEvents(), season: (() => { const s = SE().seasonAt(); return { number: s.number, name: s.name, ends_at: s.end_at + 1 }; })() }));
   setTimeout(() => { try { grantWeekly(); } catch (e) { console.error('weekly gates', e.message); } }, 5000).unref();
   setInterval(() => { try { grantWeekly(); } catch (e) { console.error('weekly gates', e.message); } }, 3600e3).unref();

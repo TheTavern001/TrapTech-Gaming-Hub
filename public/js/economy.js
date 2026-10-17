@@ -50,8 +50,8 @@ async function detailSheet(id, onBought) {
   const why = p ? `<table class="ec-why"><tbody>
       <tr><td>Starting price (${esc(it.rarity_label)} ${esc(TYPE[it.type].toLowerCase())})</td><td>${fmt(p.base)}</td></tr>
       <tr><td>Demand (${p.recent_buys} bought in 14 days)</td><td>x${p.demand}</td></tr>
-      <tr><td>Scarcity (${p.owners} of ~${fmt(p.active_players)} active players own it)</td><td>x${p.scarcity}</td></tr>
-      <tr><td>${p.tag === 'vault' ? 'Back from the Vault' : p.appearances === 0 ? 'Debut day' : `Seen ${p.appearances} time${p.appearances === 1 ? '' : 's'} before`}</td><td>x${p.appear_mult}</td></tr>
+      <tr><td>Scarcity (${p.owners} of ~${fmt(p.active_players)} active players own it; small adjustment, 15% at most)</td><td>x${p.scarcity}</td></tr>
+      <tr><td>${p.tag === 'vault' || p.tag === 'returning' ? 'Back after its rest period' : p.appearances === 0 ? 'Debut day' : `Seen ${p.appearances} time${p.appearances === 1 ? '' : 's'} before`}</td><td>x${p.appear_mult}</td></tr>
       ${p.section_mult !== 1 ? `<tr><td>Limited (season / event only)</td><td>x${p.section_mult}</td></tr>` : ''}
       <tr class="tot"><td>Today's price</td><td>${icon('coins')} ${fmt(p.price)}</td></tr>${r.your_price != null && r.your_price !== p.price ? `<tr class="tot"><td>Your price (season perk)</td><td>${icon('coins')} ${fmt(r.your_price)}</td></tr>` : ''}</tbody></table>` : '';
   const draw = () => {
@@ -61,8 +61,8 @@ async function detailSheet(id, onBought) {
       <div class="ec-facts"><span class="rar-chip r-${esc(it.rarity)}">${esc(it.rarity_label)}</span><span class="pill">${icon(TYPE_IC[it.type])} ${esc(TYPE[it.type])}</span>${it.tag_label ? `<span class="pill">${esc(it.tag_label)}</span>` : ''}<span class="pill">${icon('users')} ${fmt(r.owners)} own it</span></div>
       <p class="small muted">${esc(r.source)}${r.where ? ` • on sale in the ${r.where.section === 'event' ? esc(r.where.event) : r.where.section} shop for ${cdi(r.where.ends_at)} (until ${localAt(r.where.ends_at)})` : r.sold ? ' • not in the shop right now' : ''}</p>
       ${r.requirement ? `<div class="nocash">${icon('target')} <span><b>Earned, not bought.</b> ${esc(r.requirement)}.</span></div>` : ''}
-      ${why ? `<h3 class="ec-h">Why this price</h3>${why}` : ''}
-      ${r.sold ? `<h3 class="ec-h">History</h3><ul class="ec-hist small"><li>${h.first_seen ? `First in the shop ${dateOf(h.first_seen)}` : 'Not in the shop yet'}</li><li>${h.appearances} appearance${h.appearances === 1 ? '' : 's'} so far • retires to the Vault after ${h.retire_after}</li>${h.vaulted ? `<li>In the Vault since ${dateOf(h.vaulted_at)}: it can return after 90 days for 25% more</li>` : ''}</ul>` : ''}
+      ${p ? `<p class="ec-priceline"><b>Today's price:</b> ${icon('coins')} ${fmt(r.your_price ?? p.price)} HC</p><details class="ec-priced"><summary>How is this priced?</summary>${why}</details>` : ''}
+      ${r.sold ? `<h3 class="ec-h">History</h3><ul class="ec-hist small"><li>${h.first_seen ? `First in the shop ${dateOf(h.first_seen)}` : 'Not in the shop yet'}</li><li>${h.appearances} appearance${h.appearances === 1 ? '' : 's'} so far • never retires: after each showing it rests ${h.cooldown_days} days, then it can come back</li></ul>` : ''}
       <div class="btn-row">${it.owned ? `<a class="btn" href="/u/${encodeURIComponent((C.S.me || {}).username || '')}?tab=${it.type}#customize">${icon('check')} Owned - equip it</a>`
         : r.on_sale ? (C.S.me ? `<button class="btn" id="ec-buy">${icon('coins')} Buy for ${fmt(r.your_price ?? p.price)}</button>` : `<a class="btn" href="/signup?next=/shop">Sign up to buy</a>`) : ''}
         <button class="btn ghost" data-x>Close</button></div></div>`;
@@ -102,7 +102,7 @@ if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is una
       <div class="section-h"><h2>${icon('calendar-range')} Season ${r.season.number} shop: ${esc(r.season.name)}</h2><span class="small muted">Leaves in ${cdi(r.season_ends)}</span></div>
       ${grid('shop-season', r.season.items, bal)}
       ${r.peek ? `<div class="section-h"><h2>${icon('eye')} Tomorrow's daily picks</h2><span class="small muted">Season perk: early peek</span></div><div class="ec-peek">${r.peek.map(i => `<button class="ec-peek-i" data-item="${esc(i.id)}">${preview(i, 'sm')}<span>${esc(i.name)}</span></button>`).join('')}</div>` : ''}
-      ${r.vault_radar ? `<div class="section-h"><h2>${icon('history')} Vault radar</h2><span class="small muted">Season perk</span></div>${r.vault_radar.length ? `<div class="card pad ec-radar">${r.vault_radar.map(v => `<div class="mini-row" data-item="${esc(v.item.id)}"><b>${esc(v.item.name)}</b><span class="small muted">${dateOf(v.at)}</span></div>`).join('')}</div>` : `<p class="small muted">No Vault returns in the next 7 days.</p>`}` : ''}
+      ${r.vault_radar ? `<div class="section-h"><h2>${icon('history')} Return radar</h2><span class="small muted">Season perk</span></div>${r.vault_radar.length ? `<div class="card pad ec-radar">${r.vault_radar.map(v => `<div class="mini-row" data-item="${esc(v.item.id)}"><b>${esc(v.item.name)}</b><span class="small muted">${dateOf(v.at)}</span></div>`).join('')}</div>` : `<p class="small muted">No Vault returns in the next 7 days.</p>`}` : ''}
       <div class="section-h" id="earned"><h2>${icon('target')} Earned, not bought</h2><span class="small muted">Unlock by score or weekly rank</span></div>
       <div class="ec-earned">${r.earned_items.map(i => { const pct = i.need ? Math.min(100, Math.round((i.best || 0) / i.need * 100)) : 0;
         return `<div class="card ec-earn ${i.owned ? 'owned' : ''}" data-item="${esc(i.id)}" tabindex="0" role="button">${preview(i, 'sm')}<div class="ec-earn-b"><b>${esc(i.name)}</b><div class="tiny muted">${esc(i.requirement)}</div>
@@ -192,8 +192,8 @@ async function howPage() {
     <div class="card pad"><h2>${icon('shuffle')} What's in it</h2><ul class="ec-list">${r.rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
     <div class="card pad"><h2>${icon('coins')} How prices work, in plain words</h2>
       <p>Every item starts from its rarity (Common ${fmt(r.rarity.common.price)}, Rare ${fmt(r.rarity.rare.price)}, Epic ${fmt(r.rarity.epic.price)}, Legendary ${fmt(r.rarity.legendary.price)}) and its type (titles are cheaper, effects cost more). Then it moves:</p>
-      <ul class="ec-list"><li><b>Demand</b>: bought a lot in the last 14 days? Up to 35% more. Nobody wants it? Up to 15% less.</li><li><b>Scarcity</b>: owned by under 1% of active players? About 10% more. Already owned by a quarter of players? 12% less.</li>
-        <li><b>Appearances</b>: 8% more on its debut day, then cheaper the more often it comes back. Vault returns cost 25% more.</li><li><b>Limited</b>: season and event items cost 15% more.</li></ul>
+      <ul class="ec-list"><li><b>Demand</b>: bought a lot in the last 14 days? Up to 35% more. Nobody wants it? Up to 15% less.</li><li><b>Scarcity</b>: a small nudge of 15% at most, and only once the hub has plenty of active players. Rarely owned: slightly more. Widely owned: slightly less.</li>
+        <li><b>Appearances</b>: 8% more on its debut day, then cheaper the more often it comes back. Items that come back after their rest period are priced like any other showing.</li><li><b>Limited</b>: season and event items cost 15% more.</li></ul>
       <p class="small muted">Example: a Rare frame starts at ${fmt(ex)}. Popular and rare to own, it might be ${fmt(exHi)}; on its fifth showing with low demand, about ${fmt(exLo)}. Prices are set at midnight and hold all day. Season perks take 5-15% off.</p></div>
     <div class="card pad" id="seasons"><h2>${icon('calendar-range')} Seasons</h2><ul class="ec-list">${r.seasons.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
       <h3 class="ec-h">Perks</h3><ul class="ec-list">${r.perks.map(p => `<li><b>Level ${p.level}: ${esc(p.name)}</b> - ${esc(p.desc)}</li>`).join('')}</ul>

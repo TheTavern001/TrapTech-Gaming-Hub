@@ -275,3 +275,11 @@
 .hub-settings .settings-quick-nav a:focus-visible{outline:2px solid #d8b877;outline-offset:2px}
 .hub-settings #set-account,.hub-settings #set-app,.hub-settings #v7-brand,.hub-settings #set-legal{scroll-margin-top:calc(88px + env(safe-area-inset-top,0px))}
 @media(max-width:360px){.hub-settings .settings-quick-nav{grid-template-columns:1fr}.hub-settings .settings-quick-nav a{min-height:44px}}
+/* v8: simplified price line + collapsed explainer */
+.ec-priceline { margin: 10px 0 4px; font-size: 1rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ec-priced { margin: 0 0 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: rgba(255,255,255,.03); }
+.ec-priced > summary { cursor: pointer; padding: 9px 12px; font-size: .82rem; color: #9bd7ff; list-style: none; min-height: 44px; display: flex; align-items: center; }
+.ec-priced > summary::-webkit-details-marker { display: none; }
+.ec-priced > summary::after { content: '\25BE'; margin-left: auto; transition: transform .2s; }
+.ec-priced[open] > summary::after { transform: rotate(180deg); }
+.ec-priced > .ec-why { margin: 0 8px 8px; width: calc(100% - 16px); }
