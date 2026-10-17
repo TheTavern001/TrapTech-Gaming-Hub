@@ -1,4 +1,4 @@
-// Road Brawl - original motorbike combat (Hub build). Kick rival bikers off the road while dodging traffic.
+// Road Brawl - original motorbike combat (Hub build). Kick rival bikers off the road while dodging traffic. // @uses carart.js
 Kit.run({ id: 'gl-road-brawl', title: 'ROAD BRAWL', help: 'Steer: drag / arrows. Tap left/right edge (or A/D... Q/E) to kick\nKick rivals off the road - avoid the cars', bg: '#1f2937',
   buttons: [{ id: 'L', key: 'q', label: 'KICK L' }, { id: 'R', key: 'e', label: 'KICK R' }],
   init(g) { g.x = 200; g.road = 0; g.sp = 420; g.riv = []; g.cars = []; g.nr = 1; g.nc = 1; g.hp = 100; g.kick = 0; g.kd2 = 0; g.lastM = 0; },
@@ -14,9 +14,9 @@ Kit.run({ id: 'gl-road-brawl', title: 'ROAD BRAWL', help: 'Steer: drag / arrows.
     g.riv = g.riv.filter(r => !r.dead && r.y < g.H + 120); g.cars = g.cars.filter(k => k.y < g.H + 80); g.hud = 'HP ' + Math.max(0, g.hp);
   },
   draw(g, c) {
-    c.fillStyle = '#a16207'; c.fillRect(0, 0, g.W, g.H); c.fillStyle = '#374151'; c.fillRect(50, 0, 300, g.H); c.fillStyle = '#fff'; for (let l = 1; l < 4; l++) for (let y = (g.road % 60) - 60; y < g.H; y += 60) c.fillRect(50 + l * 75, y, 3, 30);
-    for (const k of g.cars) { c.fillStyle = '#3b82f6'; Kit.rr(c, k.x - 20, k.y - 28, 40, 56, 8); c.fill(); c.fillStyle = '#0f172a'; c.fillRect(k.x - 15, k.y + 8, 30, 12); }
-    const bike = (x, y, col, kick, rot) => { c.save(); c.translate(x, y); c.rotate(rot || 0); c.fillStyle = '#111827'; c.fillRect(-4, -26, 8, 52); c.fillStyle = col; Kit.rr(c, -11, -14, 22, 28, 6); c.fill(); Kit.circ(c, 0, -2, 8, '#1f2937'); if (kick) { c.strokeStyle = col; c.lineWidth = 6; c.beginPath(); c.moveTo(0, 4); c.lineTo(kick * 34, 0); c.stroke(); } c.restore(); };
-    for (const r of g.riv) bike(r.x, r.y, '#ef4444', 0, r.fly ? g.t * 10 : 0); bike(g.x, 560, '#22c55e', g.kick > 0 ? g.kd2 : 0);
-    c.fillStyle = '#1d2a66'; c.fillRect(20, 46, g.W - 40, 8); c.fillStyle = '#34d399'; c.fillRect(20, 46, (g.W - 40) * Math.max(0, g.hp) / 100, 8);
+    CarArt.road(c, g.W, g.H, g.road, { theme: 'desert', x0: 50, x1: 350, lanes: 4, speed: true });
+    const kinds = ['sedan', 'suv', 'van', 'taxi']; for (const k of g.cars) CarArt.car(c, k.x, k.y, ['#3b82f6', '#e5e7eb', '#a855f7', '#f59e0b'][Math.floor(k.v) % 4], { kind: kinds[Math.floor(k.v) % 4 === 3 ? 0 : Math.floor(k.v) % 3], scale: 1.1 });
+    for (const r of g.riv) CarArt.bike(c, r.x, r.y, { body: '#ef4444', suit: '#450a0a', angle: r.fly ? g.t * 10 : 0, lean: r.vx / 150, scale: 0.95 });
+    CarArt.bike(c, g.x, 560, { body: '#22c55e', suit: '#14532d', kick: g.kick > 0 ? g.kd2 : 0, lean: g.ptr.down ? Kit.clamp((g.ptr.x - g.x) / 60, -1, 1) : g.ax(), boost: true, scale: 0.95 });
+    c.fillStyle = 'rgba(8,12,24,.7)'; Kit.rr(c, 20, 45, g.W - 40, 10, 5); c.fill(); c.fillStyle = g.hp > 35 ? '#34d399' : '#ef4444'; Kit.rr(c, 21, 46, Math.max(6, (g.W - 42) * Math.max(0, g.hp) / 100), 8, 4); c.fill();
   } });
