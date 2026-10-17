@@ -2,14 +2,19 @@
 // cfg: { id, title, help, theme, maze, path:[[c,r]...], towers:[{n,cost,range,rate,dmg,c,kind}], enemy(wave,i,g)->{hp,sp,v,c,r,layers,armor,fly},
 //        perWave(w)->count, bonus(w), startCash, lives, kill:'pts'|'layers' }
 window.TD = function (cfg) {
-  const CS = 40, COLS = 20, ROWS = 10, OY = 50; const T = cfg.theme || {};
-  Kit.run({ id: cfg.id, title: cfg.title, orient: 'l', help: (cfg.help || 'Tap a tower card, then tap a free tile to build\nTap a tower to upgrade it - waves auto-start') + '\nKeyboard: arrows move your chosen tile; Space builds there; number keys select a tower.', bg: T.bg || '#0b1e12',
-    init(g) { g.cash = cfg.startCash || 120; g.lives = cfg.lives || 20; g.wave = 0; g.en = []; g.tw = []; g.sh = []; g.sel = 0; g.wt = 6; g.queue = 0; g.occ = new Set(); g.block = new Set(); g.cursor = {c: 2, r: 4};
-      if (cfg.maze) { g.start = [0, 4]; g.goal = [COLS - 1, 5]; route(g); } else { g.path = expand(cfg.path); for (const p of g.path) g.block.add(p[0] + ',' + p[1]); }
+  const PORT = !!cfg.portrait; // portrait mode: 400x800 logical, 10x16 grid, two-row bar (tower cards + wave button)
+  const CS = 40, COLS = PORT ? 10 : 20, ROWS = PORT ? 16 : 10, OY = PORT ? 44 : 50; const T = cfg.theme || {};
+  const lay = (g, i) => { const n = cfg.towers.length; if (PORT) { const gap = 4, w = Math.floor((392 - (n - 1) * gap) / n); return { x: 4 + i * (w + gap), y: g.H - 110, w, h: 48 }; } return { x: 10 + i * 118, y: g.H - 46, w: 112, h: 42 }; };
+  const waveBtn = (g) => PORT ? { x: 4, y: g.H - 56, w: 392, h: 46 } : { x: g.W - 108, y: g.H - 46, w: 100, h: 42 };
+  const inR = (r, x, y) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+  Kit.run({ id: cfg.id, title: cfg.title, orient: PORT ? 'p' : 'l', h: PORT ? 800 : undefined, help: (cfg.help || 'Tap a tower card, then tap a free tile to build\nTap a tower to upgrade it - waves auto-start') + '\nKeyboard: arrows move your chosen tile; Space builds there; number keys select a tower.', bg: T.bg || '#0b1e12',
+    init(g) { g.cash = cfg.startCash || 120; g.lives = cfg.lives || 20; g.wave = 0; g.en = []; g.tw = []; g.sh = []; g.sel = 0; g.wt = 6; g.queue = 0; g.occ = new Set(); g.block = new Set(); g.cursor = PORT ? {c: 4, r: 8} : {c: 2, r: 4}; g.lay = lay; g.waveBtn = waveBtn; g.PORT = PORT; g.COLS = COLS; g.ROWS = ROWS;
+      for (const k of (cfg.extraBlock || [])) g.block.add(k[0] + ',' + k[1]);
+      if (cfg.maze) { g.start = PORT ? [4, 1] : [0, 4]; g.goal = PORT ? [5, ROWS - 1] : [COLS - 1, 5]; route(g); } else { g.path = expand(cfg.path); for (const p of g.path) g.block.add(p[0] + ',' + p[1]); }
       if (cfg.rocks) for (let i = 0; i < cfg.rocks; i++) { const c = g.RI(2, COLS - 3), r = g.RI(0, ROWS - 1); if (!g.block.has(c + ',' + r)) g.occ.add(c + ',' + r + ',rock'); } },
     update(g, dt) {
       for (let i = 0; i < cfg.towers.length; i++) if (g.kd(String(i + 1))) g.sel = i;
-      const P = g.ptr; if (P.pressed) { if (P.y > g.H - 50) { const i = Math.floor((P.x - 10) / 118); if (i >= 0 && i < cfg.towers.length) { g.sel = i; g.sfx('click'); } else if (P.x > g.W - 110) { g.wt = 0; } }
+      const P = g.ptr; if (P.pressed) { if (P.y > g.H - (PORT ? 112 : 50)) { let hit = -1; for (let i = 0; i < cfg.towers.length; i++) if (inR(lay(g, i), P.x, P.y)) hit = i; if (hit >= 0) { g.sel = hit; g.sfx('click'); } else if (inR(waveBtn(g), P.x, P.y)) { g.wt = 0; } }
         else { const c = Math.floor(P.x / CS), r = Math.floor((P.y - OY) / CS); if (c >= 0 && c < COLS && r >= 0 && r < ROWS) tap(g, c, r); } }
       // Keyboard and touch players both choose placements manually.
       // Do not pick the "best" tile automatically for desktop players.
@@ -100,9 +105,9 @@ window.TD = function (cfg) {
       }
       for (const e of g.en) { if (cfg.drawEnemy) cfg.drawEnemy(c, e, g); else { Kit.glow(c, e.c, 6); Kit.circ(c, e.x, e.y, e.r || 10, e.c); Kit.noGlow(c); } if (e.max > 1 && e.hp < e.max && !e.layers) { c.fillStyle = '#111'; c.fillRect(e.x - 12, e.y - 18, 24, 4); c.fillStyle = '#34d399'; c.fillRect(e.x - 12, e.y - 18, 24 * e.hp / e.max, 4); } }
       for (const s of g.sh) if (cfg.drawShot) cfg.drawShot(c, s, g); else Kit.circ(c, s.x, s.y, 3.5, s.S.c);
-      if (cfg.drawBar) cfg.drawBar(c, g); else { c.fillStyle = 'rgba(5,7,20,.8)'; c.fillRect(0, g.H - 50, g.W, 50);
-      cfg.towers.forEach((S, i) => { const x = 10 + i * 118; c.fillStyle = g.sel === i ? '#6366f1' : '#1d2a66'; Kit.rr(c, x, g.H - 46, 112, 42, 8); c.fill(); Kit.circ(c, x + 18, g.H - 25, 9, S.c); g.txt(S.n, x + 66, g.H - 34, 11, '#fff'); g.txt('$' + S.cost, x + 66, g.H - 16, 12, g.cash >= S.cost ? '#fbbf24' : '#ef4444'); });
-      if (g.wt < 100 && g.wt > 0 && g.state === 'play') { c.fillStyle = '#16a34a'; Kit.rr(c, g.W - 108, g.H - 46, 100, 42, 8); c.fill(); g.txt('NEXT ' + Math.ceil(g.wt) + 's \u25B6', g.W - 58, g.H - 25, 12, '#fff'); } }
+      if (cfg.drawBar) cfg.drawBar(c, g); else { c.fillStyle = 'rgba(5,7,20,.8)'; c.fillRect(0, g.H - (PORT ? 114 : 50), g.W, PORT ? 114 : 50);
+      cfg.towers.forEach((S, i) => { const L = lay(g, i); c.fillStyle = g.sel === i ? '#6366f1' : '#1d2a66'; Kit.rr(c, L.x, L.y, L.w, L.h, 8); c.fill(); Kit.circ(c, L.x + 18, L.y + L.h / 2, 9, S.c); g.txt(S.n, L.x + L.w * 0.6, L.y + L.h * 0.3, 11, '#fff'); g.txt('$' + S.cost, L.x + L.w * 0.6, L.y + L.h * 0.72, 12, g.cash >= S.cost ? '#fbbf24' : '#ef4444'); });
+      if (g.wt < 100 && g.wt > 0 && g.state === 'play') { const W2 = waveBtn(g); c.fillStyle = '#16a34a'; Kit.rr(c, W2.x, W2.y, W2.w, W2.h, 8); c.fill(); g.txt('NEXT ' + Math.ceil(g.wt) + 's \u25B6', W2.x + W2.w / 2, W2.y + W2.h / 2, 12, '#fff'); } }
     } });
   function expand(pts) { const out = []; for (let i = 0; i < pts.length - 1; i++) { let [x, y] = pts[i]; const [bx, by] = pts[i + 1]; while (x !== bx || y !== by) { out.push([x, y]); x += Math.sign(bx - x); y += Math.sign(by - y); } } out.push(pts[pts.length - 1]); return out; }
   function free(g, c, r) { const k = c + ',' + r; return !g.block.has(k) && !g.tw.some(t => t.c === c && t.r === r) && !g.occ.has(k + ',rock'); }
