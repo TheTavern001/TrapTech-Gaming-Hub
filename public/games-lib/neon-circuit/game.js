@@ -2,7 +2,7 @@
 // Controls: left/right arrows or A/D; touch the left/right sides on mobile.
 Kit.run({
   id: 'gl-neon-circuit', title: 'NEON CIRCUIT', help: 'DODGE TRAFFIC · COLLECT ENERGY · SURVIVE THE CIRCUIT',
-  orient: 'l', bg: '#050816',
+  fill: true, minH: 560, maxH: 900, bg: '#050816',
   init(g) {
     g.player = { lane: 1, x: 0, y: 0, tilt: 0 };
     g.speed = 0.38; g.distance = 0; g.energy = 0; g.combo = 0;
