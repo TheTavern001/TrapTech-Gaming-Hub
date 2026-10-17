@@ -6,18 +6,18 @@ const { register } = require('./external-routes');
 const app = express();
 app.disable('x-powered-by');
 
-// Serve static files from public/ if present
 const publicDir = path.join(__dirname, '..', 'public');
 app.use(express.static(publicDir, { maxAge: '1h' }));
 
-// Register external games routes
 register(app);
 
-// Root serves the games catalog directly
 app.get('/', async (req, res) => {
   try {
     const { loadGames } = require('./external-games');
     const games = await loadGames();
+    if (!games || !games.length) {
+      return res.send('<!doctype html><html><head><meta charset="utf-8"><title>Trap Tech Gaming Hub</title></head><body style="background:#0a0a0a;color:#eee;font-family:system-ui;padding:20px;"><h1>Trap Tech Gaming Hub</h1><p>Catalog is loading or feeds are temporarily unavailable. <a href="/api/external-games" style="color:#22d3ee;">Check API</a> or refresh in a minute.</p></body></html>');
+    }
     const cards = games.slice(0, 200).map(g => `
       <a href="/external/play/${encodeURIComponent(g.id)}" style="display:block;border:1px solid #333;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;background:#111;">
         <img src="${g.thumbnail || ''}" alt="" style="width:100%;height:120px;object-fit:cover;background:#222;" loading="lazy">
@@ -36,11 +36,10 @@ app.get('/', async (req, res) => {
 <div class="grid">${cards}</div>
 </body></html>`);
   } catch (e) {
-    res.status(200).send('<h1>Trap Tech Gaming Hub</h1><p>Catalog loading. Refresh in a moment.</p>');
+    res.status(200).send(`<!doctype html><html><head><meta charset="utf-8"><title>Trap Tech Gaming Hub</title></head><body style="background:#0a0a0a;color:#eee;font-family:system-ui;padding:20px;"><h1>Trap Tech Gaming Hub</h1><p>Error loading catalog: ${e.message}. <a href="/api/external-games" style="color:#22d3ee;">API status</a></p></body></html>`);
   }
 });
 
-// Basic health
 app.get('/healthz', (req, res) => res.json({ ok: true }));
 
 const PORT = process.env.PORT || 8787;
