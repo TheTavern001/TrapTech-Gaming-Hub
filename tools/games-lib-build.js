@@ -18,9 +18,13 @@ let n = 0;
 for (const g of games) {
   const dir = path.join(ROOT, g.slug); if (!fs.existsSync(path.join(dir, 'game.js')) && g.build === 'built') { console.log('missing', g.slug); continue; }
   if (g.build === 'built') {
-    const src = fs.readFileSync(path.join(dir, 'game.js'), 'utf8'); const three = /@three\b/.test(src);
+    const src = fs.readFileSync(path.join(dir, 'game.js'), 'utf8'); const three = /@three\b/.test(src) || /^import .* from 'three'/m.test(src) || /type="importmap"/.test(fs.existsSync(path.join(dir, 'index.html')) ? fs.readFileSync(path.join(dir, 'index.html'), 'utf8') : '');
     const imap = three ? `<script type="importmap">{"imports":{"three":"../vendor/three.module.min.js","three/addons/":"../vendor/three-addons/"}}</script>` : '';
-    const uses = [...src.matchAll(/@uses ([\w./-]+)/g)].map(m => `<script src="../${m[1]}"></script>`).join('');
+    const prev = fs.existsSync(path.join(dir, 'index.html')) ? fs.readFileSync(path.join(dir, 'index.html'), 'utf8') : '';
+    // keep extra shared scripts already wired in an existing page (matter, arena, ...) so a rebuild never strips them
+    const found = [...prev.matchAll(/<script src="\.\.\/([\w./-]+)"><\/script>/g)].map(m => m[1]).filter(f => !/^(adapter|kit)\.js$/.test(f));
+    const marked = [...src.matchAll(/@uses ([\w./-]+)/g)].map(m => m[1]);
+    const uses = [...new Set([...found, ...marked])].map(f => `<script src="../${f}"></script>`).join('');
     fs.writeFileSync(path.join(dir, 'index.html'), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${esc(g.title)} - The Gaming Hub</title><meta name="theme-color" content="#050714"><link rel="stylesheet" href="../lib.css"></head>
 <body class="glplay">${imap}<a class="glback" href="/games-lib/index.html" aria-label="Back to the library">&#8592;</a>

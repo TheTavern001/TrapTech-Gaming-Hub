@@ -1,4 +1,4 @@
-// Cube Horde - original blocky zombie-wave arena (Hub build, shared arena.js rules) // @uses arena.js
+// Cube Horde - original blocky zombie-wave arena (Hub build, shared arena.js rules) // @uses arena.js // @three
 // Voxel 3D presentation (three.js, code-built models): instanced voxel shamblers with walk cycles, voxel debris bursts, soft shadows.
 import * as THREE from 'three'; import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'; import { stage, bake, canvasTex } from '../runner3x.js';
 const S3 = stage({}); const { scene, cam, sun, hemi } = S3; scene.background = new THREE.Color('#2a3b2a'); scene.fog = new THREE.Fog('#2a3b2a', 30, 60); hemi.intensity = 0.85; S3.r.toneMappingExposure = 0.95; hemi.color.set('#dfe8ff'); hemi.groundColor.set('#3a4a2a'); sun.intensity = 2.6; sun.color.set('#fff2d8');
@@ -33,6 +33,17 @@ const EB = new THREE.InstancedMesh(new THREE.SphereGeometry(0.22, 10, 8), new TH
 const DEB = new THREE.InstancedMesh(rbox(0.22, 0.22, 0.22, 0.03), new THREE.MeshStandardMaterial({ roughness: 0.8, vertexColors: true }), 400); DEB.castShadow = true; DEB.frustumCulled = false; DEB.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(400 * 3), 3); scene.add(DEB); const debris = [];
 const CRATE = { r: mat('#22c4e8', { emissive: '#0a6a80', emissiveIntensity: 0.6 }), s: mat('#ffc21f', { emissive: '#805a00', emissiveIntensity: 0.6 }), b: mat('#ff4a3a', { emissive: '#801a10', emissiveIntensity: 0.6 }) }; const crateG = new THREE.Group(); scene.add(crateG);
 const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), SC = new THREE.Vector3(), COL = new THREE.Color();
+
+// scattered voxel props (rocks, bushes, flowers) + kill splats: pure visuals, no collision
+const hash = (i, k) => { const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return v - Math.floor(v); };
+{ const mk = (geo, m, n) => { const im = new THREE.InstancedMesh(geo, m, n); im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false; scene.add(im); return im; };
+  const rocks = mk(rbox(0.9, 0.5, 0.8, 0.12), new THREE.MeshStandardMaterial({ roughness: 0.9, vertexColors: true, color: '#9a9ca3' }), 90), bush = mk(rbox(1.0, 0.7, 1.0, 0.18), new THREE.MeshStandardMaterial({ roughness: 0.9, vertexColors: true, color: '#3f8a35' }), 110), flw = mk(rbox(0.16, 0.16, 0.16, 0.04), new THREE.MeshStandardMaterial({ roughness: 0.6, vertexColors: true, color: '#fff' }), 260);
+  flw.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(260 * 3), 3); const FC = ['#ffd23f', '#ff6fa8', '#ffffff', '#7ad7ff'];
+  const L = WW * K; const sp = (i, o) => [3 + hash(i, o) * (L - 6), 3 + hash(i, o + 9) * (L - 6)];
+  for (let i = 0; i < 90; i++) { const [x, z] = sp(i, 1); const s = 0.25 + hash(i, 5) * 0.35; M4.compose(V.set(x, 0.2 * s, z), Q.setFromEuler(E.set(0, hash(i, 3) * 6, 0)), SC.set(s, s * (0.7 + hash(i, 6) * 0.6), s)); rocks.setMatrixAt(i, M4); }
+  for (let i = 0; i < 110; i++) { const [x, z] = sp(i, 20); const s = 0.25 + hash(i, 7) * 0.3; M4.compose(V.set(x, 0.3 * s, z), Q.setFromEuler(E.set(0, hash(i, 4) * 6, 0)), SC.set(s, s, s)); bush.setMatrixAt(i, M4); }
+  for (let i = 0; i < 260; i++) { const [x, z] = sp(i, 40); M4.compose(V.set(x, 0.1, z), Q.identity(), SC.set(1, 1, 1)); flw.setMatrixAt(i, M4); flw.setColorAt(i, COL.set(FC[i % 4])); } }
+const SPL = new THREE.InstancedMesh(new THREE.CircleGeometry(0.7, 7), new THREE.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: 0.55, depthWrite: false }), 60); SPL.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(60 * 3), 3); SPL.frustumCulled = false; SPL.count = 0; scene.add(SPL); const splats = [];
 let camX = 25, camZ = 25, lastT = 0;
 function render(g, c) { const dt = Math.min(0.05, Math.max(0, g.t - lastT)); lastT = g.t; const p = g.p, px = p.x * K, pz = p.y * K;
   // zombies
@@ -51,6 +62,7 @@ function render(g, c) { const dt = Math.min(0.05, Math.max(0, g.t - lastT)); las
   // debris
   for (const d of debris) { d.vy -= 22 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.z += d.vz * dt; if (d.y < 0.11) { d.y = 0.11; d.vy *= -0.35; d.vx *= 0.7; d.vz *= 0.7; } d.r += d.vr * dt; d.l -= dt; } for (let i = debris.length - 1; i >= 0; i--) if (debris[i].l <= 0) debris.splice(i, 1);
   b = 0; for (const d of debris) { if (b >= 400) break; const s = Math.min(1, d.l * 2) * d.s; M4.compose(V.set(d.x, d.y, d.z), Q.setFromEuler(E.set(d.r, d.r * 0.7, 0)), SC.set(s, s, s)); DEB.setMatrixAt(b, M4); DEB.setColorAt(b++, COL.set(d.c)); } DEB.count = b; DEB.instanceMatrix.needsUpdate = true; if (DEB.instanceColor) DEB.instanceColor.needsUpdate = true;
+  b = 0; for (const sp of splats) { sp.a += dt; const k = Math.max(0, 1 - sp.a / 6) * sp.s; M4.compose(V.set(sp.x, 0.03, sp.y), Q.setFromEuler(E.set(-Math.PI / 2, 0, sp.r)), SC.set(k, k, k)); SPL.setMatrixAt(b, M4); SPL.setColorAt(b++, COL.set(sp.c)); } SPL.count = b; SPL.instanceMatrix.needsUpdate = true; if (SPL.instanceColor) SPL.instanceColor.needsUpdate = true;
   // power crates
   crateG.clear(); for (const m of g.gems) if (m.pu) { const o = new THREE.Mesh(rbox(0.7, 0.7, 0.7, 0.1), CRATE[m.pu]); o.position.set(m.x * K, 0.6 + Math.sin(g.t * 4) * 0.12, m.y * K); o.rotation.y = g.t * 2; o.castShadow = true; crateG.add(o); }
   camX += (px - camX) * Math.min(1, dt * 5); camZ += (pz - camZ) * Math.min(1, dt * 5); cam.position.set(camX, 27, camZ + 15); cam.lookAt(camX, 0, camZ + 0.5); sun.position.set(camX + 8, 22, camZ + 6); sun.target.position.set(camX, 0, camZ);
@@ -64,4 +76,4 @@ Arena({ id: 'gl-cube-horde', title: 'CUBE HORDE', aim: 'auto', lives: 5, fireRat
   types: { walker: { hp: 2, sp: 70, r: 13, c: '#65a30d', v: 10, shape: 'box' }, runner: { hp: 1, sp: 140, r: 10, c: '#a3e635', v: 15, shape: 'box' }, brute: { hp: 10, sp: 50, r: 22, c: '#3f6212', v: 50, shape: 'box' }, spitter: { hp: 3, sp: 55, r: 13, c: '#16a34a', v: 25, shape: 'box', shoot: 2.5 } },
   wave: (g) => { const w = g.wave; const o = [['walker', 5 + w * 2]]; if (w > 1) o.push(['runner', w]); if (w > 3) o.push(['brute', Math.floor(w / 3)]); if (w > 4) o.push(['spitter', Math.floor(w / 3)]); return o; },
   render, toScreen,
-  onKill: (g, e, S) => { const sk = SKIN[e.k] || SKIN.walker; const t = { brute: 1.7 }[e.k] || 1; for (let i = 0; i < 14 * t; i++) debris.push({ x: e.x * K, y: 0.4 + Math.random() * 1.4 * t, z: e.y * K, vx: (Math.random() - 0.5) * 7, vy: 3 + Math.random() * 6, vz: (Math.random() - 0.5) * 7, r: Math.random() * 6, vr: (Math.random() - 0.5) * 12, l: 1.2 + Math.random() * 0.6, s: 0.7 + Math.random() * 0.8 * t, c: sk[i % 3] }); if (debris.length > 400) debris.splice(0, debris.length - 400); g.shake(e.k === 'brute' ? 6 : 2, 0.15); } });
+  onKill: (g, e, S) => { const sk = SKIN[e.k] || SKIN.walker; const t = { brute: 1.7 }[e.k] || 1; for (let i = 0; i < 14 * t; i++) debris.push({ x: e.x * K, y: 0.4 + Math.random() * 1.4 * t, z: e.y * K, vx: (Math.random() - 0.5) * 7, vy: 3 + Math.random() * 6, vz: (Math.random() - 0.5) * 7, r: Math.random() * 6, vr: (Math.random() - 0.5) * 12, l: 1.2 + Math.random() * 0.6, s: 0.7 + Math.random() * 0.8 * t, c: sk[i % 3] }); if (debris.length > 400) debris.splice(0, debris.length - 400); splats.push({ x: e.x * K, y: e.y * K, r: Math.random() * 6, s: e.k === 'brute' ? 1.7 : 1, a: 0, c: sk[0] }); if (splats.length > 60) splats.shift(); g.shake(e.k === 'brute' ? 6 : 2, 0.15); }, fill: true });
