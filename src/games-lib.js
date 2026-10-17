@@ -51,7 +51,7 @@ const LIST = [
   T('mole-whack', 'Mole Whack', 'Whac-A-Mole', 7, 'A', 'endless', 120, true, 'Critter 10, gold 50, combo x5; hits refill the clock (+0.6s / gold +2s), drain speeds up', '1-3 days'),
   // Cannabis themed
   T('grow-op', 'Grow Op', 'Cannabis grow sim', 11, 'C', 'endless', 60, true, 'Harvest 40-150 by ripeness x health, pests 5; ends when 3 plants die', '3 days'),
-  T('trim-rush', 'Trim Rush', 'Cannabis trimming speed game', 11, 'C', 'endless', 120, true, 'Leaf 10-30 combo, clean trim bonus; trims refill the clock, bud slice -3s', '1-3 days'),
+  T('trim-rush', 'Trim Rush', 'Cannabis bud trimming precision game', 11, 'C', 'endless', 150, true, 'Snip 10/20/30 by cut distance + combo up to 10 (gold leaf x2), bud bonus 25-65; finished buds refill the clock; 3 bud nicks end the run', '1-3 days'),
   T('strain-crush', 'Strain Crush', 'Strain match-3', 11, 'C', 'endless', 400, true, '10 per gem x cascade chain; matches refill the clock', '3 days'),
   T('bud-bar', 'Bud Bar', 'Dispensary tapper', 11, 'C', 'endless', 80, true, 'Serve 50, empties 25', '3 days'),
   T('green-dash', 'Green Dash', 'Delivery runner', 11, 'C', 'endless', 60, true, 'Distance + deliveries 100', '3 days'),
