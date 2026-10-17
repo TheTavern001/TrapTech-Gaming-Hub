@@ -123,7 +123,7 @@ async function dashboard() {
       <div class="card"><div class="panel-h"><h2>Upcoming & Live Giveaways</h2><a class="small" href="/admin/giveaways">View All</a></div>
         ${s.upcoming.length ? s.upcoming.map(g => `<a class="act" href="/admin/giveaways/${g.id}" style="color:var(--text)"><span class="dot" style="background:#f59e0b33;color:#f59e0b">${icon('gift')}</span><span><b>${esc(g.title)}</b>${demoTag(g.demo)}<div class="small muted">${statusPill(g.status)} ${fmt(g.entrants)} entrants</div></span><span class="t">${g.status === 'upcoming' ? 'starts ' + dt(g.start_at) : 'ends ' + dt(g.end_at)}</span></a>`).join('') : '<div class="empty">None scheduled.</div>'}
         <div style="padding:12px"><a class="btn block" href="/admin/giveaways/new">${icon('plus')} New Giveaway</a></div>
-        <div class="small muted" style="padding:0 14px 12px">Anti-cheat: ${fmt(s.rejected_runs)} rejected run submission${s.rejected_runs === 1 ? '' : 's'}. ${s.games_live}/${s.games_total} games live.</div>
+        <div class="small muted" style="padding:0 14px 12px">Anti-cheat: ${fmt(s.rejected_runs)} rejected run submission${s.rejected_runs === 1 ? '' : 's'}. ${s.games_live}/${s.games_total} core games live (the Games Library is counted separately).</div>
       </div>
     </div>`);
 }
