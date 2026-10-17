@@ -1,22 +1,25 @@
-// Neon Munchies (id munchies-snake) - v7: a true infinite snake arena (original code and art).
+// Neon Munchies (id munchies-snake) - v8 rebuild on the shared kit (FX, shake, hit-stop, glass HUD, music, death sequence). v7 notes: a true infinite snake arena (original code and art).
 // Slither-style: a huge circular arena, the snake follows your finger, grows by eating, and AI rival snakes roam, hunt food and
 // try to cut you off. A rival whose head hits your body bursts into glowing orbs for you; your head hitting a rival or the wall
 // ends the run. No win state: rivals keep respawning and get bigger over time, so the score can climb forever.
 // Snacks are Blender Cycles renders (original models, PBR, HDRI); snakes are drawn as continuous glossy tubes with scale bands.
-import { Game, TAU, rnd, clamp, lerp, fmt, loadAtlas, sprC, softShadow, reducedMotion } from './engine.js';
+import { loadAtlas, sprC, softShadow } from './engine.js';
+import { Game8, PAL, TAU, rnd, clamp, lerp, fmt, halo } from './kit.js';
 const ARENA = 1700, SEG = 9, CELL = 120;
 const SNACKS = ['donut', 'cookie', 'pizza'];
 const SKINS = [['#22d3ee', '#ec4899', '#7c3aed'], ['#fde047', '#f97316', '#dc2626'], ['#a3e635', '#10b981', '#065f46'], ['#f0abfc', '#a855f7', '#4c1d95'], ['#93c5fd', '#3b82f6', '#1e3a8a'], ['#fca5a5', '#ef4444', '#7f1d1d'], ['#fef08a', '#84cc16', '#365314']];
 const NAMES = ['Zig', 'Noodle', 'Viper', 'Mamba', 'Slinky', 'Coil', 'Fang', 'Hiss', 'Glowworm', 'Twister', 'Ribbon', 'Sidewinder'];
 const glowDot = (col, r) => { const c = document.createElement('canvas'); c.width = c.height = r * 4; const g = c.getContext('2d'); const gr = g.createRadialGradient(r * 2, r * 2, 0, r * 2, r * 2, r * 2); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.25, col); gr.addColorStop(0.6, col + '55'); gr.addColorStop(1, col + '00'); g.fillStyle = gr; g.fillRect(0, 0, r * 4, r * 4); return c; };
 const PCOL = ['#22d3ee', '#f472b6', '#a3e635', '#fde047', '#c084fc', '#fb923c'];
-export class MunchiesSnake extends Game {
+export class MunchiesSnake extends Game8 {
   get title() { return 'NEON MUNCHIES'; }
   get hint() { return 'Drag anywhere to steer; the snake follows your finger. Hold a second finger or Space to boost. Eat to grow, and make rival snakes crash into your body to steal their glow. Avoid rival bodies and the arena wall.'; }
+  get accent() { return '#22d3ee'; }
+  get musicOpts() { return { root: 55, bpm: 112, mode: 'minor', seed: 5, vol: 0.28 }; }
   async load() { this.A = await loadAtlas('/assets/v7/snacks'); }
   layout() { }
   reset() {
-    this.score = 0; this.coins = 0; this.kills = 0; this.dead = 0; this.boostKey = false; this.ptr = null; this.ptrs = {}; this.magnet = 0; this.nextCoin = 1000;
+    super.reset(); this.score = 0; this.coins = 0; this.kills = 0; this.dead = 0; this.boostKey = false; this.ptr = null; this.ptrs = {}; this.magnet = 0; this.nextCoin = 1000;
     this.dots = PCOL.map(c => glowDot(c, 8)); this.food = []; this.snakes = [];
     this.player = this.makeSnake(0, 0, this.r() * TAU, 16, 0, true); this.snakes.push(this.player);
     for (let i = 0; i < 480; i++) this.spawnFood(); for (let i = 0; i < 22; i++) this.spawnSnack(); this.gold = 0;
@@ -57,7 +60,7 @@ export class MunchiesSnake extends Game {
     return want;
   }
   update(dt) {
-    if (this.dead) { this.dead -= dt; this.zoomTo(dt); if (this.dead <= 0) this.finish(); return; }
+    
     if (this.magnet > 0) this.magnet -= dt; const G = this.grid(); const pl = this.player;
     // player steering target
     let want = pl.a; const h = pl.pts[0];
@@ -67,8 +70,8 @@ export class MunchiesSnake extends Game {
     for (const s of this.snakes) { if (!s.alive) continue; const w = s.me ? want : this.steerAI(s, G, dt); this.move(s, w, dt); }
     // collisions
     for (const s of this.snakes) { if (!s.alive) continue; const hd = s.pts[0]; const r = this.width(s) * 0.42;
-      if (Math.hypot(hd[0], hd[1]) > ARENA - r) { this.kill(s, null); continue; }
-      const o = this.hitsBody(s, G, hd[0], hd[1], r); if (o) this.kill(s, o); }
+      if (Math.hypot(hd[0], hd[1]) > ARENA - r) { this.killSnake(s, null); continue; }
+      const o = this.hitsBody(s, G, hd[0], hd[1], r); if (o) this.killSnake(s, o); }
     // eat
     for (const s of this.snakes) { if (!s.alive) continue; const hd = s.pts[0]; const rr = this.width(s) * 0.5 + 16; const mag = s.me && this.magnet > 0 ? 160 : 0;
       for (const f of this.food) { if (f.gone) continue; const dx = f.x - hd[0], dy = f.y - hd[1]; const d2 = dx * dx + dy * dy;
@@ -97,15 +100,16 @@ export class MunchiesSnake extends Game {
   eat(f) { this.award(f.v, 'f'); const hd = this.player.pts[0];
     if (f.k === 'p') { if (this.r() < 0.25) this.sfx.tone(700 + this.r() * 300, 0.04, { type: 'sine', vol: 0.12 }); }
     else { const [sx, sy] = this.toScreen(hd[0], hd[1]); this.pop(sx, sy - 24, f.k === 'brownie' ? '+250 GOLDEN' : f.k === 'mint' ? 'MAGNET' : '+' + f.v, f.k === 'brownie' ? '#fbbf24' : f.k === 'mint' ? '#67e8f9' : '#a3e635', f.k === 'brownie' ? 24 : 18);
-      this.burst(sx, sy, f.k === 'brownie' ? ['#fbbf24', '#fde68a'] : ['#f9a8d4', '#fcd34d', '#fb923c'], 12, 160, 0.45, 4); this.sfx.tone(f.k === 'brownie' ? 990 : 620, 0.1, { type: 'triangle', vol: 0.28 }); if (f.k === 'mint') this.magnet = 6; if (f.k === 'brownie') this.coins++; } }
-  kill(s, by) {
+      this.fx.burst(sx, sy, f.k === 'brownie' ? ['#fbbf24', '#fde68a'] : ['#f9a8d4', '#fcd34d', '#fb923c'], 12, 160, 0.45, 4); this.sfx.tone(f.k === 'brownie' ? 990 : 620, 0.1, { type: 'triangle', vol: 0.28 }); if (f.k === 'mint') this.magnet = 6; if (f.k === 'brownie') this.coins++; } }
+  killSnake(s, by) {
     if (!s.alive) return; s.alive = false;
     for (let i = 0; i < s.pts.length; i += 2) { const p = s.pts[i]; this.spawnFood(p[0] + rnd(-6, 6), p[1] + rnd(-6, 6), 20, 1.6, s.me ? 1 : PCOL.indexOf(s.skin[0]) >= 0 ? PCOL.indexOf(s.skin[0]) : Math.floor(this.r() * PCOL.length)); }
     const [sx, sy] = this.toScreen(s.pts[0][0], s.pts[0][1]);
-    if (s.me) { this.dead = 1.4; this.sfx.lose(); this.burst(sx, sy, s.skin, 40, 320, 0.8, 6); return; }
-    if (by === this.player) { this.kills++; this.pop(sx, sy - 20, `CUT OFF ${s.name}!`, '#fde047', 22); this.sfx.chord([523, 784, 1047], 0.18, { type: 'triangle', vol: 0.3 }); }
-    if (Math.abs(sx - this.W / 2) < this.W && Math.abs(sy - this.H / 2) < this.H) this.burst(sx, sy, s.skin, 18, 240, 0.6, 5);
+    if (s.me) { this.fx.burst(sx, sy, s.skin, 40, 320, 0.8, 6); this.fx.ring(sx, sy, s.skin[0], 10, 150, 0.6, 6); this.kill(1.3, '#22d3ee'); return; }
+    if (by === this.player) { this.kills++; this.pop(sx, sy - 20, `CUT OFF ${s.name}!`, '#fde047', 22); this.sfx.chord([523, 784, 1047], 0.18, { type: 'triangle', vol: 0.3 }); this.fx.shake(7); this.fx.ring(sx, sy, '#fde047', 8, 90, 0.45, 4); this.hitstop(0.05); }
+    if (Math.abs(sx - this.W / 2) < this.W && Math.abs(sy - this.H / 2) < this.H) this.fx.burst(sx, sy, s.skin, 18, 240, 0.6, 5);
   }
+  dyingUpdate(dt) { this.zoomTo(dt * 2.5); }
   zoomTo(dt) { const h = this.player.pts[0]; const z = clamp(1.25 - Math.sqrt(this.player.len) * 0.025, 0.6, 1.15); this.cam.x = lerp(this.cam.x, h[0], Math.min(1, dt * 6)); this.cam.y = lerp(this.cam.y, h[1], Math.min(1, dt * 6)); this.cam.z = lerp(this.cam.z, z, Math.min(1, dt)); }
   toScreen(x, y) { return [(x - this.cam.x) * this.cam.z + this.W / 2, (y - this.cam.y) * this.cam.z + this.H / 2]; }
   floor() { // pre-rendered hex floor tile (dark glass with faint neon seams)
@@ -159,10 +163,8 @@ export class MunchiesSnake extends Game {
     if (this.player.alive) this.drawSnake(ctx, this.player);
     if (this.magnet > 0) { ctx.strokeStyle = `rgba(103,232,249,${0.25 + 0.15 * Math.sin(t * 8)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, 160 * z, 0, TAU); ctx.stroke(); }
     // HUD
-    this.hudScore(ctx);
-    this.text(ctx, 'LENGTH', W - 18, 30, { size: 12, weight: 700, color: '#9aa3d0', align: 'right' });
-    this.text(ctx, fmt(this.player.len), W - 18, 62, { size: 28, weight: 900, align: 'right', glow: '#22d3ee' });
-    this.text(ctx, `CUT OFFS ${this.kills}`, W - 18, 82, { size: 12, weight: 700, align: 'right', color: '#fde047', font: 'Exo' });
+    this.hud(ctx, { best: this.best, chip: 'LEN ' + this.player.len, chipColor: 'rgba(34,211,238,.4)' });
+    if (this.kills) this.text(ctx, `CUT OFFS ${this.kills}`, W - 18, 80, { size: 12, weight: 800, align: 'right', color: '#fde047', font: 'Exo' });
     // minimap
     const mr = 34, mx = W - mr - 14, my = H - mr - 14; ctx.fillStyle = 'rgba(10,12,30,0.65)'; ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(255,79,216,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
     for (const s of this.snakes) { const h = s.pts[0]; ctx.fillStyle = s.me ? '#fff' : s.skin[1]; ctx.beginPath(); ctx.arc(mx + h[0] / ARENA * mr, my + h[1] / ARENA * mr, s.me ? 3 : 2, 0, TAU); ctx.fill(); }

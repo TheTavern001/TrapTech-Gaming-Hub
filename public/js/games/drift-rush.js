@@ -1,5 +1,6 @@
 // Drift Rush - top-down drift racer. v5 art: Poly Haven CC0 asphalt/grass photo textures + Kenney Racing Pack (CC0) cars/props. See /CREDITS.md
-import { Game, TAU, rnd, clamp, roundRect, fmt, loadArt, pattern, loadAtlas, sprC, drawFlame, reducedMotion } from './engine.js';
+import { loadArt, pattern, loadAtlas, sprC, drawFlame, reducedMotion } from './engine.js';
+import { Game8, TAU, rnd, clamp, lerp, roundRect, fmt } from './kit.js';
 // v6: Kenney Car Kit (CC0) 3D sports car + cones + tyres re-lit and rendered top-down in Blender, original nitro canister + street lamps,
 // top-down parallax: ground (1.0) -> street-lamp light pools (1.0) -> lamp heads (1.12, closer to the camera) -> drifting cloud shadows (0.55).
 const PX = 10; // px per meter
@@ -7,13 +8,16 @@ const PX = 10; // px per meter
 // running off the road only slows you down, the road is wider, the start is slower with a gentle ramp (16 -> 50 m/s over ~3 min),
 // obstacles are telegraphed (warning chevrons at the top edge + a pulsing ring), and touch steering has an assist that keeps
 // the car lined up with the road when you let go. Score = meters + banked drift points (same formula as before).
-export class DriftRush extends Game {
+export class DriftRush extends Game8 {
+  get accent() { return '#f472b6'; }
+  get musicOpts() { return { root: 52, bpm: 132, mode: 'minor', seed: 21, vol: 0.3 }; }
+  burst(x, y, c, n, sp, life, size) { this.fx.burst(x, y, c, Math.ceil(n * 0.8), sp, life, (size || 4) * 2.2); }
   get title() { return 'DRIFT RUSH'; }
   get hint() { return 'Hold the left or right side (or use the arrows / A-D) to steer. Slide through curves to build drift points, then straighten out to bank them. You have 3 hearts, and every 1,500 m checkpoint repairs one.'; }
   async load() { this.D = null; loadAtlas('drift').then(d => { this.D = d; }); const D = loadAtlas('drift'); this.art = await loadArt({ clouds: '/assets/v6/dr-clouds.webp', road: 'dr-asphalt.webp', grass: 'dr-grass.webp', car: 'dr-car_red_1.webp', cone: 'dr-cone_straight.webp', barrel: 'dr-barrel_red.webp', tires: 'dr-tires_white.webp', oil: 'dr-oil.webp' }); this.D = await D; }
   layout() { this.carY = this.H * 0.74; }
   pool() { if (this._pool) return this._pool; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const lg = g.createRadialGradient(32, 32, 1, 32, 32, 32); lg.addColorStop(0, 'rgba(255,190,120,0.22)'); lg.addColorStop(1, 'rgba(255,150,80,0)'); g.fillStyle = lg; g.fillRect(0, 0, 64, 64); return (this._pool = c); }
-  reset() {
+  reset() { super.reset();
     this.score = 0; this.coins = 0; this.dist = 0; this.meters = 0; this.x = this.W / 2; this.th = 0; this.ph = 0; this.v = 16;
     this.hearts = 3; this.inv = 0; this.nextCp = 1500; this.nextM = 250; this.banked = 0; this.pending = 0; this.chain = 0; this.calm = 0; this.boost = 0; this.hit = 0; this.off = 0; this.dying = 0;
     this.items = []; this.nextCone = 1100; this.nextOrb = 1500; this.skids = []; this.touch = {}; this.keyL = false; this.keyR = false; this.flash = 0;
@@ -34,7 +38,7 @@ export class DriftRush extends Game {
     this.pop(this.x, this.carY - 50, this.pending > 0 ? `${msg}  -${fmt(this.pending)}` : msg, '#f87171', 20);
     this.pending = 0; this.chain = 0; this.v = Math.max(14, this.v * 0.6); this.hit = 0.5; this.flash = 0.3; this.th *= 0.3; this.ph *= 0.3;
     this.burst(this.x, this.carY, ['#f472b6', '#fde047', '#fff'], 18, 260, 0.5, 4); this.sfx.noise(0.25, { vol: 0.4, freq: 500 });
-    if (this.hearts <= 0) { this.dying = 0.9; this.sfx.lose(); }
+    if (this.hearts <= 0) { this.dying = 0.9; this.sfx.lose(); this.fx.shake(10); this.fx.flash('#ef4444', 0.25); }
   }
   roadAngle(d) { return Math.atan2(this.cx(d + 60) - this.cx(d - 20), 80); }
   update(dt) {

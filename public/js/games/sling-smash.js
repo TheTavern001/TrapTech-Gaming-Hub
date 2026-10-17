@@ -2,15 +2,19 @@
 // wood, glass and stone to knock out the Glitch Bots. Lightweight physics: the ball is a real projectile (gravity, wind, bounces);
 // blocks are boxes that break when hit hard enough and fall when their support is gone; bots break when hit or crushed.
 // Art: Blender Cycles renders (original models, PBR wood/glass/stone, steel ball, Glitch Bot, slingshot fork), v6 sky layers.
-import { Game, TAU, rnd, clamp, lerp, fmt, loadAtlas, loadLayers, spr, sprC, softShadow, reducedMotion } from './engine.js';
+import { loadAtlas, loadLayers, spr, sprC, softShadow, reducedMotion } from './engine.js';
+import { Game8, TAU, rnd, clamp, lerp, roundRect, fmt } from './kit.js';
 const MAT = { wood: { hp: 2.2, pts: 10, col: ['#a16207', '#78350f'] }, glass: { hp: 1, pts: 20, col: ['#bae6fd', '#7dd3fc'] }, stone: { hp: 4.5, pts: 40, col: ['#a8a29e', '#57534e'] } };
 const G = 900;
-export class SlingSmash extends Game {
+export class SlingSmash extends Game8 {
+  get accent() { return '#fb923c'; }
+  get musicOpts() { return { root: 57, bpm: 100, mode: 'major', seed: 33, vol: 0.28 }; }
+  burst(x, y, c, n, sp, life, size) { this.fx.burst(x, y, c, Math.ceil(n * 0.8), sp, life, (size || 4) * 2.2); }
   get title() { return 'SLING SMASH'; }
   get hint() { return 'Drag back from the slingshot to aim, then let go to fire. Knock out every Glitch Bot to clear the tower. Unused balls carry over, and towers get taller and windier forever. Run out of balls with bots still standing and the run ends.'; }
   async load() { const [S, L] = await Promise.all([loadAtlas('/assets/v7/sling'), loadLayers({ sky: 'px-sky.webp', far: 'px-far.webp' })]); this.S = S; this.L = L; }
   layout() { this.ground = this.H - 150; this.sx = 92; this.sy = this.ground - 120; }
-  reset() { this.layout(); this.score = 0; this.coins = 0; this.balls = 5; this.tower = 0; this.used = 0; this.ball = null; this.aim = null; this.blocks = []; this.bots = []; this.wind = 0; this.settle = 0; this.over = 0; this.next = 0.8; this.shake = 0; this.trail = []; }
+  reset() { super.reset(); this.layout(); this.score = 0; this.coins = 0; this.balls = 5; this.tower = 0; this.used = 0; this.ball = null; this.aim = null; this.blocks = []; this.bots = []; this.wind = 0; this.settle = 0; this.over = 0; this.next = 0.8; this.shake = 0; this.trail = []; }
   build() {
     this.tower++; this.mark('t', this.tower); this.used = 0; this.blocks = []; this.bots = []; const k = this.tower; const cols = Math.min(4, 2 + Math.floor(k / 3)), floors = Math.min(6, 2 + Math.floor(k / 2)); const bw = 26, colW = Math.min(80, (this.W - 230) / cols); const x0 = this.W - 40 - cols * colW;
     this.wind = k < 3 ? 0 : rnd(-1, 1) * Math.min(160, 30 + k * 10);
@@ -55,7 +59,7 @@ export class SlingSmash extends Game {
   }
   check() {
     if (this.bots.every(o => !o.alive)) { const k = this.tower; const spare = Math.max(0, 3 - this.used); const bonus = this.award(1000 * Math.min(5, k) * (spare + 1) / 2, 'c'); this.balls += 1 + spare; this.pop(this.W / 2, this.H * 0.35, `TOWER CLEARED  +${fmt(bonus)}`, '#34d399', 24); this.pop(this.W / 2, this.H * 0.35 + 30, `+${1 + spare} BALL${spare ? 'S' : ''}`, '#bae6fd', 18); this.sfx.win(); if (k % 3 === 0) this.coins++; this.next = 1.6; return; }
-    if (this.balls <= 0) { this.over = 1.4; this.sfx.lose(); }
+    if (this.balls <= 0) { this.over = 1.4; this.sfx.lose(); this.fx.shake(10); this.fx.flash('#ef4444', 0.25); }
   }
   render(ctx) {
     const W = this.W, H = this.H, S = this.S, L = this.L || {}, t = this.t;

@@ -1,7 +1,8 @@
 // Haze Defense - original endless tower-defense game (v7). Volumetric smoke orbs drift along a glowing track; build turrets on
 // the pads to pop them layer by layer before they slip through. Art: Blender Cycles renders (original models): Dart Coil, Fan
 // Blaster, Prism Laser and Frost Mister turrets on lit pads, and true volumetric smoke orbs (Cycles volume shader, 5 colours).
-import { Game, TAU, rnd, clamp, lerp, fmt, roundRect, loadAtlas, sprC, softShadow } from './engine.js';
+import { loadAtlas, sprC, softShadow } from './engine.js';
+import { Game8, TAU, rnd, clamp, lerp, roundRect, fmt } from './kit.js';
 const ORB = [null, { spr: 'orb_white', sp: 70, col: '#f1f5f9' }, { spr: 'orb_violet', sp: 80, col: '#c084fc' }, { spr: 'orb_green', sp: 92, col: '#4ade80' }, { spr: 'orb_gold', sp: 104, col: '#fbbf24', split: true }, { spr: 'orb_dark', sp: 60, col: '#64748b', split: true, armor: true }];
 const TUR = {
   dart: { name: 'Dart Coil', cost: 100, spr: 'dart', range: 125, rate: 0.45, dmg: 1 },
@@ -9,7 +10,10 @@ const TUR = {
   prism: { name: 'Prism Laser', cost: 260, spr: 'prism', range: 165, rate: 0.12, dmg: 0.5, pierce: true },
   frost: { name: 'Frost Mister', cost: 120, spr: 'frost', range: 105, rate: 1.6, dmg: 0, slow: true },
 };
-export class HazeDefense extends Game {
+export class HazeDefense extends Game8 {
+  get accent() { return '#c084fc'; }
+  get musicOpts() { return { root: 53, bpm: 96, mode: 'minor', seed: 44, vol: 0.26 }; }
+  burst(x, y, c, n, sp, life, size) { this.fx.burst(x, y, c, Math.ceil(n * 0.8), sp, life, (size || 4) * 2.2); }
   get title() { return 'HAZE DEFENSE'; }
   get hint() { return 'Tap a turret at the bottom, then tap an empty pad to build it. Tap a built turret to upgrade it. Pop the smoke orbs before they reach the exit: big orbs split, dark orbs are armored (lasers melt them). You have 20 lives, and the waves never stop.'; }
   async load() { this.Z = await loadAtlas('/assets/v7/haze'); }
@@ -21,7 +25,7 @@ export class HazeDefense extends Game {
     const pads = [[W * 0.3, y0 + 4], [W * 0.55, y0 + 4], [W * 0.92, top + h * 0.25]]; for (const [i, y] of ys.entries()) for (const fx of (i % 2 ? [0.38, 0.62, 0.9] : [0.1, 0.38, 0.62])) pads.push([W * fx, y]); pads.push([W * 0.08, top + h * 0.51], [W * 0.45, y1 - 6]);
     if (!this.pads || this.pads.length !== pads.length) this.pads = pads.map(([x, y]) => ({ x, y, t: null })); else this.pads.forEach((p, i) => { p.x = pads[i][0]; p.y = pads[i][1]; });
   }
-  reset() { this.pads = null; this.layout(); this.score = 0; this.coins = 0; this.cash = 300; this.lives = 20; this.wave = 0; this.orbs = []; this.queue = []; this.spawnT = 0; this.between = 2.5; this.sel = null; this.fx = []; this.over = 0; this.beams = []; }
+  reset() { super.reset(); this.pads = null; this.layout(); this.score = 0; this.coins = 0; this.cash = 300; this.lives = 20; this.wave = 0; this.orbs = []; this.queue = []; this.spawnT = 0; this.between = 2.5; this.sel = null; this.efx = []; this.over = 0; this.beams = []; }
   at(d) { for (const s of this.seg) if (d <= s.s + s.l) { const k = (d - s.s) / s.l; return [lerp(s.a[0], s.b[0], k), lerp(s.a[1], s.b[1], k)]; } return this.path[this.path.length - 1]; }
   startWave() { this.wave++; const w = this.wave; this.mark('w', w); const n = 8 + Math.floor(w * 2.2); this.queue = [];
     for (let i = 0; i < n; i++) { let lv = 1 + Math.floor(this.r() * Math.min(4, 1 + w / 3)); if (w >= 6 && this.r() < Math.min(0.3, (w - 5) * 0.03)) lv = 5; this.queue.push(lv); }
@@ -36,7 +40,7 @@ export class HazeDefense extends Game {
   }
   popLayer(o, dmg) {
     if (o.dead) return; o.hp -= dmg * (ORB[o.lv].armor && !o.melt ? 0.35 : 1); o.melt = false;
-    while (o.hp <= 0 && !o.dead) { const tier = this.award(1 + Math.floor(this.wave / 10), 'o'); this.cash += 1; const [x, y] = this.at(o.d); this.burst(x, y, [ORB[o.lv].col, '#ffffff'], 6, 120, 0.4, 3); this.fx.push({ x, y, t: 0.35, c: ORB[o.lv].col });
+    while (o.hp <= 0 && !o.dead) { const tier = this.award(1 + Math.floor(this.wave / 10), 'o'); this.cash += 1; const [x, y] = this.at(o.d); this.burst(x, y, [ORB[o.lv].col, '#ffffff'], 6, 120, 0.4, 3); this.efx.push({ x, y, t: 0.35, c: ORB[o.lv].col });
       if (o.lv === 1) { o.dead = true; if (Math.random() < 0.3) this.sfx.tone(rnd(500, 900), 0.04, { type: 'sine', vol: 0.12 }); break; }
       const split = ORB[o.lv].split; o.lv--; o.hp += 1; if (split) this.orbs.push({ lv: o.lv, d: Math.max(0, o.d - 18), hp: 1, slow: 0 }); }
   }
@@ -46,18 +50,18 @@ export class HazeDefense extends Game {
     if (this.queue.length) { this.spawnT -= dt; if (this.spawnT <= 0) { this.orbs.push({ lv: this.queue.shift(), d: 0, hp: 1, slow: 0 }); this.spawnT = this.gap; } }
     const spdMul = 1 + Math.min(0.8, this.wave * 0.02);
     for (const o of this.orbs) { if (o.slow > 0) o.slow -= dt; o.d += ORB[o.lv].sp * spdMul * (o.slow > 0 ? 0.55 : 1) * dt; if (o.d >= this.len) { o.dead = true; o.leak = true; this.lives -= o.lv; this.sfx.noise(0.15, { vol: 0.2, freq: 400 }); this.pop(40, this.path[this.path.length - 1][1] - 20, `-${o.lv}`, '#f87171', 18); } }
-    if (this.lives <= 0) { this.lives = 0; this.over = 1.5; this.sfx.lose(); return; }
+    if (this.lives <= 0) { this.lives = 0; this.over = 1.5; this.sfx.lose(); this.fx.shake(10); this.fx.flash('#ef4444', 0.25); return; }
     this.beams = [];
     for (const p of this.pads) { const t = p.t; if (!t) continue; const T = TUR[t.k]; const rng = T.range * (1 + 0.15 * (t.lv - 1)); t.cd -= dt;
       const inR = this.orbs.filter(o => !o.dead && Math.hypot(...((q) => [q[0] - p.x, q[1] - p.y])(this.at(o.d))) < rng).sort((a, b) => b.d - a.d);
       if (inR.length) { const q = this.at(inR[0].d); t.ang = Math.atan2(q[1] - p.y, q[0] - p.x); }
       if (t.cd > 0 || !inR.length) continue; t.cd = T.rate / (1 + 0.25 * (t.lv - 1));
-      if (t.k === 'dart') { this.popLayer(inR[0], T.dmg * t.lv); const q = this.at(inR[0].d); this.fx.push({ line: [p.x, p.y, q[0], q[1]], t: 0.08, c: '#fde68a' }); }
-      if (t.k === 'fan') { for (const o of inR.slice(0, T.multi + t.lv)) { this.popLayer(o, 1); o.d = Math.max(0, o.d - 14); } this.fx.push({ ring: [p.x, p.y, rng], t: 0.3, c: '#7dd3fc' }); this.sfx.noise(0.1, { vol: 0.08, freq: 1500 }); }
+      if (t.k === 'dart') { this.popLayer(inR[0], T.dmg * t.lv); const q = this.at(inR[0].d); this.efx.push({ line: [p.x, p.y, q[0], q[1]], t: 0.08, c: '#fde68a' }); }
+      if (t.k === 'fan') { for (const o of inR.slice(0, T.multi + t.lv)) { this.popLayer(o, 1); o.d = Math.max(0, o.d - 14); } this.efx.push({ ring: [p.x, p.y, rng], t: 0.3, c: '#7dd3fc' }); this.sfx.noise(0.1, { vol: 0.08, freq: 1500 }); }
       if (t.k === 'prism') { const o = inR[0]; o.melt = true; this.popLayer(o, T.dmg * (1 + 0.5 * (t.lv - 1))); const q = this.at(o.d); this.beams.push([p.x, p.y - 16, q[0], q[1]]); }
-      if (t.k === 'frost') { for (const o of inR) o.slow = 1.6 + 0.4 * t.lv; this.fx.push({ ring: [p.x, p.y, rng], t: 0.5, c: '#a5f3fc' }); if (t.lv >= 2) for (const o of inR.slice(0, 2)) this.popLayer(o, 1); }
+      if (t.k === 'frost') { for (const o of inR) o.slow = 1.6 + 0.4 * t.lv; this.efx.push({ ring: [p.x, p.y, rng], t: 0.5, c: '#a5f3fc' }); if (t.lv >= 2) for (const o of inR.slice(0, 2)) this.popLayer(o, 1); }
     }
-    this.orbs = this.orbs.filter(o => !o.dead); for (const f of this.fx) f.t -= dt; this.fx = this.fx.filter(f => f.t > 0);
+    this.orbs = this.orbs.filter(o => !o.dead); for (const f of this.efx) f.t -= dt; this.efx = this.efx.filter(f => f.t > 0);
   }
   floor() { if (this._fl && this._fl.width === Math.ceil(this.W)) return this._fl; const c = document.createElement('canvas'); c.width = Math.ceil(this.W); c.height = Math.ceil(this.H); const g = c.getContext('2d');
     const bg = g.createLinearGradient(0, 0, 0, c.height); bg.addColorStop(0, '#0b0d17'); bg.addColorStop(1, '#05060c'); g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height);
@@ -81,7 +85,7 @@ export class HazeDefense extends Game {
       ctx.save(); ctx.translate(x, y); ctx.scale(wob, 2 - wob); if (!sprC(ctx, Z, O.spr, 0, 0, s * 1.5)) { ctx.fillStyle = O.col; ctx.beginPath(); ctx.arc(0, 0, s / 2, 0, TAU); ctx.fill(); } ctx.restore();
       if (o.slow > 0) { ctx.strokeStyle = 'rgba(165,243,252,0.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, s * 0.6, 0, TAU); ctx.stroke(); } }
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const [x0, y0, x1, y1] of this.beams) { ctx.strokeStyle = 'rgba(232,121,249,0.35)'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.strokeStyle = '#fdf4ff'; ctx.lineWidth = 2.5; ctx.stroke(); }
-    for (const f of this.fx) { ctx.globalAlpha = Math.min(1, f.t * 4); if (f.line) { ctx.strokeStyle = f.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.line[0], f.line[1]); ctx.lineTo(f.line[2], f.line[3]); ctx.stroke(); } else if (f.ring) { ctx.strokeStyle = f.c; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.ring[0], f.ring[1], f.ring[2] * (1 - f.t), 0, TAU); ctx.stroke(); } else { ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, 26 * (1 - f.t / 0.35) + 6, 0, TAU); ctx.globalAlpha = f.t; ctx.fill(); } } ctx.restore(); ctx.globalAlpha = 1;
+    for (const f of this.efx) { ctx.globalAlpha = Math.min(1, f.t * 4); if (f.line) { ctx.strokeStyle = f.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.line[0], f.line[1]); ctx.lineTo(f.line[2], f.line[3]); ctx.stroke(); } else if (f.ring) { ctx.strokeStyle = f.c; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.ring[0], f.ring[1], f.ring[2] * (1 - f.t), 0, TAU); ctx.stroke(); } else { ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, 26 * (1 - f.t / 0.35) + 6, 0, TAU); ctx.globalAlpha = f.t; ctx.fill(); } } ctx.restore(); ctx.globalAlpha = 1;
     for (const c of this.bar()) { const T = TUR[c.k]; const ok = this.cash >= T.cost, on = this.sel === c.k; roundRect(ctx, c.x, c.y, c.w, c.h, 12); ctx.fillStyle = on ? 'rgba(14,116,144,0.85)' : 'rgba(10,12,24,0.85)'; ctx.fill(); ctx.strokeStyle = on ? '#67e8f9' : ok ? 'rgba(103,232,249,0.4)' : 'rgba(100,116,139,0.35)'; ctx.lineWidth = on ? 3 : 1.5; ctx.stroke();
       ctx.save(); ctx.globalAlpha = ok ? 1 : 0.4; sprC(ctx, Z, T.spr, c.x + c.w / 2, c.y + 42, Math.min(64, c.w * 0.7)); ctx.restore(); this.text(ctx, T.name, c.x + c.w / 2, c.y + c.h - 24, { size: 10, weight: 700, align: 'center', color: '#e2e8f0', font: 'Exo' }); this.text(ctx, `$${T.cost}`, c.x + c.w / 2, c.y + c.h - 8, { size: 13, weight: 900, align: 'center', color: ok ? '#67e8f9' : '#64748b' }); }
     this.hudScore(ctx);
