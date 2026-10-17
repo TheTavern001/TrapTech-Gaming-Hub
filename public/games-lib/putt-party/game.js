@@ -28,7 +28,7 @@
     for (const [x, y] of [[X0 + 14, Y0 + 14], [X1 - 14, Y0 + 14]]) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.arc(x + 2, y + 3, 9, 0, 7); c.fill(); c.fillStyle = '#9a3412'; c.beginPath(); c.arc(x, y, 9, 0, 7); c.fill(); c.fillStyle = '#16a34a'; c.font = 'bold 14px serif'; c.textAlign = 'center'; c.fillText('\u2618', x, y + 5); }
     const t = g.tee; c.fillStyle = 'rgba(255,255,255,.25)'; Kit.rr(c, t.x - 22, t.y - 12, 44, 24, 6); c.fill();
     c.fillStyle = 'rgba(157,255,122,.45)'; c.font = 'bold 9px sans-serif'; c.textAlign = 'center'; c.fillText('\u2618 PUTT PARTY \u00b7 THE GREENHOUSE LINKS \u00b7 21+', 200, H - 12); return (g.cache = cv); }
-  Kit.run({ id: 'gl-putt-party', title: 'PUTT PARTY', help: 'Drag back from anywhere, release to putt (slingshot). Longer drag = harder\nSlopes push, sand slows, water costs a stroke. Beat par for bonus', bg: '#0f2418',
+  Kit.run({ fill: true, id: 'gl-putt-party', title: 'PUTT PARTY', help: 'Drag back from anywhere, release to putt (slingshot). Longer drag = harder\nSlopes push, sand slows, water costs a stroke. Beat par for bonus', bg: '#0f2418',
     init(g) { g.hole = 1; g.lives = 3; g.under = 0; g.aces = 0; build(g); g.hud = ''; },
     update(g, dt) { const b = g.b, P = g.ptr; for (const s of g.spin) s.a += s.w * dt;
       if (g.next > 0) { g.next -= dt; if (g.next <= 0) { g.hole++; g.mark('h', g.hole); build(g); } return; }

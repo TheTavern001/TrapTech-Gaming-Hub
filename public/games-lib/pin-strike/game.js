@@ -29,7 +29,7 @@
   function drawBall(c, b, t) { const q = proj(b.x, b.z), r = BR * q.s * 1.5; c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(q.x + r * 0.2, q.y, r * 1.1, r * 0.35, 0, 0, 7); c.fill(); const g = c.createRadialGradient(q.x - r * 0.35, q.y - r * 1.35, r * 0.1, q.x, q.y - r, r); g.addColorStop(0, '#d9f99d'); g.addColorStop(0.35, '#22c55e'); g.addColorStop(1, '#052e16'); c.fillStyle = g; c.beginPath(); c.arc(q.x, q.y - r, r, 0, 7); c.fill();
     c.fillStyle = '#021a0c'; const a = b.z * 0.05; for (const k of [0, 0.5, 1]) { c.beginPath(); c.arc(q.x + Math.sin(a + k) * r * 0.4, q.y - r * 1.25 + Math.cos(a + k) * r * 0.15, r * 0.1, 0, 7); c.fill(); } }
   function knocked(g) { return g.pins.filter(p => p.down && !p.gone).length; }
-  Kit.run({ id: 'gl-pin-strike', title: 'PIN STRIKE', help: 'Swipe up to bowl: start position = where you stand, direction = aim,\ncurve the swipe for hook, faster = harder. Frames under 7 pins cost a life', bg: '#120a24',
+  Kit.run({ fill: true, id: 'gl-pin-strike', title: 'PIN STRIKE', help: 'Swipe up to bowl: start position = where you stand, direction = aim,\ncurve the swipe for hook, faster = harder. Frames under 7 pins cost a life', bg: '#120a24',
     init(g) { g.frame = 1; g.roll = 1; g.lives = 3; g.hist = []; g.bonus = []; g.strikes = 0; setPins(g); newBall(g); g.msg = null; g.hud = ''; },
     update(g, dt) { const b = g.ball, P = g.ptr;
       if (!b.live && !b.done) { if (P.pressed) g.sw = { pts: [[P.x, P.y, g.t]] }; if (g.sw && P.down) { g.sw.pts.push([P.x, P.y, g.t]); b.x = Math.max(-LW + BR, Math.min(LW - BR, (g.sw.pts[0][0] - 200) * 0.5)); }

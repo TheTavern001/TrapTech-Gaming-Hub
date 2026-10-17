@@ -9,7 +9,7 @@
     b.vx = (tx - b.x) / T; b.vy = (ty - b.y) / T; b.vh = (0 - b.h + 0.5 * G * T * T) / T; b.land = { x: tx, y: ty }; }
   function aiShot(g, ease) { const b = g.b, lv = Math.min(1, 0.2 + g.rally / 10 + g.pts / 20); const err = !ease && g.R(0, 1) < 0.05 + Math.min(0.06, g.rally * 0.005); const tx = err ? (g.R(0, 1) < 0.5 ? -1 : 1) * g.R(4.3, 5) : g.R(-1, 1) * (1.8 + lv * 2.2) * (ease || 1), ty = g.R(2, 6.5 - lv * 2);
     launch(b, tx, ty, (1.2 - lv * 0.45) * g.R(0.92, 1.08)); g.bounces = 0; g.side = 'me'; }
-  Kit.run({ id: 'gl-rally-court', title: 'RALLY COURT', help: 'Drag or use arrows to move along the baseline\nThe racket swings by itself: where the ball meets it aims the shot\nKeep rallies going; beat the rival for big points. 3 lives', bg: '#0b1a33',
+  Kit.run({ fill: true, id: 'gl-rally-court', title: 'RALLY COURT', help: 'Drag or use arrows to move along the baseline\nThe racket swings by itself: where the ball meets it aims the shot\nKeep rallies going; beat the rival for big points. 3 lives', bg: '#0b1a33',
     init(g) { g.me = { x: 0, sw: 0, sd: 1 }; g.ai = { x: 0, sw: 0 }; g.b = { x: 0, y: 0, h: 0, vx: 0, vy: 0, vh: 0 }; g.lives = 3; g.pts = 0; g.rally = 0; g.long = 0; g.hits = 0; g.sweet = 0; g.msg = ''; g.msgT = 0; g.fx = []; g.trail = []; g.hud = ''; g.phase = 'wait'; g.wait = 1; },
     update(g, dt) { const me = g.me, ai = g.ai, b = g.b; g.msgT -= dt; me.sw = Math.max(0, me.sw - dt * 4); ai.sw = Math.max(0, ai.sw - dt * 4);
       for (const f of g.fx) { f.x += f.vx * dt; f.y += f.vy * dt; f.l -= dt; } g.fx = g.fx.filter(f => f.l > 0);
