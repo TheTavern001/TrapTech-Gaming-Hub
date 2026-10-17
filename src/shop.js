@@ -74,8 +74,9 @@ const BY_ID = new Proxy(HANDMADE_BY, { get: (t, k) => typeof k === 'string' ? re
 function attach(BY) {
   for (const type of ['banner', 'frame', 'title', 'color', 'effect']) {
     const base = BY[type];
-    BY[type] = new Proxy(base, { get: (t, k) => { if (typeof k !== 'string') return t[k]; if (t[k]) return t[k]; const it = /^(fx-)?v7/.test(k) ? resolve(k) : null;
-      return it && it.type === type ? { id: it.id, name: it.name, shop: true, anim: it.type === 'frame' ? it.extra.split('|')[1] : undefined } : undefined; } });
+    BY[type] = new Proxy(base, { get: (t, k) => { if (typeof k !== 'string') return t[k]; if (Object.prototype.hasOwnProperty.call(t, k)) return t[k]; const it = /^(fx-)?v7/.test(k) ? resolve(k) : null;
+      // v8 fix: generated shop ids must resolve to their real design BEFORE the placeholder fallback in cosmetics.js can mint one
+      return it && it.type === type ? { id: it.id, name: it.name, shop: true, anim: it.type === 'frame' ? it.extra.split('|')[1] : undefined } : t[k]; } });
   }
   return BY;
 }
@@ -131,20 +132,27 @@ const VAULT_GAP = 90, VAULT_REPEAT = 180, SEASON_VAULT_AFTER = 365;
 const DAILY_SLOTS = 6, WEEKLY_SLOTS = 4;
 const SIM = { day: EPOCH_DAY - 1, seen: new Map(), vaulted: new Map(), lastReturn: new Map(), days: new Map(), weeks: new Map(), pool: [], intro: [] };
 for (const it of HANDMADE) SIM.pool.push(it.id);
+// v8: after the cutover, newly minted shop items are universe designs (src/cosmetic-universe.js): globally unique names, never repeated within a 8,000-design block.
+const UNI = require('./cosmetic-universe');
+SIM.uCounter = 0;
+function nextU(ok) { for (let guard = 0; guard < 400; guard++) { const i = UNI.shopIndex(SIM.uCounter++); const c = UNI.ctx(i); if (!ok || ok(c)) return resolve(UNI.idOf(i)); } return resolve(UNI.idOf(UNI.shopIndex(SIM.uCounter++))); }
+const mintDaily = (day, s) => post(day) ? nextU((c) => c.rarity !== 'legendary') : resolve(G.make('d', day, s).id);
+const mintWeekly = (day, w, s) => post(day) ? nextU((c) => c.rarity === 'epic' || c.rarity === 'legendary') : resolve(G.make('w', w, s).id);
 function meta(id) { let m = SIM.seen.get(id); if (!m) { m = { first: null, last: -1e9, days: [] }; SIM.seen.set(id, m); } return m; }
 function appear(id, day, last = day) { const m = meta(id); if (m.first === null) { m.first = day; if (!HANDMADE_BY[id]) SIM.intro.push([day, id]); } m.days.push(day); m.last = Math.max(m.last, last); }
 function wpickIds(r, ids, weight) { let tot = 0; const w = ids.map(id => { const x = Math.max(0, weight(id)); tot += x; return x; }); if (!tot) return null; let x = r() * tot; for (let i = 0; i < ids.length; i++) { if ((x -= w[i]) < 0) return ids[i]; } return ids[ids.length - 1]; }
-const rarOf = (id) => resolve(id).rarity;
+const RAR = new Map(); // id -> rarity (tiny); keeps the rotation sim from rebuilding evicted items
+const rarOf = (id) => { let r = RAR.get(id); if (!r) { r = resolve(id).rarity; RAR.set(id, r); } return r; };
 function stepWeek(w, day) {
   const r = G.rng(G.hash('weekly', w)); const out = []; const tags = {};
-  for (const s of [0, 1]) { const it = resolve(G.make('w', w, s).id); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); }
+  for (const s of [0, 1]) { const it = mintWeekly(day, w, s); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); }
   const endDay = weekStartDay(w) + 6;
   const cand = () => SIM.pool.filter(id => !out.includes(id) && !SIM.vaulted.has(id) && /epic|legendary/.test(rarOf(id)) && meta(id).last <= day - (post(day) ? COOL[rarOf(id)] : 42));
   let wslot = 2;
   while (out.length < WEEKLY_SLOTS) {
     const c = cand();
     // v8: when nothing has finished its cooldown yet, mint a fresh item instead of repeating one early (the generator never runs out)
-    if (post(day) && !c.length) { const it = resolve(G.make('w', w, wslot++).id); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); continue; }
+    if (post(day) && !c.length) { const it = mintWeekly(day, w, wslot++); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); continue; }
     const id = wpickIds(r, c.length ? c : SIM.pool.filter(id => !out.includes(id) && /epic|legendary/.test(rarOf(id))), (id) => 1 + Math.min(120, day - meta(id).last) / 20); if (!id) break; out.push(id);
   }
   for (const id of out) { appear(id, day, endDay); const m = meta(id); if (!post(day) && m.days.length >= CAP[rarOf(id)] && !SIM.vaulted.has(id)) SIM.vaulted.set(id, endDay); }
@@ -154,7 +162,7 @@ function stepDay(day) {
   const w = weekOf(day); if (!SIM.weeks.has(w)) stepWeek(w, day);
   if (day === CUTOVER_DAY) SIM.vaulted.clear(); // v8: the Vault is gone; formerly retired items rejoin the pool (cooldown counts from their last appearance)
   const week = SIM.weeks.get(w).ids; const r = G.rng(G.hash('daily', day)); const out = []; const tags = {};
-  for (const s of [0, 1]) { const it = resolve(G.make('d', day, s).id); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); }
+  for (const s of [0, 1]) { const it = mintDaily(day, s); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); }
   // season shop items join the Vault a year after their season ends
   const sn = SE().seasonAt(PR().dayStart(day) + 3600e3).number;
   for (let n = 1; n < sn; n++) { const endDay = EPOCH_DAY + n * 56 - 1; if (day === endDay + SEASON_VAULT_AFTER) for (let s = 0; s < 6; s++) { const id = resolve(G.make('s', n, s, G.parse.contexts.s(n, s)).id).id; if (post(day)) { if (!SIM.pool.includes(id)) SIM.pool.push(id); } else SIM.vaulted.set(id, endDay); } }
@@ -168,7 +176,7 @@ function stepDay(day) {
   let dslot = 2;
   while (out.length < DAILY_SLOTS) {
     let c = SIM.pool.filter(id => ok(id, true) && (rarOf(id) !== 'legendary' || r() < 0.15));
-    if (!c.length && post(day)) { const it = resolve(G.make('d', day, dslot++).id); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); continue; }
+    if (!c.length && post(day)) { const it = mintDaily(day, dslot++); out.push(it.id); tags[it.id] = 'new'; SIM.pool.push(it.id); continue; }
     if (!c.length) c = SIM.pool.filter(id => ok(id, false));
     const id = wpickIds(r, c, (id) => RW[rarOf(id)] * (1 + Math.min(60, day - meta(id).last) / 15)); if (!id) break; out.push(id);
   }
@@ -412,7 +420,7 @@ function css() {
     if (i.type === 'frame') { const [bg, anim] = i.extra.split('|'); out.push(`.fr-${i.id}{--frame-bg:${bg}}`); if (anim) out.push(`.fr-${i.id}::before{animation:${{ spin: 'fr-spin 5s linear infinite', glow: 'fr-glow 2.6s ease-in-out infinite', pulse: 'fr-pulse 1.6s ease-in-out infinite' }[anim]}}`); }
     if (i.type === 'color') out.push(`.nc-${i.id} .nt{background:${i.extra};-webkit-background-clip:text;background-clip:text;color:transparent}`);
   }
-  for (const i of gen) { if (i.type === 'banner') out.push(`.bn-${i.id}{background:url(/shop/art/${i.id}.svg) center/cover no-repeat;background-color:${G.PALETTES[i.palette][0]}}`); else { const c = G.itemCss(i); if (c) out.push(c); } }
+  for (const i of gen) { if (i.type === 'banner') out.push(`.bn-${i.id}{background:url(/shop/${i.src === 'u' || i.src === 'a' ? 'banner' : 'art'}/${i.id}.svg) center/cover no-repeat;background-color:${G.PALETTES[i.palette][0]}}`); else { const c = G.itemCss(i); if (c) out.push(c); } }
   CSS_CACHE = { key, css: out.join('\n') + '\n' }; return CSS_CACHE.css;
 }
 const cssKey = () => realToday() + ':' + liveGenerated().length;
@@ -454,7 +462,7 @@ function detail(user, id, t = Date.now()) {
   const gate = GATES.find(g => gateItem(g).id === it.id);
   const owners = db.prepare('SELECT COUNT(*) AS n FROM user_items WHERE item_id=?').get(it.id).n;
   return { item: { ...o, tag, tag_label: TAG_LABEL[tag] }, on_sale: on, where, source: it.src === 'k' ? `Season ${it.num} free track (${it.label || 'level reward'})` : it.src === 'b' ? 'Earned, not sold' : it.src === 's' ? `Season ${it.num} shop` : it.src === 'e' ? 'Event item' : it.src === 'w' ? 'Weekly featured drop' : it.src === 'd' ? 'Daily drop' : 'Original v5 collection',
-    sold: it.src !== 'k' && it.src !== 'b', requirement: gate ? gateText(gate) : null, price: on ? priceParts(it, t) : null, your_price: on && user ? module.exports.priceFor(it, user, t) : null, history: history(it.id), owners };
+    sold: it.src !== 'k' && it.src !== 'b' && it.src !== 'a', requirement: gate ? gateText(gate) : null, price: on ? priceParts(it, t) : null, your_price: on && user ? module.exports.priceFor(it, user, t) : null, history: history(it.id), owners };
 }
 // for the admin panel (src/admin-ops.js) and tests: the catalog that has appeared so far, newest first
 function catalog({ limit = 500, type = '', q = '' } = {}) {
@@ -462,27 +470,27 @@ function catalog({ limit = 500, type = '', q = '' } = {}) {
   const list = [...HANDMADE, ...[...GEN.values()].filter(i => (SIM.seen.get(i.id) || {}).first <= today).reverse()];
   return list.filter(i => (!type || i.type === type) && (!q || i.name.toLowerCase().includes(String(q).toLowerCase()))).slice(0, limit).map(i => ({ ...pub(i, false), src: i.generated ? i.src : 'v5', history: history(i.id) }));
 }
-// A deterministic 1,200-item rotating universe: two new daily originals for 600 days.
- // Items are previewable in the catalog, but purchase still requires the item to be in the active rotation.
-const CATALOG_UNIVERSE_SIZE = 1200;
-function catalogUniverse({ limit = 50, offset = 0, type = '', q = '', user = null, t = Date.now() } = {}) {
-  const safeLimit = Math.max(1, Math.min(100, Math.floor(Number(limit) || 50)));
+// v8: the browsable universe: 12,000+ uniquely named designs (src/cosmetic-universe.js), generated on demand from their index.
+// Items are previewable here; purchase still requires the item to be in the active rotation, and earn-only designs
+// (id letter 'a') come from achievements, quests and seasons, never from the shop.
+const CATALOG_UNIVERSE_SIZE = UNI.UNIVERSE_SIZE;
+function catalogUniverse({ limit = 48, offset = 0, type = '', q = '', rarity = '', theme = '', sold = '', user = null, t = Date.now() } = {}) {
+  const safeLimit = Math.max(1, Math.min(100, Math.floor(Number(limit) || 48)));
   const safeOffset = Math.max(0, Math.min(CATALOG_UNIVERSE_SIZE, Math.floor(Number(offset) || 0)));
   const needle = String(q || '').trim().slice(0, 80).toLowerCase();
   const rot = module.exports.rotation(t);
   const onSale = new Set(module.exports.allOnSale(rot).map(it => it.id));
   const own = user ? owned(user.id) : new Set();
-  const matches = [];
-  for (let n = 0; n < 600; n++) {
-    const day = EPOCH_DAY + n;
-    for (let slot = 0; slot < 2; slot++) {
-      const it = resolve(G.make('d', day, slot).id);
-      if (!it || (type && it.type !== type) || (needle && !it.name.toLowerCase().includes(needle))) continue;
-      matches.push({ it, day });
-    }
+  const hits = [];
+  for (let i = 0; i < CATALOG_UNIVERSE_SIZE; i++) {
+    const c = UNI.ctx(i);
+    if (type && c.type !== type) continue; if (rarity && c.rarity !== rarity) continue; if (theme && c.theme !== theme) continue;
+    if (sold === 'earn' && !c.earn) continue; if (sold === 'shop' && c.earn) continue;
+    if (needle && !c.name.toLowerCase().includes(needle)) continue;
+    hits.push(i);
   }
-  return { total: matches.length, offset: safeOffset, limit: safeLimit,
-    items: matches.slice(safeOffset, safeOffset + safeLimit).map(({ it, day }) => ({ ...module.exports.pub(it, own.has(it.id)), catalog_only: !onSale.has(it.id), on_sale: onSale.has(it.id), scheduled_day: day })) };
+  return { total: hits.length, offset: safeOffset, limit: safeLimit,
+    items: hits.slice(safeOffset, safeOffset + safeLimit).map((i) => { const it = resolve(UNI.idOf(i)); return { ...module.exports.pub(it, own.has(it.id)), catalog_only: !onSale.has(it.id), on_sale: onSale.has(it.id), earn_only: !!it.earn, index: i }; }) };
 }
 function schedule(days = 14, t = Date.now()) { const d0 = Math.max(EPOCH_DAY, dayNum(t)); const out = []; for (let d = d0; d < d0 + days; d++) { const r = module.exports.rotation(PR().dayStart(d) + 3600e3); out.push({ day: d, at: PR().dayStart(d), daily: r.daily.map(i => ({ id: i.id, name: i.name, tag: r.tags[i.id] || null })), weekly: r.weekly.map(i => i.id), events: r.events.map(e => e.name) }); } return out; }
 function stats() { syncGen(); return { catalog_universe: CATALOG_UNIVERSE_SIZE, generated_so_far: GEN.size, handmade: HANDMADE.length, vaulted: [...SIM.vaulted.values()].filter(v => v <= realToday()).length, simulated_to: SIM.day }; }
@@ -506,9 +514,14 @@ function routes(app, A, H) {
     res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
     res.send(svg);
   });
+  app.get('/shop/banner/:id.svg', (req, res) => { // v8: the bare banner scene (cards at /shop/art show the framed preview)
+    const it = resolve(req.params.id); if (!it || !it.generated || it.type !== 'banner') return res.status(404).end();
+    res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8'); res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+    res.send(G.bannerSvg(it.art.seed, it.palette, it.art.motif, it.rarity));
+  });
   app.get('/api/shop/catalog', (req, res) => {
     const me = H.currentUser(req);
-    const page = module.exports.catalogUniverse({ limit: req.query.limit, offset: req.query.offset, type: req.query.type, q: req.query.q, user: me });
+    const page = module.exports.catalogUniverse({ limit: req.query.limit, offset: req.query.offset, type: String(req.query.type || ''), q: String(req.query.q || ''), rarity: String(req.query.rarity || ''), theme: String(req.query.theme || ''), sold: String(req.query.sold || ''), user: me });
     res.setHeader('Cache-Control', 'private, max-age=60');
     res.json({ ok: true, catalog_size: CATALOG_UNIVERSE_SIZE, ...page });
   });

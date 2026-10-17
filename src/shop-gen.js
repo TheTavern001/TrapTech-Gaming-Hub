@@ -5,7 +5,7 @@
 // always rebuilds the same name, rarity, art and CSS. Art is original SVG/CSS (no third-party assets).
 //   id = [fx-]v7<src><num>s<slot>      src: d daily (num = hub day), w weekly (num = week), s season shop (num = season),
 //                                        k season track reward (num = season), e event (num = event key), b earned (num = gate)
-const ID_RE = /^(?:fx-)?v7([dwskebp])(\d{1,9})s(\d{1,3})$/;
+const ID_RE = /^(?:fx-)?v7([dwskebpua])(\d{1,9})s(\d{1,3})$/; // u = universe shop item, a = universe earn-only item (src/cosmetic-universe.js)
 const TYPES = ['banner', 'frame', 'color', 'title', 'badge', 'effect'];
 const RARITIES = ['common', 'rare', 'epic', 'legendary'];
 
@@ -114,6 +114,14 @@ const MOTIFS = {
   stripes(r, p) { let s = ''; const ang = Math.round(-30 + r() * 60); for (let i = -10; i < 30; i++) s += `<rect x='${i * 26}' y='-200' width='${f1(6 + r() * 16)}' height='600' fill='${pick(r, [p[2], p[3], p[4], p[1]])}' opacity='${f1(0.15 + r() * 0.45)}' transform='rotate(${ang} 240 80)'/>`; return s; },
 };
 function stars(r, p, n) { let s = ''; for (let i = 0; i < n; i++) s += `<circle cx='${f1(r() * W)}' cy='${f1(r() * H * 0.8)}' r='${f1(0.4 + r() * 1.3)}' fill='${r() < 0.7 ? '#fff' : p[4]}' opacity='${f1(0.3 + r() * 0.7)}'/>`; return s; }
+// v8 extra banner motifs (more variety for the 12,000-item universe)
+Object.assign(MOTIFS, {
+  rain(r, p) { let s = `<rect y='104' width='${W}' height='56' fill='${p[0]}' opacity='.55'/>`; for (let i = 0; i < 70; i++) { const x = r() * W, y = r() * H, l = 10 + r() * 26; s += `<line x1='${f1(x)}' y1='${f1(y)}' x2='${f1(x - l * 0.3)}' y2='${f1(y + l)}' stroke='${pick(r, [p[2], p[3], p[4]])}' stroke-width='${f1(0.8 + r() * 1.4)}' opacity='${f1(0.25 + r() * 0.6)}'/>`; } for (let i = 0; i < 5; i++) s += `<ellipse cx='${f1(r() * W)}' cy='${f1(118 + r() * 34)}' rx='${f1(14 + r() * 30)}' ry='3' fill='none' stroke='${p[3]}' opacity='.5'/>`; return s; },
+  orbits(r, p) { const cx = 120 + r() * 240, cy = 70 + r() * 30; let s = `<circle cx='${f1(cx)}' cy='${f1(cy)}' r='18' fill='url(#g2)'/>`; for (let i = 1; i <= 6; i++) { const rx = 24 + i * 34, ry = 8 + i * 11; s += `<ellipse cx='${f1(cx)}' cy='${f1(cy)}' rx='${rx}' ry='${ry}' fill='none' stroke='${pick(r, [p[2], p[3], p[4]])}' stroke-opacity='${f1(0.55 - i * 0.06)}' transform='rotate(${f1(-18 + r() * 8)} ${f1(cx)} ${f1(cy)})'/>`; const a = r() * 6.28; s += `<circle cx='${f1(cx + Math.cos(a) * rx)}' cy='${f1(cy + Math.sin(a) * ry)}' r='${f1(2.5 + r() * 3)}' fill='${p[4]}'/>`; } return s; },
+  petals(r, p) { let s = ''; for (let i = 0; i < 60; i++) { const sc = 0.5 + r() * 1.4; s += `<ellipse cx='0' cy='0' rx='${f1(7 * sc)}' ry='${f1(3.2 * sc)}' transform='translate(${f1(r() * W)} ${f1(r() * H)}) rotate(${Math.round(r() * 360)})' fill='${pick(r, [p[2], p[3], p[4]])}' opacity='${f1(0.25 + r() * 0.6)}'/>`; } return s; },
+  dunes(r, p) { let s = `<circle cx='${f1(80 + r() * 320)}' cy='${f1(44 + r() * 20)}' r='${f1(26 + r() * 10)}' fill='${p[4]}' opacity='.85'/>`; for (let i = 0; i < 4; i++) s += `<path d='${wave(r, 70 + i * 24, 14, 3)}' fill='${[p[3], p[2], p[1], p[0]][i]}' opacity='${[0.5, 0.7, 0.88, 1][i]}'/>`; return s; },
+  lanterns(r, p) { let s = ''; for (let i = 0; i < 16; i++) { const x = 14 + r() * (W - 28), y = 24 + r() * 100, rr = 7 + r() * 10, c = pick(r, [p[2], p[3], p[4]]); s += `<line x1='${f1(x)}' y1='0' x2='${f1(x)}' y2='${f1(y - rr)}' stroke='${p[2]}' stroke-opacity='.4'/><circle cx='${f1(x)}' cy='${f1(y)}' r='${f1(rr * 2.2)}' fill='${c}' opacity='.18' filter='url(#bl)'/><rect x='${f1(x - rr * 0.7)}' y='${f1(y - rr)}' width='${f1(rr * 1.4)}' height='${f1(rr * 1.9)}' rx='${f1(rr * 0.5)}' fill='${c}' opacity='.9'/>`; } return s; },
+});
 const MOTIF_KEYS = Object.keys(MOTIFS);
 const THEME_MOTIFS = { culture: ['canopy', 'smoke', 'bokeh', 'waves', 'contours', 'aurora', 'ridges'], gaming: ['synthwave', 'circuit', 'hexes', 'skyline', 'shards', 'galaxy', 'stripes'], money: ['skyline', 'shards', 'stripes', 'bokeh', 'contours', 'hexes', 'waves'] };
 function bannerSvg(seed, pal, motif, rarity) {
@@ -142,7 +150,7 @@ const TYPE_W = [['banner', 26], ['frame', 20], ['color', 16], ['title', 16], ['b
 const BADGE_ICONS = ['crown', 'gem', 'leaf', 'diamond', 'flame', 'rocket', 'star', 'zap', 'trophy', 'medal', 'sparkles', 'heart', 'music', 'target', 'crosshair', 'castle', 'anchor', 'flask-conical', 'hand-metal', 'moon', 'sunrise', 'flame-kindling', 'wand-sparkles', 'swords', 'piggy-bank', 'banknote', 'shield-half', 'gamepad-2', 'disc-3', 'dices', 'paintbrush', 'cookie', 'cake'];
 const FX_KINDS = ['embers', 'aurora', 'shimmer', 'snow', 'pulse', 'confetti', 'fog', 'starfall', 'static', 'fireflies'];
 const FRAME_STYLES = ['smooth', 'segments', 'dual', 'ticks'];
-const cache = new Map();
+const cache = new Map(); const CACHE_MAX = Number(process.env.COSMETIC_CACHE_MAX) || 600;
 // ctx (optional, for season/event/earned items): { theme, palette, name, label, type, rarity }
 function make(src, num, slot, ctx = {}) {
   const core = `v7${src}${num}s${slot}`;
@@ -153,14 +161,14 @@ function make(src, num, slot, ctx = {}) {
   const pal = ctx.palette || pick(r, THEME_PALS[theme] || PAL_KEYS);
   const words = ctx.words || WORDS[theme] || WORDS[pick(r, ['culture', 'gaming', 'money'])];
   const id = (type === 'effect' ? 'fx-' : '') + core;
-  const it = { id, type, rarity, theme: WORDS[theme] ? theme : ctx.themeKey || 'culture', palette: pal, src, num, slot, generated: true, art: {} };
+  const it = { id, type, rarity, universe: ctx.universe, earn: !!ctx.earn, theme: WORDS[theme] ? theme : ctx.themeKey || 'culture', palette: pal, src, num, slot, generated: true, art: {} };
   const p = PALETTES[pal];
   if (type === 'banner') { it.art.motif = ctx.motif || pick(r, THEME_MOTIFS[theme] || MOTIF_KEYS); it.art.seed = hash('art', core); it.name = ctx.name || `${pick(r, words.adj)} ${pick(r, words.noun)}`; }
   else if (type === 'frame') { it.art.style = pick(r, FRAME_STYLES); it.art.anim = pick(r, ['spin', 'glow', 'pulse']); it.name = ctx.name || `${pick(r, words.adj)}${KIND_NOUN.frame}`; }
   else if (type === 'color') { it.art.stops = [p[2], p[3], p[4]].slice(0, rarity === 'common' ? 2 : 3); it.art.shimmer = rarity === 'epic' || rarity === 'legendary'; it.name = ctx.name || `${pick(r, words.adj)} ${pick(r, ['Glow', 'Ink', 'Shine', 'Script', 'Tone', 'Gleam'])}`; }
   else if (type === 'title') { it.name = ctx.name || pick(r, words.title); if (!ctx.name && r() < 0.45) it.name = `${pick(r, words.adj)} ${it.name.split(' ').pop()}`; }
   else if (type === 'badge') { it.art.icon = ctx.icon || pick(r, BADGE_ICONS); it.name = ctx.name || `${pick(r, words.adj)}${KIND_NOUN.badge}`; }
-  else { it.art.kind = pick(r, FX_KINDS); it.art.hue = Math.round(r() * 360); it.name = ctx.name || `${pick(r, words.adj)} ${EFFECT_NOUN[FX_KINDS.indexOf(it.art.kind)]}`; }
+  else { it.art.kind = ctx.fxKind != null ? FX_KINDS[ctx.fxKind % FX_KINDS.length] : pick(r, FX_KINDS); it.art.hue = Math.round(r() * 360); it.name = ctx.name || `${pick(r, words.adj)} ${EFFECT_NOUN[FX_KINDS.indexOf(it.art.kind)]}`; }
   // Give each scheduled daily drop a stable edition mark so the 1,200-item catalog has distinct display names.
   if (src === 'd' && slot < 2) it.name = `${it.name} · ${String(num - 20727 + 1).padStart(3, '0')}${slot === 0 ? 'A' : 'B'}`;
   if (ctx.label) it.label = ctx.label;
@@ -208,9 +216,12 @@ function parse(id) {
   if (ctx === null) return null;
   const it = make(m[1], +m[2], +m[3], ctx);
   if (it.id !== id) return null; // effect ids must carry fx-, others must not
-  cache.set(id, it); return it;
+  cache.set(id, it); if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value); // bounded: 12,000+ designs are rebuilt on demand, never held in RAM
+  return it;
 }
-parse.contexts = {}; // shop.js / seasons.js register context builders for s, k, e, b items (theme, fixed type, names)
+const UNI = require('./cosmetic-universe');
+parse.contexts = { u: (n, slot) => (slot === 0 && !UNI.isEarn(n) ? UNI.ctx(n) : null), a: (n, slot) => (slot === 0 && UNI.isEarn(n) ? UNI.ctx(n) : null) }; // universe items (shop 'u', earn-only 'a')
+// shop.js / seasons.js register context builders for s, k, e, b items (theme, fixed type, names)
 // medallion SVG used for badge previews in the shop
 function badgeArt(it, iconPaths = '') {
   const p = PALETTES[it.palette] || PALETTES.neon; const rim = { common: ['#e2e8f0', '#64748b'], rare: ['#bfdbfe', '#2563eb'], epic: ['#f5d0fe', '#9333ea'], legendary: ['#fef08a', '#db2777'] }[it.rarity] || ['#fff', '#888'];
@@ -220,6 +231,7 @@ function badgeArt(it, iconPaths = '') {
 
 function itemThumbSvg(it, iconMap = {}) {
   if (!it || !it.generated || !TYPES.includes(it.type)) return null;
+  if (it.src === 'u' || it.src === 'a') return require('./cosmetic-art').cardSvg(it, iconMap);
   if (it.type === 'banner') return bannerSvg(it.art.seed, it.palette, it.art.motif, it.rarity);
   if (it.type === 'badge') return badgeArt(it, iconMap[it.art.icon] || '');
   const p = PALETTES[it.palette] || PALETTES.neon;
