@@ -23,7 +23,7 @@
   const IMG = {}; const img = (n) => IMG[n] || (IMG[n] = ballImg(n));
   function rack(g) { const n = Math.min(15, 6 + g.racks * 3); g.rackN = n; g.balls = [{ n: 0, x: 200, y: TY + TH * 0.78, vx: 0, vy: 0, in: false }]; let k = 0; const nums = []; for (let i = 1; i <= 15; i++) nums.push(i); for (let i = nums.length - 1; i > 0; i--) { const j = g.RI(0, i); [nums[i], nums[j]] = [nums[j], nums[i]]; }
     for (let r = 0; r < 5 && k < n; r++) for (let i = 0; i <= r && k < n; i++) { g.balls.push({ n: nums[k++], x: 200 + (i - r / 2) * (BR * 2 + 0.6), y: TY + TH * 0.25 - r * (BR * 1.75), vx: 0, vy: 0, in: false }); } }
-  Kit.run({ id: 'gl-cue-club', title: 'CUE CLUB', help: 'Drag back from anywhere and release to shoot (slingshot). Longer = harder\nPot every ball to re-rack. A turn without a pot or a scratch costs a chalk', bg: '#0c0705',
+  Kit.run({ fill: true, id: 'gl-cue-club', title: 'CUE CLUB', help: 'Drag back from anywhere and release to shoot (slingshot). Longer = harder\nPot every ball to re-rack. A turn without a pot or a scratch costs a chalk', bg: '#0c0705',
     init(g) { g.racks = 0; g.lives = 3; g.potted = 0; g.best = 0; rack(g); g.turn = null; g.hud = ''; },
     update(g, dt) { const P = g.ptr, cue = g.balls[0]; const moving = g.balls.some(b => !b.in && Math.hypot(b.vx, b.vy) > 3);
       if (!moving) { if (g.turn) { const t = g.turn; g.turn = null; if (cue.in) { cue.in = false; cue.x = 200; cue.y = TY + TH * 0.78; cue.vx = cue.vy = 0; for (const b of g.balls) if (b !== cue && !b.in && Math.hypot(b.x - cue.x, b.y - cue.y) < BR * 2) cue.y += BR * 3; g.lives--; g.float(200, 380, 'SCRATCH', '#ff5a5a', 22); g.sfx('bad'); } else if (t.pots === 0 && !t.brk) { g.lives--; g.float(200, 380, 'NO POT', '#ff5a5a', 20); g.sfx('bad'); }

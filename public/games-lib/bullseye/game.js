@@ -16,7 +16,7 @@
     c.fillStyle = '#8a6a3a'; c.fillRect(x - r * 0.1, y, r * 0.2, r * 1.6); c.save(); c.translate(x, y); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.arc(r * 0.06, r * 0.06, r * 1.02, 0, 7); c.fill(); c.fillStyle = '#d6c08a'; c.beginPath(); c.arc(0, 0, r * 1.05, 0, 7); c.fill();
     for (let i = 0; i < 10; i++) { const rr = r * (1 - i / 10); c.fillStyle = cols[i]; c.beginPath(); c.arc(0, 0, rr, 0, 7); c.fill(); c.strokeStyle = i < 2 ? '#999' : 'rgba(255,255,255,.4)'; c.lineWidth = Math.max(0.5, r / 120); c.stroke(); } c.strokeStyle = '#111'; c.beginPath(); c.arc(0, 0, r * 0.05, 0, 7); c.stroke(); c.restore(); }
   function newEnd(g) { g.arrows = 3; g.endScore = 0; g.hits = []; g.dist = 18 + g.endN * 6; g.wind = g.R(-1, 1) * Math.min(12, 2 + g.endN * 1.2); g.need = 15; }
-  Kit.run({ id: 'gl-bullseye', title: 'BULLSEYE', help: 'Press and drag to aim, release to shoot. The sight steadies, then tires after 3 s\nAim into the wind and above for drop. Hit 15+ per end of 3 arrows', bg: '#5aa8e8',
+  Kit.run({ fill: true, id: 'gl-bullseye', title: 'BULLSEYE', help: 'Press and drag to aim, release to shoot. The sight steadies, then tires after 3 s\nAim into the wind and above for drop. Hit 15+ per end of 3 arrows', bg: '#5aa8e8',
     init(g) { g.endN = 0; g.lives = 3; g.xs = 0; g.fly = null; newEnd(g); g.aim = { x: TX, y: TY }; g.hold = 0; g.hud = ''; },
     update(g, dt) { const P = g.ptr; const r = 1100 / g.dist; // target radius in px
       if (g.fly) { const f = g.fly; f.t += dt; if (f.t >= f.T) { const hx = f.x, hy = f.y, d = Math.hypot(hx - TX, hy - TY) / r; const ring = d <= 0.05 ? 11 : Math.max(0, 10 - Math.floor(d * 10)); const pts = ring === 11 ? 10 : ring;

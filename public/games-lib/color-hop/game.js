@@ -1,5 +1,5 @@
 // Color Hop - original colour-gate tapper (Hub build). Pass only through your own colour.
-Kit.run({ id: 'gl-color-hop', title: 'COLOR HOP', help: 'Tap / Space to hop upward\nPass through segments of YOUR colour only', bg: '#111827',
+Kit.run({ fill: true, id: 'gl-color-hop', title: 'COLOR HOP', help: 'Tap / Space to hop upward\nPass through segments of YOUR colour only', bg: '#111827',
   init(g) { g.C = ['#f472b6', '#22d3ee', '#fde047', '#a855f7']; g.b = { y: 560, vy: 0, c: 0 }; g.cam = 0; g.obs = []; g.top = 400; for (let i = 0; i < 6; i++) add(g); g.started = false; },
   update(g, dt) {
     const b = g.b; if (g.tap()) { b.vy = -430; g.started = true; g.sfx('flap'); } if (g.started) b.vy += 1100 * dt; b.y += b.vy * dt; if (b.y - g.cam < 330) g.cam = b.y - 330; if (b.y - g.cam > g.H + 20) return g.end('Fell');
