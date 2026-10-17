@@ -85,7 +85,7 @@ const LIST = [
   T('road-brawl', 'Road Brawl', 'Road Rash', 1, 'A', 'endless', 120, true, 'Distance + takedowns 60-100', '3 days'),
   T('derby-smash', 'Derby Smash', 'Demolition Derby', 1, 'A', 'endless', 200, true, 'Impact damage dealt + wrecks 150', '3 days'),
   T('dunk-flick', 'Dunk Flick', 'Dunk Shot', 7, 'A', 'endless', 25, true, '1 per basket, swish streak +n', '3 days'),
-  T('duck-shot', 'Duck Shot', 'Duck Hunt', 7, 'A', 'endless', 400, true, 'Bird 100 + 20 x round, gold +400', '3 days'),
+  T('duck-shot', 'Duck Shot', 'Duck Hunt', 7, 'A', 'endless', 900, true, 'Duck 100 + 20 x round x streak, gold +400, perfect bonus', '3 days'),
   T('paper-toss', 'Paper Toss', 'Paper Toss', 7, 'A', 'endless', 8, true, '1-5 per basket by wind strength', '1-3 days'),
   T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'endless', 100, true, 'Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame', '1-3 days'),
   T('neon-circuit', 'Neon Circuit', 'Neon Arcade Racer', 1, 'A', 'endless', 120, true, 'Energy cells 30–125 by combo; near-miss 5', '3 days'),
