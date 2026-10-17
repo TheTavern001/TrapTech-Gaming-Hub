@@ -116,7 +116,8 @@ function tickCountdowns() {
 setInterval(tickCountdowns, 1000);
 
 // ---------------- layout ----------------
-const NAV = [['/', 'house', 'Home'], ['/games', 'gamepad-2', 'Games'], ['/leaderboard', 'trophy', 'Leaderboard'], ['/giveaways', 'gift', 'Giveaways'], ['/community', 'users', 'Community']];
+const NAV = [['/', 'house', 'Home'], ['/games', 'gamepad-2', 'Games'], ['/leaderboard', 'trophy', 'Leaderboard'], ['/giveaways', 'gift', 'Giveaways'], ['/community', 'users', 'Community'], ['/shop', 'store', 'Shop']];
+const NAV_SHORT = { '/leaderboard': 'Ranks', '/giveaways': 'Prizes', '/community': 'Social' }; // 6 tabs must fit a 320px phone
 function navActive(path) {
   if (path === '/' || path === '/home') return '/';
   const hit = NAV.slice(1).find(([p]) => path.startsWith(p)); if (hit) return hit[0];
@@ -152,7 +153,7 @@ function footer() {
 }
 function bottomnav(path) {
   const act = navActive(path);
-  return `<nav class="bottomnav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}<span>${l}</span></a>`).join('')}</nav>`;
+  return `<nav class="bottomnav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}<span><i class="nl-f">${l}</i>${NAV_SHORT[p] ? `<i class="nl-s">${NAV_SHORT[p]}</i>` : ''}</span></a>`).join('')}</nav>`;
 }
 const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/sponsor': 'Book a Giveaway',
   '/quests': 'Daily Quests', '/season': 'Season Pass', '/tournaments': 'Tournaments', '/notifications': 'Notifications', '/search': 'Search', '/invite': 'Invite Friends',
@@ -745,7 +746,7 @@ route(/^\/giveaways$/, async (m, url) => {
   let tab = url.searchParams.get('tab') || 'active';
   let mine = url.searchParams.get('mine') === '1'; let myBrand = null;
   if (S.me) { const f = await api('/api/me/brand'); myBrand = f.ok ? f.brand : null; }
-  shell('/giveaways', `<div class="gw-head"><h1>Official Giveaways</h1><a class="btn sm ghost" href="/settings#v7-brand">${icon('store')} ${myBrand ? esc(myBrand.name) : 'Join a brand'}</a></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
+  shell('/giveaways', `<div class="gw-head"><h1>Official Giveaways</h1><div class="gw-head-act"><a class="btn sm" href="/sponsor">${icon('briefcase')} Book a giveaway</a><a class="btn sm ghost" href="/settings#v7-brand">${icon('store')} My giveaway affiliation${myBrand ? ': ' + esc(myBrand.name) : ''}</a></div></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
     ${S.me ? `<div class="chip-row"><button class="chip ${mine ? 'on' : ''}" id="f-follow" aria-pressed="${mine}">${icon('store')} I can enter</button><a class="chip" href="/me/entries">${icon('ticket')} My entries</a></div>` : ''}
     <div id="list" class="gw-list"><div class="skeleton"></div></div>
     ${officialNotice()}
@@ -754,7 +755,7 @@ route(/^\/giveaways$/, async (m, url) => {
     history.replaceState({}, '', `/giveaways?tab=${tab}${mine ? '&mine=1' : ''}`);
     const r = await api('/api/giveaways?status=' + tab); const el = document.getElementById('list'); if (!el) return;
     const list = r.ok ? r.giveaways.filter(g => !mine || g.open_to_all !== false || (myBrand && g.brand && g.brand.id === myBrand.id)) : [];
-    el.innerHTML = list.length ? list.map(giveawayCard).join('') : `<div class="empty card" style="grid-column:1/-1">${mine ? `No ${tab} giveaways you can enter. <a href="/settings#v7-brand">Join a brand</a>` : `No ${tab} giveaways right now.`}</div>`;
+    el.innerHTML = list.length ? list.map(giveawayCard).join('') : `<div class="empty card" style="grid-column:1/-1">${mine ? `No ${tab} giveaways you can enter. <a href="/settings#v7-brand">Set my giveaway affiliation</a>` : `No ${tab} giveaways right now.`}</div>`;
     tickCountdowns();
   }
   document.getElementById('t').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (!b) return; tab = b.dataset.k; document.querySelectorAll('#t button').forEach(x => x.classList.toggle('on', x === b)); load(); });
