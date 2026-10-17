@@ -14,7 +14,7 @@ Kit.run({ id: 'gl-road-brawl', title: 'ROAD BRAWL', help: 'Steer: drag / arrows.
     g.riv = g.riv.filter(r => !r.dead && r.y < g.H + 120); g.cars = g.cars.filter(k => k.y < g.H + 80); g.hud = 'HP ' + Math.max(0, g.hp);
   },
   draw(g, c) {
-    CarArt.road(c, g.W, g.H, g.road, { theme: 'desert', x0: 50, x1: 350, lanes: 4, speed: true });
+    CarArt.road(c, g.W, g.H, g.road, { theme: 'desert', x0: 50, x1: 350, lanes: 4, speed: true }); CarArt.roadside(c, g.W, g.H, g.road, { theme: 'desert', x0: 50, x1: 350 });
     const kinds = ['sedan', 'suv', 'van', 'taxi']; for (const k of g.cars) CarArt.car(c, k.x, k.y, ['#3b82f6', '#e5e7eb', '#a855f7', '#f59e0b'][Math.floor(k.v) % 4], { kind: kinds[Math.floor(k.v) % 4 === 3 ? 0 : Math.floor(k.v) % 3], scale: 1.1 });
     for (const r of g.riv) CarArt.bike(c, r.x, r.y, { body: '#ef4444', suit: '#450a0a', angle: r.fly ? g.t * 10 : 0, lean: r.vx / 150, scale: 0.95 });
     CarArt.bike(c, g.x, 560, { body: '#22c55e', suit: '#14532d', kick: g.kick > 0 ? g.kd2 : 0, lean: g.ptr.down ? Kit.clamp((g.ptr.x - g.x) / 60, -1, 1) : g.ax(), boost: true, scale: 0.95 });
