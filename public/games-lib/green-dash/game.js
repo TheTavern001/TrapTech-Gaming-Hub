@@ -1,4 +1,4 @@
-// Green Dash - original top-down delivery scooter runner (Hub build, cannabis-delivery theme)
+// Green Dash - original top-down delivery scooter runner (Hub build, cannabis-delivery theme) // @uses carart.js
 Kit.run({ id: 'gl-green-dash', title: 'GREEN DASH', help: 'Steer: drag / arrows. Hit the glowing drop zones\nEach delivery adds time - dodge traffic', bg: '#1f2937',
   init(g) { g.x = 200; g.scroll = 0; g.cars = []; g.next = 0.8; g.time = 25; g.zone = null; g.zt = 1.5; g.deliv = 0; g.sp = 300; g.lastM = 0; },
   update(g, dt) {
@@ -11,11 +11,9 @@ Kit.run({ id: 'gl-green-dash', title: 'GREEN DASH', help: 'Steer: drag / arrows.
     g.hud = Math.ceil(g.time) + 's  DROPS ' + g.deliv;
   },
   draw(g, c) {
-    c.fillStyle = '#4b5563'; c.fillRect(0, 0, g.W, g.H); c.fillStyle = '#9ca3af'; c.fillRect(0, 0, 40, g.H); c.fillRect(360, 0, 40, g.H);
-    c.fillStyle = '#fff'; for (let l = 1; l < 5; l++) for (let y = (g.scroll % 70) - 70; y < g.H; y += 70) c.fillRect(40 + l * 64, y, 3, 34);
-    for (let y = (g.scroll % 160) - 160; y < g.H; y += 160) { c.fillStyle = '#334155'; c.fillRect(0, y, 40, 120); c.fillRect(360, y + 60, 40, 120); }
-    if (g.zone) { const zx = g.zone.side ? 375 : 25; Kit.glow(c, '#34d399', 18); c.strokeStyle = '#34d399'; c.lineWidth = 4; c.beginPath(); c.arc(zx, g.zone.y, 26 + Math.sin(g.t * 8) * 4, 0, 7); c.stroke(); Kit.noGlow(c); g.txt('DROP', zx, g.zone.y, 11, '#34d399'); }
-    for (const k of g.cars) { c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(k.x - 20, k.y - 26, 44, 60); c.fillStyle = k.c; Kit.rr(c, k.x - 22, k.y - 30, 44, 60, 8); c.fill(); c.fillStyle = '#0f172a'; c.fillRect(k.x - 16, k.y + 10, 32, 12); }
-    c.save(); c.translate(g.x, 560); c.fillStyle = '#111827'; c.fillRect(-4, -26, 8, 52); c.fillStyle = '#22c55e'; Kit.rr(c, -12, -14, 24, 30, 6); c.fill(); c.fillStyle = '#14532d'; c.fillRect(-10, 6, 20, 14); Kit.circ(c, 0, -4, 8, '#fcd9b6'); c.fillStyle = '#16a34a'; c.fillRect(-8, -14, 16, 6); c.restore();
-    c.fillStyle = '#1d2a66'; c.fillRect(20, 46, g.W - 40, 8); c.fillStyle = g.time > 8 ? '#34d399' : '#ef4444'; c.fillRect(20, 46, (g.W - 40) * Math.min(1, g.time / 40), 8);
+    CarArt.road(c, g.W, g.H, g.scroll, { theme: 'city', x0: 40, x1: 360, lanes: 5, speed: true });
+    if (g.zone) { const zx = g.zone.side ? 375 : 25, zy = g.zone.y, pu = 26 + Math.sin(g.t * 8) * 4; c.save(); c.globalCompositeOperation = 'lighter'; const rg = c.createRadialGradient(zx, zy, 4, zx, zy, pu + 14); rg.addColorStop(0, 'rgba(52,211,153,.1)'); rg.addColorStop(0.75, 'rgba(52,211,153,.4)'); rg.addColorStop(1, 'rgba(52,211,153,0)'); c.fillStyle = rg; c.beginPath(); c.arc(zx, zy, pu + 14, 0, 7); c.fill(); c.restore(); c.strokeStyle = '#6ee7b7'; c.lineWidth = 3; c.setLineDash([7, 5]); c.lineDashOffset = -g.t * 30; c.beginPath(); c.arc(zx, zy, pu, 0, 7); c.stroke(); c.setLineDash([]); g.txt('DROP', zx, zy, 11, '#d1fae5'); }
+    const kinds = ['sedan', 'suv', 'van']; for (const k of g.cars) CarArt.car(c, k.x, k.y, k.c, { kind: kinds[Math.abs(Math.floor(k.v)) % 3], scale: 1.12, brake: k.v < 0 });
+    CarArt.bike(c, g.x, 560, { body: '#22c55e', suit: '#14532d', lean: Kit.clamp((g.ptr.down ? (g.ptr.x - g.x) / 60 : g.ax()), -1, 1), boost: true, scale: 0.95 });
+    c.fillStyle = 'rgba(8,12,24,.7)'; Kit.rr(c, 20, 45, g.W - 40, 10, 5); c.fill(); c.fillStyle = g.time > 8 ? '#34d399' : '#ef4444'; Kit.rr(c, 21, 46, Math.max(8, (g.W - 42) * Math.min(1, g.time / 40)), 8, 4); c.fill();
   } });
