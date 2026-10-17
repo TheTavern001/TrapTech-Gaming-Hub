@@ -1,6 +1,7 @@
 import { icon } from './icons.js';
 import { ls, ss, copyText } from './store.js';
 import * as V7 from './v7.js';
+import * as V8 from './v8.js'; // v8: skill quests + achievements at scale
 import * as I18N from './i18n.js'; // v7: multi-language layer (public/i18n/*.json)
 import * as GV7 from './gw-v7.js'; // v7 admin overhaul: builder giveaway extras + admin site settings
 import { mountAvatar3D } from './avatar-3d.js';
@@ -1136,6 +1137,7 @@ route(/^\/achievements$/, async (m, url) => {
   document.getElementById('cats').addEventListener('click', (e) => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; document.querySelectorAll('#cats .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
   document.getElementById('flt').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; filt = b.dataset.f; document.querySelectorAll('#flt button').forEach(x => x.classList.toggle('on', x === b)); draw(); });
   achToast(r.unlocked);
+  if (!who) { const host = document.querySelector('main .narrow'); if (host) { const d = document.createElement('div'); d.id = 'v8-skillach'; host.insertBefore(d, host.children[2] || null); V8.fillAchievements(d); } }
 });
 
 // v7: /host + /book (tiers, public prices) are replaced by /sponsor (feature picker + quote; see v7.js).
@@ -1256,13 +1258,14 @@ route(/^\/quests$/, async () => {
     </div>
     <div class="card pad"><div class="lvl-h"><b>Level ${lv.level}</b><span class="small muted">${fmt(lv.into)} / ${fmt(lv.need)} XP to level ${lv.level + 1}</span></div>${xpBar(lv)}
       <div class="tiny muted" style="margin-top:8px">XP sources: every run (+10, +10 per Bronze/Silver/Gold tier reached), quests, daily check-ins and achievements.</div></div>
+    <div id="v8-skillq"></div>
     <div class="section-h"><h2>${icon('scroll-text')} Today's quests</h2><span class="small muted">Resets in <span data-cdi="${q.resets_at}">--</span></span></div>
     <div class="card pad quests">${q.quests.map(questRow).join('')}${bonusRow(q.bonus)}</div>
     <div class="streak-rewards card pad"><h2>${icon('award')} Streak & quest rewards</h2>
       <div class="rw-grid">${[['Early Bird', '3-day streak', 'calendar-check'], ['Habit Former', '7-day streak + Daily Sunrise banner', 'sunrise'], ['Eternal Flame', '30-day streak frame + banner', 'flame'], ['Questor', 'Claim 1 quest', 'scroll-text'], ['Quest Legend', '25 quests + Quest Map banner', 'map']].map(([n, d, ic]) => `<div class="rw">${icon(ic)}<b>${n}</b><span>${d}</span></div>`).join('')}</div>
       <p class="tiny muted" style="margin:10px 0 0">${icon('shield')} Cosmetic only, no cash value.</p></div>
   </div>`);
-  wireDaily(); tickInline();
+  wireDaily(); tickInline(); V8.fillQuests(document.getElementById('v8-skillq'));
   const ci = document.getElementById('ci'); if (ci) ci.onclick = async () => { ci.disabled = true; await doCheckin(); go('/quests', true); };
 });
 
@@ -1544,6 +1547,7 @@ if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigat
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
 // v7 pages (Book a Giveaway, brands, shop & seasons) - public/js/v7.js
+V8.install({ api, icon, esc, fmt, toast, S });
 V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS, avatar, bumpAvatar });
 // ---------------- boot ----------------
 (async function boot() {

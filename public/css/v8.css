@@ -1,0 +1,29 @@
+/* v8 systems UI (theme and colors unchanged: uses the existing v7 tokens) */
+.shop-bal{flex-wrap:wrap;row-gap:10px}
+.shop-bal>div:nth-child(2){flex:1 1 150px;min-width:150px}
+.shop-bal .orb{letter-spacing:.08em;white-space:nowrap}
+.shop-bal .btn{flex:0 0 auto}
+.shop-catalog-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0}
+.shop-catalog-filters input{grid-column:1/-1}
+.shop-catalog-filters .btn{grid-column:1/-1}
+@media(min-width:640px){.shop-catalog-filters{grid-template-columns:2fr 1fr 1fr 1fr auto}.shop-catalog-filters input,.shop-catalog-filters .btn{grid-column:auto}}
+.v8-note{margin:0 0 8px}
+.v8-qs{display:grid;gap:10px;margin-bottom:12px}
+.v8-qs-h{display:flex;justify-content:space-between;align-items:center}
+.v8-q{border:1px solid var(--line,rgba(255,255,255,.1));border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);display:grid;gap:6px}
+.v8-q.done:not(.claimed){border-color:var(--green,#34d399);box-shadow:0 0 0 1px rgba(52,211,153,.25) inset}
+.v8-q.claimed{opacity:.6}
+.v8-q-h{display:flex;align-items:center;gap:8px}
+.v8-q-f{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.v8-tier{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.1)}
+.v8-tier.t-hard{background:rgba(168,85,247,.25)}.v8-tier.t-elite{background:rgba(250,204,21,.22)}.v8-tier.t-mythic{background:linear-gradient(90deg,#f472b6,#facc15);color:#1c1917}
+.v8-rw{display:inline-flex;align-items:center;gap:4px;font-weight:700}
+.v8-ach-sum{display:grid;gap:10px}
+.v8-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}
+.v8-game{display:grid;gap:4px;text-align:left;padding:10px;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.1));background:rgba(255,255,255,.03);color:inherit;cursor:pointer;min-height:44px}
+.v8-game:hover{border-color:var(--accent,#8b5cf6)}
+.v8-fams{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.v8-steps{display:grid;gap:6px;max-height:520px;overflow:auto}
+.v8-step{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:8px;border-radius:12px;background:rgba(255,255,255,.03);opacity:.6}
+.v8-step.on{opacity:1;background:rgba(52,211,153,.08)}
+.v8-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08)}
