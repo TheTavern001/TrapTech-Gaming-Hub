@@ -863,6 +863,7 @@ require('./sponsor')(app, A, H); // v7 official giveaway booking: feature picker
 require('./brands').routes(app, A, H); // v7 brand affiliation (invite links, one brand per player)
 require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
+require('./v8')(app, A, H); // v8 systems: skill quests + achievements at scale, brand pages, privacy tools
 require('./events').routes(app, A, H); // v7 official events (event codes, event-run tokens, event boards, vendor QR)
 require('./monetize').routes(app, A, H); // v7 cosmetic-only store: Hub Crowns, Season Pass, Prestige; Bitcoin checkout (BTC_ADDRESS)
 require('./avatars').routes(app, H); // v7 Phase 5 player avatars (GET /avatar/<name>.svg, editor API)
