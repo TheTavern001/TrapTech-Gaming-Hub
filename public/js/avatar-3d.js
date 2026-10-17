@@ -122,6 +122,17 @@ export async function mountAvatar3D(stage, cfg) {
   if (cfg.bg === 'aurora-crown') { for(let i=0;i<3;i++){ const ribbon=neon(0,1.85,-1.35+i*0.05,0.82+i*0.15,['#34d399','#a78bfa','#f0abfc'][i]); ribbon.scale.y=0.35; ribbon.rotation.x=0.25+i*0.2; } mesh(new THREE.CylinderGeometry(0.35,0.43,0.17,8),mat('#fbbf24',0.2,0.9),0,2.28,-1.1,1,1,1,backdrop); for(let i=0;i<5;i++) mesh(new THREE.ConeGeometry(0.075,0.24,5),mat('#fde68a',0.15,0.85),-0.27+i*0.135,2.47+(i===2?0.08:0),-1.1,1,1,1,backdrop); }
   const floor = mesh(new THREE.CircleGeometry(2.3, 64), mat('#111827',0.8,0), 0,0.02,0,1,1,1,scene);
   floor.rotation.x = -Math.PI / 2;
+  { // soft spotlight pool + contact shadow so the character is grounded instead of floating on a flat disc
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128; const cx = cv.getContext('2d'); const gr = cx.createRadialGradient(64,64,4,64,64,62);
+    gr.addColorStop(0,'rgba(255,255,255,.55)'); gr.addColorStop(.5,'rgba(167,139,250,.22)'); gr.addColorStop(1,'rgba(167,139,250,0)'); cx.fillStyle = gr; cx.fillRect(0,0,128,128);
+    const glowTex = new THREE.CanvasTexture(cv); glowTex.colorSpace = THREE.SRGBColorSpace;
+    const gm = new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, toneMapped: false }); materials.add(gm); gm.userData.tex = glowTex;
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(1.7, 48), gm); glow.rotation.x = -Math.PI / 2; glow.position.y = 0.03; scene.add(glow);
+    const cv2 = document.createElement('canvas'); cv2.width = cv2.height = 64; const c2 = cv2.getContext('2d'); const g2 = c2.createRadialGradient(32,32,2,32,32,30);
+    g2.addColorStop(0,'rgba(0,0,0,.6)'); g2.addColorStop(1,'rgba(0,0,0,0)'); c2.fillStyle = g2; c2.fillRect(0,0,64,64);
+    const shTex = new THREE.CanvasTexture(cv2); const sm = new THREE.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false }); materials.add(sm); sm.userData.tex = shTex;
+    const sh = new THREE.Mesh(new THREE.CircleGeometry(0.85, 32), sm); sh.rotation.x = -Math.PI / 2; sh.position.y = 0.035; scene.add(sh);
+  }
   const trousers = ['suit','mechanic','scrubs','farmer','firefighter','tracksuit'].includes(cfg.outfit) ? shirt : '#27364b';
   ball(-0.24,0.66,0,0.20,0.68,0.22,trousers); ball(0.24,0.66,0,0.20,0.68,0.22,trousers);
   ball(-0.24,0.16,0.02,0.19,0.14,0.25,'#111827'); ball(0.24,0.16,0.02,0.19,0.14,0.25,'#111827');
@@ -174,14 +185,14 @@ export async function mountAvatar3D(stage, cfg) {
   ball(0,-0.105,0.47,0.07,0.055,0.07,skin,head);
   // Jaw and lower cheek planes make the starter read as a stylized character, not a bald baby.
   ball(0,-0.35,0.12,0.35,0.20,0.33,skin,head);
-  ball(-0.19,0.205,0.405,0.135,0.035,0.045,hair,head);
-  ball(0.19,0.205,0.405,0.135,0.035,0.045,hair,head);
-  const eyeWhite = mat('#f8fafc',0.25,0); const pupil = mat('#10131d',0.18,0);
+  { const bl = ball(-0.19,0.235,0.41,0.125,0.032,0.045,hair,head); bl.rotation.z = 0.14; const br = ball(0.19,0.235,0.41,0.125,0.032,0.045,hair,head); br.rotation.z = -0.14; }
+  ball(-0.30,-0.10,0.40,0.085,0.05,0.03,'#f08a8a',head,0.8).material.transparent = true; ball(0.30,-0.10,0.40,0.085,0.05,0.03,'#f08a8a',head,0.8).material.transparent = true; // soft cheek blush
+  const blinkers = []; const eyeWhite = mat('#f8fafc',0.25,0); const pupil = mat('#10131d',0.18,0);
   for (const x of [-0.19,0.19]) {
     ball(x,0.065,0.448,0.103,0.082,0.045,'#f8fafc',head,0.28);
     ball(x,-0.001,0.491,0.045,0.052,0.024,'#152136',head,0.2);
     ball(x-0.016,0.019,0.513,0.016,0.018,0.009,'#ffffff',head,0.2);
-    ball(x,0.205,0.423,0.125,0.035,0.042,hair,head);
+    const bw = ball(x,0.235,0.43,0.125,0.032,0.042,hair,head); bw.rotation.z = x < 0 ? 0.14 : -0.14; blinkers.push(...head.children.slice(-4, -1));
   }
   if (cfg.eyes === 'sleepy') { for (const x of [-0.19,0.19]) ball(x,0.055,0.44,0.09,0.018,0.012,hair,head); }
   if (cfg.eyes === 'wink') ball(0.19,0.06,0.44,0.09,0.018,0.012,hair,head);
@@ -190,11 +201,13 @@ export async function mountAvatar3D(stage, cfg) {
     for (const x of [-0.19,0.19]) { const st = mesh(new THREE.OctahedronGeometry(0.07,0),starMat,x,0.06,0.445,1,1,0.35,head); st.rotation.z=Math.PI/4; }
   }
   const mouthMat = mat(cfg.mouth === 'flat' ? '#7f1d1d' : '#7c2430',0.45,0);
-  if (cfg.mouth === 'flat') ball(0,-0.25,0.405,0.12,0.018,0.018,mouthMat.color,head);
-  else if (cfg.mouth === 'open') ball(0,-0.24,0.412,0.09,0.10,0.025,'#501b27',head);
+  if (cfg.mouth === 'flat') ball(0,-0.25,0.425,0.12,0.02,0.02,mouthMat.color,head);
+  else if (cfg.mouth === 'open') { ball(0,-0.25,0.43,0.095,0.10,0.03,'#3b0f1a',head); ball(0,-0.205,0.452,0.075,0.02,0.012,'#f8fafc',head,0.3); ball(0,-0.29,0.452,0.05,0.025,0.012,'#e11d48',head,0.5); }
   else {
-    const mouth = mesh(new THREE.TorusGeometry(cfg.mouth === 'grin' ? 0.13 : 0.09,0.018,8,24,Math.PI),mouthMat,0,-0.22,0.405,1,1,1,head);
+    const wide = cfg.mouth === 'grin' ? 0.14 : 0.10;
+    const mouth = mesh(new THREE.TorusGeometry(wide,0.022,8,28,Math.PI),mouthMat,0,-0.20,0.432,1,1,0.9,head);
     mouth.rotation.z = Math.PI;
+    if (cfg.mouth === 'grin') ball(0,-0.235,0.44,0.115,0.032,0.015,'#f8fafc',head,0.3);
   }
   const hairStyle = cfg.hair || 'waves';
   if (hairStyle !== 'none') {
@@ -308,13 +321,15 @@ export async function mountAvatar3D(stage, cfg) {
     }
     if(!pointer.down && !reduced) { root.rotation.y += 0.0012; backdrop.rotation.y += 0.0008; }
     torso.scale.y=0.75+(reduced?0:Math.sin(t*0.0015)*0.008);
+    if(!reduced){ head.rotation.y=Math.sin(t*0.0011)*0.10; head.rotation.x=Math.sin(t*0.0008)*0.03; head.position.y=2.62+Math.sin(t*0.0015)*0.008;
+      const ph=(t%4200)/4200; const bl=ph>0.96?1-Math.abs((ph-0.98)/0.02)*0.9:1; for(const e of blinkers) e.scale.y=(e.userData.sy||(e.userData.sy=e.scale.y))*(e.userData.blink===false?1:bl); }
     renderer.render(scene,camera);
   };
   frame=requestAnimationFrame(animate);
   cleanup = () => {
     if(!alive) return; alive=false; cancelAnimationFrame(frame); if(visibilityObserver) visibilityObserver.disconnect(); if(observer) observer.disconnect(); else window.removeEventListener('resize',resize);
     renderer.domElement.removeEventListener('pointerdown',down); renderer.domElement.removeEventListener('pointermove',move); renderer.domElement.removeEventListener('pointerup',up); renderer.domElement.removeEventListener('pointercancel',up);
-    const geometryResources = new Set(); scene.traverse(o=>{if(o.geometry)geometryResources.add(o.geometry);}); geometryResources.forEach(g=>g.dispose()); materials.forEach(m=>m.dispose()); renderer.dispose(); renderer.domElement.remove();
+    const geometryResources = new Set(); scene.traverse(o=>{if(o.geometry)geometryResources.add(o.geometry);}); geometryResources.forEach(g=>g.dispose()); materials.forEach(m=>{ if(m.userData&&m.userData.tex)m.userData.tex.dispose(); m.dispose(); }); renderer.dispose(); renderer.domElement.remove();
   };
   return cleanup;
 }
