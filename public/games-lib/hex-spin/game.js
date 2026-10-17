@@ -1,5 +1,5 @@
 // Hex Spin - original closing-walls survival (Hub build). Orbit the core, slip through the gaps.
-Kit.run({ id: 'gl-hex-spin', title: 'HEX SPIN', help: 'Hold left / right side (or arrows) to orbit\nSurvive the closing walls - score = time', bg: '#020617',
+Kit.run({ fill: true, id: 'gl-hex-spin', title: 'HEX SPIN', help: 'Hold left / right side (or arrows) to orbit\nSurvive the closing walls - score = time', bg: '#020617',
   init(g) { g.a = 0; g.walls = []; g.next = 0.5; g.rot = 0; g.rs = 1; g.lastS = 0; g.hue = 280; },
   update(g, dt) {
     let d = g.ax(); if (g.ptr.down) d = g.ptr.x < g.W / 2 ? -1 : 1; g.a += d * 6.5 * dt; g.rot += g.rs * dt * (1 + g.t * 0.02); if (g.rnd() < dt * 0.2) g.rs = -g.rs;

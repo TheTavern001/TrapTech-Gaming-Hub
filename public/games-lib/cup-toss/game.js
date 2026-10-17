@@ -25,7 +25,7 @@
   function meter(t) { const p = (t * 0.8) % 2; return p < 1 ? p : 2 - p; } // power oscillates 0..1..0 while held
   function throwBall(g, aim, m) { const b = g.ball, pw = 0.55 + m * 0.6; b.vz = 470 * pw + 80; b.vy = 360 * pw + 60; b.vx = aim * b.vz * 0.42; b.live = true; g.sfx('whoosh'); }
   function newBall(g) { g.ball = { x: 0, y: 70, z: 60, vx: 0, vy: 0, vz: 0, live: false, bounces: 0, rim: 0 }; }
-  Kit.run({ id: 'gl-cup-toss', title: 'CUP TOSS', help: '21+ only. Press and hold: the power meter rises and falls; swipe up and release to throw\nAim with swipe direction - mind the wobble\nSink every cup to re-rack. Racks slide back and start to sway', bg: '#1a0f24',
+  Kit.run({ fill: true, id: 'gl-cup-toss', title: 'CUP TOSS', help: '21+ only. Press and hold: the power meter rises and falls; swipe up and release to throw\nAim with swipe direction - mind the wobble\nSink every cup to re-rack. Racks slide back and start to sway', bg: '#1a0f24',
     init(g) { g.racks = 0; g.balls = 5; g.streak = 0; g.made = 0; rack(g); newBall(g); g.sw = null; g.trail = []; g.sp = []; g.hud = ''; },
     update(g, dt) { const P = g.ptr, b = g.ball;
       g.wob = Math.sin(g.t * 1.7) * 0.1 + Math.sin(g.t * 2.9 + 1) * 0.04; // aim wobble (the hand isn't steady)
@@ -40,7 +40,7 @@
             if (d < CR + 5 && d >= CR - 6) { const nx = dx / (d || 1), nz = dz / (d || 1); const vn = b.vx * nx + b.vz * nz; b.vx -= 1.6 * vn * nx; b.vz -= 1.6 * vn * nz; b.vy = Math.abs(b.vy) * 0.45; b.rim++; g.sfx('hit'); } } }
         if (!b.live) break; }
       if (b.live && (b.z > 1100 || b.z < -50 || b.y < -200 || Math.abs(b.x) > 400 || (b.bounces > 3))) { b.live = false; g.streak = 0; g.balls--; g.sfx('bad'); g.float(200, 560, 'MISS', '#ff5a5a', 22); if (g.balls <= 0) return g.end('Out of balls'); }
-      if (!b.live) { if (g.cups.every(c => c.hit)) { g.racks++; g.mark('r', g.racks); g.add(500 * g.racks, 'rack'); g.balls = Math.min(8, g.balls + 2); g.float(200, 250, 'RE-RACK +2 BALLS', '#ffd23f', 24); g.sfx('power'); rack(g); } newBall(g); }
+      if (!b.live) { if (g.cups.every(c => c.hit)) { g.racks++; g.mark('r', g.racks); g.add(500 * g.racks, 'rack'); g.balls = Math.min(8, g.balls + 2); g.float(200, 250, 'RE-RACK +2 BALLS', '#ffd23f', 24); g.sfx('power'); rack(g); } setTimeout(() => {}, 0); newBall(g); }
       if (g.splash) { g.splash.l -= dt; if (g.splash.l <= 0) g.splash = null; } },
     draw(g, c) { c.drawImage(bg(g.W, g.H), 0, 0); const b = g.ball;
       const cups = g.cups.filter(cp => !cp.hit).sort((a, b) => b.z - a.z); const bp = proj(b.x, b.y, b.z), sh = proj(b.x, 0, b.z);

@@ -1,5 +1,5 @@
 // Helix Drop - original spinning-tower drop (Hub build). Drag / arrows rotate the tower; fall through gaps, avoid red.
-Kit.run({ id: 'gl-helix-drop', title: 'HELIX DROP', help: 'Drag sideways / arrows to spin the tower\nDrop through gaps - red zones break you', bg: '#1e1b4b',
+Kit.run({ fill: true, id: 'gl-helix-drop', title: 'HELIX DROP', help: 'Drag sideways / arrows to spin the tower\nDrop through gaps - red zones break you', bg: '#1e1b4b',
   init(g) { g.rot = 0; g.ball = { y: 120, vy: 0 }; g.lv = []; for (let i = 0; i < 400; i++) g.lv.push(mk(g, i)); g.cam = 0; g.pass = 0; g.combo = 0; },
   update(g, dt) {
     if (g.ptr.down) { g.rot += (g.ptr.x - (g.lx ?? g.ptr.x)) * 0.012; g.lx = g.ptr.x; } else g.lx = null; g.rot += g.ax() * 3.2 * dt;

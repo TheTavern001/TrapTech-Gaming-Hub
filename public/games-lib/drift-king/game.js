@@ -1,5 +1,5 @@
 // Drift King - original one-tap drift on a zig-zag road (Hub build)
-Kit.run({ id: 'gl-drift-king', title: 'DRIFT KING', help: 'Hold to turn right, release to turn left\nKeep the car on the winding road', bg: '#0f766e',
+Kit.run({ fill: true, id: 'gl-drift-king', title: 'DRIFT KING', help: 'Hold to turn right, release to turn left\nKeep the car on the winding road', bg: '#0f766e',
   init(g) { g.car = { x: 0, y: 0, a: -Math.PI / 2, sp: 170 }; g.pts = [[0, 120], [0, -140]]; let x = 0, y = -140, d = 1; for (let i = 0; i < 40; i++) { const L = g.R(80, 220); d = -d; x += d * L * 0.7; y -= L * 0.7; g.pts.push([x, y]); } g.last = 0; g.dist = 0; g.lastM = 0; },
   update(g, dt) {
     const c0 = g.car, turn = g.held() ? 1 : -1; c0.a += turn * 2.6 * dt; c0.a = Kit.clamp(c0.a, -Math.PI * 0.95, -Math.PI * 0.05); c0.sp = Math.min(330, 170 + g.t * 3); c0.x += Math.cos(c0.a) * c0.sp * dt; c0.y += Math.sin(c0.a) * c0.sp * dt;
@@ -10,14 +10,6 @@ Kit.run({ id: 'gl-drift-king', title: 'DRIFT KING', help: 'Hold to turn right, r
     if (best > 36) { g.sfx('die'); g.burst(g.W / 2, g.H * 0.65, '#a16207', 30); return g.end('Off the road'); }
     const m = Math.floor(-c0.y / 20); if (m > g.lastM) { g.add(m - g.lastM, 'm'); g.lastM = m; }
     for (const p of g.parts) if (p.sk) { p.x = p.wx - c0.x + g.W / 2; p.y = p.wy - c0.y + g.H * 0.65; }
-    // Discard obsolete road segments, retaining the preceding eight for
-    // collision and the future generated road for forward visibility.
-    // This bounds both memory and Canvas lineTo work per rendered frame.
-    if (g.last > 12) {
-      const discard = g.last - 8;
-      g.pts.splice(0, discard);
-      g.last -= discard;
-    }
   },
   draw(g, c) {
     const ox = g.W / 2 - g.car.x, oy = g.H * 0.65 - g.car.y; c.lineCap = 'round'; c.lineJoin = 'round';
