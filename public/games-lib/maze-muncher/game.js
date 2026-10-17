@@ -27,7 +27,7 @@
   const GC = ['#ff5a6e', '#c77dff', '#3fd8c8', '#ffa94d'];
   const wall = (g, x, y) => { if (x < 0 || x >= COLS) return false; const ch = (MAP[y] || '')[x]; return ch === '#' || ch === '-' ; };
   function reset(g) { g.pl = { x: 9, y: 15, px: 9, py: 15, d: [0, 0], nd: [-1, 0], prog: 0 }; g.gh = [[9, 7], [8, 9], [9, 9], [10, 9]].map(([x, y], i) => ({ x, y, d: [0, 0], prog: 0, home: i * 2.5, fr: 0, eaten: false, i })); g.fr = 0; g.ready = 1.2; }
-  Kit.run({ id: 'gl-maze-muncher', title: 'MAZE MUNCHER', help: 'Arrows / swipe to steer\nEat every dot, power pellets turn the hunters', bg: '#03051a',
+  Kit.run({ fill: true, id: 'gl-maze-muncher', title: 'MAZE MUNCHER', help: 'Arrows / swipe to steer\nEat every dot, power pellets turn the hunters', bg: '#03051a',
     init(g) { g.lvl = 1; g.lives = 3; g.dots = new Set(); g.pw = new Set(); MAP.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') g.dots.add(x + ',' + y); if (ch === 'o') g.pw.add(x + ',' + y); })); g.total = g.dots.size + g.pw.size; reset(g); g.combo = 0; },
     update(g, dt) {
       const p = g.pl; const ax = g.ax(), ay = g.ay();

@@ -8,7 +8,7 @@
   function newPitch(g) { g.n++; const lvl = Math.min(1, g.n / 30); const t = g.n < 3 ? 0 : g.RI(0, g.n < 6 ? 1 : 3); const [name, slow, brk] = TYPES[t];
     g.p = { name, z: 1, T: (1.05 - lvl * 0.35) * slow * g.R(0.95, 1.05), x0: PX + g.R(-30, 30), brk: brk * g.R(25, 50) * (0.5 + lvl), t: 0, wind: 0.9 }; g.phase = 'wind'; g.swing = -1; }
   function px(p, z) { const k = 1 - z; return p.x0 + p.brk * k * k; }
-  Kit.run({ id: 'gl-long-ball', title: 'LONG BALL', help: 'Tap to swing as the pitch reaches the plate\nTap on the side the ball crosses for solid contact (Space swings centre)\nHomers score by distance; streaks multiply. 10 outs ends the run', bg: '#0b1a33',
+  Kit.run({ fill: true, id: 'gl-long-ball', title: 'LONG BALL', help: 'Tap to swing as the pitch reaches the plate\nTap on the side the ball crosses for solid contact (Space swings centre)\nHomers score by distance; streaks multiply. 10 outs ends the run', bg: '#0b1a33',
     init(g) { g.n = 0; g.outs = 0; g.hr = 0; g.streak = 0; g.lng = 0; g.fly = null; g.msg = ''; g.msgT = 0; g.bat = 0; g.fx = []; g.hud = ''; newPitch(g); },
     update(g, dt) { g.msgT -= dt; g.bat = Math.max(0, g.bat - dt * 5); for (const f of g.fx) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; f.l -= dt; } g.fx = g.fx.filter(f => f.l > 0);
       const p = g.p;

@@ -37,7 +37,7 @@
     const pl = p.punch === 'L' ? p.pk : 0, pr = p.punch === 'R' ? p.pk : 0, up = p.punch === 'S' ? p.pk : 0, bl = p.block ? 1 : 0;
     gl(-70 + pl * 40 + bl * 40, -30 - pl * 150 - bl * 60 - up * 90, 32 - pl * 8); gl(70 - pr * 40 - bl * 40 + up * -40, -30 - pr * 150 - bl * 60 - up * 230, 32 - pr * 8 + up * 4); c.restore(); }
   function newFight(g) { const F = FIGHTERS[g.fi % FIGHTERS.length], lap = Math.floor(g.fi / FIGHTERS.length); g.o = { f: F, hp: F.hp * 1.5 * (1 + lap * 0.3), max: F.hp * 1.5 * (1 + lap * 0.3), st: 'idle', t: 1.4, mv: null, k: 0, dx: 0, dy: 0, hitT: 0, flash: 0, tell: Math.max(0.28, F.tell * 0.8 * Math.pow(0.9, lap)) }; g.intro = 1.6; }
-  Kit.run({ id: 'gl-knockout', title: 'KNOCKOUT RING', help: 'Dodge: swipe / A D / arrows.  Block: hold the bottom / S / down.  Punch: tap upper-left/right (J K)\nCounter while he is open after a miss. STAR full: U or double tap for an uppercut', bg: '#07050c',
+  Kit.run({ fill: true, id: 'gl-knockout', title: 'KNOCKOUT RING', help: 'Dodge: swipe / A D / arrows.  Block: hold the bottom / S / down.  Punch: tap upper-left/right (J K)\nCounter while he is open after a miss. STAR full: U or double tap for an uppercut', bg: '#07050c',
     init(g) { g.fi = 0; g.p = { hp: 100, dx: 0, dodge: 0, dir: 0, block: false, punch: null, pk: 0, pt: 0, star: 0 }; g.kos = 0; g.counters = 0; g.lastTap = -1; newFight(g); g.hud = ''; },
     update(g, dt) { const p = g.p, o = g.o, P = g.ptr; if (g.intro > 0) { g.intro -= dt; return; }
       // input
