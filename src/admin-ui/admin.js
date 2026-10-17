@@ -31,7 +31,7 @@ const NAV_G = [
   ['Players', [['players', 'users', 'Players', 'users.view'], ['moderation', 'scan-eye', 'Moderation', 'moderation.queue', 'mod'], ['reports', 'file-text', 'Exports', 'giveaways.view']]],
   ['Live ops', [['events', 'party-popper', 'Specials & events', 'events.manage'], ['seasons', 'calendar-range', 'Seasons', 'seasons.manage'], ['shop', 'shopping-bag', 'Shop', 'shop.manage'], ['badges', 'badge-check', 'Badges', 'badges.award'], ['announcements', 'megaphone', 'Announcements', 'announcements.post']]],
   ['Business', [['sponsor', 'briefcase', 'Sponsor requests', 'billing.view'], ['official', 'badge-check', 'Official events', 'giveaways.view'], ['store', 'wallet', 'Store & orders', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
-  ['Admin', [['team', 'shield-half', 'Team & roles', 'dashboard.view'], ['log', 'history', 'Action log', 'actionlog.view'], ['security', 'shield-check', 'Security', 'dashboard.view'], ['settings', 'settings', 'Settings', 'settings.manage'], ['system', 'server-cog', 'System', 'settings.manage']]],
+  ['Admin', [['team', 'shield-half', 'Team & roles', 'dashboard.view'], ['log', 'history', 'Action log', 'actionlog.view'], ['security', 'shield-check', 'Security', 'dashboard.view'], ['systems', 'cpu', 'Systems', 'settings.manage'], ['settings', 'settings', 'Settings', 'settings.manage'], ['system', 'server-cog', 'System', 'settings.manage']]],
 ];
 let V7 = null, V7ME = null, V7AT = 0;
 const canV7 = (k) => !V7ME || !k || !!(V7ME.perms || {})[k];
