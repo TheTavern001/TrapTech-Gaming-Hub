@@ -111,19 +111,28 @@ const LIST = [
   T('woody-hexa', 'Woody Hexa', 'Hex Puzzle', 6, 'A', 'endless', 75, true, 'Hexes cleared x combo', '3 days', 'opensource'),
   T('boxing-legend', 'Boxing Legend', 'Boxing', 8, 'A', 'endless', 200, true, 'Hits + KOs + stamina', '3 days', 'opensource'),
   T('silent-asylum', 'Silent Asylum', 'Horror Survival', 4, 'A', 'endless', 90, true, 'Survival time + escapes', '3 days', 'opensource'),
+  T('wreck-ride', 'Wreck Ride', 'Retired duplicate (historic id kept)', 2, 'A', 'endless', 60, false, 'Distance m + flips 150 + big air 20 + crates 25', '3 days'),
+  T('rig-rally', 'Rig Rally', 'Retired duplicate (historic id kept)', 2, 'A', 'endless', 60, false, 'Distance m + coins 5 + stars 50 (build your own rig)', '3 days'),
+  T('drift-king', 'Drift King', 'Retired duplicate (historic id kept)', 1, 'A', 'endless', 25, false, 'Distance', '3 days'),
+  T('dune-glide', 'Dune Glide', 'Retired duplicate (historic id kept)', 0, 'A', 'endless', 80, false, 'Distance + flips 100 x n + coins 5', '3 days'),
+  T('egg-roll', 'Egg Roll', 'Retired duplicate (historic id kept)', 1, 'A', 'endless', 40, false, 'Distance m + coins 5', '3 days'),
+  T('monster-crush', 'Monster Crush', 'Retired duplicate (historic id kept)', 1, 'A', 'endless', 120, false, 'Distance + crushed cars 50 + flips', '3 days'),
 ];
-const OWNER_RETIRED = Object.freeze({});
+const OWNER_RETIRED = Object.freeze({
+  'wreck-ride': 'gl-hill-hauler', 'rig-rally': 'gl-hill-hauler', 'dune-glide': 'gl-hill-hauler', 'egg-roll': 'gl-hill-hauler', 'monster-crush': 'gl-hill-hauler', 'drift-king': 'drift-rush',
+});
 // Only list games whose playable files actually exist in this build. The registry advertised 20 titles with no
 // public/games-lib/<slug>/ folder (404 on click, and they inflated the game count); they come back automatically once built.
 const HAS_FILES = (slug) => require('fs').existsSync(require('path').join(__dirname, '..', 'public', 'games-lib', slug, 'index.html'));
+const ART_EXT = (slug) => { const d = require('path').join(__dirname, '..', 'public', 'games-lib', slug); const fs = require('fs'); return !fs.existsSync(require('path').join(d, 'thumb.jpg')) && fs.existsSync(require('path').join(d, 'thumb.svg')) ? 'svg' : 'jpg'; };
 const games = LIST.filter(x => HAS_FILES(x.slug)).map(x => {
   const s = SOURCES[x.src] || SOURCES.built;
   return {
     id: 'gl-' + x.slug, slug: x.slug, title: x.title, ref_internal: x.ref, category: CATS[x.cat], lib: true,
-    playable: true, retired: false, replacedBy: null,
+    playable: !OWNER_RETIRED[x.slug], retired: !!OWNER_RETIRED[x.slug], replacedBy: OWNER_RETIRED[x.slug] || null,
     unit: 'pts',
-    url: `/games-lib/${x.slug}/index.html`, art: `/games-lib/${x.slug}/thumb.jpg`, tier: x.tier, competition: x.comp, endless: /^endless/.test(x.comp),
-    giveaway: true, just_for_fun: false, endless_mode: /^endless/.test(x.comp), scoring: x.scoring, event_length: x.evlen, acLevel: 2, ac_level: 'L2 session checks',
+    url: `/games-lib/${x.slug}/index.html`, art: `/games-lib/${x.slug}/thumb.${ART_EXT(x.slug)}`, tier: x.tier, competition: x.comp, endless: /^endless/.test(x.comp),
+    giveaway: !OWNER_RETIRED[x.slug], just_for_fun: false, endless_mode: /^endless/.test(x.comp), scoring: x.scoring, event_length: x.evlen, acLevel: 2, ac_level: 'L2 session checks',
     ac: { perSec: x.rate, ramp: 0, grace: Math.max(50, x.rate * 20), max: 1e12, coinsPerSec: 1 },
     tiers: [x.rate * 20, x.rate * 90, x.rate * 240].map(Math.round),
     source: s.source, licence: s.licence, build: s.kind, attempts: 'unlimited', leaderboard: 'best run', winner_rule: 'highest single-run score in endless mode (uncapped); exactly one winner', tiebreak: ["skill: faster server-timed completion of the same score","skill: stronger server-derived scoring-event efficiency or game metric","exact tie: seeded sudden-death playoff (same game and seed for tied players)"],
