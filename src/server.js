@@ -532,6 +532,7 @@ app.post('/api/me/cosmetics', requireUser, limiter('equip', 60, 60e3), (req, res
 });
 // v7: rebuilt when the shop's live set of generated items changes (new day / new purchases); see src/shop.js css()
 let COS_CSS = { k: '', css: '' }; const cosCss = () => { const k = require('./shop').cssKey(); if (COS_CSS.k !== k) COS_CSS = { k, css: COS.css() }; return COS_CSS.css; };
+app.get('/cosmetics-mine.css', (req, res) => { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store'); const u = currentUser(req); res.send(u ? require('./shop').cssMine(u.id) : ''); });
 app.get('/cosmetics.css', (req, res) => { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=600'); res.send(cosCss()); });
 
 // ---------- community ----------

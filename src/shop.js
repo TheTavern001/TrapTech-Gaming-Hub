@@ -407,8 +407,18 @@ function liveGenerated() {
   for (const n of [sn - 1, sn, sn + 1]) if (n >= 1) { SE().SCHEDULE.forEach((_, i) => ids.add(SE().trackItem(n, i).id)); ids.add(SE().trackItem(n, 90).id); ids.add(SE().trackItem(n, 91).id); }
   for (const d of [today, today + 1]) for (const ev of eventsOn(d)) eventItems(ev).forEach(x => ids.add(x.it.id));
   for (const gt of GATES) ids.add(gateItem(gt).id);
-  for (const r of db.prepare("SELECT DISTINCT item_id FROM user_items WHERE item_id LIKE 'v7%' OR item_id LIKE 'fx-v7%'").all()) ids.add(r.item_id);
+  // only what other players are visibly wearing right now (bounded); each player's own wardrobe is served by /cosmetics-mine.css
+  for (const r of db.prepare("SELECT eq_banner,eq_frame,eq_badge,eq_color,eq_effect FROM users ORDER BY last_seen DESC LIMIT 300").all()) for (const v of Object.values(r)) if (v && /^(fx-)?v7/.test(v)) ids.add(v);
   return [...ids].map(resolve).filter(i => i && i.generated);
+}
+function genLines(gen, out) {
+  for (const i of gen) { if (i.type === 'banner') out.push(`.bn-${i.id}{background:url(/shop/${i.src === 'u' || i.src === 'a' ? 'banner' : 'art'}/${i.id}.svg) center/cover no-repeat;background-color:${G.PALETTES[i.palette][0]}}`); else { const c = G.itemCss(i); if (c) out.push(c); } }
+}
+const MINE_MAX = 400;
+// per-player dynamic CSS: only the generated cosmetics this player owns (capped), never the global sheet
+function cssMine(userId) {
+  const ids = db.prepare("SELECT item_id FROM user_items WHERE user_id=? AND (item_id LIKE 'v7%' OR item_id LIKE 'fx-v7%') ORDER BY acquired_at DESC LIMIT ?").all(userId, MINE_MAX).map(r => r.item_id);
+  const out = []; genLines(ids.map(resolve).filter(i => i && i.generated), out); return out.join('\n') + '\n';
 }
 let CSS_CACHE = { key: '', css: '' };
 function css() {
@@ -420,7 +430,7 @@ function css() {
     if (i.type === 'frame') { const [bg, anim] = i.extra.split('|'); out.push(`.fr-${i.id}{--frame-bg:${bg}}`); if (anim) out.push(`.fr-${i.id}::before{animation:${{ spin: 'fr-spin 5s linear infinite', glow: 'fr-glow 2.6s ease-in-out infinite', pulse: 'fr-pulse 1.6s ease-in-out infinite' }[anim]}}`); }
     if (i.type === 'color') out.push(`.nc-${i.id} .nt{background:${i.extra};-webkit-background-clip:text;background-clip:text;color:transparent}`);
   }
-  for (const i of gen) { if (i.type === 'banner') out.push(`.bn-${i.id}{background:url(/shop/${i.src === 'u' || i.src === 'a' ? 'banner' : 'art'}/${i.id}.svg) center/cover no-repeat;background-color:${G.PALETTES[i.palette][0]}}`); else { const c = G.itemCss(i); if (c) out.push(c); } }
+  genLines(gen, out);
   CSS_CACHE = { key, css: out.join('\n') + '\n' }; return CSS_CACHE.css;
 }
 const cssKey = () => realToday() + ':' + liveGenerated().length;
@@ -533,7 +543,7 @@ function routes(app, A, H) {
 }
 function upcomingEvents(t = Date.now()) { const d0 = dayNum(t); const out = []; for (let d = d0; d < d0 + 400 && out.length < 4; d++) for (const ev of eventsOn(d)) if (ev.first === d || (d === d0)) { if (!out.some(x => x.key === ev.key && x.year === ev.year)) out.push({ key: ev.key, name: ev.name, icon: ev.icon, starts_at: PR().dayStart(ev.first), ends_at: PR().dayStart(ev.last + 1), live: ev.first <= d0 }); } return out; }
 
-module.exports = { ITEMS, BY_ID, RARITY, THEMES, EARN, sync, balance, earned, owned, rotation, buy, pub, css, cssKey, attach,
+module.exports = { cssMine, ITEMS, BY_ID, RARITY, THEMES, EARN, sync, balance, earned, owned, rotation, buy, pub, css, cssKey, attach,
   // v7 engine (docs/ECONOMY.md)
   EPOCH_DAY, EVENTS, GATES, CAP, COOL, TYPE_MULT, RULES, DISCLAIMER, resolve, listPrice, priceParts, priceFor, inRotation, allOnSale, view, detail, history, catalog, catalogUniverse, CATALOG_UNIVERSE_SIZE, schedule, stats, listFor,
   grantGates, grantWeekly, eventsOn, upcomingEvents, routes, gateItem, _sim: SIM };

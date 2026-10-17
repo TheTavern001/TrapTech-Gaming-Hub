@@ -1,7 +1,14 @@
 // v8 UI: skill quests (daily / weekly / seasonal) and the 12,000+ skill achievements browser.
 // Everything is rendered from /api/skill/*; definitions are generated on the server on demand.
 let C = null;
-export function install(ctx) { C = ctx; }
+export function install(ctx) {
+  C = ctx;
+  // per-player wardrobe CSS (the global sheet only covers what is on sale / worn right now)
+  const link = document.createElement('link'); link.rel = 'stylesheet'; link.id = 'v8-mine'; document.head.appendChild(link);
+  let last = '', t = 0; const refresh = () => { const me = C.S && C.S.me; const k = me ? me.id || me.username : ''; if (!k) { link.removeAttribute('href'); last = ''; return; } if (k !== last || Date.now() - t > 45000) { last = k; t = Date.now(); link.href = '/cosmetics-mine.css?u=' + encodeURIComponent(k) + '&t=' + t; } };
+  const push = history.pushState; history.pushState = function () { const r = push.apply(this, arguments); setTimeout(refresh, 400); return r; };
+  window.addEventListener('popstate', () => setTimeout(refresh, 400)); setTimeout(refresh, 1200);
+}
 const TIER_IC = { bronze: 'medal', silver: 'medal', gold: 'trophy', epic: 'gem', legendary: 'crown' };
 const PERIOD = { daily: ['Daily', 'sun', 'Resets at midnight ET'], weekly: ['Weekly', 'calendar-range', 'Resets Monday'], seasonal: ['Season', 'flag', 'Lasts the whole season'] };
 const left = (t) => { const s = Math.max(0, Math.floor((t - Date.now()) / 1000)); const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
