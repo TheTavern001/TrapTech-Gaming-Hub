@@ -95,7 +95,18 @@ function productData(p) {
   const data = JSON.parse(p.data || '{}');
   return p.kind === 'pass' ? { ...data, xp_boost_pct: 0 } : data;
 }
-const prod = (id) => { const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = productData(p); return p; };
+// v8: any cosmetic on sale in the rotating shop can be bought with cash. Product id = 'cos:<item id>'; price in cents = Credit price / 10
+// (the same rate as the Credit packs: 5,000 Credits = $4.99), clamped to $0.99-$99.99 and snapshotted on the order.
+const COS_PRODUCT = /^cos:(v7[A-Za-z0-9_-]{1,60}|[a-z0-9][a-z0-9_-]{1,60})$/;
+function cosProduct(id, t = Date.now()) {
+  const m = COS_PRODUCT.exec(String(id)); if (!m) return null; const SH = require('./shop'); const it = SH.BY_ID[m[1]]; if (!it) return null;
+  const credits = Number(it.price) || 0; if (!(credits > 0) || it.src === 'k' || it.src === 'b' || it.src === 'p') return null;
+  return { id: 'cos:' + it.id, kind: 'cosmetic', name: it.name, usd_cents: Math.min(9999, Math.max(99, Math.ceil(credits / 10))), crowns: 0, bonus: 0, active: 1, data: { item: it.id, credits }, onSale: SH.onSale(it.id, t) };
+}
+const prod = (id) => { if (String(id).startsWith('cos:')) return cosProduct(id); const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = productData(p); return p; };
+const ownsCos = (userId, p) => !!db.prepare('SELECT 1 FROM user_items WHERE user_id=? AND item_id=?').get(userId, p.data.item);
+const openCosOrder = (userId, id) => !!db.prepare("SELECT 1 FROM store_orders WHERE product_id=? AND user_id=? AND status IN ('pending','seen','confirming')").get(id, userId);
+const cosGate = (user, p) => p.kind !== 'cosmetic' ? null : !p.onSale ? { status: 409, error: 'That item is not in the shop right now.' } : (ownsCos(user.id, p) || openCosOrder(user.id, p.id)) ? { status: 409, error: ownsCos(user.id, p) ? 'You already own this.' : 'You already have an open order for this item.' } : null;
 const products = (all = false) => db.prepare(`SELECT * FROM store_products ${all ? '' : 'WHERE active=1'} ORDER BY sort, id`).all().map(p => ({ ...p, data: productData(p) }));
 const issued = (id) => db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=? AND revoked_at IS NULL').get(id).c;
 const reserved = (id) => db.prepare("SELECT COUNT(*) c FROM store_orders WHERE product_id=? AND status IN ('pending','seen','confirming')").get(id).c;
@@ -158,6 +169,7 @@ async function createOrder(user, productId, t = Date.now()) {
     return { status:503, error:'Credit pack temporarily unavailable; contact support' };
   if (p.kind === 'prestige' && (ownsPrestige(user.id, p.id) || openPrestigeOrder(user.id, p.id))) return { status: 409, error: ownsPrestige(user.id, p.id) ? 'You already own this one.' : 'You already have an open order for this item.' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: 'You already have this season\'s pass.' };
+  { const cg = cosGate(user, p); if (cg) return cg; }
   const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status='pending' AND expires_at > ?").get(user.id, t).c; if (open >= 3) return { status: 429, error: 'Finish or let your open orders expire first (max 3).' };
   let usd; try { usd = await BTC.usdPrice(); } catch (e) { return { status: 503, error: 'Could not get the Bitcoin price right now. Try again in a minute.' }; }
   const base = Math.ceil(p.usd_cents / 100 / usd * 1e8);
@@ -189,6 +201,7 @@ async function createStripeOrder(user, productId, t = Date.now()) {
     return { status:503, error:'Credit pack temporarily unavailable; contact support' };
   if (p.kind === 'prestige' && (ownsPrestige(user.id, p.id) || openPrestigeOrder(user.id, p.id))) return { status: 409, error: ownsPrestige(user.id, p.id) ? 'You already own this one.' : 'You already have an open order for this item.' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: "You already have this season's pass." };
+  { const cg = cosGate(user, p); if (cg) return cg; }
   const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status IN ('pending','seen','confirming') AND expires_at > ?").get(user.id, t).c;
   if (open >= 3) return { status: 429, error: 'Finish or let your open orders expire first (max 3).' };
   const ref = 'O' + crypto.randomBytes(6).toString('hex').toUpperCase();
@@ -250,6 +263,10 @@ function grant(o, how = 'auto', t = Date.now()) {
         return { ok:false, error:'Order lacks verified locked Credit quantity; manual review required' };
       if (!addCrowns(fresh.user_id,fresh.pack_crowns,'purchase',fresh.ref,t))
         return { ok:false, error:'Existing grant requires financial reconciliation' };
+    }
+    else if (p.kind === 'cosmetic') {
+      if (ownsCos(fresh.user_id, p)) { db.prepare("UPDATE store_orders SET status='sold_out_refund', note=? WHERE id=?").run('Player already owned this cosmetic: refund manually', o.id); return { ok: false, error: 'already owned' }; }
+      db.prepare('INSERT INTO user_items (user_id, item_id, price, acquired_at) VALUES (?,?,0,?)').run(fresh.user_id, p.data.item, t);
     }
     else if (p.kind === 'pass') db.prepare('INSERT OR IGNORE INTO pass_owned (user_id, season, source, order_id, created_at) VALUES (?,?,?,?,?)').run(o.user_id, o.season || curSeason(t), 'purchase', o.id, t);
     else if (p.kind === 'prestige') {
@@ -344,10 +361,11 @@ function reverseEntitlements(incoming, actor, note = '', t = Date.now()) {
         db.prepare('DELETE FROM pass_owned WHERE user_id=? AND order_id=?').run(o.user_id, o.id);
       }
       if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=? WHERE order_id=?').run(t, o.id);
+      if (p.kind === 'cosmetic') db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(o.user_id, p.data.item);
     }
       db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=? AND refunded_at IS NULL")
         .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, o.id);
-      if(p.kind==='pass'||p.kind==='prestige')
+      if(p.kind==='pass'||p.kind==='prestige'||p.kind==='cosmetic')
         require('./cosmetic-rewards').reconcileCosmeticRewards(o.user_id,t);
       return { ok:true };
     })();
@@ -508,6 +526,8 @@ function routes(app, A, H) {
       pass: (() => { const p = prod('season-pass'); return p && p.active ? { id: p.id, name: p.name, usd_cents: p.usd_cents, ...p.data } : null; })(),
       prestige: prestigeWall().filter(p => p.active).map(p => ({ ...p, owners_count: p.owners_total, owned: me ? ownsPrestige(me.id, p.id) : false })),
       credits: me ? reviewedCredits(me.id) : null, non_advantage: NON_ADVANTAGE, terms: TERMS }); });
+  app.get('/api/store/cosmetic/:id', limiter('store-cos', 120, 60e3), (req, res) => { const p = cosProduct('cos:' + String(req.params.id).slice(0, 80)); if (!p) return bad(res, 404, 'That item cannot be bought with cash.'); const me = currentUser(req); const st = checkoutState();
+    res.setHeader('Cache-Control', 'private, no-store'); res.json({ ok: true, item: { id: p.data.item, name: p.name }, product_id: p.id, usd_cents: p.usd_cents, credits: p.data.credits, on_sale: p.onSale, owned: !!(me && ownsCos(me.id, p)), checkout: { enabled: st.enabled, methods: st.methods } }); });
   app.get('/api/store/prestige', (req, res) => res.json({ ok: true, items: prestigeWall({ owners: true, limit: req.query.limit, offset: req.query.offset }) }));
   app.get('/api/users/:u/prestige', (req, res) => { const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(req.params.u); res.json({ ok: true, items: u ? prestigeOf(u.id) : [] }); });
   app.post('/api/store/orders', requireUser, limiter('store-order', 20, 3600e3), async (req, res) => { const b = req.body || {}; const st = checkoutState(); const provider = String(b.provider || (st.providers.bitcoin.configured ? 'bitcoin' : 'stripe')); const r = provider === 'stripe' ? await createStripeOrder(req.user, String(b.product_id || '')) : provider === 'bitcoin' ? await createOrder(req.user, String(b.product_id || '')) : { status: 400, error: 'Unsupported payment method.' }; if (!r.ok) return bad(res, r.status, r.error); if (r.order.uri) r.order.qr_svg = require('./events').qrSvg(r.order.uri); res.json(r); });

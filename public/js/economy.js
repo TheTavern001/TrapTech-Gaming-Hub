@@ -54,6 +54,7 @@ async function detailSheet(id, onBought) {
       <tr><td>${p.tag === 'vault' || p.tag === 'returning' ? 'Back after its rest period' : p.appearances === 0 ? 'Debut day' : `Seen ${p.appearances} time${p.appearances === 1 ? '' : 's'} before`}</td><td>x${p.appear_mult}</td></tr>
       ${p.section_mult !== 1 ? `<tr><td>Limited (season / event only)</td><td>x${p.section_mult}</td></tr>` : ''}
       <tr class="tot"><td>Today's price</td><td>${icon('coins')} ${fmt(p.price)}</td></tr>${r.your_price != null && r.your_price !== p.price ? `<tr class="tot"><td>Your price (season perk)</td><td>${icon('coins')} ${fmt(r.your_price)}</td></tr>` : ''}</tbody></table>` : '';
+  let cq = null;
   const draw = () => {
     d.innerHTML = `<div class="sheet-in card ec-detail"><div class="panel-h"><h2>${esc(it.name)}</h2><button class="iconbtn" data-x aria-label="Close">${icon('x')}</button></div>
       <div class="tabs ec-tabs"><button data-t="item" class="${tab === 'item' ? 'on' : ''}">Item</button><button data-t="me" class="${tab === 'me' ? 'on' : ''}" id="ec-on-me">${icon('eye')} On my profile</button></div>
@@ -64,10 +65,11 @@ async function detailSheet(id, onBought) {
       ${p ? `<p class="ec-priceline"><b>Today's price:</b> ${icon('coins')} ${fmt(r.your_price ?? p.price)} HC</p><details class="ec-priced"><summary>How is this priced?</summary>${why}</details>` : ''}
       ${r.sold ? `<h3 class="ec-h">History</h3><ul class="ec-hist small"><li>${h.first_seen ? `First in the shop ${dateOf(h.first_seen)}` : 'Not in the shop yet'}</li><li>${h.appearances} appearance${h.appearances === 1 ? '' : 's'} so far • never retires: after each showing it rests ${h.cooldown_days} days, then it can come back</li></ul>` : ''}
       <div class="btn-row">${it.owned ? `<a class="btn" href="/u/${encodeURIComponent((C.S.me || {}).username || '')}?tab=${it.type}#customize">${icon('check')} Owned - equip it</a>`
-        : r.on_sale ? (C.S.me ? `<button class="btn" id="ec-buy">${icon('coins')} Buy for ${fmt(r.your_price ?? p.price)}</button>` : `<a class="btn" href="/signup?next=/shop">Sign up to buy</a>`) : ''}
+        : r.on_sale ? (C.S.me ? `<button class="btn" id="ec-buy">${icon('coins')} Buy for ${fmt(r.your_price ?? p.price)}</button>${cq && cq.ok && cq.checkout.enabled && !cq.owned ? `<button class="btn ghost" id="ec-cash">${icon('credit-card')} Buy with ${cq.checkout.methods.includes('bitcoin') ? 'Bitcoin' : 'card'} ($${(cq.usd_cents / 100).toFixed(2)})</button>` : ''}` : `<a class="btn" href="/signup?next=/shop">Sign up to buy</a>`) : ''}
         <button class="btn ghost" data-x>Close</button></div></div>`;
     C.tickInline && C.tickInline();
     d.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { tab = b.dataset.t; draw(); });
+    const cash = d.querySelector('#ec-cash'); if (cash) cash.onclick = async () => { cash.disabled = true; const x = await api('/api/store/orders', { method: 'POST', body: { product_id: cq.product_id, provider: cq.checkout.methods.includes('bitcoin') ? 'bitcoin' : 'stripe' } }); if (!x.ok) { cash.disabled = false; return toast(x.error); } if (x.order.checkout_url) { window.location.assign(x.order.checkout_url); return; } d.remove(); C.go('/store/order/' + x.order.ref); };
     const buy = d.querySelector('#ec-buy'); if (buy) buy.onclick = async () => {
       buy.disabled = true; const x = await api('/api/shop/buy', { method: 'POST', body: { item: it.id } });
       if (!x.ok) { buy.disabled = false; return toast(x.error); }
@@ -77,6 +79,7 @@ async function detailSheet(id, onBought) {
   d.addEventListener('click', (e) => { if (e.target === d || e.target.closest('[data-x]')) d.remove(); });
   d.addEventListener('keydown', (e) => { if (e.key === 'Escape') d.remove(); });
   draw(); document.body.appendChild(d); d.querySelector('[data-x]').focus();
+  if (r.on_sale && C.S.me && !it.owned) api('/api/store/cosmetic/' + encodeURIComponent(it.id)).then(q => { if (q && q.ok && document.body.contains(d)) { cq = q; draw(); } });
 }
 
 // ---------- /shop ----------

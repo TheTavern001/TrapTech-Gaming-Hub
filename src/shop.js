@@ -543,7 +543,7 @@ function routes(app, A, H) {
 }
 function upcomingEvents(t = Date.now()) { const d0 = dayNum(t); const out = []; for (let d = d0; d < d0 + 400 && out.length < 4; d++) for (const ev of eventsOn(d)) if (ev.first === d || (d === d0)) { if (!out.some(x => x.key === ev.key && x.year === ev.year)) out.push({ key: ev.key, name: ev.name, icon: ev.icon, starts_at: PR().dayStart(ev.first), ends_at: PR().dayStart(ev.last + 1), live: ev.first <= d0 }); } return out; }
 
-module.exports = { cssMine, ITEMS, BY_ID, RARITY, THEMES, EARN, sync, balance, earned, owned, rotation, buy, pub, css, cssKey, attach,
+module.exports = { onSale: (id, t = Date.now()) => { const it = BY_ID[id]; return !!it && inRotation(module.exports.rotation(t), it); }, cssMine, ITEMS, BY_ID, RARITY, THEMES, EARN, sync, balance, earned, owned, rotation, buy, pub, css, cssKey, attach,
   // v7 engine (docs/ECONOMY.md)
   EPOCH_DAY, EVENTS, GATES, CAP, COOL, TYPE_MULT, RULES, DISCLAIMER, resolve, listPrice, priceParts, priceFor, inRotation, allOnSale, view, detail, history, catalog, catalogUniverse, CATALOG_UNIVERSE_SIZE, schedule, stats, listFor,
   grantGates, grantWeekly, eventsOn, upcomingEvents, routes, gateItem, _sim: SIM };
