@@ -5,7 +5,7 @@
   const G = 1500, BR = 15;
   function spot(g) { const lv = g.makes; g.bx0 = g.R(50, 190); g.by0 = g.R(600, 660); g.hx = 300 + (lv > 6 ? 0 : 0); resetBall(g); }
   function resetBall(g) { g.b = { x: g.bx0, y: g.by0, vx: 0, vy: 0, live: false, t: 0, rim: false, scored: false, below: false }; }
-  Kit.run({ id: 'gl-hoop-streak', title: 'HOOP STREAK', help: 'Swipe up from the ball to shoot: aim and speed set the arc\nMakes add time, swishes add more; 3 in a row = FIRE (x2)\nEndless until the clock hits zero', bg: '#1a0f0a',
+  Kit.run({ fill: true, id: 'gl-hoop-streak', title: 'HOOP STREAK', help: 'Swipe up from the ball to shoot: aim and speed set the arc\nMakes add time, swishes add more; 3 in a row = FIRE (x2)\nEndless until the clock hits zero', bg: '#1a0f0a',
     init(g) { g.time = 30; g.makes = 0; g.sw = 0; g.streak = 0; g.shots = 0; g.hy = 330; g.hx = 300; g.ht = 0; g.fx = []; g.msg = ''; g.msgT = 0; g.net = 0; g.hud = ''; spot(g); },
     update(g, dt) { g.msgT -= dt; g.net = Math.max(0, g.net - dt * 3); for (const f of g.fx) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 400 * dt; f.l -= dt; } g.fx = g.fx.filter(f => f.l > 0);
       g.time -= dt; if (g.time <= 0) { g.time = 0; return g.end('Time up'); }

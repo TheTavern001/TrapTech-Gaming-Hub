@@ -5,7 +5,7 @@
   const NW = 183, NH = 122, GZ = 1100;
   const proj = (x, y, z, cz) => { const d = z - cz + 260, s = 640 / d; return { x: 200 + x * s, y: 270 + (150 - y) * s, s }; };
   function reset(g) { g.cz = 0; g.p = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, live: false, done: false }; g.px = 0; g.gk = { x: 0, lag: [], dive: 0, dir: 0 }; g.res = null; g.sw = null; g.hist = []; }
-  Kit.run({ id: 'gl-ice-snipe', title: 'ICE SNIPE', help: 'You skate in automatically. Drag left/right to stickhandle (arrows too)\nSwipe up to shoot: direction aims, speed lifts. Space shoots straight\nDeke the goalie, then shoot the other way. 3 misses end it', bg: '#0b1426',
+  Kit.run({ fill: true, id: 'gl-ice-snipe', title: 'ICE SNIPE', help: 'You skate in automatically. Drag left/right to stickhandle (arrows too)\nSwipe up to shoot: direction aims, speed lifts. Space shoots straight\nDeke the goalie, then shoot the other way. 3 misses end it', bg: '#0b1426',
     init(g) { g.goals = 0; g.miss = 0; g.streak = 0; g.lvl = 0; g.fx = []; reset(g); g.hud = ''; },
     update(g, dt) { const p = g.p, k = g.gk, P = g.ptr; for (const f of g.fx) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 200 * dt; f.l -= dt; } g.fx = g.fx.filter(f => f.l > 0);
       if (g.res) { g.res.t -= dt; if (g.res.t <= 0) { if (g.miss >= 3) return g.end('Three misses'); reset(g); } }

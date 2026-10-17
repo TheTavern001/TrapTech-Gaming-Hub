@@ -1,5 +1,5 @@
 // Knife Toss - original spinning-target knife thrower (Hub build)
-Kit.run({ id: 'gl-knife-toss', title: 'KNIFE TOSS', help: 'Tap / Space to throw\nDon\'t hit other knives - apples are bonus', bg: '#1c1917',
+Kit.run({ fill: true, id: 'gl-knife-toss', title: 'KNIFE TOSS', help: 'Tap / Space to throw\nDon\'t hit other knives - apples are bonus', bg: '#1c1917',
   init(g) { g.stage = 0; nextStage(g); g.fly = null; },
   update(g, dt) {
     g.rs += (g.rt - g.rs) * dt * 1.5; if (g.rnd() < dt * g.chg) g.rt = g.R(-1, 1) * g.maxs; g.rot += g.rs * dt;
