@@ -320,11 +320,11 @@ const gameById = (id) => S.games.find(g => g.id === id) || S.libraryGames.find(g
 route(/^\/welcome$/, () => splash());
 function splash() {
   $app.innerHTML = `<div class="splash">
-    <div>
+    <div><h1 class="sr-only">The Gaming Hub by Trap Tech Solutions</h1>
       <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub" width="330" height="195">
       <div class="tagline">PLAY <b>•</b> COMPETE <b>•</b> WIN <b>•</b> CONNECT</div>
       <p class="splash-sub">Free arcade games, tournaments and brand giveaways.<br>No purchase necessary. 21+.</p>
-      <div class="splash-feats">${[['gamepad-2','13 skill games','Built for phones, scored fairly'],['gift','Brand giveaways','Official events with real prizes'],['trophy','Seasons & quests','Free season track, earn the pass'],['palette','Your avatar','Dress it up, flex your wins']].map(([i,t,d])=>`<div class="sf">${icon(i)}<b>${t}</b><span>${d}</span></div>`).join('')}</div>
+      <div class="splash-feats">${[['gamepad-2','80+ skill games','Built for phones, scored fairly'],['gift','Brand giveaways','Official events with real prizes'],['trophy','Seasons & quests','Free season track, earn the pass'],['palette','Your avatar','Dress it up, flex your wins']].map(([i,t,d])=>`<div class="sf">${icon(i)}<b>${t}</b><span>${d}</span></div>`).join('')}</div>
     </div>
     <div class="cta">
       <a class="btn block" href="/signup">Get Started</a>
@@ -426,7 +426,7 @@ route(/^\/signup$/, (m, url) => {
     toast(`Account created. Welcome, ${r.user.username}!`); achToast(r.unlocked); go(url.searchParams.get('next') || '/games/jetpack-dash', true);
   });
 });
-route(/^\/forgot$/, () => shell('/forgot', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Forgot password</h1></div>
+route(/^\/forgot$/, () => shell('/forgot', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>Forgot password</h1></div>
   <div class="card pad"><p>Password resets are handled by the hub admins. Message Trap Tech Solutions with your Potato username and an admin will give you a temporary password, which you can change from your profile settings.</p>
   <a class="btn block" href="/signin">Back to sign in</a></div></div>`));
 
@@ -689,10 +689,10 @@ route(/^\/leaderboard$/, async (m, url) => {
   let showMine = false;
   shell('/leaderboard', `<div class="narrow"><h1>${game === 'global' ? 'Global' : esc(gameById(game)?.title || '')} Leaderboard</h1>
     <div class="tabs" id="per">${[['all', 'All Time'], ['weekly', 'Weekly'], ['monthly', 'Monthly']].map(([k, l]) => `<button data-p="${k}" class="${k === period ? 'on' : ''}">${l}</button>`).join('')}</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <div class="chips" id="gsel" style="padding:0;flex:1">${[['global', 'Global'], ...S.games.filter(x => x.playable).map(x => [x.id, x.title])].map(([k, l]) => `<button class="chip ${k === game ? 'on' : ''}" data-g="${k}">${esc(l)}</button>`).join('')}</div>
-      ${S.me ? `<label class="check small" style="margin:0;white-space:nowrap">Friends <input type="checkbox" id="friends" ${url.searchParams.get('friends') === '1' ? 'checked' : ''}></label>` : ''}
-      <label class="check small" style="margin:0;white-space:nowrap">My Rank <input type="checkbox" id="mine"></label>
+    <div class="lb-filters">
+      <div class="chips" id="gsel">${[['global', 'Global'], ...S.games.filter(x => x.playable).map(x => [x.id, x.title])].map(([k, l]) => `<button class="chip ${k === game ? 'on' : ''}" data-g="${k}">${esc(l)}</button>`).join('')}</div>
+      ${S.me ? `<label class="check small lb-chk">Friends <input type="checkbox" id="friends" ${url.searchParams.get('friends') === '1' ? 'checked' : ''}></label>` : ''}
+      <label class="check small lb-chk">My Rank <input type="checkbox" id="mine"></label>
     </div>
     <div class="card" id="tbl"><div class="skeleton" style="margin:12px"></div></div>
     ${officialNotice('lb-notice')}
@@ -790,7 +790,7 @@ route(/^\/giveaways\/(\d+)$/, async (m) => {
   const sc = (n) => multi ? `${fmt(n)} pts` : fmtScore(n, g.game_id);
   const playBtns = g.game_ids.map(id => { const x = gameById(id); const href = g.event_code ? `/play/${id}?event=${g.event_code}` : `/play/${id}?giveaway=${g.id}`; return x ? `<a class="gpick" href="${S.me ? href : `/signin?next=${encodeURIComponent(href)}`}"><img src="${x.art}" alt=""><span>${esc(x.title)}</span>${icon('play')}</a>` : ''; }).join('');
   shell('/giveaways', `<div class="narrow">
-    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>${esc(g.title)}${demoTag(g.demo)}</h1></div>
+    <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>${esc(g.title)}${demoTag(g.demo)}</h1></div>
     ${g.event_label ? `<div class="event-label small" id="event-label">${icon('badge-check')} ${esc(g.event_label)}</div>` : ''}
     <div class="card gw branded" style="${brandStyle(g)}">
       <div class="row"><div><div class="host">Hosted by ${g.channel ? `<span class="ch-link" id="gw-channel">${esc(g.channel.name)}</span>` : esc(g.host)}</div>${brandMark(g)}<div style="margin-top:10px"><span class="pill ${g.status === 'active' ? 'green' : g.status === 'upcoming' ? '' : 'red'}">${g.status.toUpperCase()}</span> ${tierPill(g)}</div></div>
@@ -845,7 +845,7 @@ async function eligCard(g) {
 route(/^\/me\/entries$/, async () => {
   if (!S.me) return go('/signin?next=/me/entries', true);
   const r = await api('/api/me/entries');
-  shell('/giveaways', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>My giveaway entries</h1></div>
+  shell('/giveaways', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>My giveaway entries</h1></div>
     <p class="muted small">You can be entered in up to ${r.max} live giveaways at once (some giveaways set their own limit). Leave one to free a slot for another.</p>
     <div class="card">${r.entries.length ? r.entries.map(x => `<div class="mini-row ent-row"><a href="/giveaways/${x.id}"><b>${esc(x.title)}</b></a><span class="small muted">ends ${new Date(x.end_at).toLocaleDateString()}</span><button class="btn sm ghost" data-leave="${x.id}">Leave</button></div>`).join('') : `<div class="empty">You're not in any live giveaways. <a href="/giveaways">Browse giveaways</a></div>`}</div></div>`);
   document.querySelectorAll('[data-leave]').forEach(b => b.onclick = async () => { const x = await api(`/api/giveaways/${b.dataset.leave}/leave`, { method: 'POST' }); toast(x.ok ? 'Left giveaway' : x.error); render(); });
@@ -1002,7 +1002,7 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
   if (r.is_me) { cz = await api('/api/cosmetics'); S.me.cos = cos; }
   const badgeGrid = p.achievements.length ? p.achievements.slice(0, 12).map(a => `<div class="b t-${a.tier}" title="${esc(a.desc)}"><span class="bi">${icon(a.icon)}</span>${esc(a.name)}</div>`).join('') : `<div class="empty" style="grid-column:1/-1">No achievements yet. ${r.is_me ? '<a href="/games">Play a game</a> to unlock your first.' : ''}</div>`;
   shell('/profile', `<div class="narrow">
-    <div class="back-row" style="justify-content:space-between"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button>${r.is_me ? `<button class="iconbtn" id="gear" aria-label="Settings">${icon('settings')}</button>` : ''}</div>
+    <div class="back-row" style="justify-content:space-between"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button>${r.is_me ? `<button class="iconbtn" id="gear" aria-label="Settings">${icon('settings')}</button>` : ''}</div>
     <div class="prof-banner bn-${esc(cos.banner)}${cos.effect ? ' fx ' + esc(cos.effect) : ''}" id="pbanner">
       <div class="prof-head">${framed(p.username, p.demo, cos, 'lg')}
         <div><div class="name${cos.color ? ' nc-' + esc(cos.color) : ''}"><span class="nt">${esc(p.username)}</span>${demoTag(p.demo)}${badgeIcon(cos.badge)} </div>
@@ -1098,7 +1098,7 @@ route(/^\/achievements$/, async (m, url) => {
   const A = r.achievements; const done = A.filter(a => a.unlocked).length;
   const rewardsTotal = A.reduce((s, a) => s + a.rewards.length, 0) + A.length;
   shell('/achievements', `<div class="narrow">
-    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>${who && !r.is_me ? esc(r.user) + "'s " : ''}Achievements</h1></div>
+    <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>${who && !r.is_me ? esc(r.user) + "'s " : ''}Achievements</h1></div>
     <div class="card pad ach-sum">
       <div class="ring" style="--p:${Math.round(done / A.length * 100)}"><b>${done}</b><span>/ ${A.length}</span></div>
       <div><b class="orb">${Math.round(done / A.length * 100)}% complete</b><div class="small muted">${A.length} achievements across ${r.cats.length} categories. Each unlock awards a badge plus a banner, avatar frame or title for your profile.</div>
@@ -1157,7 +1157,7 @@ route(/^\/community$/, async () => {
     el.innerHTML = r.items.length ? r.items.map(it => {
       const u = it.user;
       const head = it.kind === 'announcement' ? `<img src="/assets/brand/hub-mark.svg" alt="" style="width:38px;height:38px;object-fit:contain"><div><b>TrapTech Admin${demoTag(it.is_demo)}</b><span>${ago(it.created_at)}</span></div>`
-        : u ? `<a href="/u/${encodeURIComponent(u.username)}" class="ph-av">${framed(u.username, u.demo, u.cos)}</a><div>${pname(u.username, u.demo, u.cos)}<span>${it.kind === 'winner' ? 'Giveaway Winner' : ({ levelup: 'Level up', streak: 'Streak', tournament: 'Tournament', achievement: 'Achievement', highscore: 'High score' }[it.type] || 'Hub Activity')} • ${ago(it.created_at)}</span></div>`
+        : u ? `<a href="/u/${encodeURIComponent(u.username)}" class="ph-av" aria-label="View ${esc(u.username)}'s profile">${framed(u.username, u.demo, u.cos)}</a><div>${pname(u.username, u.demo, u.cos)}<span>${it.kind === 'winner' ? 'Giveaway Winner' : ({ levelup: 'Level up', streak: 'Streak', tournament: 'Tournament', achievement: 'Achievement', highscore: 'High score' }[it.type] || 'Hub Activity')} • ${ago(it.created_at)}</span></div>`
         : `<span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">${icon('zap')}</span><div><b>Hub Activity${demoTag(it.is_demo)}</b><span>${ago(it.created_at)}</span></div>`;
       return `<div class="card post ${it.kind} ${u ? 'has-bn' : ''}">${u ? `<span class="post-bn bn-${esc(u.cos.banner)}"></span>` : ''}
       <div class="ph">${head}</div>
@@ -1492,7 +1492,7 @@ route(/^\/friends$/, async (m, url) => {
       <b>${x.incoming ? `${esc(x.from)} challenged you` : `You challenged ${esc(x.to)}`}</b><div class="small muted">${esc(x.game_title)} • beat ${unitOf(x)}</div>
       <div class="tiny muted">${x.status === 'pending' ? `Expires ${new Date(x.expires_at).toLocaleString()}` : x.status === 'accepted' ? `Window ends ${new Date(x.expires_at).toLocaleString()}` : x.status === 'completed' ? (x.won ? `${icon('trophy')} You won${x.result_score != null ? ` (${fmtScore(x.result_score, x.game_id)})` : ''}` : `You lost${x.result_score != null ? ` (${fmtScore(x.result_score, x.game_id)})` : ''}`) : x.status}</div></div>
       <div class="ch-act">${x.incoming && x.status === 'pending' ? `<button class="btn sm" data-acc="${x.id}">${icon('check')} Accept</button><button class="btn sm ghost" data-dec="${x.id}">Decline</button>` : x.incoming && x.status === 'accepted' ? `<a class="btn sm" href="/play/${x.game_id}">${icon('play')} Play</a>` : ''}</div></div>`;
-    shell('/friends', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Friends &amp; Challenges</h1></div>
+    shell('/friends', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>Friends &amp; Challenges</h1></div>
       <div class="tabs" id="ft"><button data-k="friends" class="${tab === 'friends' ? 'on' : ''}">Friends</button><button data-k="challenges" class="${tab === 'challenges' ? 'on' : ''}">Challenges${c.incoming && c.incoming.length ? ` <span class="pill-mini">${c.incoming.length}</span>` : ''}</button></div>
       ${tab === 'friends' ? `<p class="small muted">Friends are players you follow who follow you back. There is no chat or messaging on the hub - play together with score challenges and friend leaderboards.</p>
         <div class="card">${c.friends.length ? c.friends.map(f => `<div class="mini-row">${avatar(f)}<a href="/u/${encodeURIComponent(f)}" style="flex:1;color:var(--text)"><b>${esc(f)}</b></a><a class="btn sm ghost" href="/friends?tab=challenges&to=${encodeURIComponent(f)}">${icon('swords')} Challenge</a></div>`).join('') : `<div class="empty">No friends yet. Follow players from the leaderboards; when they follow back you can challenge them. <a href="/invite">Invite friends</a></div>`}</div>

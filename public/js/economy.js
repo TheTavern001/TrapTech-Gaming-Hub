@@ -92,7 +92,7 @@ if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'The shop is una
     const catalog = catalogOpen ? await api('/api/shop/catalog?limit=24&offset=' + catalogOffset + '&type=' + encodeURIComponent(catalogType) + '&q=' + encodeURIComponent(catalogQuery) + '&rarity=' + encodeURIComponent(catalogRarity) + '&sold=' + encodeURIComponent(catalogSold)) : null;
     const bal = r.balance; const ev = r.events || [];
     shell('/shop', `<div class="narrow wide ec">
-      <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Hub Credits Shop</h1><a class="ec-how small" href="/shop/how-it-works">${icon('circle-help')} How it works</a></div>
+      <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>Hub Credits Shop</h1><a class="ec-how small" href="/shop/how-it-works">${icon('circle-help')} How it works</a></div>
       <div class="card pad" aria-label="Cosmetic collections"><b>Customize your Hub identity</b><p class="small muted">Profile banners, name effects and badges live here. Clothing, hair and held accessories are equipped in the avatar wardrobe. Both use the same Hub Credits balance.</p><div class="btn-row"><a class="btn sm" href="/avatar">${icon('user-round')} Avatar wardrobe</a><a class="btn sm ghost" href="/store">${icon('wallet')} Get Credits</a></div></div>
       ${r.signed_in ? `<div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><div class="tiny muted orb">HUB CREDITS</div><b class="sb-n" id="pts-bal">${fmt(bal)}</b><div class="tiny muted">${fmt(r.earned)} earned all-time${r.perks && r.perks.discount ? ` • ${r.perks.discount}% season discount` : ''}</div></div><a class="btn sm ghost" href="#earn">Earn Credits</a> <a class="btn sm ghost" href="/store">Buy Credits</a></div>`
         : `<div class="card pad shop-bal"><div class="sb-ic">${icon('coins')}</div><div><b>Earn Hub Credits by playing</b><div class="tiny muted">Play, complete quests and progress through seasons to earn Credits.</div></div><a class="btn sm" href="/signup?next=/shop">Sign up free</a></div>`}
@@ -189,7 +189,7 @@ async function howPage() {
   if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'Could not load', ''));
   const ex = Math.round(400 * 1.1); const exHi = Math.round(ex * 1.2 / 5) * 5, exLo = Math.round(ex * 0.9 / 5) * 5;
   shell('/shop', `<div class="narrow ec prose-ish">
-    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>How Seasons &amp; Shop work</h1></div>
+    <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>How Seasons &amp; Shop work</h1></div>
     <div class="nocash">${icon('shield')} <span>${esc(r.disclaimer)}</span></div>
     <div class="card pad"><h2>${icon('clock')} When the shop changes</h2>
       <ul class="ec-list"><li><b>Daily picks</b>: every day at midnight hub time (US Eastern). The shop page shows each reset in your own time zone.</li><li><b>Weekly featured</b>: every Monday at midnight.</li><li><b>Season shop</b>: the whole 8-week season.</li><li><b>Events</b>: while the event runs (dates below).</li></ul>

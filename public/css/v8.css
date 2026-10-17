@@ -45,3 +45,17 @@
 .v8-fb:hover{border-color:rgba(167,139,250,.6);box-shadow:0 6px 22px rgba(124,58,237,.25)}
 .btn-row .btn{min-height:44px}
 @media (prefers-reduced-motion:reduce){.stat3 .card,.v8-fb,.card{transition:none}.stat3 .card:hover{transform:none}}
+
+/* AAA polish: touch targets, leaderboard filter row */
+.lb-filters{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-bottom:10px}
+.lb-filters .chips{flex:1 1 100%;padding:0;min-width:0}
+.lb-chk{margin:0;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;gap:6px}
+.hub-home-link{min-height:44px;display:inline-flex;align-items:center}
+a.small,.sec-h a,.section-h a,.row-h a,.card-h a{display:inline-flex;align-items:center;min-height:40px;padding:0 6px}
+.hype{min-height:40px;padding-inline:14px}
+a.ph-av{display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center}
+/* Orbitron's zero is slashed and reads like a "no" sign next to counts; use Exo 2's clean zero for U+0030 only */
+@font-face{font-family:'Orbitron';font-weight:600;font-display:swap;unicode-range:U+0030;src:url(/fonts/exo-2-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Orbitron';font-weight:700;font-display:swap;unicode-range:U+0030;src:url(/fonts/exo-2-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Orbitron';font-weight:800;font-display:swap;unicode-range:U+0030;src:url(/fonts/exo-2-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:'Orbitron';font-weight:900;font-display:swap;unicode-range:U+0030;src:url(/fonts/exo-2-latin-800-normal.woff2) format('woff2')}
