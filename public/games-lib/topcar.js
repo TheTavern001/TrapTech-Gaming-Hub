@@ -2,7 +2,20 @@
 // cfg.mode: 'getaway' (collect cash bags, cops chase), 'derby' (closed arena, ram AI cars, health), 'taxi' (city grid, fares + timer)
 window.TopCar = function (cfg) {
   const WW = cfg.world || 1600, WH = cfg.world || 1600;
-  Kit.run({ id: cfg.id, title: cfg.title, help: cfg.help, bg: cfg.bg || '#14532d',
+  let GND = null, GKEY = null;
+  function ground(g) { if (GND && GKEY === g.obj) return GND; GKEY = g.obj; const cv = document.createElement('canvas'); cv.width = WW; cv.height = WH; const c = cv.getContext('2d'); let s = 5; const R = () => (s = (s * 16807) % 2147483647) / 2147483647; const taxi = cfg.mode === 'taxi';
+    c.fillStyle = taxi ? '#2b2f36' : cfg.mode === 'derby' ? '#a9783a' : '#2f3a2c'; c.fillRect(0, 0, WW, WH);
+    for (let i = 0; i < WW * WH / 380; i++) { c.fillStyle = taxi ? (R() < 0.5 ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.1)') : (R() < 0.5 ? 'rgba(255,230,170,.1)' : 'rgba(70,40,10,.14)'); c.fillRect(R() * WW, R() * WH, 1 + R() * 3, 1 + R() * 2); }
+    if (taxi) { for (let x = 75; x < WW; x += 300) { c.fillStyle = '#e6c04a'; c.fillRect(x - 3, 0, 2, WH); c.fillRect(x + 1, 0, 2, WH); } for (let y = 75; y < WH; y += 300) { c.fillStyle = '#e6c04a'; c.fillRect(0, y - 3, WW, 2); c.fillRect(0, y + 1, WW, 2); }
+      c.fillStyle = 'rgba(245,245,235,.8)'; for (let x = 75; x < WW; x += 300) for (let y = 75; y < WH; y += 300) { for (let k = -48; k <= 48; k += 12) { c.fillRect(x + k - 3, y - 70, 6, 18); c.fillRect(x + k - 3, y + 52, 6, 18); c.fillRect(x - 70, y + k - 3, 18, 6); c.fillRect(x + 52, y + k - 3, 18, 6); } }
+      for (const o of g.obj) if (o.b) { c.fillStyle = '#9097a2'; c.fillRect(o.x - 14, o.y - 14, o.w + 28, o.h + 28); c.fillStyle = '#c5cbd3'; c.fillRect(o.x - 14, o.y - 14, o.w + 28, 3); c.strokeStyle = 'rgba(0,0,0,.2)'; c.lineWidth = 1; for (let k = 0; k < o.w + 28; k += 24) { c.beginPath(); c.moveTo(o.x - 14 + k, o.y - 14); c.lineTo(o.x - 14 + k, o.y + o.h + 14); c.stroke(); } }
+      for (const o of g.obj) if (o.b) CarArt.roof(c, o.x, o.y, o.w, o.h, Math.floor(o.x * 3 + o.y)); else CarArt.tree(c, o.x, o.y, o.r); }
+    else { if (cfg.mode === 'derby') { c.strokeStyle = 'rgba(70,40,10,.3)'; c.lineWidth = 9; c.lineCap = 'round'; for (let i = 0; i < 26; i++) { const cx = R() * WW, cy = R() * WH, rad = 60 + R() * 220; c.beginPath(); c.arc(cx, cy, rad, R() * 6, R() * 6 + 1.6); c.stroke(); } }
+      for (const o of g.obj) if (cfg.mode === 'derby') CarArt.tire(c, o.x, o.y, o.r); else CarArt.tree(c, o.x, o.y, o.r);
+      if (cfg.mode === 'derby') for (let k = 20; k < WW; k += 38) for (const [x, y] of [[k, 18], [k, WH - 18], [18, k], [WW - 18, k]]) CarArt.tire(c, x, y, 17); }
+    if (taxi) { c.strokeStyle = '#d93a2b'; c.lineWidth = 10; c.setLineDash([26, 26]); c.strokeRect(5, 5, WW - 10, WH - 10); c.strokeStyle = '#f5f5f0'; c.lineDashOffset = -26; c.strokeRect(5, 5, WW - 10, WH - 10); c.setLineDash([]); }
+    return (GND = cv); }
+  Kit.run({ id: cfg.id, title: cfg.title, help: cfg.help, bg: cfg.bg || '#14532d', fill: true,
     init(g) { const s0 = cfg.mode === 'taxi' ? 975 : WW / 2; g.car = { x: s0, y: s0, a: -Math.PI / 2, sp: 0, hp: 100 }; g.ai = []; g.obj = []; g.next = 2; g.heat = 1; g.ht = 0; g.time = cfg.mode === 'taxi' ? 45 : 0; g.fares = 0;
       if (cfg.mode === 'taxi') { for (let x = 100; x < WW; x += 300) for (let y = 100; y < WH; y += 300) g.obj.push({ x: x + 50, y: y + 50, w: 150, h: 150, b: true }); newFare(g); }
       else { for (let i = 0; i < (cfg.mode === 'derby' ? 14 : 70); i++) { const x = g.R(60, WW - 60), y = g.R(60, WH - 60); if (Math.hypot(x - WW / 2, y - WH / 2) > 160) g.obj.push({ x, y, r: g.R(14, 28) }); } }
@@ -32,16 +45,13 @@ window.TopCar = function (cfg) {
       g.hud = cfg.mode === 'taxi' ? Math.ceil(g.time) + 's  FARES ' + g.fares : cfg.mode === 'derby' ? 'HP ' + Math.max(0, Math.round(c0.hp)) : 'HEAT ' + Math.floor(g.heat);
     },
     draw(g, c) {
-      const c0 = g.car, ox = g.W / 2 - c0.x, oy = g.H / 2 - c0.y; c.fillStyle = cfg.ground || '#166534'; c.fillRect(0, 0, g.W, g.H); c.save(); c.translate(ox, oy);
-      if (cfg.mode === 'taxi') { c.fillStyle = '#374151'; c.fillRect(0, 0, WW, WH); c.fillStyle = '#e5e7eb'; for (let x = 75; x < WW; x += 300) for (let y = 0; y < WH; y += 40) c.fillRect(x, y, 3, 20); for (let y = 75; y < WH; y += 300) for (let x = 0; x < WW; x += 40) c.fillRect(x, y, 20, 3); }
-      else if (cfg.mode === 'derby') { c.fillStyle = '#a16207'; c.fillRect(0, 0, WW, WH); c.fillStyle = 'rgba(0,0,0,.08)'; for (let i = 0; i < 80; i++) c.fillRect((i * 197) % WW, (i * 331) % WH, 30, 6); }
-      c.strokeStyle = '#ef4444'; c.lineWidth = 8; c.strokeRect(0, 0, WW, WH);
-      for (const o of g.obj) { if (o.b) { c.fillStyle = '#1e293b'; c.fillRect(o.x, o.y, o.w, o.h); c.fillStyle = '#334155'; for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) c.fillRect(o.x + 12 + i * 34, o.y + 12 + j * 34, 22, 22); } else if (cfg.mode === 'derby') { c.fillStyle = '#e5e7eb'; Kit.circ(c, o.x, o.y, o.r, '#1f2937'); Kit.circ(c, o.x, o.y, o.r * 0.5, '#4b5563'); } else { Kit.circ(c, o.x, o.y, o.r, '#15803d'); Kit.circ(c, o.x - o.r * 0.3, o.y - o.r * 0.3, o.r * 0.5, '#22c55e'); } }
-      if (g.bags) for (const b of g.bags) { Kit.glow(c, '#34d399', 12); c.fillStyle = '#34d399'; Kit.rr(c, b.x - 10, b.y - 10, 20, 20, 5); c.fill(); Kit.noGlow(c); g.txt('$', b.x, b.y + 1, 13, '#052e16'); }
-      if (g.fare) { const F = g.fare, t = F.picked ? F.to : F.from; Kit.glow(c, '#fbbf24', 16); c.strokeStyle = '#fbbf24'; c.lineWidth = 4; c.beginPath(); c.arc(t.x, t.y, 30 + Math.sin(g.t * 6) * 4, 0, 7); c.stroke(); Kit.noGlow(c); }
-      const car = (x, y, a, body, roof, siren) => { c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(-14, -8, 32, 20); c.fillStyle = body; Kit.rr(c, -16, -10, 32, 20, 5); c.fill(); c.fillStyle = roof; c.fillRect(-6, -8, 12, 16); if (siren) { c.fillStyle = Math.sin(g.t * 20) > 0 ? '#ef4444' : '#3b82f6'; c.fillRect(-2, -8, 4, 16); } c.restore(); };
-      for (const p of g.ai) if (!p.dead) car(p.x, p.y, p.a, p.cop ? '#f8fafc' : p.c, '#111827', p.cop);
-      car(c0.x, c0.y, c0.a, cfg.carColor || '#f97316', '#1f2937', false); c.restore();
+      const c0 = g.car, ox = g.W / 2 - c0.x, oy = g.H / 2 - c0.y; c.fillStyle = cfg.mode === 'taxi' ? '#12151b' : cfg.mode === 'derby' ? '#2b1d10' : (cfg.ground || '#166534'); c.fillRect(0, 0, g.W, g.H); c.save(); c.translate(ox, oy);
+      c.drawImage(ground(g), 0, 0);
+      if (g.bags) for (const b of g.bags) { const bob = Math.sin(g.t * 5 + b.x) * 2; c.save(); c.shadowColor = '#34d399'; c.shadowBlur = 16; c.fillStyle = '#10b981'; Kit.rr(c, b.x - 11, b.y - 11 + bob, 22, 22, 6); c.fill(); c.restore(); c.fillStyle = '#6ee7b7'; Kit.rr(c, b.x - 11, b.y - 11 + bob, 22, 8, 5); c.fill(); g.txt('$', b.x, b.y + 2 + bob, 14, '#052e16'); }
+      if (g.fare) { const F = g.fare, t = F.picked ? F.to : F.from, pu = 30 + Math.sin(g.t * 6) * 4; c.save(); c.globalCompositeOperation = 'lighter'; const rg = c.createRadialGradient(t.x, t.y, 4, t.x, t.y, pu + 10); rg.addColorStop(0, 'rgba(251,191,36,.05)'); rg.addColorStop(0.8, 'rgba(251,191,36,.3)'); rg.addColorStop(1, 'rgba(251,191,36,0)'); c.fillStyle = rg; c.beginPath(); c.arc(t.x, t.y, pu + 10, 0, 7); c.fill(); c.restore(); c.strokeStyle = '#fbbf24'; c.lineWidth = 3; c.setLineDash([8, 6]); c.lineDashOffset = -g.t * 30; c.beginPath(); c.arc(t.x, t.y, pu, 0, 7); c.stroke(); c.setLineDash([]); g.txt(F.picked ? 'DROP' : 'FARE', t.x, t.y, 11, '#fde68a'); }
+      const kinds = ['sedan', 'suv', 'van'], carAt = (x, y, a, col, kind, o) => CarArt.car(c, x, y, col, Object.assign({ kind, angle: a + Math.PI / 2, scale: 0.72, t: g.t }, o || {}));
+      for (const p of g.ai) if (!p.dead) { const kd = cfg.mode === 'derby' ? 'derby' : p.cop ? 'cop' : kinds[Math.abs(Math.floor((p.c || '#000').charCodeAt(2) + (p.x > 0 ? 1 : 0))) % 3]; carAt(p.x, p.y, p.a, p.cop ? '#f8fafc' : p.c, kd, { siren: p.cop }); }
+      carAt(c0.x, c0.y, c0.a, cfg.carColor || '#f97316', cfg.mode === 'taxi' ? 'taxi' : cfg.mode === 'derby' ? 'derby' : 'sedan', { brake: !!(g.keys.ArrowDown || g.keys.s || (g.ptr.down && g.ptr.y > g.H - 140)) }); c.restore();
       if (g.fare) { const F = g.fare, t = F.picked ? F.to : F.from; const a = Math.atan2(t.y - c0.y, t.x - c0.x); if (Math.hypot(t.x - c0.x, t.y - c0.y) > 160) { c.save(); c.translate(g.W / 2 + Math.cos(a) * 80, g.H / 2 + Math.sin(a) * 80); c.rotate(a); c.fillStyle = '#fbbf24'; c.beginPath(); c.moveTo(16, 0); c.lineTo(-8, -10); c.lineTo(-8, 10); c.fill(); c.restore(); } }
       if (cfg.mode === 'derby') { c.fillStyle = '#1d2a66'; c.fillRect(20, 46, g.W - 40, 8); c.fillStyle = c0.hp > 30 ? '#34d399' : '#ef4444'; c.fillRect(20, 46, (g.W - 40) * Math.max(0, c0.hp) / 100, 8); }
     } });
