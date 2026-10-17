@@ -1,3 +1,12 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W;
+  // camera flashes in the crowd
+  for (let i = 0; i < 9; i++) { const ph = (t * 0.9 + i * 0.37) % 2.6; if (ph < 0.12) { const x = (i * 83 + 40) % W, y = 135 + (i * 29) % 70; c.globalCompositeOperation = 'lighter'; const gl = c.createRadialGradient(x, y, 1, x, y, 26); gl.addColorStop(0, 'rgba(255,255,255,.95)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gl; c.beginPath(); c.arc(x, y, 26, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over'; } }
+  // ring bell on right post, swinging
+  const bx = W - 38, by = 238; c.save(); c.translate(bx, by); c.fillStyle = '#4a4a4a'; c.fillRect(-2, -14, 4, 14); c.rotate(Math.sin(t * 7) * (g.bellT > 0 ? 0.35 : 0.04)); const bg2 = c.createLinearGradient(-9, 0, 9, 0); bg2.addColorStop(0, '#f6d56a'); bg2.addColorStop(0.5, '#c8941a'); bg2.addColorStop(1, '#7a5508'); c.fillStyle = bg2; c.beginPath(); c.moveTo(-9, 12); c.quadraticCurveTo(-9, -2, 0, -4); c.quadraticCurveTo(9, -2, 9, 12); c.closePath(); c.fill(); c.fillStyle = '#5a3d08'; c.beginPath(); c.arc(0, 13, 2.4, 0, 7); c.fill(); c.restore();
+  // overhead arena lights
+  c.globalCompositeOperation = 'lighter'; for (const x of [W * 0.2, W * 0.5, W * 0.8]) { const lg = c.createRadialGradient(x, 0, 2, x, 0, 120); lg.addColorStop(0, 'rgba(255,240,210,.28)'); lg.addColorStop(1, 'rgba(255,240,210,0)'); c.fillStyle = lg; c.fillRect(x - 120, 0, 240, 150); }
+} })(); // v8 scenery+sprite overlay
 // Knockout Ring - original Punch-Out!!-style boxing (Hub build, Combat). Your boxer is seen from behind; the opponent telegraphs every
 // attack (eye flash + wind-up). Dodge left/right (swipe or A/D / arrows) or block (hold the bottom / S / down), then counter while he
 // is open: tap the upper half (left/right hand by side, or J/K). Hits during his recovery are counters (x2, stun meter). KO him to
