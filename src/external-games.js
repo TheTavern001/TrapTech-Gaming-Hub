@@ -24,9 +24,11 @@ async function loadGames() {
 
   const games = [];
 
+  // GameArter: paginate to 500+ (limit 100, offset pages)
   try {
-    const ga = await fetchJson('https://www.gamearter.com/api/v1/catalog/games?limit=200');
-    if (ga && ga.games) {
+    for (let offset = 0; offset < 600; offset += 100) {
+      const ga = await fetchJson(`https://www.gamearter.com/api/v1/catalog/games?limit=100&offset=${offset}`);
+      if (!ga || !ga.games || !ga.games.length) break;
       for (const g of ga.games) {
         games.push({
           id: 'ga-' + g.slug,
@@ -38,11 +40,13 @@ async function loadGames() {
           mobile: g.platforms && g.platforms.mobile
         });
       }
+      if (ga.games.length < 100) break;
     }
   } catch (e) { console.error('GameArter fetch failed', e.message); }
 
+  // GameDistribution: higher amount + page if needed
   try {
-    const gd = await fetchJson('https://catalog.api.gamedistribution.com/api/v2.0/rss/All/?format=json&amount=100');
+    const gd = await fetchJson('https://catalog.api.gamedistribution.com/api/v2.0/rss/All/?format=json&amount=200');
     if (Array.isArray(gd)) {
       for (const g of gd) {
         const embed = 'https://embed.gamedistribution.com/?url=' + encodeURIComponent(g.Url);
@@ -60,8 +64,19 @@ async function loadGames() {
     }
   } catch (e) { console.error('GameDistribution fetch failed', e.message); }
 
-  cache = { games, fetchedAt: now };
-  return games;
+  // Deduplicate by title (case-insensitive)
+  const seen = new Set();
+  const unique = [];
+  for (const g of games) {
+    const key = g.title.toLowerCase().trim();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(g);
+    }
+  }
+
+  cache = { games: unique, fetchedAt: now };
+  return unique;
 }
 
 module.exports = { loadGames };
