@@ -11,7 +11,7 @@ const SOURCES = {
 };
 const T = (slug, title, ref, cat, tier, comp, rate, give, scoring, evlen, src) => ({ slug, title, ref, cat, tier, comp, rate, give, scoring, evlen, src: src || 'built' });
 const LIST = [
-  // ---- Core A+ (cleaned, upgraded scoring notes) ----
+  // ---- Core A+ (cleaned) ----
   T('block-drop', 'Block Drop', 'Tetris', 6, 'A+', 'endless', 220, true, 'Lines 100/300/500/800 x level + soft drop', '3-7 days'),
   T('maze-muncher', 'Maze Muncher', 'Pac-Man', 10, 'A+', 'endless', 260, true, 'Dots 10, power 50, ghosts 200-1600, mazes repeat faster', '3-7 days'),
   T('alien-rows', 'Alien Rows', 'Space Invaders', 5, 'A+', 'endless', 140, true, 'Aliens 10-30, saucer 100-300, wave bonus', '3 days'),
@@ -29,7 +29,7 @@ const LIST = [
   T('cube-horde', 'Cube Horde', 'Zombie Cubes', 4, 'A+', 'endless', 120, true, 'Kills 10-50 x combo, wave bonus', '3 days'),
   T('arrow-hero', 'Arrow Hero', 'Archero', 4, 'A', 'endless', 400, true, 'Kill 25, boss 1000, room clear 100 x room', '3 days'),
   T('grid-wars', 'Grid Wars', 'Geometry Wars', 4, 'A+', 'endless', 400, true, 'Enemies 25-150 x multiplier', '3 days'),
-  // ---- A tier (cleaned of retired duplicates) ----
+  // ---- A tier ----
   T('moon-swarm', 'Moon Swarm', 'Vampire Survivors', 4, 'A', 'endless', 150, true, 'Kills 10-80 (enemy tier), uncapped survival', '3 days'),
   T('throttle-rider', 'Throttle Rider', 'Traffic Rider', 1, 'A', 'endless', 60, true, 'Distance + near-miss chains (first-person)', '3 days'),
   T('goo-tower', 'Goo Tower', 'World of Goo', 2, 'A', 'endless', 20, true, 'Peak tower height in m (wind grows)', '3 days'),
@@ -49,7 +49,7 @@ const LIST = [
   T('mine-sweep', 'Mine Sweep', 'Minesweeper', 6, 'A', 'endless-levels', 120, true, '1 per cell + board clear speed bonus', '7 days'),
   T('knife-toss', 'Knife Toss', 'Knife Hit', 7, 'A', 'endless', 80, true, 'Knife 10, apple 50, stage 100 x stage', '3 days'),
   T('mole-whack', 'Mole Whack', 'Whac-A-Mole', 7, 'A', 'endless', 120, true, 'Critter 10, gold 50, combo x5; hits refill the clock (+0.6s / gold +2s), drain speeds up', '1-3 days'),
-  // Cannabis themed (kept, upgraded notes)
+  // Cannabis themed
   T('grow-op', 'Grow Op', 'Cannabis grow sim', 11, 'C', 'endless', 60, true, 'Harvest 40-150 by ripeness x health, pests 5; ends when 3 plants die', '3 days'),
   T('trim-rush', 'Trim Rush', 'Cannabis trimming speed game', 11, 'C', 'endless', 120, true, 'Leaf 10-30 combo, clean trim bonus; trims refill the clock, bud slice -3s', '1-3 days'),
   T('strain-crush', 'Strain Crush', 'Strain match-3', 11, 'C', 'endless', 400, true, '10 per gem x cascade chain; matches refill the clock', '3 days'),
@@ -77,7 +77,7 @@ const LIST = [
   T('hoop-streak', 'Hoop Streak', 'Basketball Shot', 9, 'B', 'endless', 400, true, 'Make 100/150 (2/3 pt) x1.5 swish x2 fire', '3 days'),
   T('kickflip-city', 'Kickflip City', 'Skateboard Tricks', 9, 'B', 'endless', 900, true, 'Combo = trick/grind points x tricks in combo, banked on clean landing', '3 days'),
   T('tile-twin', 'Tile Twin', 'Mahjong Solitaire', 6, 'B', 'endless', 150, true, 'Pair 20 x combo up to 6 + 5 x layout, clear 500 x layout', '3 days'),
-  // Remaining runners / driving (duplicates removed)
+  // Remaining runners / driving
   T('tunnel-hop', 'Tunnel Hop', 'Tunnel Runner', 0, 'A', 'endless', 40, true, 'Distance m', '3 days'),
   T('no-brakes', 'No Brakes', 'Faily Brakes', 1, 'A', 'endless', 80, true, 'Distance + cars passed 10', '3 days'),
   T('cab-rush', 'Cab Rush', 'Crazy Taxi', 1, 'A', 'endless', 40, true, 'Fares 50 + speed bonus; time extends per fare', '3 days'),
@@ -90,29 +90,28 @@ const LIST = [
   T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'endless', 100, true, 'Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame', '1-3 days'),
   T('neon-circuit', 'Neon Circuit', 'Neon Arcade Racer', 1, 'A', 'endless', 120, true, 'Energy cells 30–125 by combo; near-miss 5', '3 days'),
   T('rift-survival', 'Rift Survival', 'Arena Survival', 4, 'A', 'endless', 180, true, 'Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop', '3 days'),
-  // ---- 20 NEW finished open-source titles ----
-  T('snake-dash', 'Snake Dash', 'Classic Snake', 7, 'A', 'endless', 30, true, 'Length growth + speed bonus', '1-3 days', 'opensource'),
-  T('pong-rally', 'Pong Rally', 'Classic Pong', 9, 'A', 'endless', 50, true, 'Points per rally, first to 7', '1-3 days', 'opensource'),
-  T('brick-smash', 'Brick Smash', 'Breakout', 6, 'A', 'endless', 150, true, 'Bricks 10-50 by color, clear bonus', '3 days', 'opensource'),
-  T('flap-flight', 'Flap Flight', 'Flappy Bird style', 0, 'A', 'endless', 20, true, 'Pipes passed', '1-3 days', 'opensource'),
-  T('memory-flip', 'Memory Flip', 'Memory Match', 6, 'B', 'endless', 80, true, 'Pairs matched x speed', '3 days', 'opensource'),
-  T('tic-strike', 'Tic Strike', 'Tic-Tac-Toe', 6, 'B', 'endless', 40, true, 'Wins + speed', '1-3 days', 'opensource'),
-  T('connect-line', 'Connect Line', 'Connect Four', 6, 'B', 'endless', 60, true, 'Wins + chain length', '3 days', 'opensource'),
-  T('hang-word', 'Hang Word', 'Hangman', 6, 'B', 'endless', 30, true, 'Words solved + remaining lives', '3 days', 'opensource'),
-  T('rock-paper', 'Rock Paper', 'Rock Paper Scissors', 7, 'B', 'endless', 25, true, 'Wins x streak', '1-3 days', 'opensource'),
-  T('sudoku-grid', 'Sudoku Grid', 'Sudoku', 6, 'A', 'endless-levels', 100, true, 'Board clear speed + difficulty', '7 days', 'opensource'),
-  T('checker-board', 'Checker Board', 'Checkers', 6, 'B', 'endless', 70, true, 'Captures + wins', '3-7 days', 'opensource'),
-  T('solitaire-stack', 'Solitaire Stack', 'Klondike Solitaire', 6, 'B', 'endless', 90, true, 'Cards moved + foundation', '3-7 days', 'opensource'),
-  T('spider-weave', 'Spider Weave', 'Spider Solitaire', 6, 'B', 'endless', 80, true, 'Sequences completed', '3-7 days', 'opensource'),
-  T('bounce-ball', 'Bounce Ball', 'Bounce / Breakout variant', 6, 'A', 'endless', 120, true, 'Bricks + combo', '3 days', 'opensource'),
-  T('defender-wave', 'Defender Wave', 'Defender', 5, 'A', 'endless', 160, true, 'Aliens destroyed + human saves', '3 days', 'opensource'),
-  T('typing-rush', 'Typing Rush', 'Typing Test', 7, 'B', 'endless', 15, true, 'WPM x accuracy', '1-3 days', 'opensource'),
-  T('simon-glow', 'Simon Glow', 'Simon Says', 6, 'B', 'endless', 100, true, 'Sequence length x speed', '1-3 days', 'opensource'),
-  T('whack-mole', 'Whack Mole', 'Whac-A-Mole', 7, 'A', 'endless', 110, true, 'Hits x combo, misses penalize', '1-3 days', 'opensource'),
-  T('piano-keys', 'Piano Keys', 'Piano Tiles style', 6, 'B', 'endless', 25, true, 'Tiles hit by timing', '3 days', 'opensource'),
-  T('asteroid-belt', 'Asteroid Belt', 'Asteroids', 5, 'A+', 'endless', 170, true, 'Rocks destroyed + UFO', '3 days', 'opensource'),
+  // ---- 20 NEW catalog-style titles (idle, merge, stickman, defense, casual) ----
+  T('mahjong-meadow', 'Mahjong Meadow', 'Mahjong Solitaire', 6, 'A', 'endless', 140, true, 'Pairs matched x combo + layout clear', '3 days', 'opensource'),
+  T('bubble-odyssey', 'Bubble Odyssey', 'Bubble Shooter', 6, 'A', 'endless', 180, true, 'Bubbles cleared x chain + level bonus', '3 days', 'opensource'),
+  T('idle-coffee', 'Idle Coffee Empire', 'Idle Tycoon', 10, 'A', 'endless', 40, true, 'Coins earned + upgrades', '3-7 days', 'opensource'),
+  T('parking-sim', 'Parking Practice', 'Parking Simulator', 1, 'A', 'endless', 50, true, 'Successful parks + speed + style', '3 days', 'opensource'),
+  T('merge-garden', 'Merge Garden', 'Merge Game', 6, 'A', 'endless', 90, true, 'Merges completed + chain bonus', '3 days', 'opensource'),
+  T('twin-tiles', 'Twin Tiles', 'Tile Match', 6, 'A', 'endless', 100, true, 'Matches x speed + combo', '1-3 days', 'opensource'),
+  T('stickman-jump', 'Stickman Jump', 'Endless Jumper', 0, 'A', 'endless', 35, true, 'Height + platforms + pickups', '3 days', 'opensource'),
+  T('zombie-defense', 'Zombie Idle Defense', 'Idle Tower Defense', 3, 'A', 'endless-waves', 130, true, 'Kills + wave bonus + upgrades', '7 days', 'opensource'),
+  T('stickman-plane', 'Stickman Airplane', 'Endless Flyer', 0, 'A', 'endless', 45, true, 'Distance + obstacles cleared', '3 days', 'opensource'),
+  T('fruit-bounce', 'Fruit Bounce', 'Bounce / Fruit Ninja style', 7, 'A', 'endless', 110, true, 'Fruits sliced x combo', '1-3 days', 'opensource'),
+  T('drive-zone', 'Drive Zone', 'Endless Driver', 1, 'A', 'endless', 55, true, 'Distance + near-misses + coins', '3 days', 'opensource'),
+  T('block-fit', 'Block Fit', 'Block Puzzle', 6, 'A', 'endless', 70, true, 'Lines cleared + fits', '3 days', 'opensource'),
+  T('geometry-parkour', 'Geometry Parkour', 'Parkour Runner', 0, 'A', 'endless', 30, true, 'Distance + obstacles', '3 days', 'opensource'),
+  T('ragdoll-express', 'Ragdoll Express', 'Physics Runner', 0, 'A', 'endless', 40, true, 'Distance + flips', '3 days', 'opensource'),
+  T('step-box', 'Step Box', 'Platformer', 0, 'A', 'endless', 25, true, 'Boxes stacked + height', '3 days', 'opensource'),
+  T('word-tictac', 'Word Tic Tac Toe', 'Word Puzzle', 6, 'B', 'endless', 60, true, 'Words formed + wins', '3 days', 'opensource'),
+  T('heart-forge', 'Heart Forge', 'Merge / Idle', 6, 'A', 'endless', 80, true, 'Merges + production', '3-7 days', 'opensource'),
+  T('woody-hexa', 'Woody Hexa', 'Hex Puzzle', 6, 'A', 'endless', 75, true, 'Hexes cleared x combo', '3 days', 'opensource'),
+  T('boxing-legend', 'Boxing Legend', 'Boxing', 8, 'A', 'endless', 200, true, 'Hits + KOs + stamina', '3 days', 'opensource'),
+  T('silent-asylum', 'Silent Asylum', 'Horror Survival', 4, 'A', 'endless', 90, true, 'Survival time + escapes', '3 days', 'opensource'),
 ];
-// Cleaned: removed close duplicates (wreck-ride, egg-roll, monster-crush, rig-rally, dune-glide, drift-king) that were consolidated.
 const OWNER_RETIRED = Object.freeze({});
 const games = LIST.map(x => {
   const s = SOURCES[x.src] || SOURCES.built;
