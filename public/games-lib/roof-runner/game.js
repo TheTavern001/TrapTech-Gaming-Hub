@@ -15,7 +15,7 @@ Kit.run({ id: 'gl-roof-runner', title: 'ROOF RUNNER', fill: true, help: 'Tap to 
       g.roofs.push({ x, w, y, k: g.RI(0, 5) }); if (g.rnd() < 0.45 && w > 300) g.box.push({ x: x + g.R(110, w - 90), y }); }
     const was = p.on; p.on = false;
     for (const r of g.roofs) if (96 + 6 > r.x && 96 - 6 < r.x + r.w) {
-      if (oy <= r.y + 1 && p.y >= r.y && p.vy >= 0) { p.y = r.y; p.vy = 0; p.on = true; const edge = Math.min(96 - r.x, r.x + r.w - 96); if (!was) { p.sq = 1; g.sfx('thud'); for (let i = 0; i < 8; i++) g.dust.push({ x: 96, y: r.y, vx: g.R(-120, 40), vy: g.R(-90, -20), l: 0.5 }); if (r.x > -2 && 96 - r.x < 26 && 96 - r.x > -10) { g.cl++; g.add(5, 'close'); g.float('CLOSE +5', 96, r.y - 70, '#fde047'); } } }
+      if (oy <= r.y + 1 && p.y >= r.y && p.vy >= 0) { p.y = r.y; p.vy = 0; p.on = true; const edge = Math.min(96 - r.x, r.x + r.w - 96); if (!was) { p.sq = 1; g.sfx('thud'); for (let i = 0; i < 8; i++) g.dust.push({ x: 96, y: r.y, vx: g.R(-120, 40), vy: g.R(-90, -20), l: 0.5 }); if (r.x > -2 && 96 - r.x < 26 && 96 - r.x > -10) { g.cl++; g.add(5, 'close'); g.float(96, r.y - 80, 'CLOSE +5', '#fde047', 16); } } }
       else if (p.y > r.y + 8 && oy > r.y + 8 && 96 > r.x - 2 && 96 < r.x + 10) { g.sfx('hit'); g.shake(10); g.flash('#fff'); return g.end('Hit a wall'); } }
     for (const b of g.box) if (!b.hit && Math.abs(b.x - 96) < 20 && p.y > b.y - 30) { b.hit = true; g.sp *= 0.82; g.sfx('bad'); g.burst(b.x, b.y - 14, '#a16207', 14, 170); g.shake(5); }
     if (p.on && g.rnd() < 0.5) g.dust.push({ x: 90, y: p.y, vx: g.R(-160, -60), vy: g.R(-40, -5), l: 0.35 });
