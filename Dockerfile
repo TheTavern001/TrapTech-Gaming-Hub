@@ -9,3 +9,4 @@ COPY src ./src
 COPY public ./public
 EXPOSE 8787
 CMD ["node", "src/start-with-external.js"]
+# clean deploy
