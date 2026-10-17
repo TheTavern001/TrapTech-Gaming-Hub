@@ -1,3 +1,10 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t;
+  // umpire chair + umpire at the net post
+  c.save(); c.translate(64, 300); c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(6, 50, 22, 6, 0, 0, 7); c.fill(); c.strokeStyle = '#d6d9de'; c.lineWidth = 4; c.beginPath(); c.moveTo(-10, 10); c.lineTo(-14, 50); c.moveTo(12, 10); c.lineTo(16, 50); c.moveTo(-12, 30); c.lineTo(14, 30); c.stroke(); c.fillStyle = '#2b2f36'; Kit.rr(c, -16, 4, 32, 8, 3); c.fill(); c.fillStyle = '#3a5ea8'; Kit.rr(c, -9, -14, 18, 20, 5); c.fill(); c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(0, -20, 7, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(0, -23, 7.5, Math.PI, 0); c.fill(); c.fillRect(-9, -23, 18, 2); c.strokeStyle = '#f0c8a0'; c.lineWidth = 3; c.beginPath(); c.moveTo(-8, -8); c.lineTo(-13 + Math.sin(t * 0.8) * 2, 2); c.stroke(); c.restore();
+  // ball kid crouching by the far corner
+  c.save(); c.translate(318, 292); const kb = Math.sin(t * 2) * 1; c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(2, 16, 12, 4, 0, 0, 7); c.fill(); c.fillStyle = '#e8c21f'; Kit.rr(c, -8, -6 + kb, 16, 16, 5); c.fill(); c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(0, -12 + kb, 6, 0, 7); c.fill(); c.fillStyle = '#16a34a'; c.beginPath(); c.arc(0, -14 + kb, 6.5, Math.PI, 0); c.fill(); c.fillRect(0, -15 + kb, 9, 2); c.fillStyle = '#d7ff3b'; c.beginPath(); c.arc(12, 12, 3.2, 0, 7); c.fill(); c.restore();
+} })(); // v8 scenery+sprite overlay
 // Rally Court - original tennis rally game (Hub build, Sports; ref Tennis rally challenges). Drag or arrows to move along the baseline.
 // The racket swings automatically when the ball reaches you: where it meets the racket aims the shot (hit it on your left side to
 // go cross-court right). Sweet-spot hits fly faster. Win points by beating the rival; every return scores, rallies multiply. 3 lives.

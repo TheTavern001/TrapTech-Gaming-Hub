@@ -1,3 +1,10 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W;
+  // overhead scoring monitor with animated pins + neon lane strips
+  c.save(); const mx = W / 2 - 80, my = 150, mw = 160, mh = 46; c.fillStyle = '#0a0f1c'; Kit.rr(c, mx, my, mw, mh, 8); c.fill(); c.strokeStyle = '#7a5cff'; c.lineWidth = 2; c.shadowColor = '#7a5cff'; c.shadowBlur = 12; c.stroke(); c.shadowBlur = 0;
+  for (let i = 0; i < 10; i++) { const px = mx + 16 + i * 14.2, up = Math.sin(t * 2.4 + i * 0.7) > -0.2; c.globalAlpha = up ? 1 : 0.25; c.fillStyle = '#f8fafc'; c.beginPath(); c.ellipse(px, my + 22, 3.2, 7, 0, 0, 7); c.fill(); c.fillStyle = '#ef4444'; c.fillRect(px - 2.4, my + 18, 4.8, 1.6); } c.globalAlpha = 1; c.fillStyle = '#9dff7a'; c.font = 'bold 9px monospace'; c.textAlign = 'center'; c.fillText('FRAME ' + (Math.floor(t / 4) % 10 + 1) + ' \u2618', W / 2, my + 40); c.restore();
+  c.globalCompositeOperation = 'lighter'; for (const s of [-1, 1]) { const g2 = c.createLinearGradient(s < 0 ? 0 : W, 0, s < 0 ? 60 : W - 60, 0); g2.addColorStop(0, 'rgba(120,80,255,.28)'); g2.addColorStop(1, 'rgba(120,80,255,0)'); c.fillStyle = g2; c.fillRect(s < 0 ? 0 : W - 60, 210, 60, 570); }
+} })(); // v8 scenery+sprite overlay
 // Pin Strike - original bowling game (Hub build). Perspective lane, top-down circle physics for ball and pins (sub-stepped impulses, pins topple
 // when hit and keep scattering). Swipe to bowl: horizontal start drag positions, swipe direction aims, sideways curve of the swipe adds hook,
 // swipe speed = power. Endless frames with real strike/spare bonuses; any frame under 7 pins costs a life (3).
