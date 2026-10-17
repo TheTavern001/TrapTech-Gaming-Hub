@@ -106,7 +106,9 @@ const openPrestigeOrder = (userId, id) => !!db.prepare("SELECT 1 FROM store_orde
 // ---------- settings / provider ----------
 const setting = (k, d) => { const r = db.prepare('SELECT value FROM settings WHERE key=?').get(k); try { return r ? JSON.parse(r.value) : d; } catch { return d; } };
 const setSetting = (k, v) => db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at').run(k, JSON.stringify(v), Date.now());
-const ADDR = () => String(process.env.BTC_ADDRESS || '').trim();
+// Reese's receiving address (watch-only, public). BTC_ADDRESS overrides it; checkout is still OFF until the admin switches it on.
+const DEFAULT_BTC_ADDRESS = '32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB';
+const ADDR = () => String(process.env.BTC_ADDRESS || DEFAULT_BTC_ADDRESS).trim();
 // Two independent deployment flags are required; keep originals preview-only until the owner has completed real-device compatibility checks.
 const prestigeSalesEnabled = () => process.env.PRESTIGE_SALES_ENABLED === '1' && process.env.PRESTIGE_COMPATIBILITY_APPROVED === '1';
 function checkoutState() {
