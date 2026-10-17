@@ -1,4 +1,5 @@
 import { ls } from './store.js';
+import { halo } from './games/kit.js';
 import { Telemetry, loadAtlas, loadLayers, spr, sprC, coinFrame, drawFlame, reducedMotion } from './games/engine.js';
 // Jetpack Dash - original HTML5 canvas side-scroller for The Gaming Hub.
 // Code: original. Sounds: Kenney (CC0). v6 art: original Blender-rendered astronaut (run/fly/hit/idle frames), saw blades, zapper
@@ -300,7 +301,7 @@ export class JetpackDash {
   draw() {
     const ctx = this.ctx; const s = this.scale;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = '#05060f'; ctx.fillRect(0, 0, this.c.width, this.c.height);
+    { const bg = ctx.createLinearGradient(0, 0, 0, this.c.height); bg.addColorStop(0, '#05060f'); bg.addColorStop(0.35, '#150a38'); bg.addColorStop(0.5, '#2a1060'); bg.addColorStop(0.65, '#150a38'); bg.addColorStop(1, '#05060f'); ctx.fillStyle = bg; ctx.fillRect(0, 0, this.c.width, this.c.height); }
     let sx = 0, sy = 0; if (this.shake > 0) { sx = rnd(-6, 6); sy = rnd(-6, 6); }
     ctx.setTransform(s, 0, 0, s, this.ox + sx * s, this.oy + sy * s);
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, this.W, H); ctx.clip();
@@ -310,7 +311,8 @@ export class JetpackDash {
     for (const o of this.obs) o.type === 'zap' ? this._drawZap(ctx, o) : this._drawSaw(ctx, o);
     this._drawPlayer(ctx);
     for (const m of this.missiles) this._drawMissile(ctx, m);
-    for (const q of this.parts) { ctx.globalAlpha = Math.max(0, q.life / q.max); ctx.fillStyle = q.c; ctx.fillRect(q.x - q.s / 2, q.y - q.s / 2, q.s, q.s); }
+    for (const q of this.parts) { halo(ctx, q.c, q.x, q.y, q.s * 3.2, Math.max(0, q.life / q.max)); }
+    if (this.state === 'play' && this.mps > 14) { ctx.strokeStyle = 'rgba(180,200,255,.16)'; ctx.lineWidth = 1.5; ctx.beginPath(); const k = (this.t * 900) % 400; for (let i = 0; i < 9; i++) { const y = CEIL + 30 + ((i * 97) % (H - FLOOR - CEIL - 60)), x = this.W - ((k + i * 173) % (this.W + 200)); ctx.moveTo(x, y); ctx.lineTo(x + 60 + this.mps * 2, y); } ctx.stroke(); }
     ctx.globalAlpha = 1;
     this._drawHud(ctx);
     if (this.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${this.flash})`; ctx.fillRect(0, 0, this.W, H); }
@@ -414,6 +416,7 @@ export class JetpackDash {
     ctx.restore();
   }
   _drawCoin(ctx, c) {
+    halo(ctx, "#fbbf24", c.x, c.y, 26, 0.45);
     if (V6.props && sprC(ctx, V6.props, coinFrame(this.t, c.ph), c.x, c.y, 30, 30)) return;
     const sx = Math.abs(Math.cos(this.t * 4 + c.ph)) * 0.8 + 0.2;
     ctx.save(); ctx.translate(c.x, c.y); ctx.scale(sx, 1);
@@ -428,21 +431,19 @@ export class JetpackDash {
     ctx.restore();
   }
   _drawHud(ctx) {
-    ctx.save();
-    ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#7c4dff'; ctx.shadowBlur = 10;
-    ctx.font = '900 34px Orbitron, sans-serif';
-    const sc = this.state === 'dying' || this.state === 'over' ? this.finalScore : this.score;
-    ctx.fillText(`${sc.toLocaleString('en-US')}m`, 18, CEIL + 42);
-    ctx.shadowBlur = 0; ctx.font = '600 15px "Exo 2", sans-serif'; ctx.fillStyle = '#b9b3ff';
-    ctx.fillText(`BEST ${Math.max(this.best, sc).toLocaleString('en-US')}m`, 20, CEIL + 64);
-    if (V6.props && V6.props.f.coin_0) spr(ctx, V6.props, 'coin_0', 16, CEIL + 73, 22, 22); else if (IMG.coin) ctx.drawImage(IMG.coin, 18, CEIL + 74, 18, 20);
-    ctx.fillStyle = '#ffe066'; ctx.font = '700 17px Orbitron, sans-serif'; ctx.fillText(String(this.coins), 42, CEIL + 91);
-    if (this.p.shield) { ctx.fillStyle = '#4fc3ff'; ctx.font = '700 13px Orbitron, sans-serif'; ctx.fillText('SHIELD', 20, CEIL + 114); }
+    ctx.save(); const sc = this.state === 'dying' || this.state === 'over' ? this.finalScore : this.score;
+    const g = ctx.createLinearGradient(0, 0, 0, 100); g.addColorStop(0, 'rgba(26,22,66,.78)'); g.addColorStop(1, 'rgba(6,14,38,.72)');
+    roundRect(ctx, 10, CEIL + 8, 190, 98, 16); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = 'rgba(139,92,246,.55)'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.textAlign = 'left'; ctx.font = '900 34px Orbitron, sans-serif'; ctx.strokeStyle = 'rgba(124,77,255,.4)'; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.strokeText(`${sc.toLocaleString('en-US')}m`, 22, CEIL + 50); ctx.fillStyle = '#fff'; ctx.fillText(`${sc.toLocaleString('en-US')}m`, 22, CEIL + 50);
+    ctx.font = '600 14px "Exo 2", sans-serif'; ctx.fillStyle = '#b9b3ff'; ctx.fillText(`BEST ${Math.max(this.best, sc).toLocaleString('en-US')}m`, 24, CEIL + 72);
+    if (V6.props && V6.props.f.coin_0) spr(ctx, V6.props, 'coin_0', 22, CEIL + 91, 20, 20); else if (IMG.coin) ctx.drawImage(IMG.coin, 24, CEIL + 82, 18, 20);
+    ctx.fillStyle = '#ffe066'; ctx.font = '700 16px Orbitron, sans-serif'; ctx.fillText(String(this.coins), 42, CEIL + 97);
+    if (this.p.shield) { ctx.fillStyle = '#4fc3ff'; ctx.font = '700 12px Orbitron, sans-serif'; ctx.fillText('SHIELD', 110, CEIL + 97); }
     ctx.restore();
   }
   _drawCenterText(ctx, title, sub) {
     ctx.save(); ctx.fillStyle = 'rgba(5,6,20,0.45)'; ctx.fillRect(0, 0, this.W, H);
-    ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 18;
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,229,255,.35)'; ctx.lineWidth = 8; ctx.lineJoin = 'round'; ctx.font = '900 44px Orbitron, sans-serif'; ctx.strokeText(title, this.W / 2, H / 2 - 8);
     ctx.font = '900 44px Orbitron, sans-serif'; ctx.fillText(title, this.W / 2, H / 2 - 8);
     ctx.shadowBlur = 0; ctx.fillStyle = '#c9c4ff'; ctx.font = '600 18px "Exo 2", sans-serif'; ctx.fillText(sub, this.W / 2, H / 2 + 26);
     ctx.restore();

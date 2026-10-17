@@ -1,7 +1,8 @@
 // Grow Guard - original endless lane-defense game (v7). Pests crawl in from the right along 5 rows of soil beds; place
 // bug-fighting gadgets to protect the plants on the left. Art: Blender Cycles renders (original models, PBR, HDRI): aphid, mite,
 // gnat, caterpillar, beetle, Ladybug Launcher, Sticky Trap, Neem Mister, UV Zapper, Solar Panel and a flowering plant.
-import { Game, TAU, rnd, clamp, lerp, fmt, roundRect, loadAtlas, loadArt, sprC, softShadow } from './engine.js';
+import { loadAtlas, loadArt, sprC, softShadow } from './engine.js';
+import { Game8, TAU, rnd, clamp, lerp, roundRect, fmt } from './kit.js';
 const ROWS = 5, COLS = 7;
 const GADGETS = {
   launcher: { name: 'Ladybug', cost: 100, hp: 6, spr: 'launcher', tip: 'Shoots ladybugs down the row' },
@@ -11,12 +12,15 @@ const GADGETS = {
   solar: { name: 'Solar Panel', cost: 50, hp: 5, spr: 'solar', tip: 'Makes extra light' },
 };
 const PESTS = { aphid: { hp: 3, sp: 20, pts: 10, size: 46 }, mite: { hp: 4, sp: 26, pts: 15, size: 44 }, gnat: { hp: 2, sp: 42, pts: 20, size: 46, fly: true }, caterpillar: { hp: 9, sp: 15, pts: 30, size: 62 }, beetle: { hp: 20, sp: 12, pts: 60, size: 58 } };
-export class GrowGuard extends Game {
+export class GrowGuard extends Game8 {
+  get accent() { return '#84cc16'; }
+  get musicOpts() { return { root: 60, bpm: 104, mode: 'major', seed: 55, vol: 0.26 }; }
+  burst(x, y, c, n, sp, life, size) { this.fx.burst(x, y, c, Math.ceil(n * 0.8), sp, life, (size || 4) * 2.2); }
   get title() { return 'GROW GUARD'; }
   get hint() { return 'Tap falling light drops to collect light. Tap a gadget card, then tap a tile to place it. Stop the pests before they reach your plants: each pest that gets through costs a plant, and losing all 3 ends the run. The waves never stop.'; }
   async load() { const [G, a] = await Promise.all([loadAtlas('/assets/v7/grow'), loadArt({ bg: '/assets/v7/growroom.webp' })]); this.G = G; this.art = a; }
   layout() { const top = 140, bottom = this.H - 130; this.ch = Math.min(96, (bottom - top) / ROWS); this.cw = (this.W - 70) / COLS; this.gx = 62; this.gy = top + ((bottom - top) - this.ch * ROWS) / 2; this._soil = null; }
-  reset() {
+  reset() { super.reset();
     this.layout(); this.score = 0; this.coins = 0; this.light = 250; this.swarm = Array(ROWS).fill(true); this.swarms = []; this.plants = 3; this.wave = 0; this.tiles = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
     this.pests = []; this.shots = []; this.drops = []; this.sel = null; this.queue = []; this.spawnT = 0; this.dropT = 3; this.between = 3; this.over = 0; this.zaps = [];
   }
@@ -58,7 +62,7 @@ export class GrowGuard extends Game {
       else p.x -= P.sp * (p.slow > 0 ? 0.5 : 1) * Math.min(1.35, 0.7 + this.wave * 0.05) * dt;
       if (p.slow > 0) p.slow -= dt;
       if (p.x < this.gx - 10 && this.swarm[p.r]) { this.swarm[p.r] = false; this.swarms.push({ r: p.r, x: this.gx - 20 }); this.pop(80, this.cy(p.r), 'LADYBUG SWARM!', '#fca5a5', 18); this.sfx.chord([440, 660, 880], 0.2, { type: 'triangle', vol: 0.25 }); }
-      if (p.x < this.gx - 10 && !this.swarms.some(s => s.r === p.r)) { p.hp = 0; p.leak = true; this.plants--; this.sfx.lose(); this.burst(36, this.cy(p.r), ['#84cc16', '#fde047'], 18, 200, 0.6, 4); this.pop(60, this.cy(p.r), 'PLANT LOST', '#f87171', 18); if (this.plants <= 0) { this.over = 1.5; } }
+      if (p.x < this.gx - 10 && !this.swarms.some(s => s.r === p.r)) { p.hp = 0; p.leak = true; this.plants--; this.sfx.lose(); this.fx.shake(10); this.fx.flash('#ef4444', 0.25); this.burst(36, this.cy(p.r), ['#84cc16', '#fde047'], 18, 200, 0.6, 4); this.pop(60, this.cy(p.r), 'PLANT LOST', '#f87171', 18); if (this.plants <= 0) { this.over = 1.5; } }
     }
     // last-line ladybug swarm (once per row): sweeps the whole row clear
     for (const s of this.swarms) { s.x += 420 * dt; for (const p of this.pests) if (p.r === s.r && p.x < s.x + 20 && p.hp > 0) this.damage(p, 999); }
