@@ -1,8 +1,8 @@
 // Core-game kit (v8, original code). Shared by the 13 rebuilt core games: baked glow sprites, pooled additive FX,
 // screen shake / hit-stop / slow-mo, a unified glass HUD + start card in the hub palette, procedural music, atlas packs.
 // Everything is canvas-2D, allocation-light (pooled particles, pre-baked sprites) and capped for mid phones.
-import { Game, TAU, rnd, clamp, lerp, roundRect, fmt, seeded, reducedMotion } from './engine.js';
-export { TAU, rnd, clamp, lerp, roundRect, fmt, seeded, reducedMotion };
+import { Game, TAU, rnd, clamp, lerp, roundRect, fmt, seeded, shuffle, reducedMotion } from './engine.js';
+export { TAU, rnd, clamp, lerp, roundRect, fmt, seeded, shuffle, reducedMotion };
 export const PAL = { bg: '#050714', bg2: '#0a1030', purple: '#8b5cf6', violet: '#a855f7', blue: '#3b82f6', cyan: '#22d3ee', green: '#34d399', gold: '#fbbf24', red: '#ef4444', pink: '#f472b6', text: '#eef0ff', muted: '#9aa3d0' };
 // ---------- atlas packs: /assets/v8/<name>.js = { i: data-URI webp, f: { sprite: [x,y,w,h] } } ----------
 const _packs = {};
@@ -20,9 +20,9 @@ export function spr(ctx, P, name, x, y, w, h, rot = 0, a = 1, flip = false) {
 }
 export const aspect = (P, name) => { const f = P && P.f[name]; return f ? f[3] / f[2] : 1; };
 // ---------- baked glow / light sprites ----------
-const _glow = {};
+const _glow = {}; let _nc = null;
 export function glowSpr(color) {
-  if (color.length === 4) color = '#' + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
+  if (color[0] !== '#' || color.length !== 7) { if (!_nc) _nc = document.createElement('canvas').getContext('2d'); _nc.fillStyle = '#000'; _nc.fillStyle = color; color = _nc.fillStyle; if (color[0] !== '#') color = '#ffffff'; }
   if (_glow[color]) return _glow[color]; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
   const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.18, color); gr.addColorStop(0.5, color + '55'); gr.addColorStop(1, color + '00');
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return (_glow[color] = c);
@@ -101,6 +101,12 @@ export class Music {
 }
 // ---------- Game8: engine Game + FX, shake, hit-stop, HUD, start card, music, death sequence ----------
 export class Game8 extends Game {
+  // cheap neon text: a soft stroke halo instead of shadowBlur (shadowBlur is very slow on software / low-end canvases)
+  text(ctx, s, x, y, { size = 20, weight = 800, color = '#fff', align = 'left', glow = null, font = 'Orbitron', base = 'alphabetic' } = {}) {
+    ctx.font = `${weight} ${size}px ${font === 'Exo' ? '"Exo 2"' : 'Orbitron'}, sans-serif`; ctx.textAlign = align; ctx.textBaseline = base;
+    if (glow) { const ga = ctx.globalAlpha; ctx.globalAlpha = ga * 0.38; ctx.strokeStyle = glow; ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(2.5, size * 0.2); ctx.strokeText(s, x, y); ctx.globalAlpha = ga; }
+    ctx.fillStyle = color; ctx.fillText(s, x, y);
+  }
   get fx() { return this._fx || (this._fx = new Fx()); }
   get musicOpts() { return null; }
   get accent() { return PAL.cyan; }
