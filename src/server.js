@@ -41,6 +41,7 @@ app.use((req, res, next) => {
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') res.setHeader('Strict-Transport-Security', 'max-age=31536000');
   next();
 });
+require('./v8-sec').install(app); // v8: public-page CSP + cross-site request guard
 const PRIVATE_REVIEW = require('./private-review');
 app.use(PRIVATE_REVIEW.makeGate({
   enabled: process.env.HUB_PRIVATE_REVIEW === '1',
