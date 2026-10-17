@@ -15,7 +15,7 @@
   function grade(g, acc) { const pts = Math.round(acc * 100); let lbl, col; if (acc >= 0.9) { g.streak++; lbl = 'PERFECT'; col = '#7dff6a'; g.sfx('coin'); if (navigator.vibrate) navigator.vibrate(12); } else if (acc >= 0.6) { g.streak = 0; lbl = 'GOOD'; col = '#ffd23f'; g.sfx('pop'); } else if (acc >= 0.25) { g.streak = 0; lbl = 'MEH'; col = '#fb923c'; g.sfx('click'); } else { g.streak = 0; lbl = 'BOTCHED'; col = '#ff5a5a'; g.sfx('bad'); g.shake(6); g.leaves--; }
     const mult = 1 + Math.min(4, Math.floor(g.streak / 3)); g.add(pts * mult, 'step'); g.q.push(acc); g.pop = { t: 0.7, lbl, col, pts: pts * mult, mult }; if (g.leaves <= 0) return g.end('Too many botched rolls');
     g.wait = 0.45; }
-  Kit.run({ id: 'gl-roll-up', title: 'ROLL UP', help: '21+ only. Tap to stop the needle in the zone (GRIND, ROLL, SEAL)\nFILL: hold to pour, release on the line. Perfects build a streak multiplier', bg: '#120a06',
+  Kit.run({ fill: true, id: 'gl-roll-up', title: 'ROLL UP', help: '21+ only. Tap to stop the needle in the zone (GRIND, ROLL, SEAL)\nFILL: hold to pour, release on the line. Perfects build a streak multiplier', bg: '#120a06',
     init(g) { g.order = 0; g.leaves = 3; g.streak = 0; g.done = 0; g.smoke = []; newOrder(g); g.hud = ''; },
     update(g, dt) { const st = STEPS[g.step]; g.bt = Math.max(0, g.bt - dt); if (g.pop) { g.pop.t -= dt; if (g.pop.t <= 0) g.pop = null; }
       for (const s of g.smoke) { s.y -= 30 * dt; s.x += Math.sin(g.t * 2 + s.p) * 12 * dt; s.r += 10 * dt; s.l -= dt * 0.5; } g.smoke = g.smoke.filter(s => s.l > 0);
