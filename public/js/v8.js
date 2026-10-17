@@ -8,6 +8,28 @@ export function install(ctx) {
   let last = '', t = 0; const refresh = () => { const me = C.S && C.S.me; const k = me ? me.id || me.username : ''; if (!k) { link.removeAttribute('href'); last = ''; return; } if (k !== last || Date.now() - t > 45000) { last = k; t = Date.now(); link.href = '/cosmetics-mine.css?u=' + encodeURIComponent(k) + '&t=' + t; } };
   const push = history.pushState; history.pushState = function () { const r = push.apply(this, arguments); setTimeout(refresh, 400); return r; };
   window.addEventListener('popstate', () => setTimeout(refresh, 400)); setTimeout(refresh, 1200);
+  // fill the Featured Brands strip wherever a page leaves a #v8-fb placeholder
+  let pend = 0; new MutationObserver(() => { if (pend) return; pend = setTimeout(() => { pend = 0; const el = document.getElementById('v8-fb'); if (el && !el.dataset.done) { el.dataset.done = '1'; featuredBrands(el); } }, 60); }).observe(document.body, { childList: true, subtree: true });
+}
+const brandDot = (b) => `<span class="v8-bl" style="--bc:${/^#[0-9a-f]{3,8}$/i.test(b.color || '') ? b.color : '#7c3aed'}">${b.logo && /^(\/|https:\/\/)/.test(b.logo) ? `<img src="${C.esc(b.logo)}" alt="" loading="lazy" width="44" height="44">` : C.esc((b.name || '?').slice(0, 1).toUpperCase())}</span>`;
+export async function featuredBrands(el) {
+  const { api, esc, icon } = C; const r = await api('/api/brands/featured'); if (!r.ok || !r.brands.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="section-h"><h2>${icon('store')} Featured Brands</h2></div><div class="hscroll v8-fbs">${r.brands.map(b => `<a class="v8-fb" href="/brand/${esc(b.slug)}">${brandDot(b)}<span><b>${esc(b.name)}</b><small>${b.live ? `${b.live} live giveaway${b.live === 1 ? '' : 's'}` : esc(b.tagline || 'Brand on the Hub')}</small></span></a>`).join('')}</div>`;
+}
+export async function brandPage(slug) {
+  const { api, esc, icon, shell, emptyState, pageHead } = C;
+  shell('/giveaways', '<div class="narrow"><div class="skeleton"></div></div>');
+  const r = await api('/api/brand/' + encodeURIComponent(slug));
+  if (!r.ok) return shell('/giveaways', `<div class="narrow">${emptyState('store', 'Brand not found', 'This brand page is not available.', '<a class="btn sm" href="/giveaways">Giveaways</a>')}</div>`);
+  const b = r.brand; const row = (g) => `<a class="mini-row" href="/giveaways/${g.id}"><b>${esc(g.title)}</b><span class="small muted">${g.audience === 'invite' ? 'Invite only' : g.audience === 'affiliated' ? 'Brand members' : 'Open to all'} · ${new Date(g.end_at).toLocaleDateString()}</span></a>`;
+  const sec = (t, l) => l.length ? `<div class="card pad"><h2>${t}</h2>${l.map(row).join('')}</div>` : '';
+  shell('/giveaways', `<div class="narrow v8-bp">${pageHead(esc(b.name), esc(b.tagline || ''))}
+    <div class="card pad v8-bp-h">${brandDot(b)}<div style="flex:1"><div class="small muted">${b.members} player${b.members === 1 ? '' : 's'} affiliated · ${r.giveaways_hosted} giveaway${r.giveaways_hosted === 1 ? '' : 's'} hosted</div>${b.about ? `<p>${esc(b.about)}</p>` : ''}
+    ${b.link ? `<a class="btn sm ghost" rel="noopener nofollow" target="_blank" href="${esc(b.link.url)}">${icon('external-link')} ${esc(b.link.label)}</a>` : ''}
+    ${r.affiliated ? `<span class="pill green">${icon('check')} Your giveaway affiliation</span>` : `<a class="btn sm" href="/settings#v7-brand">${icon('store')} Set as my giveaway affiliation</a>`}</div></div>
+    ${sec('Live giveaways', r.live)}${sec('Upcoming', r.upcoming)}${sec('Past giveaways', r.past)}
+    ${r.live.length + r.upcoming.length + r.past.length ? '' : emptyState('gift', 'No giveaways yet', 'Giveaways from this brand will appear here.')}
+    <p class="tiny dim">${esc(r.facts_note)}</p></div>`);
 }
 const TIER_IC = { bronze: 'medal', silver: 'medal', gold: 'trophy', epic: 'gem', legendary: 'crown' };
 const PERIOD = { daily: ['Daily', 'sun', 'Resets at midnight ET'], weekly: ['Weekly', 'calendar-range', 'Resets Monday'], seasonal: ['Season', 'flag', 'Lasts the whole season'] };
@@ -60,4 +82,27 @@ export async function fillAchievements(el) {
     draw();
   };
   el.querySelectorAll('.v8-game').forEach(b => b.addEventListener('click', () => open(b.dataset.g)));
+}
+
+// Your data: download everything we hold, or delete the account (password + typed username confirm).
+export function fillData(el) {
+  if (!el || !C || !C.S.me) return; const { api, icon, esc, toast } = C; const name = C.S.me.username;
+  el.innerHTML = `<h2 style="margin-bottom:6px">${icon('shield')} Your data</h2>
+    <p class="small muted">We only keep what the Hub needs: your username, a salted password hash, your date of birth (21+ check), gameplay and purchases. <a href="/privacy">Privacy policy</a></p>
+    <div class="set-row"><div><b>${icon('download')} Download my data</b><div class="small muted">A JSON file with your account, runs, items, orders and sign-in history.</div></div><button class="btn sm ghost" id="v8-export">Download</button></div>
+    <details class="v8-del"><summary class="small"><b>${icon('trash-2')} Delete my account</b></summary>
+      <p class="small muted">This permanently removes your profile, runs, items, Credits and follows. Locked giveaway results keep only your username as a public record. It cannot be undone.</p>
+      <form id="v8-delf"><div id="v8-delmsg"></div><div class="field"><input class="input" id="v8-delname" placeholder="Type your username (${esc(name)})" autocomplete="off" aria-label="Type your username to confirm"></div>
+      <div class="field"><input class="input" id="v8-delpw" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password"></div>
+      <button class="btn danger block" type="submit">Delete my account for good</button></form></details>`;
+  el.querySelector('#v8-export').onclick = async () => {
+    const res = await fetch('/api/me/export', { credentials: 'same-origin' }); if (!res.ok) return toast('Could not export right now. Try again in a minute.');
+    const blob = await res.blob(); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gaming-hub-data.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  };
+  el.querySelector('#v8-delf').onsubmit = async (e) => {
+    e.preventDefault(); const out = el.querySelector('#v8-delmsg');
+    const r = await api('/api/me/delete', { method: 'POST', body: { confirm: el.querySelector('#v8-delname').value, password: el.querySelector('#v8-delpw').value } });
+    if (!r.ok) { out.innerHTML = `<div class="notice err">${esc(r.error || 'Could not delete')}</div>`; return; }
+    toast('Your account was deleted.'); setTimeout(() => { location.href = '/'; }, 800);
+  };
 }

@@ -225,6 +225,7 @@ async function mountBrand() {
 }
 // giveaway pages: the brand/audience pill
 export function audiencePill(g) {
+  if (g && g.audience === 'invite') return `<span class="tier-pill aud brand">${C.icon('lock')}Invite only</span>`;
   if (!g || g.open_to_all !== false || !g.brand) return g && g.brand ? `<span class="tier-pill aud open">${C.icon('globe')}Open to everyone</span>` : '';
   return `<span class="tier-pill aud brand" style="--bc:${C.esc(g.brand.color || '#8b5cf6')}">${C.icon('store')}${C.esc(g.brand.name)} members</span>`;
 }

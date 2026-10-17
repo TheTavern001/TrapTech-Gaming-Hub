@@ -457,6 +457,7 @@ route(/^\/(home)?$/, async () => {
     </section>
     ${takeover ? heroTakeover(takeover) : `<div class="hero"><img src="/assets/brand/hero-banner.webp" alt="The Gaming Hub - Play, Compete, Win, Connect" width="1336" height="400"></div>`}
     ${S.me && q && q.ok ? dailyPanel(q) : !S.me ? `<div class="card pad cta-card"><span class="es-ic">${icon('sparkles')}</span><div style="flex:1"><b>Play free. Win real prizes.</b><div class="small muted">Create a free account so your scores count for giveaways, tournaments and daily quests.</div></div><a class="btn sm" href="/signup">Sign up</a></div>` : ''}
+    <div id="v8-fb"></div>
     ${featuredGw.length ? `<div class="section-h"><h2>${icon('sparkles')} Featured Giveaways</h2><a href="/giveaways">View All</a></div><div class="feat-gw">${featuredGw.map(featCard).join('')}</div>` : ''}
     <div class="section-h"><h2>Featured Games</h2><a href="/games">View All</a></div>
     <div class="hscroll">${featured.map(g => gameCard(g, true)).join('')}</div>
@@ -749,6 +750,7 @@ route(/^\/giveaways$/, async (m, url) => {
   if (S.me) { const f = await api('/api/me/brand'); myBrand = f.ok ? f.brand : null; }
   shell('/giveaways', `<div class="gw-head"><h1>Official Giveaways</h1><div class="gw-head-act"><a class="btn sm" href="/sponsor">${icon('briefcase')} Book a giveaway</a><a class="btn sm ghost" href="/settings#v7-brand">${icon('store')} My giveaway affiliation${myBrand ? ': ' + esc(myBrand.name) : ''}</a></div></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
     ${S.me ? `<div class="chip-row"><button class="chip ${mine ? 'on' : ''}" id="f-follow" aria-pressed="${mine}">${icon('store')} I can enter</button><a class="chip" href="/me/entries">${icon('ticket')} My entries</a></div>` : ''}
+    <div id="v8-fb"></div>
     <div id="list" class="gw-list"><div class="skeleton"></div></div>
     ${officialNotice()}
     <p class="small dim center">No purchase necessary. Join a giveaway and play a linked game while it is live. Each giveaway shows who can enter and its eligibility rules. <a href="/rules">Official Rules</a></p>`);
@@ -829,6 +831,7 @@ async function eligCard(g) {
     <div class="elig-status ${e.joined ? 'joined' : ok ? 'ok' : 'no'}" id="elig-status">${icon(e.joined ? 'ticket' : ok ? 'circle-check' : 'circle-alert')} <b>${esc(e.message)}</b></div>
     <ul class="elig-checks">${e.checks.filter(c => !c.checklist).map(c => `<li class="${c.ok ? 'ok' : 'no'}" data-chk="${c.id}">${icon(c.ok ? 'check' : 'x')}<span><b>${esc(c.label)}</b><small>${esc(c.hint)}</small></span>${c.id === 'brand_member' && !c.ok ? `<a class="btn sm ghost" href="/settings#v7-brand">Giveaway affiliation</a>` : ''}</li>`).join('')}</ul>
     ${potatoChk && !potatoChk.ok ? `<form class="potato-form" id="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="potato-in" placeholder="Your Potato username" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></form>` : ''}
+    ${(e.checks.find(c => c.id === 'invited') || { ok: true }).ok ? '' : `<form class="potato-form" id="inv-form"><div class="field ic">${icon('lock')}<input class="input" id="inv-in" placeholder="Invite code" maxlength="24" autocapitalize="characters" autocomplete="off" aria-label="Invite code"></div><button class="btn sm">Redeem</button></form>`}
     ${slots && !slots.ok ? `<div class="small muted">Your live entries: ${slots.entries.map(x => `<a href="/giveaways/${x.id}">${esc(x.title)}</a>`).join(', ')}. <a href="/me/entries">Manage entries</a></div>` : ''}
     ${e.entries ? `<div class="elig-entries">${icon('ticket')} Draw entries: <b>${e.entries.count}</b> of ${e.entries.max}${e.entries.count < e.entries.max ? ` • ${e.entries.next_at - e.entries.runs} more run${e.entries.next_at - e.entries.runs === 1 ? '' : 's'} for ${e.entries.count + 1}` : ''}</div>` : ''}
     <div class="btn-row">${e.can_join ? `<button class="btn" id="join-gw">${icon('ticket')} Enter giveaway</button>` : ''}${e.joined && g.status !== 'past' ? `<button class="btn ghost sm" id="leave-gw">${icon('log-out')} Leave (free a slot)</button>` : ''}</div>
@@ -836,6 +839,7 @@ async function eligCard(g) {
   GV7.elig(el, e, g, () => eligCard(g)); // v7: US-state picker for region-limited giveaways
   const j = document.getElementById('join-gw'); if (j) j.onclick = async () => { j.disabled = true; const r = await api(`/api/giveaways/${g.id}/join`, { method: 'POST' }); if (r.ok) toast("You're entered! Play a linked game to rank."); else toast(r.error); eligCard(g); };
   const l = document.getElementById('leave-gw'); if (l) l.onclick = async () => { const r = await api(`/api/giveaways/${g.id}/leave`, { method: 'POST' }); toast(r.ok ? 'You left this giveaway. Your slot is free.' : r.error); eligCard(g); };
+  const iv = document.getElementById('inv-form'); if (iv) iv.onsubmit = async (ev) => { ev.preventDefault(); const r = await api(`/api/giveaways/${g.id}/invite`, { method: 'POST', body: { code: document.getElementById('inv-in').value } }); toast(r.ok ? 'Invite accepted' : r.error); if (r.ok) eligCard(g); };
   const pf = document.getElementById('potato-form'); if (pf) pf.onsubmit = async (ev) => { ev.preventDefault(); const r = await api('/api/me/potato', { method: 'PUT', body: { potato: document.getElementById('potato-in').value } }); toast(r.ok ? 'Potato username saved' : r.error); if (r.ok) eligCard(g); };
 }
 route(/^\/me\/entries$/, async () => {
@@ -1404,13 +1408,20 @@ route(/^\/terms$/, () => legal('/terms', 'Terms of Service', 'October 3, 2026', 
   <h2>9. Changes</h2><p>We may update these Terms. We will post the new date above; continued use means you accept the update.</p>
   <h2>10. Contact</h2><p>Questions? Contact ${OP} via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
-route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 3, 2026', `
-  <p>${OP} operates The Gaming Hub. This policy explains what we collect and why.</p>
-  <h2>What we collect</h2><ul><li><b>Account:</b> username, salted password hash, date of birth (to confirm you are 21+), the invite code you used (if any).</li><li><b>Gameplay:</b> runs (game, score, coins, duration, time), achievements, quests, check-ins, follows, reactions and share events.</li><li><b>Security:</b> a one-way salted hash of your IP address for anti-cheat and rate limiting. We do not store your raw IP.</li><li><b>Bookings:</b> the contact details a brand enters in a booking request.</li><li><b>On your device:</b> local storage for preferences (e.g. remembered username, age check, sound). No advertising trackers.</li></ul>
-  <h2>How we use it</h2><p>To run the Hub, show leaderboards and profiles, evaluate achievements, prevent cheating, verify giveaway winners and contact winners and brand clients.</p>
-  <h2>What is public</h2><p>Your username, equipped cosmetics, scores, level, achievements, followers/following counts and activity (high scores, wins, level-ups) are visible to others. Your date of birth is never shown.</p>
-  <h2>Sharing</h2><p>We do not sell your data. When you win a giveaway we may share the details needed to deliver the prize with the sponsor brand.</p>
-  <h2>Retention & deletion</h2><p>We keep data while your account is active. Ask us to delete your account at any time and we remove your profile, runs and related data.</p>
+route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 17, 2026', `
+  <p>${OP} operates The Gaming Hub. This policy explains what we collect, why, and how you can see or delete it. We collect as little as we can.</p>
+  <h2>What we collect</h2><ul>
+    <li><b>Account:</b> username, a salted password hash (we never store or see your password), date of birth (only to confirm you are 21+), the invite code you used (if any), and an optional Potato username so we can reach you if you win.</li>
+    <li><b>Gameplay:</b> runs (game, score, duration, time), achievements, quests, check-ins, items and Hub Credits, follows, and tournament or giveaway entries.</li>
+    <li><b>Security:</b> a salted, truncated hash of your IP address and a short device summary (to catch cheating and multiple accounts). We do not keep your full IP address.</li>
+    <li><b>Purchases:</b> order records (product, amount, Bitcoin transaction id or card-processor reference, status). We never see or store your card number or wallet keys.</li>
+    <li><b>Not collected:</b> email address, phone number, precise location, contacts, or advertising identifiers. We run no ad trackers.</li></ul>
+  <h2>How we use it</h2><p>To run the Hub, show leaderboards and profiles, evaluate achievements, prevent cheating, verify giveaway winners, process purchases, and contact winners and brand clients.</p>
+  <h2>Cookies</h2><p>One essential, HttpOnly, SameSite session cookie keeps you signed in (Secure on HTTPS). Preferences such as language and reduced motion are stored on your device. No tracking cookies.</p>
+  <h2>What is public</h2><p>Your username, equipped cosmetics, scores, level, achievements, followers/following counts and activity (high scores, wins, level-ups) are visible to others. Your date of birth, Potato username, IP hash and purchases are never shown.</p>
+  <h2>Sharing</h2><p>We do not sell your data. When you win a giveaway we may share the details needed to deliver the prize with the sponsor brand. Brand clients only see facts about their own giveaway.</p>
+  <h2>Your controls</h2><ul><li><b>See it:</b> Settings, Your data, Download my data gives you a JSON file of everything we hold about your account.</li><li><b>Delete it:</b> Settings, Your data, Delete my account removes your profile, runs, items, Credits, follows and sign-in history right away. Locked giveaway results keep only your username as an immutable public record. Purchase records may be kept as required for accounting and refunds.</li></ul>
+  <h2>Retention</h2><p>We keep data while your account is active. Accounts you delete are removed immediately; routine security logs are pruned on a rolling basis.</p>
   <h2>Age</h2><p>The Hub is for adults 21+. We do not knowingly collect data from anyone under 21.</p>
   <h2>Contact</h2><p>${OP} - via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
@@ -1427,7 +1438,7 @@ function rulesHTML(g) {
   return `<p class="npn">NO PURCHASE NECESSARY TO ENTER OR WIN. A PURCHASE WILL NOT IMPROVE YOUR CHANCES OF WINNING. OPEN ONLY TO LEGAL RESIDENTS OF THE 50 UNITED STATES AND D.C. WHO ARE 21 YEARS OF AGE OR OLDER. VOID WHERE PROHIBITED.</p>
   <h2>1. Giveaway, Sponsor and Operator</h2><p>The ${name} giveaway (the "Giveaway") is sponsored by <b>${sponsor}</b> ("Sponsor") and operated and administered by <b>${OP}</b> ("Operator") on The Gaming Hub. Sponsor must comply with all laws and regulations that apply to its business, products, advertising and this Giveaway; sponsors that sell cannabis products must be licensed and legally permitted to operate and advertise in their jurisdiction.</p>
   <h2>2. Eligibility</h2><p>Open to legal residents of the 50 United States and the District of Columbia who are <b>21 or older</b> at the time of entry and have a Gaming Hub account in good standing. Employees of Sponsor and Operator, and their immediate families and household members, are not eligible. Void where prohibited or restricted by law.
-    ${g && g.brand && g.open_to_all === false ? `<b>Brand members only:</b> this Giveaway is open only to players affiliated with <b>${esc(g.brand.name)}</b> on The Gaming Hub when they enter and when the Giveaway ends. Each player belongs to one brand at a time; joining a brand is free (invite link, brand code or a pick at signup) and players can switch brands once every 30 days. Players who leave or switch brands lose their entry.` : g ? `This Giveaway is <b>open to every eligible player</b>, whatever brand they belong to.` : `[OPEN TO EVERYONE / BRAND MEMBERS ONLY: if the Giveaway belongs to a brand, only players affiliated with that brand on The Gaming Hub when they enter and when it ends are eligible; each player belongs to one brand at a time and can switch once every 30 days.]`}</p>
+    ${g && g.audience === 'invite' ? `<b>Invite only:</b> you need an invite code from the host to enter. Everyone invited competes on the same skill-based rules.` : g && g.brand && g.open_to_all === false ? `<b>Brand members only:</b> this Giveaway is open only to players affiliated with <b>${esc(g.brand.name)}</b> on The Gaming Hub when they enter and when the Giveaway ends. Each player belongs to one brand at a time; joining a brand is free (invite link, brand code or a pick at signup) and players can switch brands once every 30 days. Players who leave or switch brands lose their entry.` : g ? `This Giveaway is <b>open to every eligible player</b>, whatever brand they belong to.` : `[OPEN TO EVERYONE / BRAND MEMBERS ONLY: if the Giveaway belongs to a brand, only players affiliated with that brand on The Gaming Hub when they enter and when it ends are eligible; each player belongs to one brand at a time and can switch once every 30 days.]`}</p>
   <h2>3. Giveaway Period</h2><p>${period} (the "Giveaway Period"). Operator's server clock is the official timekeeper.</p>
   <h2>4. How to Enter (free)</h2><p>Sign in to a free Gaming Hub account, then start and finish at least one scored run of ${games} during the Giveaway Period${g && g.min_score ? ` with a score of at least ${fmt(g.min_score)}` : ''}. Every game on the Hub is free; there is nothing to buy. Limit: one account per person. ${g && g.require_join ? 'You must also tap "Enter giveaway" on the giveaway page; only joined players are ranked or drawn. ' : ''}${g && g.weight_mode === 'activity' && g.win_method === 'random' ? `For this random draw, each eligible entrant gets 1 entry plus 1 more per 5 runs of the linked games during the Giveaway Period (maximum 5 entries). Entries come only from free play and can never be bought. ` : 'Playing more runs can improve your score ranking, but does not create extra entries for random draws. '}Entries made with scripts, bots, multiple accounts or tampered scores are void.</p>
   ${g && g.eligibility_rules && g.eligibility_rules.length ? `<p id="rules-elig"><b>Eligibility rules for this giveaway</b> (designed so active players, not only prize hunters, win):</p><ul class="plain">${g.eligibility_rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p>Winners who become ineligible before the standings lock (for example by winning another giveaway inside the cooldown) are skipped with a logged reason and the next eligible entrant moves up.</p>` : ''}
@@ -1534,6 +1545,7 @@ route(/^\/settings$/, () => {
   document.getElementById('gp-fps').onchange=e=>GP.saveGlobal({showFps:e.target.checked});
   const ib = document.getElementById('install'); ib.onclick = async () => { if (!installEvt) return toast(/iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'Safari: Share → Add to Home Screen' : 'Chrome: menu ⋮ → Add to Home screen → Install'); installEvt.prompt(); await installEvt.userChoice; installEvt = null; ib.disabled = true; };
   const potf = document.getElementById('potf'); if (potf) potf.onsubmit = async (e) => { e.preventDefault(); const r = await api('/api/me/potato', { method: 'PUT', body: { potato: document.getElementById('pot').value } }); toast(r.ok ? 'Potato username saved' : r.error); if (r.ok) S.me.potato = r.potato; };
+  if (S.me) { const d = document.createElement('div'); d.className = 'card pad'; d.id = 'v8-data'; const acc = document.getElementById('set-account'); if (acc) { acc.parentNode.insertBefore(d, acc.nextSibling); V8.fillData(d); } }
   const pf = document.getElementById('pwf2');
   if (pf) pf.addEventListener('submit', async (e) => { e.preventDefault(); const out = document.getElementById('pwmsg2'); const r = await api('/api/auth/password', { method: 'POST', body: { current: document.getElementById('cur2').value, password: document.getElementById('np2').value } }); out.innerHTML = r.ok ? '<div class="ok-msg">Password changed.</div>' : `<div class="err">${esc(r.error)}</div>`; });
 });
@@ -1547,7 +1559,8 @@ if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigat
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
 // v7 pages (Book a Giveaway, brands, shop & seasons) - public/js/v7.js
-V8.install({ api, icon, esc, fmt, toast, S });
+V8.install({ api, icon, esc, fmt, toast, S, shell, emptyState, pageHead, go });
+route(/^\/brand\/([a-z0-9-]{1,60})$/i, (m) => V8.brandPage(m[1]));
 V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS, avatar, bumpAvatar });
 // ---------------- boot ----------------
 (async function boot() {
