@@ -295,3 +295,85 @@
   K.glow = function (c, col, blur) { c.shadowColor = col; c.shadowBlur = blur || 12; };
   K.noGlow = function (c) { c.shadowBlur = 0; };
 })();
+// ---- juice layer (opt-in allowlist; see juice.js notes) ----
+// The Gaming Hub - Games Library "juice" layer (original code, MIT). Opt-in with "// @uses juice.js" before the game script.
+// Wraps Kit.run to add, with no change to game rules or scoring: additive spark streaks + shockwave rings on every burst,
+// hit-stop on heavy hits, a screen-edge vignette + colour grade, a fade-in, and an original procedural music bed
+// (bass + arpeggio, themed per game, tempo creeps up with run time) played through Kit.tone so the Hub mute switch applies.
+(function () {
+  if (!window.Kit || Kit.__juice) return; Kit.__juice = 1;
+  const ON = new Set(['gl-arrow-hero', 'gl-bubble-pop', 'gl-bud-bar', 'gl-bud-sort', 'gl-bullseye', 'gl-cloud-hopper', 'gl-color-hop', 'gl-cue-club', 'gl-cup-toss', 'gl-drift-king', 'gl-helix-drop', 'gl-hex-spin', 'gl-hoop-streak', 'gl-ice-snipe', 'gl-kickflip-city', 'gl-knife-toss', 'gl-knockout', 'gl-light-cycle', 'gl-long-ball', 'gl-maze-muncher', 'gl-missile-guard', 'gl-mole-whack', 'gl-moon-lander', 'gl-neon-flipper', 'gl-no-brakes', 'gl-orb-coil', 'gl-paper-toss', 'gl-pest-patrol', 'gl-pin-strike', 'gl-putt-party', 'gl-rally-court', 'gl-reel-deal', 'gl-roll-up', 'gl-skee-roll', 'gl-spot-kick', 'gl-strain-crush', 'gl-tile-twin', 'gl-tunnel-hop', 'gl-zig-path', 'gl-smoke-rings', 'gl-rock-buster', 'gl-star-swarm', 'gl-block-drop', 'gl-dune-glide', 'gl-egg-roll', 'gl-monster-crush', 'gl-hill-hauler', 'gl-wreck-ride', 'gl-rig-rally', 'gl-neon-circuit', 'gl-grid-wars', 'gl-moon-swarm', 'gl-arrow-hero', 'gl-rail-rush', 'gl-throttle-rider', 'gl-wanted-run', 'gl-road-hopper', 'gl-green-dash', 'gl-road-brawl', 'gl-cab-rush', 'gl-derby-smash', 'gl-cube-horde', 'gl-goo-tower', 'gl-pop-defense']);
+  const run = Kit.run;
+  // [root midi, scale steps, bpm, bass wave, arp wave, grade colour]
+  const MUS = [
+    [45, [0, 3, 5, 7, 10], 112, 'triangle', 'square', '20,10,60'],     // dark pentatonic minor
+    [48, [0, 2, 4, 7, 9], 124, 'triangle', 'triangle', '10,40,60'],    // bright major pentatonic
+    [43, [0, 2, 3, 7, 8], 104, 'sine', 'sawtooth', '50,10,30'],        // moody
+    [50, [0, 2, 4, 5, 7], 132, 'triangle', 'square', '10,50,30'],      // upbeat
+    [41, [0, 3, 5, 6, 7], 98, 'sine', 'triangle', '30,20,60'],         // bluesy
+    [47, [0, 2, 5, 7, 9], 118, 'triangle', 'sawtooth', '60,30,10'],    // warm
+  ];
+  function hash(s) { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+  const mf = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const VIG = {};
+  function vignette(W, H, str) {
+    const k = W + 'x' + H + ':' + str; if (VIG[k]) return VIG[k];
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+    const g = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.78);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,' + str + ')'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    return (VIG[k] = cv);
+  }
+  Kit.run = function (def) {
+    const J0 = def.juice || {}; if (J0.off || !(J0.on || ON.has(def.id))) return run.call(this, def);
+    const oi = def.init, ou = def.update, od = def.draw, id = def.id || 'x';
+    const M = MUS[J0.music != null ? J0.music : hash(id) % MUS.length];
+    const vig = J0.vig != null ? J0.vig : 0.38;
+    def.init = function (g) {
+      if (!g.__jw) {
+        g.__jw = 1;
+        const b0 = g.burst, s0 = g.shake;
+        g.burst = function (x, y, col, n, sp, life, sz) {
+          b0(x, y, col, n, sp, life, sz); const J = g.jx; if (!J || J.sparks.length > 140) return;
+          const cc = Array.isArray(col) ? col[0] : col, big = (n || 12) >= 18;
+          const k = Math.min(10, 4 + Math.floor((n || 12) / 5));
+          for (let i = 0; i < k; i++) { const a = Math.random() * 6.283, s = (sp || 160) * (0.5 + Math.random() * 0.9); J.sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, l: 0.35 + Math.random() * 0.3, m: 0, c: cc }); }
+          if (J.rings.length < 8) J.rings.push({ x, y, r: 4, l: big ? 0.4 : 0.28, m: 0, c: cc, w: big ? 3 : 2, R: big ? 54 : 30 });
+        };
+        g.shake = function (m, t) { s0(m, t); if (g.jx && m >= 7) g.jx.freeze = Math.min(0.065, m * 0.005); };
+      }
+      g.jx = { sparks: [], rings: [], freeze: 0, mt: 0, step: 0, hat: 0 };
+      oi.call(def, g);
+    };
+    def.update = function (g, dt) {
+      const J = g.jx; if (!J) return ou.call(def, g, dt);
+      for (let i = J.sparks.length - 1; i >= 0; i--) { const p = J.sparks[i]; p.m += dt; if (p.m >= p.l) { J.sparks.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.94; p.vy *= 0.94; }
+      for (let i = J.rings.length - 1; i >= 0; i--) { const r = J.rings[i]; r.m += dt; if (r.m >= r.l) J.rings.splice(i, 1); }
+      // music bed
+      J.mt -= dt; if (J.mt <= 0 && !J0.nomusic) {
+        const bpm = M[2] * (1 + Math.min(0.25, g.t / 480)), sd = 60 / bpm / 2, root = M[0], sc = M[1];
+        for (let i = 0; i < 4; i++) {
+          const st = J.step++, d = i * sd;
+          if (st % 2 === 0) Kit.tone(mf(root + (st % 16 < 8 ? 0 : st % 16 < 12 ? sc[2] : sc[1])), sd * 1.8, M[3], 0.032, 1, d);
+          const deg = sc[(st * 3 + (st >> 2)) % sc.length] + ((st >> 3) % 2 ? 12 : 24);
+          if (st % 4 !== 3) Kit.tone(mf(root + deg), sd * 0.8, M[4], 0.011, 1, d);
+          if (st % 2 === 1) setTimeout(() => Kit.noise && Kit.noise(0.03, 0.012, 6000), d * 1000);
+        }
+        J.mt += sd * 4;
+      }
+      if (J.freeze > 0) { J.freeze -= dt; return; }
+      return ou.call(def, g, dt);
+    };
+    def.draw = function (g, c) {
+      od.call(def, g, c); const J = g.jx; const W = g.W, H = g.H;
+      if (J) {
+        c.save(); c.globalCompositeOperation = 'lighter';
+        for (const p of J.sparks) { const a = 1 - p.m / p.l; c.globalAlpha = a; c.strokeStyle = p.c; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.vx * 0.04, p.y - p.vy * 0.04); c.stroke(); }
+        for (const r of J.rings) { const k = r.m / r.l; c.globalAlpha = (1 - k) * 0.8; c.strokeStyle = r.c; c.lineWidth = r.w * (1 - k) + 0.5; c.beginPath(); c.arc(r.x, r.y, 4 + r.R * Math.sqrt(k), 0, 6.283); c.stroke(); }
+        c.restore();
+      }
+      c.drawImage(vignette(W, H, vig), 0, 0, W, H);
+      if (g.state === 'play' && g.t < 0.7) { c.globalAlpha = 1 - g.t / 0.7; c.fillStyle = '#000'; c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
+    };
+    return run.call(this, def);
+  };
+})();
