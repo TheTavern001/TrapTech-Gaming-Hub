@@ -29,7 +29,7 @@
   function anyMove(g) { const fr = g.tiles.filter(t => !t.gone && free(g, t)); const seen = {}; for (const t of fr) { const key = t.k[0] + t.k[1]; if (seen[key]) return true; seen[key] = 1; } return false; }
   function reshuffle(g) { const live = g.tiles.filter(t => !t.gone), ks = live.map(t => t.k); for (let i = ks.length - 1; i > 0; i--) { const j = g.RI(0, i); [ks[i], ks[j]] = [ks[j], ks[i]]; } live.forEach((t, i) => t.k = ks[i]); }
   const scr = (g, t) => ({ x: g.ox + t.x * TW / 2 - t.z * DEP, y: g.oy + t.y * TH / 2 - t.z * DEP });
-  Kit.run({ id: 'gl-tile-twin', title: 'TILE TWIN', help: 'Tap two matching FREE tiles (nothing on top, left or right edge open)\nMatches refill the clock; fast matches combo. Clear the layout for a bigger one', bg: '#14231c',
+  Kit.run({ fill: true, id: 'gl-tile-twin', title: 'TILE TWIN', help: 'Tap two matching FREE tiles (nothing on top, left or right edge open)\nMatches refill the clock; fast matches combo. Clear the layout for a bigger one', bg: '#14231c',
     init(g) { g.lv = 1; g.time = 60; g.combo = 0; g.lastM = -9; g.pairs = 0; deal(g); g.fx = []; g.hud = ''; },
     update(g, dt) { g.time -= dt; if (g.time <= 0) return g.end('Time up'); for (const f of g.fx) f.l -= dt; g.fx = g.fx.filter(f => f.l > 0);
       if (g.ptr.pressed) { const px = g.ptr.x, py = g.ptr.y; const live = g.tiles.filter(t => !t.gone).sort((a, b) => b.z - a.z || b.y - a.y || b.x - a.x); const hit = live.find(t => { const s = scr(g, t); return px >= s.x && px <= s.x + TW && py >= s.y && py <= s.y + TH; });

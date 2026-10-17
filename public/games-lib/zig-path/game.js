@@ -1,8 +1,8 @@
 // Zig Path - original tap-to-turn zigzag (Hub build), isometric path.
-Kit.run({ id: 'gl-zig-path', title: 'ZIG PATH', help: 'Tap / Space to switch direction\nStay on the path, grab the gems', bg: '#0c4a6e',
+Kit.run({ fill: true, id: 'gl-zig-path', title: 'ZIG PATH', help: 'Tap / Space to switch direction\nStay on the path, grab the gems', bg: '#0c4a6e',
   init(g) { g.tiles = []; let x = 0, y = 0; for (let i = 0; i < 8; i++) { g.tiles.push({ x, y }); y--; } g.tx = x; g.ty = y; for (let i = 0; i < 60; i++) ext(g); g.p = { x: 0, y: -2, d: 0 }; g.sp = 3.2; g.cam = { x: 0, y: 0 }; g.dist = 0; g.gems = new Set(); },
   update(g, dt) {
-    if (g.tap() && g.t > 0.15) { g.p.d = 1 - g.p.d; g.sfx('click'); g.add(1, 't'); }
+    if (g.tap()) { g.p.d = 1 - g.p.d; g.sfx('click'); g.add(1, 't'); }
     g.sp = Math.min(7, 3.2 + g.t * 0.05); const s = g.sp * dt; if (g.p.d === 0) g.p.y -= s; else g.p.x += s; g.dist += s;
     while (g.tiles.length < 80 + Math.floor(g.dist)) ext(g);
     const cx = Math.round(g.p.x), cy = Math.round(g.p.y); const on = g.tiles.some(t => Math.abs(t.x - g.p.x) < 0.62 && Math.abs(t.y - g.p.y) < 0.62); if (!on && g.t > 0.2) { g.sfx('die'); return g.end('Fell off'); }
