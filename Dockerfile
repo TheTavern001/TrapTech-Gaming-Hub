@@ -16,4 +16,4 @@ USER node
 VOLUME ["/data"]
 EXPOSE 8787
 # One plain start command. Do not set a custom start command in the Deplexo dashboard (no "npm run start:external", no trailing dots).
-CMD ["node", "--max-old-space-size=72", "--max-semi-space-size=1", "src/server.js"]
+CMD ["node", "--max-old-space-size=72", "--max-semi-space-size=1", "--single-threaded", "src/server.js"]
