@@ -251,6 +251,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/bud-merge/index.html",
       "art": "/games-lib/bud-merge/thumb.jpg",
@@ -286,9 +288,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-hex-stack",
