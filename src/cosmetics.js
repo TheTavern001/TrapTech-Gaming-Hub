@@ -38,7 +38,34 @@ const TITLES = ['Rookie', 'Hub Regular', 'Hub Legend', 'Explorer', 'Daily Driver
   .map(name => ({ id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name }));
 
 const DEFAULTS = { banner: 'midnight', frame: 'none', title: 'rookie' };
-const BY = { banner: Object.fromEntries(BANNERS.map(b => [b.id, b])), frame: Object.fromEntries(FRAMES.map(f => [f.id, f])), title: Object.fromEntries(TITLES.map(t => [t.id, t])), color: {}, effect: {} };
+const LISTS = { banner: BANNERS, frame: FRAMES, title: TITLES };
+const BASE = { banner: Object.fromEntries(BANNERS.map(b => [b.id, b])), frame: Object.fromEntries(FRAMES.map(f => [f.id, f])), title: Object.fromEntries(TITLES.map(t => [t.id, t])), color: {}, effect: {} };
+
+// Safety net: achievements/shop/quests may reference a cosmetic id that has no hand-made design yet. Instead of crashing the
+// whole server at startup (which happened in production), unknown ids get a deterministic generated design (hue from the id)
+// and a warning is logged once. tools/test-cosmetic-rewards.js fails the build on any such id so designs get added on purpose.
+const GENERATED = [];
+const hue = (id) => { let h = 7; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
+const nice = (id) => id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+function generate(type, id) {
+  const h = hue(id);
+  let item;
+  if (type === 'banner') item = { id, name: nice(id), css: `linear-gradient(120deg,hsl(${h} 70% 18%),hsl(${(h + 50) % 360} 75% 30%) 60%,hsl(${(h + 110) % 360} 70% 22%))` };
+  else if (type === 'frame') item = { id, name: nice(id), bg: `conic-gradient(hsl(${h} 85% 60%),hsl(${(h + 120) % 360} 85% 55%),hsl(${(h + 240) % 360} 85% 60%),hsl(${h} 85% 60%))`, anim: 'glow' };
+  else item = { id, name: nice(id) };
+  LISTS[type].push(item); BASE[type][id] = item; GENERATED.push(`${type}:${id}`);
+  console.warn(`[cosmetics] no design for ${type} "${id}"; using a generated placeholder`);
+  return item;
+}
+const BY = Object.fromEntries(Object.keys(BASE).map(type => [type, new Proxy(BASE[type], {
+  get(t, id) {
+    if (typeof id !== 'string' || id in t) return t[id];
+    if (!LISTS[type] || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(id) || id in Object.prototype) return undefined;
+    return generate(type, id);
+  },
+  has(t, id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(t, id); },
+})]));
+const generated = () => GENERATED.slice();
 
 function css() {
   return [
@@ -48,4 +75,4 @@ function css() {
   ].join('\n');
 }
 
-module.exports = { BANNERS, FRAMES, TITLES, DEFAULTS, BY, css, IMAGE_BANNERS };
+module.exports = { BANNERS, FRAMES, TITLES, DEFAULTS, BY, css, IMAGE_BANNERS, generated };
