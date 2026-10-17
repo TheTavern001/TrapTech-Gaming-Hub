@@ -297,6 +297,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/hex-stack/index.html",
       "art": "/games-lib/hex-stack/thumb.jpg",
@@ -306,7 +308,7 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Cleared blocks x combo (endless, speeds up)",
+      "scoring": "Hexes burst x chain (endless, speeds up)",
       "event_length": "1-3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
@@ -322,9 +324,9 @@
         7200,
         19200
       ],
-      "source": "github.com/Hextris/hextris",
-      "licence": "GPL-3.0 (client code, source served unminified); LICENSE kept",
-      "build": "vendored",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
       "attempts": "unlimited",
       "leaderboard": "best run",
       "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
@@ -332,9 +334,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-dino-dash",
@@ -343,6 +343,8 @@
       "category": "Endless Runners",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/dino-dash/index.html",
       "art": "/games-lib/dino-dash/thumb.jpg",
@@ -352,7 +354,7 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Distance (Chromium meter)",
+      "scoring": "Distance run (endless, speeds up)",
       "event_length": "1-3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
@@ -368,9 +370,9 @@
         2250,
         6000
       ],
-      "source": "github.com/wayou/t-rex-runner (extracted from Chromium neterror resources)",
-      "licence": "BSD-3-Clause (code + sprites + sounds, Chromium Authors); LICENSE kept",
-      "build": "vendored",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
       "attempts": "unlimited",
       "leaderboard": "best run",
       "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
@@ -378,9 +380,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-rock-buster",
