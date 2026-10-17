@@ -29,7 +29,7 @@
   function spawnBug(g) { const wave = g.wave, r = g.rnd(); const t = r < 0.12 ? 'lady' : r < 0.12 + Math.min(0.25, wave * 0.03) ? 'beetle' : r < 0.5 ? 'cat' : 'mite'; const alive = PL.filter(p => p.hp > 0); const tg = g.pick(alive);
     const side = g.RI(0, 2), x = side === 0 ? -20 : side === 1 ? 420 : g.R(30, 370), y = side === 2 ? 80 : g.R(90, 420); const base = { mite: 70, cat: 40, beetle: 32, lady: 55 }[t] * (1 + wave * 0.07);
     g.bugs.push({ t, x, y, tg, sp: base * g.R(0.85, 1.15), hp: t === 'beetle' ? 2 : 1, s: t === 'mite' ? 0.8 : 1, a: 0, ph: g.R(0, 9), wob: g.R(0, 6), pts: { mite: 10, cat: 20, beetle: 40, lady: 0 }[t] }); }
-  Kit.run({ id: 'gl-pest-patrol', title: 'PEST PATROL', help: '21+ only. Tap bugs to squash them before they reach your plants\nBlue beetles take two taps. Never squash the ladybugs - they help', bg: '#2a1a10',
+  Kit.run({ fill: true, id: 'gl-pest-patrol', title: 'PEST PATROL', help: '21+ only. Tap bugs to squash them before they reach your plants\nBlue beetles take two taps. Never squash the ladybugs - they help', bg: '#2a1a10',
     init(g) { for (const p of PL) p.hp = 3; g.bugs = []; g.splats = []; g.wave = 1; g.left = 10; g.spT = 1; g.combo = 0; g.cT = 0; g.hud = ''; g.waveT = 0; },
     update(g, dt) { g.spT -= dt; if (g.left > 0 && g.spT <= 0) { g.left--; g.spT = Math.max(0.28, 1.1 - g.wave * 0.07) * g.R(0.6, 1.3); spawnBug(g); }
       if (g.left <= 0 && !g.bugs.some(b => b.t !== 'lady')) { g.wave++; g.mark('w', g.wave); g.left = 10 + g.wave * 4; g.add(100 * g.wave, 'wave'); g.float(200, 300, 'WAVE ' + g.wave, '#9dff7a', 28); g.sfx('power'); g.bugs = g.bugs.filter(b => b.t !== 'lady'); }

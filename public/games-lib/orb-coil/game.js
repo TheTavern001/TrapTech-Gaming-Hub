@@ -16,7 +16,7 @@
     const e = PATH[PATH.length - 1]; const hg = c.createRadialGradient(e[0], e[1], 4, e[0], e[1], 34); hg.addColorStop(0, '#000'); hg.addColorStop(0.6, '#1a0a00'); hg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = hg; c.beginPath(); c.arc(e[0], e[1], 34, 0, 7); c.fill(); c.strokeStyle = '#ffd23f'; c.lineWidth = 4; c.beginPath(); c.arc(e[0], e[1], 22, 0, 7); c.stroke();
     c.fillStyle = 'rgba(30,20,10,.6)'; Kit.rr(c, g.W / 2 - 74, g.H - 40, 148, 22, 6); c.fill(); c.fillStyle = '#9dff7a'; c.font = 'bold 11px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('\u2618 TEMPLE OF TERPS \u00b7 21+', g.W / 2, g.H - 29);
     return (BG = cv); }
-  Kit.run({ id: 'gl-orb-coil', title: 'ORB COIL', orient: 'p', help: 'Aim with mouse / drag, release or click to shoot\nSpace / tap the idol swaps orbs. Match 3+ before the coil reaches the pit', bg: '#6a5030',
+  Kit.run({ fill: true, id: 'gl-orb-coil', title: 'ORB COIL', orient: 'p', help: 'Aim with mouse / drag, release or click to shoot\nSpace / tap the idol swaps orbs. Match 3+ before the coil reaches the pit', bg: '#6a5030',
     init(g) { mkPath(g.W, g.H); BG = null; g.ch = []; g.head = 260; g.spd = 70; g.rush = 1.2; g.shots = []; g.nc = 4; g.cur = g.RI(0, 3); g.next = g.RI(0, 3); g.aim = -Math.PI / 2; g.combo = 0; g.fx = []; g.idle = 0; for (let i = 0; i < 18; i++) g.ch.push({ c: g.RI(0, 3), off: 0 }); },
     update(g, dt) { const cx = g.W / 2, cy = g.H * 0.5;
       g.nc = Math.min(6, 4 + Math.floor(g.t / 60)); g.spd = 14 + Math.min(40, g.t * 0.25); const v = g.rush > 0 ? 220 : g.spd; g.rush -= dt; g.head += v * dt * (g.ch.length ? 1 : 0);
