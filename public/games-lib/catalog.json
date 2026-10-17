@@ -3390,7 +3390,7 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop",
+      "scoring": "Kills 10-40 (crawl 10, dash/spit 20, tank 40), shard pickups 5, wave clear 50 × wave; positioning and auto-fire survival",
       "event_length": "3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",

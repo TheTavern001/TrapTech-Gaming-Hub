@@ -89,7 +89,7 @@ const LIST = [
   T('paper-toss', 'Paper Toss', 'Paper Toss', 7, 'A', 'endless', 8, true, '1-5 per basket by wind strength', '1-3 days'),
   T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'endless', 100, true, 'Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame', '1-3 days'),
   T('neon-circuit', 'Neon Circuit', 'Neon Arcade Racer', 1, 'A', 'endless', 120, true, 'Energy cells 30–125 by combo; near-miss 5', '3 days'),
-  T('rift-survival', 'Rift Survival', 'Arena Survival', 4, 'A', 'endless', 180, true, 'Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop', '3 days'),
+  T('rift-survival', 'Rift Survival', 'Arena Survival', 4, 'A', 'endless', 180, true, 'Kills 10-40 (crawl 10, dash/spit 20, tank 40), shard pickups 5, wave clear 50 × wave; positioning and auto-fire survival', '3 days'),
   // ---- 20 NEW catalog-style titles (idle, merge, stickman, defense, casual) ----
   T('mahjong-meadow', 'Mahjong Meadow', 'Mahjong Solitaire', 6, 'A', 'endless', 140, true, 'Pairs matched x combo + layout clear', '3 days', 'opensource'),
   T('bubble-odyssey', 'Bubble Odyssey', 'Bubble Shooter', 6, 'A', 'endless', 180, true, 'Bubbles cleared x chain + level bonus', '3 days', 'opensource'),
