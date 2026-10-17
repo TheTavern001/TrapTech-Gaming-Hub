@@ -40,7 +40,7 @@
   K.tone = tone; K.noise = noise;
   // ---- run a game ----
   K.run = function (def) {
-    const L = def.orient === 'l' ? [800, 450] : [400, 700]; const W = def.w || L[0], Hh = def.h || L[1];
+    const L = def.orient === 'l' ? [800, 450] : [400, 700]; const W = def.w || L[0]; let Hh = def.h || L[1]; let g = null;
     const cv = document.createElement('canvas'); cv.id = 'gl'; document.body.appendChild(cv); const c = cv.getContext('2d');
     let scale = 1, ox = 0, oy = 0;
     // Start crisp on high-DPR phones, then dynamically lower only backing-store pixels
@@ -48,9 +48,21 @@
     const initialDpr = Math.min(2, devicePixelRatio || 1);
     let renderDpr = initialDpr, slowFrames = 0, p95Ms = 0; let cameraShakeAllowed=true;let gamePrefs=null;
     const frameSamples = [];
-    function resize() { const vw = innerWidth, vh = innerHeight, d = renderDpr; scale = Math.min(vw / W, vh / Hh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - cw) / 2; oy = (vh - ch) / 2; cv.style.cssText = `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`; cv.width = Math.max(1,Math.floor(cw * d)); cv.height = Math.max(1,Math.floor(ch * d)); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
+    // v8: portrait fix. Landscape-designed games (orient 'l') rotate 90deg on a portrait phone so they fill the tall screen
+    // instead of floating in a thin band; pointer input is mapped back. Portrait games with def.fill grow their logical
+    // height to the real aspect ratio (g.W/g.H update, def.onResize fires). Remaining bands take the game's own bg colour.
+    let rot = false, hintEl = null;
+    function rotateHint(on) { if (!on) { if (hintEl) hintEl.style.display = 'none'; return; } if (!hintEl) { hintEl = document.createElement('div'); hintEl.textContent = 'Turn your phone sideways for a bigger view'; hintEl.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:7px 12px;border-radius:12px;background:rgba(12,14,38,.85);border:1px solid rgba(154,126,255,.45);color:#cfd2ff;font:600 12px system-ui,sans-serif;z-index:50;pointer-events:none;white-space:nowrap'; document.body.appendChild(hintEl); } hintEl.style.display = 'block'; }
+    document.documentElement.style.background = def.bg || '#050714'; document.body.style.background = def.bg || '#050714';
+    function resize() { const vw = innerWidth, vh = innerHeight, d = renderDpr;
+      rot = !!def.rotate && (def.orient === 'l' || W > Hh) && vh > vw * 1.15;
+      const land = (def.orient === 'l' || W > Hh) && !rot; rotateHint(land && vh > vw * 1.15);
+      if (def.fill && !rot && g) { const minH = def.minH || Math.round(W * 1.3), maxH = def.maxH || Math.round(W * 2.3); const nh = Math.round(K.clamp(W * vh / vw, minH, maxH)); if (nh !== g.H) { g.H = nh; Hh = nh; if (typeof btns !== "undefined" && btns) btns.forEach(b => { b.y = Hh - 56; }); if (def.onResize) def.onResize(g); } }
+      const lw = rot ? Hh : W, lh = rot ? W : Hh; scale = Math.min(vw / lw, vh / lh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - (rot ? ch : cw)) / 2; oy = (vh - (rot ? cw : ch)) / 2;
+      cv.style.cssText = rot ? `position:absolute;left:${vw / 2 - cw / 2}px;top:${vh / 2 - ch / 2}px;width:${cw}px;height:${ch}px;transform:rotate(90deg);touch-action:none` : `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`;
+      cv.width = Math.max(1,Math.floor(cw * d)); cv.height = Math.max(1,Math.floor(ch * d)); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
     addEventListener('resize', resize); resize();
-    const g = { W, H: Hh, c, t: 0, score: 0, best: +(safeStore.get('gl_best_' + def.id) || 0), state: 'title', rnd: Math.random, keys: {}, hud: '', parts: [], texts: [], shakeT: 0, shakeM: 0, flashT: 0, flashC: '#fff', frames: 0, fps: 60, inputs: 0,
+    g = { W, H: Hh, c, t: 0, score: 0, best: +(safeStore.get('gl_best_' + def.id) || 0), state: 'title', rnd: Math.random, keys: {}, hud: '', parts: [], texts: [], shakeT: 0, shakeM: 0, flashT: 0, flashC: '#fff', frames: 0, fps: 60, inputs: 0,
       ptr: { x: W / 2, y: Hh / 2, down: false, pressed: false, released: false, sx: 0, sy: 0 }, stick: { x: 0, y: 0, on: false, cx: 0, cy: 0 }, btn: {}, def, sub: null };
     g.R = (a, b) => a + g.rnd() * (b - a); g.RI = (a, b) => Math.floor(g.R(a, b + 1)); g.pick = (arr) => arr[Math.floor(g.rnd() * arr.length)];
     g.add = (v, k) => { v = Math.round(v); if (!v || g.state !== 'play') return; g.score += v; window.Hub && Hub.event(k || 'p', v); };
@@ -91,8 +103,8 @@
         },fps:()=>g.fps});
     }).catch(e=>console.error('Game settings failed to load',e));
     // buttons: def.buttons = [{id:'A', key:' ', label:'JUMP'}]
-    const btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
-    const toL = (e) => [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
+    var btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
+    const toL = (e) => rot ? [W / 2 + (e.clientY - innerHeight / 2) / scale, Hh / 2 - (e.clientX - innerWidth / 2) / scale] : [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
     const touches = new Map();
     // Revoke all held pointers and keys together. A tab switch, focus loss or
     // settings overlay must not leave a steering stick or firing key active.
@@ -268,7 +280,7 @@
         if(g.why)label(g.why,W/2,py+65,11,'#aeb9df');label('SCORE',W/2,py+87,9,'#8feaff');
         label(Math.floor(g.score).toLocaleString('en-US')+(def.unit?' '+def.unit:''),W/2,py+112,Math.min(38,W/10),'#fff');
         panel(px+18,py+143,pw-36,36,12,'rgba(6,11,29,.76)','rgba(255,255,255,.12)');
-        const status=!g.sub||g.sub.pending?'SAVING SCORE…':g.sub.ok?'LEADERBOARD SAVED'+(g.sub.rank?' · RANK #'+g.sub.rank:''):(g.sub.error||'SCORE NOT SAVED');
+        const status=!g.sub||g.sub.pending?'SAVING SCORE…':g.sub.ok?'LEADERBOARD SAVED'+(g.sub.rank?' · RANK #'+g.sub.rank:''):g.sub.practice?'PRACTICE RUN · SIGN IN TO SAVE':(g.sub.error||'SCORE NOT SAVED');
         label(status.toUpperCase(),W/2,py+161,9,g.sub&&g.sub.ok?'#7bf0bf':'#b6c2e8');
         panel(px+25,py+ph-40,pw-50,34,12,'rgba(117,91,255,.27)','rgba(145,130,255,.68)');label('TAP TO PLAY AGAIN',W/2,py+ph-23,11,'#b8f4ff');
       }

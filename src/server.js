@@ -240,6 +240,9 @@ app.post('/api/auth/password', requireUser, limiter('pw', 10, 3600e3), (req, res
   res.json({ ok: true });
 });
 
+// v8: browsers always probe /favicon.ico; answer with the brand icon so no game page logs a 404.
+app.get('/favicon.ico', (req, res) => res.redirect(301, '/assets/brand/favicon.png?v=tt-crown-20261014'));
+
 app.get('/api/me', (req, res) => {
   const u = currentUser(req);
   res.json({ ok: true, user: u ? { username: u.username, created_at: u.created_at, cos: ach.publicCos(u), potato: db.prepare('SELECT potato FROM users WHERE id=?').get(u.id).potato, ...H.meExtras(u), ...(H.meV5 ? H.meV5(u) : {}) } : null, now: now(), version: HUB_VERSION });
