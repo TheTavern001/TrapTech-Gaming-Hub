@@ -1,4 +1,6 @@
-# Hub economy (v7): shop rotations, endless items, prices, earned items, seasons
+# Hub economy (current v8 rules): shop rotations, endless items, prices, earned items, seasons
+
+**Current rules verified against `src/shop.js` and `src/monetize.js` at `d7809e3` on October 18, 2026 (ET).** Historical API field names containing `vault` do not imply current retirement.
 
 This is the reference for the engine in `src/shop.js`, `src/shop-gen.js` and `src/seasons.js`. The admin panel
 (`src/admin-ops.js`, `src/admin-ui/`) is built on the hooks listed at the end. Tests: `node tools/e2e-economy.js`
@@ -12,7 +14,7 @@ own time zone.
 
 | Section | Changes | What is in it |
 |---|---|---|
-| **Daily** | every midnight | 6 items: 2 brand-new generated items, 1 "Back from the Vault" slot (a retired item, or a catalog pick when nothing is due), and 3 catalog picks |
+| **Daily** | every midnight | 6 items: 2 brand-new generated items, 1 returning-item slot (an item whose cooldown has elapsed, or a catalog pick when none is due), and 3 catalog picks |
 | **Weekly featured** | Monday midnight | 4 items: 2 brand-new epic or legendary items, plus 2 epic or legendary catalog picks |
 | **Season shop** | when the season changes | 6 items made for the season's palette and theme, on sale all season |
 | **Events** | on calendar dates | 6 themed items while the event runs (see below) |
@@ -23,13 +25,14 @@ day. Each day's picks come from hashes of the day number, so every server proces
 shop. It only depends on the date, never on who asked first. Nothing is stored. The sim runs to today plus 7 days,
 which takes about 1 s for 2 years of history.
 
-**Retire and Vault rules:**
-- **Cooldown.** After a listing, an item cannot be a catalog pick again for 10 (common), 14 (rare), 21 (epic) or
-  28 (legendary) days (`COOL`).
-- **Retirement.** After 8 / 6 / 4 / 3 listings (`CAP`), an item is retired to the **Vault**.
-- **Vault returns.** A vaulted item can return in the daily Vault slot. That happens at least 90 days after it
-  retired, and at most once every 180 days. Returns are tagged "Back from the Vault".
-- **Season-shop items** enter the Vault 365 days after their season. **Track rewards** never return.
+**Current cooldown and return rules (from October 18, 2026):**
+- Minimum catalog return gaps are **60 / 120 / 180 / 270 days** for common / rare / epic / legendary (`COOL`). Eligibility after cooldown does not guarantee a listing on that date.
+- There is **no automatic retirement or lifetime listing cap**. The cutover clears the old Vault; previously retired items rejoin the pool, subject to their last appearance and current cooldown.
+- Season-shop items become return candidates 365 days after their season. Track rewards remain separate from the rotating shop.
+- Historical simulation before the cutover retains the old 10 / 14 / 21 / 28 day cooldowns, listing caps and Vault rules solely to reproduce past shop days. Do not use those legacy values for current product copy or new features.
+- Internal names such as `vault_radar`, old tags and admin moderation fields remain for compatibility. They do not authorize automatic retirement of current designs.
+
+**Prestige:** unlimited copies of each design, at most one active entitlement per player per design. No numbered editions or global ownership cap. See [the current prestige specification](ONE-OF-ONE-PRESTIGE-COLLECTIBLES.md); its filename is retained for existing links.
 
 **Events** (`EVENTS`, every year):
 
@@ -101,13 +104,14 @@ items, today ±2 days of rotations, the season items, and everything anyone owns
 price = rarity base (150 / 400 / 900 / 2000)
       × type        (title 0.7, badge 0.8, colour 0.9, banner 1, frame 1.1, effect 1.25)
       × demand      (this item's buys in the last 14 days vs the average for its type; 0.85 - 1.35)
-      × scarcity    (only after its debut: owned by <1% of active players 1.1, <5% 1.04, >12% 0.95, >25% 0.88)
-      × appearances (debut 1.08, back from the Vault 1.25, 1-2 earlier listings 1, 3-4 0.94, 5+ 0.88)
+      × scarcity    (only after its debut AND with at least 500 active players: owned by <1% of active players 1.1, <5% 1.04, >12% 0.95, >25% 0.88)
+      × appearances (debut 1.08, legacy Vault return 1.25, 1-2 earlier listings 1, 3-4 0.94, 5+ 0.88)
       × section     (season shop and event items 1.15)
       × jitter      (0.96 - 1.04, fixed per item)
 clamped to 0.6× - 2.2× of rarity × type, rounded to 5, minimum 50
 ```
 
+- **Small populations:** `MIN_ACTIVE_FOR_SCARCITY=500`; the scarcity multiplier is exactly 1 below that threshold.
 - **Prices are set at midnight and hold all day.** Today's purchases only count from tomorrow, and the cache is
   per-day (`listPrice`).
 - **What a player pays:** `priceFor(item, user)` is the list price minus the season perk discount (5 / 10 / 15%).
