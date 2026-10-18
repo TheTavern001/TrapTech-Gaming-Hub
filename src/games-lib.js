@@ -18,8 +18,8 @@ const LIST = [
   T('cloud-hopper', 'Cloud Hopper', 'Doodle Jump', 0, 'A+', 'endless', 60, true, 'Height climbed + pickups', '3 days'),
   T('road-hopper', 'Road Hopper', 'Crossy Road', 0, 'A+', 'endless', 8, true, '1 per furthest row + coins 5', '3 days'),
   T('bud-merge', 'Bud Merge', '2048', 11, 'A+', 'endless', 60, true, 'Sum of merged tiles (endless, no win stop)', '1-3 days', 'm2048'),
-  T('hex-stack', 'Hex Stack', 'Hextris', 6, 'A', 'endless', 80, true, 'Cleared blocks x combo (endless, speeds up)', '1-3 days', 'hextris'),
-  T('dino-dash', 'Desert Dash', 'Chrome T-Rex Runner', 0, 'A+', 'endless', 25, true, 'Distance (Chromium meter)', '1-3 days', 'trex'),
+  T('hex-stack', 'Hex Stack', 'Hextris', 6, 'A', 'endless', 80, true, 'Hexes burst x chain (endless, speeds up)', '1-3 days'),
+  T('dino-dash', 'Desert Dash', 'Chrome T-Rex Runner', 0, 'A+', 'endless', 25, true, 'Distance run (endless, speeds up)', '1-3 days'),
   T('rock-buster', 'Rock Buster', 'Asteroids', 5, 'A+', 'endless', 180, true, 'Rocks 20/50/100, UFO 300', '3 days'),
   T('star-swarm', 'Star Swarm', 'Galaga', 5, 'A+', 'endless', 200, true, 'Bugs 50-160 (diving x2), stage bonus', '3 days'),
   T('rail-rush', 'Rail Rush', 'Subway Surfers', 0, 'A+', 'endless', 900, true, 'Distance x multiplier (1-5 from coins, x2 power-up) + coins 10 x multiplier, power-ups 25', '3 days'),
@@ -51,7 +51,7 @@ const LIST = [
   T('mole-whack', 'Mole Whack', 'Whac-A-Mole', 7, 'A', 'endless', 120, true, 'Critter 10, gold 50, combo x5; hits refill the clock (+0.6s / gold +2s), drain speeds up', '1-3 days'),
   // Cannabis themed
   T('grow-op', 'Grow Op', 'Cannabis grow sim', 11, 'C', 'endless', 60, true, 'Harvest 40-150 by ripeness x health, pests 5; ends when 3 plants die', '3 days'),
-  T('trim-rush', 'Trim Rush', 'Cannabis trimming speed game', 11, 'C', 'endless', 120, true, 'Leaf 10-30 combo, clean trim bonus; trims refill the clock, bud slice -3s', '1-3 days'),
+  T('trim-rush', 'Trim Rush', 'Cannabis bud trimming precision game', 11, 'C', 'endless', 150, true, 'Snip 10/20/30 by cut distance + combo up to 10 (gold leaf x2), bud bonus 25-65; finished buds refill the clock; 3 bud nicks end the run', '1-3 days'),
   T('strain-crush', 'Strain Crush', 'Strain match-3', 11, 'C', 'endless', 400, true, '10 per gem x cascade chain; matches refill the clock', '3 days'),
   T('bud-bar', 'Bud Bar', 'Dispensary tapper', 11, 'C', 'endless', 80, true, 'Serve 50, empties 25', '3 days'),
   T('green-dash', 'Green Dash', 'Delivery runner', 11, 'C', 'endless', 60, true, 'Distance + deliveries 100', '3 days'),
@@ -85,11 +85,11 @@ const LIST = [
   T('road-brawl', 'Road Brawl', 'Road Rash', 1, 'A', 'endless', 120, true, 'Distance + takedowns 60-100', '3 days'),
   T('derby-smash', 'Derby Smash', 'Demolition Derby', 1, 'A', 'endless', 200, true, 'Impact damage dealt + wrecks 150', '3 days'),
   T('dunk-flick', 'Dunk Flick', 'Dunk Shot', 7, 'A', 'endless', 25, true, '1 per basket, swish streak +n', '3 days'),
-  T('duck-shot', 'Duck Shot', 'Duck Hunt', 7, 'A', 'endless', 400, true, 'Bird 100 + 20 x round, gold +400', '3 days'),
+  T('duck-shot', 'Duck Shot', 'Duck Hunt', 7, 'A', 'endless', 900, true, 'Duck 100 + 20 x round x streak, gold +400, perfect bonus', '3 days'),
   T('paper-toss', 'Paper Toss', 'Paper Toss', 7, 'A', 'endless', 8, true, '1-5 per basket by wind strength', '1-3 days'),
   T('skee-roll', 'Skee Roll', 'Skee-Ball', 7, 'A', 'endless', 100, true, 'Rings 10-100; 9-ball frames, beat the rising target to continue, frame bonus 50 x frame', '1-3 days'),
   T('neon-circuit', 'Neon Circuit', 'Neon Arcade Racer', 1, 'A', 'endless', 120, true, 'Energy cells 30–125 by combo; near-miss 5', '3 days'),
-  T('rift-survival', 'Rift Survival', 'Arena Survival', 4, 'A', 'endless', 180, true, 'Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop', '3 days'),
+  T('rift-survival', 'Rift Survival', 'Arena Survival', 4, 'A', 'endless', 180, true, 'Kills 10-40 (crawl 10, dash/spit 20, tank 40), shard pickups 5, wave clear 50 × wave; positioning and auto-fire survival', '3 days'),
   // ---- 20 NEW catalog-style titles (idle, merge, stickman, defense, casual) ----
   T('mahjong-meadow', 'Mahjong Meadow', 'Mahjong Solitaire', 6, 'A', 'endless', 140, true, 'Pairs matched x combo + layout clear', '3 days', 'opensource'),
   T('bubble-odyssey', 'Bubble Odyssey', 'Bubble Shooter', 6, 'A', 'endless', 180, true, 'Bubbles cleared x chain + level bonus', '3 days', 'opensource'),
@@ -111,19 +111,28 @@ const LIST = [
   T('woody-hexa', 'Woody Hexa', 'Hex Puzzle', 6, 'A', 'endless', 75, true, 'Hexes cleared x combo', '3 days', 'opensource'),
   T('boxing-legend', 'Boxing Legend', 'Boxing', 8, 'A', 'endless', 200, true, 'Hits + KOs + stamina', '3 days', 'opensource'),
   T('silent-asylum', 'Silent Asylum', 'Horror Survival', 4, 'A', 'endless', 90, true, 'Survival time + escapes', '3 days', 'opensource'),
+  T('wreck-ride', 'Wreck Ride', 'Retired duplicate (historic id kept)', 2, 'A', 'endless', 60, false, 'Distance m + flips 150 + big air 20 + crates 25', '3 days'),
+  T('rig-rally', 'Rig Rally', 'Retired duplicate (historic id kept)', 2, 'A', 'endless', 60, false, 'Distance m + coins 5 + stars 50 (build your own rig)', '3 days'),
+  T('drift-king', 'Drift King', 'Retired duplicate (historic id kept)', 1, 'A', 'endless', 25, false, 'Distance', '3 days'),
+  T('dune-glide', 'Dune Glide', 'Retired duplicate (historic id kept)', 0, 'A', 'endless', 80, false, 'Distance + flips 100 x n + coins 5', '3 days'),
+  T('egg-roll', 'Egg Roll', 'Retired duplicate (historic id kept)', 1, 'A', 'endless', 40, false, 'Distance m + coins 5', '3 days'),
+  T('monster-crush', 'Monster Crush', 'Retired duplicate (historic id kept)', 1, 'A', 'endless', 120, false, 'Distance + crushed cars 50 + flips', '3 days'),
 ];
-const OWNER_RETIRED = Object.freeze({});
+const OWNER_RETIRED = Object.freeze({
+  'wreck-ride': 'gl-hill-hauler', 'rig-rally': 'gl-hill-hauler', 'dune-glide': 'gl-hill-hauler', 'egg-roll': 'gl-hill-hauler', 'monster-crush': 'gl-hill-hauler', 'drift-king': 'drift-rush',
+});
 // Only list games whose playable files actually exist in this build. The registry advertised 20 titles with no
 // public/games-lib/<slug>/ folder (404 on click, and they inflated the game count); they come back automatically once built.
 const HAS_FILES = (slug) => require('fs').existsSync(require('path').join(__dirname, '..', 'public', 'games-lib', slug, 'index.html'));
+const ART_EXT = (slug) => { const d = require('path').join(__dirname, '..', 'public', 'games-lib', slug); const fs = require('fs'); return !fs.existsSync(require('path').join(d, 'thumb.jpg')) && fs.existsSync(require('path').join(d, 'thumb.svg')) ? 'svg' : 'jpg'; };
 const games = LIST.filter(x => HAS_FILES(x.slug)).map(x => {
   const s = SOURCES[x.src] || SOURCES.built;
   return {
     id: 'gl-' + x.slug, slug: x.slug, title: x.title, ref_internal: x.ref, category: CATS[x.cat], lib: true,
-    playable: true, retired: false, replacedBy: null,
+    playable: !OWNER_RETIRED[x.slug], retired: !!OWNER_RETIRED[x.slug], replacedBy: OWNER_RETIRED[x.slug] || null,
     unit: 'pts',
-    url: `/games-lib/${x.slug}/index.html`, art: `/games-lib/${x.slug}/thumb.jpg`, tier: x.tier, competition: x.comp, endless: /^endless/.test(x.comp),
-    giveaway: true, just_for_fun: false, endless_mode: /^endless/.test(x.comp), scoring: x.scoring, event_length: x.evlen, acLevel: 2, ac_level: 'L2 session checks',
+    url: `/games-lib/${x.slug}/index.html`, art: `/games-lib/${x.slug}/thumb.${ART_EXT(x.slug)}`, tier: x.tier, competition: x.comp, endless: /^endless/.test(x.comp),
+    giveaway: !OWNER_RETIRED[x.slug], just_for_fun: false, endless_mode: /^endless/.test(x.comp), scoring: x.scoring, event_length: x.evlen, acLevel: 2, ac_level: 'L2 session checks',
     ac: { perSec: x.rate, ramp: 0, grace: Math.max(50, x.rate * 20), max: 1e12, coinsPerSec: 1 },
     tiers: [x.rate * 20, x.rate * 90, x.rate * 240].map(Math.round),
     source: s.source, licence: s.licence, build: s.kind, attempts: 'unlimited', leaderboard: 'best run', winner_rule: 'highest single-run score in endless mode (uncapped); exactly one winner', tiebreak: ["skill: faster server-timed completion of the same score","skill: stronger server-derived scoring-event efficiency or game metric","exact tie: seeded sudden-death playoff (same game and seed for tied players)"],

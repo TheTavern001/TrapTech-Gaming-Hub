@@ -30,7 +30,7 @@ ok(s1.number === 1 && s2.number === 2 && s1.end_at === at('2026-11-26T05:00:00Z'
 ok(SH.rotation(at('2026-11-25T20:00:00Z')).season.items[0].id !== SH.rotation(at('2026-11-26T15:00:00Z')).season.items[0].id, 'season shop items change with the season');
 ok(SE.seasonAt(at('2031-06-01T12:00:00Z')).number > 30, `seasons keep rolling forever (June 2031 = Season ${SE.seasonAt(at('2031-06-01T12:00:00Z')).number})`);
 
-console.log('# 2-year simulation: the generator never runs out and the retire / Vault rules hold');
+console.log('# 2-year simulation: the generator never runs out and the v8 long-cooldown rotation holds (no Vault, no retirement)');
 const t0 = Date.now(); const start = SH.EPOCH_DAY; const days = 730; let dupes = 0, overlap = 0, short = 0, newPerDay = 0, cooldownBreaks = 0, eventDays = 0; const seenLast = new Map(); const vaultGaps = []; const capBreaks = [];
 const nonVault = new Map();
 for (let d = start; d < start + days; d++) {
@@ -38,18 +38,18 @@ for (let d = start; d < start + days; d++) {
   if (new Set(ids).size !== ids.length) dupes++; if (ids.some(i => w.includes(i))) overlap++; if (ids.length !== 6 || w.length !== 4) short++;
   newPerDay += ids.filter(i => r.tags[i] === 'new').length; if (r.events.length) eventDays++;
   for (const it of r.daily) { const last = seenLast.get(it.id); const tag = r.tags[it.id];
-    if (tag === 'vault') { if (last !== undefined) vaultGaps.push(d - last); } else { if (last !== undefined && d - last < SH.COOL[it.rarity] && tag !== 'new') cooldownBreaks++; nonVault.set(it.id, (nonVault.get(it.id) || 0) + 1); }
+    if (tag === 'returning') { if (last !== undefined) vaultGaps.push(d - last); if (last !== undefined && d - last < SH.COOL[it.rarity]) cooldownBreaks++; } else { if (d >= SH.EPOCH_DAY + 17 && last !== undefined && d - last < SH.COOL[it.rarity] && tag !== 'new') cooldownBreaks++; nonVault.set(it.id, (nonVault.get(it.id) || 0) + 1); }
     seenLast.set(it.id, d); }
   for (const it of r.weekly) seenLast.set(it.id, d + 6 - ((d + 3) % 7));
   for (const it of r.season.items) seenLast.set(it.id, d);
 }
 const simMs = Date.now() - t0; const st = SH.stats();
 ok(short === 0 && dupes === 0 && overlap === 0, `every day has 6 daily + 4 weekly items, no duplicates, daily never repeats a weekly item (${days} days)`);
-ok(newPerDay === days * 2, `2 brand-new daily items every single day (${newPerDay} over ${days} days)`);
+ok(newPerDay >= days * 2, `at least 2 brand-new daily items every day (${newPerDay} over ${days} days; more are minted whenever nothing has finished its cooldown)`);
 ok(SH._sim.intro.filter(([d]) => d < start + days).length >= days * 2 + 200, `${SH._sim.intro.filter(([d]) => d < start + days).length} generated items introduced in 2 years (never runs out)`);
-ok(cooldownBreaks <= days * 0.02, `catalog picks respect the per-rarity cooldown (${cooldownBreaks} relaxed picks)`);
-ok([...nonVault.entries()].every(([id, n]) => n <= SH.CAP[SH.BY_ID[id].rarity]), 'no item is listed more times than its retire cap before going to the Vault');
-ok(vaultGaps.length > 50 && vaultGaps.every(g => g >= 90), `Vault returns happen (${vaultGaps.length}) and always after 90+ days away (min ${Math.min(...vaultGaps)})`);
+ok(cooldownBreaks === 0, `after the 2026-10-18 cutover no daily item reappears inside its rarity cooldown (${cooldownBreaks} breaks)`);
+ok(!vaultGaps.some(g => g < 60), 'nothing is ever retired: items just rest 60 / 120 / 180 / 270 days by rarity, then return');
+ok(vaultGaps.length > 50 && vaultGaps.every(g => g >= 60), `returning items happen (${vaultGaps.length}) and always after their cooldown (min ${Math.min(...vaultGaps)} days)`);
 ok(eventDays >= 2 * 60 && SH.rotation(at('2026-10-31T16:00:00Z')).events.some(e => e.name === 'Spooky Haze') && SH.rotation(at('2027-04-20T16:00:00Z')).events.some(e => e.name === '4/20 Week') && SH.rotation(at('2027-10-03T16:00:00Z')).events.some(e => e.name === 'Hub Birthday Week'), `calendar events run on their dates (${eventDays} event days in 2 years)`);
 const ev27 = SH.rotation(at('2027-10-31T16:00:00Z')).events.find(e => e.name === 'Spooky Haze'); ok(ev27 && ev27.items.length === 6 && ev27.items.some(i => /^(fx-)?v7e2026/.test(i.id)), 'year-two events bring 4 new items + 2 returning from last year');
 ok(simMs < 20000, `2-year simulation in ${simMs} ms`);

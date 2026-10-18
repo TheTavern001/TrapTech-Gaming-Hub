@@ -38,7 +38,7 @@ SKIN.forEach((c, i) => add('skin', 's' + i, 'Tone ' + (i + 1)));
 ['round','oval','square','heart','angular','soft','chiseled'].forEach(f=>add('face',f,f));
 ['none', 'buzz', 'curly', 'afro', 'long', 'bun', 'mohawk', 'braids', 'waves', 'spiky'].forEach(h => add('hair', h, h));
 HAIRC.forEach((c, i) => add('hairc', 'c' + i, 'Color ' + (i + 1), i >= 7 ? { crowns: 150 } : 'free'));
-['dot', 'happy', 'sleepy', 'wink', 'wide'].forEach(e => add('eyes', e, e)); add('eyes', 'star', 'star eyes');
+['dot', 'happy', 'sleepy', 'wink', 'wide'].forEach(e => add('eyes', e, e)); add('eyes', 'star', 'star eyes', { ach: 15 });
 ['smile', 'grin', 'flat', 'open', 'smirk'].forEach(m => add('mouth', m, m));
 ['none', 'mustache', 'goatee', 'beard'].forEach(b => add('beard', b, b));
 for (const [id, label] of [['average','Average build'],['slim','Slim build'],['athletic','Athletic build'],['stocky','Stocky build'],['curvy','Curvy build'],['tall','Tall build'],['short','Short build']]) add('build', id, label, 'free');
@@ -127,7 +127,7 @@ function achCount(userId) { try { return db.prepare('SELECT COUNT(*) c FROM user
 // ---- SVG ----
 function svg(c) {
   const s = SKIN[+c.skin.slice(1)] || SKIN[2]; const hc = HAIRC[+c.hairc.slice(1)] || HAIRC[0]; const [b1, b2] = BG[c.bg] || BG.violet; const o = [];
-  o.push(`<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${b1}"/><stop offset="1" stop-color="${b2}"/></linearGradient><linearGradient id="au" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#f59e0b"/><stop offset="1" stop-color="#fef3c7"/></linearGradient></defs><rect width="120" height="120" rx="24" fill="url(#g)"/>`);
+  o.push(`<defs><linearGradient id="sh-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".32"/></linearGradient><radialGradient id="sh-f" cx=".4" cy=".32" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".14"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></radialGradient><radialGradient id="sh-v" cx=".5" cy=".42" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></radialGradient><radialGradient id="sh-l" cx=".25" cy=".1" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${b1}"/><stop offset="1" stop-color="${b2}"/></linearGradient><linearGradient id="au" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#f59e0b"/><stop offset="1" stop-color="#fef3c7"/></linearGradient></defs><rect width="120" height="120" rx="24" fill="url(#g)"/>`);
   if (c.bg === 'gold-rays') o.push('<g opacity=".35" fill="#fef3c7">' + [0, 30, 60, 90, 120, 150].map(a => `<path d="M60 60 L${60 + 90 * Math.cos(a * Math.PI / 180)} ${60 + 90 * Math.sin(a * Math.PI / 180)} L${60 + 90 * Math.cos((a + 10) * Math.PI / 180)} ${60 + 90 * Math.sin((a + 10) * Math.PI / 180)}Z"/>`).join('') + '<animateTransform attributeName="transform" type="rotate" from="0 60 60" to="360 60 60" dur="24s" repeatCount="indefinite"/></g>');
   if (c.bg === 'cash-rain') o.push('<g fill="#86efac" opacity=".55">' + [12, 34, 58, 82, 104].map((x, i) => `<rect x="${x}" y="-12" width="12" height="7" rx="1"><animate attributeName="y" from="-12" to="124" dur="${3 + i * 0.6}s" repeatCount="indefinite"/></rect>`).join('') + '</g>');
   if (c.bg === 'stack-throne') o.push('<g opacity=".65"><path d="M22 82 L28 45 L43 59 L60 32 L77 59 L92 45 L98 82Z" fill="#facc15" fill-opacity=".25" stroke="#fde68a" stroke-width="2"/><path d="M25 86 H95 M30 92 H90" stroke="#86efac" stroke-width="3"/><g fill="#86efac">' + [18, 43, 72, 97].map((x,i)=>`<rect x="${x}" y="-10" width="8" height="5" rx="1"><animate attributeName="y" from="-10" to="120" dur="${2.5+i*.5}s" repeatCount="indefinite"/></rect>`).join('') + '</g></g>');
@@ -145,6 +145,7 @@ function svg(c) {
   if (c.bg === 'aurora-crown') o.push('<g fill="none" stroke-width="3" opacity=".75"><path d="M7 28 Q26 4 43 26 T80 24 T113 26" stroke="#86efac"><animate attributeName="d" values="M7 28 Q26 4 43 26 T80 24 T113 26;M7 32 Q26 16 43 30 T80 18 T113 32;M7 28 Q26 4 43 26 T80 24 T113 26" dur="5s" repeatCount="indefinite"/></path><path d="M7 38 Q26 18 43 37 T80 35 T113 38" stroke="#e9d5ff"/><path d="M38 18 L43 8 L48 18 L60 3 L72 18 L77 8 L82 18 L82 26 L38 26Z" stroke="#fde68a" fill="#fbbf24" fill-opacity=".25"/></g>');
   const shirt = { base:'#475569', tee: '#3b82f6', hoodie: '#334155', jersey: '#dc2626', tracksuit: '#111827', 'chain-tee': '#f8fafc', fur: '#a16207', 'cannabis-hoodie':'#166534', dj:'#312e81', scrubs:'#0e7490', labcoat:'#f8fafc', mechanic:'#292524', hardhat:'#f59e0b', farmer:'#365314', suit:'#111827', tactical:'#374151', chef:'#f8fafc', firefighter:'#991b1b', varsity:'#7f1d1d', adventurer:'#3b493b', denim:'#1d4ed8', ranch:'#92400e', hype:'#db2777', 'titan-exoframe':'#334155' }[c.outfit] || '#3b82f6';
   o.push(`<path d="M18 120 C22 92 40 84 60 84 C80 84 98 92 102 120Z" fill="${shirt}"/>`);
+  o.push('<path d="M18 120 C22 92 40 84 60 84 C80 84 98 92 102 120Z" fill="url(#sh-b)"/><path d="M24 108 C28 94 42 87 54 86 C44 92 34 98 30 120 L22 120Z" fill="#fff" opacity=".10"/><path d="M60 84 C54 96 52 108 54 120" stroke="#000" stroke-opacity=".12" stroke-width="2" fill="none"/>');
   if (c.outfit === 'adventurer') o.push('<path d="M24 117 L42 89 L51 93 L48 120 L25 120Z M96 117 L78 89 L69 93 L72 120 L95 120Z" fill="#233c33" stroke="#c49b65" stroke-width="1.4"/><path d="M46 87 L61 112 L75 87 M51 107 H69" stroke="#d1aa66" stroke-width="3" fill="none"/>');
   if (c.outfit === 'hoodie') o.push('<path d="M42 88 C48 100 72 100 78 88" fill="none" stroke="#1e293b" stroke-width="4"/>');
   if (c.outfit === 'jersey') o.push('<text x="60" y="112" font-size="16" font-family="Arial" font-weight="700" fill="#fff" text-anchor="middle">7</text>');
@@ -152,12 +153,14 @@ function svg(c) {
   if (c.outfit === 'fur') o.push('<path d="M22 118 C26 96 40 88 50 88 L56 120Z M98 118 C94 96 80 88 70 88 L64 120Z" fill="#fde68a" opacity=".85"/>');
   if (c.outfit === 'chain-tee') o.push('<path d="M44 88 Q60 108 76 88" fill="none" stroke="url(#au)" stroke-width="3.5" stroke-dasharray="4 2"/><circle cx="60" cy="102" r="5" fill="url(#au)"/>');
   o.push(`<rect x="52" y="72" width="16" height="16" rx="6" fill="${s}"/>`);
+  o.push('<path d="M52 76 Q60 84 68 76 L68 86 L52 86Z" fill="#000" opacity=".16"/>');
   const faceW = c.gender === 'female' ? 24 : c.gender === 'male' ? 27 : 25;
   const face = ['square','angular','chiseled'].includes(c.face) ? `<rect x="${60-faceW}" y="28" width="${faceW*2}" height="54" rx="16" fill="${s}"/>` : c.face === 'oval' ? `<ellipse cx="60" cy="54" rx="${faceW}" ry="29" fill="${s}"/>` : `<ellipse cx="60" cy="55" rx="${faceW+1}" ry="27" fill="${s}"/>`;
   if (c.hair === 'long' || c.hair === 'braids') o.push(`<path d="M32 50 C30 30 44 22 60 22 C76 22 90 30 88 50 L92 92 L76 90 L74 60 L46 60 L44 90 L28 92Z" fill="${hc}"/>`);
   if (c.hair === 'afro') o.push(`<circle cx="60" cy="42" r="34" fill="${hc}"/>`);
   if (c.hair === 'bun') o.push(`<circle cx="60" cy="20" r="10" fill="${hc}"/>`);
   o.push(`<circle cx="33" cy="56" r="5" fill="${s}"/><circle cx="87" cy="56" r="5" fill="${s}"/>`, face);
+  o.push('<ellipse cx="60" cy="54" rx="27" ry="29" fill="url(#sh-f)"/><ellipse cx="46" cy="63" rx="5.5" ry="3.2" fill="#fb7185" opacity=".20"/><ellipse cx="74" cy="63" rx="5.5" ry="3.2" fill="#fb7185" opacity=".20"/><path d="M60 56 Q57 62 60 64" stroke="#000" stroke-opacity=".14" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="52" cy="38" rx="9" ry="4" fill="#fff" opacity=".16"/>');
   const HAIR = { buzz: `<path d="M35 46 C36 30 48 26 60 26 C72 26 84 30 85 46 C80 38 70 34 60 34 C50 34 40 38 35 46Z" fill="${hc}" opacity=".9"/>`,
     curly: `<g fill="${hc}">${[38, 46, 54, 62, 70, 78, 84].map((x, i) => `<circle cx="${x}" cy="${32 + (i % 2) * 3}" r="8"/>`).join('')}</g>`,
     afro: `<path d="M33 50 C33 34 46 28 60 28 C74 28 87 34 87 50 C80 40 70 37 60 37 C50 37 40 40 33 50Z" fill="${hc}"/>`,
@@ -205,7 +208,7 @@ function svg(c) {
   if (c.emote === 'cheer' || c.emote === 'victory') o.push('<g fill="#facc15"><path d="M12 25 L16 16 L20 25 L30 29 L20 32 L16 42 L12 32 L3 29Z"><animate attributeName="opacity" values=".2;1;.2" dur="1.2s" repeatCount="indefinite"/></path><path d="M102 13 L106 5 L110 13 L118 17 L110 21 L106 30 L102 21 L94 17Z"/></g>');
   if (c.emote === 'salute') o.push('<path d="M78 46 Q91 32 105 38" fill="none" stroke="#f1c19b" stroke-width="7" stroke-linecap="round"><animate attributeName="opacity" values=".4;1;.4" dur="1.2s" repeatCount="indefinite"/></path>');
   if (c.emote === 'laugh') o.push('<g fill="#fbbf24"><circle cx="16" cy="60" r="3"/><circle cx="104" cy="60" r="3"><animate attributeName="cy" values="60;71;60" dur="1.3s" repeatCount="indefinite"/></circle></g>');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">${o.join('')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">${o.join('')}<rect width="120" height="120" rx="24" fill="url(#sh-v)"/><rect width="120" height="120" rx="24" fill="url(#sh-l)"/><rect x=".75" y=".75" width="118.5" height="118.5" rx="23.4" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.5"/></svg>`;
 }
 function partsFor(userId) { const ctx = {}; return P.map(p => ({ kind: p.kind, id: p.id, label: p.label, unlock: p.unlock, owned: userId ? owns(userId, p, ctx) : p.unlock === 'free',
   crowns: p.unlock.crowns || 0, points: pointsPrice(p), credits: pointsPrice(p) })); }

@@ -1,7 +1,7 @@
 // Cloud Hopper - original vertical bounce climber (Hub build). Art: Kenney Jumper Pack (CC0), see LICENSE-Kenney-CC0.txt
 const CH = {}; let chN = 0; const CHL = ['bg_layer1', 'bg_layer2', 'bg_layer3', 'bg_layer4', 'ground_grass_small', 'ground_snow_small', 'ground_wood_small_broken', 'ground_cake_small', 'spring', 'spring_out', 'flyMan_fly', 'flyMan_still_fly', 'bunny1_jump', 'bunny1_stand', 'bunny1_hurt']; CHL.forEach(n => { const im = new Image(); im.onload = () => chN++; im.src = 'img/' + n + '.webp'; CH[n] = im; });
-Kit.run({ id: 'gl-cloud-hopper', title: 'CLOUD HOPPER', help: 'Tilt with arrows / hold left or right side\nBounce up - springs, movers and breakers', bg: '#0b1240',
-  init(g) { g.p = { x: 200, y: 560, vx: 0, vy: -600 }; g.cam = 0; g.top = 0; g.pl = [{ x: 160, y: 620, w: 80, t: 0 }]; g.hi = 620; while (g.hi > -800) gen(g); g.en = []; },
+Kit.run({ fill: true, id: 'gl-cloud-hopper', title: 'CLOUD HOPPER', help: 'Tilt with arrows / hold left or right side\nBounce up - springs, movers and breakers', bg: '#0b1240',
+  init(g) { g.p = { x: 200, y: 560, vx: 0, vy: -600 }; g.cam = 0; g.top = 0; g.pl = [{ x: 160, y: 620, w: 80, t: 0 }, { x: 40, y: 700, w: 70, t: 0 }, { x: 290, y: 770, w: 70, t: 0 }, { x: 150, y: 840, w: 70, t: 0 }]; g.hi = 620; while (g.hi > -800) gen(g); g.en = []; },
   update(g, dt) {
     const p = g.p; let ax = g.ax(); if (g.ptr.down) ax = g.ptr.x < g.W / 2 ? -1 : 1; p.vx = Kit.lerp(p.vx, ax * 300, Math.min(1, dt * 10)); p.x += p.vx * dt; if (p.x < -15) p.x = g.W + 15; if (p.x > g.W + 15) p.x = -15;
     p.vy += 1100 * dt; const oy = p.y; p.y += p.vy * dt;

@@ -6,7 +6,7 @@ let NEB = null; function neb(W, H) { if (NEB) return NEB; const cv = document.cr
   for (const [x, y, r, col] of [[90, 160, 260, 'rgba(120,40,160,.35)'], [330, 520, 300, 'rgba(20,90,160,.33)'], [250, 300, 180, 'rgba(200,60,120,.16)'], [60, 620, 200, 'rgba(40,160,120,.14)']]) { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H); }
   for (let i = 0; i < 260; i++) { const x = Math.random() * W, y = Math.random() * H, b = Math.random(); c.fillStyle = `rgba(255,255,255,${0.2 + b * 0.7})`; c.fillRect(x, y, b > 0.92 ? 2 : 1, b > 0.92 ? 2 : 1); }
   c.save(); c.translate(W - 90, 96); const pg = c.createRadialGradient(-12, -12, 4, 0, 0, 42); pg.addColorStop(0, '#9be7c4'); pg.addColorStop(1, '#14532d'); c.fillStyle = pg; c.beginPath(); c.arc(0, 0, 40, 0, 7); c.fill(); c.strokeStyle = 'rgba(180,255,200,.35)'; c.lineWidth = 3; c.beginPath(); c.ellipse(0, 0, 62, 12, -0.3, 0, 7); c.stroke(); c.fillStyle = 'rgba(157,255,122,.55)'; c.font = 'bold 9px sans-serif'; c.textAlign = 'center'; c.fillText('PLANET KUSH \u00b7 21+', 0, 62); c.restore(); return (NEB = cv); }
-Kit.run({ id: 'gl-rock-buster', title: 'ROCK BUSTER', help: 'Desktop: arrows rotate/thrust, Space fire\nTouch: stick to steer + thrust, FIRE button', bg: '#02030f', stick: true,
+Kit.run({ id: 'gl-rock-buster', fill: true, title: 'ROCK BUSTER', help: 'Desktop: arrows rotate/thrust, Space fire\nTouch: stick to steer + thrust, FIRE button', bg: '#02030f', stick: true,
   buttons: [{ id: 'F', key: 'f', label: 'FIRE' }],
   init(g) { g.s = { x: 200, y: 350, a: -Math.PI / 2, vx: 0, vy: 0, inv: 2 }; g.rocks = []; g.sh = []; g.lv = 0; g.lives = 3; g.cd = 0; g.ufo = null; g.ub = []; next(g); },
   update(g, dt) {

@@ -31,7 +31,7 @@ const NAV_G = [
   ['Players', [['players', 'users', 'Players', 'users.view'], ['moderation', 'scan-eye', 'Moderation', 'moderation.queue', 'mod'], ['reports', 'file-text', 'Exports', 'giveaways.view']]],
   ['Live ops', [['events', 'party-popper', 'Specials & events', 'events.manage'], ['seasons', 'calendar-range', 'Seasons', 'seasons.manage'], ['shop', 'shopping-bag', 'Shop', 'shop.manage'], ['badges', 'badge-check', 'Badges', 'badges.award'], ['announcements', 'megaphone', 'Announcements', 'announcements.post']]],
   ['Business', [['sponsor', 'briefcase', 'Sponsor requests', 'billing.view'], ['official', 'badge-check', 'Official events', 'giveaways.view'], ['store', 'wallet', 'Store & orders', 'billing.view'], ['channels', 'store', 'Brands', 'settings.manage']]],
-  ['Admin', [['team', 'shield-half', 'Team & roles', 'dashboard.view'], ['log', 'history', 'Action log', 'actionlog.view'], ['security', 'shield-check', 'Security', 'dashboard.view'], ['settings', 'settings', 'Settings', 'settings.manage'], ['system', 'server-cog', 'System', 'settings.manage']]],
+  ['Admin', [['team', 'shield-half', 'Team & roles', 'dashboard.view'], ['log', 'history', 'Action log', 'actionlog.view'], ['security', 'shield-check', 'Security', 'dashboard.view'], ['systems', 'cpu', 'Systems', 'settings.manage'], ['settings', 'settings', 'Settings', 'settings.manage'], ['system', 'server-cog', 'System', 'settings.manage']]],
 ];
 let V7 = null, V7ME = null, V7AT = 0;
 const canV7 = (k) => !V7ME || !k || !!(V7ME.perms || {})[k];
@@ -123,7 +123,7 @@ async function dashboard() {
       <div class="card"><div class="panel-h"><h2>Upcoming & Live Giveaways</h2><a class="small" href="/admin/giveaways">View All</a></div>
         ${s.upcoming.length ? s.upcoming.map(g => `<a class="act" href="/admin/giveaways/${g.id}" style="color:var(--text)"><span class="dot" style="background:#f59e0b33;color:#f59e0b">${icon('gift')}</span><span><b>${esc(g.title)}</b>${demoTag(g.demo)}<div class="small muted">${statusPill(g.status)} ${fmt(g.entrants)} entrants</div></span><span class="t">${g.status === 'upcoming' ? 'starts ' + dt(g.start_at) : 'ends ' + dt(g.end_at)}</span></a>`).join('') : '<div class="empty">None scheduled.</div>'}
         <div style="padding:12px"><a class="btn block" href="/admin/giveaways/new">${icon('plus')} New Giveaway</a></div>
-        <div class="small muted" style="padding:0 14px 12px">Anti-cheat: ${fmt(s.rejected_runs)} rejected run submission${s.rejected_runs === 1 ? '' : 's'}. ${s.games_live}/${s.games_total} games live.</div>
+        <div class="small muted" style="padding:0 14px 12px">Anti-cheat: ${fmt(s.rejected_runs)} rejected run submission${s.rejected_runs === 1 ? '' : 's'}. ${s.games_live}/${s.games_total} core games live (the Games Library is counted separately).</div>
       </div>
     </div>`);
 }
@@ -457,7 +457,11 @@ async function channels(editId) {
         <div class="field"><label class="lbl">Business type</label><input class="input" id="c-bt" value="${esc(f.business_type)}" maxlength="80"></div>
         <label class="check"><input type="checkbox" id="c-active" ${f.active ? 'checked' : ''}> Visible</label>
         <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" style="flex:1">${icon('check')} ${c ? 'Save' : 'Create brand'}</button>${c ? `<button class="btn danger" type="button" id="c-del">${icon('trash-2')}</button>` : ''}</div>
-      </form></div>`, `<a class="btn sm" href="/admin/channels/new">${icon('plus')} New brand</a>`);
+      </form>${c ? `<div class="card pad" id="pubpage" style="margin-top:12px"><h2 style="margin-bottom:6px">Public brand page</h2><p class="muted small" style="margin-top:0">Shown at /brand/${esc(f.slug)} and in Featured Brands. Facts only: never promise followers, subscribers, traffic or sales.</p>
+        <label class="check"><input type="checkbox" id="c-feat" ${(BI[c.id] || {}).featured ? 'checked' : ''}> Featured Brand (Home + Giveaways carousel)</label>
+        <div class="field"><label class="lbl">About (public, up to 600 characters)</label><textarea class="input" id="c-about" rows="4" maxlength="600">${esc((BI[c.id] || {}).about || '')}</textarea></div>
+        <button class="btn sm" type="button" id="c-pubsave">${icon('check')} Save page</button></div>` : ''}</div>`, `<a class="btn sm" href="/admin/channels/new">${icon('plus')} New brand</a>`);
+  { const ps = $('#c-pubsave'); if (ps) ps.onclick = async () => { const a = await api(`/api/admin/brands/${c.id}/featured`, { method: 'PUT', body: { featured: $('#c-feat').checked } }); const b = await api(`/api/admin/brands/${c.id}/about`, { method: 'PUT', body: { about: $('#c-about').value } }); toast(a.ok && b.ok ? 'Brand page saved' : (a.error || b.error)); }; }
   $('#ch-tbl').onclick = async (e) => {
     const inv = e.target.closest('[data-inv]'); if (inv) { try { await navigator.clipboard.writeText(inv.dataset.inv); toast('Invite link copied'); } catch { toast(inv.dataset.inv); } return; }
     const nc = e.target.closest('[data-newcode]'); if (nc && confirm('Make a new invite code? The old link stops working.')) { const x = await api(`/api/admin/brands/${nc.dataset.newcode}/new-code`, { method: 'POST' }); toast(x.ok ? 'New code: ' + x.invite_code : x.error); channels(editId); }
@@ -670,7 +674,7 @@ async function storeAdmin() {
       <p class="small muted">${esc(r.non_advantage)}</p></div>
     <div class="card wrap-x" style="margin-top:12px"><table class="tbl"><thead><tr><th>Product</th><th>Kind</th><th class="num">Price (USD)</th><th class="num">Crowns+bonus / supply</th><th>Active</th><th></th></tr></thead><tbody>
       ${r.products.map(p => `<tr data-p="${esc(p.id)}"><td><input class="input sm" data-k="name" value="${esc(p.name)}"></td><td>${esc(p.kind)}</td><td class="num"><input class="input sm num" type="number" step="0.01" data-k="usd" value="${(p.usd_cents / 100).toFixed(2)}"></td>
-        <td class="num">${p.kind === 'pack' ? `<input class="input sm num" type="number" data-k="crowns" value="${p.crowns}"> + <input class="input sm num" type="number" data-k="bonus" value="${p.bonus}">` : p.kind === 'prestige' ? `<input class="input sm num" type="number" data-k="supply" value="${p.supply}">` : ''}</td>
+        <td class="num">${p.kind === 'pack' ? `<input class="input sm num" type="number" data-k="crowns" value="${p.crowns}"> + <input class="input sm num" type="number" data-k="bonus" value="${p.bonus}">` : p.kind === 'prestige' ? '<span class="muted">unlimited</span>' : ''}</td>
         <td><input type="checkbox" data-k="active" ${p.active ? 'checked' : ''}></td><td><button class="btn sm" data-save="${esc(p.id)}">Save</button></td></tr>`).join('')}</tbody></table></div>
     <div class="card pad" style="margin-top:12px"><h2>Manual grant</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="input sm" id="mg-user" placeholder="username"><select class="input sm" id="mg-prod">${r.products.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select><input class="input sm" id="mg-crowns" type="number" placeholder="or Crowns (+/-)"><button class="btn sm" id="mg-go">Grant</button></div></div>
     <div class="card wrap-x" style="margin-top:12px"><table class="tbl"><thead><tr><th>Order</th><th>Player</th><th>Product</th><th class="num">USD</th><th class="num">Sats / received</th><th>Status</th><th>Tx</th><th></th></tr></thead><tbody>

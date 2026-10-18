@@ -53,8 +53,8 @@ function player() {
   const U = {}; for (const n of ['ava', 'ben', 'cam', 'dee', 'eli', 'fay']) U[n] = mkUser(`t7${n}_${tag}`);
   const uname = (k) => `t7${k}_${tag}`;
   const insRun = db.prepare('INSERT INTO runs (user_id, game_id, score, coins, duration_ms, started_at, created_at, ip_hash, verify, held, event_id) VALUES (?,?,?,0,?,?,?,?,?,?,?)');
-  // a run that ended `ago` seconds ago and lasted `dur` seconds (server-measured); verify='cleared' = passed review
-  const run = (uid, game, score, ago, dur = 60, o = {}) => { const c = Date.now() - ago * 1000; return insRun.run(uid, game, score, dur * 1000, c - dur * 1000, c, 'e2e' + uid, o.verify ?? 'cleared', o.held ? 1 : 0, o.event ?? EV).lastInsertRowid; };
+  // a run that ended `ago` seconds ago and lasted `dur` seconds (server-measured); verify='replay-ok' = passed independent replay
+  const run = (uid, game, score, ago, dur = 60, o = {}) => { const c = Date.now() - ago * 1000; return insRun.run(uid, game, score, dur * 1000, c - dur * 1000, c, 'e2e' + uid, o.verify ?? 'replay-ok', o.held ? 1 : 0, o.event ?? EV).lastInsertRowid; };
   let EV = null; // v7: runs only count for the official event they were started in -> tag seeded runs with the latest giveaway
   const join = (gid, ...ks) => { for (const k of ks) db.prepare('INSERT OR IGNORE INTO giveaway_entries (giveaway_id, user_id, joined_at) VALUES (?,?,?)').run(gid, U[k], Date.now() - 50 * MIN); };
   const O = adminClient(BASE, env);
@@ -122,7 +122,7 @@ function player() {
       if (!over.prizes) over = { ...over, prizes: [{ id: 'p1', name: 'Hub hoodie', qty: 1, value: 60, type: 'physical', award: 'rank' }] };
       const data = { ...base, ...over, basics: { ...base.basics, ...(over.basics || {}) }, media: { ...base.media, ...(over.media || {}) }, schedule: { ...base.schedule, ...(over.schedule || {}) }, games: { ...base.games, ...(over.games || {}) }, entry: { ...base.entry, ...(over.entry || {}) }, winners: { ...base.winners, ...(over.winners || {}) }, features: { ...base.features, ...(over.features || {}) } };
       const s = await O('/api/admin/v7/gw/drafts/' + id, { method: 'PUT', body: { data } }); if (!publish) return { draft: id, save: s.body };
-      const p = await O(`/api/admin/v7/gw/drafts/${id}/publish`, { body: {} }); if (p.body.id) EV = p.body.id; return { draft: id, save: s.body, pub: p.body, id: p.body.id };
+      const p = await O(`/api/admin/v7/gw/drafts/${id}/publish`, { body: {} }); if (p.body.id) { EV = p.body.id; db.prepare('UPDATE giveaways SET start_at=start_at-7200e3 WHERE id=?').run(EV); } return { draft: id, save: s.body, pub: p.body, id: p.body.id };
     }
     const standings = async (gid) => (await O('/api/admin/v7/gw/' + gid)).body.standings || [];
     const top = async (gid) => (await standings(gid)).map(x => [x.username.replace(/^t7|_.*$/g, ''), x.score]);
@@ -141,13 +141,13 @@ function player() {
       entry: { require_join: true, activity_weight: true, age21: true }, winners: { claim_hours: 48 } });
     ok(full.save.ok && !full.save.validation.errors.length, 'custom draft validates', full.save.validation);
     ok(full.pub && full.pub.ok && full.id, 'custom giveaway published', full.pub);
-    const FG = full.id; join(FG, 'ava', 'ben', 'cam', 'dee', 'eli');
-    run(U.ava, 'munchies-snake', 300, 20 * 60); run(U.ava, 'brick-breaker', 100, 19 * 60);   // 300 + 2x100 = 500 (reached 19 min ago)
-    run(U.ben, 'munchies-snake', 500, 10 * 60);                                                // 500 (reached 10 min ago) -> loses the tie
-    run(U.cam, 'munchies-snake', 200, 15 * 60); run(U.cam, 'brick-breaker', 50, 14 * 60); run(U.cam, 'munchies-snake', 150, 13 * 60); // 200 + 100 = 300
-    run(U.dee, 'brick-breaker', 120, 12 * 60);                                                 // 240
-    run(U.eli, 'munchies-snake', 9_999_999, 8 * 60, 10, { verify: '' });                      // over the plausibility cap, not reviewed: does not count
-    run(U.eli, 'munchies-snake', 90, 7 * 60); run(U.fay, 'munchies-snake', 5000, 6 * 60);     // fay never joined
+    const FG = full.id; db.prepare('UPDATE giveaways SET start_at=start_at-7200e3 WHERE id=?').run(FG); join(FG, 'ava', 'ben', 'cam', 'dee', 'eli');
+    run(U.ava, 'munchies-snake', 300, 20 * 60, 60, { event: FG }); run(U.ava, 'brick-breaker', 100, 19 * 60, 60, { event: FG });   // 300 + 2x100 = 500 (reached 19 min ago)
+    run(U.ben, 'munchies-snake', 500, 10 * 60, 60, { event: FG });                                                // 500 (reached 10 min ago) -> loses the tie
+    run(U.cam, 'munchies-snake', 200, 15 * 60, 60, { event: FG }); run(U.cam, 'brick-breaker', 50, 14 * 60, 60, { event: FG }); run(U.cam, 'munchies-snake', 150, 13 * 60, 60, { event: FG }); // 200 + 100 = 300
+    run(U.dee, 'brick-breaker', 120, 12 * 60, 60, { event: FG });                                                 // 240
+    run(U.eli, 'munchies-snake', 9_999_999, 8 * 60, 10, { verify: '', event: FG });                      // over the plausibility cap, not reviewed: does not count
+    run(U.eli, 'munchies-snake', 90, 7 * 60, 60, { event: FG }); run(U.fay, 'munchies-snake', 5000, 6 * 60, 60, { event: FG });     // fay never joined
     let st = await top(FG);
     ok(JSON.stringify(st.slice(0, 4)) === JSON.stringify([['ben', 500], ['ava', 500], ['cam', 300], ['dee', 240]]), 'weighted sum of best per game; tie 500/500 goes to the shorter server-timed play (ben 60 s beats ava 120 s; who scored first no longer matters)', st);
     ok(st.find(x => x[0] === 'eli')[1] === 90 && !st.some(x => x[0] === 'fay'), 'unverified over-cap run ignored (only verified runs count); non-entrant not ranked', st);

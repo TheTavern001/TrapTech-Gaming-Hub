@@ -1,0 +1,61 @@
+/* v8 systems UI (theme and colors unchanged: uses the existing v7 tokens) */
+.shop-bal{flex-wrap:wrap;row-gap:10px}
+.shop-bal>div:nth-child(2){flex:1 1 150px;min-width:150px}
+.shop-bal .orb{letter-spacing:.08em;white-space:nowrap}
+.shop-bal .btn{flex:0 0 auto}
+.shop-catalog-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0}
+.shop-catalog-filters input{grid-column:1/-1}
+.shop-catalog-filters .btn{grid-column:1/-1}
+@media(min-width:640px){.shop-catalog-filters{grid-template-columns:2fr 1fr 1fr 1fr auto}.shop-catalog-filters input,.shop-catalog-filters .btn{grid-column:auto}}
+.v8-note{margin:0 0 8px}
+.v8-qs{display:grid;gap:10px;margin-bottom:12px}
+.v8-qs-h{display:flex;justify-content:space-between;align-items:center}
+.v8-q{border:1px solid var(--line,rgba(255,255,255,.1));border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.03);display:grid;gap:6px}
+.v8-q.done:not(.claimed){border-color:var(--green,#34d399);box-shadow:0 0 0 1px rgba(52,211,153,.25) inset}
+.v8-q.claimed{opacity:.6}
+.v8-q-h{display:flex;align-items:center;gap:8px}
+.v8-q-f{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.v8-tier{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:99px;background:rgba(255,255,255,.1)}
+.v8-tier.t-hard{background:rgba(168,85,247,.25)}.v8-tier.t-elite{background:rgba(250,204,21,.22)}.v8-tier.t-mythic{background:linear-gradient(90deg,#f472b6,#facc15);color:#1c1917}
+.v8-rw{display:inline-flex;align-items:center;gap:4px;font-weight:700}
+.v8-ach-sum{display:grid;gap:10px}
+.v8-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}
+.v8-game{display:grid;gap:4px;text-align:left;padding:10px;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.1));background:rgba(255,255,255,.03);color:inherit;cursor:pointer;min-height:44px}
+.v8-game:hover{border-color:var(--accent,#8b5cf6)}
+.v8-fams{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.v8-steps{display:grid;gap:6px;max-height:520px;overflow:auto}
+.v8-step{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:8px;border-radius:12px;background:rgba(255,255,255,.03);opacity:.6}
+.v8-step.on{opacity:1;background:rgba(52,211,153,.08)}
+.v8-ic{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08)}
+
+.v8-fbs{gap:10px;padding-bottom:4px}
+.v8-fb{display:flex;align-items:center;gap:10px;min-width:210px;padding:10px 12px;border-radius:14px;background:var(--card,#161a2b);border:1px solid rgba(255,255,255,.08);color:inherit;text-decoration:none}
+.v8-fb small{display:block;opacity:.7;font-size:.75rem}
+.v8-bl{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:800;background:var(--bc);color:#fff;overflow:hidden}
+.v8-bl img{width:100%;height:100%;object-fit:cover}
+.v8-bp-h{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.v8-bp .card{margin-top:12px}
+
+/* v8 polish: counts use the body face (Orbitron's slashed zero reads as a "no" sign at small sizes) */
+.stat3 b,.fcount b,.xp-num,.ec-priceline b{font-family:'Exo 2',system-ui,sans-serif;font-weight:800;letter-spacing:.01em}
+.stat3 .card{background:linear-gradient(160deg,rgba(124,58,237,.14),rgba(34,211,238,.05));border:1px solid rgba(255,255,255,.08);transition:transform .18s ease,border-color .18s ease}
+.stat3 .card:hover{transform:translateY(-2px);border-color:rgba(167,139,250,.5)}
+.prof-head .av{box-shadow:0 0 0 3px rgba(34,211,238,.75),0 0 28px rgba(124,58,237,.55)}
+.v8-fb,.card{transition:border-color .18s ease,box-shadow .18s ease}
+.v8-fb:hover{border-color:rgba(167,139,250,.6);box-shadow:0 6px 22px rgba(124,58,237,.25)}
+.btn-row .btn{min-height:44px}
+@media (prefers-reduced-motion:reduce){.stat3 .card,.v8-fb,.card{transition:none}.stat3 .card:hover{transform:none}}
+
+/* AAA polish: touch targets, leaderboard filter row */
+.lb-filters{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-bottom:10px}
+.lb-filters .chips{flex:1 1 100%;padding:0;min-width:0}
+.lb-chk{margin:0;white-space:nowrap;min-height:36px;display:inline-flex;align-items:center;gap:6px}
+.hub-home-link{min-height:44px;display:inline-flex;align-items:center}
+a.small,.sec-h a,.section-h a,.row-h a,.card-h a{display:inline-flex;align-items:center;min-height:40px;padding:0 6px}
+.hype{min-height:40px;padding-inline:14px}
+a.ph-av{display:inline-flex;min-width:44px;min-height:44px;align-items:center;justify-content:center}
+/* Orbitron's zero is slashed and reads like a "no" sign next to counts; use Exo 2's clean zero for U+0030 only */
+@font-face{font-family:'Orbitron';font-weight:600;font-display:swap;unicode-range:U+0030;src:url(/fonts/exo-2-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Orbitron';font-weight:700;font-display:swap;unicode-range:U+0030;src:url(/fonts/exo-2-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Orbitron';font-weight:800;font-display:swap;unicode-range:U+0030;src:url(/fonts/exo-2-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:'Orbitron';font-weight:900;font-display:swap;unicode-range:U+0030;src:url(/fonts/exo-2-latin-800-normal.woff2) format('woff2')}

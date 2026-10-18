@@ -100,8 +100,9 @@ const FORMS = {
       <div class="fld"><span class="fl">Sponsor logo</span><div class="img-row">${b.sponsor_logo ? `<img src="${esc(b.sponsor_logo)}" alt="" class="logo-prev">` : '<span class="muted small">No logo (text name is used)</span>'}<button type="button" class="btn sm ghost" data-act="up-logo">${icon('upload')} Upload</button>${b.sponsor_logo ? '<button type="button" class="btn sm ghost" data-act="rm-logo">Remove</button>' : ''}</div></div>
       ${field('Brand', `<select class="input" data-k="basics.channel_id" data-type="num" data-rerender="1"><option value="0">None (Trap Tech, hub-wide)</option>${brands.map(c => `<option value="${c.id}" ${+b.channel_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>`, 'Brands come from Brand affiliation (one brand per player).')}
       <fieldset class="seg"><legend>Who can enter</legend>
-        <label class="seg-opt ${b.hub_wide ? 'on' : ''}"><input type="radio" name="aud" data-act="aud" value="all" ${b.hub_wide ? 'checked' : ''}>${icon('globe')}<span><b>Open to everyone</b><small>Every eligible hub player, whatever brand they are in.</small></span></label>
-        <label class="seg-opt ${!b.hub_wide ? 'on' : ''} ${!b.channel_id ? 'dis' : ''}"><input type="radio" name="aud" data-act="aud" value="brand" ${!b.hub_wide ? 'checked' : ''} ${!b.channel_id ? 'disabled' : ''}>${icon('store')}<span><b>Brand members only</b><small>${b.channel_id ? `Only players in ${esc((brands.find(x => x.id === +b.channel_id) || {}).name || 'this brand')}.` : 'Pick a brand first.'}</small></span></label></fieldset>`;
+        <label class="seg-opt ${b.hub_wide && !b.invite_only ? 'on' : ''}"><input type="radio" name="aud" data-act="aud" value="all" ${b.hub_wide && !b.invite_only ? 'checked' : ''}>${icon('globe')}<span><b>Open to everyone</b><small>Every eligible hub player, whatever brand they are in.</small></span></label>
+        <label class="seg-opt ${!b.hub_wide && !b.invite_only ? 'on' : ''} ${!b.channel_id ? 'dis' : ''}"><input type="radio" name="aud" data-act="aud" value="brand" ${!b.hub_wide && !b.invite_only ? 'checked' : ''} ${!b.channel_id ? 'disabled' : ''}>${icon('store')}<span><b>Brand members only</b><small>${b.channel_id ? `Only players in ${esc((brands.find(x => x.id === +b.channel_id) || {}).name || 'this brand')}.` : 'Pick a brand first.'}</small></span></label></fieldset>`;
+        <label class="seg-opt ${b.invite_only ? 'on' : ''}"><input type="radio" name="aud" data-act="aud" value="invite" ${b.invite_only ? 'checked' : ''}>${icon('lock')}<span><b>Invite only</b><small>Players need an invite code you create (after publishing, open the giveaway to make codes or invite by username).</small></span></label>
   },
   media() {
     const m = S.d.media;
@@ -228,7 +229,7 @@ const FORMS = {
   },
   review() {
     const v = S.v || { errors: [], warnings: [] }; const p = plan(S.d); const s = S.d.schedule;
-    const rows = [['Title', esc(S.d.basics.title || '-')], ['Audience', S.d.basics.hub_wide ? 'Open to everyone' : 'Brand members only'], ['When', `${dtz(s.start_at)} → ${dtz(s.end_at)} (${dur(s.end_at - s.start_at)})`],
+    const rows = [['Title', esc(S.d.basics.title || '-')], ['Audience', S.d.basics.invite_only ? 'Invite only' : S.d.basics.hub_wide ? 'Open to everyone' : 'Brand members only'], ['When', `${dtz(s.start_at)} → ${dtz(s.end_at)} (${dur(s.end_at - s.start_at)})`],
       ['Publishing', s.publish_mode === 'schedule' ? `Scheduled for ${dtz(s.publish_at)}` : 'On publish'], ['Repeats', s.recur.freq ? `${s.recur.freq}, every ${s.recur.every}${s.recur.count ? `, ${s.recur.count} times` : ''}` : 'No'],
       ['Games', S.d.games.ids.map(id => `${esc(gameOf(id).title)}${S.d.games.weights[id] !== 1 ? ` x${S.d.games.weights[id]}` : ''}`).join(', ') || '-'], ['Score rule', esc(M.score_rules[S.d.games.score_rule])], ['Format', compLine(S.d)], ['Anti-cheat', esc([...new Set(S.d.games.ids.map(id => ((M.profiles || {})[id] || {}).anticheat_level || 'L2'))].join(', ')) + ` • ${esc(M.winner_rule)}`],
       ['Prizes', `${S.d.prizes.length} prizes, ${p.winners} winners, ${money(p.arv)} total`], ['Winners', METHOD[p.method]], ['Features', M.features.filter(([k]) => S.d.features[k]).map(([, l]) => esc(l)).join(', ') || 'None']];
@@ -273,7 +274,7 @@ async function onClick(e) {
   const prizeI = () => +a.closest('[data-i]').dataset.i; let rerender = true;
   switch (act) {
     case 'slug': d.basics.slug = (d.basics.title || 'giveaway').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50); break;
-    case 'aud': d.basics.hub_wide = a.value === 'all'; d.entry.brand_only = !d.basics.hub_wide; if (d.basics.hub_wide) d.entry.follow_sponsor = false; break;
+    case 'aud': d.basics.invite_only = a.value === 'invite'; d.basics.hub_wide = a.value === 'all' || a.value === 'invite'; d.entry.brand_only = a.value === 'brand'; d.entry.follow_sponsor = false; break;
     case 'up-logo': { const u = await cropUpload({ kinds: ['square'], kind: 'logo', title: 'Sponsor logo' }); if (!u) return; d.basics.sponsor_logo = u.square; break; }
     case 'rm-logo': d.basics.sponsor_logo = ''; break;
     case 'src': d.media.source = a.dataset.src; break;

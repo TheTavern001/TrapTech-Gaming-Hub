@@ -5,7 +5,7 @@
 //  (a) Hub Credits: ONE currency earned from play OR purchased; separate historical crown transactions migrate at 10 Credits each.
 //  (b) Season Pass: premium cosmetics and bonus Credits; both tracks use the same earned XP.
 //  (c) "Earn next season's pass free": a hard 48-quest chain (src/pass-quests.js, docs/PASS-QUESTS.md).
-//  (d) Prestige showcase items: three numbered, limited, very expensive cosmetics with an "owned by" wall.
+//  (d) Prestige showcase items: very expensive, UNLIMITED (one per player) cosmetics with an "owned by" wall.
 // PAYMENTS are provider-agnostic (PROVIDERS below). Default: BITCOIN to one fixed watch-only address (BTC_ADDRESS):
 // every order gets a unique exact satoshi amount (+1..999 sat offset, unique among open orders) and a 45-minute
 // quote; src/btc.js matches incoming transactions on the public chain (mempool.space). No private keys on the server.
@@ -38,16 +38,18 @@ CREATE TABLE IF NOT EXISTS pass_owned (user_id INTEGER NOT NULL, season INTEGER 
 CREATE TABLE IF NOT EXISTS pass_claims (user_id INTEGER NOT NULL, season INTEGER NOT NULL, level INTEGER NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (user_id, season, level));
 CREATE TABLE IF NOT EXISTS prestige_owned (item_id TEXT NOT NULL, serial INTEGER NOT NULL, user_id INTEGER, order_id INTEGER, created_at INTEGER NOT NULL, revoked_at INTEGER, PRIMARY KEY (item_id, serial));
 `);
-// Database-level guard: each new Prestige original can have only one active owner.
-// Legacy numbered editions are excluded because their historical supply may exceed one.
-db.exec("CREATE UNIQUE INDEX IF NOT EXISTS prestige_original_one_owner ON prestige_owned(item_id) WHERE item_id LIKE 'prestige-original-%' AND revoked_at IS NULL");
+// v8: Prestige items are UNLIMITED - there is no supply, no 'numbered' edition and no sold-out state.
+// The only database guard left is one copy per player. (The old one-owner-per-item index is dropped.)
+db.exec("DROP INDEX IF EXISTS prestige_original_one_owner");
+db.exec("CREATE UNIQUE INDEX IF NOT EXISTS prestige_one_per_user ON prestige_owned(item_id, user_id) WHERE user_id IS NOT NULL AND revoked_at IS NULL");
+db.exec("CREATE INDEX IF NOT EXISTS prestige_owned_by_item ON prestige_owned(item_id, created_at)");
 for (const [name, type] of [['provider_ref','TEXT'], ['checkout_url','TEXT'], ['provider_payment_id','TEXT'], ['pack_crowns','INTEGER']]) {
   if (!db.prepare('PRAGMA table_info(store_orders)').all().some(c => c.name === name)) db.exec(`ALTER TABLE store_orders ADD COLUMN ${name} ${type}`);
 }
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS store_orders_provider_ref ON store_orders(provider, provider_ref) WHERE provider_ref IS NOT NULL');
 
 // ---------- catalog (prices are PUBLIC for player items; booking prices are not) ----------
-// Exactly 12 prestige originals. Each is a one-of-one digital cosmetic; never duplicate, recolor, or replenish.
+// 12 Prestige originals. v8: unlimited copies (one per player), cosmetic only, no cash value; no supply cap, no numbering.
 const PRESTIGE = {
   'prestige-original-cane': { name: 'Diamond Don Cane', blurb: 'A cut-crystal crown tops a hand-set diamond cane; prismatic sparkle trail, gold reflections, and a slow ceremonial reveal.', fx: 'prism-cane', supply: 1, usd: 100000, confs: 6 },
   'prestige-original-throne': { name: 'Stack Throne Aura', blurb: 'A towering cash-stack throne with individually drifting bills, emerald-gold backlight, and a slow orbiting crown crest.', fx: 'stack-throne', supply: 1, usd: 125000, confs: 6 },
@@ -73,10 +75,10 @@ const SEED = [
   { id: 'crowns-2400', kind: 'pack', name: '24,000 Hub Credits', usd_cents: 1999, crowns: 2000, bonus: 400, sort: 3 },
   { id: 'crowns-6500', kind: 'pack', name: '65,000 Hub Credits', usd_cents: 4999, crowns: 5000, bonus: 1500, sort: 4 },
   { id: 'season-pass', kind: 'pass', name: 'Season Pass (premium track)', usd_cents: 999, crowns: 0, bonus: 0, sort: 10, data: { bonus_crowns_total: 600, xp_boost_pct: 0 } },
-  ...Object.entries(PRESTIGE).map(([id, p], i) => ({ id, kind: 'prestige', name: p.name, usd_cents: p.usd, crowns: 0, bonus: 0, supply: p.supply, sort: 20 + i, data: { blurb: p.blurb, fx: p.fx, confs: p.confs } })),
+  ...Object.entries(PRESTIGE).map(([id, p], i) => ({ id, kind: 'prestige', name: p.name, usd_cents: p.usd, crowns: 0, bonus: 0, supply: null, sort: 20 + i, data: { blurb: p.blurb, fx: p.fx, confs: p.confs } })),
 ];
 { const ins = db.prepare('INSERT OR IGNORE INTO store_products (id, kind, name, usd_cents, crowns, bonus, supply, data, active, sort, updated_at) VALUES (?,?,?,?,?,?,?,?,1,?,?)');
-  const updPrestige = db.prepare("UPDATE store_products SET name=?, usd_cents=?, supply=1, data=?, sort=?, updated_at=? WHERE id=? AND kind='prestige'");
+  const updPrestige = db.prepare("UPDATE store_products SET name=?, usd_cents=?, supply=NULL, data=?, sort=?, updated_at=? WHERE id=? AND kind='prestige'");
   for (const p of SEED) {
     ins.run(p.id, p.kind, p.name, p.usd_cents, p.crowns, p.bonus, p.supply ?? null, JSON.stringify(p.data || {}), p.sort, Date.now());
     // Keep the database's existing product row aligned with the canonical one-of-one catalog.
@@ -93,15 +95,31 @@ function productData(p) {
   const data = JSON.parse(p.data || '{}');
   return p.kind === 'pass' ? { ...data, xp_boost_pct: 0 } : data;
 }
-const prod = (id) => { const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = productData(p); return p; };
+// v8: any cosmetic on sale in the rotating shop can be bought with cash. Product id = 'cos:<item id>'; price in cents = Credit price / 10
+// (the same rate as the Credit packs: 5,000 Credits = $4.99), clamped to $0.99-$99.99 and snapshotted on the order.
+const COS_PRODUCT = /^cos:(v7[A-Za-z0-9_-]{1,60}|[a-z0-9][a-z0-9_-]{1,60})$/;
+function cosProduct(id, t = Date.now()) {
+  const m = COS_PRODUCT.exec(String(id)); if (!m) return null; const SH = require('./shop'); const it = SH.BY_ID[m[1]]; if (!it) return null;
+  const credits = Number(it.price) || 0; if (!(credits > 0) || it.src === 'k' || it.src === 'b' || it.src === 'p') return null;
+  return { id: 'cos:' + it.id, kind: 'cosmetic', name: it.name, usd_cents: Math.min(9999, Math.max(99, Math.ceil(credits / 10))), crowns: 0, bonus: 0, active: 1, data: { item: it.id, credits }, onSale: SH.onSale(it.id, t) };
+}
+const prod = (id) => { if (String(id).startsWith('cos:')) return cosProduct(id); const p = db.prepare('SELECT * FROM store_products WHERE id=?').get(id); if (p) p.data = productData(p); return p; };
+const ownsCos = (userId, p) => !!db.prepare('SELECT 1 FROM user_items WHERE user_id=? AND item_id=?').get(userId, p.data.item);
+const openCosOrder = (userId, id) => !!db.prepare("SELECT 1 FROM store_orders WHERE product_id=? AND user_id=? AND status IN ('pending','seen','confirming')").get(id, userId);
+const cosGate = (user, p) => p.kind !== 'cosmetic' ? null : !p.onSale ? { status: 409, error: 'That item is not in the shop right now.' } : (ownsCos(user.id, p) || openCosOrder(user.id, p.id)) ? { status: 409, error: ownsCos(user.id, p) ? 'You already own this.' : 'You already have an open order for this item.' } : null;
 const products = (all = false) => db.prepare(`SELECT * FROM store_products ${all ? '' : 'WHERE active=1'} ORDER BY sort, id`).all().map(p => ({ ...p, data: productData(p) }));
 const issued = (id) => db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=? AND revoked_at IS NULL').get(id).c;
 const reserved = (id) => db.prepare("SELECT COUNT(*) c FROM store_orders WHERE product_id=? AND status IN ('pending','seen','confirming')").get(id).c;
+// v8: unlimited copies, one per player. A player cannot own (or have an open order for) the same Prestige item twice.
+const ownsPrestige = (userId, id) => !!db.prepare('SELECT 1 FROM prestige_owned WHERE item_id=? AND user_id=? AND revoked_at IS NULL').get(id, userId);
+const openPrestigeOrder = (userId, id) => !!db.prepare("SELECT 1 FROM store_orders WHERE product_id=? AND user_id=? AND status IN ('pending','seen','confirming')").get(id, userId);
 
 // ---------- settings / provider ----------
 const setting = (k, d) => { const r = db.prepare('SELECT value FROM settings WHERE key=?').get(k); try { return r ? JSON.parse(r.value) : d; } catch { return d; } };
 const setSetting = (k, v) => db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at').run(k, JSON.stringify(v), Date.now());
-const ADDR = () => String(process.env.BTC_ADDRESS || '').trim();
+// Reese's receiving address (watch-only, public). BTC_ADDRESS overrides it; checkout is still OFF until the admin switches it on.
+const DEFAULT_BTC_ADDRESS = '32Y22JCbcemRzTV661yqYzG1PU6tnoE2rB';
+const ADDR = () => String(process.env.BTC_ADDRESS || DEFAULT_BTC_ADDRESS).trim();
 // Two independent deployment flags are required; keep originals preview-only until the owner has completed real-device compatibility checks.
 const prestigeSalesEnabled = () => process.env.PRESTIGE_SALES_ENABLED === '1' && process.env.PRESTIGE_COMPATIBILITY_APPROVED === '1';
 function checkoutState() {
@@ -149,8 +167,9 @@ async function createOrder(user, productId, t = Date.now()) {
   if (p.kind === 'pack' && (!Number.isSafeInteger(p.crowns+p.bonus) ||
       p.crowns+p.bonus<=0 || p.crowns+p.bonus>100000000))
     return { status:503, error:'Credit pack temporarily unavailable; contact support' };
-  if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return { status: 409, error: 'Sold out (or the last ones are reserved by open orders).' };
+  if (p.kind === 'prestige' && (ownsPrestige(user.id, p.id) || openPrestigeOrder(user.id, p.id))) return { status: 409, error: ownsPrestige(user.id, p.id) ? 'You already own this one.' : 'You already have an open order for this item.' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: 'You already have this season\'s pass.' };
+  { const cg = cosGate(user, p); if (cg) return cg; }
   const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status='pending' AND expires_at > ?").get(user.id, t).c; if (open >= 3) return { status: 429, error: 'Finish or let your open orders expire first (max 3).' };
   let usd; try { usd = await BTC.usdPrice(); } catch (e) { return { status: 503, error: 'Could not get the Bitcoin price right now. Try again in a minute.' }; }
   const base = Math.ceil(p.usd_cents / 100 / usd * 1e8);
@@ -160,12 +179,12 @@ async function createOrder(user, productId, t = Date.now()) {
   const insertOrder = db.transaction(() => {
     // Reservation and capacity check share one SQLite transaction, so two simultaneous requests cannot reserve
     // the same one-of-one original.
-    if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return null;
+    if (p.kind === 'prestige' && (ownsPrestige(user.id, p.id) || openPrestigeOrder(user.id, p.id))) return null;
     return db.prepare('INSERT INTO store_orders (ref, user_id, product_id, usd_cents, provider, btc_usd, sats, address, need_confs, created_at, expires_at, season, pack_crowns) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
       .run(ref, user.id, p.id, p.usd_cents, 'bitcoin', usd, sats, ADDR(), needConfs(p, p.usd_cents), t, t + ORDER_TTL_MS, p.kind === 'pass' ? curSeason(t) : null, p.kind === 'pack' ? p.crowns+p.bonus : null).lastInsertRowid;
   });
   const id = insertOrder();
-  if (!id) return { status: 409, error: 'This one-of-one original has just been reserved or sold.' };
+  if (!id) return { status: 409, error: 'You already own this item or have an open order for it.' };
   return { ok: true, order: pubOrder(db.prepare('SELECT * FROM store_orders WHERE id=?').get(id)) };
 }
 const curSeason = (t = Date.now()) => require('./seasons').seasonAt(t).number;
@@ -180,19 +199,20 @@ async function createStripeOrder(user, productId, t = Date.now()) {
   if (p.kind === 'pack' && (!Number.isSafeInteger(p.crowns+p.bonus) ||
       p.crowns+p.bonus<=0 || p.crowns+p.bonus>100000000))
     return { status:503, error:'Credit pack temporarily unavailable; contact support' };
-  if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return { status: 409, error: 'Sold out (or the last ones are reserved by open orders).' };
+  if (p.kind === 'prestige' && (ownsPrestige(user.id, p.id) || openPrestigeOrder(user.id, p.id))) return { status: 409, error: ownsPrestige(user.id, p.id) ? 'You already own this one.' : 'You already have an open order for this item.' };
   if (p.kind === 'pass' && db.prepare('SELECT 1 FROM pass_owned WHERE user_id=? AND season=?').get(user.id, curSeason(t))) return { status: 409, error: "You already have this season's pass." };
+  { const cg = cosGate(user, p); if (cg) return cg; }
   const open = db.prepare("SELECT COUNT(*) c FROM store_orders WHERE user_id=? AND status IN ('pending','seen','confirming') AND expires_at > ?").get(user.id, t).c;
   if (open >= 3) return { status: 429, error: 'Finish or let your open orders expire first (max 3).' };
   const ref = 'O' + crypto.randomBytes(6).toString('hex').toUpperCase();
   const expires = t + ORDER_TTL_MS;
   const insertOrder = db.transaction(() => {
-    if (p.kind === 'prestige' && issued(p.id) + reserved(p.id) >= p.supply) return null;
+    if (p.kind === 'prestige' && (ownsPrestige(user.id, p.id) || openPrestigeOrder(user.id, p.id))) return null;
     return db.prepare("INSERT INTO store_orders (ref,user_id,product_id,usd_cents,provider,status,created_at,expires_at,season,pack_crowns) VALUES (?,?,?,?,'stripe','pending',?,?,?,?)")
       .run(ref, user.id, p.id, p.usd_cents, t, expires, p.kind === 'pass' ? curSeason(t) : null, p.kind === 'pack' ? p.crowns+p.bonus : null).lastInsertRowid;
   });
   const id = insertOrder();
-  if (!id) return { status: 409, error: 'This one-of-one original has just been reserved or sold.' };
+  if (!id) return { status: 409, error: 'You already own this item or have an open order for it.' };
   try {
     const form = new URLSearchParams();
     form.set('mode', 'payment');
@@ -244,14 +264,17 @@ function grant(o, how = 'auto', t = Date.now()) {
       if (!addCrowns(fresh.user_id,fresh.pack_crowns,'purchase',fresh.ref,t))
         return { ok:false, error:'Existing grant requires financial reconciliation' };
     }
+    else if (p.kind === 'cosmetic') {
+      if (ownsCos(fresh.user_id, p)) { db.prepare("UPDATE store_orders SET status='sold_out_refund', note=? WHERE id=?").run('Player already owned this cosmetic: refund manually', o.id); return { ok: false, error: 'already owned' }; }
+      db.prepare('INSERT INTO user_items (user_id, item_id, price, acquired_at) VALUES (?,?,0,?)').run(fresh.user_id, p.data.item, t);
+    }
     else if (p.kind === 'pass') db.prepare('INSERT OR IGNORE INTO pass_owned (user_id, season, source, order_id, created_at) VALUES (?,?,?,?,?)').run(o.user_id, o.season || curSeason(t), 'purchase', o.id, t);
     else if (p.kind === 'prestige') {
-      const issuedEver = db.prepare('SELECT COUNT(*) c FROM prestige_owned WHERE item_id=?').get(p.id).c;
-      if (issuedEver >= p.supply) {
-        db.prepare("UPDATE store_orders SET status='sold_out_refund', note=? WHERE id=?").run('One-of-one original already awarded: refund manually', o.id);
-        return { ok: false, error: 'sold out' };
+      if (ownsPrestige(o.user_id, p.id)) {
+        db.prepare("UPDATE store_orders SET status='sold_out_refund', note=? WHERE id=?").run('Player already owned this Prestige item (one per player): refund manually', o.id);
+        return { ok: false, error: 'already owned' };
       }
-      // Count every historical serial so a refunded/revoked original is never silently reissued as a "new" original.
+      // The serial is a private ownership id (never shown as scarcity); every historical serial is kept so ids are never reused.
       const serial = db.prepare('SELECT COALESCE(MAX(serial),0)+1 n FROM prestige_owned WHERE item_id=?').get(p.id).n;
       db.prepare('INSERT INTO prestige_owned (item_id, serial, user_id, order_id, created_at) VALUES (?,?,?,?,?)').run(p.id, serial, o.user_id, o.id, t);
     }
@@ -338,10 +361,11 @@ function reverseEntitlements(incoming, actor, note = '', t = Date.now()) {
         db.prepare('DELETE FROM pass_owned WHERE user_id=? AND order_id=?').run(o.user_id, o.id);
       }
       if (p.kind === 'prestige') db.prepare('UPDATE prestige_owned SET revoked_at=? WHERE order_id=?').run(t, o.id);
+      if (p.kind === 'cosmetic') db.prepare('DELETE FROM user_items WHERE user_id=? AND item_id=?').run(o.user_id, p.data.item);
     }
       db.prepare("UPDATE store_orders SET status='refunded', refunded_at=?, note=? WHERE id=? AND refunded_at IS NULL")
         .run(t, `refunded by ${actor}${note ? ': ' + note : ''}`, o.id);
-      if(p.kind==='pass'||p.kind==='prestige')
+      if(p.kind==='pass'||p.kind==='prestige'||p.kind==='cosmetic')
         require('./cosmetic-rewards').reconcileCosmeticRewards(o.user_id,t);
       return { ok:true };
     })();
@@ -418,10 +442,14 @@ function buyWithCrowns(user, itemId, t = Date.now()) {
 const NON_ADVANTAGE = 'Everything sold in the Hub Store is cosmetic. Hub Credits, the Season Pass and Prestige items never change scores, attempts, anti-cheat checks, giveaway entries, eligibility, tie-breaks or winners. Paid and free players are ranked by exactly the same rules.';
 const TERMS = '[DRAFT - FOR LAWYER REVIEW] Digital items are a limited licence to use cosmetic content in The Gaming Hub, have no cash value and cannot be exchanged for money or prizes. All sales are final once an item is delivered, except where the law requires a refund or an order was charged in error; contact Trap Tech Solutions within 14 days. Bitcoin payments are final on-chain; refunds, when granted, are sent back in BTC at the USD value of the order. You must be 21+. Prestige items are numbered and limited; their serial number is a display feature, not an investment. Trap Tech Solutions may change or retire items.';
 
-function prestigeWall() { return Object.entries(PRESTIGE).map(([id, d]) => { const p = prod(id);
-  return { id, name: p ? p.name : d.name, blurb: d.blurb, fx: d.fx, usd_cents: p ? p.usd_cents : d.usd, supply: p ? p.supply : d.supply, issued: issued(id), active: p ? !!p.active : false,
-    owners: db.prepare('SELECT o.serial, u.username, o.created_at FROM prestige_owned o JOIN users u ON u.id=o.user_id WHERE o.item_id=? AND o.revoked_at IS NULL ORDER BY o.serial').all(id) }; }); }
-const prestigeOf = (userId) => db.prepare('SELECT item_id, serial, created_at FROM prestige_owned WHERE user_id=? AND revoked_at IS NULL ORDER BY created_at').all(userId).map(r => ({ ...r, name: (PRESTIGE[r.item_id] || LEGACY_PRESTIGE[r.item_id] || {}).name, fx: (PRESTIGE[r.item_id] || LEGACY_PRESTIGE[r.item_id] || {}).fx, supply: (prod(r.item_id) || {}).supply }));
+// v8: unlimited copies. Counts only by default; the owner list is paginated (newest first) and only loaded on request, so a
+// 100k-owner item never turns the store page into a 100k-row query.
+function prestigeWall(opts = {}) { const limit = Math.min(100, Math.max(1, parseInt(opts.limit, 10) || 24)), offset = Math.max(0, parseInt(opts.offset, 10) || 0);
+  return Object.entries(PRESTIGE).map(([id, d]) => { const p = prod(id); const total = issued(id);
+  const out = { id, name: p ? p.name : d.name, blurb: d.blurb, fx: d.fx, usd_cents: p ? p.usd_cents : d.usd, supply: null, issued: total, owners_total: total, active: p ? !!p.active : false };
+  if (opts.owners) { out.owners = db.prepare('SELECT u.username, o.created_at FROM prestige_owned o JOIN users u ON u.id=o.user_id WHERE o.item_id=? AND o.revoked_at IS NULL ORDER BY o.created_at DESC, o.serial DESC LIMIT ? OFFSET ?').all(id, limit, offset); out.offset = offset; out.limit = limit; out.has_more = offset + out.owners.length < total; }
+  return out; }); }
+const prestigeOf = (userId) => db.prepare('SELECT item_id, serial, created_at FROM prestige_owned WHERE user_id=? AND revoked_at IS NULL ORDER BY created_at').all(userId).map(r => ({ ...r, name: (PRESTIGE[r.item_id] || LEGACY_PRESTIGE[r.item_id] || {}).name, fx: (PRESTIGE[r.item_id] || LEGACY_PRESTIGE[r.item_id] || {}).fx, supply: null }));
 
 function stripeSignatureOk(req) {
   const secret = String(process.env.STRIPE_WEBHOOK_SECRET || '');
@@ -496,9 +524,11 @@ function routes(app, A, H) {
     res.json({ ok: true, currency: WALLET.currency, checkout: { enabled: st.enabled, reason: st.reason, methods: st.methods || [] }, prestige_sales_enabled: prestigeSalesEnabled(),
       packs: products().filter(p => p.kind === 'pack').map(p => ({ id: p.id, name: p.name, usd_cents: p.usd_cents, credits: (p.crowns + p.bonus)*10 })),
       pass: (() => { const p = prod('season-pass'); return p && p.active ? { id: p.id, name: p.name, usd_cents: p.usd_cents, ...p.data } : null; })(),
-      prestige: prestigeWall().filter(p => p.active).map(p => ({ ...p, owners: undefined, owners_count: p.owners.length })),
+      prestige: prestigeWall().filter(p => p.active).map(p => ({ ...p, owners_count: p.owners_total, owned: me ? ownsPrestige(me.id, p.id) : false })),
       credits: me ? reviewedCredits(me.id) : null, non_advantage: NON_ADVANTAGE, terms: TERMS }); });
-  app.get('/api/store/prestige', (req, res) => res.json({ ok: true, items: prestigeWall() }));
+  app.get('/api/store/cosmetic/:id', limiter('store-cos', 120, 60e3), (req, res) => { const p = cosProduct('cos:' + String(req.params.id).slice(0, 80)); if (!p) return bad(res, 404, 'That item cannot be bought with cash.'); const me = currentUser(req); const st = checkoutState();
+    res.setHeader('Cache-Control', 'private, no-store'); res.json({ ok: true, item: { id: p.data.item, name: p.name }, product_id: p.id, usd_cents: p.usd_cents, credits: p.data.credits, on_sale: p.onSale, owned: !!(me && ownsCos(me.id, p)), checkout: { enabled: st.enabled, methods: st.methods } }); });
+  app.get('/api/store/prestige', (req, res) => res.json({ ok: true, items: prestigeWall({ owners: true, limit: req.query.limit, offset: req.query.offset }) }));
   app.get('/api/users/:u/prestige', (req, res) => { const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(req.params.u); res.json({ ok: true, items: u ? prestigeOf(u.id) : [] }); });
   app.post('/api/store/orders', requireUser, limiter('store-order', 20, 3600e3), async (req, res) => { const b = req.body || {}; const st = checkoutState(); const provider = String(b.provider || (st.providers.bitcoin.configured ? 'bitcoin' : 'stripe')); const r = provider === 'stripe' ? await createStripeOrder(req.user, String(b.product_id || '')) : provider === 'bitcoin' ? await createOrder(req.user, String(b.product_id || '')) : { status: 400, error: 'Unsupported payment method.' }; if (!r.ok) return bad(res, r.status, r.error); if (r.order.uri) r.order.qr_svg = require('./events').qrSvg(r.order.uri); res.json(r); });
   app.get('/api/store/orders', requireUser, (req, res) => res.json({ ok: true, orders: db.prepare('SELECT * FROM store_orders WHERE user_id=? ORDER BY id DESC LIMIT 50').all(req.user.id).map(pubOrder) }));
@@ -533,7 +563,7 @@ function routes(app, A, H) {
     const data = { ...((p && p.data) || {}), ...(b.data && typeof b.data === 'object' ? b.data : {}) };
     db.prepare(`INSERT INTO store_products (id, kind, name, usd_cents, crowns, bonus, supply, data, active, sort, updated_at) VALUES (@id,@kind,@name,@usd,@crowns,@bonus,@supply,@data,@active,@sort,@t)
       ON CONFLICT(id) DO UPDATE SET name=@name, usd_cents=@usd, crowns=@crowns, bonus=@bonus, supply=@supply, data=@data, active=@active, sort=@sort, updated_at=@t`).run({ id: String(req.params.id).slice(0, 40), kind: p ? p.kind : b.kind, name, usd,
-      crowns: Math.max(0, parseInt(b.crowns ?? (p && p.crowns) ?? 0, 10) || 0), bonus: Math.max(0, parseInt(b.bonus ?? (p && p.bonus) ?? 0, 10) || 0), supply: (p ? p.kind : b.kind) === 'prestige' ? Math.max(issued(req.params.id), parseInt(b.supply ?? (p && p.supply) ?? 1, 10) || 1) : null,
+      crowns: Math.max(0, parseInt(b.crowns ?? (p && p.crowns) ?? 0, 10) || 0), bonus: Math.max(0, parseInt(b.bonus ?? (p && p.bonus) ?? 0, 10) || 0), supply: null,
       data: JSON.stringify(data), active: b.active === undefined ? (p ? p.active : 1) : (b.active ? 1 : 0), sort: parseInt(b.sort ?? (p && p.sort) ?? 50, 10) || 0, t });
     res.json({ ok: true, product: prod(req.params.id) }); });
   A.get('/store/orders', (req, res) => { const st = String(req.query.status || ''); res.json({ ok: true, orders: db.prepare(`SELECT o.*, u.username FROM store_orders o LEFT JOIN users u ON u.id=o.user_id ${st ? 'WHERE o.status=?' : ''} ORDER BY o.id DESC LIMIT 500`).all(...(st ? [st] : [])).map(o => ({ ...pubOrder(o), username: o.username })) }); });

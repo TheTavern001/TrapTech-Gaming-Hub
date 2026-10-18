@@ -35,7 +35,7 @@
     if (!(p.inv > 0 && Math.sin(g.t * 30) > 0) && g.state !== 'over') { c.save(); c.translate(p.x, p.y); c.rotate(p.aim != null ? p.aim : (p.face || 0)); for (const [lw, a] of [[8, 0.3], [2.5, 1]]) { c.globalAlpha = a; c.strokeStyle = '#f4f8ff'; c.lineWidth = lw; c.beginPath(); c.moveTo(15, 0); c.lineTo(-9, -12); c.lineTo(-3, -4); c.lineTo(-10, 0); c.lineTo(-3, 4); c.lineTo(-9, 12); c.closePath(); c.stroke(); } c.restore(); c.globalAlpha = 1; }
     c.restore(); c.globalCompositeOperation = 'source-over';
     const vg = c.createRadialGradient(g.W / 2, g.H / 2, g.H * 0.35, g.W / 2, g.H / 2, g.H * 0.8); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)'); c.fillStyle = vg; c.fillRect(0, 0, g.W, g.H); }
-  Arena({ id: 'gl-grid-wars', title: 'GRID WARS', aim: 'mouse', mult: true, lives: 3, bombs: 3, fireRate: 0.09, shots: 2, spread: 0.08, clearOnHit: true, world: { w: WW, h: WH },
+  Arena({ fill: true, id: 'gl-grid-wars', title: 'GRID WARS', aim: 'mouse', mult: true, lives: 3, bombs: 3, fireRate: 0.09, shots: 2, spread: 0.08, clearOnHit: true, world: { w: WW, h: WH },
     help: 'Move: WASD / drag   Aim: mouse (auto-aim on touch)\nB = smart bomb. Chain kills to raise the multiplier',
     theme: { bg: '#01020a', grid: 'rgba(56,189,248,.16)', edge: '#38bdf8', player: '#f8fafc', bullet: '#fde68a' },
     types: { wand: { hp: 1, sp: 90, r: 11, c: '#a855f7', v: 25, ai: 'wander', shape: 'square', spin: 3 }, dia: { hp: 1, sp: 130, r: 12, c: '#22d3ee', v: 50, shape: 'diamond' }, dodger: { hp: 2, sp: 150, r: 12, c: '#34d399', v: 100, ai: 'dodge', shape: 'square' },

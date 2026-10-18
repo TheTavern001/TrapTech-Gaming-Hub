@@ -141,3 +141,11 @@ illustrations with a baked-in checkerboard. Kenney 2D hero/saw/flame sprites are
 
 ### Core game cover repair — October 2026
 The Void Swarm, Grow Guard, Sling Smash and Haze Defense cards reuse the same original shipped Blender sprite atlases under public/assets/v7 used by those games. Glass Stack uses original vector slab artwork. tools/build-core-game-cards.js creates self-contained SVG cards without external downloads. Existing source artwork attribution above remains applicable.
+
+### Core games v8 rebuild - October 2026
+All assets are Kenney (https://kenney.nl), CC0 1.0 Universal, taken from the mirror https://github.com/shorepine/kenney and repacked into small data-URI atlases under `public/assets/v8/` by `tools/v8/pack.py`:
+- **Void Swarm** (`public/assets/v8/void-swarm.js`): Kenney Space Shooter Remastered.
+- **Brick Breaker** (`public/assets/v8/brick.js`): Kenney Puzzle Pack 2 (tiles, balls).
+- **Sky Hopper** (`public/assets/v8/sky-hopper.js`): Kenney Tappy Plane (biplane, star coins).
+- **High Score** (`public/assets/v8/high-score.js`): Kenney Shooting Gallery (ducks, crosshairs, curtain, wood), hue-shifted to the hub palette.
+Shared FX, music (procedural WebAudio) and HUD live in `public/js/games/kit.js` and are original code.

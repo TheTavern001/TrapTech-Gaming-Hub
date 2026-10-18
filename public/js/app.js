@@ -1,6 +1,7 @@
 import { icon } from './icons.js';
 import { ls, ss, copyText } from './store.js';
 import * as V7 from './v7.js';
+import * as V8 from './v8.js'; // v8: skill quests + achievements at scale
 import * as I18N from './i18n.js'; // v7: multi-language layer (public/i18n/*.json)
 import * as GV7 from './gw-v7.js'; // v7 admin overhaul: builder giveaway extras + admin site settings
 import { mountAvatar3D } from './avatar-3d.js';
@@ -116,7 +117,8 @@ function tickCountdowns() {
 setInterval(tickCountdowns, 1000);
 
 // ---------------- layout ----------------
-const NAV = [['/', 'house', 'Home'], ['/games', 'gamepad-2', 'Games'], ['/leaderboard', 'trophy', 'Leaderboard'], ['/giveaways', 'gift', 'Giveaways'], ['/community', 'users', 'Community']];
+const NAV = [['/', 'house', 'Home'], ['/games', 'gamepad-2', 'Games'], ['/leaderboard', 'trophy', 'Leaderboard'], ['/giveaways', 'gift', 'Giveaways'], ['/community', 'users', 'Community'], ['/shop', 'store', 'Shop']];
+const NAV_SHORT = { '/leaderboard': 'Ranks', '/giveaways': 'Prizes', '/community': 'Social' }; // 6 tabs must fit a 320px phone
 function navActive(path) {
   if (path === '/' || path === '/home') return '/';
   const hit = NAV.slice(1).find(([p]) => path.startsWith(p)); if (hit) return hit[0];
@@ -152,7 +154,7 @@ function footer() {
 }
 function bottomnav(path) {
   const act = navActive(path);
-  return `<nav class="bottomnav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}<span>${l}</span></a>`).join('')}</nav>`;
+  return `<nav class="bottomnav" aria-label="Main">${NAV.map(([p, i, l]) => `<a href="${p}" class="${act === p ? 'on' : ''}" ${act === p ? 'aria-current="page"' : ''}>${icon(i)}<span><i class="nl-f">${l}</i>${NAV_SHORT[p] ? `<i class="nl-s">${NAV_SHORT[p]}</i>` : ''}</span></a>`).join('')}</nav>`;
 }
 const TITLES = { '/': 'Home', '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/community': 'Community', '/achievements': 'Achievements & Rewards', '/sponsor': 'Book a Giveaway',
   '/quests': 'Daily Quests', '/season': 'Season Pass', '/tournaments': 'Tournaments', '/notifications': 'Notifications', '/search': 'Search', '/invite': 'Invite Friends',
@@ -167,7 +169,7 @@ function shell(path, inner, { cls = '', title } = {}) {
   const alias = (path === '/settings' && activePath === '/avatar') ||
     (path === '/shop' && (activePath === '/store' || activePath === '/prestige' || activePath === '/shop/how-it-works' || /^\/store\/order\/[A-Z0-9]{8,20}$/.test(activePath))) ||
     (path === '/sponsor' && /^\/sponsor\/status\/[A-Za-z0-9_-]{20,40}$/.test(activePath)) ||
-    (path === '/giveaways' && (/^\/join\/[A-Za-z0-9-]{3,40}$/.test(activePath) || /^\/event\/TT-[0-9A-Za-z]{5}$/i.test(activePath) || /^\/giveaways\/\d+(?:\/(?:rules|live|results))?$/.test(activePath) || activePath === '/me/entries')) ||
+    (path === '/giveaways' && (/^\/brand\/[a-z0-9-]{1,60}$/i.test(activePath) || /^\/join\/[A-Za-z0-9-]{3,40}$/.test(activePath) || /^\/event\/TT-[0-9A-Za-z]{5}$/i.test(activePath) || /^\/giveaways\/\d+(?:\/(?:rules|live|results))?$/.test(activePath) || activePath === '/me/entries')) ||
     (path === '/games' && /^\/games\/[A-Za-z0-9_-]+$/.test(activePath)) ||
     (path === '/profile' && /^\/u\/[^/]{1,80}$/.test(activePath)) ||
     (path === '/tournaments' && /^\/tournaments\/\d+$/.test(activePath)) ||
@@ -318,11 +320,11 @@ const gameById = (id) => S.games.find(g => g.id === id) || S.libraryGames.find(g
 route(/^\/welcome$/, () => splash());
 function splash() {
   $app.innerHTML = `<div class="splash">
-    <div>
+    <div><h1 class="sr-only">The Gaming Hub by Trap Tech Solutions</h1>
       <img class="logo-stack" src="/assets/brand/hub-stacked.svg" alt="The Gaming Hub" width="330" height="195">
       <div class="tagline">PLAY <b>•</b> COMPETE <b>•</b> WIN <b>•</b> CONNECT</div>
       <p class="splash-sub">Free arcade games, tournaments and brand giveaways.<br>No purchase necessary. 21+.</p>
-      <div class="splash-feats">${[['gamepad-2','13 skill games','Built for phones, scored fairly'],['gift','Brand giveaways','Official events with real prizes'],['trophy','Seasons & quests','Free season track, earn the pass'],['palette','Your avatar','Dress it up, flex your wins']].map(([i,t,d])=>`<div class="sf">${icon(i)}<b>${t}</b><span>${d}</span></div>`).join('')}</div>
+      <div class="splash-feats">${[['gamepad-2','80+ skill games','Built for phones, scored fairly'],['gift','Brand giveaways','Official events with real prizes'],['trophy','Seasons & quests','Free season track, earn the pass'],['palette','Your avatar','Dress it up, flex your wins']].map(([i,t,d])=>`<div class="sf">${icon(i)}<b>${t}</b><span>${d}</span></div>`).join('')}</div>
     </div>
     <div class="cta">
       <a class="btn block" href="/signup">Get Started</a>
@@ -424,7 +426,7 @@ route(/^\/signup$/, (m, url) => {
     toast(`Account created. Welcome, ${r.user.username}!`); achToast(r.unlocked); go(url.searchParams.get('next') || '/games/jetpack-dash', true);
   });
 });
-route(/^\/forgot$/, () => shell('/forgot', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Forgot password</h1></div>
+route(/^\/forgot$/, () => shell('/forgot', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>Forgot password</h1></div>
   <div class="card pad"><p>Password resets are handled by the hub admins. Message Trap Tech Solutions with your Potato username and an admin will give you a temporary password, which you can change from your profile settings.</p>
   <a class="btn block" href="/signin">Back to sign in</a></div></div>`));
 
@@ -455,6 +457,7 @@ route(/^\/(home)?$/, async () => {
     </section>
     ${takeover ? heroTakeover(takeover) : `<div class="hero"><img src="/assets/brand/hero-banner.webp" alt="The Gaming Hub - Play, Compete, Win, Connect" width="1336" height="400"></div>`}
     ${S.me && q && q.ok ? dailyPanel(q) : !S.me ? `<div class="card pad cta-card"><span class="es-ic">${icon('sparkles')}</span><div style="flex:1"><b>Play free. Win real prizes.</b><div class="small muted">Create a free account so your scores count for giveaways, tournaments and daily quests.</div></div><a class="btn sm" href="/signup">Sign up</a></div>` : ''}
+    <div id="v8-fb"></div>
     ${featuredGw.length ? `<div class="section-h"><h2>${icon('sparkles')} Featured Giveaways</h2><a href="/giveaways">View All</a></div><div class="feat-gw">${featuredGw.map(featCard).join('')}</div>` : ''}
     <div class="section-h"><h2>Featured Games</h2><a href="/games">View All</a></div>
     <div class="hscroll">${featured.map(g => gameCard(g, true)).join('')}</div>
@@ -686,10 +689,10 @@ route(/^\/leaderboard$/, async (m, url) => {
   let showMine = false;
   shell('/leaderboard', `<div class="narrow"><h1>${game === 'global' ? 'Global' : esc(gameById(game)?.title || '')} Leaderboard</h1>
     <div class="tabs" id="per">${[['all', 'All Time'], ['weekly', 'Weekly'], ['monthly', 'Monthly']].map(([k, l]) => `<button data-p="${k}" class="${k === period ? 'on' : ''}">${l}</button>`).join('')}</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <div class="chips" id="gsel" style="padding:0;flex:1">${[['global', 'Global'], ...S.games.filter(x => x.playable).map(x => [x.id, x.title])].map(([k, l]) => `<button class="chip ${k === game ? 'on' : ''}" data-g="${k}">${esc(l)}</button>`).join('')}</div>
-      ${S.me ? `<label class="check small" style="margin:0;white-space:nowrap">Friends <input type="checkbox" id="friends" ${url.searchParams.get('friends') === '1' ? 'checked' : ''}></label>` : ''}
-      <label class="check small" style="margin:0;white-space:nowrap">My Rank <input type="checkbox" id="mine"></label>
+    <div class="lb-filters">
+      <div class="chips" id="gsel">${[['global', 'Global'], ...S.games.filter(x => x.playable).map(x => [x.id, x.title])].map(([k, l]) => `<button class="chip ${k === game ? 'on' : ''}" data-g="${k}">${esc(l)}</button>`).join('')}</div>
+      ${S.me ? `<label class="check small lb-chk">Friends <input type="checkbox" id="friends" ${url.searchParams.get('friends') === '1' ? 'checked' : ''}></label>` : ''}
+      <label class="check small lb-chk">My Rank <input type="checkbox" id="mine"></label>
     </div>
     <div class="card" id="tbl"><div class="skeleton" style="margin:12px"></div></div>
     ${officialNotice('lb-notice')}
@@ -745,8 +748,9 @@ route(/^\/giveaways$/, async (m, url) => {
   let tab = url.searchParams.get('tab') || 'active';
   let mine = url.searchParams.get('mine') === '1'; let myBrand = null;
   if (S.me) { const f = await api('/api/me/brand'); myBrand = f.ok ? f.brand : null; }
-  shell('/giveaways', `<div class="gw-head"><h1>Official Giveaways</h1><a class="btn sm ghost" href="/settings#v7-brand">${icon('store')} ${myBrand ? esc(myBrand.name) : 'Join a brand'}</a></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
+  shell('/giveaways', `<div class="gw-head"><h1>Official Giveaways</h1><div class="gw-head-act"><a class="btn sm" href="/sponsor">${icon('briefcase')} Book a giveaway</a><a class="btn sm ghost" href="/settings#v7-brand">${icon('store')} My giveaway affiliation${myBrand ? ': ' + esc(myBrand.name) : ''}</a></div></div><div class="tabs" id="t">${['active', 'upcoming', 'past'].map(k => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>
     ${S.me ? `<div class="chip-row"><button class="chip ${mine ? 'on' : ''}" id="f-follow" aria-pressed="${mine}">${icon('store')} I can enter</button><a class="chip" href="/me/entries">${icon('ticket')} My entries</a></div>` : ''}
+    <div id="v8-fb"></div>
     <div id="list" class="gw-list"><div class="skeleton"></div></div>
     ${officialNotice()}
     <p class="small dim center">No purchase necessary. Join a giveaway and play a linked game while it is live. Each giveaway shows who can enter and its eligibility rules. <a href="/rules">Official Rules</a></p>`);
@@ -754,7 +758,7 @@ route(/^\/giveaways$/, async (m, url) => {
     history.replaceState({}, '', `/giveaways?tab=${tab}${mine ? '&mine=1' : ''}`);
     const r = await api('/api/giveaways?status=' + tab); const el = document.getElementById('list'); if (!el) return;
     const list = r.ok ? r.giveaways.filter(g => !mine || g.open_to_all !== false || (myBrand && g.brand && g.brand.id === myBrand.id)) : [];
-    el.innerHTML = list.length ? list.map(giveawayCard).join('') : `<div class="empty card" style="grid-column:1/-1">${mine ? `No ${tab} giveaways you can enter. <a href="/settings#v7-brand">Join a brand</a>` : `No ${tab} giveaways right now.`}</div>`;
+    el.innerHTML = list.length ? list.map(giveawayCard).join('') : `<div class="empty card" style="grid-column:1/-1">${mine ? `No ${tab} giveaways you can enter. <a href="/settings#v7-brand">Set my giveaway affiliation</a>` : `No ${tab} giveaways right now.`}</div>`;
     tickCountdowns();
   }
   document.getElementById('t').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (!b) return; tab = b.dataset.k; document.querySelectorAll('#t button').forEach(x => x.classList.toggle('on', x === b)); load(); });
@@ -786,7 +790,7 @@ route(/^\/giveaways\/(\d+)$/, async (m) => {
   const sc = (n) => multi ? `${fmt(n)} pts` : fmtScore(n, g.game_id);
   const playBtns = g.game_ids.map(id => { const x = gameById(id); const href = g.event_code ? `/play/${id}?event=${g.event_code}` : `/play/${id}?giveaway=${g.id}`; return x ? `<a class="gpick" href="${S.me ? href : `/signin?next=${encodeURIComponent(href)}`}"><img src="${x.art}" alt=""><span>${esc(x.title)}</span>${icon('play')}</a>` : ''; }).join('');
   shell('/giveaways', `<div class="narrow">
-    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>${esc(g.title)}${demoTag(g.demo)}</h1></div>
+    <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>${esc(g.title)}${demoTag(g.demo)}</h1></div>
     ${g.event_label ? `<div class="event-label small" id="event-label">${icon('badge-check')} ${esc(g.event_label)}</div>` : ''}
     <div class="card gw branded" style="${brandStyle(g)}">
       <div class="row"><div><div class="host">Hosted by ${g.channel ? `<span class="ch-link" id="gw-channel">${esc(g.channel.name)}</span>` : esc(g.host)}</div>${brandMark(g)}<div style="margin-top:10px"><span class="pill ${g.status === 'active' ? 'green' : g.status === 'upcoming' ? '' : 'red'}">${g.status.toUpperCase()}</span> ${tierPill(g)}</div></div>
@@ -827,6 +831,7 @@ async function eligCard(g) {
     <div class="elig-status ${e.joined ? 'joined' : ok ? 'ok' : 'no'}" id="elig-status">${icon(e.joined ? 'ticket' : ok ? 'circle-check' : 'circle-alert')} <b>${esc(e.message)}</b></div>
     <ul class="elig-checks">${e.checks.filter(c => !c.checklist).map(c => `<li class="${c.ok ? 'ok' : 'no'}" data-chk="${c.id}">${icon(c.ok ? 'check' : 'x')}<span><b>${esc(c.label)}</b><small>${esc(c.hint)}</small></span>${c.id === 'brand_member' && !c.ok ? `<a class="btn sm ghost" href="/settings#v7-brand">Giveaway affiliation</a>` : ''}</li>`).join('')}</ul>
     ${potatoChk && !potatoChk.ok ? `<form class="potato-form" id="potato-form"><div class="field ic">${icon('message-circle')}<input class="input" id="potato-in" placeholder="Your Potato username" maxlength="32" autocapitalize="none"></div><button class="btn sm">Save</button></form>` : ''}
+    ${(e.checks.find(c => c.id === 'invited') || { ok: true }).ok ? '' : `<form class="potato-form" id="inv-form"><div class="field ic">${icon('lock')}<input class="input" id="inv-in" placeholder="Invite code" maxlength="24" autocapitalize="characters" autocomplete="off" aria-label="Invite code"></div><button class="btn sm">Redeem</button></form>`}
     ${slots && !slots.ok ? `<div class="small muted">Your live entries: ${slots.entries.map(x => `<a href="/giveaways/${x.id}">${esc(x.title)}</a>`).join(', ')}. <a href="/me/entries">Manage entries</a></div>` : ''}
     ${e.entries ? `<div class="elig-entries">${icon('ticket')} Draw entries: <b>${e.entries.count}</b> of ${e.entries.max}${e.entries.count < e.entries.max ? ` • ${e.entries.next_at - e.entries.runs} more run${e.entries.next_at - e.entries.runs === 1 ? '' : 's'} for ${e.entries.count + 1}` : ''}</div>` : ''}
     <div class="btn-row">${e.can_join ? `<button class="btn" id="join-gw">${icon('ticket')} Enter giveaway</button>` : ''}${e.joined && g.status !== 'past' ? `<button class="btn ghost sm" id="leave-gw">${icon('log-out')} Leave (free a slot)</button>` : ''}</div>
@@ -834,12 +839,13 @@ async function eligCard(g) {
   GV7.elig(el, e, g, () => eligCard(g)); // v7: US-state picker for region-limited giveaways
   const j = document.getElementById('join-gw'); if (j) j.onclick = async () => { j.disabled = true; const r = await api(`/api/giveaways/${g.id}/join`, { method: 'POST' }); if (r.ok) toast("You're entered! Play a linked game to rank."); else toast(r.error); eligCard(g); };
   const l = document.getElementById('leave-gw'); if (l) l.onclick = async () => { const r = await api(`/api/giveaways/${g.id}/leave`, { method: 'POST' }); toast(r.ok ? 'You left this giveaway. Your slot is free.' : r.error); eligCard(g); };
+  const iv = document.getElementById('inv-form'); if (iv) iv.onsubmit = async (ev) => { ev.preventDefault(); const r = await api(`/api/giveaways/${g.id}/invite`, { method: 'POST', body: { code: document.getElementById('inv-in').value } }); toast(r.ok ? 'Invite accepted' : r.error); if (r.ok) eligCard(g); };
   const pf = document.getElementById('potato-form'); if (pf) pf.onsubmit = async (ev) => { ev.preventDefault(); const r = await api('/api/me/potato', { method: 'PUT', body: { potato: document.getElementById('potato-in').value } }); toast(r.ok ? 'Potato username saved' : r.error); if (r.ok) eligCard(g); };
 }
 route(/^\/me\/entries$/, async () => {
   if (!S.me) return go('/signin?next=/me/entries', true);
   const r = await api('/api/me/entries');
-  shell('/giveaways', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>My giveaway entries</h1></div>
+  shell('/giveaways', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>My giveaway entries</h1></div>
     <p class="muted small">You can be entered in up to ${r.max} live giveaways at once (some giveaways set their own limit). Leave one to free a slot for another.</p>
     <div class="card">${r.entries.length ? r.entries.map(x => `<div class="mini-row ent-row"><a href="/giveaways/${x.id}"><b>${esc(x.title)}</b></a><span class="small muted">ends ${new Date(x.end_at).toLocaleDateString()}</span><button class="btn sm ghost" data-leave="${x.id}">Leave</button></div>`).join('') : `<div class="empty">You're not in any live giveaways. <a href="/giveaways">Browse giveaways</a></div>`}</div></div>`);
   document.querySelectorAll('[data-leave]').forEach(b => b.onclick = async () => { const x = await api(`/api/giveaways/${b.dataset.leave}/leave`, { method: 'POST' }); toast(x.ok ? 'Left giveaway' : x.error); render(); });
@@ -996,7 +1002,7 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
   if (r.is_me) { cz = await api('/api/cosmetics'); S.me.cos = cos; }
   const badgeGrid = p.achievements.length ? p.achievements.slice(0, 12).map(a => `<div class="b t-${a.tier}" title="${esc(a.desc)}"><span class="bi">${icon(a.icon)}</span>${esc(a.name)}</div>`).join('') : `<div class="empty" style="grid-column:1/-1">No achievements yet. ${r.is_me ? '<a href="/games">Play a game</a> to unlock your first.' : ''}</div>`;
   shell('/profile', `<div class="narrow">
-    <div class="back-row" style="justify-content:space-between"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button>${r.is_me ? `<button class="iconbtn" id="gear" aria-label="Settings">${icon('settings')}</button>` : ''}</div>
+    <div class="back-row" style="justify-content:space-between"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button>${r.is_me ? `<button class="iconbtn" id="gear" aria-label="Settings">${icon('settings')}</button>` : ''}</div>
     <div class="prof-banner bn-${esc(cos.banner)}${cos.effect ? ' fx ' + esc(cos.effect) : ''}" id="pbanner">
       <div class="prof-head">${framed(p.username, p.demo, cos, 'lg')}
         <div><div class="name${cos.color ? ' nc-' + esc(cos.color) : ''}"><span class="nt">${esc(p.username)}</span>${demoTag(p.demo)}${badgeIcon(cos.badge)} </div>
@@ -1032,7 +1038,7 @@ route(/^\/u\/([^/]+)$/, async (m, url) => {
   if (!p.demo) hydrateProfileAvatar(p.username);
   achToast(r.unlocked);
   setTitle(`${p.username}'s profile`);
-  api('/api/users/' + encodeURIComponent(p.username) + '/prestige').then(x => { const el = document.getElementById('px-show'); if (el && x.ok && x.items.length) el.innerHTML = `<div class="px-showcase">${x.items.map(it => `<a href="/prestige" class="pill gold" title="${esc(it.name)}">${icon('gem')} ${esc(it.name)} #${it.serial}/${it.supply}</a>`).join('')}</div>`; });
+  api('/api/users/' + encodeURIComponent(p.username) + '/prestige').then(x => { const el = document.getElementById('px-show'); if (el && x.ok && x.items.length) el.innerHTML = `<div class="px-showcase">${x.items.map(it => `<a href="/prestige" class="pill gold" title="${esc(it.name)}">${icon('gem')} ${esc(it.name)}</a>`).join('')}</div>`; });
   api(`/api/users/${encodeURIComponent(p.username)}/special-badges`).then(sb => { const el = document.getElementById('special-badges'); if (!el || !sb.ok || !sb.granted.length) return;
     el.innerHTML = `<div class="special-row" aria-label="Special badges">${sb.granted.map(b => `<span class="special-b" title="${esc(b.desc)}">${badgeArt('adm:' + b.id, 'sm')}<b>${esc(b.name)}</b></span>`).join('')}</div>`; });
   document.getElementById('share-prof').onclick = () => shareLink({ kind: 'profile', ref: p.username, url: `/u/${encodeURIComponent(p.username)}`, title: `${p.username} on The Gaming Hub`, text: `Level ${p.level.level} on The Gaming Hub - come play!` });
@@ -1092,7 +1098,7 @@ route(/^\/achievements$/, async (m, url) => {
   const A = r.achievements; const done = A.filter(a => a.unlocked).length;
   const rewardsTotal = A.reduce((s, a) => s + a.rewards.length, 0) + A.length;
   shell('/achievements', `<div class="narrow">
-    <div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>${who && !r.is_me ? esc(r.user) + "'s " : ''}Achievements</h1></div>
+    <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>${who && !r.is_me ? esc(r.user) + "'s " : ''}Achievements</h1></div>
     <div class="card pad ach-sum">
       <div class="ring" style="--p:${Math.round(done / A.length * 100)}"><b>${done}</b><span>/ ${A.length}</span></div>
       <div><b class="orb">${Math.round(done / A.length * 100)}% complete</b><div class="small muted">${A.length} achievements across ${r.cats.length} categories. Each unlock awards a badge plus a banner, avatar frame or title for your profile.</div>
@@ -1135,6 +1141,7 @@ route(/^\/achievements$/, async (m, url) => {
   document.getElementById('cats').addEventListener('click', (e) => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; document.querySelectorAll('#cats .chip').forEach(x => x.classList.toggle('on', x === b)); draw(); });
   document.getElementById('flt').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; filt = b.dataset.f; document.querySelectorAll('#flt button').forEach(x => x.classList.toggle('on', x === b)); draw(); });
   achToast(r.unlocked);
+  if (!who) { const host = document.querySelector('main .narrow'); if (host) { const d = document.createElement('div'); d.id = 'v8-skillach'; host.insertBefore(d, host.children[2] || null); V8.fillAchievements(d); } }
 });
 
 // v7: /host + /book (tiers, public prices) are replaced by /sponsor (feature picker + quote; see v7.js).
@@ -1150,7 +1157,7 @@ route(/^\/community$/, async () => {
     el.innerHTML = r.items.length ? r.items.map(it => {
       const u = it.user;
       const head = it.kind === 'announcement' ? `<img src="/assets/brand/hub-mark.svg" alt="" style="width:38px;height:38px;object-fit:contain"><div><b>TrapTech Admin${demoTag(it.is_demo)}</b><span>${ago(it.created_at)}</span></div>`
-        : u ? `<a href="/u/${encodeURIComponent(u.username)}" class="ph-av">${framed(u.username, u.demo, u.cos)}</a><div>${pname(u.username, u.demo, u.cos)}<span>${it.kind === 'winner' ? 'Giveaway Winner' : ({ levelup: 'Level up', streak: 'Streak', tournament: 'Tournament', achievement: 'Achievement', highscore: 'High score' }[it.type] || 'Hub Activity')} • ${ago(it.created_at)}</span></div>`
+        : u ? `<a href="/u/${encodeURIComponent(u.username)}" class="ph-av" aria-label="View ${esc(u.username)}'s profile">${framed(u.username, u.demo, u.cos)}</a><div>${pname(u.username, u.demo, u.cos)}<span>${it.kind === 'winner' ? 'Giveaway Winner' : ({ levelup: 'Level up', streak: 'Streak', tournament: 'Tournament', achievement: 'Achievement', highscore: 'High score' }[it.type] || 'Hub Activity')} • ${ago(it.created_at)}</span></div>`
         : `<span class="av" style="background:linear-gradient(135deg,#7c3aed,#22d3ee)">${icon('zap')}</span><div><b>Hub Activity${demoTag(it.is_demo)}</b><span>${ago(it.created_at)}</span></div>`;
       return `<div class="card post ${it.kind} ${u ? 'has-bn' : ''}">${u ? `<span class="post-bn bn-${esc(u.cos.banner)}"></span>` : ''}
       <div class="ph">${head}</div>
@@ -1255,13 +1262,14 @@ route(/^\/quests$/, async () => {
     </div>
     <div class="card pad"><div class="lvl-h"><b>Level ${lv.level}</b><span class="small muted">${fmt(lv.into)} / ${fmt(lv.need)} XP to level ${lv.level + 1}</span></div>${xpBar(lv)}
       <div class="tiny muted" style="margin-top:8px">XP sources: every run (+10, +10 per Bronze/Silver/Gold tier reached), quests, daily check-ins and achievements.</div></div>
+    <div id="v8-skillq"></div>
     <div class="section-h"><h2>${icon('scroll-text')} Today's quests</h2><span class="small muted">Resets in <span data-cdi="${q.resets_at}">--</span></span></div>
     <div class="card pad quests">${q.quests.map(questRow).join('')}${bonusRow(q.bonus)}</div>
     <div class="streak-rewards card pad"><h2>${icon('award')} Streak & quest rewards</h2>
       <div class="rw-grid">${[['Early Bird', '3-day streak', 'calendar-check'], ['Habit Former', '7-day streak + Daily Sunrise banner', 'sunrise'], ['Eternal Flame', '30-day streak frame + banner', 'flame'], ['Questor', 'Claim 1 quest', 'scroll-text'], ['Quest Legend', '25 quests + Quest Map banner', 'map']].map(([n, d, ic]) => `<div class="rw">${icon(ic)}<b>${n}</b><span>${d}</span></div>`).join('')}</div>
       <p class="tiny muted" style="margin:10px 0 0">${icon('shield')} Cosmetic only, no cash value.</p></div>
   </div>`);
-  wireDaily(); tickInline();
+  wireDaily(); tickInline(); V8.fillQuests(document.getElementById('v8-skillq'));
   const ci = document.getElementById('ci'); if (ci) ci.onclick = async () => { ci.disabled = true; await doCheckin(); go('/quests', true); };
 });
 
@@ -1400,13 +1408,20 @@ route(/^\/terms$/, () => legal('/terms', 'Terms of Service', 'October 3, 2026', 
   <h2>9. Changes</h2><p>We may update these Terms. We will post the new date above; continued use means you accept the update.</p>
   <h2>10. Contact</h2><p>Questions? Contact ${OP} via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
-route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 3, 2026', `
-  <p>${OP} operates The Gaming Hub. This policy explains what we collect and why.</p>
-  <h2>What we collect</h2><ul><li><b>Account:</b> username, salted password hash, date of birth (to confirm you are 21+), the invite code you used (if any).</li><li><b>Gameplay:</b> runs (game, score, coins, duration, time), achievements, quests, check-ins, follows, reactions and share events.</li><li><b>Security:</b> a one-way salted hash of your IP address for anti-cheat and rate limiting. We do not store your raw IP.</li><li><b>Bookings:</b> the contact details a brand enters in a booking request.</li><li><b>On your device:</b> local storage for preferences (e.g. remembered username, age check, sound). No advertising trackers.</li></ul>
-  <h2>How we use it</h2><p>To run the Hub, show leaderboards and profiles, evaluate achievements, prevent cheating, verify giveaway winners and contact winners and brand clients.</p>
-  <h2>What is public</h2><p>Your username, equipped cosmetics, scores, level, achievements, followers/following counts and activity (high scores, wins, level-ups) are visible to others. Your date of birth is never shown.</p>
-  <h2>Sharing</h2><p>We do not sell your data. When you win a giveaway we may share the details needed to deliver the prize with the sponsor brand.</p>
-  <h2>Retention & deletion</h2><p>We keep data while your account is active. Ask us to delete your account at any time and we remove your profile, runs and related data.</p>
+route(/^\/privacy$/, () => legal('/privacy', 'Privacy Policy', 'October 17, 2026', `
+  <p>${OP} operates The Gaming Hub. This policy explains what we collect, why, and how you can see or delete it. We collect as little as we can.</p>
+  <h2>What we collect</h2><ul>
+    <li><b>Account:</b> username, a salted password hash (we never store or see your password), date of birth (only to confirm you are 21+), the invite code you used (if any), and an optional Potato username so we can reach you if you win.</li>
+    <li><b>Gameplay:</b> runs (game, score, duration, time), achievements, quests, check-ins, items and Hub Credits, follows, and tournament or giveaway entries.</li>
+    <li><b>Security:</b> a salted, truncated hash of your IP address and a short device summary (to catch cheating and multiple accounts). We do not keep your full IP address.</li>
+    <li><b>Purchases:</b> order records (product, amount, Bitcoin transaction id or card-processor reference, status). We never see or store your card number or wallet keys.</li>
+    <li><b>Not collected:</b> email address, phone number, precise location, contacts, or advertising identifiers. We run no ad trackers.</li></ul>
+  <h2>How we use it</h2><p>To run the Hub, show leaderboards and profiles, evaluate achievements, prevent cheating, verify giveaway winners, process purchases, and contact winners and brand clients.</p>
+  <h2>Cookies</h2><p>One essential, HttpOnly, SameSite session cookie keeps you signed in (Secure on HTTPS). Preferences such as language and reduced motion are stored on your device. No tracking cookies.</p>
+  <h2>What is public</h2><p>Your username, equipped cosmetics, scores, level, achievements, followers/following counts and activity (high scores, wins, level-ups) are visible to others. Your date of birth, Potato username, IP hash and purchases are never shown.</p>
+  <h2>Sharing</h2><p>We do not sell your data. When you win a giveaway we may share the details needed to deliver the prize with the sponsor brand. Brand clients only see facts about their own giveaway.</p>
+  <h2>Your controls</h2><ul><li><b>See it:</b> Settings, Your data, Download my data gives you a JSON file of everything we hold about your account.</li><li><b>Delete it:</b> Settings, Your data, Delete my account removes your profile, runs, items, Credits, follows and sign-in history right away. Locked giveaway results keep only your username as an immutable public record. Purchase records may be kept as required for accounting and refunds.</li></ul>
+  <h2>Retention</h2><p>We keep data while your account is active. Accounts you delete are removed immediately; routine security logs are pruned on a rolling basis.</p>
   <h2>Age</h2><p>The Hub is for adults 21+. We do not knowingly collect data from anyone under 21.</p>
   <h2>Contact</h2><p>${OP} - via the <a href="/sponsor">sponsor form</a> or on Potato.</p>
   <p class="tiny muted">Template provided by ${OP}. Have counsel review before relying on it.</p>`));
@@ -1423,7 +1438,7 @@ function rulesHTML(g) {
   return `<p class="npn">NO PURCHASE NECESSARY TO ENTER OR WIN. A PURCHASE WILL NOT IMPROVE YOUR CHANCES OF WINNING. OPEN ONLY TO LEGAL RESIDENTS OF THE 50 UNITED STATES AND D.C. WHO ARE 21 YEARS OF AGE OR OLDER. VOID WHERE PROHIBITED.</p>
   <h2>1. Giveaway, Sponsor and Operator</h2><p>The ${name} giveaway (the "Giveaway") is sponsored by <b>${sponsor}</b> ("Sponsor") and operated and administered by <b>${OP}</b> ("Operator") on The Gaming Hub. Sponsor must comply with all laws and regulations that apply to its business, products, advertising and this Giveaway; sponsors that sell cannabis products must be licensed and legally permitted to operate and advertise in their jurisdiction.</p>
   <h2>2. Eligibility</h2><p>Open to legal residents of the 50 United States and the District of Columbia who are <b>21 or older</b> at the time of entry and have a Gaming Hub account in good standing. Employees of Sponsor and Operator, and their immediate families and household members, are not eligible. Void where prohibited or restricted by law.
-    ${g && g.brand && g.open_to_all === false ? `<b>Brand members only:</b> this Giveaway is open only to players affiliated with <b>${esc(g.brand.name)}</b> on The Gaming Hub when they enter and when the Giveaway ends. Each player belongs to one brand at a time; joining a brand is free (invite link, brand code or a pick at signup) and players can switch brands once every 30 days. Players who leave or switch brands lose their entry.` : g ? `This Giveaway is <b>open to every eligible player</b>, whatever brand they belong to.` : `[OPEN TO EVERYONE / BRAND MEMBERS ONLY: if the Giveaway belongs to a brand, only players affiliated with that brand on The Gaming Hub when they enter and when it ends are eligible; each player belongs to one brand at a time and can switch once every 30 days.]`}</p>
+    ${g && g.audience === 'invite' ? `<b>Invite only:</b> you need an invite code from the host to enter. Everyone invited competes on the same skill-based rules.` : g && g.brand && g.open_to_all === false ? `<b>Brand members only:</b> this Giveaway is open only to players affiliated with <b>${esc(g.brand.name)}</b> on The Gaming Hub when they enter and when the Giveaway ends. Each player belongs to one brand at a time; joining a brand is free (invite link, brand code or a pick at signup) and players can switch brands once every 30 days. Players who leave or switch brands lose their entry.` : g ? `This Giveaway is <b>open to every eligible player</b>, whatever brand they belong to.` : `[OPEN TO EVERYONE / BRAND MEMBERS ONLY: if the Giveaway belongs to a brand, only players affiliated with that brand on The Gaming Hub when they enter and when it ends are eligible; each player belongs to one brand at a time and can switch once every 30 days.]`}</p>
   <h2>3. Giveaway Period</h2><p>${period} (the "Giveaway Period"). Operator's server clock is the official timekeeper.</p>
   <h2>4. How to Enter (free)</h2><p>Sign in to a free Gaming Hub account, then start and finish at least one scored run of ${games} during the Giveaway Period${g && g.min_score ? ` with a score of at least ${fmt(g.min_score)}` : ''}. Every game on the Hub is free; there is nothing to buy. Limit: one account per person. ${g && g.require_join ? 'You must also tap "Enter giveaway" on the giveaway page; only joined players are ranked or drawn. ' : ''}${g && g.weight_mode === 'activity' && g.win_method === 'random' ? `For this random draw, each eligible entrant gets 1 entry plus 1 more per 5 runs of the linked games during the Giveaway Period (maximum 5 entries). Entries come only from free play and can never be bought. ` : 'Playing more runs can improve your score ranking, but does not create extra entries for random draws. '}Entries made with scripts, bots, multiple accounts or tampered scores are void.</p>
   ${g && g.eligibility_rules && g.eligibility_rules.length ? `<p id="rules-elig"><b>Eligibility rules for this giveaway</b> (designed so active players, not only prize hunters, win):</p><ul class="plain">${g.eligibility_rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p>Winners who become ineligible before the standings lock (for example by winning another giveaway inside the cooldown) are skipped with a logged reason and the next eligible entrant moves up.</p>` : ''}
@@ -1477,7 +1492,7 @@ route(/^\/friends$/, async (m, url) => {
       <b>${x.incoming ? `${esc(x.from)} challenged you` : `You challenged ${esc(x.to)}`}</b><div class="small muted">${esc(x.game_title)} • beat ${unitOf(x)}</div>
       <div class="tiny muted">${x.status === 'pending' ? `Expires ${new Date(x.expires_at).toLocaleString()}` : x.status === 'accepted' ? `Window ends ${new Date(x.expires_at).toLocaleString()}` : x.status === 'completed' ? (x.won ? `${icon('trophy')} You won${x.result_score != null ? ` (${fmtScore(x.result_score, x.game_id)})` : ''}` : `You lost${x.result_score != null ? ` (${fmtScore(x.result_score, x.game_id)})` : ''}`) : x.status}</div></div>
       <div class="ch-act">${x.incoming && x.status === 'pending' ? `<button class="btn sm" data-acc="${x.id}">${icon('check')} Accept</button><button class="btn sm ghost" data-dec="${x.id}">Decline</button>` : x.incoming && x.status === 'accepted' ? `<a class="btn sm" href="/play/${x.game_id}">${icon('play')} Play</a>` : ''}</div></div>`;
-    shell('/friends', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back">${icon('chevron-left')}</button><h1>Friends &amp; Challenges</h1></div>
+    shell('/friends', `<div class="narrow"><div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>Friends &amp; Challenges</h1></div>
       <div class="tabs" id="ft"><button data-k="friends" class="${tab === 'friends' ? 'on' : ''}">Friends</button><button data-k="challenges" class="${tab === 'challenges' ? 'on' : ''}">Challenges${c.incoming && c.incoming.length ? ` <span class="pill-mini">${c.incoming.length}</span>` : ''}</button></div>
       ${tab === 'friends' ? `<p class="small muted">Friends are players you follow who follow you back. There is no chat or messaging on the hub - play together with score challenges and friend leaderboards.</p>
         <div class="card">${c.friends.length ? c.friends.map(f => `<div class="mini-row">${avatar(f)}<a href="/u/${encodeURIComponent(f)}" style="flex:1;color:var(--text)"><b>${esc(f)}</b></a><a class="btn sm ghost" href="/friends?tab=challenges&to=${encodeURIComponent(f)}">${icon('swords')} Challenge</a></div>`).join('') : `<div class="empty">No friends yet. Follow players from the leaderboards; when they follow back you can challenge them. <a href="/invite">Invite friends</a></div>`}</div>
@@ -1530,6 +1545,7 @@ route(/^\/settings$/, () => {
   document.getElementById('gp-fps').onchange=e=>GP.saveGlobal({showFps:e.target.checked});
   const ib = document.getElementById('install'); ib.onclick = async () => { if (!installEvt) return toast(/iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'Safari: Share → Add to Home Screen' : 'Chrome: menu ⋮ → Add to Home screen → Install'); installEvt.prompt(); await installEvt.userChoice; installEvt = null; ib.disabled = true; };
   const potf = document.getElementById('potf'); if (potf) potf.onsubmit = async (e) => { e.preventDefault(); const r = await api('/api/me/potato', { method: 'PUT', body: { potato: document.getElementById('pot').value } }); toast(r.ok ? 'Potato username saved' : r.error); if (r.ok) S.me.potato = r.potato; };
+  if (S.me) { const d = document.createElement('div'); d.className = 'card pad'; d.id = 'v8-data'; const acc = document.getElementById('set-account'); if (acc) { acc.parentNode.insertBefore(d, acc.nextSibling); V8.fillData(d); } }
   const pf = document.getElementById('pwf2');
   if (pf) pf.addEventListener('submit', async (e) => { e.preventDefault(); const out = document.getElementById('pwmsg2'); const r = await api('/api/auth/password', { method: 'POST', body: { current: document.getElementById('cur2').value, password: document.getElementById('np2').value } }); out.innerHTML = r.ok ? '<div class="ok-msg">Password changed.</div>' : `<div class="err">${esc(r.error)}</div>`; });
 });
@@ -1543,6 +1559,8 @@ if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigat
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
 // v7 pages (Book a Giveaway, brands, shop & seasons) - public/js/v7.js
+V8.install({ api, icon, esc, fmt, toast, S, shell, emptyState, pageHead, go });
+route(/^\/brand\/([a-z0-9-]{1,60})$/i, (m) => V8.brandPage(m[1]));
 V7.install({ route, routes, shell, api, icon, esc, fmt, toast, go, S, TT, copyText, ls, emptyState, pageHead, render, framed, badgeIcon, pname, whoHTML, tickInline, nowS, avatar, bumpAvatar });
 // ---------------- boot ----------------
 (async function boot() {

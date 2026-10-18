@@ -205,7 +205,7 @@ export async function afterSignup() {
   if (x.ok) { C.ls.removeItem(BR_KEY); C.toast(`You're in ${x.brand.name}`); }
 }
 // Settings: brand affiliation controls giveaway eligibility, not an external channel connection.
-export function brandCard() { setTimeout(mountBrand, 0); return `<div class="card pad" id="v7-brand"><h2 style="margin-bottom:6px">${C.icon('store')} Giveaway brand</h2><div class="small muted">Loading membership…</div></div>`; }
+export function brandCard() { setTimeout(mountBrand, 0); return `<div class="card pad" id="v7-brand"><h2 style="margin-bottom:6px">${C.icon('store')} My giveaway affiliation</h2><div class="small muted">Loading membership…</div></div>`; }
 async function mountBrand() {
   const el = document.getElementById('v7-brand'); if (!el || !C.S.me) return;
   const [st, all] = await Promise.all([C.api('/api/me/brand'), C.api('/api/brands')]); if (!st.ok) return;
@@ -214,7 +214,7 @@ async function mountBrand() {
   const lockExplanation = !st.can_switch
     ? ' Brand switching is locked until ' + day(st.can_switch_at) + '. Leaving does not reset or bypass the 30-day cooldown.'
     : ' You may switch brands once every ' + st.cooldown_days + ' days; leaving or switching ends entries in active member-only giveaways for the previous brand.';
-  el.innerHTML = `<h2 style="margin-bottom:6px">${icon('store')} Giveaway brand</h2>
+  el.innerHTML = `<h2 style="margin-bottom:6px">${icon('store')} My giveaway affiliation</h2>
     ${st.brand ? `<div class="br-mine">${brandLogo(st.brand, 40)}<div><b>${esc(st.brand.name)}</b><div class="tiny muted">Hub affiliation since ${day(st.joined_at)}${st.can_switch ? ' • switching available' : ` • switching locked until ${day(st.can_switch_at)} (30-day cooldown)`}</div></div><button class="btn sm ghost" id="br-leave">Leave</button></div>`
       : `<p class="small muted" style="margin:0 0 8px">No brand selected. Joining is optional; choose one only if you want to enter giveaways restricted to its Hub members.</p>`}
     <p class="small muted" style="margin:8px 0">${esc(explanation + lockExplanation)}</p>
@@ -225,6 +225,7 @@ async function mountBrand() {
 }
 // giveaway pages: the brand/audience pill
 export function audiencePill(g) {
+  if (g && g.audience === 'invite') return `<span class="tier-pill aud brand">${C.icon('lock')}Invite only</span>`;
   if (!g || g.open_to_all !== false || !g.brand) return g && g.brand ? `<span class="tier-pill aud open">${C.icon('globe')}Open to everyone</span>` : '';
   return `<span class="tier-pill aud brand" style="--bc:${C.esc(g.brand.color || '#8b5cf6')}">${C.icon('store')}${C.esc(g.brand.name)} members</span>`;
 }

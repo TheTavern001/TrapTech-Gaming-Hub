@@ -16,10 +16,14 @@ addCol('users', 'brand_id', 'INTEGER');
 addCol('users', 'brand_joined_at', 'INTEGER');
 addCol('channels', 'invite_code', 'TEXT');
 addCol('giveaways', 'open_to_all', 'INTEGER NOT NULL DEFAULT 0');
+addCol('giveaways', 'audience', "TEXT NOT NULL DEFAULT ''"); // v8: '' (derived) | 'open' | 'affiliated' | 'invite'
+db.exec(`CREATE TABLE IF NOT EXISTS giveaway_invites (code TEXT PRIMARY KEY, giveaway_id INTEGER NOT NULL, user_id INTEGER, label TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL, used_at INTEGER);
+CREATE INDEX IF NOT EXISTS idx_gwinv_g ON giveaway_invites(giveaway_id, user_id);`);
 db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_channels_invite ON channels(invite_code);
 CREATE INDEX IF NOT EXISTS idx_users_brand ON users(brand_id);
 CREATE TABLE IF NOT EXISTS brand_moves (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, from_brand INTEGER, to_brand INTEGER, via TEXT, at INTEGER NOT NULL);`);
 const ALPH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const newInviteCode = () => { for (;;) { const b = crypto.randomBytes(10); let c = ''; for (const x of b) c += ALPH[x % ALPH.length]; if (!db.prepare('SELECT 1 FROM giveaway_invites WHERE code=?').get(c)) return c; } };
 const newCode = () => { for (;;) { const b = crypto.randomBytes(8); let c = ''; for (const x of b) c += ALPH[x % ALPH.length]; if (!db.prepare('SELECT 1 FROM channels WHERE invite_code=?').get(c)) return c; } };
 function ensureCodes() { for (const c of db.prepare('SELECT id FROM channels WHERE invite_code IS NULL').all()) db.prepare('UPDATE channels SET invite_code=? WHERE id=?').run(newCode(), c.id); }
 ensureCodes();
@@ -99,13 +103,24 @@ function leave(userId, t = Date.now()) {
   return { ok: true, ...status(userId, t) };
 }
 // giveaway audience: { open, brand } and whether a user may enter
-function audience(g) { const b = g.channel_id ? brandById(g.channel_id) : null; return { open: !b || !!g.open_to_all, brand: b ? pubBrand(b) : null }; }
+function audience(g) { const b = g.channel_id ? brandById(g.channel_id) : null; const invite = g.audience === 'invite';
+  return { open: invite ? false : (!b || !!g.open_to_all), brand: b ? pubBrand(b) : null, mode: invite ? 'invite' : (!b || g.open_to_all) ? 'open' : 'affiliated' }; }
+// v8 invite-only audience: a player is invited when a single-use code was redeemed for them (or the host invited them by username)
+const invited = (gid, uid) => !!db.prepare('SELECT 1 FROM giveaway_invites WHERE giveaway_id=? AND user_id=?').get(gid, uid);
+function redeemInvite(gid, uid, code) {
+  const c = String(code || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!/^[A-Z0-9]{6,24}$/.test(c)) return { ok: false, error: 'That invite code is not valid.' };
+  if (invited(gid, uid)) return { ok: true, already: true };
+  const row = db.prepare('SELECT * FROM giveaway_invites WHERE code=? AND giveaway_id=?').get(c, gid);
+  if (!row || row.user_id) return { ok: false, error: 'That invite code is not valid or was already used.' };
+  const r = db.prepare('UPDATE giveaway_invites SET user_id=?, used_at=? WHERE code=? AND user_id IS NULL').run(uid, Date.now(), c);
+  return r.changes ? { ok: true } : { ok: false, error: 'That invite code is not valid or was already used.' };
+}
 function allowed(userId, g) {
-  const a = audience(g); if (a.open) return { ok: true, ...a };
+  const a = audience(g); if (a.mode === 'invite') return { ok: invited(g.id, userId), ...a }; if (a.open) return { ok: true, ...a };
   const u = db.prepare('SELECT brand_id FROM users WHERE id=?').get(userId);
   return { ok: !!(u && u.brand_id === g.channel_id), ...a };
 }
-const RULE_TEXT = (g) => { const a = audience(g); return a.open ? 'Open to everyone: every eligible hub player can enter, whatever brand they belong to.' : `${a.brand.name} members only: players affiliated with ${a.brand.name} can enter. Each player belongs to one brand at a time (join with the brand's invite link or code; switching is allowed once every ${COOLDOWN_DAYS} days).`; };
+const RULE_TEXT = (g) => { const a = audience(g); if (a.mode === 'invite') return 'Invite only: you need an invite code from the host to enter. Everyone invited competes on the same skill-based rules.'; return a.open ? 'Open to everyone: every eligible hub player can enter, whatever brand they belong to.' : `${a.brand.name} members only: players affiliated with ${a.brand.name} can enter. Each player belongs to one brand at a time (join with the brand's invite link or code; switching is allowed once every ${COOLDOWN_DAYS} days).`; };
 
 function routes(app, A, h) {
   const { bad, requireUser, currentUser, limiter, str } = h;
@@ -115,15 +130,31 @@ function routes(app, A, h) {
   app.post('/api/me/brand', requireUser, limiter('brand-join', 20, 3600e3), (req, res) => { const r = join(req.user.id, str(req.body.code, 40), req.body.via === 'signup' ? 'signup' : req.body.via === 'link' ? 'invite link' : 'code'); r.ok ? res.json(r) : bad(res, 400, r.error, r); });
   app.post('/api/me/brand/leave', requireUser, limiter('brand-join', 20, 3600e3), (req, res) => { const r = leave(req.user.id); r.ok ? res.json(r) : bad(res, 400, r.error); });
   // admin: invite codes + member counts for the brand list; set a giveaway's audience
-  A.get('/brands', (req, res) => { ensureCodes(); res.json({ ok: true, brands: db.prepare('SELECT * FROM channels ORDER BY name').all().map(c => ({ ...pubBrand(c, true), invite_code: c.invite_code, invite_path: '/join/' + c.invite_code, active: !!c.active, link_url: c.link_url, business_type: c.business_type })), cooldown_days: COOLDOWN_DAYS }); });
+  A.get('/brands', (req, res) => { ensureCodes(); res.json({ ok: true, brands: db.prepare('SELECT * FROM channels ORDER BY name').all().map(c => ({ ...pubBrand(c, true), invite_code: c.invite_code, invite_path: '/join/' + c.invite_code, active: !!c.active, link_url: c.link_url, business_type: c.business_type, featured: !!c.featured, about: c.about || '' })), cooldown_days: COOLDOWN_DAYS }); });
   A.post('/brands/:id/new-code', (req, res) => { const c = brandById(+req.params.id); if (!c) return bad(res, 404, 'Not found'); const code = newCode(); db.prepare('UPDATE channels SET invite_code=? WHERE id=?').run(code, c.id); res.json({ ok: true, invite_code: code }); });
   A.put('/giveaways/:id/audience', (req, res) => {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.params.id); if (!g) return bad(res, 404, 'Not found');
+    const mode = ['open', 'affiliated', 'invite'].includes(req.body.audience) ? req.body.audience : null;
     const bid = req.body.brand_id === null || req.body.brand_id === '' ? null : parseInt(req.body.brand_id, 10) || g.channel_id;
     if (bid && !brandById(bid)) return bad(res, 400, 'Unknown brand.');
-    const open = bid ? (req.body.open_to_all ? 1 : 0) : 1;
-    db.prepare('UPDATE giveaways SET channel_id=?, open_to_all=?, require_join=CASE WHEN ?=0 THEN 1 ELSE require_join END, updated_at=? WHERE id=?').run(bid, open, open, Date.now(), g.id);
+    if (mode === 'affiliated' && !bid) return bad(res, 400, 'Pick a brand for an affiliated-only giveaway.');
+    const open = mode === 'invite' ? 1 : mode === 'affiliated' ? 0 : mode === 'open' ? 1 : (bid ? (req.body.open_to_all ? 1 : 0) : 1);
+    db.prepare("UPDATE giveaways SET channel_id=?, open_to_all=?, audience=?, require_join=CASE WHEN ?=0 OR ?='invite' THEN 1 ELSE require_join END, updated_at=? WHERE id=?").run(bid, open, mode === 'invite' ? 'invite' : mode || '', open, mode || '', Date.now(), g.id);
     res.json({ ok: true, audience: audience(db.prepare('SELECT * FROM giveaways WHERE id=?').get(g.id)) });
   });
+  // v8 invite-only giveaways: the host creates single-use codes (or invites a player by username); players redeem a code on the giveaway page
+  A.get('/giveaways/:id/invites', (req, res) => res.json({ ok: true, invites: db.prepare('SELECT i.code, i.label, i.created_at, i.used_at, u.username FROM giveaway_invites i LEFT JOIN users u ON u.id=i.user_id WHERE i.giveaway_id=? ORDER BY i.created_at DESC LIMIT 1000').all(+req.params.id) }));
+  A.post('/giveaways/:id/invites', (req, res) => {
+    const g = db.prepare('SELECT id FROM giveaways WHERE id=?').get(+req.params.id); if (!g) return bad(res, 404, 'Not found');
+    const b = req.body || {}; const label = str(b.label, 60); const out = []; const ins = db.prepare('INSERT INTO giveaway_invites (code, giveaway_id, user_id, label, created_at, used_at) VALUES (?,?,?,?,?,?)');
+    if (b.username) { const u = db.prepare('SELECT id FROM users WHERE username=? COLLATE NOCASE').get(str(b.username, 40)); if (!u) return bad(res, 404, 'No such player.'); const code = newInviteCode(); ins.run(code, g.id, u.id, label || 'by username', Date.now(), Date.now()); return res.json({ ok: true, invited: str(b.username, 40) }); }
+    const n = Math.max(1, Math.min(200, parseInt(b.count, 10) || 1)); for (let i = 0; i < n; i++) { const code = newInviteCode(); ins.run(code, g.id, null, label, Date.now(), null); out.push(code); }
+    res.json({ ok: true, codes: out });
+  });
+  A.delete('/giveaways/:id/invites/:code', (req, res) => { const r = db.prepare('DELETE FROM giveaway_invites WHERE giveaway_id=? AND code=?').run(+req.params.id, String(req.params.code).toUpperCase()); res.json({ ok: !!r.changes }); });
+  app.post('/api/giveaways/:id/invite', requireUser, limiter('gw-invite', 15, 3600e3), (req, res) => {
+    const g = db.prepare('SELECT id, audience FROM giveaways WHERE id=?').get(parseInt(req.params.id, 10) || 0); if (!g || g.audience !== 'invite') return bad(res, 404, 'This giveaway does not use invite codes.');
+    const r = redeemInvite(g.id, req.user.id, req.body && req.body.code); r.ok ? res.json(r) : bad(res, 400, r.error);
+  });
 }
-module.exports = { COOLDOWN_DAYS, status, join, leave, audience, allowed, findBrand, pubBrand, RULE_TEXT, routes, ensureCodes };
+module.exports = { COOLDOWN_DAYS, status, join, leave, audience, invited, redeemInvite, allowed, findBrand, pubBrand, RULE_TEXT, routes, ensureCodes };

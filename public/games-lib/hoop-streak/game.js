@@ -5,7 +5,7 @@
   const G = 1500, BR = 15;
   function spot(g) { const lv = g.makes; g.bx0 = g.R(50, 190); g.by0 = g.R(600, 660); g.hx = 300 + (lv > 6 ? 0 : 0); resetBall(g); }
   function resetBall(g) { g.b = { x: g.bx0, y: g.by0, vx: 0, vy: 0, live: false, t: 0, rim: false, scored: false, below: false }; }
-  Kit.run({ id: 'gl-hoop-streak', title: 'HOOP STREAK', help: 'Swipe up from the ball to shoot: aim and speed set the arc\nMakes add time, swishes add more; 3 in a row = FIRE (x2)\nEndless until the clock hits zero', bg: '#1a0f0a',
+  Kit.run({ fill: true, id: 'gl-hoop-streak', title: 'HOOP STREAK', help: 'Swipe up from the ball to shoot: aim and speed set the arc\nMakes add time, swishes add more; 3 in a row = FIRE (x2)\nEndless until the clock hits zero', bg: '#1a0f0a',
     init(g) { g.time = 30; g.makes = 0; g.sw = 0; g.streak = 0; g.shots = 0; g.hy = 330; g.hx = 300; g.ht = 0; g.fx = []; g.msg = ''; g.msgT = 0; g.net = 0; g.hud = ''; spot(g); },
     update(g, dt) { g.msgT -= dt; g.net = Math.max(0, g.net - dt * 3); for (const f of g.fx) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 400 * dt; f.l -= dt; } g.fx = g.fx.filter(f => f.l > 0);
       g.time -= dt; if (g.time <= 0) { g.time = 0; return g.end('Time up'); }
@@ -26,7 +26,14 @@
         gr = k.createLinearGradient(0, 421, 0, g.H); gr.addColorStop(0, '#9a5b2a'); gr.addColorStop(1, '#d08b4c'); k.fillStyle = gr; k.fillRect(0, 421, 400, g.H - 421);
         for (let i = 0; i < 16; i++) { k.fillStyle = i % 2 ? 'rgba(0,0,0,.05)' : 'rgba(255,255,255,.04)'; k.fillRect(i * 25, 421, 25, g.H - 421); }
         k.strokeStyle = 'rgba(255,255,255,.75)'; k.lineWidth = 3; k.beginPath(); k.ellipse(300, 470, 210, 34, 0, Math.PI * 0.5, Math.PI * 1.5); k.stroke(); k.beginPath(); k.moveTo(230, 445); k.lineTo(230, 495); k.stroke();
-        k.fillStyle = 'rgba(255,255,255,.08)'; k.beginPath(); k.ellipse(200, 700, 260, 40, 0, 0, 7); k.fill(); g.bgc = cv; }
+        k.fillStyle = 'rgba(255,255,255,.08)'; k.beginPath(); k.ellipse(200, 700, 260, 40, 0, 0, 7); k.fill(); { // v8 art: hanging jumbotron, wood plank grain, painted key + centre logo
+          const k2 = cv.getContext('2d'); const jx = 120, jy = 56; k2.strokeStyle = '#555'; k2.lineWidth = 2; k2.beginPath(); k2.moveTo(jx + 10, 0); k2.lineTo(jx + 22, jy); k2.moveTo(jx + 150, 0); k2.lineTo(jx + 138, jy); k2.stroke();
+          const jg = k2.createLinearGradient(0, jy, 0, jy + 62); jg.addColorStop(0, '#2b2f3a'); jg.addColorStop(1, '#0b0d14'); k2.fillStyle = jg; Kit.rr(k2, jx, jy, 160, 62, 8); k2.fill(); k2.strokeStyle = '#8b93a8'; k2.lineWidth = 2; k2.stroke(); k2.fillStyle = '#05070c'; Kit.rr(k2, jx + 6, jy + 6, 148, 50, 5); k2.fill();
+          k2.fillStyle = '#ff9a2e'; k2.font = 'bold 22px monospace'; k2.textAlign = 'center'; k2.textBaseline = 'middle'; k2.fillText('HOME 00', jx + 80, jy + 22); k2.fillStyle = '#9dff7a'; k2.font = 'bold 11px monospace'; k2.fillText('\u2618 STREAK ARENA', jx + 80, jy + 44);
+          for (let y = 430; y < g.H; y += 26) { k2.fillStyle = (y / 26) % 2 ? 'rgba(0,0,0,.05)' : 'rgba(255,230,170,.04)'; k2.fillRect(0, y, 400, 26); } k2.strokeStyle = 'rgba(80,40,10,.12)'; for (let y = 430; y < g.H; y += 26) { k2.beginPath(); k2.moveTo(0, y); k2.lineTo(400, y); k2.stroke(); }
+          k2.fillStyle = 'rgba(120,30,40,.25)'; k2.beginPath(); k2.moveTo(120, 700); k2.lineTo(280, 700); k2.lineTo(310, 760); k2.lineTo(90, 760); k2.closePath(); k2.fill();
+          k2.fillStyle = 'rgba(255,255,255,.2)'; k2.font = 'bold 26px system-ui'; k2.fillText('\u2618', 200, 560); }
+        g.bgc = cv; }
       c.drawImage(g.bgc, 0, 0); const b = g.b, hx = g.hx, hy = g.hy;
       // stanchion + backboard
       const pg = c.createLinearGradient(hx + 52, 0, hx + 64, 0); pg.addColorStop(0, '#64748b'); pg.addColorStop(1, '#1e293b'); c.fillStyle = pg; c.fillRect(hx + 52, hy - 120, 12, 560); c.fillStyle = '#1e293b'; c.fillRect(hx + 36, 680, 44, 30); c.fillStyle = '#16a34a'; c.fillRect(hx + 36, 690, 44, 6); c.fillStyle = 'rgba(226,232,240,.35)'; c.fillRect(hx + 40, hy - 115, 10, 130); c.strokeStyle = '#f8fafc'; c.lineWidth = 2; c.strokeRect(hx + 40, hy - 115, 10, 130); c.strokeStyle = '#ef4444'; c.strokeRect(hx + 42, hy - 52, 6, 40);

@@ -1,0 +1,8 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W, H = g.H;
+  // stage lights sweeping + floating notes (additive, never covers tiles)
+  c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 3; i++) { const x = W * (0.2 + i * 0.3), a = Math.sin(t * 0.9 + i * 2) * 0.5; const bg = c.createLinearGradient(x, 0, x + Math.sin(a) * 180, 360); const col = ['180,120,255', '90,220,255', '255,120,200'][i]; bg.addColorStop(0, 'rgba(' + col + ',.18)'); bg.addColorStop(1, 'rgba(' + col + ',0)'); c.fillStyle = bg; c.beginPath(); c.moveTo(x - 10, 0); c.lineTo(x + 10, 0); c.lineTo(x + Math.sin(a) * 180 + 60, 360); c.lineTo(x + Math.sin(a) * 180 - 60, 360); c.closePath(); c.fill(); } c.restore();
+  for (let i = 0; i < 6; i++) { const x = (i * 71 + Math.sin(t + i) * 20) % W, y = H - ((t * 30 + i * 130) % (H + 40)); c.globalAlpha = 0.35; c.fillStyle = '#cdb8ff'; c.font = 'bold 20px system-ui'; c.textAlign = 'center'; c.fillText(['\u266a', '\u266b'][i % 2], x, y); } c.globalAlpha = 1;
+  // speaker stacks on the screen edges
+  for (const s of [0, 1]) { const x = s ? W - 6 : 6; c.fillStyle = 'rgba(10,8,24,.8)'; c.fillRect(s ? W - 12 : 0, 120, 12, 90); const pulse = 1 + Math.sin(t * 8) * 0.12; c.fillStyle = 'rgba(180,140,255,.7)'; c.beginPath(); c.arc(x, 150, 4 * pulse, 0, 7); c.fill(); c.beginPath(); c.arc(x, 185, 3 * pulse, 0, 7); c.fill(); }
+} })(); // v8 scenery+sprite overlay

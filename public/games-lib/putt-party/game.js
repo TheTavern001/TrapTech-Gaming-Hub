@@ -1,3 +1,11 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W, H = g.H;
+  // garden gnome by the rail
+  c.save(); c.translate(40, 706); const sw = Math.sin(t * 2) * 0.05; c.rotate(sw); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(2, 18, 18, 5, 0, 0, 7); c.fill(); c.fillStyle = '#2f6fd1'; c.beginPath(); c.moveTo(-12, 16); c.lineTo(12, 16); c.lineTo(8, -2); c.lineTo(-8, -2); c.closePath(); c.fill(); c.fillStyle = '#f2c9a0'; c.beginPath(); c.arc(0, -6, 7, 0, 7); c.fill(); c.fillStyle = '#f5f5f5'; c.beginPath(); c.moveTo(-8, -2); c.quadraticCurveTo(0, 18, 8, -2); c.quadraticCurveTo(0, 4, -8, -2); c.fill(); c.fillStyle = '#d6342a'; c.beginPath(); c.moveTo(-8, -9); c.lineTo(0, -34); c.lineTo(8, -9); c.closePath(); c.fill(); c.fillStyle = '#111'; c.fillRect(-3.5, -8, 2, 2); c.fillRect(1.5, -8, 2, 2); c.fillStyle = '#e88'; c.beginPath(); c.arc(0, -4, 1.8, 0, 7); c.fill(); c.restore();
+  // bees + drifting dandelion fluff over the course
+  for (let i = 0; i < 3; i++) { const x = W / 2 + Math.cos(t * 0.9 + i * 2.2) * 120, y = H * 0.45 + Math.sin(t * 1.3 + i * 1.7) * 140; c.fillStyle = '#ffd23f'; c.beginPath(); c.ellipse(x, y, 4, 3, 0, 0, 7); c.fill(); c.fillStyle = '#222'; c.fillRect(x - 1, y - 3, 1.5, 6); c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.ellipse(x - 1, y - 4, 3, 1.6 + Math.abs(Math.sin(t * 40 + i)) * 2, -0.4, 0, 7); c.fill(); }
+  for (let i = 0; i < 8; i++) { const x = ((i * 53 + t * 16) % (W + 20)), y = (i * 97 + Math.sin(t + i) * 18) % H; c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.arc(x, y, 1.5, 0, 7); c.fill(); }
+} })(); // v8 scenery+sprite overlay
 // Putt Party - original top-down mini golf (Hub build, Sports: Golf Challenge). Drag back from the ball to aim (slingshot), release to putt.
 // Ball physics: sub-stepped, rolling friction, wall bounces off wooden rails, slope zones that push the ball, sand that slows it, water that
 // costs a stroke, plus spinning sweeper bars. Holes are generated endlessly from a seed (later holes get more hazards). Par per hole;
@@ -28,7 +36,7 @@
     for (const [x, y] of [[X0 + 14, Y0 + 14], [X1 - 14, Y0 + 14]]) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.arc(x + 2, y + 3, 9, 0, 7); c.fill(); c.fillStyle = '#9a3412'; c.beginPath(); c.arc(x, y, 9, 0, 7); c.fill(); c.fillStyle = '#16a34a'; c.font = 'bold 14px serif'; c.textAlign = 'center'; c.fillText('\u2618', x, y + 5); }
     const t = g.tee; c.fillStyle = 'rgba(255,255,255,.25)'; Kit.rr(c, t.x - 22, t.y - 12, 44, 24, 6); c.fill();
     c.fillStyle = 'rgba(157,255,122,.45)'; c.font = 'bold 9px sans-serif'; c.textAlign = 'center'; c.fillText('\u2618 PUTT PARTY \u00b7 THE GREENHOUSE LINKS \u00b7 21+', 200, H - 12); return (g.cache = cv); }
-  Kit.run({ id: 'gl-putt-party', title: 'PUTT PARTY', help: 'Drag back from anywhere, release to putt (slingshot). Longer drag = harder\nSlopes push, sand slows, water costs a stroke. Beat par for bonus', bg: '#0f2418',
+  Kit.run({ fill: true, id: 'gl-putt-party', title: 'PUTT PARTY', help: 'Drag back from anywhere, release to putt (slingshot). Longer drag = harder\nSlopes push, sand slows, water costs a stroke. Beat par for bonus', bg: '#0f2418',
     init(g) { g.hole = 1; g.lives = 3; g.under = 0; g.aces = 0; build(g); g.hud = ''; },
     update(g, dt) { const b = g.b, P = g.ptr; for (const s of g.spin) s.a += s.w * dt;
       if (g.next > 0) { g.next -= dt; if (g.next <= 0) { g.hole++; g.mark('h', g.hole); build(g); } return; }

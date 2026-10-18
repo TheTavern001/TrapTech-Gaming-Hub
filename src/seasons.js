@@ -38,7 +38,7 @@ const PERKS = [
   { level: 8, id: 'discount5', name: '5% off the shop', desc: 'Every Points Shop price is 5% lower for the rest of the season.', discount: 5 },
   { level: 18, id: 'peek', name: 'Early peek', desc: "See tomorrow's daily picks in the shop before they go live." },
   { level: 28, id: 'discount10', name: '10% off the shop', desc: 'Shop prices are 10% lower for the rest of the season.', discount: 10 },
-  { level: 38, id: 'vault', name: 'Vault radar', desc: 'See which retired items return from the Vault over the next 7 days.' },
+  { level: 38, id: 'vault', name: 'Return radar', desc: 'See which items come back from their rest period over the next 7 days.' },
   { level: 48, id: 'discount15', name: '15% off the shop', desc: 'Shop prices are 15% lower for the rest of the season.', discount: 15 },
   { level: 58, id: 'glow', name: 'Season glow', desc: 'An animated ring around your name on the season leaderboard.' },
 ];

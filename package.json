@@ -26,7 +26,9 @@
     "icons:verify": "node tools/test-traptech-pwa-icons.js",
     "verify:private": "node tools/verify-private-preview-live.js",
     "qa:87:browser": "node tools/qa-87-browser.js",
-    "test:cosmetics": "node tools/test-cosmetic-rewards.js"
+    "test:cosmetics": "node tools/test-cosmetic-rewards.js",
+    "test:systems": "node tools/test-systems-v8.js",
+    "test:rewards-startup": "node tools/test-reward-startup.js"
   },
   "keywords": [],
   "author": "",

@@ -1,3 +1,10 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W;
+  // blimp drifting over the stadium
+  const bx = ((t * 14) % (W + 220)) - 110, by = 48 + Math.sin(t * 0.8) * 4; c.save(); c.translate(bx, by); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(4, 20, 46, 10, 0, 0, 7); c.fill(); const bg3 = c.createLinearGradient(0, -14, 0, 14); bg3.addColorStop(0, '#f3f6fa'); bg3.addColorStop(1, '#9aa7b8'); c.fillStyle = bg3; c.beginPath(); c.ellipse(0, 0, 44, 13, 0, 0, 7); c.fill(); c.fillStyle = '#16a34a'; c.fillRect(-20, -13, 8, 26); c.fillRect(-2, -13, 8, 26); c.fillStyle = '#c7ccd4'; c.beginPath(); c.moveTo(-40, 0); c.lineTo(-54, -12); c.lineTo(-48, 0); c.lineTo(-54, 12); c.closePath(); c.fill(); c.fillStyle = '#333'; Kit.rr(c, -8, 12, 16, 6, 2); c.fill(); c.fillStyle = '#ffd23f'; c.font = 'bold 8px system-ui'; c.textAlign = 'center'; c.fillText('\u2618 21+', 10, 3); c.restore();
+  // leaf mascot dancing on the foul line
+  const mx = 30, my = 470, bob = Math.abs(Math.sin(t * 5)) * 6; c.save(); c.translate(mx, my - bob); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 26 + bob, 14, 4, 0, 0, 7); c.fill(); c.fillStyle = '#16a34a'; c.beginPath(); c.ellipse(0, 4, 13, 18, 0, 0, 7); c.fill(); c.fillStyle = '#22c55e'; for (let k = -2; k <= 2; k++) { c.beginPath(); c.ellipse(k * 6, -16, 3.5, 11, k * 0.35, 0, 7); c.fill(); } c.fillStyle = '#fff'; c.beginPath(); c.arc(-5, 0, 3.6, 0, 7); c.arc(5, 0, 3.6, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(-4.5, 0.5, 1.6, 0, 7); c.arc(5.5, 0.5, 1.6, 0, 7); c.fill(); c.strokeStyle = '#052e16'; c.lineWidth = 1.6; c.beginPath(); c.arc(0, 7, 4, 0.2, 2.9); c.stroke(); c.strokeStyle = '#16a34a'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(-12, 4); c.lineTo(-22, -8 + Math.sin(t * 10) * 6); c.moveTo(12, 4); c.lineTo(22, -8 - Math.sin(t * 10) * 6); c.stroke(); c.restore();
+} })(); // v8 scenery+sprite overlay
 // Long Ball - original Home Run Derby-style batting game (Hub build, Sports). Pitches come in; tap to swing.
 // Timing sets launch angle and exit speed, tap position (left/right of the ball) must line up for solid contact.
 // Fastballs, change-ups and curves; pitch speed ramps. Non-homers and misses are outs; 10 outs ends the run.
@@ -8,7 +15,7 @@
   function newPitch(g) { g.n++; const lvl = Math.min(1, g.n / 30); const t = g.n < 3 ? 0 : g.RI(0, g.n < 6 ? 1 : 3); const [name, slow, brk] = TYPES[t];
     g.p = { name, z: 1, T: (1.05 - lvl * 0.35) * slow * g.R(0.95, 1.05), x0: PX + g.R(-30, 30), brk: brk * g.R(25, 50) * (0.5 + lvl), t: 0, wind: 0.9 }; g.phase = 'wind'; g.swing = -1; }
   function px(p, z) { const k = 1 - z; return p.x0 + p.brk * k * k; }
-  Kit.run({ id: 'gl-long-ball', title: 'LONG BALL', help: 'Tap to swing as the pitch reaches the plate\nTap on the side the ball crosses for solid contact (Space swings centre)\nHomers score by distance; streaks multiply. 10 outs ends the run', bg: '#0b1a33',
+  Kit.run({ fill: true, id: 'gl-long-ball', title: 'LONG BALL', help: 'Tap to swing as the pitch reaches the plate\nTap on the side the ball crosses for solid contact (Space swings centre)\nHomers score by distance; streaks multiply. 10 outs ends the run', bg: '#0b1a33',
     init(g) { g.n = 0; g.outs = 0; g.hr = 0; g.streak = 0; g.lng = 0; g.fly = null; g.msg = ''; g.msgT = 0; g.bat = 0; g.fx = []; g.hud = ''; newPitch(g); },
     update(g, dt) { g.msgT -= dt; g.bat = Math.max(0, g.bat - dt * 5); for (const f of g.fx) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; f.l -= dt; } g.fx = g.fx.filter(f => f.l > 0);
       const p = g.p;

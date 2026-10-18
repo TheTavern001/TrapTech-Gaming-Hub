@@ -40,7 +40,7 @@
   K.tone = tone; K.noise = noise;
   // ---- run a game ----
   K.run = function (def) {
-    const L = def.orient === 'l' ? [800, 450] : [400, 700]; const W = def.w || L[0], Hh = def.h || L[1];
+    const L = def.orient === 'l' ? [800, 450] : [400, 700]; const W = def.w || L[0]; let Hh = def.h || L[1]; let g = null;
     const cv = document.createElement('canvas'); cv.id = 'gl'; document.body.appendChild(cv); const c = cv.getContext('2d');
     let scale = 1, ox = 0, oy = 0;
     // Start crisp on high-DPR phones, then dynamically lower only backing-store pixels
@@ -48,9 +48,21 @@
     const initialDpr = Math.min(2, devicePixelRatio || 1);
     let renderDpr = initialDpr, slowFrames = 0, p95Ms = 0; let cameraShakeAllowed=true;let gamePrefs=null;
     const frameSamples = [];
-    function resize() { const vw = innerWidth, vh = innerHeight, d = renderDpr; scale = Math.min(vw / W, vh / Hh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - cw) / 2; oy = (vh - ch) / 2; cv.style.cssText = `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`; cv.width = Math.max(1,Math.floor(cw * d)); cv.height = Math.max(1,Math.floor(ch * d)); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
+    // v8: portrait fix. Landscape-designed games (orient 'l') rotate 90deg on a portrait phone so they fill the tall screen
+    // instead of floating in a thin band; pointer input is mapped back. Portrait games with def.fill grow their logical
+    // height to the real aspect ratio (g.W/g.H update, def.onResize fires). Remaining bands take the game's own bg colour.
+    let rot = false, hintEl = null;
+    function rotateHint(on) { if (!on) { if (hintEl) hintEl.style.display = 'none'; return; } if (!hintEl) { hintEl = document.createElement('div'); hintEl.textContent = 'Turn your phone sideways for a bigger view'; hintEl.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:7px 12px;border-radius:12px;background:rgba(12,14,38,.85);border:1px solid rgba(154,126,255,.45);color:#cfd2ff;font:600 12px system-ui,sans-serif;z-index:50;pointer-events:none;white-space:nowrap'; document.body.appendChild(hintEl); } hintEl.style.display = 'block'; }
+    document.documentElement.style.background = def.bg || '#050714'; document.body.style.background = def.bg || '#050714';
+    function resize() { const vw = innerWidth, vh = innerHeight, d = renderDpr;
+      rot = !!def.rotate && (def.orient === 'l' || W > Hh) && vh > vw * 1.15;
+      const land = (def.orient === 'l' || W > Hh) && !rot; rotateHint(land && vh > vw * 1.15);
+      if (def.fill && !rot && g) { const minH = def.minH || Math.round(W * 1.3), maxH = def.maxH || Math.round(W * 2.3); const nh = Math.round(K.clamp(W * vh / vw, minH, maxH)); if (nh !== g.H) { g.H = nh; Hh = nh; if (typeof btns !== "undefined" && btns) btns.forEach(b => { b.y = Hh - 56; }); if (def.onResize) def.onResize(g); } }
+      const lw = rot ? Hh : W, lh = rot ? W : Hh; scale = Math.min(vw / lw, vh / lh); const cw = Math.floor(W * scale), ch = Math.floor(Hh * scale); ox = (vw - (rot ? ch : cw)) / 2; oy = (vh - (rot ? cw : ch)) / 2;
+      cv.style.cssText = rot ? `position:absolute;left:${vw / 2 - cw / 2}px;top:${vh / 2 - ch / 2}px;width:${cw}px;height:${ch}px;transform:rotate(90deg);touch-action:none` : `position:absolute;left:${ox}px;top:${oy}px;width:${cw}px;height:${ch}px;touch-action:none`;
+      cv.width = Math.max(1,Math.floor(cw * d)); cv.height = Math.max(1,Math.floor(ch * d)); c.setTransform(cv.width / W, 0, 0, cv.height / Hh, 0, 0); }
     addEventListener('resize', resize); resize();
-    const g = { W, H: Hh, c, t: 0, score: 0, best: +(safeStore.get('gl_best_' + def.id) || 0), state: 'title', rnd: Math.random, keys: {}, hud: '', parts: [], texts: [], shakeT: 0, shakeM: 0, flashT: 0, flashC: '#fff', frames: 0, fps: 60, inputs: 0,
+    g = { W, H: Hh, c, t: 0, score: 0, best: +(safeStore.get('gl_best_' + def.id) || 0), state: 'title', rnd: Math.random, keys: {}, hud: '', parts: [], texts: [], shakeT: 0, shakeM: 0, flashT: 0, flashC: '#fff', frames: 0, fps: 60, inputs: 0,
       ptr: { x: W / 2, y: Hh / 2, down: false, pressed: false, released: false, sx: 0, sy: 0 }, stick: { x: 0, y: 0, on: false, cx: 0, cy: 0 }, btn: {}, def, sub: null };
     g.R = (a, b) => a + g.rnd() * (b - a); g.RI = (a, b) => Math.floor(g.R(a, b + 1)); g.pick = (arr) => arr[Math.floor(g.rnd() * arr.length)];
     g.add = (v, k) => { v = Math.round(v); if (!v || g.state !== 'play') return; g.score += v; window.Hub && Hub.event(k || 'p', v); };
@@ -91,8 +103,8 @@
         },fps:()=>g.fps});
     }).catch(e=>console.error('Game settings failed to load',e));
     // buttons: def.buttons = [{id:'A', key:' ', label:'JUMP'}]
-    const btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
-    const toL = (e) => [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
+    var btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));
+    const toL = (e) => rot ? [W / 2 + (e.clientY - innerHeight / 2) / scale, Hh / 2 - (e.clientX - innerWidth / 2) / scale] : [((e.clientX - ox) / scale), ((e.clientY - oy) / scale)];
     const touches = new Map();
     // Revoke all held pointers and keys together. A tab switch, focus loss or
     // settings overlay must not leave a steering stick or firing key active.
@@ -158,7 +170,7 @@
       try { seed = window.Hub ? await Hub.start(def.id) : null; }
       catch (_) { g.state = 'title'; g.startError = 'Could not start game. Check connection and retry.'; return; }
       g.rnd = mulberry(seed); g.score = 0; g.t = 0; g.parts = []; g.texts = []; g.hud = ''; g.paused = document.hidden || gameSettingsOpen; def.init(g); g.state = 'play'; if (!g.paused) K.sfx('power'); }
-    g.rnd = mulberry(); def.init(g);
+    resize(); g.rnd = mulberry(); def.init(g);
     let last = performance.now(), acc = 0, fpsT = 0, fpsN = 0;
     function frame(now) {
       requestAnimationFrame(frame); const js0 = performance.now();
@@ -268,7 +280,7 @@
         if(g.why)label(g.why,W/2,py+65,11,'#aeb9df');label('SCORE',W/2,py+87,9,'#8feaff');
         label(Math.floor(g.score).toLocaleString('en-US')+(def.unit?' '+def.unit:''),W/2,py+112,Math.min(38,W/10),'#fff');
         panel(px+18,py+143,pw-36,36,12,'rgba(6,11,29,.76)','rgba(255,255,255,.12)');
-        const status=!g.sub||g.sub.pending?'SAVING SCORE…':g.sub.ok?'LEADERBOARD SAVED'+(g.sub.rank?' · RANK #'+g.sub.rank:''):(g.sub.error||'SCORE NOT SAVED');
+        const status=!g.sub||g.sub.pending?'SAVING SCORE…':g.sub.ok?'LEADERBOARD SAVED'+(g.sub.rank?' · RANK #'+g.sub.rank:''):g.sub.practice?'PRACTICE RUN · SIGN IN TO SAVE':(g.sub.error||'SCORE NOT SAVED');
         label(status.toUpperCase(),W/2,py+161,9,g.sub&&g.sub.ok?'#7bf0bf':'#b6c2e8');
         panel(px+25,py+ph-40,pw-50,34,12,'rgba(117,91,255,.27)','rgba(145,130,255,.68)');label('TAP TO PLAY AGAIN',W/2,py+ph-23,11,'#b8f4ff');
       }
@@ -282,4 +294,86 @@
   K.stars = function (c, W, H, t, sp, n) { n = n || 60; c.fillStyle = '#fff'; for (let i = 0; i < n; i++) { const x = (i * 97.3) % W, y = ((i * 53.7) + t * (sp || 40) * (1 + i % 3)) % H; c.globalAlpha = 0.25 + (i % 4) * 0.18; c.fillRect(x, y, 1 + i % 2, 1 + i % 2); } c.globalAlpha = 1; };
   K.glow = function (c, col, blur) { c.shadowColor = col; c.shadowBlur = blur || 12; };
   K.noGlow = function (c) { c.shadowBlur = 0; };
+})();
+// ---- juice layer (opt-in allowlist; see juice.js notes) ----
+// The Gaming Hub - Games Library "juice" layer (original code, MIT). Opt-in with "// @uses juice.js" before the game script.
+// Wraps Kit.run to add, with no change to game rules or scoring: additive spark streaks + shockwave rings on every burst,
+// hit-stop on heavy hits, a screen-edge vignette + colour grade, a fade-in, and an original procedural music bed
+// (bass + arpeggio, themed per game, tempo creeps up with run time) played through Kit.tone so the Hub mute switch applies.
+(function () {
+  if (!window.Kit || Kit.__juice) return; Kit.__juice = 1;
+  const ON = new Set(['gl-arrow-hero', 'gl-bubble-pop', 'gl-bud-bar', 'gl-bud-sort', 'gl-bullseye', 'gl-cloud-hopper', 'gl-color-hop', 'gl-cue-club', 'gl-cup-toss', 'gl-drift-king', 'gl-helix-drop', 'gl-hex-spin', 'gl-hoop-streak', 'gl-ice-snipe', 'gl-kickflip-city', 'gl-knife-toss', 'gl-knockout', 'gl-light-cycle', 'gl-long-ball', 'gl-maze-muncher', 'gl-missile-guard', 'gl-mole-whack', 'gl-moon-lander', 'gl-neon-flipper', 'gl-no-brakes', 'gl-orb-coil', 'gl-paper-toss', 'gl-pest-patrol', 'gl-pin-strike', 'gl-putt-party', 'gl-rally-court', 'gl-reel-deal', 'gl-roll-up', 'gl-skee-roll', 'gl-spot-kick', 'gl-strain-crush', 'gl-tile-twin', 'gl-tunnel-hop', 'gl-zig-path', 'gl-smoke-rings', 'gl-rock-buster', 'gl-star-swarm', 'gl-block-drop', 'gl-dune-glide', 'gl-egg-roll', 'gl-monster-crush', 'gl-hill-hauler', 'gl-wreck-ride', 'gl-rig-rally', 'gl-neon-circuit', 'gl-grid-wars', 'gl-moon-swarm', 'gl-arrow-hero', 'gl-rail-rush', 'gl-throttle-rider', 'gl-wanted-run', 'gl-road-hopper', 'gl-green-dash', 'gl-road-brawl', 'gl-cab-rush', 'gl-derby-smash', 'gl-cube-horde', 'gl-goo-tower', 'gl-pop-defense']);
+  const run = Kit.run;
+  // [root midi, scale steps, bpm, bass wave, arp wave, grade colour]
+  const MUS = [
+    [45, [0, 3, 5, 7, 10], 112, 'triangle', 'square', '20,10,60'],     // dark pentatonic minor
+    [48, [0, 2, 4, 7, 9], 124, 'triangle', 'triangle', '10,40,60'],    // bright major pentatonic
+    [43, [0, 2, 3, 7, 8], 104, 'sine', 'sawtooth', '50,10,30'],        // moody
+    [50, [0, 2, 4, 5, 7], 132, 'triangle', 'square', '10,50,30'],      // upbeat
+    [41, [0, 3, 5, 6, 7], 98, 'sine', 'triangle', '30,20,60'],         // bluesy
+    [47, [0, 2, 5, 7, 9], 118, 'triangle', 'sawtooth', '60,30,10'],    // warm
+  ];
+  function hash(s) { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+  const mf = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const VIG = {};
+  function vignette(W, H, str) {
+    const k = W + 'x' + H + ':' + str; if (VIG[k]) return VIG[k];
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+    const g = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.78);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,' + str + ')'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    return (VIG[k] = cv);
+  }
+  Kit.run = function (def) {
+    const J0 = def.juice || {}; if (J0.off || !(J0.on || ON.has(def.id))) return run.call(this, def);
+    const oi = def.init, ou = def.update, od = def.draw, id = def.id || 'x';
+    const M = MUS[J0.music != null ? J0.music : hash(id) % MUS.length];
+    const vig = J0.vig != null ? J0.vig : 0.38;
+    def.init = function (g) {
+      if (!g.__jw) {
+        g.__jw = 1;
+        const b0 = g.burst, s0 = g.shake;
+        g.burst = function (x, y, col, n, sp, life, sz) {
+          b0(x, y, col, n, sp, life, sz); const J = g.jx; if (!J || J.sparks.length > 140) return;
+          const cc = Array.isArray(col) ? col[0] : col, big = (n || 12) >= 18;
+          const k = Math.min(10, 4 + Math.floor((n || 12) / 5));
+          for (let i = 0; i < k; i++) { const a = Math.random() * 6.283, s = (sp || 160) * (0.5 + Math.random() * 0.9); J.sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, l: 0.35 + Math.random() * 0.3, m: 0, c: cc }); }
+          if (J.rings.length < 8) J.rings.push({ x, y, r: 4, l: big ? 0.4 : 0.28, m: 0, c: cc, w: big ? 3 : 2, R: big ? 54 : 30 });
+        };
+        g.shake = function (m, t) { s0(m, t); if (g.jx && m >= 7) g.jx.freeze = Math.min(0.065, m * 0.005); };
+      }
+      g.jx = { sparks: [], rings: [], freeze: 0, mt: 0, step: 0, hat: 0 };
+      oi.call(def, g);
+    };
+    def.update = function (g, dt) {
+      const J = g.jx; if (!J) return ou.call(def, g, dt);
+      for (let i = J.sparks.length - 1; i >= 0; i--) { const p = J.sparks[i]; p.m += dt; if (p.m >= p.l) { J.sparks.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.94; p.vy *= 0.94; }
+      for (let i = J.rings.length - 1; i >= 0; i--) { const r = J.rings[i]; r.m += dt; if (r.m >= r.l) J.rings.splice(i, 1); }
+      // music bed
+      J.mt -= dt; if (J.mt <= 0 && !J0.nomusic) {
+        const bpm = M[2] * (1 + Math.min(0.25, g.t / 480)), sd = 60 / bpm / 2, root = M[0], sc = M[1];
+        for (let i = 0; i < 4; i++) {
+          const st = J.step++, d = i * sd;
+          if (st % 2 === 0) Kit.tone(mf(root + (st % 16 < 8 ? 0 : st % 16 < 12 ? sc[2] : sc[1])), sd * 1.8, M[3], 0.032, 1, d);
+          const deg = sc[(st * 3 + (st >> 2)) % sc.length] + ((st >> 3) % 2 ? 12 : 24);
+          if (st % 4 !== 3) Kit.tone(mf(root + deg), sd * 0.8, M[4], 0.011, 1, d);
+          if (st % 2 === 1) setTimeout(() => Kit.noise && Kit.noise(0.03, 0.012, 6000), d * 1000);
+        }
+        J.mt += sd * 4;
+      }
+      if (J.freeze > 0) { J.freeze -= dt; return; }
+      return ou.call(def, g, dt);
+    };
+    def.draw = function (g, c) {
+      od.call(def, g, c); const J = g.jx; const W = g.W, H = g.H;
+      if (J) {
+        c.save(); c.globalCompositeOperation = 'lighter';
+        for (const p of J.sparks) { const a = 1 - p.m / p.l; c.globalAlpha = a; c.strokeStyle = p.c; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.vx * 0.04, p.y - p.vy * 0.04); c.stroke(); }
+        for (const r of J.rings) { const k = r.m / r.l; c.globalAlpha = (1 - k) * 0.8; c.strokeStyle = r.c; c.lineWidth = r.w * (1 - k) + 0.5; c.beginPath(); c.arc(r.x, r.y, 4 + r.R * Math.sqrt(k), 0, 6.283); c.stroke(); }
+        c.restore();
+      }
+      c.drawImage(vignette(W, H, vig), 0, 0, W, H);
+      if (g.state === 'play' && g.t < 0.7) { c.globalAlpha = 1 - g.t / 0.7; c.fillStyle = '#000'; c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
+    };
+    return run.call(this, def);
+  };
 })();

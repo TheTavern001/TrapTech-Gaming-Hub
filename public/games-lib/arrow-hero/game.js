@@ -1,62 +1,45 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W;
+  // animated torch flames in the sconces
+  for (const x of [58, W - 60]) { c.globalCompositeOperation = 'lighter'; const fl = 1 + Math.sin(t * 13 + x) * 0.18; const gl = c.createRadialGradient(x, 66, 2, x, 66, 90); gl.addColorStop(0, 'rgba(255,170,60,.38)'); gl.addColorStop(1, 'rgba(255,120,30,0)'); c.fillStyle = gl; c.beginPath(); c.arc(x, 66, 90, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over'; c.fillStyle = '#ffb02e'; c.beginPath(); c.moveTo(x - 5, 70); c.quadraticCurveTo(x - 7, 58, x, 50 - fl * 4); c.quadraticCurveTo(x + 7, 58, x + 5, 70); c.closePath(); c.fill(); c.fillStyle = '#fff2a0'; c.beginPath(); c.ellipse(x, 64, 2.4, 5 * fl, 0, 0, 7); c.fill(); }
+  // bats crossing the room
+  for (let i = 0; i < 2; i++) { const bx = ((t * (46 + i * 18) + i * 200) % (W + 80)) - 40, by = 160 + i * 220 + Math.sin(t * 2 + i) * 30, f = Math.sin(t * 16 + i) * 7; c.save(); c.translate(bx, by); c.globalAlpha = 0.85; c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(4, 26, 8, 3, 0, 0, 7); c.fill(); c.fillStyle = '#1b1426'; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(-10, -9 - f, -20, -2 - f); c.quadraticCurveTo(-14, 0, -11, 4); c.quadraticCurveTo(-6, 1, 0, 6); c.quadraticCurveTo(6, 1, 11, 4); c.quadraticCurveTo(14, 0, 20, -2 - f); c.quadraticCurveTo(10, -9 - f, 0, 0); c.fill(); c.beginPath(); c.arc(0, 1, 4.5, 0, 7); c.fill(); c.fillStyle = '#ff5a5a'; c.fillRect(-2.5, 0, 1.5, 1.5); c.fillRect(1, 0, 1.5, 1.5); c.restore(); }
+  // cobwebs in corners
+  c.strokeStyle = 'rgba(255,255,255,.28)'; c.lineWidth = 0.8; for (const [cx, cy, dx, dy] of [[22, 80, 1, 1], [W - 22, 80, -1, 1]]) { for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + dx * 46 * Math.cos(k * 0.5), cy + dy * 46 * Math.sin(k * 0.5)); c.stroke(); } for (let r = 12; r < 46; r += 11) { c.beginPath(); for (let k = 0; k < 4; k++) { const px = cx + dx * r * Math.cos(k * 0.5), py = cy + dy * r * Math.sin(k * 0.5); k ? c.lineTo(px, py - 0 + 3) : c.moveTo(px, py); } c.stroke(); } }
+} })(); // v8 scenery+sprite overlay
 // Arrow Hero - original Archero-style room crawler (Hub build, Survival & Horde). Drag anywhere to move (virtual stick); stand still
 // and your archer auto-fires at the nearest enemy. Clear the room, walk through the gate, pick 1 of 3 skills on level-up.
 // Enemies: slimes (charge), mages (aimed orbs), bats (weave), turrets (radial bursts); every 5th room is a boss. Endless rooms.
 (function () {
-  const RX = 20, RY = 80, RW = 360, RH = 560;
+  const RX = 20, RY = 80, RW = 360; let RH = 560;
   const SK = [['Multishot', 'Fire 1 extra arrow', g => g.multi++], ['Ricochet', 'Arrows bounce to 1 more foe', g => g.rico++], ['Front +1', 'Extra arrow straight ahead', g => g.front++], ['Attack speed', '+25% fire rate', g => g.rate *= 0.8], ['Attack +30%', 'More damage', g => g.dmg *= 1.3], ['Heal', 'Restore 40% HP', g => g.hp = Math.min(g.maxhp, g.hp + g.maxhp * 0.4)], ['Max HP +20%', 'Tougher', g => { g.maxhp *= 1.2; g.hp *= 1.2; }], ['Piercing', 'Arrows pass through 1 foe', g => g.pierce++], ['Diagonal', '+2 diagonal arrows', g => g.diag++], ['Bloodthirst', 'Kills heal 2 HP', g => g.leech += 2]];
-  let FLOOR = null;
-  function floor(W, H) { if (FLOOR) return FLOOR; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d'); c.fillStyle = '#1a1410'; c.fillRect(0, 0, W, H);
+  let FLOOR = null, FRH = 0;
+  function floor(W, H) { if (FLOOR && FRH === RH) return FLOOR; FRH = RH; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d'); c.fillStyle = '#1a1410'; c.fillRect(0, 0, W, H);
     let s = 5; const R = () => (s = (s * 16807) % 2147483647) / 2147483647; for (let y = RY; y < RY + RH; y += 40) for (let x = RX; x < RX + RW; x += 40) { const v = 70 + R() * 20; c.fillStyle = `rgb(${v + 30},${v + 18},${v})`; c.fillRect(x + 1, y + 1, 38, 38); c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(x + 1, y + 1, 38, 3); if (R() < 0.12) { c.strokeStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.moveTo(x + R() * 40, y); c.lineTo(x + R() * 40, y + 40); c.stroke(); } if (R() < 0.08) { c.fillStyle = 'rgba(60,120,40,.5)'; c.beginPath(); c.arc(x + R() * 40, y + R() * 40, 5, 0, 7); c.fill(); } }
-    const vg = c.createRadialGradient(200, 360, 120, 200, 360, 420); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)'); c.fillStyle = vg; c.fillRect(RX, RY, RW, RH);
+    const vg = c.createRadialGradient(200, RY + RH / 2, 120, 200, RY + RH / 2, RH * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)'); c.fillStyle = vg; c.fillRect(RX, RY, RW, RH);
     const wall = (x, y, w, h) => { const gg = c.createLinearGradient(x, y, x, y + h); gg.addColorStop(0, '#6b5a4a'); gg.addColorStop(1, '#3a2e24'); c.fillStyle = gg; c.fillRect(x, y, w, h); c.strokeStyle = 'rgba(0,0,0,.35)'; for (let yy = y; yy < y + h; yy += 10) for (let xx = x + ((yy / 10) % 2) * 10; xx < x + w; xx += 20) c.strokeRect(xx, yy, 20, 10); };
     wall(0, RY - 30, W, 30); wall(0, RY + RH, W, 30); wall(0, RY, RX, RH); wall(RX + RW, RY, RX, RH);
     for (const x of [60, 340]) { c.fillStyle = '#ffb347'; c.shadowColor = '#ffb347'; c.shadowBlur = 18; c.beginPath(); c.arc(x, RY - 12, 5, 0, 7); c.fill(); c.shadowBlur = 0; }
     c.fillStyle = 'rgba(157,255,122,.5)'; c.font = 'bold 9px sans-serif'; c.textAlign = 'center'; c.fillText('\u2618 ARROW HERO \u00b7 21+', 200, RY + RH + 20); return (FLOOR = cv); }
-  function spawnRoom(g) { g.en = []; g.eb = []; g.ar = []; g.gate = false; const n = g.room; g.obs = []; for (let i = 0; i < Math.min(5, 1 + Math.floor(n / 2)); i++) {
-      // Keep a permanent navigable center lane to the exit and boss.
-      // Otherwise several randomly placed obstacles can seal off a room.
-      const w = 40 + g.R(0, 40);
-      const left = g.RI(0, 1) === 0;
-      const x = left ? RX + 18 + g.R(0, 36) :
-        RX + RW - 18 - w - g.R(0, 36);
-      g.obs.push({ x, y: RY + 120 + g.R(0, RH - 300), w, h: 30 });
-    }
+  function spawnRoom(g) { g.en = []; g.eb = []; g.ar = []; g.gate = false; const n = g.room; g.obs = []; for (let i = 0; i < Math.min(5, 1 + Math.floor(n / 2)); i++) g.obs.push({ x: RX + 50 + g.R(0, RW - 140), y: RY + 120 + g.R(0, RH - 300), w: 40 + g.R(0, 40), h: 30 });
     const pos = () => { for (let k = 0; k < 30; k++) { const x = RX + 30 + g.R(0, RW - 60), y = RY + 40 + g.R(0, RH * 0.55); if (!g.obs.some(o => x > o.x - 16 && x < o.x + o.w + 16 && y > o.y - 16 && y < o.y + o.h + 16)) return [x, y]; } return [200, 150]; };
     const hpK = 1 + n * 0.22;
     if (n % 5 === 0) { const [x, y] = [200, RY + 120]; g.en.push({ t: 'boss', x, y, r: 34, hp: 80 * hpK, max: 80 * hpK, cd: 1.5, ph: 0, vx: 0, vy: 0 }); }
     else { const cnt = Math.min(12, 2 + Math.floor(n * 0.8)); for (let i = 0; i < cnt; i++) { const t = g.pick(n < 2 ? ['slime', 'slime', 'mage'] : n < 4 ? ['slime', 'mage', 'bat'] : ['slime', 'mage', 'bat', 'turret']); const [x, y] = pos(); g.en.push({ t, x, y, r: t === 'turret' ? 16 : 14, hp: { slime: 5, mage: 4, bat: 3, turret: 8 }[t] * hpK, max: { slime: 5, mage: 4, bat: 3, turret: 8 }[t] * hpK, cd: g.R(0.8, 2), ph: g.R(0, 6), vx: 0, vy: 0 }); } }
     g.p.x = 200; g.p.y = RY + RH - 50; g.p.inv = 0.8; }
   function blocked(g, x, y, r) { if (x < RX + r || x > RX + RW - r || y < RY + r || y > RY + RH - r) return true; return g.obs.some(o => x > o.x - r && x < o.x + o.w + r && y > o.y - r && y < o.y + o.h + r); }
-  // A fast arrow can travel more than an enemy's diameter in one phone frame.
-  // Collision must cover the entire frame segment, not only the destination.
-  function arrowHitsEnemy(x0, y0, x1, y1, e) {
-    const dx = x1 - x0, dy = y1 - y0;
-    const len2 = dx * dx + dy * dy;
-    const t = len2 > 0 ? Math.max(0, Math.min(1,
-      ((e.x - x0) * dx + (e.y - y0) * dy) / len2)) : 0;
-    const px = x0 + t * dx - e.x, py = y0 + t * dy - e.y;
-    return px * px + py * py < (e.r + 4) * (e.r + 4);
-  }
   function fire(g) { const p = g.p; const tg = g.en.reduce((b, e) => { const d = Math.hypot(e.x - p.x, e.y - p.y); return d < b.d ? { e, d } : b; }, { e: null, d: 1e9 }).e; if (!tg) return; const a = Math.atan2(tg.y - p.y, tg.x - p.x); p.face = a; const shots = []; const spread = 0.12; for (let i = 0; i <= g.multi; i++) shots.push([a, i * 0.09]); for (let i = 0; i < g.front; i++) shots.push([a + (i % 2 ? 1 : -1) * spread * Math.ceil((i + 1) / 2), 0]); for (let i = 0; i < g.diag; i++) { shots.push([a + 0.7, 0], [a - 0.7, 0]); }
     for (const [ang, delay] of shots) g.ar.push({ x: p.x, y: p.y, vx: Math.cos(ang) * 620, vy: Math.sin(ang) * 620, d: delay, rico: g.rico, pierce: g.pierce, hit: new Set() }); g.sfx('shoot'); }
-  Kit.run({ id: 'gl-arrow-hero', title: 'ARROW HERO', help: 'Drag anywhere to move (WASD / arrows). Stand still to auto-shoot\nClear the room, walk through the gate, pick a skill on level-up', bg: '#1a1410', stick: 'always', stickZone: () => true, stickAlsoPtr: true,
-    // The virtual stick ordinarily consumes touch pointerdown. This game also
-    // needs that tap to select one of three level-up cards.
-    init(g) { g.p = { x: 200, y: 600, inv: 1, face: -1.57, walk: 0 }; g.hp = g.maxhp = 120; g.rate = 0.55; g.dmg = 1; g.multi = 0; g.rico = 0; g.front = 0; g.diag = 0; g.pierce = 0; g.leech = 0; g.cd = 0; g.room = 1; g.xp = 0; g.need = 6; g.lvl = 1; g.kills = 0; g.choose = null; spawnRoom(g); g.hud = ''; },
+  Kit.run({ fill: true, id: 'gl-arrow-hero', title: 'ARROW HERO', help: 'Drag anywhere to move (WASD / arrows). Stand still to auto-shoot\nClear the room, walk through the gate, pick a skill on level-up', bg: '#1a1410', stick: 'always', stickZone: () => true,
+    init(g) { RH = Math.round(Kit.clamp(g.H - 140, 460, 700)); g.p = { x: 200, y: RY + RH - 40, inv: 1, face: -1.57, walk: 0 }; g.hp = g.maxhp = 120; g.rate = 0.55; g.dmg = 1; g.multi = 0; g.rico = 0; g.front = 0; g.diag = 0; g.pierce = 0; g.leech = 0; g.cd = 0; g.room = 1; g.xp = 0; g.need = 6; g.lvl = 1; g.kills = 0; g.choose = null; spawnRoom(g); g.hud = ''; },
     update(g, dt) { const p = g.p;
-      if (g.choose) { let pick = -1; for (let i = 0; i < 3; i++) if (g.kd(String(i + 1))) pick = i; if (g.ptr.pressed) {
-        const i = Math.floor((g.ptr.y - 250) / 90);
-        // Only a tap inside the VISIBLE 320×76 card is a selection,
-        // not a stray touch on the overlay or a gap between cards.
-        if (g.ptr.x >= 40 && g.ptr.x <= 360 &&
-            i >= 0 && i < 3 && g.ptr.y < 250 + i * 90 + 76) pick = i;
-      } if (pick >= 0) { SK[g.choose[pick]][2](g); g.float(200, 330, SK[g.choose[pick]][0], '#9dff7a', 22); g.choose = null; g.sfx('power'); g.stick.on = false; g.stick.x = g.stick.y = 0; } return; }
+      if (g.choose) { let pick = -1; for (let i = 0; i < 3; i++) if (g.kd(String(i + 1))) pick = i; if (g.ptr.pressed) { const i = Math.floor((g.ptr.y - 250) / 90); if (i >= 0 && i < 3) pick = i; } if (pick >= 0) { SK[g.choose[pick]][2](g); g.float(200, 330, SK[g.choose[pick]][0], '#9dff7a', 22); g.choose = null; g.sfx('power'); g.stick.on = false; g.stick.x = g.stick.y = 0; } return; }
       let mx = g.ax(), my = g.ay(); const ml = Math.hypot(mx, my); if (ml > 1) { mx /= ml; my /= ml; } const moving = ml > 0.15; if (moving) { const sp = 190; const nx = p.x + mx * sp * dt, ny = p.y + my * sp * dt; if (!blocked(g, nx, p.y, 12)) p.x = nx; if (!blocked(g, p.x, ny, 12)) p.y = ny; p.walk += dt * 10; p.face = Math.atan2(my, mx); }
       p.inv -= dt; g.cd -= dt; if (!moving && g.cd <= 0 && g.en.length) { fire(g); g.cd = g.rate; }
       if (g.gate && p.y < RY + 30 && Math.abs(p.x - 200) < 40) { g.room++; g.mark('r', g.room); g.add(100 * g.room, 'room'); spawnRoom(g); return; }
       // arrows
-      for (const a of g.ar) { if (a.d > 0) { a.d -= dt; continue; } const x0 = a.x, y0 = a.y; a.x += a.vx * dt; a.y += a.vy * dt; if (a.x < RX || a.x > RX + RW || a.y < RY || a.y > RY + RH) a.dead = true;
-        for (const e of g.en) { if (a.hit.has(e) || e.dead) continue; if (arrowHitsEnemy(x0, y0, a.x, a.y, e)) { a.hit.add(e); e.hp -= 1.6 * g.dmg; e.fl = 0.08; g.sfx('hit'); if (e.hp <= 0) { e.dead = true; g.kills++; g.mark('k', g.kills); g.add(e.t === 'boss' ? 1000 : 25, 'kill'); g.burst(e.x, e.y, e.t === 'boss' ? ['#f97316', '#fde047', '#fff'] : ['#84cc16', '#a855f7', '#fff'], e.t === 'boss' ? 40 : 12, 180); g.hp = Math.min(g.maxhp, g.hp + g.leech); g.xp += e.t === 'boss' ? 10 : 1; }
+      for (const a of g.ar) { if (a.d > 0) { a.d -= dt; continue; } a.x += a.vx * dt; a.y += a.vy * dt; if (a.x < RX || a.x > RX + RW || a.y < RY || a.y > RY + RH) a.dead = true;
+        for (const e of g.en) { if (a.hit.has(e) || e.dead) continue; if (Math.hypot(e.x - a.x, e.y - a.y) < e.r + 4) { a.hit.add(e); e.hp -= 1.6 * g.dmg; e.fl = 0.08; g.sfx('hit'); if (e.hp <= 0) { e.dead = true; g.kills++; g.mark('k', g.kills); g.add(e.t === 'boss' ? 1000 : 25, 'kill'); g.burst(e.x, e.y, e.t === 'boss' ? ['#f97316', '#fde047', '#fff'] : ['#84cc16', '#a855f7', '#fff'], e.t === 'boss' ? 40 : 12, 180); g.hp = Math.min(g.maxhp, g.hp + g.leech); g.xp += e.t === 'boss' ? 10 : 1; }
             if (a.pierce > 0) a.pierce--; else if (a.rico > 0) { a.rico--; const nx = g.en.filter(o => !o.dead && !a.hit.has(o)).sort((u, v) => Math.hypot(u.x - a.x, u.y - a.y) - Math.hypot(v.x - a.x, v.y - a.y))[0]; if (nx) { const an = Math.atan2(nx.y - a.y, nx.x - a.x); a.vx = Math.cos(an) * 620; a.vy = Math.sin(an) * 620; } else a.dead = true; } else a.dead = true; break; } } }
       g.ar = g.ar.filter(a => !a.dead && a.x > 0 && a.x < 400 && a.y > 0 && a.y < 700); g.en = g.en.filter(e => !e.dead);
       if (g.xp >= g.need) { g.xp -= g.need; g.need = Math.round(g.need * 1.35); g.lvl++; const idx = []; while (idx.length < 3) { const i = g.RI(0, SK.length - 1); if (!idx.includes(i)) idx.push(i); } g.choose = idx; g.sfx('power'); }
@@ -68,9 +51,9 @@
         else if (e.t === 'mage') { if (e.cd <= 0) { e.cd = g.R(1.6, 2.4); g.eb.push({ x: e.x, y: e.y, vx: dx / d * 160, vy: dy / d * 160, r: 6, c: '#c084fc' }); } }
         else if (e.t === 'turret') { if (e.cd <= 0) { e.cd = 2.6; for (let i = 0; i < 8; i++) { const a = i * 0.785 + e.ph * 0.3; g.eb.push({ x: e.x, y: e.y, vx: Math.cos(a) * 150, vy: Math.sin(a) * 150, r: 6, c: '#f87171' }); } } }
         else if (e.t === 'boss') { e.x += Math.sin(e.ph * 0.8) * 70 * dt; if (e.cd <= 0) { e.cd = Math.max(0.9, 1.8 - g.room * 0.02); const k = Math.floor(e.ph) % 3; if (k === 0) for (let i = 0; i < 14; i++) { const a = i * 0.449; g.eb.push({ x: e.x, y: e.y, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160, r: 7, c: '#fb923c' }); } else for (let i = -2; i <= 2; i++) { const a = Math.atan2(dy, dx) + i * 0.18; g.eb.push({ x: e.x, y: e.y, vx: Math.cos(a) * 230, vy: Math.sin(a) * 230, r: 7, c: '#fde047' }); } } }
-        if (Math.hypot(p.x - e.x, p.y - e.y) < e.r + 12 && p.inv <= 0) { g.hp -= e.t === 'boss' ? 22 : 9; p.inv = 0.8; g.sfx('bad'); g.shake(6); } }
-      for (const b of g.eb) { const bx = b.x, by = b.y; b.x += b.vx * dt; b.y += b.vy * dt; if (!b.dead && p.inv <= 0 && arrowHitsEnemy(bx, by, b.x, b.y, { x:p.x, y:p.y, r:b.r + 6 })) { b.dead = true; g.hp -= 7 + g.room * 0.5; p.inv = 0.6; g.sfx('bad'); g.shake(5); } }
-      g.eb = g.eb.filter(b => !b.dead && b.x >= RX && b.x <= RX + RW && b.y >= RY && b.y <= RY + RH);
+        if (d < e.r + 12 && p.inv <= 0) { g.hp -= e.t === 'boss' ? 22 : 9; p.inv = 0.8; g.sfx('bad'); g.shake(6); } }
+      for (const b of g.eb) { b.x += b.vx * dt; b.y += b.vy * dt; if (b.x < RX || b.x > RX + RW || b.y < RY || b.y > RY + RH) b.dead = true; if (!b.dead && Math.hypot(b.x - p.x, b.y - p.y) < b.r + 10 && p.inv <= 0) { b.dead = true; g.hp -= 7 + g.room * 0.5; p.inv = 0.6; g.sfx('bad'); g.shake(5); } }
+      g.eb = g.eb.filter(b => !b.dead);
       if (g.hp <= 0) return g.end('Fell in room ' + g.room); },
     draw(g, c) { c.drawImage(floor(g.W, g.H), 0, 0); const p = g.p, t = g.t;
       // gate

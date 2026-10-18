@@ -57,7 +57,7 @@ window.__GL3 = () => S.r.info.render;
     if (r < 0.58) return { t: 'w', sp: g.R(45, 90 + 50 * lvl) * (g.rnd() < 0.5 ? -1 : 1), logs: [], next: 0 };
     if (r < 0.66 && i > 12) return { t: 't', warn: 0, train: null, cd: g.R(2, 5) };
     const trees = []; for (let x = 0; x < COLS; x++) if (g.rnd() < 0.18) trees.push(x); return { t: 'g', trees }; }
-  Kit.run({ id: 'gl-road-hopper', title: 'ROAD HOPPER', help: 'Tap / Up to hop forward, swipe or arrows to dodge\nDon\'t stall - the hawk is watching', bg: 'rgba(0,0,0,0)',
+  Kit.run({ id: 'gl-road-hopper', title: 'ROAD HOPPER', help: 'Tap / Up to hop forward, swipe or arrows to dodge\nDon\'t stall - the hawk is watching', bg: 'rgba(0,0,0,0)', fill: true,
     init(g) { g.rows = []; for (let i = 0; i < 30; i++) g.rows.push(row(g, i)); g.p = { x: 4, y: 0, hx: 4, hy: 0, ht: 1, on: null }; g.cam = 0; g.best = g.best; g.far = 0; g.idle = 0; g.coins = new Set(); for (let i = 5; i < 30; i++) if (g.rnd() < 0.15) g.coins.add(i + ',' + g.RI(0, 9)); },
     update(g, dt) {
       const p = g.p; p.ht = Math.min(1, p.ht + dt * 9);

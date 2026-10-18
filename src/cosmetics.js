@@ -150,6 +150,7 @@ function generate(type, id) {
 const BY = Object.fromEntries(Object.keys(BASE).map(type => [type, new Proxy(BASE[type], {
   get(t, id) {
     if (typeof id !== 'string' || id in t) return t[id];
+    if (id === 'undefined' || id === 'null') return undefined; // a missing id is not a reward: never mint a placeholder for it
     if (!LISTS[type] || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(id) || id in Object.prototype) return undefined;
     return generate(type, id);
   },

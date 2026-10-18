@@ -6,6 +6,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
  let resolveScore,scorePayload;
  const win={},clock={now:()=>100};
  const fetch=(url,opts)=>{
+   if(url==='/api/me')return Promise.resolve({status:200,json:async()=>({ok:true,user:{username:'t'}})});
    if(url==='/api/run/start')return Promise.resolve({status:200,json:async()=>({ok:true,token:'run-A',seed:'abc123'})});
    scorePayload=JSON.parse(opts.body);
    return new Promise(resolve=>{resolveScore=resolve;});

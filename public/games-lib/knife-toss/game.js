@@ -1,5 +1,5 @@
 // Knife Toss - original spinning-target knife thrower (Hub build)
-Kit.run({ id: 'gl-knife-toss', title: 'KNIFE TOSS', help: 'Tap / Space to throw\nDon\'t hit other knives - apples are bonus', bg: '#1c1917',
+Kit.run({ fill: true, id: 'gl-knife-toss', title: 'KNIFE TOSS', help: 'Tap / Space to throw\nDon\'t hit other knives - apples are bonus', bg: '#1c1917',
   init(g) { g.stage = 0; nextStage(g); g.fly = null; },
   update(g, dt) {
     g.rs += (g.rt - g.rs) * dt * 1.5; if (g.rnd() < dt * g.chg) g.rt = g.R(-1, 1) * g.maxs; g.rot += g.rs * dt;
@@ -11,6 +11,11 @@ Kit.run({ id: 'gl-knife-toss', title: 'KNIFE TOSS', help: 'Tap / Space to throw\
     g.hitT = Math.max(0, (g.hitT || 0) - dt); g.hud = '';
   },
   draw(g, c) { const W = g.W, H = g.H; const bg = c.createRadialGradient(200, 300, 30, 200, 340, 520); bg.addColorStop(0, '#3b2a22'); bg.addColorStop(1, '#0d0907'); c.fillStyle = bg; c.fillRect(0, 0, W, H);
+    { // v8 art: plank wall with knots, stage curtains, spotlight cone, sawdust floor
+      for (let x = 0, i = 0; x < W; x += 39, i++) { c.fillStyle = i % 2 ? 'rgba(255,200,140,.035)' : 'rgba(0,0,0,.12)'; c.fillRect(x, 0, 39, H); c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x, 0, 1.5, H); } for (const [kx, ky] of [[60, 180], [330, 420], [120, 560], [300, 90]]) { c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(kx, ky, 6, 9, 0, 0, 7); c.stroke(); c.beginPath(); c.ellipse(kx, ky, 3, 5, 0, 0, 7); c.stroke(); }
+      for (const side of [0, 1]) { const x0 = side ? W : 0, dir = side ? -1 : 1; const cg = c.createLinearGradient(x0, 0, x0 + dir * 70, 0); cg.addColorStop(0, '#6b0f1a'); cg.addColorStop(1, '#a3162a'); c.fillStyle = cg; c.beginPath(); c.moveTo(x0, 0); c.lineTo(x0 + dir * 62, 0); for (let y = 0; y <= H; y += 20) c.lineTo(x0 + dir * (40 + Math.sin(y * 0.05) * 14 + y * 0.01), y); c.lineTo(x0, H); c.closePath(); c.fill(); c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; for (let f = 1; f < 4; f++) { c.beginPath(); c.moveTo(x0 + dir * f * 12, 0); for (let y = 0; y <= H; y += 20) c.lineTo(x0 + dir * (f * 10 + Math.sin(y * 0.05 + f) * 4), y); c.stroke(); } c.fillStyle = '#d9a521'; c.fillRect(x0 + (side ? -62 : 0), 0, 62, 6); }
+      c.save(); c.globalCompositeOperation = 'lighter'; const sg2 = c.createLinearGradient(W / 2, 0, W / 2, 380); sg2.addColorStop(0, 'rgba(255,236,190,.2)'); sg2.addColorStop(1, 'rgba(255,236,190,.02)'); c.fillStyle = sg2; c.beginPath(); c.moveTo(W / 2 - 18, 0); c.lineTo(W / 2 + 18, 0); c.lineTo(W / 2 + 190, 400); c.lineTo(W / 2 - 190, 400); c.closePath(); c.fill(); c.restore();
+      const fg = c.createLinearGradient(0, H - 90, 0, H); fg.addColorStop(0, 'rgba(120,85,45,0)'); fg.addColorStop(1, 'rgba(150,105,55,.5)'); c.fillStyle = fg; c.fillRect(0, H - 90, W, 90); for (let i = 0; i < 80; i++) { c.fillStyle = 'rgba(220,180,120,.35)'; c.fillRect((i * 83) % W, H - 70 + (i * 37) % 70, 2, 1.5); } }
     // stage dots
     for (let i = 0; i < 5; i++) { const st = Math.floor((g.stage - 1) / 5) * 5 + i + 1, x = 200 + (i - 2) * 26; c.save(); c.translate(x, 70); c.rotate(0.785); c.fillStyle = st < g.stage ? '#fbbf24' : st === g.stage ? (i === 4 ? '#ef4444' : '#fde68a') : 'rgba(255,255,255,.18)'; c.fillRect(-6, -6, 12, 12); c.restore(); }
     c.fillStyle = g.boss ? '#ef4444' : '#fde68a'; c.font = 'bold 18px sans-serif'; c.textAlign = 'center'; c.fillText(g.boss ? 'BOSS: ' + BOSS[(g.stage / 5 - 1) % BOSS.length].n : 'STAGE ' + g.stage, 200, 106);

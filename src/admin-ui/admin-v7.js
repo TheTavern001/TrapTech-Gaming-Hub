@@ -14,6 +14,7 @@ export async function route(s, id, sub) {
   if (s === 'players') return id ? (await B('./admin-users.js')).profile(id) : (await B('./admin-users.js')).list();
   if (s === 'moderation') return moderation();
   if (s === 'team') return team();
+  if (s === 'systems') return systems();
   if (s === 'log') return actionLog();
   const ops = { events: 'events', seasons: 'seasons', shop: 'shop', badges: 'badges', analytics: 'analytics', announcements: 'announcements', settings: 'settings' };
   if (ops[s]) return (await B('./admin-ops.js'))[ops[s]](id);
@@ -56,6 +57,7 @@ async function giveawayView(id) {
       <div>${cl ? `<div class="card pad"><h2>${icon('crown')} Winners &amp; claims</h2><p class="small muted">Claim deadline ${dtz(cl.deadline)} (${cl.claim_hours} h). Contact winners on Potato.</p>${cl.winners.map(w => `<div class="claim" data-uid="${w.user_id}"><div><b>#${w.place} ${esc(w.username)}</b> ${pill(w.state, w.state === 'confirmed' ? 'green' : 'gold')}${w.overdue ? pill('overdue', 'red') : ''}<div class="small muted">${esc(w.prize || '')}${w.contacted_at ? ` • contacted ${dshort(w.contacted_at)}` : ''}${w.claimed_at ? ` • claimed ${dshort(w.claimed_at)}` : ''}</div></div>
           ${can('winners.review') ? `<div class="claim-b">${!w.contacted_at ? `<button class="btn sm ghost" data-claim="contacted">${icon('send')} Contacted</button>` : ''}${!w.claimed_at ? `<button class="btn sm ghost" data-claim="claimed">${icon('check')} Claimed</button>` : ''}<button class="btn sm ghost danger-t" data-claim="forfeit">${icon('user-x')} Forfeit</button></div>` : ''}</div>`).join('') || '<div class="empty">No winners.</div>'}
         ${cl.alternates.length ? `<h3>Alternates</h3>${cl.alternates.map(a => `<div class="small">#${a.place} ${esc(a.username)} (${fmt(a.score)})</div>`).join('')}` : ''}</div>` : `<div class="card pad"><h2>${icon('crown')} Winners</h2><p class="small muted">Standings lock automatically at ${dtz(g.end_at)}. ${g.draw_commit ? `Draw commitment: <code>${esc(g.draw_commit.slice(0, 16))}…</code>` : ''}</p></div>`}
+      ${g.audience === 'invite' ? `<div class="card pad" id="gv-inv"><h2>${icon('lock')} Invites</h2><p class="small muted">Single-use codes. Share each code privately; the player enters it on the giveaway page. You can also invite a player by username.</p><div class="btn-row"><button class="btn sm" id="inv-new">${icon('plus')} 5 new codes</button><button class="btn sm ghost" id="inv-user">${icon('user-plus')} Invite a player</button></div><div id="inv-list" class="small"></div></div>` : ''}
       <div class="card pad"><h2>${icon('gift')} Prizes</h2>${r.plan.places.map(p => `<div class="small"><b>${p.award === 'random' ? 'Random draw' : p.from === p.to ? '#' + p.from : `#${p.from}-${p.to}`}</b> ${esc(p.name)}</div>`).join('')}</div>
       <div class="card pad"><h2>${icon('history')} Audit log</h2><div class="audit">${r.audit.slice(0, 30).map(a => `<div class="small"><span class="muted">${dshort(a.created_at)}</span> <b>${esc(a.actor)}</b> ${esc(a.action)} ${esc(a.username || '')}</div>`).join('')}</div></div></div></div>`);
   document.querySelector('.gv-acts').addEventListener('click', async (e) => {
@@ -69,6 +71,12 @@ async function giveawayView(id) {
     if (['archive', 'announce', 'stop_series'].includes(a) && !(await dialog({ title: { archive: 'Archive this giveaway?', announce: 'Announce the winners publicly?', stop_series: 'Stop creating new occurrences?' }[a], confirm: 'Yes' }))) return;
     const x = await api(`/api/admin/v7/gw/${g.id}/act/${a}`, { method: 'POST', body }); toast(x.ok ? 'Done' : x.error); if (x.ok) giveawayView(id);
   });
+  if (g.audience === 'invite') {
+    const drawInv = async () => { const x = await api(`/api/admin/giveaways/${g.id}/invites`); const el = document.getElementById('inv-list'); if (!el) return; el.innerHTML = (x.invites || []).map(i => `<div class="mini-row"><code>${esc(i.code)}</code><span class="muted">${esc(i.label || '')}</span><span>${i.username ? 'used by ' + esc(i.username) : 'unused'}</span>${i.username ? '' : `<button class="btn sm ghost" data-rv="${esc(i.code)}">Revoke</button>`}</div>`).join('') || '<div class="muted">No invites yet.</div>'; el.querySelectorAll('[data-rv]').forEach(b => b.onclick = async () => { await api(`/api/admin/giveaways/${g.id}/invites/${b.dataset.rv}`, { method: 'DELETE' }); drawInv(); }); };
+    document.getElementById('inv-new').onclick = async () => { const x = await api(`/api/admin/giveaways/${g.id}/invites`, { method: 'POST', body: { count: 5 } }); toast(x.ok ? 'Codes created' : x.error); drawInv(); };
+    document.getElementById('inv-user').onclick = async () => { const u = await dialog({ title: 'Invite a player', input: { label: 'Username' }, confirm: 'Invite' }); if (!u) return; const x = await api(`/api/admin/giveaways/${g.id}/invites`, { method: 'POST', body: { username: u } }); toast(x.ok ? 'Player invited' : x.error); drawInv(); };
+    drawInv();
+  }
   document.querySelectorAll('[data-claim]').forEach(b => b.onclick = async () => {
     const uid = b.closest('[data-uid]').dataset.uid; const action = b.dataset.claim; let reason = '';
     if (action === 'forfeit') { reason = await dialog({ title: 'Forfeit this prize?', body: '<p>The winner is disqualified and the next alternate moves up.</p>', input: { label: 'Reason', value: 'Prize not claimed in time' }, confirm: 'Forfeit', danger: true }); if (reason === false) return; }
@@ -141,4 +149,21 @@ async function actionLog() {
     <div class="card wrap-x"><table class="tbl"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody>${r.log.map(a => `<tr><td class="small">${dshort(a.at)}</td><td><b>${esc(a.actor)}</b>${a.role ? ` <span class="tiny muted">${esc(a.role)}</span>` : ''}</td><td>${pill(a.action, a.src === 'signin' ? '' : a.action.includes('delete') || a.action.includes('ban') ? 'red' : 'violet')}</td><td class="small">${a.target.startsWith('user:') ? `<a href="/admin/players/${a.target.slice(5)}">${esc(a.target)}</a>` : a.target.startsWith('giveaway:') ? `<a href="/admin/giveaways/${a.target.slice(9)}">${esc(a.target)}</a>` : esc(a.target)}</td><td class="small muted">${esc(a.detail)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Nothing logged yet.</td></tr>'}</tbody></table></div>`);
   document.getElementById('lg').onsubmit = (e) => { e.preventDefault(); C.nav('/admin/log?q=' + encodeURIComponent(new FormData(e.target).get('q'))); };
   document.getElementById('lg-csv').onclick = () => csvDownload('admin-action-log.csv', [['at', 'actor', 'role', 'action', 'target', 'detail'], ...r.log.map(a => [new Date(a.at).toISOString(), a.actor, a.role, a.action, a.target, a.detail])]);
+}
+
+// ================= v8 systems overview (catalog, quests, brands, orders, security, privacy) =================
+async function systems() {
+  const r = await api('/api/admin/v8/overview'); if (!r.ok) return C.frame('systems', 'Systems', `<div class="card pad">${esc(r.error || 'Unavailable')}</div>`);
+  const row = (k, v) => `<tr><td>${esc(k)}</td><td class="num">${esc(String(v))}</td></tr>`; const yn = (b) => (b ? 'yes' : 'no');
+  const card = (t, ic, rows, link = '') => `<div class="card pad"><h2 style="margin-bottom:8px">${icon(ic)} ${t}</h2><table class="tbl"><tbody>${rows.join('')}</tbody></table>${link}</div>`;
+  C.frame('systems', 'Systems', `<p class="muted small" style="margin-top:0">Live status of the v8 systems. Everything here is read-only; change settings on the linked pages.</p>
+    <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:0">
+    ${card('Cosmetic catalog', 'gem', [row('Designs in the universe', fmt(r.catalog.designs)), row('Owned rows', fmt(r.catalog.owned_rows || 0)), row('Global stylesheet (KB)', r.catalog.global_css_kb), row('Per-player stylesheet cap', r.catalog.per_player_css_cap)], `<p class="small"><a href="/admin/shop">Shop &amp; rotation</a></p>`)}
+    ${card('Skill achievements and quests', 'trophy', [row('Achievements', fmt(r.skill.achievements)), row('Quest variants', fmt(r.skill.quest_variants)), row('Unlocked by players', fmt(r.skill.unlocked || 0)), row('Quests claimed', fmt(r.skill.claimed_quests || 0))])}
+    ${card('Brands and audiences', 'store', [row('Active brands', r.brands.total), row('Featured brands', r.brands.featured), row('Affiliated players', fmt(r.brands.affiliated_players || 0)), row('Live invite-only giveaways', r.brands.invite_giveaways_live), row('Invite codes open / used', `${r.brands.invites_open} / ${r.brands.invites_used}`)], `<p class="small"><a href="/admin/channels">Manage brands</a></p>`)}
+    ${card('Cosmetic orders', 'wallet', [row('Open orders', r.orders.cosmetic_pending), row('Granted', r.orders.cosmetic_granted), row('Need your attention (underpaid / overpaid / late / already owned)', r.orders.needs_you), row('Checkout enabled', r.checkout ? yn(r.checkout.enabled) : 'n/a'), row('Methods', r.checkout && r.checkout.methods.length ? r.checkout.methods.join(', ') : 'none')], `<p class="small">${r.checkout && !r.checkout.enabled ? esc(r.checkout.reason || '') + ' ' : ''}<a href="/admin/store">Store &amp; orders</a></p>`)}
+    ${card('Security', 'shield-check', [row('Script CSP', r.security.csp), row('Cross-site request guard', yn(r.security.cross_site_guard)), row('Custom admin path', yn(r.security.admin_path_custom)), row('Two-factor available', yn(r.security.two_factor_available)), row('Private review lock', yn(r.security.private_review)), row('Prize events unlocked', yn(r.security.prize_events_unlocked))], `<p class="small"><a href="/admin/security">Security settings</a></p>`)}
+    ${card('Privacy', 'lock', [row('Player data export', r.privacy.export_endpoint), row('Account deletion', r.privacy.delete_endpoint)], `<p class="small muted">Players export or delete their own data from Settings. The privacy policy text lives in the app (/privacy).</p>`)}
+    ${card('Server', 'cpu', [row('Node', r.node), row('Memory RSS (MB)', r.memory_mb.rss), row('Heap used (MB)', r.memory_mb.heap)])}
+    </div>`);
 }

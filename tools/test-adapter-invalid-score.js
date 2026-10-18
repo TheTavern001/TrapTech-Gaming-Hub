@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 (async()=>{
  const src=fs.readFileSync(path.join(__dirname,'../public/games-lib/adapter.js'),'utf8');
- const sent=[],win={};const fetch=(url,opt)=>{sent.push({url,body:JSON.parse(opt.body)});return Promise.resolve({status:200,json:async()=>url==='/api/run/start'?{ok:true,token:'secure-token',seed:'2'}:{ok:true}});};
+ const sent=[],win={};const fetch=(url,opt)=>{if(url==='/api/me')return Promise.resolve({status:200,json:async()=>({ok:true,user:{username:'t'}})});sent.push({url,body:JSON.parse(opt.body)});return Promise.resolve({status:200,json:async()=>url==='/api/run/start'?{ok:true,token:'secure-token',seed:'2'}:{ok:true}});};
  vm.runInNewContext(src,{window:win,fetch,performance:{now:()=>100},URLSearchParams:class{get(){return null}},location:{search:''}},{timeout:2000});
  await win.Hub.start('test');
  for(const value of [NaN,Infinity,-Infinity,-1,Number.MAX_VALUE,'99',null]){

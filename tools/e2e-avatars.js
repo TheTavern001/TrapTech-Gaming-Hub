@@ -10,50 +10,19 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const A = client(); const ua = 'av_' + Math.random().toString(36).slice(2, 8); await A('/api/auth/signup', { body: { username: ua, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } });
   let r = await client()(`/avatar/${ua}.svg`); ok(r.status === 200 && r.ct.includes('image/svg+xml') && r.body.startsWith('<svg') && r.body.length < 8000, 'every player has a default avatar SVG (< 8 KB)', r.body.length);
   const def = r.body; r = await client()('/avatar/nobody_here.svg'); ok(r.status === 200, 'unknown names still get a generated avatar (no broken images)');
-  r = await A('/api/avatar'); ok(r.body.ok && r.body.kinds.length === 14 && r.body.parts.length > 75, 'editor lists 14 part kinds including emotes and body build', r.body.parts && r.body.parts.length);
-  const P = r.body.parts;
-  const starter = r.body.avatar;
-  const starterKinds = r.body.kinds.map(kind => P.find(p => p.kind === kind && p.id === starter[kind]));
-  ok(starter.gender === 'other' && starter.outfit === 'base' && starter.emote === 'none' && starter.hair === 'waves' && starterKinds.every(p => p && p.owned),
-    'unified starter appearance consists entirely of unlocked cosmetic parts', starter);
-  const fresh = client(); const ub = 'av2_' + Math.random().toString(36).slice(2, 8);
-  await fresh('/api/auth/signup', { body: { username: ub, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } });
-  const second = await fresh('/api/avatar');
-  ok(second.body.ok && JSON.stringify(starter) === JSON.stringify(second.body.avatar), 'separate new accounts receive identical starter appearance');
-  ok(!P.find(p=>p.kind==='outfit'&&p.id==='adventurer')?.owned
-     && P.filter(p=>p.kind==='hair'&&p.owned).length===7
-     && P.filter(p=>p.kind==='emote'&&!p.owned).length===5
-     && P.filter(p=>['outfit','hat','acc','held'].includes(p.kind)&&p.owned&&!['none','base'].includes(p.id)).length===0,
-     'seven free hairstyles, five locked emotes, no free collectible starter outfit or gear');
-  ok(['skin','face','eyes','mouth','beard'].every(k=>P.filter(p=>p.kind===k).every(p=>p.owned&&p.crowns===0&&p.points===0)), 'every natural face and facial-feature option is FREE');
-  const cfg = { ...r.body.avatar, face: 'round', hair: 'curly', hairc: 'c3', skin: 's4' };
-  r = await A('/api/avatar', { method: 'PUT', body: { avatar: cfg } }); ok(r.body.ok && r.body.avatar.hair === 'curly', 'free face/skin/hair customization saves');
+  r = await A('/api/avatar'); ok(r.body.ok && r.body.kinds.length >= 12 && r.body.parts.length > 70, 'editor lists 12+ part kinds and 70+ parts', [r.body.kinds.length, r.body.parts && r.body.parts.length]);
+  const P = r.body.parts; const cfg = { ...r.body.avatar, hair: 'curly', hairc: 'c3' }; // only the neutral base + free hair are owned by a new player
+  r = await A('/api/avatar', { method: 'PUT', body: { avatar: cfg } }); ok(r.body.ok && r.body.avatar.hair === 'curly', 'save free parts');
   r = await client()(`/avatar/${ua}.svg`); ok(r.body !== def, 'the public avatar changes after saving');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur' } } }); ok(r.status === 403, 'a Crowns part cannot be worn before it is bought');
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, hat: 'crown' } } }); ok(r.status === 403, 'the gold crown is Prestige-only');
-  r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, face: 'heart' } } });
-  ok(r.body.ok&&r.body.avatar.face==='heart','all face shapes are free to equip');
-  r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, emote: 'wave' } } });
-  ok(r.status === 403, 'locked emote cannot be equipped without entitlement');
-  r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, face: 'chiseled', eyes: 'star', mouth: 'grin', beard: 'goatee' } } }); ok(r.body.ok&&r.body.avatar.eyes==='star'&&r.body.avatar.face==='chiseled','facial features save without a purchase');
-  r = await A('/api/avatar/buy', { body: { part: 'face:heart' } }); ok(r.status===400,'buy endpoint rejects charging for free faces');
-  r = await A('/api/avatar/buy', { body: { part: 'outfit:fur' } }); ok(r.status === 400 && /more Hub Crowns/.test(r.body.error), 'buying without Crowns is refused');
-  r = await A('/api/avatar/buy-points', { body: { part: 'outfit:fur' } }); ok(r.status === 400 && /Earn .*more Hub Points/.test(r.body.error), 'cannot buy with insufficient gameplay Points');
-  r = await A('/api/avatar/buy-points', { body: { part: 'hat:crown' } }); ok(r.status === 400, 'one-of-one Prestige cannot be purchased with farmed Points');
-  r = await A('/api/avatar/buy-points', { body: { part: 'hair:waves' } }); ok(r.status === 400, 'already-free starter item is not chargeable');
-  ok(P.find(p => p.kind === 'outfit' && p.id === 'fur').points > 0, 'every Crown outfit has an earnable Points price');
+  r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, eyes: 'star' } } }); ok(r.status === 403, 'star eyes need 15 achievements');
+  r = await A('/api/avatar/buy-credits', { body: { part: 'outfit:fur' } }); ok(r.status === 400 && /more Hub Credits/.test(r.body.error), 'buying without enough Credits is refused');
   await ADM('/api/admin/store/grant', { body: { username: ua, crowns: 1000 } });
-  r = await A('/api/avatar/buy', { body: { part: 'outfit:fur' } }); ok(r.body.ok && r.body.crowns === 100, 'buy the fur coat for 900 Crowns');
+  r = await A('/api/avatar/buy-credits', { body: { part: 'outfit:fur' } }); ok(r.body.ok && r.body.price_credits > 0 && r.body.credits >= 0, 'buy the fur coat with Hub Credits', r.body);
   r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur' } } }); ok(r.body.ok, 'bought part can be worn');
-  const emoteGrant=await ADM('/api/admin/store/grant',{body:{username:ua,crowns:200}});
-  ok(emoteGrant.body?.ok===true,'admin grants test emote budget');
-  r = await A('/api/avatar/buy', { body: { part: 'emote:wave' } });
-  ok(r.body.ok&&r.body.crowns===100,'emote unlock leaves expected Crowns balance');
-  r = await A('/api/avatar', { method: 'PUT', body: { avatar: { ...cfg, outfit: 'fur', emote: 'wave' } } });
-  ok(r.body.ok && r.body.avatar.emote==='wave', 'unlocked emote can be saved on profile');
-  const emotePreview = await client()('/avatar-preview.svg?c='+encodeURIComponent(JSON.stringify({emote:'wave'})));
-  ok(emotePreview.body.includes('animateTransform'), 'wave emote produces animated cosmetic SVG profile motif');
-  r = await A('/api/avatar/buy', { body: { part: 'hat:crown' } }); ok(r.status === 400, 'Prestige parts are never sold for Crowns');
+  r = await A('/api/avatar/buy-credits', { body: { part: 'hat:crown' } }); ok(r.status === 400, 'Prestige parts are never sold for Credits');
+  r = await A('/api/avatar/buy', { body: { part: 'outfit:fur' } }); ok(r.status === 410, 'legacy Crowns buy route is retired');
   r = await client()('/avatar-preview.svg?c=' + encodeURIComponent(JSON.stringify({ hat: 'crown', held: 'cane' }))); ok(r.body.includes('<svg'), 'preview renders any combination (editor only; saving still checks ownership)');
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

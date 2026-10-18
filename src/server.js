@@ -41,6 +41,7 @@ app.use((req, res, next) => {
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') res.setHeader('Strict-Transport-Security', 'max-age=31536000');
   next();
 });
+require('./v8-sec').install(app); // v8: public-page CSP + cross-site request guard
 const PRIVATE_REVIEW = require('./private-review');
 app.use(PRIVATE_REVIEW.makeGate({
   enabled: process.env.HUB_PRIVATE_REVIEW === '1',
@@ -239,6 +240,9 @@ app.post('/api/auth/password', requireUser, limiter('pw', 10, 3600e3), (req, res
   setCookie(req, res, 'gh_sess', '', 0);
   res.json({ ok: true });
 });
+
+// v8: browsers always probe /favicon.ico; answer with the brand icon so no game page logs a 404.
+app.get('/favicon.ico', (req, res) => res.redirect(301, '/assets/brand/favicon.png?v=tt-crown-20261014'));
 
 app.get('/api/me', (req, res) => {
   const u = currentUser(req);
@@ -529,6 +533,7 @@ app.post('/api/me/cosmetics', requireUser, limiter('equip', 60, 60e3), (req, res
 });
 // v7: rebuilt when the shop's live set of generated items changes (new day / new purchases); see src/shop.js css()
 let COS_CSS = { k: '', css: '' }; const cosCss = () => { const k = require('./shop').cssKey(); if (COS_CSS.k !== k) COS_CSS = { k, css: COS.css() }; return COS_CSS.css; };
+app.get('/cosmetics-mine.css', (req, res) => { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.setHeader('Cache-Control', 'private, no-store'); const u = currentUser(req); res.send(u ? require('./shop').cssMine(u.id) : ''); });
 app.get('/cosmetics.css', (req, res) => { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=600'); res.send(cosCss()); });
 
 // ---------- community ----------
@@ -860,6 +865,7 @@ require('./sponsor')(app, A, H); // v7 official giveaway booking: feature picker
 require('./brands').routes(app, A, H); // v7 brand affiliation (invite links, one brand per player)
 require('./v5')(app, A, H);
 require('./v5b')(app, A, H);
+require('./v8')(app, A, H); // v8 systems: skill quests + achievements at scale, brand pages, privacy tools
 require('./events').routes(app, A, H); // v7 official events (event codes, event-run tokens, event boards, vendor QR)
 require('./monetize').routes(app, A, H); // v7 cosmetic-only store: Hub Crowns, Season Pass, Prestige; Bitcoin checkout (BTC_ADDRESS)
 require('./avatars').routes(app, H); // v7 Phase 5 player avatars (GET /avatar/<name>.svg, editor API)
@@ -905,13 +911,17 @@ app.get(Object.keys(HUB_ICON_ROUTES), (req, res) => {
 });
 // Public, read-only release review. Uses the same generated report as /api/audit/report.
 app.get(['/audit', '/audit/'], (req, res) => { res.setHeader('Cache-Control','no-store');res.sendFile(path.join(PUB, 'audit', 'index.html')); });
+// robots.txt + sitemap.xml: private/account/API paths are not indexed; the sitemap is only published when PUBLIC_URL is configured.
+const SITEMAP_PATHS = ['/', '/games', '/leaderboard', '/giveaways', '/tournaments', '/season', '/quests', '/achievements', '/community', '/shop', '/sponsor', '/about', '/terms', '/privacy', '/rules', '/responsible-play'];
+app.get('/robots.txt', (req, res) => res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /settings\nDisallow: /notifications\nDisallow: /me/\nDisallow: /friends\nDisallow: /invite\nDisallow: /join/\nDisallow: /signin\nDisallow: /signup\nDisallow: /forgot\n${PU.PUBLIC_URL ? `Sitemap: ${PU.PUBLIC_URL}/sitemap.xml\n` : ''}`));
+app.get('/sitemap.xml', (req, res) => { if (!PU.PUBLIC_URL) return res.status(404).type('text').send('Sitemap is published once PUBLIC_URL is set.'); res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${SITEMAP_PATHS.map(x => `<url><loc>${PU.PUBLIC_URL}${x === '/' ? '' : x}</loc></url>`).join('\n')}\n</urlset>\n`); });
 app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')||process.env.HUB_PRIVATE_REVIEW==='1') res.setHeader('Cache-Control', 'no-store'); } }));
 // Per-page <title> / description / Open Graph + Twitter card tags for share links (crawlers don't run JS).
 const INDEX_FILE = path.join(PUB, 'index.html');
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const PAGE_TITLES = { '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/tournaments': 'Tournaments', '/season': 'Season Pass', '/quests': 'Daily Quests',
   '/achievements': 'Achievements & Rewards', '/community': 'Community', '/sponsor': 'Book a Giveaway - Trap Tech Solutions', '/about': 'About Trap Tech Solutions',
-  '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/search': 'Search', '/notifications': 'Notifications', '/settings': 'Settings', '/invite': 'Invite Friends', '/channels': 'Brand Channels', '/friends': 'Friends & Challenges', '/shop': 'Points Shop' };
+  '/terms': 'Terms of Service', '/privacy': 'Privacy Policy', '/rules': 'Official Giveaway Rules', '/responsible-play': 'Responsible Play', '/search': 'Search', '/notifications': 'Notifications', '/settings': 'Settings', '/invite': 'Invite Friends', '/channels': 'Brand Channels', '/friends': 'Friends & Challenges', '/shop': 'Hub Credits Shop', '/store': 'Get Hub Credits', '/prestige': 'Prestige Collection' };
 function pageMeta(p, origin) {
   let m = null, mm;
   if ((mm = p.match(/^\/s\/(\d+)$/))) { const o = H.og.run(+mm[1]); if (o) m = { ...o, img: `/og/run/${mm[1]}.png` }; }
@@ -937,6 +947,7 @@ app.get('*', (req, res) => {
   const origin = PU.originOf(req); // v7: PUBLIC_URL when set
   const meta = (() => { try { return pageMeta(req.path.replace(/\/+$/, '') || '/', origin); } catch (e) { console.error(e); return null; } })();
   if (PU.PUBLIC_URL) html = html.replace('</head>', `<meta name="public-url" content="${escA(PU.PUBLIC_URL)}"><link rel="canonical" href="${escA(PU.PUBLIC_URL + (req.path.replace(/\/+$/, '') || '/'))}"></head>`);
+  if (/^\/(settings|notifications|me|friends|invite|join|signin|signup|forgot|welcome|reset)(\/|$)/.test(req.path)) html = html.replace('</head>', '<meta name="robots" content="noindex,nofollow"></head>');
   if (meta) html = html.replace(/<!--META-->[\s\S]*?<!--\/META-->/, meta);
   else html = html.replace(/(content=")\/og\/default\.png"/g, `$1${origin}/og/default.png"`);
   res.type('html').send(html);

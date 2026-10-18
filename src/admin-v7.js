@@ -138,7 +138,7 @@ function routes(app, A, H) {
   });
   M.get('/v7/gw/:id', perm('giveaways.view'), (req, res) => {
     const g = gwRow(req, res); if (!g) return; const c = G.cfgOf(g); const fin = g.finalized_at ? R.results(g) : null;
-    res.json({ ok: true, giveaway: { id: g.id, title: g.title, state: G.lifecycle(g), start_at: g.start_at, end_at: g.end_at, finalized_at: g.finalized_at, win_method: g.win_method, win_split: g.win_split, winners: R.winnerCount(g), series_id: g.series_id, occurrence: g.occurrence, slug: g.slug, draw_commit: g.draw_commit, pauses: SC.pausesOf(g) },
+    res.json({ ok: true, giveaway: { id: g.id, title: g.title, audience: g.audience || '', state: G.lifecycle(g), start_at: g.start_at, end_at: g.end_at, finalized_at: g.finalized_at, win_method: g.win_method, win_split: g.win_split, winners: R.winnerCount(g), series_id: g.series_id, occurrence: g.occurrence, slug: g.slug, draw_commit: g.draw_commit, pauses: SC.pausesOf(g) },
       data: c, plan: G.plan(c), standings: g.finalized_at ? null : R.liveStandings(g).slice(0, 50), results: fin, claims: fin ? G.claims(g) : null,
       audit: db.prepare('SELECT created_at, actor, action, username, detail FROM giveaway_audit WHERE giveaway_id=? ORDER BY id DESC LIMIT 100').all(g.id) });
   });

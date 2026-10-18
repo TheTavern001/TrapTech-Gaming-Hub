@@ -1,3 +1,9 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W, H = g.H;
+  // butterflies fluttering over the temple floor
+  for (let i = 0; i < 4; i++) { const x = W / 2 + Math.cos(t * 0.5 + i * 1.7) * (110 + i * 25), y = H / 2 + Math.sin(t * 0.7 + i * 2.1) * (180 - i * 20), fl = Math.abs(Math.sin(t * 14 + i * 3)), col = ['#ff7ab8', '#ffd23f', '#7ad7ff', '#c79bff'][i]; c.save(); c.translate(x, y); c.rotate(Math.cos(t * 0.5 + i * 1.7) * 0.6); c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(5, 10, 8 * fl + 1, 3, 0, 0, 7); c.fill(); c.fillStyle = col; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * 5 * fl, -2, 6 * fl + 0.8, 8, s * 0.5, 0, 7); c.fill(); c.beginPath(); c.ellipse(s * 4 * fl, 5, 4 * fl + 0.6, 5, -s * 0.4, 0, 7); c.fill(); } c.fillStyle = '#222'; c.fillRect(-1, -8, 2, 15); c.restore(); }
+  c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 12; i++) { const x = (i * 97 + Math.sin(t + i) * 20) % W, y = (i * 61 + t * 12) % H; c.fillStyle = 'rgba(255,240,150,' + (0.3 + 0.3 * Math.sin(t * 3 + i)) + ')'; c.beginPath(); c.arc(x, y, 2, 0, 7); c.fill(); }
+} })(); // v8 scenery+sprite overlay
 // Orb Coil - original marble-chain shooter (Hub build, Zuma-style). Code-drawn temple art, glossy orbs.
 (function () { const D = 26, COLS = ['#e8343a', '#2f7fe8', '#2fbf4a', '#ffc21f', '#b26bff', '#ff8a2a'];
   let PATH = null, LEN = 0, CUM = null; function mkPath(W, H) { const pts = [], cx = W / 2, cy = H * 0.5; const turns = 2.35, R0 = Math.min(W, H) * 0.47, R1 = 70; for (let i = 0; i <= 1600; i++) { const t = i / 1600, a = -Math.PI / 2 + t * turns * 6.283, r = R0 + (R1 - R0) * t; pts.push([cx + Math.cos(a) * r * (W / Math.min(W, H) * 0.98), cy + Math.sin(a) * r * 0.98]); }
@@ -16,7 +22,7 @@
     const e = PATH[PATH.length - 1]; const hg = c.createRadialGradient(e[0], e[1], 4, e[0], e[1], 34); hg.addColorStop(0, '#000'); hg.addColorStop(0.6, '#1a0a00'); hg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = hg; c.beginPath(); c.arc(e[0], e[1], 34, 0, 7); c.fill(); c.strokeStyle = '#ffd23f'; c.lineWidth = 4; c.beginPath(); c.arc(e[0], e[1], 22, 0, 7); c.stroke();
     c.fillStyle = 'rgba(30,20,10,.6)'; Kit.rr(c, g.W / 2 - 74, g.H - 40, 148, 22, 6); c.fill(); c.fillStyle = '#9dff7a'; c.font = 'bold 11px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('\u2618 TEMPLE OF TERPS \u00b7 21+', g.W / 2, g.H - 29);
     return (BG = cv); }
-  Kit.run({ id: 'gl-orb-coil', title: 'ORB COIL', orient: 'p', help: 'Aim with mouse / drag, release or click to shoot\nSpace / tap the idol swaps orbs. Match 3+ before the coil reaches the pit', bg: '#6a5030',
+  Kit.run({ fill: true, id: 'gl-orb-coil', title: 'ORB COIL', orient: 'p', help: 'Aim with mouse / drag, release or click to shoot\nSpace / tap the idol swaps orbs. Match 3+ before the coil reaches the pit', bg: '#6a5030',
     init(g) { mkPath(g.W, g.H); BG = null; g.ch = []; g.head = 260; g.spd = 70; g.rush = 1.2; g.shots = []; g.nc = 4; g.cur = g.RI(0, 3); g.next = g.RI(0, 3); g.aim = -Math.PI / 2; g.combo = 0; g.fx = []; g.idle = 0; for (let i = 0; i < 18; i++) g.ch.push({ c: g.RI(0, 3), off: 0 }); },
     update(g, dt) { const cx = g.W / 2, cy = g.H * 0.5;
       g.nc = Math.min(6, 4 + Math.floor(g.t / 60)); g.spd = 14 + Math.min(40, g.t * 0.25); const v = g.rush > 0 ? 220 : g.spd; g.rush -= dt; g.head += v * dt * (g.ch.length ? 1 : 0);

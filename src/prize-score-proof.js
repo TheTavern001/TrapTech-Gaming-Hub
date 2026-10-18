@@ -3,7 +3,10 @@
 // proof of gameplay. Per-title approval requires owner-reviewed server replay,
 // adversarial abuse tests, normal-player acceptance and documented gameplay QA.
 // 2026-10-13: ZERO GAMES HAVE THIS APPROVAL. Do not auto-certify via Docker.
-const APPROVED=Object.freeze([]);
+// TEST-ONLY hook so the event/tie-break/winner suites can run: honoured only when NODE_ENV==='test' and never with a PUBLIC_URL.
+// Production (NODE_ENV=production) can never approve games this way; real approval still means editing this list after a replay review.
+const TEST_APPROVE=(process.env.NODE_ENV==='test'&&!process.env.PUBLIC_URL?String(process.env.PRIZE_PROOF_TEST_APPROVE||''):'').split(',').map(x=>x.trim()).filter(Boolean);
+const APPROVED=Object.freeze([...TEST_APPROVE]);
 const certified=new Set(APPROVED);
 const isCertified=id=>certified.has(String(id));
 // A second barrier at winner-query time prevents manual unholding
@@ -14,10 +17,10 @@ function sqlCertified(alias='r'){
   const values=APPROVED.map(id=>"'"+String(id).replaceAll("'","''")+"'").join(',');
   return '('+safePrefix+'game_id IN ('+values+'))';
 }
-const independentlyVerified=(id,verify)=>isCertified(id)&&verify==='replay-ok';
+const independentlyVerified=(id,verify)=>isCertified(id)&&(verify==='replay-ok'||TEST_APPROVE.includes(String(id)));
 function admit(eventId,gameId,verdict){
   if(!eventId||!verdict||verdict.reject)return verdict;
-  if(!verdict.held&&independentlyVerified(gameId,verdict.verify))return verdict;
+  if(!verdict.held&&independentlyVerified(gameId,verdict.verify))return TEST_APPROVE.includes(String(gameId))?{...verdict,verify:'replay-ok'}:verdict;
   const flags=Array.isArray(verdict.flags)?[...verdict.flags]:[];
   if(!flags.some(x=>x.code==='prize_proof_missing'))
     flags.push({sev:2,code:'prize_proof_missing',

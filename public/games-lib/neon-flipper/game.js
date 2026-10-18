@@ -1,3 +1,11 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, cx = 195, cy = 664;
+  // drain guardian: glowing alien that blinks and watches
+  c.save(); c.translate(cx, cy); const bl = Math.sin(t * 1.7) > 0.96; c.globalCompositeOperation = 'lighter'; const gl = c.createRadialGradient(0, 0, 4, 0, 0, 52); gl.addColorStop(0, 'rgba(180,90,255,.35)'); gl.addColorStop(1, 'rgba(180,90,255,0)'); c.fillStyle = gl; c.beginPath(); c.arc(0, 0, 52, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over';
+  const hg = c.createRadialGradient(-6, -8, 2, 0, 0, 30); hg.addColorStop(0, '#9dffb0'); hg.addColorStop(1, '#1f7a52'); c.fillStyle = hg; c.beginPath(); c.ellipse(0, 0, 26, 20, 0, 0, 7); c.fill(); c.strokeStyle = '#073b2a'; c.lineWidth = 2; c.stroke(); c.strokeStyle = '#2fd18a'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(-8, -18); c.quadraticCurveTo(-14, -30, -8 + Math.sin(t * 4) * 3, -36); c.moveTo(8, -18); c.quadraticCurveTo(14, -30, 8 + Math.sin(t * 4 + 1) * 3, -36); c.stroke(); c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(-8 + Math.sin(t * 4) * 3, -36, 3, 0, 7); c.arc(8 + Math.sin(t * 4 + 1) * 3, -36, 3, 0, 7); c.fill();
+  c.fillStyle = '#fff'; if (!bl) { c.beginPath(); c.ellipse(-9, -2, 7, 8, 0, 0, 7); c.ellipse(9, -2, 7, 8, 0, 0, 7); c.fill(); c.fillStyle = '#220a3a'; c.beginPath(); c.arc(-9 + Math.sin(t) * 2, -1, 3.2, 0, 7); c.arc(9 + Math.sin(t) * 2, -1, 3.2, 0, 7); c.fill(); } else { c.fillRect(-15, -2, 12, 2); c.fillRect(3, -2, 12, 2); }
+  c.fillStyle = '#052a1c'; c.beginPath(); c.arc(0, 10, 8, 0.1, Math.PI - 0.1); c.fill(); c.fillStyle = '#fff'; for (let k = -2; k <= 2; k++) c.fillRect(k * 3 - 1, 10.5, 2, 2.5); c.restore();
+} })(); // v8 scenery+sprite overlay
 // Neon Flipper - original pinball table (Hub build). Custom sub-stepped circle-vs-capsule physics (fixed 1/600 s steps), moving-flipper impulses.
 // Pop bumpers, slingshots, a 3-target drop bank, 3 rollover lanes (multiplier), ball save, endless: extra ball every 40k.
 (function () {
@@ -37,7 +45,7 @@
     c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(352, 250, 24, 440); return (TABLE = cv); }
   addEventListener('pointerdown', e => { const cv = document.getElementById('gl'); if (!cv) return; const r = cv.getBoundingClientRect(); (e.clientX < r.left + r.width / 2 ? touch.l : touch.r).add(e.pointerId); });
   const up = e => { touch.l.delete(e.pointerId); touch.r.delete(e.pointerId); }; addEventListener('pointerup', up); addEventListener('pointercancel', up);
-  Kit.run({ id: 'gl-neon-flipper', title: 'NEON FLIPPER', help: 'Left / right side of the screen (or Z and M / arrow keys) flip\nHold, then release to launch. Light the lanes for a multiplier', bg: '#0b0620',
+  Kit.run({ fill: true, id: 'gl-neon-flipper', title: 'NEON FLIPPER', help: 'Left / right side of the screen (or Z and M / arrow keys) flip\nHold, then release to launch. Light the lanes for a multiplier', bg: '#0b0620',
     init(g) { g.balls = 3; g.mult = 1; g.tgt = [false, false, false]; g.roll = [false, false, false]; g.nextXB = 40000; for (const f of FL) { f.ang = f.rest; f.w = 0; } for (const b of bumps) b.lit = 0; newBall(g); g.hud = ''; },
     update(g, dt) { const L = touch.l.size > 0 || g.keys.ArrowLeft || g.keys.z || g.keys.Z || g.keys.a, Rt = touch.r.size > 0 || g.keys.ArrowRight || g.keys.m || g.keys.M || g.keys.d; const b = g.ball;
       if (b.lane) { const hold = g.held() || L || Rt; if (hold) g.charge = Math.min(1, g.charge + dt * 1.2); else if (g.charge > 0.05) { b.vy = -(900 + g.charge * 700); b.lane = false; g.sfx('whoosh'); g.charge = 0; } }

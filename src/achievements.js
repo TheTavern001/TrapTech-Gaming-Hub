@@ -281,7 +281,10 @@ function evaluate(userId, opts = {}) {
     }
     if (!added) break;
   }
-  return { fresh: fresh.map(a => publicAch(a, true)), stats: st, have };
+  // v8: skill achievements (12,000+ ladders, generated on demand, src/skill-engine.js)
+  let skill = [];
+  if (!opts.quiet && !opts.noSkill) { try { skill = require('./skill-engine').evaluate(userId, opts.games && opts.games.length ? opts.games : null).fresh; } catch (e) { console.error('[skill-engine]', e.message); } }
+  return { fresh: [...fresh.map(a => publicAch(a, true)), ...skill], stats: st, have };
 }
 function rewardInfo(r) { const it = COS.BY[r.type][r.id]; return { type: r.type, id: r.id, name: it.name }; }
 function publicAch(a, unlocked) {

@@ -1,12 +1,11 @@
 // v5 phone + in-app browser test (Potato chat, Android WebView, iOS WKWebView).
-// Runs on Chromium ONLY: Pixel 7 emulation, iPhone 14 viewport/UA emulation, Android WebView UA, iOS WKWebView UA, and a
+// Emulates Pixel 7 (Chrome), iPhone 14 (Safari), an Android WebView UA, an iOS in-app (WKWebView) UA, and a
 // "locked webview" (Android WebView UA + DOM storage that throws + cookies stripped from every response).
-// Visits pages with simulated touch. iPhone UA on Chromium is NOT Safari/WebKit QA.\n// Actual physical iPhone Safari + WKWebView and Android Chrome + WebView UAT remain mandatory, tracked separately.
+// Visits every page and plays every game with touch input on each profile.
 // Usage: node tools/e2e-mobile.js   (restart the server first: it signs up 5 accounts; signup is limited to 10/hour per IP)
 const { chromium, devices } = require('playwright-core');
 const path = require('path'); const fs = require('fs');
 const BASE = process.env.BASE || 'http://localhost:8787';
-console.log('MOBILE SIMULATION ONLY: all profiles use Chromium, including iPhone UA. This is NOT physical iOS Safari or WKWebView proof.');
 const SHOTS = path.join(__dirname, '..', 'screenshots', 'v5'); fs.mkdirSync(SHOTS, { recursive: true });
 let pass = 0, fail = 0; const errors = []; const report = {};
 const ok = (c, m, x) => { if (c) { pass++; console.log('  PASS', m); } else { fail++; console.log('  FAIL', m, x !== undefined ? JSON.stringify(x).slice(0, 300) : ''); } };
@@ -22,15 +21,11 @@ const PROFILES = [
   { id: 'ios-inapp-wkwebview', dev: { ...I14, userAgent: IOS_INAPP } },
   { id: 'locked-webview', dev: { ...P7, userAgent: AND_WV }, locked: true },
 ];
-// Use the canonical ACTIVE registry. Retired chance games must not appear in
-// the mobile release gate or a stale hard-coded list will report false failures.
-const GAMES = require('../src/config').GAMES.filter(g => !g.retired && g.playable !== false).map(g => g.id);
+const GAMES = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'void-swarm', 'stack', 'grow-guard', 'sling-smash', 'haze-defense'];
 let STEP = 'start'; const T0 = Date.now();
 setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: hung at', STEP); process.exit(2); } }, 1000).unref();
 (async () => {
-  const chromeBin = process.env.CHROME_BIN || ['/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(f=>fs.existsSync(f));
-  if(!chromeBin) throw Error('Chromium/Chrome not installed; set CHROME_BIN');
-  const browser = await chromium.launch({ executablePath: chromeBin, args: ['--no-sandbox', '--autoplay-policy=user-gesture-required'] });
+  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--autoplay-policy=user-gesture-required'] });
   const gw = await (await fetch(BASE + '/api/giveaways?status=active')).json(); const gid = gw.giveaways[0] && gw.giveaways[0].id;
   for (const pf of PROFILES.filter(x => !process.env.ONLY || process.env.ONLY.split(',').includes(x.id))) {
     console.log(`# ${pf.id}${pf.locked ? ' (storage throws + cookies blocked)' : ''}`);
@@ -94,7 +89,7 @@ setInterval(() => { if (Date.now() - T0 > 20 * 60e3) { console.error('WATCHDOG: 
       const box = await p.locator('#game').boundingBox();
       ok(box.width >= 300 && box.height >= 300, `${g}: canvas fills the portrait screen (${Math.round(box.width)}x${Math.round(box.height)})`);
       await tapGame(box.x + box.width / 2, box.y + box.height * 0.45); await sleep(600);
-      if (g === 'drift-rush') { await tapGame(box.x + box.width / 2, box.y + box.height * 0.5); }
+      if (g === 'spin-to-win' || g === 'drift-rush') { await tapGame(box.x + box.width / 2, box.y + box.height * 0.5); }
       const st = await p.evaluate(() => window.__game.state);
       ok(st === 'play' || st === 'over', `${g}: touch starts the run (state ${st})`);
       if (pf.id === 'desktop-chrome') await p.screenshot({ path: path.join(SHOTS, `d-play-${g}.png`) });

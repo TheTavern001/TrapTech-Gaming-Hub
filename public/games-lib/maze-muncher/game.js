@@ -1,3 +1,9 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W, H = g.H;
+  // drifting leaf sprites + sparkles (maze stays readable)
+  for (let i = 0; i < 7; i++) { const x = ((i * 137 + t * (8 + i * 2)) % (W + 40)) - 20, y = ((i * 211 + t * (14 + i * 3)) % (H + 40)) - 20, r = t * (0.6 + i * 0.1) + i; c.save(); c.translate(x, y); c.rotate(r); c.globalAlpha = 0.35; c.fillStyle = '#34d399'; c.beginPath(); c.moveTo(0, -7); c.quadraticCurveTo(5, 0, 0, 7); c.quadraticCurveTo(-5, 0, 0, -7); c.fill(); c.strokeStyle = '#065f46'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(0, -6); c.lineTo(0, 6); c.stroke(); c.restore(); }
+  const vg = c.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.35)'); c.fillStyle = vg; c.fillRect(0, 0, W, H);
+} })(); // v8 scenery+sprite overlay
 // Maze Muncher - original maze chase (Hub build). Original maze layout, 4 hunters with different targeting.
 (function () {
   const MAP = [
@@ -27,7 +33,7 @@
   const GC = ['#ff5a6e', '#c77dff', '#3fd8c8', '#ffa94d'];
   const wall = (g, x, y) => { if (x < 0 || x >= COLS) return false; const ch = (MAP[y] || '')[x]; return ch === '#' || ch === '-' ; };
   function reset(g) { g.pl = { x: 9, y: 15, px: 9, py: 15, d: [0, 0], nd: [-1, 0], prog: 0 }; g.gh = [[9, 7], [8, 9], [9, 9], [10, 9]].map(([x, y], i) => ({ x, y, d: [0, 0], prog: 0, home: i * 2.5, fr: 0, eaten: false, i })); g.fr = 0; g.ready = 1.2; }
-  Kit.run({ id: 'gl-maze-muncher', title: 'MAZE MUNCHER', help: 'Arrows / swipe to steer\nEat every dot, power pellets turn the hunters', bg: '#03051a',
+  Kit.run({ fill: true, id: 'gl-maze-muncher', title: 'MAZE MUNCHER', help: 'Arrows / swipe to steer\nEat every dot, power pellets turn the hunters', bg: '#03051a',
     init(g) { g.lvl = 1; g.lives = 3; g.dots = new Set(); g.pw = new Set(); MAP.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') g.dots.add(x + ',' + y); if (ch === 'o') g.pw.add(x + ',' + y); })); g.total = g.dots.size + g.pw.size; reset(g); g.combo = 0; },
     update(g, dt) {
       const p = g.pl; const ax = g.ax(), ay = g.ay();

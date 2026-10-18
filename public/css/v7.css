@@ -275,3 +275,19 @@
 .hub-settings .settings-quick-nav a:focus-visible{outline:2px solid #d8b877;outline-offset:2px}
 .hub-settings #set-account,.hub-settings #set-app,.hub-settings #v7-brand,.hub-settings #set-legal{scroll-margin-top:calc(88px + env(safe-area-inset-top,0px))}
 @media(max-width:360px){.hub-settings .settings-quick-nav{grid-template-columns:1fr}.hub-settings .settings-quick-nav a{min-height:44px}}
+/* v8: simplified price line + collapsed explainer */
+.ec-priceline { margin: 10px 0 4px; font-size: 1rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ec-priced { margin: 0 0 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: rgba(255,255,255,.03); }
+.ec-priced > summary { cursor: pointer; padding: 9px 12px; font-size: .82rem; color: #9bd7ff; list-style: none; min-height: 44px; display: flex; align-items: center; }
+.ec-priced > summary::-webkit-details-marker { display: none; }
+.ec-priced > summary::after { content: '\25BE'; margin-left: auto; transition: transform .2s; }
+.ec-priced[open] > summary::after { transform: rotate(180deg); }
+.ec-priced > .ec-why { margin: 0 8px 8px; width: calc(100% - 16px); }
+/* v8: six-tab bottom nav (Home, Games, Leaderboard, Giveaways, Community, Shop) must fit 320px */
+.bottomnav { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+.bottomnav a { min-width: 0; padding: 0 1px; font-size: .66rem !important; }
+.bottomnav a .ico { width: 22px !important; height: 22px !important; }
+.bottomnav a span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bottomnav .nl-s { display: none; font-style: normal; } .bottomnav .nl-f { font-style: normal; }
+@media (max-width: 400px) { .bottomnav .nl-f { display: none; } .bottomnav .nl-s { display: inline; } .bottomnav a:not(:has(.nl-s)) .nl-f { display: inline; } }
+.gw-head { flex-wrap: wrap; gap: 8px; } .gw-head-act { display: flex; gap: 6px; flex-wrap: wrap; }

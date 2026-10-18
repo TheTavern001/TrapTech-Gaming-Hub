@@ -1,102 +1,86 @@
-// Grow Guard - original endless lane-defense game (v7). Pests crawl in from the right along 5 rows of soil beds; place
-// bug-fighting gadgets to protect the plants on the left. Art: Blender Cycles renders (original models, PBR, HDRI): aphid, mite,
-// gnat, caterpillar, beetle, Ladybug Launcher, Sticky Trap, Neem Mister, UV Zapper, Solar Panel and a flowering plant.
-import { Game, TAU, rnd, clamp, lerp, fmt, roundRect, loadAtlas, loadArt, sprC, softShadow } from './engine.js';
+// Grow Guard v8 - fully rebuilt endless lane defense (original code and original baked vector art; procedural WebAudio).
+// New in v8: sun drops you tap to collect, five gadgets with distinct roles (Ladybug launcher, Sticky Trap, Neem Mister, UV Zapper, Solar Panel),
+// five pest types (flying gnats hop over traps, beetles are armored), a one-shot ladybug sweep per row as the last line of defense, row warnings.
+// Scoring contract unchanged (src/ac-levels.js): 'w' wave marker, 'p' pest 10/15/20/30/60 (type gated by wave), 'c' = 100*wave clear bonus.
+import { Game8, PAL, TAU, rnd, clamp, lerp, fmt, halo, bake, roundRect } from './kit.js';
 const ROWS = 5, COLS = 7;
-const GADGETS = {
-  launcher: { name: 'Ladybug', cost: 100, hp: 6, spr: 'launcher', tip: 'Shoots ladybugs down the row' },
-  trap: { name: 'Sticky Trap', cost: 50, hp: 16, spr: 'trap', tip: 'Blocks pests while they chew' },
-  mister: { name: 'Neem Mister', cost: 125, hp: 6, spr: 'mister', tip: 'Slows and harms the whole row' },
-  zapper: { name: 'UV Zapper', cost: 175, hp: 6, spr: 'zapper', tip: 'Big zaps on the lead pest' },
-  solar: { name: 'Solar Panel', cost: 50, hp: 5, spr: 'solar', tip: 'Makes extra light' },
-};
-const PESTS = { aphid: { hp: 3, sp: 20, pts: 10, size: 46 }, mite: { hp: 4, sp: 26, pts: 15, size: 44 }, gnat: { hp: 2, sp: 42, pts: 20, size: 46, fly: true }, caterpillar: { hp: 9, sp: 15, pts: 30, size: 62 }, beetle: { hp: 20, sp: 12, pts: 60, size: 58 } };
-export class GrowGuard extends Game {
+const GAD = { launcher: { n: 'Ladybug', cost: 100, hp: 8, c: '#f87171', tip: 'Shoots ladybugs along its row' }, trap: { n: 'Sticky Trap', cost: 50, hp: 22, c: '#fbbf24', tip: 'Blocks walking pests while they chew' }, mister: { n: 'Neem Mist', cost: 125, hp: 8, c: '#67e8f9', tip: 'Slows and harms the row ahead' }, zapper: { n: 'UV Zapper', cost: 175, hp: 8, c: '#a78bfa', tip: 'Big zaps on the lead pest' }, solar: { n: 'Solar', cost: 50, hp: 6, c: '#fde047', tip: 'Makes extra light' } };
+const KEYS = Object.keys(GAD);
+const PEST = { aphid: { hp: 3, sp: 22, v: 10, c: '#4ade80', w: 1 }, mite: { hp: 4, sp: 28, v: 15, c: '#fb923c', w: 1 }, gnat: { hp: 2, sp: 44, v: 20, c: '#e2e8f0', w: 2, fly: true }, caterpillar: { hp: 10, sp: 16, v: 30, c: '#a3e635', w: 3 }, beetle: { hp: 24, sp: 13, v: 60, c: '#6d28d9', w: 5, armor: true } };
+export class GrowGuard extends Game8 {
   get title() { return 'GROW GUARD'; }
-  get hint() { return 'Tap falling light drops to collect light. Tap a gadget card, then tap a tile to place it. Stop the pests before they reach your plants: each pest that gets through costs a plant, and losing all 3 ends the run. The waves never stop.'; }
-  async load() { const [G, a] = await Promise.all([loadAtlas('/assets/v7/grow'), loadArt({ bg: '/assets/v7/growroom.webp' })]); this.G = G; this.art = a; }
-  layout() { const top = 140, bottom = this.H - 130; this.ch = Math.min(96, (bottom - top) / ROWS); this.cw = (this.W - 70) / COLS; this.gx = 62; this.gy = top + ((bottom - top) - this.ch * ROWS) / 2; this._soil = null; }
+  get hint() { return 'Pick a gadget at the bottom, then tap a soil tile to plant it. Tap the glowing sun drops to collect light. Pests crawl in from the right along 5 rows: stop them before they reach your 3 plants. A one-time ladybug sweep guards each row. Waves never stop.'; }
+  get accent() { return '#84cc16'; }
+  get musicOpts() { return { root: 60, bpm: 106, mode: 'major', seed: 55, vol: 0.26 }; }
+  layout() { const top = 150, bot = this.H - 168; this.ch = Math.min(100, (bot - top) / ROWS); this.cw = (this.W - 74) / COLS; this.gx = 66; this.gy = top + ((bot - top) - this.ch * ROWS) / 2; const cw = (this.W - 20) / 5; this.cardsA = KEYS.map((k, i) => ({ k, x: 10 + i * cw, y: this.H - 146, w: cw - 4, h: 86 })); this.bgc = null; }
+  cards() { return this.cardsA; }
   reset() {
-    this.layout(); this.score = 0; this.coins = 0; this.light = 250; this.swarm = Array(ROWS).fill(true); this.swarms = []; this.plants = 3; this.wave = 0; this.tiles = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
-    this.pests = []; this.shots = []; this.drops = []; this.sel = null; this.queue = []; this.spawnT = 0; this.dropT = 3; this.between = 3; this.over = 0; this.zaps = [];
+    super.reset(); this.layout(); this.score = 0; this.coins = 0; this.light = 175; this.plants = 3; this.wave = 0; this.tiles = Array.from({ length: ROWS }, () => Array(COLS).fill(null)); this.pests = []; this.shots = []; this.drops = []; this.sweep = Array(ROWS).fill(true); this.sweeps = []; this.sel = null; this.queue = []; this.spawnT = 0; this.dropT = 4; this.between = 3; this.wavePaid = true; this.waveSpawned = true; this.zaps = []; this.warn = Array(ROWS).fill(0);
   }
-  startWave() { this.wave++; const w = this.wave; this.mark('w', w); const n = w <= 3 ? 4 + 2 * w : 6 + 3 * w; const pool = ['aphid', 'aphid', 'mite']; if (w >= 2) pool.push('gnat'); if (w >= 3) pool.push('caterpillar', 'mite'); if (w >= 5) pool.push('beetle'); if (w >= 8) pool.push('beetle', 'caterpillar');
-    this.queue = Array.from({ length: n }, () => pool[Math.floor(this.r() * pool.length)]); this.spawnGap = Math.max(0.5, 2.6 - w * 0.12); this.spawnT = 1; this.pop(this.W / 2, this.H * 0.42, `WAVE ${w}`, '#a3e635', 30); this.sfx.tone(330, 0.3, { type: 'triangle', vol: 0.25 }); }
-  tileAt(x, y) { const c = Math.floor((x - this.gx) / this.cw), r = Math.floor((y - this.gy) / this.ch); return r >= 0 && r < ROWS && c >= 0 && c < COLS ? [r, c] : null; }
-  cards() { const keys = Object.keys(GADGETS); const w = (this.W - 24 - 6 * (keys.length - 1)) / keys.length; return keys.map((k, i) => ({ k, x: 12 + i * (w + 6), y: this.H - 116, w, h: 104 })); }
+  cy(r) { return this.gy + this.ch * (r + 0.5); } cxT(c) { return this.gx + this.cw * (c + 0.5); }
+  tileAt(x, y) { const c = Math.floor((x - this.gx) / this.cw), r = Math.floor((y - this.gy) / this.ch); return c >= 0 && c < COLS && r >= 0 && r < ROWS ? [r, c] : null; }
+  startWave() {
+    this.wave++; this.mark('w', this.wave); const w = this.wave, n = w <= 3 ? 4 + 2 * w : 6 + 3 * w; this.queue = [];
+    for (let i = 0; i < n; i++) { const r = this.r(); let k = 'aphid'; if (w >= 5 && r < Math.min(0.2, w * 0.02)) k = 'beetle'; else if (w >= 3 && r < 0.2 + Math.min(0.15, w * 0.01)) k = 'caterpillar'; else if (w >= 2 && r < 0.38) k = 'gnat'; else if (r < 0.7) k = 'mite'; this.queue.push(k); }
+    this.spawnT = 1; this.waveSpawned = false; this.wavePaid = false; this.pop(this.W / 2, 128, 'WAVE ' + w, '#d9f99d', 26); this.sfx.chord([392, 587], 0.2, { type: 'triangle', vol: 0.2 });
+  }
   onDown(x, y) {
-    for (const d of this.drops) if (!d.got && Math.hypot(d.x - x, d.y - y) < 40) { d.got = true; this.light += d.v; this.sfx.tone(1100, 0.08, { type: 'sine', vol: 0.25 }); this.pop(d.x, d.y, `+${d.v}`, '#fde047', 18); return; }
-    const c = this.cards().find(c => x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h); if (c) { this.sel = this.sel === c.k ? null : c.k; this.sfx.click(); return; }
-    const t = this.tileAt(x, y); if (t && this.sel) { const [r, cc] = t; const G = GADGETS[this.sel];
-      if (this.tiles[r][cc]) { this.sfx.tone(150, 0.08, { type: 'square', vol: 0.08 }); return; }
-      if (this.light < G.cost) { this.pop(x, y, 'Need more light', '#f87171', 16); this.sfx.tone(150, 0.08, { type: 'square', vol: 0.08 }); return; }
-      this.light -= G.cost; this.tiles[r][cc] = { k: this.sel, hp: G.hp, cd: 0.6, t: 0 }; this.sfx.tone(520, 0.08, { type: 'triangle', vol: 0.25 }); this.burst(this.cx(cc), this.cy(r), ['#a3e635', '#fff'], 10, 120, 0.4, 3); }
+    for (const d of this.drops) if (!d.got && Math.hypot(d.x - x, d.y - y) < 44) { d.got = true; this.light += d.v; this.sfx.tone(1100, 0.08, { type: 'sine', vol: 0.25 }); this.pop(d.x, d.y, `+${d.v}`, '#fde047', 16); this.fx.sparks(d.x, d.y, ['#fde047', '#fff'], 6, 260, 0.3, 10); return; }
+    const c = this.cardsA.find(c => x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h); if (c) { this.sel = this.sel === c.k ? null : c.k; this.sfx.click(); return; }
+    const t = this.tileAt(x, y); if (!t) return; const [r, cc] = t, g = this.tiles[r][cc];
+    if (g) { if (this.sel === null) { const rf = Math.floor(GAD[g.k].cost * 0.4); this.light += rf; this.tiles[r][cc] = null; this.pop(this.cxT(cc), this.cy(r), `+${rf} (removed)`, '#94a3b8', 13); } return; }
+    if (!this.sel) { this.pop(x, y, 'Pick a gadget first', '#94a3b8', 13); return; } const G = GAD[this.sel]; if (this.light < G.cost) { this.pop(x, y, 'Need more light', '#f87171', 15); this.sfx.tone(150, 0.08, { type: 'square', vol: 0.08 }); return; }
+    this.light -= G.cost; this.tiles[r][cc] = { k: this.sel, hp: G.hp, cd: 0, t: 0 }; this.fx.burst(this.cxT(cc), this.cy(r), [G.c, '#fff'], 10, 160, 0.4, 8); this.fx.ring(this.cxT(cc), this.cy(r), G.c, 6, 50, 0.35, 3); this.sfx.tone(480, 0.08, { type: 'triangle', vol: 0.25 });
   }
-  cx(c) { return this.gx + (c + 0.5) * this.cw; } cy(r) { return this.gy + (r + 0.5) * this.ch; }
+  hurt(p, d) { p.hp -= d * (p.def.armor ? 0.6 : 1); p.flash = 0.1; if (p.hp <= 0 && !p.dead) { p.dead = true; this.award(p.def.v, 'p'); const x = p.x, y = this.cy(p.r); this.pop(x, y - 22, '+' + p.def.v, '#bef264', 16); this.fx.burst(x, y, [p.def.c, '#fff'], 9, 230, 0.5, 9); this.fx.ring(x, y, p.def.c, 5, 36, 0.3, 2); this.sfx.tone(rnd(300, 500), 0.06, { type: 'square', vol: 0.1 }); } }
   update(dt) {
-    if (this.over) { this.over -= dt; if (this.over <= 0) this.finish(); return; }
-    // waves
-    if (!this.queue.length && !this.pests.length) { this.between -= dt; if (this.between <= 0) { if (this.wave > 0) { const b = this.award(100 * this.wave, 'c'); this.pop(this.W / 2, this.H * 0.36, `WAVE ${this.wave} CLEARED  +${fmt(b)}`, '#34d399', 22); this.light += 25; } this.startWave(); this.between = 4; } }
-    if (this.queue.length) { this.spawnT -= dt; if (this.spawnT <= 0) { const k = this.queue.shift(); const P = PESTS[k]; const r = Math.floor(this.r() * ROWS); const hpMul = 1 + Math.max(0, this.wave - 6) * 0.12; this.pests.push({ k, r, x: this.W + 30, hp: P.hp * hpMul, max: P.hp * hpMul, slow: 0, eat: null, t: this.r() * 6, hit: 0 }); this.spawnT = this.spawnGap * rnd(0.6, 1.3); } }
-    // light from the sky
-    this.dropT -= dt; if (this.dropT <= 0) { this.dropT = 7.5; this.drops.push({ x: rnd(this.gx + 20, this.W - 30), y: 110, ty: rnd(this.gy + 20, this.gy + this.ch * ROWS - 20), v: 25, life: 9 }); }
-    for (const d of this.drops) { d.y = Math.min(d.ty, d.y + 60 * dt); d.life -= dt; } this.drops = this.drops.filter(d => !d.got && d.life > 0);
-    // gadgets
-    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const g = this.tiles[r][c]; if (!g) continue; g.t += dt; g.cd -= dt; const x = this.cx(c), y = this.cy(r);
-      const ahead = this.pests.filter(p => p.r === r && p.x > x - 10 && p.x < this.W + 10).sort((a, b) => a.x - b.x);
-      if (g.k === 'launcher' && ahead.length && g.cd <= 0) { g.cd = 1.3; this.shots.push({ x: x + 20, y: y - 6, r, vx: 330 }); this.sfx.tone(700, 0.04, { type: 'square', vol: 0.06 }); }
-      if (g.k === 'zapper' && ahead.length && g.cd <= 0) { g.cd = 2; const p = ahead[0]; this.damage(p, 3.5); this.zaps.push({ x0: x, y0: y - 20, x1: p.x, y1: this.cy(p.r), t: 0.15 }); this.sfx.noise(0.08, { vol: 0.15, freq: 4000 }); }
-      if (g.k === 'mister') { for (const p of ahead) { p.slow = 0.3; this.damage(p, 0.35 * dt, true); } }
-      if (g.k === 'solar' && g.cd <= 0) { g.cd = 10; this.drops.push({ x: x + rnd(-12, 12), y: y - 30, ty: y - 10, v: 25, life: 9 }); }
-    }
-    for (const s of this.shots) { s.x += s.vx * dt; const p = this.pests.find(p => p.r === s.r && Math.abs(p.x - s.x) < 18 && p.hp > 0); if (p) { s.dead = true; this.damage(p, 1); this.burst(s.x, this.cy(s.r), ['#ef4444', '#111'], 5, 90, 0.25, 3); } }
-    this.shots = this.shots.filter(s => !s.dead && s.x < this.W + 20); for (const z of this.zaps) z.t -= dt; this.zaps = this.zaps.filter(z => z.t > 0);
-    // pests: walk left, chew on any gadget they bump into
-    for (const p of this.pests) { if (p.hp <= 0) continue; p.t += dt; if (p.hit > 0) p.hit -= dt; const P = PESTS[p.k]; const c = Math.floor((p.x - 26 - this.gx) / this.cw); const g = c >= 0 && c < COLS ? this.tiles[p.r][c] : null;
-      if (g && !P.fly && p.x - 26 < this.cx(c) + this.cw * 0.4) { g.hp -= (P.hp > 8 ? 1.4 : 0.8) * dt; if (g.hp <= 0) { this.tiles[p.r][c] = null; this.burst(this.cx(c), this.cy(p.r), ['#a8a29e', '#57534e'], 12, 140, 0.5, 3); } }
-      else if (g && P.fly && g.k === 'trap' && Math.abs(p.x - this.cx(c)) < 20) { this.damage(p, 99); }
-      else p.x -= P.sp * (p.slow > 0 ? 0.5 : 1) * Math.min(1.35, 0.7 + this.wave * 0.05) * dt;
-      if (p.slow > 0) p.slow -= dt;
-      if (p.x < this.gx - 10 && this.swarm[p.r]) { this.swarm[p.r] = false; this.swarms.push({ r: p.r, x: this.gx - 20 }); this.pop(80, this.cy(p.r), 'LADYBUG SWARM!', '#fca5a5', 18); this.sfx.chord([440, 660, 880], 0.2, { type: 'triangle', vol: 0.25 }); }
-      if (p.x < this.gx - 10 && !this.swarms.some(s => s.r === p.r)) { p.hp = 0; p.leak = true; this.plants--; this.sfx.lose(); this.burst(36, this.cy(p.r), ['#84cc16', '#fde047'], 18, 200, 0.6, 4); this.pop(60, this.cy(p.r), 'PLANT LOST', '#f87171', 18); if (this.plants <= 0) { this.over = 1.5; } }
-    }
-    // last-line ladybug swarm (once per row): sweeps the whole row clear
-    for (const s of this.swarms) { s.x += 420 * dt; for (const p of this.pests) if (p.r === s.r && p.x < s.x + 20 && p.hp > 0) this.damage(p, 999); }
-    this.swarms = this.swarms.filter(s => s.x < this.W + 40);
-    this.pests = this.pests.filter(p => p.hp > 0);
+    if (this.between > 0) { this.between -= dt; if (this.between <= 0) this.startWave(); }
+    else { this.spawnT -= dt; if (this.queue.length && this.spawnT <= 0) { const k = this.queue.shift(), r = Math.floor(this.r() * ROWS); this.pests.push({ k, def: PEST[k], r, x: this.W + 20, hp: PEST[k].hp, dead: false, flash: 0, ph: this.r() * TAU, slow: 0, eat: 0 }); this.warn[r] = 1.2; this.spawnT = Math.max(0.7, 2.2 - this.wave * 0.07) * (0.7 + this.r() * 0.6); } if (!this.queue.length) this.waveSpawned = true;
+      if (this.waveSpawned && !this.pests.length && !this.wavePaid) { this.wavePaid = true; const b = this.award(100 * this.wave, 'c'); this.light += 50; this.coins++; this.pop(this.W / 2, 128, `WAVE CLEAR +${b}`, '#fde047', 20); this.fx.flash('#bef264', 0.12); this.between = 4; this.setLevel(Math.min(1, this.wave / 18)); } }
+    this.dropT -= dt; if (this.dropT <= 0) { this.dropT = 6 + this.r() * 3; this.drops.push({ x: rnd(60, this.W - 40), y: 120, ty: rnd(this.gy + 20, this.gy + this.ch * ROWS - 20), v: 25, got: false, life: 9 }); }
+    for (const d of this.drops) { d.y = Math.min(d.ty, d.y + 90 * dt); d.life -= dt; } this.drops = this.drops.filter(d => !d.got && d.life > 0);
+    for (let r = 0; r < ROWS; r++) if (this.warn[r] > 0) this.warn[r] -= dt;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const g = this.tiles[r][c]; if (!g) continue; g.t += dt; g.cd -= dt; const x = this.cxT(c);
+      const row = this.pests.filter(p => p.r === r && !p.dead && p.x > x - 10 && p.x < this.W + 30);
+      if (g.k === 'solar') { if (g.cd <= 0) { g.cd = 9; this.drops.push({ x, y: this.cy(r) - 10, ty: this.cy(r) - 10, v: 25, got: false, life: 8 }); } }
+      else if (g.k === 'launcher') { if (row.length && g.cd <= 0) { g.cd = 1.0; this.shots.push({ x: x + 20, r, vx: 330, dmg: 1 }); this.sfx.tone(800, 0.03, { type: 'square', vol: 0.05 }); } }
+      else if (g.k === 'mister') { const near = row.filter(p => p.x < x + this.cw * 4); for (const p of near) p.slow = 0.3; if (near.length && g.cd <= 0) { g.cd = 1.4; for (const p of near) this.hurt(p, 0.7); this.zaps.push({ ring: [x, this.cy(r)], t: 0.4, c: '#67e8f9' }); } }
+      else if (g.k === 'zapper') { if (row.length && g.cd <= 0) { g.cd = 3.6; const p = row.reduce((a, b) => (a.x < b.x ? a : b)); this.hurt(p, 5); this.zaps.push({ x1: x, y1: this.cy(r), x2: p.x, y2: this.cy(r), t: 0.15, c: '#c4b5fd' }); this.fx.shake(2); this.sfx.noise(0.08, { vol: 0.15, freq: 2200 }); } } }
+    for (const s of this.shots) { s.x += s.vx * dt; for (const p of this.pests) if (!p.dead && p.r === s.r && Math.abs(p.x - s.x) < 18) { this.hurt(p, s.dmg); s.dead = true; this.fx.sparks(s.x, this.cy(s.r), ['#f87171', '#fff'], 3, 200, 0.2, 8); break; } if (s.x > this.W + 20) s.dead = true; } this.shots = this.shots.filter(s => !s.dead);
+    for (const p of this.pests) { if (p.dead) continue; p.flash -= dt; p.slow = Math.max(0, p.slow - dt * 0.5); let sp = p.def.sp * (1 - p.slow) * (1 + this.wave * 0.012); const c = Math.floor((p.x - this.gx) / this.cw), g = c >= 0 && c < COLS ? this.tiles[p.r][c] : null;
+      if (g && !p.def.fly && Math.abs(p.x - this.cxT(c)) < this.cw * 0.55) { p.eat += dt; g.hp -= (p.def.armor ? 16 : 8) * dt; sp = 0; if (g.hp <= 0) { this.tiles[p.r][c] = null; this.fx.debris(this.cxT(c), this.cy(p.r), GAD[g.k].c, 6, 200, 0.6, 6); this.sfx.noise(0.1, { vol: 0.15, freq: 600 }); } } p.x -= sp * dt;
+      if (p.x < this.gx - 14) { if (this.sweep[p.r]) { this.sweep[p.r] = false; this.sweeps.push({ r: p.r, x: this.gx - 20 }); this.sfx.chord([523, 784], 0.2, { type: 'sawtooth', vol: 0.1 }); this.fx.shake(5); } else { p.dead = true; p.leak = true; this.plants--; this.fx.shake(10); this.fx.flash('#ef4444', 0.2); this.sfx.lose && 0; this.pop(40, this.cy(p.r), 'PLANT LOST', '#f87171', 16); if (this.plants <= 0) { this.plants = 0; this.kill(0.9, '#84cc16'); } } } }
+    for (const s of this.sweeps) { s.x += 520 * dt; for (const p of this.pests) if (!p.dead && p.r === s.r && p.x < s.x + 20) this.hurt(p, 99); } this.sweeps = this.sweeps.filter(s => s.x < this.W + 40);
+    for (const z of this.zaps) z.t -= dt; this.zaps = this.zaps.filter(z => z.t > 0); this.pests = this.pests.filter(p => !p.dead);
   }
-  damage(p, d, quiet) { if (p.hp <= 0) return; p.hp -= d; if (!quiet) p.hit = 0.1; if (p.hp <= 0 && !p.leak) { const pts = this.award(PESTS[p.k].pts, 'p'); const y = this.cy(p.r); this.burst(p.x, y, ['#a3e635', '#fef08a', '#57534e'], 10, 150, 0.45, 3); if (pts >= 30) this.pop(p.x, y - 20, `+${pts}`, '#fde047', 16); if (this.r() < 0.12) this.drops.push({ x: p.x, y: y - 20, ty: y, v: 25, life: 8 }); if (this.score >= (this.coins + 1) * 2500) this.coins++; } }
-  soil() { if (this._soil) return this._soil; const c = document.createElement('canvas'); c.width = Math.ceil(this.cw * COLS); c.height = Math.ceil(this.ch * ROWS); const g = c.getContext('2d'); let noiseState = 0x6d2b79f5; const noise = () => { noiseState = Math.imul(noiseState ^ (noiseState >>> 15), noiseState | 1); noiseState ^= noiseState + Math.imul(noiseState ^ (noiseState >>> 7), noiseState | 61); return ((noiseState ^ (noiseState >>> 14)) >>> 0) / 4294967296; };
-    for (let r = 0; r < ROWS; r++) { const y = r * this.ch; const gr = g.createLinearGradient(0, y, 0, y + this.ch); gr.addColorStop(0, '#3b2a1c'); gr.addColorStop(0.5, '#2a1d12'); gr.addColorStop(1, '#1b120b'); g.fillStyle = gr; g.fillRect(0, y + 3, c.width, this.ch - 6);
-      for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(${120 + noise() * 60},${90 + noise() * 40},${60 + noise() * 30},${0.15 + noise() * 0.25})`; g.fillRect(noise() * c.width, y + 4 + noise() * (this.ch - 8), 1 + noise() * 2.5, 1 + noise() * 2); }
-      g.strokeStyle = 'rgba(255,220,170,0.08)'; for (let cc = 1; cc < COLS; cc++) { g.beginPath(); g.moveTo(cc * this.cw, y + 6); g.lineTo(cc * this.cw, y + this.ch - 6); g.stroke(); } }
-    return (this._soil = c); }
+  art() {
+    if (this.A) return this.A; const A = this.A = { g: {}, p: {} }, W = this.W, H = this.H;
+    A.bg = bake(Math.round(W / 2), Math.round(H / 2), (g) => { g.scale(0.5, 0.5); const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#071a14'); gr.addColorStop(1, '#0b2a20'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const x = this.gx + c * this.cw, y = this.gy + r * this.ch; g.fillStyle = (r + c) % 2 ? '#3a2616' : '#46301c'; roundRect(g, x + 2, y + 2, this.cw - 4, this.ch - 4, 10); g.fill(); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 2; g.stroke(); g.fillStyle = 'rgba(163,230,53,.07)'; g.fillRect(x + 8, y + this.ch - 14, this.cw - 16, 4); }
+      g.fillStyle = 'rgba(163,230,53,.18)'; g.fillRect(0, this.gy, this.gx - 4, this.ch * ROWS); for (let r = 0; r < ROWS; r++) { const cy = this.gy + this.ch * (r + 0.5); g.fillStyle = '#16a34a'; g.beginPath(); g.ellipse(26, cy + 10, 12, 20, 0, 0, TAU); g.fill(); g.fillStyle = '#22c55e'; g.beginPath(); g.ellipse(20, cy, 14, 8, -0.6, 0, TAU); g.ellipse(34, cy - 6, 14, 8, 0.6, 0, TAU); g.fill(); } });
+    for (const k of KEYS) A.g[k] = bake(96, 96, (g) => { g.translate(48, 48); const c = GAD[k].c; g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(0, 30, 26, 8, 0, 0, TAU); g.fill();
+      if (k === 'launcher') { g.fillStyle = '#ef4444'; g.beginPath(); g.ellipse(0, 6, 26, 22, 0, 0, TAU); g.fill(); g.fillStyle = '#111827'; g.beginPath(); g.arc(0, -14, 12, 0, TAU); g.fill(); for (const [x, y] of [[-10, 6], [8, 12], [12, 0], [-4, 18]]) { g.beginPath(); g.arc(x, y, 4, 0, TAU); g.fill(); } g.fillStyle = '#fff'; g.beginPath(); g.arc(-5, -17, 3, 0, TAU); g.arc(5, -17, 3, 0, TAU); g.fill(); g.fillStyle = '#111827'; g.fillRect(-1, -2, 2, 28); }
+      else if (k === 'trap') { g.fillStyle = '#fbbf24'; roundRect(g, -28, -26, 56, 58, 10); g.fill(); g.strokeStyle = '#b45309'; g.lineWidth = 4; g.stroke(); g.strokeStyle = 'rgba(120,53,15,.5)'; g.lineWidth = 3; for (let i = -20; i < 24; i += 10) { g.beginPath(); g.moveTo(-24, i); g.lineTo(24, i + 6); g.stroke(); } }
+      else if (k === 'mister') { g.fillStyle = '#0e7490'; roundRect(g, -16, -4, 32, 34, 8); g.fill(); g.fillStyle = '#cffafe'; roundRect(g, -10, -26, 20, 26, 6); g.fill(); g.fillStyle = '#67e8f9'; for (const [x, y] of [[-20, -20], [20, -22], [-26, -8], [26, -10]]) { g.beginPath(); g.arc(x, y, 5, 0, TAU); g.fill(); } }
+      else if (k === 'zapper') { g.fillStyle = '#4c1d95'; roundRect(g, -20, -22, 40, 52, 10); g.fill(); g.strokeStyle = '#c4b5fd'; g.lineWidth = 3; g.stroke(); g.strokeStyle = '#e9d5ff'; g.lineWidth = 3; g.beginPath(); g.moveTo(-10, -14); g.lineTo(10, -4); g.lineTo(-8, 6); g.lineTo(10, 18); g.stroke(); }
+      else { g.fillStyle = '#1e3a8a'; g.save(); g.rotate(-0.15); roundRect(g, -30, -22, 60, 40, 6); g.fill(); g.strokeStyle = '#93c5fd'; g.lineWidth = 2; for (let i = -10; i <= 10; i += 20) { g.beginPath(); g.moveTo(i, -22); g.lineTo(i, 18); g.stroke(); } g.beginPath(); g.moveTo(-30, -2); g.lineTo(30, -2); g.stroke(); g.restore(); g.fillStyle = '#475569'; g.fillRect(-3, 16, 6, 14); } });
+    for (const k of Object.keys(PEST)) A.p[k] = bake(72, 72, (g) => { g.translate(36, 36); const c = PEST[k].c; g.strokeStyle = '#111'; g.lineWidth = 3; g.lineCap = 'round'; for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(i * 8, 0); g.lineTo(i * 12 - 8, 18); g.moveTo(i * 8, 0); g.lineTo(i * 12 + 8, 18); g.stroke(); }
+      const bg = g.createRadialGradient(-6, -8, 2, 0, 0, 24); bg.addColorStop(0, '#fff'); bg.addColorStop(0.3, c); bg.addColorStop(1, '#0b1020'); g.fillStyle = bg; if (k === 'caterpillar') { for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(14 - i * 11, 2, 11 - i * 0.6, 0, TAU); g.fill(); } } else if (k === 'gnat') { g.beginPath(); g.ellipse(0, 0, 12, 8, 0, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.ellipse(-4, -10, 12, 5, -0.5, 0, TAU); g.ellipse(6, -10, 12, 5, 0.5, 0, TAU); g.fill(); } else if (k === 'beetle') { g.beginPath(); g.ellipse(0, 2, 22, 18, 0, 0, TAU); g.fill(); g.strokeStyle = '#0b1020'; g.beginPath(); g.moveTo(0, -14); g.lineTo(0, 20); g.stroke(); } else { g.beginPath(); g.ellipse(0, 0, 18, 14, 0, 0, TAU); g.fill(); }
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(-16 + (k === 'caterpillar' ? 28 : 0), -4, 4, 0, TAU); g.fill(); g.fillStyle = '#111'; g.beginPath(); g.arc(-17 + (k === 'caterpillar' ? 28 : 0), -4, 2, 0, TAU); g.fill(); });
+    return A;
+  }
   render(ctx) {
-    const W = this.W, H = this.H, A = this.art || {}, G = this.G, t = this.t;
-    if (A.bg) { const s0 = Math.max(W / A.bg.width, H / A.bg.height); ctx.drawImage(A.bg, (W - A.bg.width * s0) / 2, (H - A.bg.height * s0) / 2, A.bg.width * s0, A.bg.height * s0); ctx.fillStyle = 'rgba(6,4,2,0.55)'; ctx.fillRect(0, 0, W, H); } else this.bg(ctx);
-    ctx.drawImage(this.soil(), this.gx, this.gy);
-    // warm grow-light pool + plants on the left
-    const lg = ctx.createRadialGradient(W * 0.4, this.gy, 10, W * 0.4, this.gy, H * 0.7); lg.addColorStop(0, 'rgba(255,200,140,0.14)'); lg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H);
-    for (let i = 0; i < 3; i++) { const y = this.gy + this.ch * ROWS * (0.2 + i * 0.3); ctx.save(); ctx.globalAlpha = i < this.plants ? 1 : 0.18; softShadow(ctx, 34, y + 34, 26, 8, 0.6); sprC(ctx, G, 'plant', 32, y - 6 + Math.sin(t * 1.5 + i) * 1.5, 72); ctx.restore(); }
-    if (this.sel) { ctx.strokeStyle = 'rgba(163,230,53,0.25)'; ctx.lineWidth = 1; for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (!this.tiles[r][c]) { roundRect(ctx, this.gx + c * this.cw + 3, this.gy + r * this.ch + 5, this.cw - 6, this.ch - 10, 8); ctx.stroke(); } }
-    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const g = this.tiles[r][c]; if (!g) continue; const x = this.cx(c), y = this.cy(r); const s = Math.min(this.cw, this.ch) * 0.95; softShadow(ctx, x, y + s * 0.35, s * 0.4, s * 0.12, 0.6);
-      const bob = g.k === 'launcher' && g.cd > 1.1 ? -3 : 0; sprC(ctx, G, GADGETS[g.k].spr, x, y + bob, s * (g.k === 'trap' ? 0.62 : 0.86));
-      if (g.k === 'mister') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < 4; i++) { const k = (t * 0.8 + i * 0.25) % 1; ctx.globalAlpha = 0.18 * (1 - k); ctx.fillStyle = '#d1fae5'; ctx.beginPath(); ctx.arc(x + 20 + k * 90, y - 10 + Math.sin(k * 6 + i) * 6, 6 + k * 18, 0, TAU); ctx.fill(); } ctx.restore(); }
-      if (g.hp < GADGETS[g.k].hp) { ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x - 18, y + s * 0.42, 36, 4); ctx.fillStyle = '#a3e635'; ctx.fillRect(x - 18, y + s * 0.42, 36 * g.hp / GADGETS[g.k].hp, 4); } }
-    for (const s of this.swarms) for (let i = 0; i < 7; i++) { const x = s.x - i * 14, y = this.cy(s.r) + Math.sin(this.t * 20 + i) * 10; ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.ellipse(x, y, 7, 6, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x + 3, y, 2.5, 0, TAU); ctx.fill(); }
-    for (let r = 0; r < ROWS; r++) if (this.swarm[r]) { ctx.fillStyle = 'rgba(220,38,38,0.85)'; ctx.beginPath(); ctx.arc(this.gx - 6, this.cy(r) + this.ch * 0.32, 5, 0, TAU); ctx.fill(); }
-    for (const s of this.shots) { ctx.save(); ctx.translate(s.x, this.cy(s.r) - 6); ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.ellipse(0, 0, 8, 6.5, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-2, -1, 1.6, 0, TAU); ctx.arc(3, 2, 1.4, 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.ellipse(-2, -3, 3, 1.5, 0, 0, TAU); ctx.fill(); ctx.restore(); }
-    for (const z of this.zaps) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#c4b5fd'; ctx.lineWidth = 3; ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(z.x0, z.y0); for (let i = 1; i < 6; i++) ctx.lineTo(lerp(z.x0, z.x1, i / 6) + rnd(-6, 6), lerp(z.y0, z.y1, i / 6) + rnd(-6, 6)); ctx.lineTo(z.x1, z.y1); ctx.stroke(); ctx.restore(); }
-    for (const p of [...this.pests].sort((a, b) => a.r - b.r)) { const P = PESTS[p.k]; const y = this.cy(p.r) + (P.fly ? -16 + Math.sin(p.t * 8) * 5 : Math.sin(p.t * 10) * 1.5); softShadow(ctx, p.x, this.cy(p.r) + 18, P.size * 0.35, 6, P.fly ? 0.3 : 0.55);
-      ctx.save(); ctx.translate(p.x, y); ctx.scale(-1, 1); if (p.hit > 0) ctx.filter = 'brightness(2)'; if (p.slow > 0) ctx.filter = 'hue-rotate(60deg) saturate(0.7)'; sprC(ctx, G, p.k, 0, 0, P.size); ctx.restore();
-      if (p.hp < p.max) { ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(p.x - 16, y - P.size * 0.5, 32, 3); ctx.fillStyle = '#f87171'; ctx.fillRect(p.x - 16, y - P.size * 0.5, 32 * p.hp / p.max, 3); } }
-    for (const d of this.drops) { const k = 1 + Math.sin(t * 6 + d.x) * 0.1; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(d.x, d.y, 2, d.x, d.y, 30 * k); g.addColorStop(0, 'rgba(255,255,230,1)'); g.addColorStop(0.3, 'rgba(253,224,71,0.8)'); g.addColorStop(1, 'rgba(253,186,71,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(d.x, d.y, 30 * k, 0, TAU); ctx.fill(); ctx.restore(); if (d.life < 2 && Math.floor(t * 8) % 2) continue; }
-    // cards
-    for (const c of this.cards()) { const G0 = GADGETS[c.k]; const ok = this.light >= G0.cost; const on = this.sel === c.k; roundRect(ctx, c.x, c.y, c.w, c.h, 12); ctx.fillStyle = on ? 'rgba(77,124,15,0.9)' : 'rgba(20,16,10,0.85)'; ctx.fill(); ctx.strokeStyle = on ? '#bef264' : ok ? 'rgba(190,242,100,0.45)' : 'rgba(120,113,108,0.4)'; ctx.lineWidth = on ? 3 : 1.5; ctx.stroke();
-      ctx.save(); ctx.globalAlpha = ok ? 1 : 0.45; sprC(ctx, G, G0.spr, c.x + c.w / 2, c.y + 40, Math.min(c.w * 0.75, 60)); ctx.restore(); this.text(ctx, G0.name, c.x + c.w / 2, c.y + c.h - 24, { size: 10, weight: 700, align: 'center', color: '#e7e5e4', font: 'Exo' }); this.text(ctx, `${G0.cost}`, c.x + c.w / 2, c.y + c.h - 8, { size: 13, weight: 900, align: 'center', color: ok ? '#fde047' : '#78716c' }); }
-    this.hudScore(ctx);
-    this.text(ctx, 'LIGHT', W - 18, 30, { size: 12, weight: 700, color: '#9aa3d0', align: 'right' }); this.text(ctx, fmt(this.light), W - 18, 62, { size: 28, weight: 900, align: 'right', color: '#fde047', glow: '#f59e0b' });
-    this.text(ctx, `WAVE ${this.wave}  •  PLANTS ${this.plants}`, W - 18, 82, { size: 12, weight: 800, align: 'right', color: '#bef264', font: 'Exo' });
-    if (this.sel) this.text(ctx, `${GADGETS[this.sel].tip}. Tap a tile.`, W / 2, this.gy - 12, { size: 13, weight: 700, align: 'center', color: '#d9f99d', font: 'Exo' });
+    const A = this.A || this.art(), W = this.W, H = this.H, t = this.t; ctx.drawImage(A.bg, 0, 0, W, H);
+    for (let r = 0; r < ROWS; r++) { if (this.warn[r] > 0) { ctx.fillStyle = `rgba(239,68,68,${0.15 + 0.15 * Math.sin(t * 20)})`; ctx.fillRect(this.gx, this.gy + r * this.ch, this.cw * COLS, this.ch); this.text(ctx, '!', W - 18, this.cy(r) + 6, { size: 22, color: '#f87171', align: 'center' }); } if (this.sweep[r]) { halo(ctx, '#f87171', 50, this.cy(r) + 24, 22, 0.35); } }
+    if (this.sel) for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (!this.tiles[r][c]) { ctx.fillStyle = 'rgba(190,242,100,.07)'; ctx.fillRect(this.gx + c * this.cw + 3, this.gy + r * this.ch + 3, this.cw - 6, this.ch - 6); }
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const g = this.tiles[r][c]; if (!g) continue; const x = this.cxT(c), y = this.cy(r), s = Math.min(this.cw, this.ch) * 1.05, b = Math.sin(g.t * 3) * 1.5; ctx.drawImage(A.g[g.k], x - s / 2, y - s / 2 + b, s, s); const m = g.hp / GAD[g.k].hp; if (m < 1) { ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(x - 16, y + s / 2 - 4, 32, 4); ctx.fillStyle = m > 0.4 ? '#84cc16' : '#ef4444'; ctx.fillRect(x - 16, y + s / 2 - 4, 32 * m, 4); } }
+    for (const s of this.sweeps) { for (let i = 0; i < 4; i++) halo(ctx, '#ef4444', s.x - i * 22, this.cy(s.r) + Math.sin(i * 2 + t * 20) * 8, 26, 0.8); }
+    for (const s of this.shots) { halo(ctx, '#f87171', s.x, this.cy(s.r) - 6, 18, 0.9); ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(s.x, this.cy(s.r) - 6, 6, 0, TAU); ctx.fill(); }
+    for (const p of this.pests) { const y = this.cy(p.r) + (p.def.fly ? -16 + Math.sin(t * 9 + p.ph) * 6 : Math.sin(t * 10 + p.ph) * 2), s = p.k === 'caterpillar' ? 68 : p.k === 'beetle' ? 64 : 52; if (p.flash > 0) ctx.globalAlpha = 0.6; ctx.drawImage(A.p[p.k], p.x - s / 2, y - s / 2, s, s); ctx.globalAlpha = 1; if (p.hp < p.def.hp) { ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(p.x - 14, y - s / 2, 28, 3); ctx.fillStyle = '#ef4444'; ctx.fillRect(p.x - 14, y - s / 2, 28 * p.hp / p.def.hp, 3); } }
+    for (const z of this.zaps) { ctx.globalAlpha = Math.min(1, z.t * 5); if (z.ring) { ctx.strokeStyle = z.c; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(z.ring[0], z.ring[1], this.cw * 4 * (1 - z.t * 2), 0, TAU); ctx.stroke(); } else { ctx.strokeStyle = z.c; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(z.x1, z.y1); for (let i = 1; i < 7; i++) ctx.lineTo(z.x1 + (z.x2 - z.x1) * i / 7, z.y1 + rnd(-8, 8)); ctx.lineTo(z.x2, z.y2); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke(); } ctx.globalAlpha = 1; }
+    for (const d of this.drops) { halo(ctx, '#fde047', d.x, d.y, 38, 0.8); ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(d.x, d.y, 14 + Math.sin(t * 6) * 1.5, 0, TAU); ctx.fill(); ctx.strokeStyle = '#fff7ad'; ctx.lineWidth = 3; for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + t; ctx.beginPath(); ctx.moveTo(d.x + Math.cos(a) * 18, d.y + Math.sin(a) * 18); ctx.lineTo(d.x + Math.cos(a) * 23, d.y + Math.sin(a) * 23); ctx.stroke(); } if (d.life < 3) ctx.globalAlpha = 0.5; ctx.globalAlpha = 1; }
+    for (const c of this.cardsA) { const G = GAD[c.k], on = this.sel === c.k, can = this.light >= G.cost; ctx.fillStyle = on ? 'rgba(54,83,20,.9)' : 'rgba(10,30,22,.88)'; roundRect(ctx, c.x, c.y, c.w, c.h, 12); ctx.fill(); ctx.strokeStyle = on ? '#bef264' : 'rgba(132,204,22,.35)'; ctx.lineWidth = on ? 2.5 : 1.2; ctx.stroke(); ctx.globalAlpha = can ? 1 : 0.45; ctx.drawImage(A.g[c.k], c.x + c.w / 2 - 28, c.y + 0, 56, 56); this.text(ctx, G.n, c.x + c.w / 2, c.y + 66, { size: 10, color: '#e2e8f0', align: 'center', font: 'Exo' }); this.text(ctx, '☀' + G.cost, c.x + c.w / 2, c.y + 81, { size: 12, color: can ? '#fde047' : '#94a3b8', align: 'center' }); ctx.globalAlpha = 1; }
+    this.hud(ctx, { label: 'SCORE', best: this.best, lives: this.plants, maxLives: 3, chip: 'W' + this.wave, chipColor: 'rgba(132,204,22,.5)' }); this.text(ctx, `☀ ${fmt(this.light)}   ·   PLANTS ${this.plants}`, W / 2, 82, { size: 13, color: '#fde047', align: 'center', glow: '#b45309' });
+    if (this.sel) this.text(ctx, `${GAD[this.sel].tip}. Tap a tile.`, W / 2, this.gy - 10, { size: 12, color: '#d9f99d', align: 'center', font: 'Exo' });
   }
 }

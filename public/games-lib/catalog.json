@@ -21,6 +21,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/block-drop/index.html",
       "art": "/games-lib/block-drop/thumb.jpg",
@@ -56,9 +58,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-maze-muncher",
@@ -67,6 +67,8 @@
       "category": "Specialty",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/maze-muncher/index.html",
       "art": "/games-lib/maze-muncher/thumb.jpg",
@@ -102,9 +104,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-alien-rows",
@@ -113,6 +113,8 @@
       "category": "Arcade Shooters",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/alien-rows/index.html",
       "art": "/games-lib/alien-rows/thumb.jpg",
@@ -148,9 +150,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-cloud-hopper",
@@ -159,6 +159,8 @@
       "category": "Endless Runners",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/cloud-hopper/index.html",
       "art": "/games-lib/cloud-hopper/thumb.jpg",
@@ -194,9 +196,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-road-hopper",
@@ -205,6 +205,8 @@
       "category": "Endless Runners",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/road-hopper/index.html",
       "art": "/games-lib/road-hopper/thumb.jpg",
@@ -240,9 +242,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-bud-merge",
@@ -251,6 +251,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/bud-merge/index.html",
       "art": "/games-lib/bud-merge/thumb.jpg",
@@ -286,9 +288,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-hex-stack",
@@ -297,6 +297,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/hex-stack/index.html",
       "art": "/games-lib/hex-stack/thumb.jpg",
@@ -306,7 +308,7 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Cleared blocks x combo (endless, speeds up)",
+      "scoring": "Hexes burst x chain (endless, speeds up)",
       "event_length": "1-3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
@@ -322,9 +324,9 @@
         7200,
         19200
       ],
-      "source": "github.com/Hextris/hextris",
-      "licence": "GPL-3.0 (client code, source served unminified); LICENSE kept",
-      "build": "vendored",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
       "attempts": "unlimited",
       "leaderboard": "best run",
       "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
@@ -332,9 +334,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-dino-dash",
@@ -343,6 +343,8 @@
       "category": "Endless Runners",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/dino-dash/index.html",
       "art": "/games-lib/dino-dash/thumb.jpg",
@@ -352,7 +354,7 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Distance (Chromium meter)",
+      "scoring": "Distance run (endless, speeds up)",
       "event_length": "1-3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
@@ -368,9 +370,9 @@
         2250,
         6000
       ],
-      "source": "github.com/wayou/t-rex-runner (extracted from Chromium neterror resources)",
-      "licence": "BSD-3-Clause (code + sprites + sounds, Chromium Authors); LICENSE kept",
-      "build": "vendored",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
       "attempts": "unlimited",
       "leaderboard": "best run",
       "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
@@ -378,9 +380,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-rock-buster",
@@ -389,6 +389,8 @@
       "category": "Arcade Shooters",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/rock-buster/index.html",
       "art": "/games-lib/rock-buster/thumb.jpg",
@@ -424,9 +426,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-star-swarm",
@@ -435,6 +435,8 @@
       "category": "Arcade Shooters",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/star-swarm/index.html",
       "art": "/games-lib/star-swarm/thumb.jpg",
@@ -470,9 +472,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-rail-rush",
@@ -481,6 +481,8 @@
       "category": "Endless Runners",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/rail-rush/index.html",
       "art": "/games-lib/rail-rush/thumb.jpg",
@@ -516,9 +518,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-hill-hauler",
@@ -527,6 +527,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/hill-hauler/index.html",
       "art": "/games-lib/hill-hauler/thumb.jpg",
@@ -562,9 +564,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-wanted-run",
@@ -573,6 +573,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/wanted-run/index.html",
       "art": "/games-lib/wanted-run/thumb.jpg",
@@ -608,9 +610,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-pop-defense",
@@ -619,6 +619,8 @@
       "category": "Tower Defense",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/pop-defense/index.html",
       "art": "/games-lib/pop-defense/thumb.jpg",
@@ -654,9 +656,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-cube-horde",
@@ -665,6 +665,8 @@
       "category": "Survival & Horde",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/cube-horde/index.html",
       "art": "/games-lib/cube-horde/thumb.jpg",
@@ -700,9 +702,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-arrow-hero",
@@ -711,6 +711,8 @@
       "category": "Survival & Horde",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/arrow-hero/index.html",
       "art": "/games-lib/arrow-hero/thumb.jpg",
@@ -746,9 +748,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-grid-wars",
@@ -757,6 +757,8 @@
       "category": "Survival & Horde",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/grid-wars/index.html",
       "art": "/games-lib/grid-wars/thumb.jpg",
@@ -792,9 +794,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-moon-swarm",
@@ -803,6 +803,8 @@
       "category": "Survival & Horde",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/moon-swarm/index.html",
       "art": "/games-lib/moon-swarm/thumb.jpg",
@@ -838,9 +840,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-throttle-rider",
@@ -849,6 +849,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/throttle-rider/index.html",
       "art": "/games-lib/throttle-rider/thumb.jpg",
@@ -884,101 +886,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
-    },
-    {
-      "id": "gl-wreck-ride",
-      "slug": "wreck-ride",
-      "title": "Wreck Ride",
-      "category": "Physics & Destruction",
-      "lib": true,
-      "playable": false,
-      "unit": "pts",
-      "url": "/games-lib/wreck-ride/index.html",
-      "art": "/games-lib/wreck-ride/thumb.jpg",
-      "tier": "A",
-      "competition": "endless",
-      "endless": true,
-      "giveaway": false,
-      "just_for_fun": false,
-      "endless_mode": true,
-      "scoring": "Distance m + flips 150 + big air 20 + crates 25",
-      "event_length": "3 days",
-      "acLevel": 2,
-      "ac_level": "L2 session checks",
-      "ac": {
-        "perSec": 60,
-        "ramp": 0,
-        "grace": 1200,
-        "max": 1000000000000,
-        "coinsPerSec": 1
-      },
-      "tiers": [
-        1200,
-        5400,
-        14400
-      ],
-      "source": "Original Hub build (public/games-lib/kit.js engine)",
-      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
-      "build": "built",
-      "attempts": "unlimited",
-      "leaderboard": "best run",
-      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
-      "tiebreak": [
-        "skill: faster server-timed completion of the same score",
-        "skill: stronger server-derived scoring-event efficiency or game metric",
-        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": true,
-      "replacedBy": "gl-hill-hauler"
-    },
-    {
-      "id": "gl-rig-rally",
-      "slug": "rig-rally",
-      "title": "Rig Rally",
-      "category": "Physics & Destruction",
-      "lib": true,
-      "playable": false,
-      "unit": "pts",
-      "url": "/games-lib/rig-rally/index.html",
-      "art": "/games-lib/rig-rally/thumb.jpg",
-      "tier": "A",
-      "competition": "endless",
-      "endless": true,
-      "giveaway": false,
-      "just_for_fun": false,
-      "endless_mode": true,
-      "scoring": "Distance m + coins 5 + stars 50 (build your own rig)",
-      "event_length": "3 days",
-      "acLevel": 2,
-      "ac_level": "L2 session checks",
-      "ac": {
-        "perSec": 60,
-        "ramp": 0,
-        "grace": 1200,
-        "max": 1000000000000,
-        "coinsPerSec": 1
-      },
-      "tiers": [
-        1200,
-        5400,
-        14400
-      ],
-      "source": "Original Hub build (public/games-lib/kit.js engine)",
-      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
-      "build": "built",
-      "attempts": "unlimited",
-      "leaderboard": "best run",
-      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
-      "tiebreak": [
-        "skill: faster server-timed completion of the same score",
-        "skill: stronger server-derived scoring-event efficiency or game metric",
-        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": true,
-      "replacedBy": "gl-hill-hauler"
+      ]
     },
     {
       "id": "gl-goo-tower",
@@ -987,6 +895,8 @@
       "category": "Physics & Destruction",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/goo-tower/index.html",
       "art": "/games-lib/goo-tower/thumb.jpg",
@@ -1022,9 +932,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-keep-guard",
@@ -1033,6 +941,8 @@
       "category": "Tower Defense",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/keep-guard/index.html",
       "art": "/games-lib/keep-guard/thumb.jpg",
@@ -1068,9 +978,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-node-siege",
@@ -1079,6 +987,8 @@
       "category": "Tower Defense",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/node-siege/index.html",
       "art": "/games-lib/node-siege/thumb.jpg",
@@ -1114,9 +1024,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-orb-coil",
@@ -1125,6 +1033,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/orb-coil/index.html",
       "art": "/games-lib/orb-coil/thumb.jpg",
@@ -1160,9 +1070,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-neon-flipper",
@@ -1171,6 +1079,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/neon-flipper/index.html",
       "art": "/games-lib/neon-flipper/thumb.jpg",
@@ -1206,9 +1116,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-light-cycle",
@@ -1217,6 +1125,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/light-cycle/index.html",
       "art": "/games-lib/light-cycle/thumb.jpg",
@@ -1252,9 +1162,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-roof-runner",
@@ -1263,6 +1171,8 @@
       "category": "Endless Runners",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/roof-runner/index.html",
       "art": "/games-lib/roof-runner/thumb.jpg",
@@ -1298,9 +1208,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-helix-drop",
@@ -1309,6 +1217,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/helix-drop/index.html",
       "art": "/games-lib/helix-drop/thumb.jpg",
@@ -1344,9 +1254,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-hex-spin",
@@ -1355,6 +1263,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/hex-spin/index.html",
       "art": "/games-lib/hex-spin/thumb.jpg",
@@ -1390,9 +1300,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-color-hop",
@@ -1401,6 +1309,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/color-hop/index.html",
       "art": "/games-lib/color-hop/thumb.jpg",
@@ -1436,9 +1346,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-zig-path",
@@ -1447,6 +1355,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/zig-path/index.html",
       "art": "/games-lib/zig-path/thumb.jpg",
@@ -1482,55 +1392,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
-    },
-    {
-      "id": "gl-drift-king",
-      "slug": "drift-king",
-      "title": "Drift King",
-      "category": "Driving",
-      "lib": true,
-      "playable": false,
-      "unit": "pts",
-      "url": "/games-lib/drift-king/index.html",
-      "art": "/games-lib/drift-king/thumb.jpg",
-      "tier": "A",
-      "competition": "endless",
-      "endless": true,
-      "giveaway": false,
-      "just_for_fun": false,
-      "endless_mode": true,
-      "scoring": "Distance",
-      "event_length": "3 days",
-      "acLevel": 2,
-      "ac_level": "L2 session checks",
-      "ac": {
-        "perSec": 25,
-        "ramp": 0,
-        "grace": 500,
-        "max": 1000000000000,
-        "coinsPerSec": 1
-      },
-      "tiers": [
-        500,
-        2250,
-        6000
-      ],
-      "source": "Original Hub build (public/games-lib/kit.js engine)",
-      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
-      "build": "built",
-      "attempts": "unlimited",
-      "leaderboard": "best run",
-      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
-      "tiebreak": [
-        "skill: faster server-timed completion of the same score",
-        "skill: stronger server-derived scoring-event efficiency or game metric",
-        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": true,
-      "replacedBy": "drift-rush"
+      ]
     },
     {
       "id": "gl-missile-guard",
@@ -1539,6 +1401,8 @@
       "category": "Arcade Shooters",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/missile-guard/index.html",
       "art": "/games-lib/missile-guard/thumb.jpg",
@@ -1574,9 +1438,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-bug-blaster",
@@ -1585,6 +1447,8 @@
       "category": "Arcade Shooters",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/bug-blaster/index.html",
       "art": "/games-lib/bug-blaster/thumb.jpg",
@@ -1620,9 +1484,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-bubble-pop",
@@ -1631,6 +1493,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/bubble-pop/index.html",
       "art": "/games-lib/bubble-pop/thumb.jpg",
@@ -1666,9 +1530,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-mine-sweep",
@@ -1677,6 +1539,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/mine-sweep/index.html",
       "art": "/games-lib/mine-sweep/thumb.jpg",
@@ -1712,9 +1576,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-knife-toss",
@@ -1723,6 +1585,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/knife-toss/index.html",
       "art": "/games-lib/knife-toss/thumb.jpg",
@@ -1758,9 +1622,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-mole-whack",
@@ -1769,6 +1631,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/mole-whack/index.html",
       "art": "/games-lib/mole-whack/thumb.jpg",
@@ -1804,9 +1668,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-grow-op",
@@ -1815,6 +1677,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/grow-op/index.html",
       "art": "/games-lib/grow-op/thumb.jpg",
@@ -1850,9 +1714,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-trim-rush",
@@ -1861,6 +1723,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/trim-rush/index.html",
       "art": "/games-lib/trim-rush/thumb.jpg",
@@ -1870,21 +1734,21 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Leaf 10-30 combo, clean trim bonus; trims refill the clock, bud slice -3s",
+      "scoring": "Snip 10/20/30 by cut distance + combo up to 10 (gold leaf x2), bud bonus 25-65; finished buds refill the clock; 3 bud nicks end the run",
       "event_length": "1-3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
       "ac": {
-        "perSec": 120,
+        "perSec": 150,
         "ramp": 0,
-        "grace": 2400,
+        "grace": 3000,
         "max": 1000000000000,
         "coinsPerSec": 1
       },
       "tiers": [
-        2400,
-        10800,
-        28800
+        3000,
+        13500,
+        36000
       ],
       "source": "Original Hub build (public/games-lib/kit.js engine)",
       "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
@@ -1896,9 +1760,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-strain-crush",
@@ -1907,6 +1769,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/strain-crush/index.html",
       "art": "/games-lib/strain-crush/thumb.jpg",
@@ -1942,9 +1806,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-bud-bar",
@@ -1953,6 +1815,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/bud-bar/index.html",
       "art": "/games-lib/bud-bar/thumb.jpg",
@@ -1988,9 +1852,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-green-dash",
@@ -1999,6 +1861,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/green-dash/index.html",
       "art": "/games-lib/green-dash/thumb.jpg",
@@ -2034,9 +1898,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-roll-up",
@@ -2045,6 +1907,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/roll-up/index.html",
       "art": "/games-lib/roll-up/thumb.jpg",
@@ -2080,9 +1944,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-smoke-rings",
@@ -2091,6 +1953,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/smoke-rings/index.html",
       "art": "/games-lib/smoke-rings/thumb.jpg",
@@ -2126,9 +1990,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-bud-sort",
@@ -2137,6 +1999,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/bud-sort/index.html",
       "art": "/games-lib/bud-sort/thumb.jpg",
@@ -2172,9 +2036,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-pest-patrol",
@@ -2183,6 +2045,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/pest-patrol/index.html",
       "art": "/games-lib/pest-patrol/thumb.jpg",
@@ -2192,7 +2056,7 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Mite 10, caterpillar 20, beetle 40 x combo up to 5, wave 100 x wave; ladybug squash costs a plant",
+      "scoring": "Mite 10, caterpillar 20, beetle 40 x combo up to 5, wave 100 x wave",
       "event_length": "3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
@@ -2218,9 +2082,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-cup-toss",
@@ -2229,6 +2091,8 @@
       "category": "Cannabis",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/cup-toss/index.html",
       "art": "/games-lib/cup-toss/thumb.jpg",
@@ -2264,9 +2128,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-beat-tiles",
@@ -2275,6 +2137,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/beat-tiles/index.html",
       "art": "/games-lib/beat-tiles/thumb.jpg",
@@ -2310,9 +2174,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-moon-lander",
@@ -2321,6 +2183,8 @@
       "category": "Specialty",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/moon-lander/index.html",
       "art": "/games-lib/moon-lander/thumb.jpg",
@@ -2356,9 +2220,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-pin-strike",
@@ -2367,6 +2229,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/pin-strike/index.html",
       "art": "/games-lib/pin-strike/thumb.jpg",
@@ -2402,9 +2266,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-bullseye",
@@ -2413,6 +2275,8 @@
       "category": "Combat",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/bullseye/index.html",
       "art": "/games-lib/bullseye/thumb.jpg",
@@ -2448,9 +2312,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-spot-kick",
@@ -2459,6 +2321,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/spot-kick/index.html",
       "art": "/games-lib/spot-kick/thumb.jpg",
@@ -2494,9 +2358,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-glow-echo",
@@ -2505,6 +2367,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/glow-echo/index.html",
       "art": "/games-lib/glow-echo/thumb.jpg",
@@ -2540,9 +2404,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-knockout",
@@ -2551,6 +2413,8 @@
       "category": "Combat",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/knockout/index.html",
       "art": "/games-lib/knockout/thumb.jpg",
@@ -2586,9 +2450,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-putt-party",
@@ -2597,6 +2459,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/putt-party/index.html",
       "art": "/games-lib/putt-party/thumb.jpg",
@@ -2632,9 +2496,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-cue-club",
@@ -2643,6 +2505,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/cue-club/index.html",
       "art": "/games-lib/cue-club/thumb.jpg",
@@ -2678,9 +2542,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-long-ball",
@@ -2689,6 +2551,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/long-ball/index.html",
       "art": "/games-lib/long-ball/thumb.jpg",
@@ -2724,9 +2588,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-rally-court",
@@ -2735,6 +2597,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/rally-court/index.html",
       "art": "/games-lib/rally-court/thumb.jpg",
@@ -2770,9 +2634,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-ice-snipe",
@@ -2781,6 +2643,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/ice-snipe/index.html",
       "art": "/games-lib/ice-snipe/thumb.jpg",
@@ -2816,9 +2680,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-reel-deal",
@@ -2827,6 +2689,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/reel-deal/index.html",
       "art": "/games-lib/reel-deal/thumb.jpg",
@@ -2862,9 +2726,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-hoop-streak",
@@ -2873,6 +2735,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/hoop-streak/index.html",
       "art": "/games-lib/hoop-streak/thumb.jpg",
@@ -2908,9 +2772,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-kickflip-city",
@@ -2919,6 +2781,8 @@
       "category": "Sports",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/kickflip-city/index.html",
       "art": "/games-lib/kickflip-city/thumb.jpg",
@@ -2954,9 +2818,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-tile-twin",
@@ -2965,6 +2827,8 @@
       "category": "Puzzle & Brain",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/tile-twin/index.html",
       "art": "/games-lib/tile-twin/thumb.jpg",
@@ -3000,9 +2864,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-tunnel-hop",
@@ -3011,6 +2873,8 @@
       "category": "Endless Runners",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/tunnel-hop/index.html",
       "art": "/games-lib/tunnel-hop/thumb.jpg",
@@ -3046,147 +2910,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
-    },
-    {
-      "id": "gl-dune-glide",
-      "slug": "dune-glide",
-      "title": "Dune Glide",
-      "category": "Endless Runners",
-      "lib": true,
-      "playable": false,
-      "unit": "pts",
-      "url": "/games-lib/dune-glide/index.html",
-      "art": "/games-lib/dune-glide/thumb.jpg",
-      "tier": "A",
-      "competition": "endless",
-      "endless": true,
-      "giveaway": false,
-      "just_for_fun": false,
-      "endless_mode": true,
-      "scoring": "Distance + flips 100 x n + coins 5",
-      "event_length": "3 days",
-      "acLevel": 2,
-      "ac_level": "L2 session checks",
-      "ac": {
-        "perSec": 80,
-        "ramp": 0,
-        "grace": 1600,
-        "max": 1000000000000,
-        "coinsPerSec": 1
-      },
-      "tiers": [
-        1600,
-        7200,
-        19200
-      ],
-      "source": "Original Hub build (public/games-lib/kit.js engine)",
-      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
-      "build": "built",
-      "attempts": "unlimited",
-      "leaderboard": "best run",
-      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
-      "tiebreak": [
-        "skill: faster server-timed completion of the same score",
-        "skill: stronger server-derived scoring-event efficiency or game metric",
-        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": true,
-      "replacedBy": "gl-hill-hauler"
-    },
-    {
-      "id": "gl-egg-roll",
-      "slug": "egg-roll",
-      "title": "Egg Roll",
-      "category": "Driving",
-      "lib": true,
-      "playable": false,
-      "unit": "pts",
-      "url": "/games-lib/egg-roll/index.html",
-      "art": "/games-lib/egg-roll/thumb.jpg",
-      "tier": "A",
-      "competition": "endless",
-      "endless": true,
-      "giveaway": false,
-      "just_for_fun": false,
-      "endless_mode": true,
-      "scoring": "Distance m + coins 5",
-      "event_length": "3 days",
-      "acLevel": 2,
-      "ac_level": "L2 session checks",
-      "ac": {
-        "perSec": 40,
-        "ramp": 0,
-        "grace": 800,
-        "max": 1000000000000,
-        "coinsPerSec": 1
-      },
-      "tiers": [
-        800,
-        3600,
-        9600
-      ],
-      "source": "Original Hub build (public/games-lib/kit.js engine)",
-      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
-      "build": "built",
-      "attempts": "unlimited",
-      "leaderboard": "best run",
-      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
-      "tiebreak": [
-        "skill: faster server-timed completion of the same score",
-        "skill: stronger server-derived scoring-event efficiency or game metric",
-        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": true,
-      "replacedBy": "gl-hill-hauler"
-    },
-    {
-      "id": "gl-monster-crush",
-      "slug": "monster-crush",
-      "title": "Monster Crush",
-      "category": "Driving",
-      "lib": true,
-      "playable": false,
-      "unit": "pts",
-      "url": "/games-lib/monster-crush/index.html",
-      "art": "/games-lib/monster-crush/thumb.jpg",
-      "tier": "A",
-      "competition": "endless",
-      "endless": true,
-      "giveaway": false,
-      "just_for_fun": false,
-      "endless_mode": true,
-      "scoring": "Distance + crushed cars 50 + flips",
-      "event_length": "3 days",
-      "acLevel": 2,
-      "ac_level": "L2 session checks",
-      "ac": {
-        "perSec": 120,
-        "ramp": 0,
-        "grace": 2400,
-        "max": 1000000000000,
-        "coinsPerSec": 1
-      },
-      "tiers": [
-        2400,
-        10800,
-        28800
-      ],
-      "source": "Original Hub build (public/games-lib/kit.js engine)",
-      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
-      "build": "built",
-      "attempts": "unlimited",
-      "leaderboard": "best run",
-      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
-      "tiebreak": [
-        "skill: faster server-timed completion of the same score",
-        "skill: stronger server-derived scoring-event efficiency or game metric",
-        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": true,
-      "replacedBy": "gl-hill-hauler"
+      ]
     },
     {
       "id": "gl-no-brakes",
@@ -3195,6 +2919,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/no-brakes/index.html",
       "art": "/games-lib/no-brakes/thumb.jpg",
@@ -3230,9 +2956,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-cab-rush",
@@ -3241,6 +2965,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/cab-rush/index.html",
       "art": "/games-lib/cab-rush/thumb.jpg",
@@ -3276,9 +3002,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-dirt-dash",
@@ -3287,6 +3011,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/dirt-dash/index.html",
       "art": "/games-lib/dirt-dash/thumb.jpg",
@@ -3322,9 +3048,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-road-brawl",
@@ -3333,6 +3057,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/road-brawl/index.html",
       "art": "/games-lib/road-brawl/thumb.jpg",
@@ -3368,9 +3094,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-derby-smash",
@@ -3379,6 +3103,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/derby-smash/index.html",
       "art": "/games-lib/derby-smash/thumb.jpg",
@@ -3414,9 +3140,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-dunk-flick",
@@ -3425,6 +3149,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/dunk-flick/index.html",
       "art": "/games-lib/dunk-flick/thumb.jpg",
@@ -3460,9 +3186,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-duck-shot",
@@ -3471,6 +3195,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/duck-shot/index.html",
       "art": "/games-lib/duck-shot/thumb.jpg",
@@ -3480,21 +3206,21 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Bird 100 + 20 x round, gold +400",
+      "scoring": "Duck 100 + 20 x round x streak, gold +400, perfect bonus",
       "event_length": "3 days",
       "acLevel": 2,
       "ac_level": "L2 session checks",
       "ac": {
-        "perSec": 400,
+        "perSec": 900,
         "ramp": 0,
-        "grace": 8000,
+        "grace": 18000,
         "max": 1000000000000,
         "coinsPerSec": 1
       },
       "tiers": [
-        8000,
-        36000,
-        96000
+        18000,
+        81000,
+        216000
       ],
       "source": "Original Hub build (public/games-lib/kit.js engine)",
       "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
@@ -3506,9 +3232,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-paper-toss",
@@ -3517,6 +3241,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/paper-toss/index.html",
       "art": "/games-lib/paper-toss/thumb.jpg",
@@ -3552,9 +3278,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-skee-roll",
@@ -3563,6 +3287,8 @@
       "category": "Reflex & Skill",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/skee-roll/index.html",
       "art": "/games-lib/skee-roll/thumb.jpg",
@@ -3598,9 +3324,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-neon-circuit",
@@ -3609,6 +3333,8 @@
       "category": "Driving",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/neon-circuit/index.html",
       "art": "/games-lib/neon-circuit/thumb.svg",
@@ -3620,8 +3346,8 @@
       "endless_mode": true,
       "scoring": "Energy cells 30–125 by combo; near-miss 5",
       "event_length": "3 days",
-      "acLevel": 3,
-      "ac_level": "L3 score-event validation",
+      "acLevel": 2,
+      "ac_level": "L2 session checks",
       "ac": {
         "perSec": 120,
         "ramp": 0,
@@ -3644,9 +3370,7 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
-      ],
-      "retired": false,
-      "replacedBy": null
+      ]
     },
     {
       "id": "gl-rift-survival",
@@ -3655,6 +3379,8 @@
       "category": "Survival & Horde",
       "lib": true,
       "playable": true,
+      "retired": false,
+      "replacedBy": null,
       "unit": "pts",
       "url": "/games-lib/rift-survival/index.html",
       "art": "/games-lib/rift-survival/thumb.svg",
@@ -3664,10 +3390,10 @@
       "giveaway": true,
       "just_for_fun": false,
       "endless_mode": true,
-      "scoring": "Shards 25; wave transition bonus 10 × wave; survival is the primary skill loop",
+      "scoring": "Kills 10-40 (crawl 10, dash/spit 20, tank 40), shard pickups 5, wave clear 50 × wave; positioning and auto-fire survival",
       "event_length": "3 days",
-      "acLevel": 3,
-      "ac_level": "L3 score-event validation",
+      "acLevel": 2,
+      "ac_level": "L2 session checks",
       "ac": {
         "perSec": 180,
         "ramp": 0,
@@ -3690,9 +3416,283 @@
         "skill: faster server-timed completion of the same score",
         "skill: stronger server-derived scoring-event efficiency or game metric",
         "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
+      ]
+    },
+    {
+      "id": "gl-wreck-ride",
+      "slug": "wreck-ride",
+      "title": "Wreck Ride",
+      "category": "Physics & Destruction",
+      "lib": true,
+      "playable": false,
+      "retired": true,
+      "replacedBy": "gl-hill-hauler",
+      "unit": "pts",
+      "url": "/games-lib/wreck-ride/index.html",
+      "art": "/games-lib/wreck-ride/thumb.jpg",
+      "tier": "A",
+      "competition": "endless",
+      "endless": true,
+      "giveaway": false,
+      "just_for_fun": false,
+      "endless_mode": true,
+      "scoring": "Distance m + flips 150 + big air 20 + crates 25",
+      "event_length": "3 days",
+      "acLevel": 2,
+      "ac_level": "L2 session checks",
+      "ac": {
+        "perSec": 60,
+        "ramp": 0,
+        "grace": 1200,
+        "max": 1000000000000,
+        "coinsPerSec": 1
+      },
+      "tiers": [
+        1200,
+        5400,
+        14400
       ],
-      "retired": false,
-      "replacedBy": null
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
+      "attempts": "unlimited",
+      "leaderboard": "best run",
+      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
+      "tiebreak": [
+        "skill: faster server-timed completion of the same score",
+        "skill: stronger server-derived scoring-event efficiency or game metric",
+        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
+      ]
+    },
+    {
+      "id": "gl-rig-rally",
+      "slug": "rig-rally",
+      "title": "Rig Rally",
+      "category": "Physics & Destruction",
+      "lib": true,
+      "playable": false,
+      "retired": true,
+      "replacedBy": "gl-hill-hauler",
+      "unit": "pts",
+      "url": "/games-lib/rig-rally/index.html",
+      "art": "/games-lib/rig-rally/thumb.jpg",
+      "tier": "A",
+      "competition": "endless",
+      "endless": true,
+      "giveaway": false,
+      "just_for_fun": false,
+      "endless_mode": true,
+      "scoring": "Distance m + coins 5 + stars 50 (build your own rig)",
+      "event_length": "3 days",
+      "acLevel": 2,
+      "ac_level": "L2 session checks",
+      "ac": {
+        "perSec": 60,
+        "ramp": 0,
+        "grace": 1200,
+        "max": 1000000000000,
+        "coinsPerSec": 1
+      },
+      "tiers": [
+        1200,
+        5400,
+        14400
+      ],
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
+      "attempts": "unlimited",
+      "leaderboard": "best run",
+      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
+      "tiebreak": [
+        "skill: faster server-timed completion of the same score",
+        "skill: stronger server-derived scoring-event efficiency or game metric",
+        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
+      ]
+    },
+    {
+      "id": "gl-drift-king",
+      "slug": "drift-king",
+      "title": "Drift King",
+      "category": "Driving",
+      "lib": true,
+      "playable": false,
+      "retired": true,
+      "replacedBy": "drift-rush",
+      "unit": "pts",
+      "url": "/games-lib/drift-king/index.html",
+      "art": "/games-lib/drift-king/thumb.jpg",
+      "tier": "A",
+      "competition": "endless",
+      "endless": true,
+      "giveaway": false,
+      "just_for_fun": false,
+      "endless_mode": true,
+      "scoring": "Distance",
+      "event_length": "3 days",
+      "acLevel": 2,
+      "ac_level": "L2 session checks",
+      "ac": {
+        "perSec": 25,
+        "ramp": 0,
+        "grace": 500,
+        "max": 1000000000000,
+        "coinsPerSec": 1
+      },
+      "tiers": [
+        500,
+        2250,
+        6000
+      ],
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
+      "attempts": "unlimited",
+      "leaderboard": "best run",
+      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
+      "tiebreak": [
+        "skill: faster server-timed completion of the same score",
+        "skill: stronger server-derived scoring-event efficiency or game metric",
+        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
+      ]
+    },
+    {
+      "id": "gl-dune-glide",
+      "slug": "dune-glide",
+      "title": "Dune Glide",
+      "category": "Endless Runners",
+      "lib": true,
+      "playable": false,
+      "retired": true,
+      "replacedBy": "gl-hill-hauler",
+      "unit": "pts",
+      "url": "/games-lib/dune-glide/index.html",
+      "art": "/games-lib/dune-glide/thumb.jpg",
+      "tier": "A",
+      "competition": "endless",
+      "endless": true,
+      "giveaway": false,
+      "just_for_fun": false,
+      "endless_mode": true,
+      "scoring": "Distance + flips 100 x n + coins 5",
+      "event_length": "3 days",
+      "acLevel": 2,
+      "ac_level": "L2 session checks",
+      "ac": {
+        "perSec": 80,
+        "ramp": 0,
+        "grace": 1600,
+        "max": 1000000000000,
+        "coinsPerSec": 1
+      },
+      "tiers": [
+        1600,
+        7200,
+        19200
+      ],
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
+      "attempts": "unlimited",
+      "leaderboard": "best run",
+      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
+      "tiebreak": [
+        "skill: faster server-timed completion of the same score",
+        "skill: stronger server-derived scoring-event efficiency or game metric",
+        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
+      ]
+    },
+    {
+      "id": "gl-egg-roll",
+      "slug": "egg-roll",
+      "title": "Egg Roll",
+      "category": "Driving",
+      "lib": true,
+      "playable": false,
+      "retired": true,
+      "replacedBy": "gl-hill-hauler",
+      "unit": "pts",
+      "url": "/games-lib/egg-roll/index.html",
+      "art": "/games-lib/egg-roll/thumb.jpg",
+      "tier": "A",
+      "competition": "endless",
+      "endless": true,
+      "giveaway": false,
+      "just_for_fun": false,
+      "endless_mode": true,
+      "scoring": "Distance m + coins 5",
+      "event_length": "3 days",
+      "acLevel": 2,
+      "ac_level": "L2 session checks",
+      "ac": {
+        "perSec": 40,
+        "ramp": 0,
+        "grace": 800,
+        "max": 1000000000000,
+        "coinsPerSec": 1
+      },
+      "tiers": [
+        800,
+        3600,
+        9600
+      ],
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
+      "attempts": "unlimited",
+      "leaderboard": "best run",
+      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
+      "tiebreak": [
+        "skill: faster server-timed completion of the same score",
+        "skill: stronger server-derived scoring-event efficiency or game metric",
+        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
+      ]
+    },
+    {
+      "id": "gl-monster-crush",
+      "slug": "monster-crush",
+      "title": "Monster Crush",
+      "category": "Driving",
+      "lib": true,
+      "playable": false,
+      "retired": true,
+      "replacedBy": "gl-hill-hauler",
+      "unit": "pts",
+      "url": "/games-lib/monster-crush/index.html",
+      "art": "/games-lib/monster-crush/thumb.jpg",
+      "tier": "A",
+      "competition": "endless",
+      "endless": true,
+      "giveaway": false,
+      "just_for_fun": false,
+      "endless_mode": true,
+      "scoring": "Distance + crushed cars 50 + flips",
+      "event_length": "3 days",
+      "acLevel": 2,
+      "ac_level": "L2 session checks",
+      "ac": {
+        "perSec": 120,
+        "ramp": 0,
+        "grace": 2400,
+        "max": 1000000000000,
+        "coinsPerSec": 1
+      },
+      "tiers": [
+        2400,
+        10800,
+        28800
+      ],
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
+      "attempts": "unlimited",
+      "leaderboard": "best run",
+      "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",
+      "tiebreak": [
+        "skill: faster server-timed completion of the same score",
+        "skill: stronger server-derived scoring-event efficiency or game metric",
+        "exact tie: seeded sudden-death playoff (same game and seed for tied players)"
+      ]
     }
   ],
   "external": []
