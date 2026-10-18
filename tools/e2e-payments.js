@@ -79,6 +79,7 @@ function client() { const jar = {}; return async (p, o = {}) => {
   const play = async (c, score) => { const s = await c('/api/run/start', { body: { game_id: 'jetpack-dash' } }); await sleep(2300); return c('/api/score', { body: { token: s.body.token, score, coins: 0, duration_ms: 2300 } }); };
   const [sp, sf] = await Promise.all([play(P1, 40), play(F, 40)]);
   ok(sp.body.ok && sf.body.ok && sp.body.held === sf.body.held && sp.body.verified === sf.body.verified, 'same run -> same anti-cheat result');
+  await sleep(4300); // leaderboard reads are memoised for 4 s (BOARD_CACHE_MS)
   r = await client()('/api/leaderboard?game=jetpack-dash&limit=50'); const rows = r.body.rows.filter(x => [P1.u, F.u].includes(x.username)); ok(rows.length === 2 && rows.every(x => x.score === 40), 'paid and free players land on the board with the same score');
   const [hp, hf] = await Promise.all([play(P1, 99999), play(F, 99999)]); ok(hp.status === 422 && hf.status === 422, 'impossible score rejected for paid and free alike');
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'server.js'), 'utf8').split("app.post('/api/score'")[1].split('\napp.')[0];

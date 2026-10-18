@@ -49,3 +49,27 @@ Not verified: e2e-mobile (headless Chrome crashes on game pages on this box), 3D
 7. Keep prize and official events locked until the games are certified.
 8. Test 3D avatar/profile and the games on real phones. Have native speakers check the translations.
 9. Merge the sync PR (v8-games-upgrade into main) when I ask.
+
+## Round 4 — cache-proof assets, load test, Stripe-only (Oct 17–18 2026)
+
+### Cache busting in code
+Every JS/CSS/i18n/manifest URL carries `?v=<build id>` (hash of public assets, or `BUILD_ID`), the service worker is registered as `/sw.js?v=<id>` with its cache name keyed on the same id, and the import map is hash-pinned in the CSP. Cloudflare's 4 h override of origin cache headers no longer matters: a new deploy changes every URL. (`/games-lib/*` game assets are the game stream's area and are not versioned.)
+
+### Load simulation (local, exact release, Dockerfile flags: `--max-old-space-size=72 --max-semi-space-size=1 --single-threaded --no-opt`, `MALLOC_ARENA_MAX=2`, `UV_THREADPOOL_SIZE=2`; live site never touched)
+Generator: `tools/loadtest.js` (+ `tools/loadsrv.sh`): each virtual user has its own IP (X-Forwarded-For, one trusted proxy hop like Cloudflare/Deplexo), signs up, browses home/games/shop/giveaways/store, starts + submits a scored run, reads game + global leaderboards, achievements, notifications, enters a giveaway, signs out/in.
+Findings and fixes (all measured by CPU profile):
+1. **bcryptjs under `--no-opt` costs ~1.1 s of blocked event loop per hash** (70 ms with the JIT). 40 signups took 62 s and froze every other request. Replaced with native async `scrypt` in the libuv threadpool (`src/pwhash.js`, 8 MB per hash, 2 at a time); old bcrypt hashes still verify and upgrade on next sign-in; overload returns 503 + Retry-After instead of queueing forever. 300-user smoke: 62 s → 22 s, signup p95 21 s → 0.85 s.
+2. `db.prepare()` re-parsed SQL on every request (15% CPU) → statement cache in `src/db.js`.
+3. Leaderboard / profile / score-submit / achievements re-ranked every player per request (~20% CPU) → display-only 4 s memo (`BOARD_CACHE_MS`), own rank computed exactly on submit, equip busts the memo; prize/giveaway results are never cached.
+4. Cosmetic CSS key regenerated every cosmetic per page render (~8%) → 30 s memo.
+Same 1,500-user run: 110 s → 54 s, 0 errors.
+Measured results (final build, staged ramps, 0 5xx):
+| stage | virtual users | concurrency | requests | 5xx/network errors | server RSS end / peak (incl. ~48 MB shared binary pages; anon ≈ 77–100 MB) | DB |
+|---|---|---|---|---|---|---|
+| 1 | 3,000 | 100 | 56,179 | 0 | 107 / 126 MB | 7.5 MB (+2 MB WAL) |
+| 2 | 3,000 | 200 | 56,213 | 0 | 124 / 146 MB | 14.4 MB |
+Latency at 100–200 concurrent: p50 60–155 ms, p95 0.5–0.9 s, p99 0.7–1.4 s for signup/home/games/score/leaderboard/shop. Sustained ≈ 340 requests/s of this mix on one core. Rate limiter behaved as designed (6 signups per distinct-IP test were 400 validation, none 429 once IPs are distinct; with ONE shared IP only 10 signups/hour succeed — correct).
+**Honest limits:** a 20,000-user *total* signup population with ~100–200 concurrent browsing sessions fits (DB stays tens of MB). 300+ simultaneous heavy sessions on this single 128 MB / single-thread host queue (seconds of latency) and in an earlier 300-concurrency run produced ~1% client-side errors and anon memory ≈ 119 MB, i.e. over the safe line. Realistic capacity: ~150–200 concurrent active players (roughly 1–2k users/hour of normal browsing); a 1,000-concurrent spike needs a bigger plan or a CDN-cached read path. Memory retained after load was ≈ 77–102 MB anon (no growth when idle).
+
+### Payments
+Stripe is the sole default checkout (`docs/PAYMENTS-STRIPE.md`): env names, webhook endpoint + events, and `tools/e2e-stripe.js` (18 checks: 4242-card flow simulated against a mocked Stripe API, signature/timestamp rejection, exact amount/currency/owner checks, idempotent duplicate webhooks, refund reversal, refund-before-completion, failed/expired). Bitcoin needs `BTC_CHECKOUT_ENABLED=1`. BTC audit (e2e-payments 32/32, e2e-cosmetic-orders 22/22): order creation, unique-amount address display, confirmation reconciliation, over/under-pay, late payments all pass. Full suite after changes: all green, mem-check peak 85 MB.

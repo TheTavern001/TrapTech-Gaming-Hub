@@ -49,7 +49,7 @@ export async function setLang(code, save = true) {
   if (save && store) store.setItem('gh_lang', code);
   if (code !== lang && lang !== 'en') { lang = code; location.reload(); return; } // swapped text can't be un-swapped; reload is simplest
   lang = code; dict = {};
-  if (code !== 'en') { try { dict = await (await fetch(`/i18n/${code}.json`)).json(); } catch { dict = {}; } }
+  if (code !== 'en') { try { dict = await (await fetch(`/i18n/${code}.json?v=${encodeURIComponent((document.querySelector('meta[name=build-id]') || {}).content || '0')}`)).json(); } catch { dict = {}; } }
   document.documentElement.lang = code; document.documentElement.dir = RTL.has(code) ? 'rtl' : 'ltr';
   document.querySelectorAll('#lang-pick').forEach(x => x.parentElement.remove()); schedule();
 }

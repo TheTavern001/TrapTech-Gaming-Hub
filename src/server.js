@@ -4,6 +4,8 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
+const pw8 = require('./pwhash');
+const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const cfg = require('./config');
 const db = require('./db');
 const boards = require('./boards');
@@ -182,7 +184,7 @@ const requireAdmin = ADMSEC.requireAdmin;
 
 const USERNAME_RE = /^[A-Za-z0-9_.-]{3,20}$/;
 
-app.post('/api/auth/signup', limiter('signup', 10, 3600e3), (req, res) => {
+app.post('/api/auth/signup', limiter('signup', 10, 3600e3), ah(async (req, res) => {
   const username = str(req.body.username, 40); const password = String(req.body.password || '');
   if (!USERNAME_RE.test(username)) return bad(res, 400, 'Username must be 3-20 characters: letters, numbers, _ . - (no spaces).');
   { const pf = require('./profanity').check(username); if (!pf.ok) return bad(res, 400, pf.reason); }
@@ -199,26 +201,31 @@ app.post('/api/auth/signup', limiter('signup', 10, 3600e3), (req, res) => {
   const refCode = String(req.body.ref || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
   const referrer = refCode ? db.prepare('SELECT id FROM users WHERE ref_code=? AND banned=0').get(refCode) : null;
   if (db.prepare('SELECT 1 FROM users WHERE username=?').get(username)) return bad(res, 409, 'That Potato username is taken.');
-  const hash = bcrypt.hashSync(password, 10);
+  if (pw8.busy()) { res.setHeader('Retry-After', '5'); return bad(res, 503, 'We are busy right now. Try again in a few seconds.'); }
+  const hash = await pw8.hash(password);
+  if (db.prepare('SELECT 1 FROM users WHERE username=?').get(username)) return bad(res, 409, 'That Potato username is taken.');
   const potato = str(req.body.potato, 40).replace(/^@/, '') || (/^[A-Za-z0-9_]{3,32}$/.test(username) ? username : '');
   if (potato && !/^[A-Za-z0-9_]{3,32}$/.test(potato)) return bad(res, 400, 'Potato usernames use letters, numbers and _ (3-32 characters).');
-  const info = db.prepare('INSERT INTO users (username, pass_hash, created_at, last_seen, birth_date, referred_by, potato) VALUES (?,?,?,?,?,?,?)').run(username, hash, now(), now(), dob, referrer ? referrer.id : null, potato);
+  let info; try { info = db.prepare('INSERT INTO users (username, pass_hash, created_at, last_seen, birth_date, referred_by, potato) VALUES (?,?,?,?,?,?,?)').run(username, hash, now(), now(), dob, referrer ? referrer.id : null, potato); }
+  catch (e) { if (/UNIQUE/i.test(String(e.message))) return bad(res, 409, 'That Potato username is taken.'); throw e; }
   const user = { id: info.lastInsertRowid, username };
   if (referrer) require('./notify').notify(referrer.id, 'referral', `${username} signed up with your invite`, 'It counts as soon as they finish their first scored run.', '/u/' + encodeURIComponent(username), 'gift');
   logActivity('player', `New player registered: ${username}`, user.id);
   const session = startSession(req, res, user);
   const unlocked = ach.evaluate(user.id, { games: [] }).fresh;
   res.json({ ok: true, user: { username, cos: ach.publicCos({}) }, unlocked, referred: !!referrer, session });
-});
+}));
 
-app.post('/api/auth/signin', limiter('signin', 20, 15 * 60e3), (req, res) => {
+app.post('/api/auth/signin', limiter('signin', 20, 15 * 60e3), ah(async (req, res) => {
   const username = str(req.body.username, 40); const password = String(req.body.password || '');
   const u = db.prepare('SELECT * FROM users WHERE username=?').get(username);
-  if (!u || !bcrypt.compareSync(password, u.pass_hash)) return bad(res, 401, 'Wrong username or password.');
+  if (pw8.busy()) { res.setHeader('Retry-After', '5'); return bad(res, 503, 'We are busy right now. Try again in a few seconds.'); }
+  if (!u || !(await pw8.verify(password, u.pass_hash))) return bad(res, 401, 'Wrong username or password.');
+  if (pw8.isLegacy(u.pass_hash)) { try { db.prepare('UPDATE users SET pass_hash=? WHERE id=? AND pass_hash=?').run(await pw8.hash(password), u.id, u.pass_hash); } catch {} }
   if (u.banned) return bad(res, 403, 'This account has been suspended.');
   const session = startSession(req, res, u);
   res.json({ ok: true, user: { username: u.username, cos: ach.publicCos(u) }, session });
-});
+}));
 
 app.post('/api/auth/signout', (req, res) => {
   const active = currentUser(req);
@@ -230,16 +237,16 @@ app.post('/api/auth/signout', (req, res) => {
   res.json({ ok:true, all_devices_signed_out:!!active });
 });
 
-app.post('/api/auth/password', requireUser, limiter('pw', 10, 3600e3), (req, res) => {
+app.post('/api/auth/password', requireUser, limiter('pw', 10, 3600e3), ah(async (req, res) => {
   const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id);
-  if (!bcrypt.compareSync(String(req.body.current || ''), u.pass_hash)) return bad(res, 401, 'Current password is wrong.');
+  if (!(await pw8.verify(String(req.body.current || ''), u.pass_hash))) return bad(res, 401, 'Current password is wrong.');
   const np = String(req.body.password || '');
   if (np.length < 8) return bad(res, 400, 'New password must be at least 8 characters.');
   db.prepare('UPDATE users SET pass_hash=?, session_version=session_version+1 WHERE id=?')
-    .run(bcrypt.hashSync(np, 10), u.id);
+    .run(await pw8.hash(np), u.id);
   setCookie(req, res, 'gh_sess', '', 0);
   res.json({ ok: true });
-});
+}));
 
 // v8: browsers always probe /favicon.ico; answer with the brand icon so no game page logs a 404.
 app.get('/favicon.ico', (req, res) => res.redirect(301, '/assets/brand/favicon.png?v=tt-crown-20261014'));
@@ -274,8 +281,8 @@ app.get('/api/leaderboard', (req, res) => {
     const g = db.prepare('SELECT * FROM giveaways WHERE id=?').get(req.query.giveaway || req.query.contest);
     if (!g) return bad(res, 404, 'Giveaway not found');
     rows = giveawayEntrants(R.ready(g));
-  } else if (game === 'global') rows = ranked(globalBoard(periodStart(period)));
-  else if (resolveGame(game)) rows = ranked(gameBoard(game, periodStart(period)));
+  } else if (game === 'global') rows = ranked(boards.cachedGlobalBoard(periodStart(period)));
+  else if (resolveGame(game)) rows = ranked(boards.cachedGameBoard(game, periodStart(period)));
   else return bad(res, 404, 'Unknown game');
   const me = currentUser(req);
   if (req.query.friends === '1' || req.query.friends === 'true') {
@@ -368,8 +375,8 @@ app.post('/api/score', requireUser, (req, res) => {
   const isBest = prevBest === null || prevBest === undefined || score > prevBest;
   if (isBest && !verdict.held && score >= (game.tiers ? game.tiers[0] : 100)) logActivity('highscore', `New high score (${game.title}): ${req.user.username} - ${score.toLocaleString('en-US')}${unit}`, req.user.id, info.lastInsertRowid);
 
-  const board = gameBoard(row.game_id);
-  const rank = board.findIndex(r => r.user_id === req.user.id) + 1;
+  const board = boards.cachedGameBoard(row.game_id);
+  const rank = boards.rankFor(row.game_id, req.user.id);
   const counted = gws.map(g => {
     const entrants = giveawayEntrants(g); const me = entrants.find(e => e.user_id === req.user.id);
     return { id: g.id, title: g.title, rank: me ? me.rank : null, entrants: entrants.length, min_score: g.min_score || 0, qualified: !verdict.held && verdict.verify === 'replay-ok' && score >= (g.min_score || 0) };
@@ -448,7 +455,7 @@ function profileFor(user) {
   const wins = db.prepare('SELECT COUNT(*) AS c FROM winners WHERE user_id=?').get(user.id).c;
   const recent = db.prepare('SELECT game_id, score, coins, created_at FROM runs WHERE user_id=? ORDER BY created_at DESC LIMIT 10').all(user.id)
     .map(r => ({ ...r, game_title: cfg.gameInfo(r.game_id)?.title || r.game_id, unit: cfg.gameInfo(r.game_id)?.unit || 'pts' }));
-  const gb = globalBoard(0); const grank = gb.findIndex(r => r.user_id === user.id) + 1;
+  const gb = boards.cachedGlobalBoard(0); const grank = gb.findIndex(r => r.user_id === user.id) + 1;
   const entries = db.prepare(`SELECT COUNT(DISTINCT g.id) AS c FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id=g.id JOIN runs r ON r.game_id=gg.game_id AND r.user_id=? AND r.started_at>=g.start_at AND r.created_at<=g.end_at AND r.created_at>=g.start_at AND r.score>=g.min_score`).get(user.id).c;
   const unl = ach.unlockedMap(user.id);
   const achievements = [...unl.entries()].sort((a, b) => b[1] - a[1]).map(([id, at]) => { const a = ach.BY_ID[id]; return a && { ...ach.publicAch(a, true), unlocked_at: at }; }).filter(Boolean);
@@ -516,6 +523,7 @@ function cosmeticsFor(user) {
 }
 app.get('/api/cosmetics', requireUser, (req, res) => res.json({ ok: true, ...cosmeticsFor(req.user), cos: ach.publicCos(req.user) }));
 app.post('/api/me/cosmetics', requireUser, limiter('equip', 60, 60e3), (req, res) => {
+  boards.bust(); res.on('finish', boards.bust); // equipped cosmetics appear on boards immediately
   const own = ach.ownedAll(req.user.id);
   const upd = {};
   for (const [k, col] of [['banner', 'eq_banner'], ['frame', 'eq_frame'], ['title', 'eq_title'], ['badge', 'eq_badge'], ['color', 'eq_color'], ['effect', 'eq_effect']]) {
@@ -915,9 +923,13 @@ app.get(['/audit', '/audit/'], (req, res) => { res.setHeader('Cache-Control','no
 const SITEMAP_PATHS = ['/', '/games', '/leaderboard', '/giveaways', '/tournaments', '/season', '/quests', '/achievements', '/community', '/shop', '/sponsor', '/about', '/terms', '/privacy', '/rules', '/responsible-play'];
 app.get('/robots.txt', (req, res) => res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /settings\nDisallow: /notifications\nDisallow: /me/\nDisallow: /friends\nDisallow: /invite\nDisallow: /join/\nDisallow: /signin\nDisallow: /signup\nDisallow: /forgot\n${PU.PUBLIC_URL ? `Sitemap: ${PU.PUBLIC_URL}/sitemap.xml\n` : ''}`));
 app.get('/sitemap.xml', (req, res) => { if (!PU.PUBLIC_URL) return res.status(404).type('text').send('Sitemap is published once PUBLIC_URL is set.'); res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${SITEMAP_PATHS.map(x => `<url><loc>${PU.PUBLIC_URL}${x === '/' ? '' : x}</loc></url>`).join('\n')}\n</urlset>\n`); });
+const BI = require('./build-id');
+// the service worker is rendered with the build id (cache name + precache URLs) and never cached by browsers or CDNs
+let _SW = null; app.get('/sw.js', (req, res) => { _SW = _SW || BI.swSource(); res.set({ 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache, max-age=0', 'Service-Worker-Allowed': '/' }).send(_SW); });
 app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')||process.env.HUB_PRIVATE_REVIEW==='1') res.setHeader('Cache-Control', 'no-store'); else if (/\.(js|css|json|webmanifest)$/.test(p)) res.setHeader('Cache-Control', 'no-cache'); } })); // code/styles/translations always revalidate (ETag) so deploys and the service worker update immediately
 // Per-page <title> / description / Open Graph + Twitter card tags for share links (crawlers don't run JS).
 const INDEX_FILE = path.join(PUB, 'index.html');
+let _INDEX = null; const INDEX_HTML = () => _INDEX || (_INDEX = BI.transformIndex(fs.readFileSync(INDEX_FILE, 'utf8'))); // transformed once per boot (build id in every asset URL)
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const PAGE_TITLES = { '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/tournaments': 'Tournaments', '/season': 'Season Pass', '/quests': 'Daily Quests',
   '/achievements': 'Achievements & Rewards', '/community': 'Community', '/sponsor': 'Book a Giveaway - Trap Tech Solutions', '/about': 'About Trap Tech Solutions',
@@ -943,7 +955,7 @@ function pageMeta(p, origin) {
 app.get('*', (req, res) => {
   if (path.extname(req.path)) return res.status(404).send('Not found');
   res.setHeader('Cache-Control', 'no-store');
-  let html = fs.readFileSync(INDEX_FILE, 'utf8');
+  let html = INDEX_HTML().replace('__COSV__', () => BI.BID + '-' + String(require('./shop').cssKey()).replace(/[^A-Za-z0-9._-]/g, '').slice(0, 24));
   const origin = PU.originOf(req); // v7: PUBLIC_URL when set
   const meta = (() => { try { return pageMeta(req.path.replace(/\/+$/, '') || '/', origin); } catch (e) { console.error(e); return null; } })();
   if (PU.PUBLIC_URL) html = html.replace('</head>', `<meta name="public-url" content="${escA(PU.PUBLIC_URL)}"><link rel="canonical" href="${escA(PU.PUBLIC_URL + (req.path.replace(/\/+$/, '') || '/'))}"></head>`);

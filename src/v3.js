@@ -172,7 +172,7 @@ module.exports = function v3(app, A, h) {
   function runCard(id) {
     const r = db.prepare('SELECT r.*, u.username, u.is_demo, u.eq_banner, u.eq_frame, u.eq_title, u.eq_badge, u.eq_color, u.eq_effect, u.banned FROM runs r JOIN users u ON u.id=r.user_id WHERE r.id=?').get(id);
     if (!r || r.banned) return null;
-    const g = cfg.GAME_MAP[r.game_id] || {}; const board = boards.gameBoard(r.game_id); const rank = board.findIndex(x => x.user_id === r.user_id) + 1;
+    const g = cfg.GAME_MAP[r.game_id] || {}; const board = boards.cachedGameBoard(r.game_id); const rank = board.findIndex(x => x.user_id === r.user_id) + 1;
     const best = db.prepare('SELECT MAX(score) AS b FROM runs WHERE user_id=? AND game_id=?').get(r.user_id, r.game_id).b;
     return { id: r.id, game_id: r.game_id, game: g.title, art: g.art, unit: g.unit, score: r.score, score_text: scoreText(r.score, r.game_id), created_at: r.created_at,
       player: pub(r), rank: rank || null, players: board.length, personal_best: r.score >= best };
