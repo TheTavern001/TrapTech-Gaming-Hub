@@ -952,7 +952,10 @@ app.get('*', (req, res) => {
   else html = html.replace(/(content=")\/og\/default\.png"/g, `$1${origin}/og/default.png"`);
   res.type('html').send(html);
 });
-app.use((err, req, res, next) => { console.error(err); bad(res, err.status || 500, err.type === 'entity.parse.failed' ? 'Bad JSON' : 'Server error'); });
+const ERR_PAGE = (code, head, msg) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${head} | The Gaming Hub</title><style>html,body{margin:0;height:100%;background:#050714;color:#e8eaff;font-family:system-ui,sans-serif}body{display:grid;place-items:center;text-align:center;padding:24px;background:radial-gradient(900px 500px at 50% 0,#1a1450,#050714 70%)}h1{font-size:1.5rem;margin:0 0 10px}p{color:#aab0d8;margin:0 0 22px;line-height:1.5}a{display:inline-block;color:#fff;text-decoration:none;font-weight:700;border-radius:12px;padding:14px 26px;background:linear-gradient(90deg,#8b5cf6,#38bdf8)}small{display:block;margin-top:18px;color:#7f86b5}</style></head><body><main><h1>${head}</h1><p>${msg}</p><a href="/">Back to The Gaming Hub</a><small>Error ${code}</small></main></body></html>`;
+app.use((err, req, res, next) => { console.error(err);
+  if (!req.path.startsWith('/api/') && req.accepts(['html', 'json']) === 'html' && !res.headersSent) { const st = err.status && err.status < 600 ? err.status : 500; return res.status(st).type('html').send(ERR_PAGE(st, st === 413 ? 'That request was too large' : 'Something went wrong on our side', st === 413 ? 'Please try again with something smaller.' : 'We have logged it. Please try again in a moment.')); }
+  bad(res, err.status || 500, err.type === 'entity.parse.failed' ? 'Bad JSON' : 'Server error'); });
 
 // lock final standings automatically at each giveaway's end time
 setInterval(() => R.sweep(), 15e3).unref(); setTimeout(() => R.sweep(), 1500).unref();
