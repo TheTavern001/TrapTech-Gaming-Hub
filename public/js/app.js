@@ -1556,7 +1556,7 @@ function netBanner() { let b = document.getElementById('offline'); if (navigator
 addEventListener('online', netBanner); addEventListener('offline', netBanner);
 const unlockAudio = () => { try { const AC = window.AudioContext || window.webkitAudioContext; if (AC) { const ac = window.__ghAC || (window.__ghAC = new AC()); if (ac.state === 'suspended') ac.resume(); const b = ac.createBuffer(1, 1, 22050); const src = ac.createBufferSource(); src.buffer = b; src.connect(ac.destination); src.start(0); } } catch {} removeEventListener('pointerdown', unlockAudio, true); removeEventListener('touchend', unlockAudio, true); };
 addEventListener('pointerdown', unlockAudio, true); addEventListener('touchend', unlockAudio, true);
-if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigator.serviceWorker.register('/sw.js').catch(() => {}); } catch {} });
+if ('serviceWorker' in navigator) addEventListener('load', () => { try { navigator.serviceWorker.register('/sw.js?v=' + encodeURIComponent((document.querySelector('meta[name=build-id]') || {}).content || '0')).catch(() => {}); } catch {} });
 setInterval(() => { if (S.me && document.visibilityState === 'visible') refreshMe(); }, 60000);
 
 // v7 pages (Book a Giveaway, brands, shop & seasons) - public/js/v7.js

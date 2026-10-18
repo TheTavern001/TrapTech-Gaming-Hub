@@ -14,7 +14,7 @@ async function api(path, opts = {}) {
   try { return await res.json(); } catch { return { ok: false, error: `HTTP ${res.status}` }; }
 }
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
-(function css() { if (document.getElementById('gw7css')) return; const l = document.createElement('link'); l.id = 'gw7css'; l.rel = 'stylesheet'; l.href = '/css/gw-v7.css'; document.head.appendChild(l); })();
+(function css() { if (document.getElementById('gw7css')) return; const l = document.createElement('link'); l.id = 'gw7css'; l.rel = 'stylesheet'; l.href = '/css/gw-v7.css?v=' + ((document.querySelector('meta[name=build-id]')||{}).content||'0'); document.head.appendChild(l); })();
 
 const AC_TXT = { L1: 'L1 basic: score range + rate checks', L2: 'L2 session: server-timed run tokens, max-rate + progression checks', L3: 'L3 event log: the run\'s key events are re-checked on the server', L4: 'L4 replay: the server replays your inputs to confirm the score' };
 const durTxt = (s) => s >= 3600 ? `${+(s / 3600).toFixed(1)} h` : s >= 60 ? `${Math.round(s / 60)} min` : `${s} s`;
