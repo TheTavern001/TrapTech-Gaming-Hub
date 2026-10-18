@@ -5,12 +5,7 @@ const crypto = require('crypto'), fs = require('fs'), path = require('path');
 const bcrypt = require('bcryptjs');
 
 // ---- CSP for the public SPA ----
-let IMPORTMAP_HASH = '';
-try {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
-  const m = html.match(/<script type="importmap">([\s\S]*?)<\/script>/);
-  if (m) IMPORTMAP_HASH = `'sha256-${crypto.createHash('sha256').update(m[1]).digest('base64')}'`;
-} catch { /* index.html missing in odd test setups: fall back to no hash */ }
+const IMPORTMAP_HASH = require('./build-id').IMPORTMAP_HASH; // the import map is generated with the build id, so its hash is computed from the generated text
 const COMMON = ["default-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "img-src 'self' data: blob: https:", "font-src 'self' data:",
   "media-src 'self' data: blob:", "worker-src 'self' blob:", "manifest-src 'self'", "connect-src 'self' https://cloudflareinsights.com", "style-src 'self' 'unsafe-inline'"];
 // the hub shell: no inline scripts (importmap is pinned by hash)

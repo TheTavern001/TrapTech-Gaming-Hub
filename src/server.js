@@ -915,9 +915,13 @@ app.get(['/audit', '/audit/'], (req, res) => { res.setHeader('Cache-Control','no
 const SITEMAP_PATHS = ['/', '/games', '/leaderboard', '/giveaways', '/tournaments', '/season', '/quests', '/achievements', '/community', '/shop', '/sponsor', '/about', '/terms', '/privacy', '/rules', '/responsible-play'];
 app.get('/robots.txt', (req, res) => res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /settings\nDisallow: /notifications\nDisallow: /me/\nDisallow: /friends\nDisallow: /invite\nDisallow: /join/\nDisallow: /signin\nDisallow: /signup\nDisallow: /forgot\n${PU.PUBLIC_URL ? `Sitemap: ${PU.PUBLIC_URL}/sitemap.xml\n` : ''}`));
 app.get('/sitemap.xml', (req, res) => { if (!PU.PUBLIC_URL) return res.status(404).type('text').send('Sitemap is published once PUBLIC_URL is set.'); res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${SITEMAP_PATHS.map(x => `<url><loc>${PU.PUBLIC_URL}${x === '/' ? '' : x}</loc></url>`).join('\n')}\n</urlset>\n`); });
+const BI = require('./build-id');
+// the service worker is rendered with the build id (cache name + precache URLs) and never cached by browsers or CDNs
+let _SW = null; app.get('/sw.js', (req, res) => { _SW = _SW || BI.swSource(); res.set({ 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache, max-age=0', 'Service-Worker-Allowed': '/' }).send(_SW); });
 app.use(express.static(PUB, { index: false, extensions: ['html'], maxAge: '1h', setHeaders(res, p) { if (p.endsWith('.html')||process.env.HUB_PRIVATE_REVIEW==='1') res.setHeader('Cache-Control', 'no-store'); else if (/\.(js|css|json|webmanifest)$/.test(p)) res.setHeader('Cache-Control', 'no-cache'); } })); // code/styles/translations always revalidate (ETag) so deploys and the service worker update immediately
 // Per-page <title> / description / Open Graph + Twitter card tags for share links (crawlers don't run JS).
 const INDEX_FILE = path.join(PUB, 'index.html');
+let _INDEX = null; const INDEX_HTML = () => _INDEX || (_INDEX = BI.transformIndex(fs.readFileSync(INDEX_FILE, 'utf8'))); // transformed once per boot (build id in every asset URL)
 const escA = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const PAGE_TITLES = { '/games': 'Games', '/leaderboard': 'Leaderboards', '/giveaways': 'Giveaways', '/tournaments': 'Tournaments', '/season': 'Season Pass', '/quests': 'Daily Quests',
   '/achievements': 'Achievements & Rewards', '/community': 'Community', '/sponsor': 'Book a Giveaway - Trap Tech Solutions', '/about': 'About Trap Tech Solutions',
@@ -943,7 +947,7 @@ function pageMeta(p, origin) {
 app.get('*', (req, res) => {
   if (path.extname(req.path)) return res.status(404).send('Not found');
   res.setHeader('Cache-Control', 'no-store');
-  let html = fs.readFileSync(INDEX_FILE, 'utf8');
+  let html = INDEX_HTML().replace('__COSV__', () => BI.BID + '-' + String(require('./shop').cssKey()).replace(/[^A-Za-z0-9._-]/g, '').slice(0, 24));
   const origin = PU.originOf(req); // v7: PUBLIC_URL when set
   const meta = (() => { try { return pageMeta(req.path.replace(/\/+$/, '') || '/', origin); } catch (e) { console.error(e); return null; } })();
   if (PU.PUBLIC_URL) html = html.replace('</head>', `<meta name="public-url" content="${escA(PU.PUBLIC_URL)}"><link rel="canonical" href="${escA(PU.PUBLIC_URL + (req.path.replace(/\/+$/, '') || '/'))}"></head>`);
