@@ -130,9 +130,10 @@ function checkoutState() {
   // Bitcoin always transfers real funds, even in local test builds. Guard this
   // independently of a configured receiving address and prior admin setting.
   const liveApproval = process.env.PAYMENTS_LIVE_APPROVED === '1';
-  const btc = { configured: !!a && v.ok && v.network === 'mainnet' && liveApproval,
+  const btcOptIn = process.env.BTC_CHECKOUT_ENABLED === '1'; // Stripe is the sole default method; Bitcoin must be explicitly switched on
+  const btc = { configured: btcOptIn && !!a && v.ok && v.network === 'mainnet' && liveApproval,
     address: v.ok && v.network === 'mainnet' ? a : null, type: v.ok ? v.type : null,
-    why: !v.ok ? v.why : v.network !== 'mainnet' ? 'Bitcoin network must be mainnet' : !liveApproval ? 'Requires explicit live-payment approval' : null };
+    why: !btcOptIn ? 'Bitcoin checkout is off (set BTC_CHECKOUT_ENABLED=1 to enable)' : !v.ok ? v.why : v.network !== 'mainnet' ? 'Bitcoin network must be mainnet' : !liveApproval ? 'Requires explicit live-payment approval' : null };
   const publicUrl = String(process.env.PUBLIC_URL || '').trim();
   const stripe = { configured: /^sk_(?:test|live)_/.test(String(process.env.STRIPE_SECRET_KEY || '')) && /^whsec_/.test(String(process.env.STRIPE_WEBHOOK_SECRET || '')) && /^https:\/\//i.test(publicUrl),
     mode: 'hosted Stripe Checkout for credit/debit cards' };
@@ -229,7 +230,7 @@ async function createStripeOrder(user, productId, t = Date.now()) {
     form.set('line_items[0][price_data][product_data][name]', p.name);
     form.set('expires_at', String(Math.floor(expires / 1000)));
     form.set('payment_method_types[0]', 'card');
-    const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    const response = await fetch((process.env.NODE_ENV === 'production' ? 'https://api.stripe.com' : (process.env.STRIPE_API_BASE || 'https://api.stripe.com')) + '/v1/checkout/sessions', {
       method: 'POST', headers: { Authorization: 'Bearer ' + process.env.STRIPE_SECRET_KEY, 'Content-Type': 'application/x-www-form-urlencoded', 'Idempotency-Key': 'hub-order-' + ref }, body: form
     });
     const session = await response.json().catch(() => ({}));
