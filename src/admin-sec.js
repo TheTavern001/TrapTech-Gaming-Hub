@@ -38,7 +38,14 @@ const RESERVED = new Set(['api', 'admin', 'assets', 'css', 'js', 'fonts', 'og', 
 const RAW_PATH = String(process.env.ADMIN_PATH || '').trim().replace(/^\/+|\/+$/g, '');
 const PATH_OK = /^[A-Za-z0-9_-]{16,128}$/.test(RAW_PATH) && !RESERVED.has(RAW_PATH.toLowerCase());
 const BASE = PATH_OK ? '/' + RAW_PATH : null;
-if (!PATH_OK) console.warn('[admin] ADMIN_PATH is not set (or shorter than 16 characters of A-Z a-z 0-9 _ -): the admin dashboard is DISABLED. Set ADMIN_PATH to a long random slug.');
+if (!PATH_OK) {
+  const why = !RAW_PATH ? 'ADMIN_PATH is not set' : RESERVED.has(RAW_PATH.toLowerCase()) ? `ADMIN_PATH "${RAW_PATH}" is a reserved word` : 'ADMIN_PATH must be 16-128 characters of A-Z a-z 0-9 _ -';
+  console.warn(['[admin] ADMIN DASHBOARD IS DISABLED: ' + why + '. The site itself runs normally; /admin and /api/admin return 404 by design.',
+    '[admin]   To enable it, set these environment variables on the host and redeploy:',
+    '[admin]     ADMIN_PATH=<a long random slug, e.g. output of `openssl rand -hex 16`>   (the admin then lives at /<ADMIN_PATH>/)',
+    '[admin]     ADMIN_PASSWORD=<a strong password, 12+ characters>                        (first owner sign-in; you then add an authenticator app)',
+    '[admin]   Optional: ADMIN_USERNAME (default "owner"), ADMIN_RESET_TOKEN (24+ chars, one-time owner recovery; remove after use).'].join('\n'));
+}
 const TRUST_CF = process.env.TRUST_CF_IP === '1' || (process.env.NODE_ENV === 'production' && process.env.TRUST_CF_IP !== '0');
 const RESET_TOKEN = String(process.env.ADMIN_RESET_TOKEN || '');
 if (RESET_TOKEN && RESET_TOKEN.length < 24) console.warn('[admin] ADMIN_RESET_TOKEN is shorter than 24 characters and is ignored.');

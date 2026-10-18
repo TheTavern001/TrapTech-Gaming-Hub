@@ -146,7 +146,9 @@ function checkoutState() {
   const enabled = !reviewLocked && on && (btc.configured || stripe.configured);
   return { enabled, admin_switch: on, methods: enabled ? [...(btc.configured ? ['bitcoin'] : []), ...(stripe.configured ? ['stripe'] : [])] : [],
     providers: { bitcoin: btc, stripe, whop: { configured: false, mode: 'not integrated' } },
-    reason: reviewLocked ? 'Checkout is disabled during private owner review.' : !on ? 'Checkout is switched off by the admin.' : stripeLive && !liveApproval && !btc.configured ? 'Live Stripe checkout requires operator payment approval.' : !btc.configured && !stripe.configured ? 'Configure a valid BTC_ADDRESS or Stripe keys plus an HTTPS PUBLIC_URL to enable checkout.' : null };
+    reason: enabled ? '' : 'Paid checkout is not open yet. Everything in the Hub is free to play, and Hub Credits can be earned by playing.',
+    operator_hint: reviewLocked ? 'Checkout is disabled during private owner review.' : !on ? 'Checkout is switched off by the admin.' : stripeLive && !liveApproval && !btc.configured ? 'Live Stripe checkout requires operator payment approval.' : !btc.configured && !stripe.configured ? 'Configure a valid BTC_ADDRESS or Stripe keys plus an HTTPS PUBLIC_URL to enable checkout.' : null,
+  };
 }
 const ORDER_TTL_MS = 45 * 60e3, LATE_MS = 24 * 3600e3;
 const needConfs = (p, usd) => p.kind === 'prestige' ? Math.max(6, (p.data && p.data.confs) || 6) : usd >= 20000 ? 3 : 1;
@@ -440,7 +442,7 @@ function buyWithCrowns(user, itemId, t = Date.now()) {
 }
 
 const NON_ADVANTAGE = 'Everything sold in the Hub Store is cosmetic. Hub Credits, the Season Pass and Prestige items never change scores, attempts, anti-cheat checks, giveaway entries, eligibility, tie-breaks or winners. Paid and free players are ranked by exactly the same rules.';
-const TERMS = '[DRAFT - FOR LAWYER REVIEW] Digital items are a limited licence to use cosmetic content in The Gaming Hub, have no cash value and cannot be exchanged for money or prizes. All sales are final once an item is delivered, except where the law requires a refund or an order was charged in error; contact Trap Tech Solutions within 14 days. Bitcoin payments are final on-chain; refunds, when granted, are sent back in BTC at the USD value of the order. You must be 21+. Prestige items are numbered and limited; their serial number is a display feature, not an investment. Trap Tech Solutions may change or retire items.';
+const TERMS = '[DRAFT - FOR LAWYER REVIEW] Digital items are a limited licence to use cosmetic content in The Gaming Hub, have no cash value and cannot be exchanged for money or prizes. All sales are final once an item is delivered, except where the law requires a refund or an order was charged in error; contact Trap Tech Solutions within 14 days. Bitcoin payments are final on-chain; refunds, when granted, are sent back in BTC at the USD value of the order. You must be 21+. Prestige items are unlimited cosmetic designs that every eligible player can own; they are not an investment and have no resale value. Trap Tech Solutions may update item designs or prices.';
 
 // v8: unlimited copies. Counts only by default; the owner list is paginated (newest first) and only loaded on request, so a
 // 100k-owner item never turns the store page into a 100k-row query.
