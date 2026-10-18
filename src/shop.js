@@ -433,7 +433,9 @@ function css() {
   genLines(gen, out);
   CSS_CACHE = { key, css: out.join('\n') + '\n' }; return CSS_CACHE.css;
 }
-const cssKey = () => realToday() + ':' + liveGenerated().length;
+// memoised 30 s: it runs on every page render and cosmetics.css hit and re-generated ~every cosmetic each time (profile: ~8% CPU)
+let _ck = { t: 0, d: -1, v: '' };
+const cssKey = () => { const t = Date.now(), d = realToday(); if (_ck.d === d && t - _ck.t < 30000) return _ck.v; _ck = { t, d, v: d + ':' + liveGenerated().length }; return _ck.v; };
 
 // ---------- views for the player pages ----------
 const DISCLAIMER = 'Hub Credits can be earned by playing or optionally purchased. They unlock cosmetics only, have no cash value, cannot be sold, traded, transferred or withdrawn, and cannot buy giveaway entries or game advantages.';

@@ -16,6 +16,10 @@ if (!process.env.SQLITE_TMPDIR) {
 }
 const Database = require('better-sqlite3');
 const db = new Database(DB_PATH);
+// Prepared-statement cache: db.prepare() (SQL parse + plan) was ~15% of CPU under load because call sites prepare inline per
+// request. No call site uses pluck/raw/expand/iterate, so sharing statement objects is safe. Bounded for dynamic SQL.
+{ const rawPrepare = db.prepare.bind(db); const stm = new Map();
+  db.prepare = (sql) => { let st = stm.get(sql); if (st) return st; st = rawPrepare(sql); if (stm.size >= 600) stm.clear(); stm.set(sql, st); return st; }; }
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 // Low-memory tuning (Deplexo free plan: 128 MB RAM). Page cache is bounded, no mmap of the DB file, temp b-trees

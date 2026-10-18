@@ -23,6 +23,20 @@ function globalBoard(since = 0) {
     JOIN users u ON u.id = b.user_id WHERE u.banned = 0 AND u.shadow_banned = 0
     GROUP BY u.id ORDER BY score DESC, last_at ASC`).all(since);
 }
+// Read-path memo: the full-board GROUP BY/sort was ~20% of CPU under load (every score submit, profile and leaderboard view
+// re-ranked every player). The cached copies are for DISPLAY only (TTL 4 s, bounded); the achievement engine and giveaway
+// results keep calling the uncached functions so awards/prizes never depend on a cache.
+const BOARD_TTL = Number(process.env.BOARD_CACHE_MS || 4000); const bmemo = new Map();
+function memo(key, fn) { const t = Date.now(); const h = bmemo.get(key); if (h && t - h.t < BOARD_TTL) return h.v; const v = fn(); if (bmemo.size > 200) bmemo.clear(); bmemo.set(key, { t, v }); return v; }
+const cachedGameBoard = (gid, since = 0) => memo('g:' + gid + ':' + (since ? Math.floor(since / 60e3) : 0), () => gameBoard(gid, since));
+const cachedGlobalBoard = (since = 0) => memo('G:' + (since ? Math.floor(since / 60e3) : 0), () => globalBoard(since));
+// exact own rank right after a submit: others from the cached board, the player's own fresh best from one indexed query
+function rankFor(gid, userId) {
+  const mine = db.prepare('SELECT MAX(score) AS s, MAX(created_at) AS l FROM runs WHERE game_id=? AND user_id=? AND held=0').get(gid, userId);
+  if (!mine || mine.s == null) return 0;
+  let better = 0; for (const r of cachedGameBoard(gid)) if (r.user_id !== userId && (r.score > mine.s || (r.score === mine.s && r.last_at < mine.l))) better++;
+  return better + 1;
+}
 const ranked = (rows) => rows.map((r, i) => ({ rank: i + 1, ...r }));
 
 function giveawayGameIds(gid) {
@@ -54,4 +68,5 @@ function activeGiveawaysFor(gameId, at) {
   return db.prepare(`SELECT g.* FROM giveaways g JOIN giveaway_games gg ON gg.giveaway_id = g.id
     WHERE g.active = 1 AND gg.game_id = ? AND g.start_at <= ? AND g.end_at >= ?`).all(gameId, at, at);
 }
-module.exports = { gameBoard, globalBoard, ranked, giveawayGameIds, giveawayEntrants, giveawayStats, giveawayStatus, activeGiveawaysFor };
+const bust = () => bmemo.clear();
+module.exports = { bust, gameBoard, globalBoard, cachedGameBoard, cachedGlobalBoard, rankFor, ranked, giveawayGameIds, giveawayEntrants, giveawayStats, giveawayStatus, activeGiveawaysFor };
