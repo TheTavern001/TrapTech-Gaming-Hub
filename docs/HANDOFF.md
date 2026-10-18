@@ -1,4 +1,11 @@
-# HANDOFF — The Gaming Hub (Trap Tech) — written Oct 18 2026 12:4x AM ET
+# HANDOFF — The Gaming Hub (Trap Tech)  ·  last updated Oct 18 2026 ~1 AM ET
+
+## SPEC INDEX — read these after START HERE
+- [spec/01-games-library.md](spec/01-games-library.md): §1 game library to ~500: wants/exists/remains/acceptance, 398 planned original titles by genre (Cannabis-themed 14, 3D runners/driving/TD/shooters, 2D, physics…), 13 core-game rebuild specs, redo spec for EVERY existing game, batches of ~20, Zombie-Cubes-style flagship, licensing rules.
+- [spec/02-licensed-sources.md](spec/02-licensed-sources.md): licensed/open game & asset sources with verified links and terms (GameDistribution, CrazyGames, itch/GitHub, js13k, Phaser, Godot, Kenney, OpenGameArt, Poly Haven, Quaternius) and the honest conflicts (iframe feeds can't be giveaway games; forced ads/SDK).
+- [spec/03-platform-spec.md](spec/03-platform-spec.md): §2 cosmetics/avatars, §3 achievements/quests/pass/currency, §4 giveaways, §5 brands, §6 shop/nav/UI/languages, §7 admin, §8 payments/security/privacy, §9 scale to 10k+, §11 QA checklist + definition of done.
+- §10 deploy/process = sections 1 and 3 below (rules and tooling gotchas).
+Unknowns are marked UNKNOWN/UNVERIFIED throughout; do not fill them in by guessing.
 
 Self-contained so any assistant (ChatGPT etc.) can continue without breaking anything. Be honest in every report; never claim "done" without a command or screenshot that proves it.
 
@@ -8,7 +15,7 @@ Self-contained so any assistant (ChatGPT etc.) can continue without breaking any
 3. Last pushed head at time of writing: `38c35c8` (+ this handoff). main was synced earlier via PR #37 (merge 58f293e, rollback point 41ed48a); main is behind v8-games-upgrade — sync only through a PR merged in the GitHub web UI.
 4. Done: security module, audiences/invite-only/brand pages, cosmetic shop + cash orders, admin (secret ADMIN_PATH, TOTP), i18n 21 languages, code-level cache busting (`?v=<build id>`), Stripe-only checkout (Bitcoin off), load-test fixes (scrypt, statement cache, board memo).
 5. Test suites last run all green: systems 52, security 30, audience 26, admin 12, tiebreak 18, api 324, avatars 14, economy 49, sponsor-brands 64, rewards 8, i18n 39, payments 32, cosmetic-orders 22, stripe 18; mem-check peak 85 MB.
-6. Games: 74 library games exist (+13 core). **None is truly AAA.** Honest classes below: 17 rebuilt, 9 art-rebuilt, rest overlay/art-upgraded. **The remaining mission is to go through EVERY game, worst first, and redo with real new gameplay + original art.** 
+6. Games: 74 library games exist (+13 core). **None is truly AAA.** Honest classes (per game-status.md): 3 juice-only, 8 overlay, 37 art-upgraded, 9 art-rebuilt, 17 rebuilt. CAVEAT: the status table labels many 'fill' games ART-UPGRADED while its own progress notes say ~30 fill games are only layout+juice — treat those as UNVERIFIED and inspect before trusting. **The remaining mission is to go through EVERY game, worst first, and redo with real new gameplay + original art.** 
 7. Capacity: free host realistically handles ~150–200 concurrent active players; 10k concurrent needs a different host (section 7).
 8. Stripe sandbox is connected by Reese; webhook secret/keys/test purchase still need him (section 11).
 9. Every push redeploys and takes the site down ~3 min: **batch pushes**.
@@ -54,82 +61,82 @@ Self-contained so any assistant (ChatGPT etc.) can continue without breaking any
 Classes: **rebuilt** = new gameplay+art; **art-rebuilt** = new rendering/art, same core loop; **overlay** = decorative art layer (art.js) over old core; **art-upgraded** = added sprites/scenery, mechanic unchanged; **juice-only** = layout fix + shared FX only; **retired** = 6 duplicate slugs not playable by design (drift-king, dune-glide, egg-roll, monster-crush, rig-rally, wreck-ride; aliases of hill-hauler/drift-rush). Signed-in score submit verified ok:true for all playable on a local server (bot scores do not prove fun). Core 13 games (public/js/games) were never fully audited signed-in — do that too.
 Ordered worst first:
 
-| game | audit tier (1 worst) | honest class today | remaining work |
+| game | audit tier | honest class today | remaining work |
 |---|---|---|---|
-| rail-rush | 4 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| throttle-rider | 4 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| cloud-hopper | 3 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| road-hopper | 3 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| wanted-run | 3 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| block-drop | 2 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| rock-buster | 2 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| star-swarm | 2 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| grid-wars | 2 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| moon-swarm | 2 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| smoke-rings | 2 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| beat-tiles | 2 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| glow-echo | 2 | overlay | FULL REDO: overlay art is decoration on the old core; rebuild mechanic + art |
-| orb-coil | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| neon-flipper | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| cup-toss | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| pin-strike | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| bullseye | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| spot-kick | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| knockout | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| cue-club | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| long-ball | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| rally-court | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| ice-snipe | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| reel-deal | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| hoop-streak | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| maze-muncher | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| pop-defense | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| light-cycle | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| missile-guard | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| bubble-pop | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| knife-toss | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| bud-bar | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| roll-up | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| bud-sort | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| pest-patrol | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| moon-lander | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| putt-party | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| kickflip-city | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| tunnel-hop | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| neon-circuit | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| hill-hauler | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| arrow-hero | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| goo-tower | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| green-dash | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| cab-rush | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| road-brawl | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| derby-smash | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: same mechanic with added sprites/scenery; add new gameplay + real art pass |
-| skee-roll | 4 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| helix-drop | 3 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| hex-spin | 3 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| color-hop | 3 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| mole-whack | 3 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| strain-crush | 3 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| tile-twin | 3 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| no-brakes | 3 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| paper-toss | 3 | art-rebuilt | REDO gameplay: new art exists, core loop unchanged |
-| alien-rows | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| hex-stack | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| cube-horde | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| keep-guard | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| node-siege | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| roof-runner | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| zig-path | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| bug-blaster | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| grow-op | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| trim-rush | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| dirt-dash | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| dunk-flick | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| duck-shot | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| rift-survival | 2 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| bud-merge | 1 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| dino-dash | 1 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
-| mine-sweep | 1 | rebuilt | Re-verify on real phone; polish; no further rebuild unless QA < 7/10 |
+| rail-rush | 4 | juice-only | FULL REDO: new gameplay twist + new art |
+| road-hopper | 3 | juice-only | FULL REDO: new gameplay twist + new art |
+| wanted-run | 3 | juice-only | FULL REDO: new gameplay twist + new art |
+| cloud-hopper | 3 | overlay | FULL REDO: overlay art is decoration on the old core |
+| rock-buster | 2 | overlay | FULL REDO: overlay art is decoration on the old core |
+| star-swarm | 2 | overlay | FULL REDO: overlay art is decoration on the old core |
+| grid-wars | 2 | overlay | FULL REDO: overlay art is decoration on the old core |
+| moon-swarm | 2 | overlay | FULL REDO: overlay art is decoration on the old core |
+| smoke-rings | 2 | overlay | FULL REDO: overlay art is decoration on the old core |
+| beat-tiles | 2 | overlay | FULL REDO: overlay art is decoration on the old core |
+| glow-echo | 2 | overlay | FULL REDO: overlay art is decoration on the old core |
+| throttle-rider | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| orb-coil | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| neon-flipper | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| cup-toss | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| pin-strike | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| bullseye | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| spot-kick | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| knockout | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| cue-club | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| long-ball | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| rally-court | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| ice-snipe | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| reel-deal | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| hoop-streak | 4 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| maze-muncher | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| pop-defense | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| light-cycle | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| missile-guard | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| bubble-pop | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| knife-toss | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| bud-bar | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| roll-up | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| bud-sort | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| pest-patrol | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| moon-lander | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| putt-party | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| kickflip-city | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| tunnel-hop | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| neon-circuit | 3 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| block-drop | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| hill-hauler | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| arrow-hero | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| goo-tower | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| green-dash | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| cab-rush | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| road-brawl | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| derby-smash | 2 | art-upgraded (scenery/sprites, same mechanic) | FULL REDO: add new gameplay + real art pass |
+| skee-roll | 4 | art-rebuilt | REDO gameplay: new art, same core loop |
+| helix-drop | 3 | art-rebuilt | REDO gameplay: new art, same core loop |
+| hex-spin | 3 | art-rebuilt | REDO gameplay: new art, same core loop |
+| color-hop | 3 | art-rebuilt | REDO gameplay: new art, same core loop |
+| mole-whack | 3 | art-rebuilt | REDO gameplay: new art, same core loop |
+| strain-crush | 3 | art-rebuilt | REDO gameplay: new art, same core loop |
+| tile-twin | 3 | art-rebuilt | REDO gameplay: new art, same core loop |
+| no-brakes | 3 | art-rebuilt | REDO gameplay: new art, same core loop |
+| paper-toss | 3 | art-rebuilt | REDO gameplay: new art, same core loop |
+| alien-rows | 2 | rebuilt | Real-phone verify; polish |
+| hex-stack | 2 | rebuilt | Real-phone verify; polish |
+| cube-horde | 2 | rebuilt | Real-phone verify; polish |
+| keep-guard | 2 | rebuilt | Real-phone verify; polish |
+| node-siege | 2 | rebuilt | Real-phone verify; polish |
+| roof-runner | 2 | rebuilt | Real-phone verify; polish |
+| zig-path | 2 | rebuilt | Real-phone verify; polish |
+| bug-blaster | 2 | rebuilt | Real-phone verify; polish |
+| grow-op | 2 | rebuilt | Real-phone verify; polish |
+| trim-rush | 2 | rebuilt | Real-phone verify; polish |
+| dirt-dash | 2 | rebuilt | Real-phone verify; polish |
+| dunk-flick | 2 | rebuilt | Real-phone verify; polish |
+| duck-shot | 2 | rebuilt | Real-phone verify; polish |
+| rift-survival | 2 | rebuilt | Real-phone verify; polish |
+| bud-merge | 1 | rebuilt | Real-phone verify; polish |
+| dino-dash | 1 | rebuilt | Real-phone verify; polish |
+| mine-sweep | 1 | rebuilt | Real-phone verify; polish |
 
 **Explicit remaining work (no skips):** go through EVERY game above, in this order, and redo each with genuinely new gameplay mechanics and original art (not recolors, not overlays): worst-first = juice-only, then overlay, then art-upgraded (tier 1–2 first), then art-rebuilt, then re-QA rebuilt ones. Each game needs: portrait 390x780 layout, endless/uncapped/skill-only, ≥7/10 on the quality gate (section 8), CREDITS.md, thumb, e2e pass, 0 console errors, real-phone check. Also fix the heavy-3D perf list (road-hopper, rail-rush, hill-hauler, wanted-run, cube-horde, grid-wars, throttle-rider, tunnel-hop, strain-crush: instancing, DPR cap, LOD; target <2 MB gzip per game).
 
