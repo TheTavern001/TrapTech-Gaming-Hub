@@ -57,11 +57,11 @@ function routes(app, A, H) {
     res.setHeader('Content-Disposition', `attachment; filename="gaming-hub-data-${String(req.user.username).replace(/[^\w-]/g, '_')}.json"`);
     res.setHeader('Cache-Control', 'no-store'); res.json(data);
   });
-  app.post('/api/me/delete', requireUser, limiter('acct-delete', 5, 3600e3), (req, res) => {
+  app.post('/api/me/delete', requireUser, limiter('acct-delete', 5, 3600e3), (req, res, next) => { (async () => {
     const b = req.body || {}; const u = db.prepare('SELECT id, username, pass_hash FROM users WHERE id=?').get(req.user.id);
     if (!u) return bad(res, 404, 'Account not found.');
     if (String(b.confirm || '') !== u.username) return bad(res, 400, `Type your username (${u.username}) to confirm.`);
-    if (!bcrypt.compareSync(String(b.password || ''), u.pass_hash)) return bad(res, 401, 'Password is wrong.');
+    if (!(await require('./pwhash').verify(String(b.password || ''), u.pass_hash))) return bad(res, 401, 'Password is wrong.');
     const r = db.transaction(() => {
       for (const t of ['activity', 'notifications', 'user_ip_log', 'points_ledger', 'user_items', 'avatar_parts_owned', 'ach2_unlocks', 'quest2_assign', 'quest2_claims', 'checkins', 'follows']) {
         try { const col = t === 'follows' ? null : 'user_id'; if (col) db.prepare(`DELETE FROM ${t} WHERE user_id=?`).run(u.id); else db.prepare('DELETE FROM follows WHERE follower_id=? OR followee_id=?').run(u.id, u.id); } catch { /* table may not exist on older DBs */ }
@@ -71,6 +71,6 @@ function routes(app, A, H) {
     try { require('./results').clearCache(); } catch {}
     res.append('Set-Cookie', 'gh_sess=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
     res.json({ ok: !!r.changes, deleted: true, note: 'Your profile, runs and related data were removed. Locked giveaway results keep only the username as an immutable record.' });
-  });
+  })().catch(next); });
 }
 module.exports = { install, routes, cspFor, HUB, GAME };
