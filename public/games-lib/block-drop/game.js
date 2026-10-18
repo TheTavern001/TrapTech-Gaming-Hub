@@ -1,3 +1,10 @@
+(function () { const r = Kit.run; Kit.run = function (d) { const o = d.draw; d.draw = function (g, c) { o.apply(this, arguments); c.save(); try { POST(g, c); } catch (e) {} c.restore(); }; Kit.run = r; return r.call(this, d); }; function POST(g, c) {
+const t = g.t, W = g.W;
+  // bud-bot mascot cheering under the board + rising pixel sparks
+  const bx = 70, by = 690 - Math.abs(Math.sin(t * 4)) * 8; c.save(); c.translate(bx, by); c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(0, 30 + Math.abs(Math.sin(t * 4)) * 8, 20, 5, 0, 0, 7); c.fill();
+  const bg = c.createLinearGradient(-18, -22, 18, 22); bg.addColorStop(0, '#9dffb0'); bg.addColorStop(1, '#1f9a5c'); c.fillStyle = bg; Kit.rr(c, -18, -20, 36, 40, 10); c.fill(); c.strokeStyle = '#063d25'; c.lineWidth = 2; c.stroke(); c.fillStyle = '#0a2a1c'; Kit.rr(c, -13, -14, 26, 16, 5); c.fill(); const bl = Math.sin(t * 1.9) > 0.94; c.fillStyle = '#9dff7a'; if (bl) { c.fillRect(-9, -6, 6, 2); c.fillRect(3, -6, 6, 2); } else { c.beginPath(); c.arc(-6, -6, 3.4, 0, 7); c.arc(6, -6, 3.4, 0, 7); c.fill(); } c.strokeStyle = '#9dff7a'; c.lineWidth = 1.5; c.beginPath(); c.arc(0, 1, 4, 0.2, Math.PI - 0.2); c.stroke(); c.strokeStyle = '#1f9a5c'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(-18, 0); c.lineTo(-28, -10 - Math.sin(t * 8) * 8); c.moveTo(18, 0); c.lineTo(28, -10 + Math.sin(t * 8) * 8); c.moveTo(0, -20); c.lineTo(0, -28); c.stroke(); c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(0, -30, 3, 0, 7); c.fill(); c.restore();
+  const cols = ['#a855f7', '#22d3ee', '#facc15', '#34d399', '#ef4444']; for (let i = 0; i < 16; i++) { const x = 130 + (i * 53) % 230, y = 770 - ((t * 22 + i * 41) % 150); c.globalAlpha = 0.6 * (1 - (770 - y) / 150); c.fillStyle = cols[i % 5]; c.fillRect(x, y, 5, 5); } c.globalAlpha = 1;
+} })(); // v8 scenery+sprite overlay
 // Block Drop - original falling-block puzzle (Hub build). Guideline-style 7-bag, hold, ghost, wall kicks (simple).
 (function () {
   const C = 10, R = 20, S = 28, OX = 20, OY = 70;
