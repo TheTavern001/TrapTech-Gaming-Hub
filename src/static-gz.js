@@ -20,6 +20,9 @@ module.exports = function staticGz(pubDir) {
   return (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     let p; try { p = decodeURIComponent(req.path); } catch { return next(); }
+    // HTML and the worker must pass through runtime build-id rendering. Serving
+    // their raw compressed copies bypasses versioned imports and SW cache names.
+    if (p.endsWith('.html') || p === '/sw.js') return next();
     const gz = map.get(p); if (!gz) return next();
     res.vary('Accept-Encoding');
     if (!/\bgzip\b/.test(String(req.headers['accept-encoding'] || ''))) return next();

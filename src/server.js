@@ -57,6 +57,8 @@ app.use(PRIVATE_REVIEW.makeGate({
 // or pre-gzipped page assets could bypass it before Express routing.
 // Static text assets are gzipped at build time (scripts/deplexo-prebuild.js -> $BUILD_DIR/gz) and served as-is;
 // on-the-fly gzip is only used for dynamic responses (JSON, HTML). Smaller zlib windows keep per-response memory low.
+app.get(['/index', '/index.html'], (req, res) => res.redirect(302, '/')); // canonical shell must be runtime-rendered
+app.use(require('./library-pages')(path.join(cfg.ROOT, 'public')));
 app.use(require('./static-gz')(path.join(cfg.ROOT, 'public')));
 app.use(require('compression')({ threshold: 1024, memLevel: 7, windowBits: 14 }));
 const V7A = require('./admin-v7'); app.use(V7A.bigJson); // v7 admin: larger JSON bodies only for signed-in builder/settings/import routes
