@@ -2,16 +2,24 @@
 
 Stripe Checkout (hosted card page) is the only live payment method. Bitcoin code is kept but is **off unless `BTC_CHECKOUT_ENABLED=1`** (it is then also gated by `BTC_ADDRESS` + `PAYMENTS_LIVE_APPROVED=1`).
 
+**Status (2026-10-19):** Test-mode webhook endpoint created and enabled on the TrapTechGamingHub Stripe account.
+- Webhook ID: `we_1US9RKEPsG1LqMze9VX6kc2C`
+- URL: `https://glassy-drifter-9532.de.deplexo.com/api/store/webhook/stripe`
+- Events: checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, checkout.session.expired, charge.refunded
+- Signing secret: set as `STRIPE_WEBHOOK_SECRET` on Deplexo (do not commit the secret).
+
 ## Environment variables (Deplexo → Environment)
 | Name | Value |
 |---|---|
-| `STRIPE_SECRET_KEY` | `sk_test_...` (sandbox) or `sk_live_...` |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_...` of the webhook endpoint below |
+| `STRIPE_SECRET_KEY` | `sk_test_...` from Stripe Dashboard → Developers → API keys (test mode) |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_...` of the webhook above |
 | `PUBLIC_URL` | `https://glassy-drifter-9532.de.deplexo.com` (must be https; used for success/cancel URLs) |
 | `PAYMENTS_LIVE_APPROVED` | `1` — **required only for `sk_live_` keys** (sandbox keys work without it) |
 | `BTC_CHECKOUT_ENABLED` | leave unset (Bitcoin hidden) |
 
 Also switch checkout ON in Admin → Store (the admin switch). Secrets are never logged or returned by any API.
+
+After setting the two Stripe secrets and PUBLIC_URL, redeploy (or wait for auto-deploy) and verify a test purchase with card `4242 4242 4242 4242`.
 
 ## Stripe Dashboard → Developers → Webhooks → Add endpoint
 - URL: `https://glassy-drifter-9532.de.deplexo.com/api/store/webhook/stripe`
