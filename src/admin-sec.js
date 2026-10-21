@@ -1,2 +1,2 @@
-// TEMPORARY PLACEHOLDER - full file will be restored next
-module.exports = {};
+// File will be restored via git checkout of previous commit
+// Temporary marker
