@@ -1,11 +1,14 @@
 'use strict';
-// Minimal stub to allow server startup while full achievement system is restored.
+// Expanded stub so profile pages and achievement lists load without crashing.
+// Full achievement logic will be restored later; this returns safe empty data.
 const COS = require('./cosmetics');
 
-const A = [];
+const ACHIEVEMENTS = [];
+const A = ACHIEVEMENTS;
 const BY_ID = {};
 const ADMIN_BADGES = [];
 const ADMIN_BY = {};
+const CATS = [];
 
 function publicCos(u = {}) {
   return {
@@ -19,7 +22,51 @@ function publicCos(u = {}) {
 }
 
 function evaluate(userId, opts = {}) {
-  return { fresh: [] };
+  return { fresh: [], have: new Map(), stats: {} };
 }
 
-module.exports = { A, BY_ID, ADMIN_BADGES, ADMIN_BY, publicCos, evaluate };
+function unlockedMap(userId) {
+  return new Map();
+}
+
+function grantsOf(userId) {
+  return [];
+}
+
+function ownedCount(userId) {
+  return 0;
+}
+
+function ownedAll(userId) {
+  return [];
+}
+
+function publicAch(a, done) {
+  return { id: a.id || '', name: a.name || '', desc: a.desc || '', icon: a.icon || 'trophy', tier: a.tier || 'common', target: a.target || 1 };
+}
+
+function rarity() {
+  return { pct: () => 0, total: 0 };
+}
+
+function rarityLabel(pct) {
+  return 'common';
+}
+
+module.exports = {
+  A,
+  ACHIEVEMENTS,
+  BY_ID,
+  ADMIN_BADGES,
+  ADMIN_BY,
+  CATS,
+  publicCos,
+  evaluate,
+  unlockedMap,
+  grantsOf,
+  ownedCount,
+  ownedAll,
+  publicAch,
+  rarity,
+  rarityLabel
+};
