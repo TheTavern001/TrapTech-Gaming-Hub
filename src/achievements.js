@@ -13,4 +13,8 @@ const add = (a) => A.push({ hidden: false, ...a });
 for (const a of AAA.AAA) add(a);
 
 const BY_ID = Object.fromEntries(A.map(a => [a.id, a]));
-module.exports = { A, BY_ID };
+
+// Safe default so admin-ops.js loadBadges does not crash when ADMIN_BADGES is not yet defined.
+const ADMIN_BADGES = [];
+
+module.exports = { A, BY_ID, ADMIN_BADGES };
