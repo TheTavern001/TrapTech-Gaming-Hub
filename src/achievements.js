@@ -1,6 +1,6 @@
 'use strict';
-// Achievements + ownership bridge for AAA cosmetics.
-// Players can equip handcrafted and generated cosmetics on their profile/character.
+// Achievements + ownership for AAA cosmetics.
+// Shop items (handmade + handcrafted) can be equipped on profiles/characters.
 const COS = require('./cosmetics');
 
 const ACHIEVEMENTS = [];
@@ -34,11 +34,9 @@ function grantsOf(userId) {
 }
 
 function ownedCount(userId) {
-  return 8; // starter set
+  return 20;
 }
 
-// Ownership: everyone owns the handcrafted AAA set + any generated item whose id starts with v7
-// so the shop items can be equipped immediately for testing and use.
 function ownedAll(userId) {
   const own = {
     banner: new Set(COS.HAND_BANNERS.map(b => b.id)),
@@ -48,7 +46,15 @@ function ownedAll(userId) {
     color: new Set(),
     effect: new Set()
   };
-  // Also allow any generated shop item (id pattern from shop-gen)
+  // Include every handmade shop item so they are equippable
+  try {
+    const SH = require('./shop');
+    if (SH.ITEMS) {
+      for (const it of SH.ITEMS) {
+        if (own[it.type]) own[it.type].add(it.id);
+      }
+    }
+  } catch {}
   own.banner.add('midnight');
   return own;
 }
