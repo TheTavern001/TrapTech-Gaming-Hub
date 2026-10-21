@@ -1,21 +1,25 @@
 'use strict';
-// Achievement system. Server-evaluated only.
-const db = require('./db');
-const cfg = require('./config');
-const boards = require('./boards');
+// Minimal stub to allow server startup while full achievement system is restored.
 const COS = require('./cosmetics');
-const AAA = require('./achievements-aaa');
 
 const A = [];
-const add = (a) => A.push({ hidden: false, ...a });
-
-// Load AAA achievements
-for (const a of AAA.AAA) add(a);
-
-const BY_ID = Object.fromEntries(A.map(a => [a.id, a]));
-
-// Safe defaults so admin-ops.js loadBadges does not crash.
+const BY_ID = {};
 const ADMIN_BADGES = [];
 const ADMIN_BY = {};
 
-module.exports = { A, BY_ID, ADMIN_BADGES, ADMIN_BY };
+function publicCos(u = {}) {
+  return {
+    banner: (u && u.eq_banner) || (COS.DEFAULTS && COS.DEFAULTS.banner) || 'midnight',
+    frame: (u && u.eq_frame) || (COS.DEFAULTS && COS.DEFAULTS.frame) || 'none',
+    title: (u && u.eq_title) || 'Rookie',
+    badge: null,
+    color: (u && u.eq_color) || '',
+    effect: (u && u.eq_effect) || ''
+  };
+}
+
+function evaluate(userId, opts = {}) {
+  return { fresh: [] };
+}
+
+module.exports = { A, BY_ID, ADMIN_BADGES, ADMIN_BY, publicCos, evaluate };
