@@ -10,7 +10,7 @@ const { games } = require('../src/games-lib');
 const PUB = path.join(__dirname, '..', 'public', 'games-lib');
 const SHOTS = path.join(__dirname, '..', 'screenshots', 'v7', 'games-lib');
 const only = (process.argv[2] || process.env.SLUGS || '').split(',').filter(Boolean);
-const list = games.filter(g => !only.length || only.includes(g.slug));
+const list = games.filter(g => only.length ? only.includes(g.slug) : !g.retired); // retired ids only redirect; test them only by name
 // Eligibility gate (Reese, Oct 10 2026): 100% of listed games giveaway-eligible, endless mode, L2+ anti-cheat,
 // skill-only tie-break metrics (src/games-lib-playoff.js). Any failure fails the whole run.
 { const PO = require('../src/games-lib-playoff'); const { EXTERNAL } = require('../src/games-lib'); const bad = [];

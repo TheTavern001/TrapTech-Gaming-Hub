@@ -89,8 +89,11 @@ engine; several reward ids that do not exist).
 - **Shop:** "See earned items" now scrolls to the earned section (router had no `#anchor` handling).
 - **Copy:** sponsor FAQ rewritten (removed the stale casino-games answer), shop "How it works" page and earned-item labels
   rewritten in plain language; internal admin notes removed from player-facing text.
-- Browser pass (72 live library games, desktop + iPhone emulation, legit score accepted / forged score rejected):
-  see the latest `tools/e2e-games-lib.js` run.
+- Browser pass, all 74 games live at the start of the run (desktop + iPhone emulation, legit score accepted / forged score
+  rejected, no console errors): **71 pass**. After the CSP fix Rail Rush passes too. Open:
+  - Cube Horde: ~180k triangles per frame, over the 150k phone budget (performance work).
+  - Throttle Rider: stayed on "starting" on emulated iPhone within the test window under software WebGL; needs a real-phone check.
+  - The six old retired ids correctly refuse runs; the harness now skips retired games unless named.
 
 ### Visual grade (owner review): rebuild required
 Owner verdict: all core games except Stack and Munchies Snake need a full rebuild (art, 3D assets, UI/layout, mechanics

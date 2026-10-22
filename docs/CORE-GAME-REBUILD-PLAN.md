@@ -1,0 +1,45 @@
+# Core Game Rebuild Plan (owner review, 2026-10-22)
+
+Owner verdict: every core game except **Stack** and **Munchies Snake** gets a full rebuild — realistic colour, real 3D (or
+high-fidelity 2D) assets, a new in-game UI/layout, and mechanics matched to the recognisable reference game.
+
+## Rules for every rebuild
+
+- **Reference ≠ copy.** The reference names the gameplay players already know. Our build is original code and art, or
+  CC0/permissively licensed assets with the licence file kept. No proprietary art, audio, names or logos.
+- **Keep the game id.** Scores, achievements, earned items and giveaway history stay attached (`jetpack-dash` etc.).
+- **Keep fairness.** All gameplay randomness from the run seed; server score limits re-tuned per rebuild
+  (`docs/SCORE-RANGES.md`); Memory Match and Stack keep server replay.
+- **Mobile first.** Portrait, one-thumb controls, 60 fps on a mid-range Android; HUD inside the safe area.
+- **Acceptance per game:** side-by-side screenshot vs reference loop, browser e2e (legit accepted / forged rejected),
+  phone FPS ≥ 30, owner visual sign-off.
+
+## Shared UI pass (applies to all games)
+
+One in-game HUD kit for core and library games: score / best / lives pills, pause, sound and settings in the safe area;
+consistent start, pause and game-over cards (current game-over card has a large empty gap); real typography and icons.
+
+## Per game
+
+| Game (id) | Reference | Rebuild target | Assets on hand |
+|---|---|---|---|
+| Drift Rush (`drift-rush`) | Traffic Racer / Drift Boss | 3D highway, chase camera, traffic weaving, near-miss + drift combo scoring, day/night | Kenney Car Kit (sedan, taxi, police, SUV, trucks), city buildings, lamps, barriers |
+| Jetpack Dash (`jetpack-dash`) | Jetpack Joyride | Side-on lab corridor with parallax depth, zappers, missiles with warnings, coin patterns, vehicle power-ups | Quaternius hero rig; lab set to build |
+| Sky Hopper (`sky-hopper`) | Flappy Bird | Bright daytime world, readable pipes/towers, satisfying flap physics, medals | 2D art to commission/build |
+| Brick Breaker (`brick-breaker`) | Arkanoid / Breakout | 3D-lit bricks with materials, multi-hit and steel bricks, capsules (laser, multiball, catch), boss stage | Procedural PBR bricks |
+| Void Swarm (`void-swarm`) | Galaga | **Overlaps Star Swarm.** Proposal: retire into Star Swarm, or re-theme to a different shooter (e.g. Asteroids or vertical bullet-hell) | Kenney space kit |
+| Memory Match (`memory-match`) | Classic concentration | Physical card table, real card flip animation, themed decks, combo timer | Card art to build |
+| High Score (`high-score`) | Duck Hunt / shooting gallery | 3D carnival gallery with moving targets, wind, combo multipliers | Kenney/Quaternius props |
+| Terp Tapper (`terp-tapper`) | Piano Tiles / Guitar Hero mobile | Highway with depth, note trails, hit windows shown, original music charts | Synthesised audio |
+| Grow Guard (`grow-guard`) | Plants vs. Zombies | Lit garden lanes with depth, animated pests and gadgets, sun-drop economy readable at a glance | Quaternius nature/creatures |
+| Sling Smash (`sling-smash`) | Angry Birds | Real 2D physics structures (wood/glass/stone break states), trajectory preview, 10-shot challenge | Material textures (Poly Haven CC0) |
+| Haze Defense (`haze-defense`) | Bloons TD | Real map art instead of placeholder hexes, distinct tower models with upgrade paths, wave preview | Kenney tower-defense kit |
+
+## Order
+
+1. **Pilot: Drift Rush** (weakest visually, best assets already in repo). Owner signs off on the quality bar.
+2. Shared HUD/UI kit.
+3. Jetpack Dash, Sling Smash, Haze Defense, Grow Guard (most recognisable references).
+4. Brick Breaker, Sky Hopper, High Score, Terp Tapper, Memory Match.
+5. Decide Void Swarm (retire vs re-theme).
+6. Library games: same pass, starting with the weakest of the visual audit (Block Drop upgrade next, as the kept Tetris title).
