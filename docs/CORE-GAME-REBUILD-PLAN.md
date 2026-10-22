@@ -14,6 +14,20 @@ high-fidelity 2D) assets, a new in-game UI/layout, and mechanics matched to the 
 - **Acceptance per game:** side-by-side screenshot vs reference loop, browser e2e (legit accepted / forged rejected),
   phone FPS ≥ 30, owner visual sign-off.
 
+## Scoring and run length (owner direction)
+
+Owner expectation: in an addictive endless game, strong players should reach **100k–1M+ points**. Today Jetpack Dash
+scores raw meters (typical run 42 s / 580 m; Pro target 3,400 m and Elite 5,300 m come from a 3,000-player Monte Carlo
+simulation in `docs/score-ranges.json`, not real players). For each rebuild:
+
+- **Points, not raw units**, where the reference uses them (Subway Surfers model): distance × multiplier, with the
+  multiplier raised by missions/streaks, plus coins, near-misses and combos.
+- **Run length:** difficulty ramp tuned so a competent run lasts minutes, not seconds.
+- **Re-tune together, never separately:** anti-cheat rate ceiling (Jetpack Dash is capped at 30 m/s today; a 1M score
+  would be rejected), score tiers, Pro/Elite earned-item targets, achievement ladders and skill-quest targets —
+  re-simulated with `tools/score-sim.js`, then replaced with real run percentiles once there is data.
+- **Fresh boards:** old-unit scores are archived (same path as retired games) because they are not comparable.
+
 ## Shared UI pass (applies to all games)
 
 One in-game HUD kit for core and library games: score / best / lives pills, pause, sound and settings in the safe area;
