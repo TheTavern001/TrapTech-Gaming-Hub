@@ -74,3 +74,24 @@ engine; several reward ids that do not exist).
    checkout + signed webhook + refund, live merchant/terms, backups/restore, 10k staging load, real Android/iOS device passes.
    These need the owner and live infrastructure; they are not code defects.
 4. True 3D wearables / finished assets via Cloudflare R2 (`docs/R2-SETUP-AND-NEXT.md`) — infrastructure, not started.
+
+## Round 2 (2026-10-22): game audit fixes
+
+- **Retired duplicates (owner decision):** Alien Rows → Star Swarm, Hex Stack → Block Drop. Retired library titles now go
+  through the same `retire()` path as core games (leaderboard archived, open giveaways and tournaments moved to the
+  replacement, pending challenges expired).
+- **Seed fairness:** Light Cycle AI aggression, Grow Guard sun-drop positions and Munchies Snake dropped orbs used
+  `Math.random()`; players on the same seed got different games. Now drawn from the run's seeded RNG.
+- **3D games on phones (Road Hopper, Wanted Run, Rail Rush, Cube Horde):** the unstyled WebGL canvas widened the layout
+  viewport to 450 px on a 390 px phone and pushed the BEST pill off-screen. Fixed in `runner3x.js`.
+- **CSP:** `connect-src` blocked the `data:`/`blob:` fetches three.js GLTFLoader makes (Rail Rush and Throttle Rider
+  textures; the hub's rigged 3D avatar, whose `.gltf` embeds its buffers). Allowed `data:` and `blob:` only.
+- **Shop:** "See earned items" now scrolls to the earned section (router had no `#anchor` handling).
+- **Copy:** sponsor FAQ rewritten (removed the stale casino-games answer), shop "How it works" page and earned-item labels
+  rewritten in plain language; internal admin notes removed from player-facing text.
+- Browser pass (72 live library games, desktop + iPhone emulation, legit score accepted / forged score rejected):
+  see the latest `tools/e2e-games-lib.js` run.
+
+### Visual grade (owner review): rebuild required
+Owner verdict: all core games except Stack and Munchies Snake need a full rebuild (art, 3D assets, UI/layout, mechanics
+matched to the reference game). Void Swarm is a third vertical space shooter next to Star Swarm.

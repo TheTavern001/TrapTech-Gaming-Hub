@@ -120,6 +120,8 @@ const LIST = [
 ];
 const OWNER_RETIRED = Object.freeze({
   'wreck-ride': 'gl-hill-hauler', 'rig-rally': 'gl-hill-hauler', 'dune-glide': 'gl-hill-hauler', 'egg-roll': 'gl-hill-hauler', 'monster-crush': 'gl-hill-hauler', 'drift-king': 'drift-rush',
+  // 2026-10-22 owner review: same core loop as the kept game
+  'alien-rows': 'gl-star-swarm', 'hex-stack': 'gl-block-drop',
 });
 // Only list games whose playable files actually exist in this build. The registry advertised 20 titles with no
 // public/games-lib/<slug>/ folder (404 on click, and they inflated the game count); they come back automatically once built.

@@ -271,10 +271,16 @@ async function render() {
   for (const [re, fn] of routes) { const m = path.match(re); if (m) {
     window.scrollTo(0, 0);
     if (!NO_SKEL.test(path) && !first) shell(path, skeleton(/^\/(games|achievements|tournaments)$/.test(path) ? 'grid' : 'list'));
-    try { await fn(m, url); } catch (err) { console.error(err); shell(path, emptyState('triangle-alert', 'Something went wrong', 'Please try again in a moment.', '<a class="btn sm" href="/">Go home</a>')); }
+    try { await fn(m, url); scrollToHash(url); } catch (err) { console.error(err); shell(path, emptyState('triangle-alert', 'Something went wrong', 'Please try again in a moment.', '<a class="btn sm" href="/">Go home</a>')); }
     if (!first) { const mm = document.getElementById('main'); if (mm) mm.focus({ preventScroll: true }); }
     return; } }
   shell(path, emptyState('circle-help', 'Page not found', "We couldn't find that page.", '<a class="btn sm" href="/">Go home</a>'), { title: 'Page not found' });
+}
+// In-page links such as /shop#earned: jump to that section once the route has rendered.
+function scrollToHash(url) {
+  if (url.hash.length < 2) return;
+  let el = null; try { el = document.getElementById(decodeURIComponent(url.hash.slice(1))); } catch {}
+  if (el) requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));
 }
 // ---------------- 21+ age gate (neutral date-of-birth screen; cannabis-brand content) ----------------
 function ageOk() { const v = +ls.getItem('gh_age_ok') || 0; return v && Date.now() - v < 30 * 864e5; }

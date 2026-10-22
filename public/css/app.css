@@ -488,7 +488,7 @@ textarea.input { height: auto; min-height: 96px; padding: 12px 14px; resize: ver
 }
 
 /* keep anchored sections clear of the sticky top bar */
-.pk, .cmp-wrap, #faq, #customize { scroll-margin-top: 84px; }
+.pk, .cmp-wrap, #faq, #customize, .section-h[id] { scroll-margin-top: calc(84px + env(safe-area-inset-top, 0px)); }
 
 /* =====================================================================
    v3: accessibility, skeletons, empty states, footer branding, age gate,

@@ -63,7 +63,7 @@ export class MunchiesSnake extends Game8 {
   }
   die(s, by) {
     if (!s.alive) return; s.alive = false;
-    for (let i = 0; i < s.pts.length; i += 2) { const p = s.pts[i]; this.orb(p[0] + rnd(-6, 6), p[1] + rnd(-6, 6), 20, 1.6); }
+    for (let i = 0; i < s.pts.length; i += 2) { const p = s.pts[i]; this.orb(p[0] + (this.r() - 0.5) * 12, p[1] + (this.r() - 0.5) * 12, 20, 1.6); }
     const x = this.sx(s.pts[0][0]), y = this.sy(s.pts[0][1]);
     if (s.me) { this.fx.burst(x, y, s.sk, 40, 360, 0.9, 14); this.fx.ring(x, y, s.sk[0], 10, 160, 0.6, 6); this.kill(1.3, '#22d3ee'); return; }
     if (by === this.you) { this.kills++; this.pop(x, y - 20, `CUT OFF ${s.name}!`, '#fde047', 22); this.sfx.chord([523, 784, 1047], 0.18, { type: 'triangle', vol: 0.3 }); this.fx.shake(7); this.fx.ring(x, y, '#fde047', 8, 100, 0.45, 4); this.hitstop(0.05); }

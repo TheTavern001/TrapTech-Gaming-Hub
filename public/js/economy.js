@@ -189,23 +189,23 @@ async function howPage() {
   if (!r.ok) return shell('/shop', C.emptyState('triangle-alert', 'Could not load', ''));
   const ex = Math.round(400 * 1.1); const exHi = Math.round(ex * 1.2 / 5) * 5, exLo = Math.round(ex * 0.9 / 5) * 5;
   shell('/shop', `<div class="narrow ec prose-ish">
-    <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>How Seasons &amp; Shop work</h1></div>
+    <div class="back-row"><button class="iconbtn" data-act="back" aria-label="Back">${icon('chevron-left')}</button><h1>How the Shop &amp; Seasons Work</h1></div>
     <div class="nocash">${icon('shield')} <span>${esc(r.disclaimer)}</span></div>
-    <div class="card pad"><h2>${icon('clock')} When the shop changes</h2>
-      <ul class="ec-list"><li><b>Daily picks</b>: every day at midnight hub time (US Eastern). The shop page shows each reset in your own time zone.</li><li><b>Weekly featured</b>: every Monday at midnight.</li><li><b>Season shop</b>: the whole 8-week season.</li><li><b>Events</b>: while the event runs (dates below).</li></ul>
-      <p class="small muted">The shop is the same for everyone: it comes from a fixed schedule, not from what you look at.</p></div>
-    <div class="card pad"><h2>${icon('shuffle')} What's in it</h2><ul class="ec-list">${r.rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
-    <div class="card pad"><h2>${icon('coins')} How prices work, in plain words</h2>
-      <p>Every item starts from its rarity (Common ${fmt(r.rarity.common.price)}, Rare ${fmt(r.rarity.rare.price)}, Epic ${fmt(r.rarity.epic.price)}, Legendary ${fmt(r.rarity.legendary.price)}) and its type (titles are cheaper, effects cost more). Then it moves:</p>
-      <ul class="ec-list"><li><b>Demand</b>: bought a lot in the last 14 days? Up to 35% more. Nobody wants it? Up to 15% less.</li><li><b>Scarcity</b>: a small nudge of 15% at most, and only once the hub has plenty of active players. Rarely owned: slightly more. Widely owned: slightly less.</li>
-        <li><b>Appearances</b>: 8% more on its debut day, then cheaper the more often it comes back. Items that come back after their rest period are priced like any other showing.</li><li><b>Limited</b>: season and event items cost 15% more.</li></ul>
-      <p class="small muted">Example: a Rare frame starts at ${fmt(ex)}. Popular and rare to own, it might be ${fmt(exHi)}; on its fifth showing with low demand, about ${fmt(exLo)}. Prices are set at midnight and hold all day. Season perks take 5-15% off.</p></div>
+    <div class="card pad"><h2>${icon('clock')} When the shop refreshes</h2>
+      <ul class="ec-list"><li><b>Daily picks</b> refresh every day at midnight Eastern Time. The shop shows the next refresh in your local time.</li><li><b>Weekly featured</b> items refresh every Monday at midnight Eastern Time.</li><li><b>Season items</b> are available for the full 8-week season.</li><li><b>Event items</b> are available only while their event is running (see dates below).</li></ul>
+      <p class="small muted">Every player sees the same shop. It follows a fixed schedule and is never personalized based on what you browse.</p></div>
+    <div class="card pad"><h2>${icon('shuffle')} What's available</h2><ul class="ec-list">${r.rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+    <div class="card pad"><h2>${icon('coins')} How prices are set</h2>
+      <p>Each item has a base price set by its rarity (Common ${fmt(r.rarity.common.price)}, Rare ${fmt(r.rarity.rare.price)}, Epic ${fmt(r.rarity.epic.price)}, Legendary ${fmt(r.rarity.legendary.price)} Hub Credits) and its type: titles cost less, effects cost more. The daily price is then adjusted by:</p>
+      <ul class="ec-list"><li><b>Demand</b>: items bought often in the last 14 days cost up to 35% more; items few players buy cost up to 15% less.</li><li><b>Ownership</b>: once the hub has enough active players, items few people own cost slightly more and widely owned items cost slightly less (never more than 15% either way).</li>
+        <li><b>Appearances</b>: an item costs 8% more on its first day in the shop and gets cheaper each time it returns.</li><li><b>Limited availability</b>: season and event items cost 15% more.</li></ul>
+      <p class="small muted">Example: a Rare frame with a base price of ${fmt(ex)} might cost ${fmt(exHi)} when it is popular and few players own it, or about ${fmt(exLo)} on its fifth appearance with low demand. Prices are set at midnight and stay fixed for the day. Season pass perks take 5–15% off.</p></div>
     <div class="card pad" id="seasons"><h2>${icon('calendar-range')} Seasons</h2><ul class="ec-list">${r.seasons.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
       <h3 class="ec-h">Perks</h3><ul class="ec-list">${r.perks.map(p => `<li><b>Level ${p.level}: ${esc(p.name)}</b> - ${esc(p.desc)}</li>`).join('')}</ul>
-      <p class="small">${up.ok ? `Now: Season ${up.season.number} "${esc(up.season.name)}", ends in ${cdi(up.season.ends_at)}.` : ''} <a href="/season">Open the season pass</a></p></div>
+      <p class="small">${up.ok ? `Now: Season ${up.season.number} "${esc(up.season.name)}", ends in ${cdi(up.season.ends_at)}.` : ''} <a href="/season">View the season pass</a></p></div>
     <div class="card pad"><h2>${icon('party-popper')} Events</h2>${up.ok && up.events.length ? `<ul class="ec-list">${up.events.map(e => `<li><b>${esc(e.name)}</b>: ${e.live ? `on now, ends in ${cdi(e.ends_at)}` : `${dateOf(e.starts_at)} - ${dateOf(e.ends_at - 1)}`}</li>`).join('')}</ul>` : '<p class="small muted">No events scheduled.</p>'}
-      <p class="small muted">Each event brings 4 themed items (2 return the next year). Admins can also run themed weekends with their own picks.</p></div>
-    <div class="card pad"><h2>${icon('target')} Earned items</h2><p>Some items can't be bought. Score at a strong player's level in a game for its <b>Pro</b> banner, reach the top-1% score for its <b>Elite</b> frame (targets come from our score research), or finish top 3 / top 10 on any game's weekly leaderboard.</p><a class="btn sm" href="/shop#earned">See earned items</a></div>
+      <p class="small muted">Each event adds 4 themed items. Two of them return when the event comes back the following year.</p></div>
+    <div class="card pad"><h2>${icon('target')} Earned items</h2><p>Some items can't be bought with Credits. You unlock them by playing well:</p><ul class="ec-list"><li><b>Pro banner</b>: reach the Pro score target in that game.</li><li><b>Elite frame</b>: reach a score in the top 1% of players for that game.</li><li><b>Weekly rewards</b>: finish in the top 3 or top 10 of any game's weekly leaderboard.</li></ul><p class="small muted">Each item shows its exact target and your progress.</p><a class="btn sm" href="/shop#earned">See earned items</a></div>
   </div>`);
   C.tickInline && C.tickInline();
 }

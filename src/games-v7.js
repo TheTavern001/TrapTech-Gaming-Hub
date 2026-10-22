@@ -36,6 +36,8 @@ function retire(old, t = Date.now()) {
   return out;
 }
 for (const g of cfg.RETIRED) retire(g);
+// library titles retired in src/games-lib.js (OWNER_RETIRED) get the same archive + giveaway/tournament relink
+for (const g of cfg.LIB_GAMES) if (g.retired && g.replacedBy) retire(g);
 
 // v7 item 21: chance games are "just for fun". Unlink them from every giveaway that is still open (runs on every boot, cheap and
 // idempotent); a giveaway left with no game gets Jetpack Dash so it stays playable. Finalized giveaways keep their history.

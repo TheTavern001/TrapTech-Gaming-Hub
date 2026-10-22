@@ -64,6 +64,9 @@ function signTex(text, bg, fg) { return canvasTex(512, 128, (x, w, h) => { const
 
 export function stage(o) {
   const cv = document.createElement('canvas'); cv.id = 'gl3d'; document.body.insertBefore(cv, document.body.firstChild);
+  // Until sync() copies the 2D canvas box, keep the 3D canvas out of layout: an unstyled canvas takes its CSS size from its
+  // backing store (300px x pixel ratio), which on phones widened the layout viewport and pushed the HUD off-screen.
+  cv.style.cssText = 'position:absolute;left:0;top:0;width:1px;height:1px;pointer-events:none';
   const maxPixelRatio = Math.min(1.5, devicePixelRatio || 1);
   let activePixelRatio = maxPixelRatio, lastRenderAt = 0, slowFrameStreak = 0;
   const r = new THREE.WebGLRenderer({ canvas: cv, antialias: (devicePixelRatio || 1) < 2, powerPreference: 'high-performance' }); r.setPixelRatio(activePixelRatio);
