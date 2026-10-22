@@ -17,7 +17,7 @@ const LIST = [
   T('alien-rows', 'Alien Rows', 'Space Invaders', 5, 'A+', 'endless', 140, true, 'Aliens 10-30, saucer 100-300, wave bonus', '3 days'),
   T('cloud-hopper', 'Cloud Hopper', 'Doodle Jump', 0, 'A+', 'endless', 60, true, 'Height climbed + pickups', '3 days'),
   T('road-hopper', 'Road Hopper', 'Crossy Road', 0, 'A+', 'endless', 8, true, '1 per furthest row + coins 5', '3 days'),
-  T('bud-merge', 'Bud Merge', '2048', 11, 'A+', 'endless', 60, true, 'Sum of merged tiles (endless, no win stop)', '1-3 days', 'm2048'),
+  T('bud-merge', 'Bud Merge', '2048', 11, 'A+', 'endless', 60, true, 'Sum of merged tiles (endless, no win stop)', '1-3 days'),
   T('hex-stack', 'Hex Stack', 'Hextris', 6, 'A', 'endless', 80, true, 'Hexes burst x chain (endless, speeds up)', '1-3 days'),
   T('dino-dash', 'Desert Dash', 'Chrome T-Rex Runner', 0, 'A+', 'endless', 25, true, 'Distance run (endless, speeds up)', '1-3 days'),
   T('rock-buster', 'Rock Buster', 'Asteroids', 5, 'A+', 'endless', 180, true, 'Rocks 20/50/100, UFO 300', '3 days'),

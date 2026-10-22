@@ -1,3 +1,5 @@
+> **Superseded (2026-10-22):** the wiring described here broke the server. Current status and what was restored: `docs/AAA-FULL-AUDIT.md`.
+
 # AAA Systems Finalized
 
 ## Achievements

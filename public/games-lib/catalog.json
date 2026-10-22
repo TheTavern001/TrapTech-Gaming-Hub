@@ -278,9 +278,9 @@
         5400,
         14400
       ],
-      "source": "github.com/gabrielecirulli/2048",
-      "licence": "MIT (Gabriele Cirulli); LICENSE kept; Clear Sans font Apache-2.0",
-      "build": "vendored",
+      "source": "Original Hub build (public/games-lib/kit.js engine)",
+      "licence": "MIT (Trap Tech Solutions), original code, synthesized WebAudio SFX, vector art",
+      "build": "built",
       "attempts": "unlimited",
       "leaderboard": "best run",
       "winner_rule": "highest single-run score in endless mode (uncapped); exactly one winner",

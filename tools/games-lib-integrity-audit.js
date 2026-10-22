@@ -88,7 +88,7 @@ for (const g of games) {
     if (result.mobile && Number.isFinite(result.mobile.fps) && result.mobile.fps < 30) problems.push('mobile FPS below 30 (' + result.mobile.fps + ')');
     if (Array.isArray(result.errors) && result.errors.length) problems.push('console/page errors (' + result.errors.length + ')');
   }
-  if (!g.giveaway) problems.push('not giveaway eligible');
+  if (!g.giveaway && !g.retired) problems.push('not giveaway eligible'); // retired duplicates keep their id only to redirect
   if (g.just_for_fun) problems.push('marked just-for-fun');
   if (Number(g.acLevel || g.acLevel === 0 ? g.acLevel : 0) < 2) problems.push('anti-cheat level below L2 or unspecified');
   if (problems.length) issues.push(g.slug + ': ' + problems.join('; '));

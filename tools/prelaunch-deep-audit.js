@@ -124,7 +124,7 @@ for (const g of games) {
   for (const n of notes) warnings.push({ slug, severity: 'review', finding: n });
 }
 
-for (const d of duplicates(games, g => normalized(g.ref_internal))) {
+for (const d of duplicates(games.filter(g => !g.retired), g => normalized(g.ref_internal))) { // retired ids only redirect to their replacement
   issues.push({ severity: 'duplicate-review', finding: 'Duplicate internal gameplay reference; review whether these are duplicate game loops', key: d.key, slugs: d.items.map(g => g.slug) });
 }
 for (const d of duplicates(games, g => normalized(g.title))) {
