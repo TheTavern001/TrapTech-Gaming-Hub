@@ -91,16 +91,30 @@
     let gameSettingsOpen=false;
     import('/js/player-prefs.js').then(P=>{
       gamePrefs=P;
-      let wasPaused=false;
-      P.openGameSettings({id:def.id,title:def.title,host:document.body,
+      let wasPaused=false,fromPause=false;
+      const gs=P.openGameSettings({id:def.id,title:def.title,host:document.body,extra:def.settings||[],
         onOpen:()=>{wasPaused=g.paused;gameSettingsOpen=true;g.paused=true;clearInputs();},
-        onClose:()=>{clearInputs();g.paused=wasPaused;gameSettingsOpen=false;},
+        onClose:()=>{clearInputs();g.paused=wasPaused;gameSettingsOpen=false;if(fromPause){fromPause=false;showPause();}},
         onChange:pref=>{
           muted=!pref.sound;cameraShakeAllowed=!pref.reducedMotion;
           const cap=P.qualityCap(pref.quality,devicePixelRatio||1);
           if(renderDpr!==cap){renderDpr=cap;resize();}
           if(!cameraShakeAllowed)g.shakeT=0;
+          if(def.applySettings)def.applySettings(g,pref.extra||{});
         },fps:()=>g.fps});
+      // Touch pause button + pause menu (Resume / Settings / Exit). Menu taps never reach the game.
+      const pb=document.createElement('button');pb.type='button';pb.className='ttgs-pausebtn';pb.setAttribute('aria-label','Pause');pb.textContent='❚❚';document.body.appendChild(pb);
+      const pm=document.createElement('div');pm.className='ttgs-modal ttgs-pausemenu';pm.hidden=true;
+      pm.innerHTML='<div class="ttgs-box" role="dialog" aria-modal="true" aria-label="Paused"><h2>Paused</h2><p class="ttgs-game"></p><div class="ttgs-actions ttgs-col"><button type="button" data-p="resume">Resume</button><button type="button" data-p="settings">Settings</button><button type="button" data-p="exit">Exit to games</button></div></div>';
+      pm.querySelector('.ttgs-game').textContent=def.title||'';document.body.appendChild(pm);
+      for(const el of [pb,pm])for(const ev of ['pointerdown','touchstart','keydown'])el.addEventListener(ev,e=>e.stopPropagation());
+      function showPause(){if(g.state==='play'){g.paused=true;clearInputs();}gameSettingsOpen=true;pm.hidden=false;pm.querySelector('button').focus();}
+      function hidePause(){pm.hidden=true;gameSettingsOpen=false;}
+      pb.addEventListener('click',showPause);
+      pm.addEventListener('click',e=>{const a=e.target.closest('[data-p]');if(!a&&e.target!==pm)return;const k=a?a.dataset.p:'resume';
+        if(k==='resume'){hidePause();if(g.state==='play')g.paused=false;}
+        else if(k==='settings'){pm.hidden=true;gameSettingsOpen=false;fromPause=true;gs.open();}
+        else if(k==='exit'){const back=document.querySelector('.glback');location.href=back?back.getAttribute('href'):'/games';}});
     }).catch(e=>console.error('Game settings failed to load',e));
     // buttons: def.buttons = [{id:'A', key:' ', label:'JUMP'}]
     var btns = (def.buttons || []).map((b, i, arr) => ({ ...b, r: 34, x: W - 50 - (arr.length - 1 - i) * 82, y: Hh - 56 }));

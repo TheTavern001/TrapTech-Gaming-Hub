@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"/vendor/three.module.min.js","three/addons/":"/vendor/three-addons/"}}</script></head><body>
+<script type="module">
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+// Render a model to a square transparent image from a given yaw (orthographic, golden-hour key light).
+window.renderImpostor = async (url, yaw, size, part) => {
+  const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); R.setSize(size, size); R.setClearColor(0x000000, 0);
+  R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.05; R.outputColorSpace = THREE.SRGBColorSpace;
+  const S = new THREE.Scene(); S.add(new THREE.HemisphereLight('#d6e4ff', '#5d4b2e', 1.25)); const L = new THREE.DirectionalLight('#ffe2b8', 2.4); L.position.set(4, 6, 6); S.add(L); const F = new THREE.DirectionalLight('#9fb8e8', 0.5); F.position.set(-5, 3, -4); S.add(F);
+  const g = await new GLTFLoader().loadAsync(url); const o = g.scene; o.traverse(m => { if (m.isMesh && m.material) { m.material.side = THREE.DoubleSide; if (m.material.transparent) { m.material.alphaTest = Math.max(m.material.alphaTest || 0, 0.4); m.material.transparent = false; } } });
+  if (part != null) { o.updateMatrixWorld(true); const ms = []; o.traverse(m => { if (m.isMesh) { const bb = new THREE.Box3().setFromObject(m), c = new THREE.Vector3(); bb.getCenter(c); ms.push({ m, x: c.x }); } });
+    ms.sort((a, b) => a.x - b.x); const groups = []; for (const e of ms) { const g = groups[groups.length - 1]; if (g && e.x - g.x1 < 0.25) { g.list.push(e.m); g.x1 = e.x; } else groups.push({ x1: e.x, list: [e.m] }); }
+    window.__groups = groups.length; const keep = new Set((groups[part] || groups[0]).list); for (const e of ms) e.m.visible = keep.has(e.m); }
+  const piv = new THREE.Group(); piv.add(o); piv.rotation.y = yaw; S.add(piv); piv.updateMatrixWorld(true);
+  const b = new THREE.Box3(); piv.traverse(m => { if (m.isMesh && m.visible) b.expandByObject(m); }); const s = new THREE.Vector3(), c = new THREE.Vector3(); b.getSize(s); b.getCenter(c);
+  const half = Math.max(s.x, s.y) / 2 * 1.02; const cam = new THREE.OrthographicCamera(-half, half, half, -half, 0.01, 1000);
+  cam.position.set(c.x, b.min.y + half, c.z + Math.max(s.z, 1) * 4 + 10); cam.lookAt(c.x, b.min.y + half, c.z); R.render(S, cam);
+  const out = R.domElement.toDataURL('image/png'); R.dispose(); return { png: out, w: s.x, h: s.y, d: s.z, groups: window.__groups || 1 };
+};
+window.ready = true;
+</script></body></html>
