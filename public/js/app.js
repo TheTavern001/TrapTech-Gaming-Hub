@@ -630,7 +630,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   S.game = game; window.__game = game; window.__lastResult = null;
   // Core games share exactly the same device-only visual preferences.
   let resumeAfterOptions = false;
-  GP.openGameSettings({id:g.id,title:g.title,host:document.querySelector('.play-wrap'),
+  const gs = GP.openGameSettings({id:g.id,title:g.title,host:document.querySelector('.play-wrap'),extra:game.settingsSchema||[],
     trigger:document.getElementById('game-settings'),
     onOpen:()=>{resumeAfterOptions=game.state==='play';if(resumeAfterOptions)game.pause(true);},
     onClose:()=>{if(resumeAfterOptions&&game.state==='paused')game.pause(false);resumeAfterOptions=false;},
@@ -638,6 +638,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
       if(game.sfx.muted===p.sound)game.sfx.toggle();
       const cap=GP.qualityCap(p.quality,window.devicePixelRatio||1);
       if(game.renderDpr!==cap){game.renderDpr=cap;game.resize(true);}
+      if(typeof game.applySettings==='function')game.applySettings(p.extra||{},p);
     },
     fps:()=>game.fps});
   const setMute = () => { document.getElementById('mute').innerHTML = icon(game.sfx.muted ? 'volume-x' : 'volume-2'); };
@@ -647,10 +648,11 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   document.getElementById('exit').onclick = () => go('/games/' + g.id);
   if (g.id === 'jetpack-dash') { const rot = document.getElementById('rot'); let shown = 0; const checkRot = () => { if (!document.body.contains(rot)) return removeEventListener('resize', checkRot); const p = innerHeight > innerWidth && innerWidth < 700 && shown < 1; rot.classList.toggle('hidden', !p); if (p) { shown++; setTimeout(() => rot.classList.add('hidden'), 5000); } }; checkRot(); addEventListener('resize', checkRot); }
   function showPause() {
-    ov.innerHTML = `<div class="card over-card"><h2>Paused</h2><div class="btns"><button class="btn block" id="res">${icon('play')} Resume</button><button class="btn ghost block" id="endrun">${icon('flag')} End run &amp; save score</button><button class="btn ghost block" id="quit">Quit without saving</button></div></div>`;
+    ov.innerHTML = `<div class="card over-card"><h2>Paused</h2><div class="btns"><button class="btn block" id="res">${icon('play')} Resume</button><button class="btn ghost block" id="opts">${icon('settings')} Settings</button><button class="btn ghost block" id="endrun">${icon('flag')} End run &amp; save score</button><button class="btn ghost block" id="quit">Quit without saving</button></div></div>`;
     ov.classList.remove('hidden');
     ov.querySelector('#res').onclick = () => game.pause(false); ov.querySelector('#quit').onclick = () => go('/games/' + g.id);
     ov.querySelector('#endrun').onclick = () => game.endNow();
+    ov.querySelector('#opts').onclick = () => gs.open();
   }
   async function finish(res) {
     if (res.score > (+ls.getItem(bestKey) || 0)) ls.setItem(bestKey, res.score);
