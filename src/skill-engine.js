@@ -1,7 +1,7 @@
 'use strict';
 // v8 skill engine: achievements and quests at scale, generated on demand (nothing is stored per definition).
 //  * ACHIEVEMENTS: per game seven ladders (best score 30 tiers, runs 25, playtime 20, longest run 15, play days 15, personal bests 15,
-//    good runs 10 = 130 per game) + ~260 hub-wide ladders. 93 games -> 12,000+ achievements. A definition is a pure function of
+//    good runs 10 = 130 per game) + ~260 hub-wide ladders. ~85 playable games -> ~11,000 achievements (counted from the live catalog). A definition is a pure function of
 //    its id (`a2:<game>:<family>:<n>`); only unlocks are stored (ach2_unlocks), so memory is O(games), not O(achievements).
 //  * QUESTS: daily / weekly / seasonal, skill-based (score targets, beating your own best, consistency, survival, variety, play days)
 //    scaled from each game's score tiers. Assignments are stored per user+period so they never change mid-period; progress is read

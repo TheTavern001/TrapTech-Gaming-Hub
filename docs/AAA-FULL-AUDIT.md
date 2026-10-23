@@ -98,3 +98,16 @@ engine; several reward ids that do not exist).
 ### Visual grade (owner review): rebuild required
 Owner verdict: all core games except Stack and Munchies Snake need a full rebuild (art, 3D assets, UI/layout, mechanics
 matched to the reference game). Void Swarm is a third vertical space shooter next to Star Swarm.
+
+## Round 3 (2026-10-23): Drift Rush rebuild, per-game settings, docs
+
+- **Drift Rush v9** (first core rebuild): three.js chase-cam highway racer — traffic with near-miss bonuses, drift banking,
+  fixed chicanes with chevrons, nitro/oil/roadworks, analog steering, real spinning/steering wheels, sky reflections,
+  photoreal Poly Haven (CC0) vegetation impostors, farm buildings, a dispensary, hemp fields and branded billboards
+  ("Never drive impaired"). Scoring contract unchanged and validated against `src/ac-levels.js`; ~26k triangles on screen.
+- **Settings + pause everywhere:** games declare their own options (camera view, graphics detail, effects); core-game pause
+  menu has Settings; every library game got a touch pause button (Resume / Settings / Exit).
+- **Docs and hub copy:** README rewritten to the current catalog (85 playable: 13 core + 72 library), counts, seasons,
+  anti-cheat and admin access; About page game count is now computed live; Terms no longer mention retired casino games.
+- **Owner/legal check needed:** Terms section 3 says cosmetics "cannot be bought", while the Hub Store supports optional paid
+  cosmetic purchases (checkout currently closed). Align the wording with counsel before opening paid checkout.

@@ -1,4 +1,10 @@
-# Library game status (rewritten 2026-10-17 ~9:20 PM ET)
+# Library game status (rewritten 2026-10-17 ~9:20 PM ET; updated 2026-10-23)
+
+> **Latest verification (2026-10-22/23):** `tools/e2e-games-lib.js` on all 74 games live at the time (desktop + iPhone
+> emulation, legit score accepted, forged score rejected, no console errors): 71 pass; Rail Rush passes after the CSP fix;
+> open items are Cube Horde (~180k triangles, over the 150k phone budget) and Throttle Rider (mobile start under software
+> WebGL, needs a real-phone check). Alien Rows and Hex Stack are now retired, leaving **72 live library games**. Every library
+> game now has an on-screen pause button (Resume / Settings / Exit). See docs/AAA-FULL-AUDIT.md.
 
 Branch: v8-games-upgrade (never main). Classification key:
 - REBUILT: new gameplay + art.  ART-REBUILT: new rendering/art on the same core loop.
@@ -11,11 +17,11 @@ Caveats: fill-game sprites/scenery were verified by 390x780 Playwright screensho
 |---|---|---|---|
 | block-drop | 2 / REPLACE | ART-UPGRADED (overlay: bud-bot mascot + pixel sparks, in game.js) - overlays verified by 390x780 screenshot, 0 page errors; signed-in score submit last run before overlays | yes (ok:true, local test account) |
 | maze-muncher | 3 / UPGRADE ART | ART-UPGRADED (new scenery and/or original sprites; mechanic unchanged) | yes (ok:true, local test account) |
-| alien-rows | 2 / REPLACE | REBUILT (gameplay + art) | yes (ok:true, local test account) |
+| alien-rows | 2 / REPLACE | **RETIRED 2026-10-23** (owner: same loop as Star Swarm; scores archived, giveaways moved) | - |
 | cloud-hopper | 3 / UPGRADE ART | ART-UPGRADED (overlay art.js: balloon, birds, sparkles) - overlays verified by 390x780 screenshot, 0 page errors; signed-in score submit last run before overlays | yes (ok:true, local test account) |
 | road-hopper | 3 / UPGRADE ART | JUICE-ONLY (sky props tried, not visible from the top-down camera; reverted) - overlays verified by 390x780 screenshot, 0 page errors; signed-in score submit last run before overlays | yes (ok:true, local test account) |
 | bud-merge | 1 / REPLACE | REBUILT (gameplay + art) | yes (ok:true, local test account) |
-| hex-stack | 2 / REPLACE | REBUILT (gameplay + art) | yes (ok:true, local test account) |
+| hex-stack | 2 / REPLACE | **RETIRED 2026-10-23** (owner: same loop as Block Drop; scores archived, giveaways moved) | - |
 | dino-dash | 1 / REPLACE | REBUILT (gameplay + art) | yes (ok:true, local test account) |
 | rock-buster | 2 / REPLACE | ART-UPGRADED (overlay art.js: freighter + tumbling astronaut) - overlays verified by 390x780 screenshot, 0 page errors; signed-in score submit last run before overlays | yes (ok:true, local test account) |
 | star-swarm | 2 / REPLACE | ART-UPGRADED (overlay art.js: ringed planet, comets, station) - overlays verified by 390x780 screenshot, 0 page errors; signed-in score submit last run before overlays | yes (ok:true, local test account) |
