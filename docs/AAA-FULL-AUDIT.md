@@ -155,3 +155,12 @@ matched to the reference game). Void Swarm is a third vertical space shooter nex
 - Verified: 8 simulated runs (70 m to 7,870 points over 7 minutes) pass the server rule and stay under the rate cap; a signed-in
   run is accepted; e2e-api 323/323, anticheat 12/12, economy 49/49, systems 54/54. e2e-tiebreak (with its prize-proof hook) has
   one failure that is identical on the base branch.
+
+## Round 7 (2026-10-24): Bud Escape art pass (owner: match the reference game's look)
+
+- Flat Kenney look replaced with thick-outline cartoon art: Cash Green is GameArt2D's "Red Hat Boy" (CC0, cap recoloured
+  green, real idle / fly / hurt / death animations); the corridor is ask4asset's sci-fi wall with its windows cut open onto a
+  magenta-lit grow room; GameArt2D sci-fi tiles for ceiling, floor, dolly deck, barrels and saw blades; hamcav90's robo orb
+  (CC0) for drones; FreeArt cartoon crates; Kenney and Openclipart pieces get the same dark outline at build time.
+  Licence record and rebuild steps: `tools/bud-escape-assets/README.md`.
+- Gameplay and scoring unchanged; runs re-validated against the server rule, signed-in run accepted, 60 fps on emulated iPhone 13.

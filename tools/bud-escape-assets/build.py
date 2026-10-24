@@ -1,78 +1,131 @@
-# usage: python3 -I build.py <kenney dir> <openclipart dir> <out dir>
-# Packs the Bud Escape sprites into one atlas (atlas.webp + atlas.json: name -> [x, y, w, h]).
-# <kenney dir> holds the extracted Kenney packs (kenney_<pack>/...), <openclipart dir> the PNG renders of the Openclipart SVGs
-# (oc-<id>.png, see README.md). Every source is CC0 / public domain; the list below is the licence record.
+# usage: python3 -I build.py <src dir> <out dir>
+# Builds the Bud Escape art: atlas.webp + atlas.json (name -> [x, y, w, h], plus "_anchor" feet anchors) and wall.webp.
+# <src dir> holds the unpacked downloads (see README.md):
+#   ga/      GameArt2D freebies (CC0): redhatfiles/, freescifiplatform/, free_plane_sprite/
+#   oga/     OpenGameArt (CC0): orb/ (Sci-Fi Flying Robo Orb), crates/ (FreeArt boxes & crates), scifi_bg1.jpg (ask4asset)
+#   kenney/  Kenney packs (CC0): kenney_<pack>/...
+#   oc/      Openclipart renders (public domain): oc-<id>.png
+# Every sprite below is listed with its source; this file is the licence record. Kenney and Openclipart pieces get the same
+# thick dark outline as the GameArt2D art so the whole game reads in one cartoon style.
 import json, os, sys
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageFilter
 
-K, OC, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
-IND = 'kenney_platformer-pack-industrial/PNG/Retina/platformIndustrial_%s.png'
-TOON = 'kenney_toon-characters/%s/PNG/Poses HD/character_%s_%s.png'
-PART = 'kenney_particle-pack/PNG (Transparent)/%s.png'
-SMOKE = 'kenney_smoke-particles/PNG/%s/%s.png'
-ROBOT = 'kenney_robot-pack/PNG/Side view/%s.png'
-NP = 'kenney_new-platformer-pack-1.1/Sprites/Tiles/Double/%s.png'
-SS = 'kenney_space-shooter-remastered/PNG/%s.png'
+SRC, OUT = sys.argv[1], sys.argv[2]
+P = lambda *a: os.path.join(SRC, *a)
+INK = (31, 24, 40)
+items = []  # (name, loader)
 
-items = []  # (name, path, scale or target height, tint, crop)
-def add(name, path, size=1.0, tint=None, crop=True): items.append((name, path, size, tint, crop))
+def load(path):
+    return Image.open(path).convert('RGBA')
 
-# Cash (Toon Characters "Male person"), warehouse staff (Female person, Male adventurer) and the security robot
-for p in ['run0', 'run1', 'run2', 'idle', 'hold', 'jump', 'fall', 'hurt', 'fallDown', 'slide', 'cheer0', 'cheer1', 'wide', 'duck', 'show']:
-    add('cash_' + p, TOON % ('Male person', 'malePerson', p), 0.8)
+def crop_alpha(im):
+    bb = im.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
+    return im.crop(bb) if bb else im
+
+def scale(im, s):
+    w, h = max(1, round(im.width * s)), max(1, round(im.height * s))
+    return im.resize((w, h), Image.LANCZOS)
+
+def outline(im, px):
+    pad = px + 2
+    big = Image.new('RGBA', (im.width + pad * 2, im.height + pad * 2)); big.paste(im, (pad, pad))
+    a = big.getchannel('A').point(lambda v: 255 if v > 40 else 0)
+    for _ in range(px): a = a.filter(ImageFilter.MaxFilter(3))
+    ink = Image.new('RGBA', big.size, INK + (0,)); ink.putalpha(a)
+    ink.alpha_composite(big); return ink
+
+def tint(im, rgb):
+    lum = im.convert('L'); a = im.getchannel('A'); r, g, b = rgb
+    return Image.merge('RGBA', (lum.point(lambda v: v * r // 255), lum.point(lambda v: v * g // 255), lum.point(lambda v: v * b // 255), a))
+
+def hue_shift_reds(im, to_hue):
+    # recolour strongly red pixels (Red Hat Boy's cap) to another hue, keep shading
+    hsv = im.convert('RGB').convert('HSV'); h, s, v = hsv.split(); hp, sp = h.load(), s.load()
+    for y in range(im.height):
+        for x in range(im.width):
+            if (hp[x, y] < 26 or hp[x, y] > 236) and sp[x, y] > 110: hp[x, y] = (to_hue + hp[x, y] if hp[x, y] < 128 else to_hue - (256 - hp[x, y])) % 256
+    out = Image.merge('HSV', (h, s, v)).convert('RGBA'); out.putalpha(im.getchannel('A')); return out
+
+def add(name, fn): items.append((name, fn))
+def simple(path, s, ol=0, sat=None, tnt=None):
+    def f():
+        im = load(path)
+        if tnt: im = tint(im, tnt)
+        if sat:
+            a = im.getchannel('A'); im = ImageEnhance.Color(im.convert('RGB')).enhance(sat).convert('RGBA'); im.putalpha(a)
+        im = scale(crop_alpha(im), s)
+        return outline(im, ol) if ol else im
+    return f
+
+anchors = {}
+# --- Cash Green: GameArt2D "Red Hat Boy" (CC0), cap recoloured green. One shared crop so every frame keeps the same anchor.
+RH = P('ga', 'redhatfiles', 'png'); RH_BOX, RH_S = (57, 20, 598, 531), 0.4
+for anim, n, key in (('Run', 8, 'run'), ('Jump', 12, 'jump'), ('Dead', 10, 'dead'), ('Hurt', 8, 'hurt'), ('Idle', 10, 'idle')):
+    for i in range(n):
+        add(f'cash_{key}{i}', (lambda a=anim, i=i: scale(hue_shift_reds(load(os.path.join(RH, f'{a} ({i + 1}).png')).crop(RH_BOX), 95), RH_S)))
+anchors['cash'] = [round((390 - RH_BOX[0]) * RH_S, 1), round((506 - RH_BOX[1]) * RH_S, 1)]
+# --- warehouse staff: Kenney Toon Characters (CC0), outlined
+TOON = P('kenney', 'kenney_toon-characters', '%s', 'PNG', 'Poses HD', 'character_%s_%s.png')
 for key, folder, slug in (('fw', 'Female person', 'femalePerson'), ('ma', 'Male adventurer', 'maleAdventurer')):
-    for i in range(8): add(f'{key}_walk{i}', TOON % (folder, slug, f'walk{i}'), 0.55)
-    for i in range(2): add(f'{key}_cheer{i}', TOON % (folder, slug, f'cheer{i}'), 0.55)
-for i in range(8): add(f'rb_walk{i}', TOON % ('Robot', 'robot', f'walk{i}'), 0.55)
-# warehouse (Platformer Pack Industrial, retina)
-for n in ['001', '002', '005', '029', '030', '031', '036', '037', '039', '040', '041', '042', '043', '045', '046', '053', '054', '055',
-          '057', '058', '059', '064', '065', '066', '067', '073', '074', '075', '076', '081', '082', '085', '086', '087', '088', '089',
-          '090', '091', '092', '094', '095', '099', '100', '104', '105', '106']:
-    add('i' + n, IND % n, 1.0, None, n not in ('001', '002', '029', '030', '059', '094', '095'))
-# drones, walker, sled, cannon cart (Robot Pack side view)
-for n in ['robot_redBody', 'robot_redHurt', 'robot_greenBody', 'robot_yellowBody', 'robot_blueDrive1', 'robot_blueDrive2', 'tracks_long1', 'tracks_long2', 'tracks_short1']:
-    add(n, ROBOT % n, 0.8)
-# collectibles and props (New Platformer Pack)
-for n in ['gem_green', 'gem_blue', 'chain', 'bomb', 'bomb_active', 'block_exclamation', 'star', 'heart']:
-    add(n, NP % n, 0.6)
-add('laserRed', SS % 'Lasers/laserRed16', 1.0); add('laserPurple', SS % 'Lasers/laserBlue16', 1.0, '#e879f9')
-# effects (Smoke Particles + Particle Pack, white particles tinted here)
-for i in range(9): add(f'boom{i}', SMOKE % ('Explosion', f'explosion0{i}'), 0.3)
-for i in (0, 4, 8, 12, 16, 20): add(f'puff{i}', SMOKE % ('White puff', f'whitePuff{i:02d}'), 0.34)
-for i in (0, 3, 6): add(f'black{i}', SMOKE % ('Black smoke', f'blackSmoke{i:02d}'), 0.3)
-for n, t in (('muzzle_02', '#fdba74'), ('muzzle_04', '#fde047'), ('spark_05', '#f0abfc'), ('spark_06', '#fde68a'), ('spark_07', '#f5d0fe'),
-             ('light_01', '#d946ef'), ('light_02', '#ffffff'), ('circle_03', '#ffffff'), ('star_06', '#ffffff'), ('smoke_04', '#cbd5e1'),
-             ('dirt_01', '#a8a29e'), ('flare_01', '#ffffff'), ('magic_05', '#a3e635'), ('trace_06', '#ffffff')):
-    add(n, PART % n, 0.25, t)
-# cannabis art (Openclipart, public domain): plant, leaf, bong; plus a security camera
-add('plant', os.path.join(OC, 'oc-265563.png'), 0.55); add('plant2', os.path.join(OC, 'oc-238184.png'), 0.55)
-add('leaf', os.path.join(OC, 'oc-277751.png'), 0.5); add('bong', os.path.join(OC, 'oc-320677.png'), 0.62); add('camera', os.path.join(OC, 'oc-1594.png'), 0.3)
+    for i in range(8): add(f'{key}_walk{i}', simple(TOON % (folder, slug, f'walk{i}'), 0.6, 4))
+    for i in range(2): add(f'{key}_cheer{i}', simple(TOON % (folder, slug, f'cheer{i}'), 0.6, 4))
+# --- security drone: "Sci-Fi Flying Robo Orb" by hamcav90 (OpenGameArt, CC0)
+add('drone', simple(P('oga', 'orb', 'orb_explosive_active.png'), 0.42)); add('drone_off', simple(P('oga', 'orb', 'orb_deactived_or_destroyed.png'), 0.42))
+for i in range(6): add(f'orbpart{i}', simple(P('oga', 'orb', f'orb_part_{i}.png'), 0.42))
+# --- lab set: GameArt2D "Free Sci-Fi Platformer Tileset" (CC0)
+GA = P('ga', 'freescifiplatform', 'png')
+for n, f, s in (('barrel_red', 'Objects/Barrel (1).png', 0.5), ('barrel_green', 'Objects/Barrel (2).png', 0.5), ('box', 'Objects/Box.png', 0.45), ('door', 'Objects/DoorLocked.png', 0.5),
+                ('saw', 'Objects/Saw.png', 0.45), ('switch', 'Objects/Switch (1).png', 0.5), ('switch2', 'Objects/Switch (2).png', 0.5), ('fence', 'Tiles/Fence (2).png', 0.5)):
+    add(n, simple(os.path.join(GA, f), s))
+for n, f in (('floor_top', 'Tiles/Tile (2).png'), ('floor_top2', 'Tiles/Tile (3).png'), ('floor', 'Tiles/Tile (5).png'), ('ceil', 'Tiles/BGTile (7).png'), ('ceil2', 'Tiles/BGTile (1).png'), ('panel', 'Tiles/BGTile (3).png')):
+    add(n, (lambda f=f: scale(load(os.path.join(GA, f)), 0.5)))
+# drone shot: GameArt2D "Free Plane Sprite" bullet (CC0)
+for i in range(5): add(f'shot{i}', simple(P('ga', 'free_plane_sprite', 'png', 'Bullet', f'Bullet ({i + 1}).png'), 0.35))
+# --- government crates: "FreeArt boxes & crates" (OpenGameArt, CC0); blue tint for the stamped government crates
+CR = P('oga', 'crates')
+for n in ('obj_crate001', 'obj_crate002', 'obj_crate004', 'obj_box001', 'obj_box004', 'obj_box005'): add(n, simple(os.path.join(CR, n + '.png'), 0.75))
+add('crate_blue', simple(os.path.join(CR, 'obj_crate001.png'), 0.75, 0, None, (120, 170, 255)))
+# --- Kenney props (CC0), outlined
+IND = P('kenney', 'kenney_platformer-pack-industrial', 'PNG', 'Retina', 'platformIndustrial_%s.png')
+for n, s in (('039', 0.6), ('040', 0.6), ('045', 0.6), ('053', 0.6), ('064', 0.8), ('065', 0.8), ('081', 0.5), ('090', 0.6), ('091', 0.6), ('106', 0.6)):
+    add('i' + n, simple(IND % n, s, 3))
+NP = P('kenney', 'kenney_new-platformer-pack-1.1', 'Sprites', 'Tiles', 'Double', '%s.png')
+add('gem_green', simple(NP % 'gem_green', 0.55, 3, 1.25)); add('chain', simple(NP % 'chain', 0.55, 2)); add('bomb_active', simple(NP % 'bomb_active', 0.55, 3))
+ROB = P('kenney', 'kenney_robot-pack', 'PNG', 'Side view', '%s.png')
+for n in ('robot_greenBody', 'robot_yellowBody', 'robot_blueDrive1', 'robot_blueDrive2', 'tracks_long1'): add(n, simple(ROB % n, 0.8, 4))
+# --- effects (Kenney Smoke Particles + Particle Pack, CC0), no outline; white particles tinted here
+SM = P('kenney', 'kenney_smoke-particles', 'PNG', '%s', '%s.png')
+for i in range(9): add(f'boom{i}', simple(SM % ('Explosion', f'explosion0{i}'), 0.3))
+for i in (0, 4, 8, 12, 16, 20): add(f'puff{i}', simple(SM % ('White puff', f'whitePuff{i:02d}'), 0.34))
+PP = P('kenney', 'kenney_particle-pack', 'PNG (Transparent)', '%s.png')
+for n, t in (('muzzle_02', (253, 186, 116)), ('muzzle_04', (253, 224, 71)), ('spark_05', (254, 240, 138)), ('spark_06', (253, 230, 138)), ('light_01', (217, 70, 239)),
+             ('light_02', (255, 255, 255)), ('light_03', (250, 204, 21)), ('circle_03', (255, 255, 255)), ('star_06', (255, 255, 255)), ('dirt_01', (168, 162, 158)), ('magic_05', (163, 230, 53)), ('trace_06', (255, 255, 255))):
+    add(n, simple(PP % n, 0.25, 0, None, t))
+# --- cannabis art: Openclipart (public domain) plants, leaf and bong; saturated and outlined to match
+add('plant', simple(P('oc', 'oc-265563.png'), 0.55, 2, 1.8)); add('plant2', simple(P('oc', 'oc-238184.png'), 0.55, 2, 1.8))
+add('leaf', simple(P('oc', 'oc-277751.png'), 0.5, 3)); add('bong', simple(P('oc', 'oc-320677.png'), 0.62, 4)); add('camera', simple(P('oc', 'oc-1594.png'), 0.3, 3))
 
-def load(name, path, size, tint, crop):
-    p = path if os.path.isabs(path) else os.path.join(K, path)
-    im = Image.open(p).convert('RGBA')
-    if tint:
-        r, g, b = (int(tint[i:i + 2], 16) for i in (1, 3, 5))
-        lum = im.convert('L'); a = im.getchannel('A')
-        im = Image.merge('RGBA', (lum.point(lambda v: v * r // 255), lum.point(lambda v: v * g // 255), lum.point(lambda v: v * b // 255), a))
-    if name.startswith('plant'):  # botanical renders are olive; push them toward the saturated greens of the Kenney art
-        a = im.getchannel('A'); im = ImageEnhance.Brightness(ImageEnhance.Color(im.convert('RGB')).enhance(1.7)).enhance(1.12).convert('RGBA'); im.putalpha(a)
-    if crop:
-        bb = im.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
-        if bb: im = im.crop(bb)
-    w, h = max(1, round(im.width * size)), max(1, round(im.height * size))
-    return im.resize((w, h), Image.LANCZOS) if (w, h) != im.size else im
-
-ims = [(n, load(n, p, s, t, c)) for n, p, s, t, c in items]
+ims = [(n, f()) for n, f in items]
 ims.sort(key=lambda t: -t[1].height)
 W, PAD = 2048, 2; x = y = rowh = 0; pos = {}
 for n, im in ims:
     if x + im.width + PAD > W: x, y, rowh = 0, y + rowh + PAD, 0
     pos[n] = [x, y, im.width, im.height]; x += im.width + PAD; rowh = max(rowh, im.height)
-H = y + rowh
-sheet = Image.new('RGBA', (W, H))
+sheet = Image.new('RGBA', (W, y + rowh))
 for n, im in ims: sheet.paste(im, tuple(pos[n][:2]))
 os.makedirs(OUT, exist_ok=True)
-sheet.save(os.path.join(OUT, 'atlas.webp'), quality=90, method=6)
+sheet.save(os.path.join(OUT, 'atlas.webp'), quality=88, method=6)
+pos['_anchor'] = anchors
 json.dump(pos, open(os.path.join(OUT, 'atlas.json'), 'w'), separators=(',', ':'))
-print(W, H, len(pos), 'sprites', os.path.getsize(os.path.join(OUT, 'atlas.webp')) // 1024, 'KB')
+print('atlas', W, sheet.height, len(ims), 'sprites', os.path.getsize(os.path.join(OUT, 'atlas.webp')) // 1024, 'KB')
+
+# --- corridor wall: ask4asset "Sci-Fi Background" (OpenGameArt, CC0). One pillar + window period, the window glass cut out so the
+# grow room behind shows through (a light glass tint keeps it reading as a window).
+bg = load(P('oga', 'scifi_bg1.jpg')).crop((265, 0, 1548, 1080))
+from PIL import ImageDraw
+mask = Image.new('L', bg.size, 255); d = ImageDraw.Draw(mask)
+ox = 372 - 265; win = [(ox + 118, 100), (ox + 1058, 100), (ox + 1176, 190), (ox + 1176, 890), (ox + 1058, 980), (ox + 118, 980), (ox, 890), (ox, 190)]
+d.polygon(win, fill=38)
+bg.putalpha(mask); bg = scale(bg, 0.75)
+bg.save(os.path.join(OUT, 'wall.webp'), quality=86, method=6)
+print('wall', bg.size, os.path.getsize(os.path.join(OUT, 'wall.webp')) // 1024, 'KB')

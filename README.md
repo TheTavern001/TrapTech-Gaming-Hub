@@ -19,7 +19,7 @@ power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-
 - **Restored on this branch:** cosmetics, achievements and rotating quests had been replaced by stubs on 2026-10-19..21;
   restored from `099effa` with the AAA designs merged properly.
 - **Rebuild in progress** ([docs/CORE-GAME-REBUILD-PLAN.md](docs/CORE-GAME-REBUILD-PLAN.md)): **Drift Rush v9** (3D highway
-  racer) and **Bud Escape** (the Jetpack Dash rebuild: 2D Joyride-style warehouse escape with Kenney CC0 art, 7 vehicles and daily missions) are done; Memory Match is next. Stack and
+  racer) and **Bud Escape** (the Jetpack Dash rebuild: 2D Joyride-style warehouse escape with outlined cartoon CC0 art, 7 vehicles and daily missions) are done; Memory Match is next. Stack and
   Munchies Snake are kept as they are.
 - **Jetpack Dash is now Bud Escape** (same game id `jetpack-dash`, scored in meters + daily mission bonus). On the first boot of
   this version, all classic Jetpack Dash runs move to the retired id `jetpack-dash-m` (board archived, history kept) and pending
