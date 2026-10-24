@@ -123,3 +123,14 @@ matched to the reference game). Void Swarm is a third vertical space shooter nex
   have rejected legitimate runs). Tiers 12k / 150k / 600k; `docs/score-ranges.json` holds design estimates until real data
   exists (`tools/score-sim.js` still models meters and must not be re-run for this game). Meter runs migrate once to the
   retired id `jetpack-dash-m` (archived board).
+
+## Round 5 (2026-10-24): Jetpack Dash as a 2D side-scroller
+
+- **Owner decision:** straight 2D side-scrolling like the original reference, not 3D. `public/js/jetpack.js` is now plain
+  canvas 2D (no three.js): pre-baked parallax lab tiles (grow-room windows, pillars, pipes, light cones, hazard floor),
+  pilot sprites pre-rendered from the Quaternius rig (`public/assets/jetpack/pilot.webp`, tooling in `tools/jetpack-sprites/`),
+  electric zapper arcs, missiles with smoke, laser emitters, spinning coins, shield bubble, jetpack flame and sparks.
+- Landscape: the corridor fills the screen. Portrait: a wide band with ~12 m visible ahead (as in the reference) and
+  service levels above/below; HUD moves right in landscape so it never covers the pilot.
+- **Gameplay, spawn order and every scoring event are unchanged** (same server rule). Re-validated: 9 simulated runs from
+  4k to 1.86M points pass `checkEvents`; a signed-in run is accepted (not held). Settings: graphics detail, screen shake.
