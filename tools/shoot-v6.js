@@ -6,7 +6,7 @@ const BASE = process.env.BASE || 'http://localhost:8787'; const SHOTS = path.joi
 const TH = +process.env.THROTTLE || 1; const NOSHOT = !!process.env.NOSHOT;
 fs.mkdirSync(SHOTS, { recursive: true }); fs.mkdirSync(FR, { recursive: true });
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const ALL = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
+const ALL = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
 (async () => {
   const games = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
   const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--autoplay-policy=no-user-gesture-required', '--enable-gpu-rasterization', '--ignore-gpu-blocklist'] });
@@ -28,8 +28,8 @@ const ALL = ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-matc
     const box = await p.locator('#game').boundingBox();
     await p.touchscreen.tap(box.x + box.width / 2, box.y + box.height * 0.45);
     await p.evaluate(() => { const G = window.__game; const st = window.__fps = { n: 0, t0: performance.now(), d: [] }; const od = G.draw.bind(G); G.draw = function () { const t = performance.now(); od(); st.d.push(performance.now() - t); }; const loop = () => { st.n++; if (!st.stop) requestAnimationFrame(loop); }; requestAnimationFrame(loop); });
-    const plan = { 'jetpack-dash': 'hold', 'drift-rush': 'steer', 'memory-match': 'flip', 'terp-tapper': 'tap', 'high-score': 'tap', 'plinko': 'tap', 'spin-to-win': 'tap', 'blazed-roulette': 'tap', 'stack-2048': 'swipe', 'munchies-snake': 'snake', 'brick-breaker': 'steer', 'sky-hopper': 'hop' }[g];
-    const t0 = Date.now(); const dur = ({ 'jetpack-dash': 2500, 'memory-match': 600, 'munchies-snake': 2200, 'sky-hopper': 1400 }[g] || 3000);
+    const plan = { 'jetpack-dash': 'hold', 'drift-rush': 'steer': 'flip', 'terp-tapper': 'tap', 'high-score': 'tap', 'plinko': 'tap', 'spin-to-win': 'tap', 'blazed-roulette': 'tap', 'stack-2048': 'swipe', 'munchies-snake': 'snake', 'brick-breaker': 'steer', 'sky-hopper': 'hop' }[g];
+    const t0 = Date.now(); const dur = ({ 'jetpack-dash': 2500: 600, 'munchies-snake': 2200, 'sky-hopper': 1400 }[g] || 3000);
     while (Date.now() - t0 < dur) {
       if (plan === 'hold') { await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await p.mouse.down(); await sleep(200); await p.mouse.up(); await sleep(220); }
       else if (plan === 'steer') { await sleep(300); }

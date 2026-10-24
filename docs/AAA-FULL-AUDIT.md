@@ -178,3 +178,11 @@ matched to the reference game). Void Swarm is a third vertical space shooter nex
   Bong Hover (glass bong with water), Seed Pod Cannon Cart, Smoke Cloud Board.
 - The ask4asset wall, the robo orb, the GameArt2D tiles and the Openclipart plants/bong are no longer used.
 - Gameplay and scoring unchanged; runs re-validated, signed-in run accepted, 60 fps on emulated iPhone 13.
+
+## Round 9 (2026-10-24): Memory Match removed (owner)
+
+- `memory-match` moved to the retired list (`src/config.js`, replaced by Stack): on boot its board is archived and open
+  giveaways/tournaments move to Stack (`retire()` in `src/games-v7.js`); `public/js/games/memory-match.js` deleted.
+  Catalog: 12 core + 72 library = 84 playable. The L4 replay test in `tools/e2e-api.js` now uses Stack's drop-log replay
+  (legit run verified, tampered run rejected); test tools no longer play Memory Match. e2e-api 321/321 on a seeded DB.
+- Bud Escape art: owner rejected the toon-render pass as well; the game will be revisited later.

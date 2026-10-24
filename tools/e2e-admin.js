@@ -111,7 +111,7 @@ function player() {
     console.log('# picking a game pre-fills its profile');
     r = await O('/api/admin/v7/gw/drafts', { body: { game: 'sling-smash' } }); let dr = (await O('/api/admin/v7/gw/drafts/' + r.body.id)).body.data;
     ok(dr.games.ids.join() === 'sling-smash' && dr.games.competition.type === 'campaign' && dr.games.competition.level_to === 30 && dr.games.score_rule === 'campaign' && dr.schedule.end_at - dr.schedule.start_at === 168 * H, 'Sling Smash: campaign levels 1-30, cumulative rule, 7-day length', dr.games);
-    r = await O('/api/admin/v7/gw/drafts', { body: { game: 'memory-match' } }); dr = (await O('/api/admin/v7/gw/drafts/' + r.body.id)).body.data;
+    r = await O('/api/admin/v7/gw/drafts', { body: { game: 'high-score' } }); dr = (await O('/api/admin/v7/gw/drafts/' + r.body.id)).body.data;
     ok(dr.games.competition.type === 'short_session' && dr.games.attempts === 3, 'Memory Match: short session, best of 3', dr.games);
     r = await O('/api/admin/v7/gw/drafts', { body: { game: 'plinko' } }); dr = (await O('/api/admin/v7/gw/drafts/' + r.body.id)).body.data; ok(!dr.games.ids.includes('plinko'), 'a chance game is never pre-filled into a giveaway');
 

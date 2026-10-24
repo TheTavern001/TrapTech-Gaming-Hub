@@ -101,7 +101,7 @@ Caveats: fill-game sprites/scenery were verified by 390x780 Playwright screensho
 | haze-defense (core) | 3 / UPGRADE ART | CORE - other executor | n/a |
 | high-score (core) | 3 / UPGRADE ART | CORE - other executor | n/a |
 | jetpack-dash (core) | 3 / UPGRADE ART | CORE - other executor | n/a |
-| memory-match (core) | 3 / UPGRADE ART | CORE - other executor | n/a |
+| memory-match (core) | RETIRED 2026-10-24 (owner) → stack | archived board | n/a |
 | munchies-snake (core) | 3 / UPGRADE ART | CORE - other executor | n/a |
 | sky-hopper (core) | 3 / UPGRADE ART | CORE - other executor | n/a |
 | sling-smash (core) | 3 / UPGRADE ART | CORE - other executor | n/a |

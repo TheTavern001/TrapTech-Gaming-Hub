@@ -60,7 +60,7 @@ function seed() {
       db.prepare(`UPDATE giveaways SET game_id=?, tier=@tier, brand_color=@brand_color, featured=@featured, min_score=@min_score, prize_tiers=@prize_tiers WHERE id=${g.id}`)
         .run(games[0], { tier: '', brand_color: '', featured: 0, min_score: 0, prize_tiers: '', ...extra }); };
     setG('$250 Store Credit', ['jetpack-dash', 'stack', 'terp-tapper'], { tier: 'premium', brand_color: '#e11d2a', featured: 1 });
-    setG('PS5 + Games Bundle', ['jetpack-dash', 'drift-rush', 'high-score', 'memory-match'], { tier: 'elite', brand_color: '#10b981', featured: 1, prize_tiers: '1st: PlayStation 5 + 3 games\n2nd: $100 store credit\n3rd: Controller + headset\nRandom: 2x Gaming Hub merch packs' });
+    setG('PS5 + Games Bundle', ['jetpack-dash', 'drift-rush', 'high-score', 'stack'], { tier: 'elite', brand_color: '#10b981', featured: 1, prize_tiers: '1st: PlayStation 5 + 3 games\n2nd: $100 store credit\n3rd: Controller + headset\nRandom: 2x Gaming Hub merch packs' });
     setG('Neon Merch Drop', ['void-swarm', 'munchies-snake'], { tier: 'basic' });
     setG('Launch Week Cash Prize', ['jetpack-dash'], { tier: 'basic' });
     const insB = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,start_date,end_date,details,status,created_at,is_demo) VALUES (?,?,?,?,?,?,?,?,?,?,1)`);

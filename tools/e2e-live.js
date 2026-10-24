@@ -20,7 +20,7 @@ setInterval(() => { if (Date.now() - T0 > 25 * 60e3) { console.error('WATCHDOG: 
 const DESKTOP = { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 };
 const PROFILES = [
   { id: 'desktop', dev: DESKTOP, touch: false, games: ['stack-2048', 'brick-breaker', 'high-score'] },
-  { id: 'iphone14', dev: devices['iPhone 14'], touch: true, games: ['munchies-snake', 'sky-hopper', 'memory-match'] },
+  { id: 'iphone14', dev: devices['iPhone 14'], touch: true, games: ['munchies-snake', 'sky-hopper'] },
   { id: 'pixel7', dev: devices['Pixel 7'], touch: true, games: ['drift-rush', 'blazed-roulette', 'terp-tapper'] },
 ];
 function watch(page, tag) {
@@ -112,7 +112,7 @@ async function passGateUI(p) {
         const gl = await j('/api/leaderboard?game=global&limit=500'); const gw = await j('/api/giveaways'); const t = await j('/api/tournaments'); const c = await j('/api/community'); const ch = await j('/api/channels');
         const sponsors = {}; for (const g of games) { const s = await j('/api/games/' + g + '/sponsor'); if (s && (s.sponsor || s.giveaway || s.channel)) sponsors[g] = s; }
         return { global_leaderboard_players: gl && gl.total, demo_rows_on_leaderboard: gl && gl.rows.filter(r => r.demo).length, giveaways: gw && gw.giveaways.length, demo_giveaways: gw && gw.giveaways.filter(g => g.is_demo || g.demo).length, tournaments: t && t.tournaments.length, community_items: c && c.items.length, channels: ch && ch.channels.length, game_sponsors: sponsors };
-      }, ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'memory-match', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper']);
+      }, ['jetpack-dash', 'drift-rush', 'plinko', 'spin-to-win', 'high-score', 'blazed-roulette', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper']);
       console.log('   demo data check', JSON.stringify(report.demo));
       await ctx.close(); }
 

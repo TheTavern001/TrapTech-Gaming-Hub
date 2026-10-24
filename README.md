@@ -1,7 +1,7 @@
 # The Gaming Hub by Trap Tech Solutions
 
 Mobile-first game hub with accounts, leaderboards, giveaways, a booking request system and an admin dashboard, designed,
-built and operated by **Trap Tech Solutions**. **85 playable games**: 13 core games and 72 Games Library titles (12 retired IDs are kept only so old scores and links still resolve), daily quests, login streaks, XP levels, a free season
+built and operated by **Trap Tech Solutions**. **84 playable games**: 12 core games and 72 Games Library titles (13 retired IDs are kept only so old scores and links still resolve), daily quests, login streaks, XP levels, a free season
 track, tournaments (timed and bracket), friends, notifications, share cards and invite codes. Competitive outcomes remain
 server-validated and purchases are limited to cosmetic items, profile presentation, and season-track content—never gameplay
 power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-gap research and sources.
@@ -13,13 +13,13 @@ power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-
 
 **As of 2026-10-23** (branch `claude/fix-cosmetics-quests-4l4mnz`; full detail in [docs/AAA-FULL-AUDIT.md](docs/AAA-FULL-AUDIT.md)):
 
-- **Live catalog:** 13 core games + 72 Games Library titles = **85 playable**. Retired and redirected: Plinko, Spin to Win,
-  Blazed Roulette, Stack 2048 (core); Alien Rows → Star Swarm, Hex Stack → Block Drop, and six duplicate driving titles
+- **Live catalog:** 12 core games + 72 Games Library titles = **84 playable**. Retired and redirected: Plinko, Spin to Win,
+  Blazed Roulette, Stack 2048, Memory Match (owner, 2026-10-24) → Stack (core); Alien Rows → Star Swarm, Hex Stack → Block Drop, and six duplicate driving titles
   → Hill Hauler / Drift Rush (library).
 - **Restored on this branch:** cosmetics, achievements and rotating quests had been replaced by stubs on 2026-10-19..21;
   restored from `099effa` with the AAA designs merged properly.
 - **Rebuild in progress** ([docs/CORE-GAME-REBUILD-PLAN.md](docs/CORE-GAME-REBUILD-PLAN.md)): **Drift Rush v9** (3D highway
-  racer) and **Bud Escape** (the Jetpack Dash rebuild: 2D Joyride-style warehouse escape with outlined cartoon CC0 art, 7 vehicles and daily missions) are done; Memory Match is next. Stack and
+  racer) and **Bud Escape** (the Jetpack Dash rebuild: 2D Joyride-style warehouse escape with outlined cartoon CC0 art, 7 vehicles and daily missions) are done (Bud Escape art is being redone); the remaining core games are next. Stack and
   Munchies Snake are kept as they are.
 - **Jetpack Dash is now Bud Escape** (same game id `jetpack-dash`, scored in meters + daily mission bonus). On the first boot of
   this version, all classic Jetpack Dash runs move to the retired id `jetpack-dash-m` (board archived, history kept) and pending
@@ -101,13 +101,12 @@ practice runs, but those scores aren't saved.
 
 All core games use the same signed run-token flow and accept only server-validated score submissions. The server checks the
 score against a per-game envelope (`perSec × server-measured seconds + grace`) and, at anti-cheat level 3–4, the game's event
-log (`src/ac-levels.js`); Memory Match and Stack are additionally replay-verified from the seed.
+log (`src/ac-levels.js`); Stack is additionally replay-verified from the drop log.
 
 | Game | Scoring loop | Server envelope |
 |---|---|---|
 | Bud Escape (`jetpack-dash`) | Meters travelled + 200 per completed daily mission (max 3) | 25 m/s + 700 grace; event log |
 | Drift Rush (v9, 3D) | Meters driven + banked drift and near-miss points (multiplier up to x3) | 240/s + 200 grace; event log |
-| Memory Match | Pair score, combo, time left, board bonus; replay-verified | 1,100/s + 500 grace |
 | High Score | Reflex targets, accuracy and combo | 1,100/s + 300 grace |
 | Terp Tapper | Rhythm timing 100/60/30 per note × combo | 4,000/s + 500 grace |
 | Neon Munchies | Pellets, snacks, golden brownies, rival orbs | 400/s + 1,000 grace |
@@ -246,7 +245,7 @@ Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store C
 - Rate limits: 20 run starts per minute per player (40 per IP) and 30 score submissions per minute per IP. Login, signup and booking
   are rate-limited per IP. IPs are stored only as salted hashes.
 - Each run is seeded by the server; gameplay randomness comes from that seed, so every player of a seed gets the same game.
-- Level 3–4 games also send an event log that `src/ac-levels.js` checks against the game's rules (sums, rates, legal values); Memory Match and Stack are replayed from the seed.
+- Level 3–4 games also send an event log that `src/ac-levels.js` checks against the game's rules (sums, rates, legal values); Stack is replayed from its drop log.
 - Limitation: it's a client-side game, so a skilled cheater can still script plausible scores. Use the admin tools before paying out prizes:
   the winner review queue (flags, per-run rate vs cap, shared IP/device), ban, and the runs CSV. Giveaway standings also re-check every run against the caps,
   so a run inserted past the API is excluded and flagged.

@@ -67,11 +67,6 @@ const GAMES = [
     howto: 'Hold to charge the power meter and release to spin. The wheel always travels the same distance for the same power, so read the wheel and time your release. You have 3 lives: landing on BUST costs one. BONUS gives a life back (max 5) and x2 doubles your next spin. Every 5 spins the wheel reshuffles, the meter gets faster and another BUST wedge appears. Spin until your lives run out.',
     scoring: 'Score = total points from all your spins. No spin limit. Points only, no real money.',
     ac: { perSec: 700, ramp: 0, grace: 2000, max: MAX_SCORE, coinsPerSec: 1 }, tiers: [4100, 14050, 19150] },
-  { id: 'memory-match', title: 'Memory Match', category: 'Puzzle', tags: ['Puzzle', 'Memory'], playable: true, unit: 'pts', module: 'games/memory-match.js', cls: 'MemoryMatch',
-    art: '/assets/cards/v5/memory-match.webp', artTall: '/assets/cards/v5/memory-match-tall.webp', desc: 'Flip cards, find pairs, beat the board clock. Endless boards, each one with less time.',
-    howto: 'Memorize the cards, then tap two at a time to find pairs. Every board has its own clock, and each new board gives you a little less time per pair. Chain matches without a miss to raise your combo (up to x5). Clear the board before its clock runs out to deal the next one; if the clock hits zero the run ends. Boards never run out.',
-    scoring: 'Score = 100 x combo per pair + 10 per second left on the board clock + 50 x board number per clear. Replay-verified on the server.',
-    ac: { perSec: 1100, ramp: 0, grace: 500, max: MAX_SCORE, coinsPerSec: 2 }, tiers: [2650, 62150, 110800] },
   { id: 'high-score', title: 'High Score', category: 'Arcade', tags: ['Arcade', 'Reflex'], playable: true, unit: 'pts', module: 'games/high-score.js', cls: 'HighScore',
     art: '/assets/cards/v5/high-score.webp', artTall: '/assets/cards/v5/high-score-tall.webp', desc: 'A quick-fire neon reflex challenge built for leaderboard bragging rights.',
     howto: 'Tap the glowing targets before they shrink away. Hit dead center for bonus points, gold targets are worth double, and never tap the red bombs. Missing a target or hitting a bomb costs a life (3 lives, a heart every 100 hits). Targets keep getting smaller, faster and more numerous for as long as you last.',
@@ -135,6 +130,8 @@ const GAMES = [
 const RETIRED = [
   // 2026-10-24: Jetpack Dash was rebuilt as Bud Escape (v9). Classic runs were moved to this id and archived.
   { id: 'jetpack-dash-m', title: 'Jetpack Dash (classic)', retired: true, playable: false, replacedBy: 'jetpack-dash', unit: 'm', art: '/assets/cards/v5/jetpack-dash.webp', ac: { perSec: 30, ramp: 0, grace: 25, max: 10_000_000, coinsPerSec: 12 }, tiers: [440, 3400, 5050] },
+  // 2026-10-24 (owner): Memory Match removed from the hub. Board archived, open giveaways/tournaments moved to Stack.
+  { id: 'memory-match', title: 'Memory Match (retired)', retired: true, playable: false, replacedBy: 'stack', unit: 'pts', art: '/assets/cards/v5/memory-match.webp', ac: { perSec: 1100, ramp: 0, grace: 500, max: MAX_SCORE, coinsPerSec: 2 }, tiers: [2650, 62150, 110800] },
   { id: 'stack-2048', title: 'Stack 2048 (retired)', retired: true, playable: false, replacedBy: 'stack', unit: 'pts', art: '/assets/cards/v7/stack.svg', ac: { perSec: 150, ramp: 0, grace: 400, max: 10_000_000, coinsPerSec: 1 }, tiers: [2500, 8000, 20000] },
 ];
 // v7 (item 21): pure-chance games stay playable "just for fun" but can never be linked to (or count for) a giveaway.
@@ -147,7 +144,7 @@ for (const id of CHANCE_RETIRED) { const i = GAMES.findIndex(g => g.id === id); 
 const JUST_FOR_FUN = new Set(); // no just-for-fun games any more
 // v7 anti-cheat level per game (src/ac-levels.js, docs/ANTI-CHEAT.md). Every game gets L1 + L2; L3 = event log checked
 // against the game rules; L4 = the server re-simulates the run from the seed + input log and computes the real score.
-const AC_LEVEL = { 'sky-hopper': 2, stack: 4, 'memory-match': 4 }; // everything else: 3
+const AC_LEVEL = { 'sky-hopper': 2, stack: 4 }; // everything else: 3
 for (const g of GAMES) if (!g.retired) g.acLevel = AC_LEVEL[g.id] || 3;
 for (const g of GAMES) g.giveaway = !JUST_FOR_FUN.has(g.id);
 

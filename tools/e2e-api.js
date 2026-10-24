@@ -157,15 +157,15 @@ function client() {
   const C = client(); const uc = 'e2e_' + Math.random().toString(36).slice(2, 8);
   r = await C('/api/auth/signup', { body: { username: uc, password: 'hunter2hunter2', agree: true, dob: '1990-05-05' } }); ok(r.body.ok, 'signup C (game runner) ' + uc);
   r = await anon('/api/games'); const GAMES = r.body.games;
-  ok(GAMES.length === 13 && GAMES.every(g => g.playable && g.module && g.ac && g.tiers), 'all 13 games (all giveaway-eligible) are playable with module + caps + tiers', GAMES.map(g => g.id));
+  ok(GAMES.length === 12 && GAMES.every(g => g.playable && g.module && g.ac && g.tiers), 'all 12 games (all giveaway-eligible) are playable with module + caps + tiers', GAMES.map(g => g.id));
   for (const g of GAMES) { const js = await anon('/js/' + g.module); ok(js.status === 200 && String(js.body).includes('class ' + g.cls), `game module served: ${g.module}`); }
   // multi-game + min-score giveaways created BEFORE C plays
   const t1 = Date.now();
-  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Multi Giveaway', host: 'E2E Brand', start_at: t1 - 60e3, end_at: t1 + 3600e3, game_ids: ['terp-tapper', 'memory-match'], placements: ['featured', 'giveaway'], brand_color: '#22d3ee', featured: true, min_score: 0, prize_tiers: '1st - test\nRandom - test', active: true } });
-  ok(r.body.ok, 'admin creates multi-game giveaway (terp-tapper + memory-match)', r.body); const gmulti = r.body.id;
+  r = await ADM('/api/admin/giveaways', { body: { title: 'E2E Multi Giveaway', host: 'E2E Brand', start_at: t1 - 60e3, end_at: t1 + 3600e3, game_ids: ['terp-tapper', 'brick-breaker'], placements: ['featured', 'giveaway'], brand_color: '#22d3ee', featured: true, min_score: 0, prize_tiers: '1st - test\nRandom - test', active: true } });
+  ok(r.body.ok, 'admin creates multi-game giveaway (terp-tapper + brick-breaker)', r.body); const gmulti = r.body.id;
   r = await ADM('/api/admin/giveaways', { body: { title: 'E2E MinScore Giveaway', host: 'E2E', start_at: t1 - 60e3, end_at: t1 + 3600e3, game_ids: ['terp-tapper'], min_score: 1000, active: true } });
   ok(r.body.ok, 'admin creates min-score giveaway (terp-tapper, 1000+)'); const gmin = r.body.id;
-  r = await anon('/api/giveaways/' + gmulti); ok(r.body.giveaway.game_ids.join() === 'terp-tapper,memory-match' && r.body.giveaway.placements.includes('featured') && !('tier' in r.body.giveaway) && r.body.giveaway.prize_tiers.length === 2 && r.body.giveaway.featured, 'public giveaway exposes game_ids, placements (no tier), prize tiers, featured', r.body.giveaway);
+  r = await anon('/api/giveaways/' + gmulti); ok(r.body.giveaway.game_ids.join() === 'terp-tapper,brick-breaker' && r.body.giveaway.placements.includes('featured') && !('tier' in r.body.giveaway) && r.body.giveaway.prize_tiers.length === 2 && r.body.giveaway.featured, 'public giveaway exposes game_ids, placements (no tier), prize tiers, featured', r.body.giveaway);
   const PLAUS = { 'jetpack-dash': 50, 'drift-rush': 300, plinko: 600, 'spin-to-win': 800, 'memory-match': 400, 'high-score': 250, 'blazed-roulette': 1150, 'terp-tapper': 600, 'stack-2048': 300, 'munchies-snake': 100, 'brick-breaker': 500, 'sky-hopper': 5, 'void-swarm': 50, 'grow-guard': 0, 'sling-smash': 0, 'haze-defense': 0 /* 12+ submits/min = submit_burst note; 0 keeps them un-held */, stack: 30 };
   await sleep(61e3); // L2 per-IP submit limit (30/min): let earlier submissions age out
   const toks = {};
@@ -186,22 +186,22 @@ function client() {
   const ids = new Set(allUnlocked.map(a => a.id));
   ok(ids.has('first-run') && ids.has('variety-3'), 'runs unlock first-run, and variety-3', [...ids]);
   ok(ids.has('drift-rush-bronze') === false, 'no bronze for drift-rush at 300 (< 1300 threshold)');
-  ok(ids.has('memory-match-bronze') === false, 'thresholds respected server-side');
+  ok(ids.has('brick-breaker-bronze') === false, 'thresholds respected server-side');
 
   // (removed: event run; prize events locked)
   console.log('  SKIP multi-game giveaway scoring + Sponsor-a-Host section (prize events locked; sponsor flow covered by e2e-sponsor-brands)');
   if (process.env.E2E_PRIZE_EVENTS === '1') {
   console.log('# v2: multi-game giveaway + one-click linking');
   r = await anon(`/api/leaderboard?giveaway=${gmulti}`); let rowC = r.body.rows.find(x => x.username === uc);
-  ok(rowC && rowC.score === 1000, 'multi-game giveaway score = sum of best per linked game (600 + 400)', rowC);
+  ok(rowC && rowC.score === 1100, 'multi-game giveaway score = sum of best per linked game (600 + 500)', rowC);
   r = await anon(`/api/leaderboard?giveaway=${gmin}`); ok(!r.body.rows.some(x => x.username === uc), 'min-score giveaway excludes C (600 < 1000)');
   r = await ADM(`/api/admin/giveaways/${gmulti}/games`, { body: { game_id: 'high-score', linked: true } }); ok(r.body.ok && r.body.game_ids.includes('high-score'), 'one-click link high-score to giveaway');
   { const x = await C('/api/run/start', { body: { game_id: 'high-score', event: gmulti } }); await sleep(2300); await C('/api/score', { body: { token: x.body.token, score: 250, coins: 0, duration_ms: 2300 } }); }
-  r = await anon(`/api/leaderboard?giveaway=${gmulti}`); rowC = r.body.rows.find(x => x.username === uc); ok(rowC && rowC.score === 1250, 'linked game immediately counts (1000 + 250)', rowC);
+  r = await anon(`/api/leaderboard?giveaway=${gmulti}`); rowC = r.body.rows.find(x => x.username === uc); ok(rowC && rowC.score === 1350, 'linked game immediately counts (1100 + 250)', rowC);
   r = await ADM('/api/admin/games'); let hs = r.body.games.find(g => g.id === 'high-score'); ok(hs.giveaways.some(x => x.id === gmulti && x.linked), 'admin games list shows giveaway linked on High Score card');
   ok(r.body.games.find(g => g.id === 'drift-rush').giveaways.some(x => x.id === gmulti && !x.linked), 'admin games list offers unlinked live giveaway as a toggle');
   r = await ADM(`/api/admin/giveaways/${gmulti}/games`, { body: { game_id: 'terp-tapper', linked: false } }); ok(r.body.ok && !r.body.game_ids.includes('terp-tapper'), 'one-click unlink terp-tapper');
-  r = await ADM(`/api/admin/giveaways/${gmulti}/games`, { body: { game_id: 'memory-match', linked: false } }); ok(r.body.ok, 'unlink memory-match');
+  r = await ADM(`/api/admin/giveaways/${gmulti}/games`, { body: { game_id: 'brick-breaker', linked: false } }); ok(r.body.ok, 'unlink brick-breaker');
   r = await ADM(`/api/admin/giveaways/${gmulti}/games`, { body: { game_id: 'high-score', linked: false } }); ok(r.status === 400, 'cannot unlink the last game of a giveaway');
   r = await ADM(`/api/admin/giveaways/${gmulti}`); ok(r.body.giveaway.game_ids.join() === 'high-score' && r.body.stats && r.body.stats.plays >= 1, 'admin giveaway detail has game_ids + live stats', r.body.stats);
 
@@ -472,20 +472,21 @@ function client() {
   r = await D('/api/me'); ok(!r.body.user.cos.badge, 'revoked badge is unequipped');
 
   console.log('# v5: anti-cheat (keep great legit scores, catch cheaters)');
-  r = await D('/api/run/start', { body: { game_id: 'memory-match' } }); const mmTok = r.body.token, mmSeed = r.body.seed; ok(/^[0-9a-f]{16}$/.test(mmSeed), 'run/start issues a server seed');
-  const AC = require(path.join(__dirname, '..', 'src', 'anticheat.js')); const deal = AC.mmLevel(0, AC.rng(mmSeed)); const pos = {}; deal.forEach((g, i) => (pos[g] = pos[g] || []).push(i));
-  const log = []; let tt = 600; for (const g in pos) { log.push([tt, pos[g][0]]); tt += 350; log.push([tt, pos[g][1]]); tt += 350; }
-  const legit = AC.replayMemory(mmSeed, log).score; await sleep(5000);
-  r = await D('/api/score', { body: { token: mmTok, score: legit, coins: 1, duration_ms: 5000, log, tel: { n: 12, mean: 350, sd: 60, min: 200 } } });
-  ok(r.body.ok && r.body.verified && !r.body.held, 'perfect Memory Match run is replay-verified and counts', r.body);
-  r = await D('/api/run/start', { body: { game_id: 'memory-match' } }); const mmTok2 = r.body.token; await sleep(5000);
-  r = await D('/api/score', { body: { token: mmTok2, score: legit + 2000, coins: 1, duration_ms: 5000, log, tel: { n: 12, mean: 350, sd: 60, min: 200 } } });
-  ok(r.body.ok && r.body.held && !r.body.verified && /fair-play review/.test(r.body.held_reason), 'tampered Memory Match score (log replays differently) is kept but held', r.body); const heldRun = r.body.run_id;
-  r = await play(C, 'terp-tapper', 30, 1500, { tel: { n: 60, mean: 100, sd: 1, min: 99 } }); ok(r.body.ok && r.body.held, 'robotic input rhythm (bot) is held for review');
-  r = await play(D, 'terp-tapper', 30, 1500); ok(r.body.ok && !r.body.held, 'human-like input rhythm counts normally');
-  r = await anon('/api/leaderboard?game=memory-match&period=all&limit=500'); const lbRows = r.body.rows || r.body.leaderboard || r.body.entries || [];
-  ok(lbRows.length > 0 && lbRows.some(x => x.username === ud && x.score === legit) && !lbRows.some(x => x.username === ud && x.score === legit + 2000), 'held runs are hidden from leaderboards (verified run shows)', lbRows.filter(x => x.username === ud));
-  r = await ADM('/api/admin/flags?status=open'); ok(r.body.flags.some(f => f.run_id === heldRun && f.reasons.some(x => x.code === 'replay_mismatch')), 'admin fair-play queue lists the held run with reasons');
+  r = await D('/api/run/start', { body: { game_id: 'stack' } }); const skTok = r.body.token, skSeed = r.body.seed; ok(/^[0-9a-f]{16}$/.test(skSeed), 'run/start issues a server seed');
+  const SC = await import(require('url').pathToFileURL(path.join(__dirname, '..', 'public', 'js', 'games', 'stack-core.js')).href); const log = [1450, 1500];
+  const legit = SC.replay(log).score; await sleep(5000);
+  r = await D('/api/score', { body: { token: skTok, score: legit, coins: 1, duration_ms: 5000, log, tel: { n: 12, mean: 350, sd: 60, min: 200 } } });
+  ok(r.body.ok && r.body.verified && !r.body.held, 'Stack run is replay-verified and counts', r.body);
+  r = await D('/api/run/start', { body: { game_id: 'stack' } }); const skTok2 = r.body.token; await sleep(5000);
+  r = await D('/api/score', { body: { token: skTok2, score: legit + 2000, coins: 1, duration_ms: 5000, log, tel: { n: 12, mean: 350, sd: 60, min: 200 } } });
+  ok(r.status === 422 && r.body.rejected, 'tampered Stack score (log replays differently) is rejected', r.body);
+  r = await play(D, 'sky-hopper', 3, 1500, { tel: { n: 60, mean: 100, sd: 1, min: 99 } }); ok(r.body.ok && r.body.held, 'robotic input rhythm (bot) is held for review'); const heldRun = r.body.run_id;
+  r = await play(D, 'terp-tapper', 30, 1500); ok(r.body.ok && !r.body.held, 'human-like input rhythm counts normally', r.body);
+  r = await anon('/api/leaderboard?game=stack&period=all&limit=500'); let lbRows = r.body.rows || r.body.leaderboard || r.body.entries || [];
+  ok(lbRows.some(x => x.username === ud && x.score === legit), 'replay-verified run shows on the leaderboard', lbRows.filter(x => x.username === ud));
+  r = await anon('/api/leaderboard?game=sky-hopper&period=all&limit=500'); lbRows = r.body.rows || r.body.leaderboard || r.body.entries || [];
+  ok(!lbRows.some(x => x.username === ud), 'held runs are hidden from leaderboards', lbRows.filter(x => x.username === ud));
+  r = await ADM('/api/admin/flags?status=open'); ok(r.body.flags.some(f => f.run_id === heldRun && f.reasons.length > 0), 'admin fair-play queue lists the held run with reasons');
   r = await ADM(`/api/admin/flags/${heldRun}/clear`, { body: { note: 'E2E clear' } }); ok(r.body.ok, 'admin clears a held run');
   r = await D('/api/notifications'); ok(r.body.items.some(n => n.title === 'Your score was verified'), 'player notified when cleared');
   r = await ADM('/api/admin/flags?status=cleared'); ok(r.body.flags.some(f => f.run_id === heldRun), 'cleared run moves to the cleared list');
