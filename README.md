@@ -22,8 +22,8 @@ power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-
   highway racer); Jetpack Dash and Memory Match are next. Stack and Munchies Snake are kept as they are.
 - **Every game has its own settings and a pause menu** (core games: header pause → Settings; library games: on-screen pause
   button → Resume / Settings / Exit). Games can declare their own options (e.g. Drift Rush camera view and graphics detail).
-- **Open blocker:** on `main`, `src/admin-sec.js` is a stub, so admin routes are not authenticated. Restore it from `099effa`
-  before deploying (owner decision pending).
+- **Admin security restored:** `src/admin-sec.js` had been replaced by a stub on `main` (admin routes unauthenticated);
+  this branch restores the full module (secret path, password + authenticator, CSRF, lockouts, audit log).
 - **Human release gates** (owner sign-off, live Stripe test, real-device passes, staging load) are tracked by
   `node tools/public-release-gate.js`; the deployment history lives in [docs/DEPLOYMENT-JOURNAL.md](docs/DEPLOYMENT-JOURNAL.md).
 
