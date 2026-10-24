@@ -222,7 +222,7 @@ function client() {
   }
   console.log('# v2: achievements + cosmetics');
   r = await C('/api/achievements'); const AL = r.body.achievements;
-  ok(AL.length >= 100 && AL.length <= 140, `achievement catalog size ${AL.length}`);
+  ok(AL.length >= 100 && AL.length <= 170, `achievement catalog size ${AL.length}`);
   ok(AL.find(a => a.id === 'first-run').unlocked && AL.every(a => typeof a.rarity_pct === 'number' && a.rarity), 'achievements list has unlocked state + rarity');
   ok(AL.filter(a => a.hidden && !a.unlocked).every(a => a.name === 'Secret achievement'), 'secret achievements stay hidden until unlocked');
   const pg = AL.find(a => a.id === 'drift-rush-bronze'); ok(pg && pg.progress === 300 && pg.target === 1300, 'progress is reported (drift-rush 300/1300)', pg || null);

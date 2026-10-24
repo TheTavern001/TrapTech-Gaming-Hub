@@ -207,34 +207,209 @@ const accounts = {
   remove(id) {
     const u = userById(id); if (!u) return { ok: false, error: 'No such admin.' };
     if (u.role === 'owner') return { ok: false, error: 'The owner account cannot be removed.' };
-    db.prepare('DELETE FROM admin_users WHERE id=?').run(id); killSessions(id); return { ok: true };
-  }
+    killSessions(id); db.prepare('DELETE FROM admin_users WHERE id=?').run(id); return { ok: true };
+  },
 };
 
-// ---------- minimal middleware so server.js can start ----------
-function requireRole(min) {
-  return function adminRoleMw(req, res, next) {
-    // Stub that does not crash the process. Full auth will be restored when the complete file is pushed.
-    next();
+// ---------- sessions ----------
+const COOKIE = 'gh_adm';
+function cookies(req) { const o = {}; for (const p of String(req.headers.cookie || '').split(';')) { const i = p.indexOf('='); if (i > 0) { try { o[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1).trim()); } catch {} } } return o; }
+const isHttps = (req) => req.secure || req.headers['x-forwarded-proto'] === 'https';
+function setCookie(req, res, val, maxMs) {
+  const parts = [`${COOKIE}=${encodeURIComponent(val)}`, `Path=${BASE}`, 'HttpOnly', 'SameSite=Strict', `Max-Age=${Math.floor(maxMs / 1000)}`];
+  if (isHttps(req)) parts.push('Secure');
+  res.append('Set-Cookie', parts.join('; '));
+}
+function newSession(req, res, u, stage, extra = {}) {
+  const sid = crypto.randomBytes(32).toString('base64url'); const csrf = crypto.randomBytes(24).toString('base64url');
+  db.prepare('INSERT INTO admin_sessions (sid_hash, admin_id, stage, created_at, last_seen, csrf, ip_hash, ua, pw_ver, pending_totp) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    .run(hm(sid), u.id, stage, now(), now(), csrf, ipHash(req), String(req.headers['user-agent'] || '').slice(0, 160), u.pw_ver, extra.pending_totp || null);
+  setCookie(req, res, sid, stage === 'full' ? ABS_MS : PRE_MS);
+  return { csrf };
+}
+function getSession(req) {
+  if (req._admSess !== undefined) return req._admSess;
+  const sid = cookies(req)[COOKIE]; if (!sid || sid.length > 100) return (req._admSess = null);
+  const s = db.prepare('SELECT * FROM admin_sessions WHERE sid_hash=?').get(hm(sid)); if (!s) return (req._admSess = null);
+  const t = now(); const u = userById(s.admin_id);
+  const dead = !u || u.disabled || s.pw_ver !== u.pw_ver || (s.stage === 'full' ? (t - s.last_seen > IDLE_MS || t - s.created_at > ABS_MS) : t - s.created_at > PRE_MS);
+  if (dead) { db.prepare('DELETE FROM admin_sessions WHERE sid_hash=?').run(s.sid_hash); return (req._admSess = null); }
+  if (s.stage === 'full' && t - s.last_seen > 30e3) db.prepare('UPDATE admin_sessions SET last_seen=? WHERE sid_hash=?').run(t, s.sid_hash);
+  s.user = u; return (req._admSess = s);
+}
+function endSession(req, res) { const sid = cookies(req)[COOKIE]; if (sid) db.prepare('DELETE FROM admin_sessions WHERE sid_hash=?').run(hm(sid)); req._admSess = null; setCookie(req, res, '', 0); }
+setInterval(() => { try { db.prepare("DELETE FROM admin_sessions WHERE (stage='full' AND last_seen < ?) OR (stage<>'full' AND created_at < ?)").run(now() - IDLE_MS, now() - PRE_MS); } catch {} }, 10 * 60e3).unref();
+
+function hashCode(c) { return hm('bc:' + String(c).replace(/[\s-]/g, '').toLowerCase()); }
+function newBackupCodes(u) {
+  const codes = Array.from({ length: 10 }, () => { const s = b32enc(crypto.randomBytes(5)).toLowerCase(); return s.slice(0, 4) + '-' + s.slice(4, 8); });
+  db.prepare('UPDATE admin_users SET backup_codes=? WHERE id=?').run(JSON.stringify(codes.map(hashCode)), u.id);
+  return codes;
+}
+function useBackupCode(u, code) {
+  const h = hashCode(code); const list = JSON.parse(userById(u.id).backup_codes || '[]');
+  let idx = -1; list.forEach((x, i) => { if (safeEq(x, h) && idx < 0) idx = i; });
+  if (idx < 0) return false;
+  list.splice(idx, 1); db.prepare('UPDATE admin_users SET backup_codes=? WHERE id=?').run(JSON.stringify(list), u.id); return true;
+}
+function checkCode(u, code) { // TOTP (replay-safe) for an account
+  const fresh = userById(u.id); const secret = dec(fresh.totp_enc); const st = secret ? totpStep(secret, code, fresh.totp_last_step) : -1;
+  if (st >= 0) db.prepare('UPDATE admin_users SET totp_last_step=? WHERE id=?').run(st, u.id);
+  return st >= 0;
+}
+
+// ---------- headers / pages ----------
+function secHeaders(req, res, next) {
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  res.setHeader('Cache-Control', 'no-store, max-age=0'); res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'");
+  res.setHeader('X-Frame-Options', 'DENY'); res.setHeader('Referrer-Policy', 'no-referrer'); res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin'); res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  next();
+}
+const UI = path.join(__dirname, 'admin-ui');
+const read = (f) => fs.readFileSync(path.join(UI, f), 'utf8');
+const sub = (s) => s.replace(/(['"`])\/api\/admin(?=[/'"`?$])/g, `$1${BASE}/api`).replace(/(['"`])\/admin(?=[/'"`?$])/g, `$1${BASE}`);
+const escA = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const shellHtml = (s) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer"><title>Admin - The Gaming Hub by Trap Tech Solutions</title><meta name="theme-color" content="#050714"><link rel="icon" type="image/svg+xml" href="/assets/brand/tt-favicon.svg">
+<meta name="csrf" content="${s.csrf}"><meta name="admin-user" content="${escA(s.user.username)}" data-role="${escA(s.user.role)}" data-name="${escA(s.user.display_name || s.user.username)}"><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/v7.css"><link rel="stylesheet" href="${BASE}/admin.css"><link rel="stylesheet" href="/cosmetics.css">
+</head><body><div id="admin"></div><script type="module" src="${BASE}/admin.js"></script></body></html>`;
+const loginHtml = (mode) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer"><title>Sign in</title><meta name="theme-color" content="#050714"><link rel="stylesheet" href="/css/app.css"><link rel="stylesheet" href="/css/v7.css"><link rel="stylesheet" href="${BASE}/login.css">
+</head><body><main class="adm-auth" id="auth" data-mode="${mode}" data-base="${BASE}"><noscript>JavaScript is required.</noscript></main><script src="${BASE}/login.js"></script></body></html>`;
+
+// auth + CSRF + minimum role. Accounts with a temporary password may only change it.
+function requireRole(min = 'admin') {
+  return function (req, res, next) {
+    const s = getSession(req);
+    if (!s || s.stage !== 'full') return res.status(401).json({ ok: false, error: 'Admin login required.' });
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+      if (String(req.headers['sec-fetch-site'] || '') === 'cross-site') return res.status(403).json({ ok: false, error: 'Cross-site request blocked.' });
+      if (!safeEq(String(req.headers['x-csrf-token'] || ''), s.csrf)) return res.status(403).json({ ok: false, error: 'Missing or invalid CSRF token. Reload the page.', csrf: true });
+    }
+    if (s.user.must_change && !/\/security\/password$|\/me$|\/logout$/.test(req.originalUrl.split('?')[0])) return res.status(403).json({ ok: false, error: 'Set your own password first (Security page).', must_change: true });
+    if (!roleAtLeast(s.user.role, min)) return res.status(403).json({ ok: false, error: `This needs the ${min} role.`, role: s.user.role });
+    req.adminSession = s; req.admin = { id: s.user.id, username: s.user.username, role: s.user.role }; next();
   };
 }
 const requireAdmin = requireRole('admin');
-const M = require('express').Router();
+const notFound = (req, res) => res.status(404).type('text/plain').send('Not found');
+const M = express.Router(); // moderator-level routes (filled by other modules)
 
-function mount(app) {
-  // No-op mount to avoid crashes
+function mount(app, _express, A) {
+  // the old public admin URLs simply don't exist any more
+  app.all(['/admin', '/admin/*', '/admin.html', '/api/admin', '/api/admin/*', '/js/admin.js', '/css/admin.css'], notFound);
+  if (!BASE) return;
+  const R = express.Router();
+  R.use(secHeaders);
+  const authLimit = (req, res, next) => {
+    if (String(req.headers['sec-fetch-site'] || '') === 'cross-site') return res.status(403).json({ ok: false, error: 'Cross-site request blocked.' });
+    if (!allow('g', REQ_GLOBAL) || !allow('ip:' + ipHash(req), REQ_IP)) { log(req, 'rate-limited', 0); return res.status(429).json({ ok: false, error: 'Too many attempts. Wait a few minutes.', retry_after: 600 }); }
+    const s = getSession(req); const uname = (req.body && req.body.username) || (s && s.user && s.user.username) || null;
+    const L = lockState(req, uname);
+    if (L.locked) { log(req, 'locked-out', 0, L.scope, uname ? { username: String(uname).toLowerCase() } : null); return res.status(429).json({ ok: false, error: L.scope === 'global' ? 'Admin sign-in is temporarily locked after many failed attempts. Try again later.' : 'Too many failed attempts. Try again later.', locked: true, scope: L.scope, retry_after: Math.ceil((L.until - now()) / 1000) }); }
+    next();
+  };
+  const slow = () => new Promise(r => setTimeout(r, 250 + Math.random() * 250));
+  R.post('/api/login', authLimit, async (req, res) => {
+    const uname = String((req.body && req.body.username) || '').trim().toLowerCase().slice(0, 40); const u = userByName(uname);
+    const ok = await checkPassword(u, req.body && req.body.password);
+    if (!ok) { log(req, 'login-fail', 0, u ? 'password' : 'unknown user', { id: u ? u.id : null, username: uname }); await slow(); return res.status(401).json({ ok: false, error: 'Wrong username, password or code.' }); }
+    endSession(req, res);
+    if (u.totp_enc && dec(u.totp_enc)) { newSession(req, res, u, 'pw'); log(req, 'password-ok', 1, '', u); return res.json({ ok: true, next: 'totp' }); }
+    // first sign-in (or after a reset): enrol an authenticator app
+    const secret = b32enc(crypto.randomBytes(20));
+    newSession(req, res, u, 'enroll', { pending_totp: enc(secret) }); log(req, 'password-ok', 1, 'enrol', u);
+    const label = encodeURIComponent(`Gaming Hub Admin:${u.username}`); const uri = `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent('Trap Tech Gaming Hub')}&algorithm=SHA1&digits=6&period=30`;
+    const qrg = require('qrcode-generator'); const q = (qrg.default || qrg)(0, 'M'); q.addData(uri); q.make();
+    res.json({ ok: true, next: 'enroll', secret, otpauth: uri, qr_svg: q.createSvgTag({ cellSize: 5, margin: 3, scalable: true }) });
+  });
+  R.post('/api/totp', authLimit, (req, res) => {
+    const s = getSession(req); if (!s || (s.stage !== 'pw' && s.stage !== 'enroll')) return res.status(401).json({ ok: false, error: 'Start again with your password.', restart: true });
+    const u = s.user; const code = String((req.body && req.body.code) || '').trim(); let codes = null, via = 'totp';
+    if (s.stage === 'enroll') {
+      const secret = dec(s.pending_totp); const st = secret ? totpStep(secret, code, 0) : -1;
+      if (st < 0) { log(req, 'totp-fail', 0, 'enrol', u); return res.status(401).json({ ok: false, error: 'That code did not match. Check the time on your phone and try the newest code.' }); }
+      db.prepare('UPDATE admin_users SET totp_enc=?, totp_at=?, totp_last_step=? WHERE id=?').run(enc(secret), now(), st, u.id);
+      codes = newBackupCodes(u); via = 'enrol';
+    } else if (checkCode(u, code)) via = 'totp';
+    else if (/^[a-z2-7]{4}-?[a-z2-7]{4}$/i.test(code) && useBackupCode(u, code)) via = 'backup-code';
+    else { log(req, 'totp-fail', 0, '', u); return res.status(401).json({ ok: false, error: 'Wrong username, password or code.' }); }
+    endSession(req, res); const { csrf } = newSession(req, res, userById(u.id), 'full'); log(req, 'login-ok', 1, via, u);
+    db.prepare('UPDATE admin_users SET last_login_at=? WHERE id=?').run(now(), u.id);
+    res.json({ ok: true, csrf, backup_codes: codes, backup_left: JSON.parse(userById(u.id).backup_codes).length, must_change: !!u.must_change, role: u.role });
+  });
+  // one-time OWNER recovery (only while ADMIN_RESET_TOKEN is set)
+  R.get('/reset', (req, res) => RESET_ON ? res.type('html').send(loginHtml('reset')) : notFound(req, res));
+  R.post('/api/reset', authLimit, async (req, res) => {
+    if (!RESET_ON) return notFound(req, res);
+    const tok = String((req.body && req.body.token) || ''); const used = JSON.parse(meta('reset_used') || '[]');
+    if (!safeEq(tok, RESET_TOKEN)) { log(req, 'reset-fail', 0); await slow(); return res.status(401).json({ ok: false, error: 'Reset token is wrong.' }); }
+    if (used.includes(sha(RESET_TOKEN))) { log(req, 'reset-fail', 0, 'token already used'); return res.status(410).json({ ok: false, error: 'This reset token was already used. Remove ADMIN_RESET_TOKEN from the host settings (or set a new one) and restart.' }); }
+    const np = req.body.new_password; const pr = pwProblem(np); if (pr) return res.status(400).json({ ok: false, error: pr });
+    used.push(sha(RESET_TOKEN)); meta('reset_used', JSON.stringify(used));
+    const owner = db.prepare("SELECT * FROM admin_users WHERE role='owner' ORDER BY id LIMIT 1").get();
+    db.prepare("UPDATE admin_users SET pass_hash=?, pass_set_at=?, must_change=0, disabled=0, pw_ver=pw_ver+1, totp_enc=NULL, totp_at=NULL, totp_last_step=0, backup_codes='[]' WHERE id=?").run(await bcrypt.hash(np, 12), now(), owner.id);
+    killSessions(owner.id); log(req, 'reset-ok', 1, 'owner password replaced, 2FA cleared', owner);
+    res.json({ ok: true, username: owner.username, note: `Owner password reset (username "${owner.username}"). Sign in and set up your authenticator again, then REMOVE ADMIN_RESET_TOKEN from the host settings.` });
+  });
+  R.get('/login.js', (req, res) => res.type('application/javascript').send(read('login.js')));
+  R.get('/login.css', (req, res) => res.type('text/css').send(read('login.css')));
+  // everything below needs a full session
+  const full = (req) => { const s = getSession(req); return s && s.stage === 'full' ? s : null; };
+  R.get('/admin.js', (req, res) => full(req) ? res.type('application/javascript').send(sub(read('admin.js'))) : notFound(req, res));
+  R.get('/admin.css', (req, res) => full(req) ? res.type('text/css').send(read('admin.css')) : notFound(req, res));
+  R.get('/api/me', (req, res) => { const s = full(req); res.json({ ok: true, admin: !!s, csrf: s ? s.csrf : undefined, account: s ? pub(s.user) : undefined }); });
+  const anyRole = requireRole('moderator');
+  R.post('/api/logout', anyRole, (req, res) => { log(req, 'logout', 1, '', req.admin); endSession(req, res); res.json({ ok: true }); });
+  R.get('/api/security', anyRole, (req, res) => {
+    const u = userById(req.admin.id); const seeAll = roleAtLeast(u.role, 'admin');
+    res.json({ ok: true, account: pub(u), backup_codes_left: JSON.parse(u.backup_codes || '[]').length, reset_token_active: RESET_ON, trust_cf: TRUST_CF,
+      password_set_at: u.pass_set_at, totp_enrolled_at: u.totp_at, password_source: pub(u).password_source,
+      sessions: db.prepare("SELECT created_at, last_seen, ua FROM admin_sessions WHERE stage='full' AND admin_id=? ORDER BY last_seen DESC").all(u.id),
+      log: seeAll ? db.prepare('SELECT at, ip_hint, ua, event, ok, detail, username FROM admin_login_log ORDER BY id DESC LIMIT 200').all()
+        : db.prepare('SELECT at, ip_hint, ua, event, ok, detail, username FROM admin_login_log WHERE admin_id=? ORDER BY id DESC LIMIT 200').all(u.id),
+      failed_24h: db.prepare(`SELECT COUNT(*) AS c FROM admin_login_log WHERE event IN ${FAIL_EVENTS} AND at > ?`).get(now() - 864e5).c });
+  });
+  R.post('/api/security/password', anyRole, async (req, res) => {
+    if (!allow('pw:' + req.admin.id, [10, 3600e3])) return res.status(429).json({ ok: false, error: 'Too many attempts.' });
+    const u = userById(req.admin.id);
+    if (!(await checkPassword(u, req.body.current))) { log(req, 'password-change-fail', 0, 'current password wrong', u); return res.status(401).json({ ok: false, error: 'Current password is wrong.' }); }
+    if (!checkCode(u, req.body.code)) { log(req, 'password-change-fail', 0, 'code wrong', u); return res.status(401).json({ ok: false, error: 'Authenticator code is wrong.' }); }
+    const pr = pwProblem(req.body.new_password); if (pr) return res.status(400).json({ ok: false, error: pr });
+    if (req.body.new_password === req.body.current) return res.status(400).json({ ok: false, error: 'Choose a different password.' });
+    db.prepare('UPDATE admin_users SET pass_hash=?, pass_set_at=?, must_change=0, pw_ver=pw_ver+1 WHERE id=?').run(await bcrypt.hash(req.body.new_password, 12), now(), u.id);
+    killSessions(u.id); setCookie(req, res, '', 0); log(req, 'password-changed', 1, 'all sessions of this account signed out', u);
+    res.json({ ok: true, note: 'Password changed. Every session of your account (including this one) has been signed out.' });
+  });
+  R.post('/api/security/backup-codes', anyRole, (req, res) => {
+    const u = userById(req.admin.id); if (!checkCode(u, req.body.code)) return res.status(401).json({ ok: false, error: 'Authenticator code is wrong.' });
+    const codes = newBackupCodes(u); log(req, 'backup-codes-regenerated', 1, '', u); res.json({ ok: true, backup_codes: codes });
+  });
+  R.post('/api/security/logout-all', anyRole, (req, res) => { killSessions(req.admin.id); setCookie(req, res, '', 0); log(req, 'logout-all', 1, '', req.admin); res.json({ ok: true }); });
+  // owner-only account management (appoint admins / moderators)
+  const owner = requireRole('owner');
+  R.get('/api/accounts', owner, (req, res) => res.json({ ok: true, accounts: accounts.list(), roles: ROLES }));
+  R.post('/api/accounts', owner, async (req, res) => { const r = await accounts.create(req.body || {}, req.admin); if (r.ok) log(req, 'account-created', 1, `${r.account.username} (${r.account.role})`, req.admin); res.status(r.ok ? 200 : 400).json(r); });
+  R.put('/api/accounts/:id', owner, (req, res) => { const r = accounts.update(+req.params.id, req.body || {}); if (r.ok) log(req, 'account-updated', 1, `${r.account.username}: ${r.account.role}${r.account.disabled ? ', disabled' : ''}`, req.admin); res.status(r.ok ? 200 : 400).json(r); });
+  R.post('/api/accounts/:id/reset', owner, async (req, res) => { const r = await accounts.resetAuth(+req.params.id, req.body && req.body.temp_password); if (r.ok) log(req, 'account-reset', 1, `${r.account.username}: temp password, 2FA cleared`, req.admin); res.status(r.ok ? 200 : 400).json(r); });
+  R.delete('/api/accounts/:id', owner, (req, res) => { const u = accounts.get(+req.params.id); const r = accounts.remove(+req.params.id); if (r.ok) log(req, 'account-removed', 1, u ? u.username : '', req.admin); res.status(r.ok ? 200 : 400).json(r); });
+  R.use('/api', anyRole, M);
+  R.use('/api', A); // A.use(requireAdmin) at its top -> admin role minimum
+  R.use('/api', (req, res) => res.status(404).json({ ok: false, error: 'Not found' }));
+  // the admin app shell (any client-side route below the secret path)
+  R.get(['/', '/*'], (req, res) => {
+    if (path.extname(req.path)) return notFound(req, res);
+    const s = full(req);
+    res.type('html').send(s ? shellHtml(s) : loginHtml('login'));
+  });
+  app.use(BASE, R);
 }
 
-function isOwnerSession(req) { return false; }
-
-module.exports = {
-  mount,
-  requireRole,
-  requireAdmin,
-  M,
-  accounts,
-  ROLES,
-  roleAtLeast,
-  isOwnerSession,
-  BASE: () => BASE
-};
+// A fully authenticated owner session (password + TOTP) is required for review bypass.
+function isOwnerSession(req) {
+  const s=getSession(req);
+  return !!(s && s.stage==='full' && s.user && s.user.role==='owner' && !s.user.disabled);
+}
+module.exports = { mount, requireRole, requireAdmin, M, accounts, ROLES, roleAtLeast, isOwnerSession, BASE: () => BASE, _t: { hotp, totpStep, b32enc, b32dec, dec, clientIp } };
