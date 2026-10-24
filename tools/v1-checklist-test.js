@@ -63,7 +63,8 @@ assert.match(paymentSource, /crypto\.timingSafeEqual/, 'webhook signature compar
 assert.match(paymentSource, /checkout\.session\.completed/, 'successful Stripe sessions must be handled server-side');
 assert.match(paymentSource, /order\.provider_ref !== obj\.id/, 'Stripe event must match the stored checkout session');
 assert.match(paymentSource, /Number\(obj\.amount_total\) !== Number\(order\.usd_cents\)/, 'Stripe fulfillment must confirm exact server-priced amount');
-assert.match(paymentSource, /Number\(obj\.amount\) === Number\(order\.usd_cents\)/, 'Stripe refunds must match the original amount');
+// refunds: obj.amount is read as a Number and must equal the server-priced order amount (either spelling of the check)
+assert.match(paymentSource, /Number\(obj\.amount\) === Number\(order\.usd_cents\)|amount\s*=\s*Number\(obj\.amount\)[\s\S]{0,800}amount\s*===\s*order\.usd_cents/, 'Stripe refunds must match the original amount');
 assert.match(storeSource, /data-provider-choice/, 'store UI must offer configured payment methods');
 assert.match(serverSource, /home_featured: featured\.has\(g\.id\)/, 'weekly featured games must be selected by the server');
 assert.match(appSource, /g\.home_featured/, 'home must render the server-selected featured games');
