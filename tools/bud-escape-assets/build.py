@@ -1,10 +1,11 @@
 # usage: python3 -I build.py <src dir> <out dir>
-# Builds the Bud Escape art: atlas.webp + atlas.json (name -> [x, y, w, h], plus "_anchor" feet anchors) and wall.webp.
+# Builds the Bud Escape art: atlas.webp + atlas.json (name -> [x, y, w, h], plus "_anchor" feet anchors).
 # <src dir> holds the unpacked downloads (see README.md):
 #   ga/      GameArt2D freebies (CC0): redhatfiles/, freescifiplatform/, free_plane_sprite/
-#   oga/     OpenGameArt (CC0): orb/ (Sci-Fi Flying Robo Orb), crates/ (FreeArt boxes & crates), scifi_bg1.jpg (ask4asset)
+#   oga/     OpenGameArt (CC0): crates/ (FreeArt boxes & crates)
 #   kenney/  Kenney packs (CC0): kenney_<pack>/...
 #   oc/      Openclipart renders (public domain): oc-<id>.png
+#   r3d/     toon renders made by toon.js from models.json (Kenney 3D kits, CC0, plus models built in toon.html)
 # Every sprite below is listed with its source; this file is the licence record. Kenney and Openclipart pieces get the same
 # thick dark outline as the GameArt2D art so the whole game reads in one cartoon style.
 import json, os, sys
@@ -69,16 +70,10 @@ TOON = P('kenney', 'kenney_toon-characters', '%s', 'PNG', 'Poses HD', 'character
 for key, folder, slug in (('fw', 'Female person', 'femalePerson'), ('ma', 'Male adventurer', 'maleAdventurer')):
     for i in range(8): add(f'{key}_walk{i}', simple(TOON % (folder, slug, f'walk{i}'), 0.6, 4))
     for i in range(2): add(f'{key}_cheer{i}', simple(TOON % (folder, slug, f'cheer{i}'), 0.6, 4))
-# --- security drone: "Sci-Fi Flying Robo Orb" by hamcav90 (OpenGameArt, CC0)
-add('drone', simple(P('oga', 'orb', 'orb_explosive_active.png'), 0.42)); add('drone_off', simple(P('oga', 'orb', 'orb_deactived_or_destroyed.png'), 0.42))
-for i in range(6): add(f'orbpart{i}', simple(P('oga', 'orb', f'orb_part_{i}.png'), 0.42))
-# --- lab set: GameArt2D "Free Sci-Fi Platformer Tileset" (CC0)
+# --- lab extras: GameArt2D "Free Sci-Fi Platformer Tileset" (CC0)
 GA = P('ga', 'freescifiplatform', 'png')
-for n, f, s in (('barrel_red', 'Objects/Barrel (1).png', 0.5), ('barrel_green', 'Objects/Barrel (2).png', 0.5), ('box', 'Objects/Box.png', 0.45), ('door', 'Objects/DoorLocked.png', 0.5),
-                ('saw', 'Objects/Saw.png', 0.45), ('switch', 'Objects/Switch (1).png', 0.5), ('switch2', 'Objects/Switch (2).png', 0.5), ('fence', 'Tiles/Fence (2).png', 0.5)):
+for n, f, s in (('barrel_red', 'Objects/Barrel (1).png', 0.5), ('barrel_green', 'Objects/Barrel (2).png', 0.5), ('saw', 'Objects/Saw.png', 0.45)):
     add(n, simple(os.path.join(GA, f), s))
-for n, f in (('floor_top', 'Tiles/Tile (2).png'), ('floor_top2', 'Tiles/Tile (3).png'), ('floor', 'Tiles/Tile (5).png'), ('ceil', 'Tiles/BGTile (7).png'), ('ceil2', 'Tiles/BGTile (1).png'), ('panel', 'Tiles/BGTile (3).png')):
-    add(n, (lambda f=f: scale(load(os.path.join(GA, f)), 0.5)))
 # drone shot: GameArt2D "Free Plane Sprite" bullet (CC0)
 for i in range(5): add(f'shot{i}', simple(P('ga', 'free_plane_sprite', 'png', 'Bullet', f'Bullet ({i + 1}).png'), 0.35))
 # --- government crates: "FreeArt boxes & crates" (OpenGameArt, CC0); blue tint for the stamped government crates
@@ -91,8 +86,6 @@ for n, s in (('039', 0.6), ('040', 0.6), ('045', 0.6), ('053', 0.6), ('064', 0.8
     add('i' + n, simple(IND % n, s, 3))
 NP = P('kenney', 'kenney_new-platformer-pack-1.1', 'Sprites', 'Tiles', 'Double', '%s.png')
 add('gem_green', simple(NP % 'gem_green', 0.55, 3, 1.25)); add('chain', simple(NP % 'chain', 0.55, 2)); add('bomb_active', simple(NP % 'bomb_active', 0.55, 3))
-ROB = P('kenney', 'kenney_robot-pack', 'PNG', 'Side view', '%s.png')
-for n in ('robot_greenBody', 'robot_yellowBody', 'robot_blueDrive1', 'robot_blueDrive2', 'tracks_long1'): add(n, simple(ROB % n, 0.8, 4))
 # --- effects (Kenney Smoke Particles + Particle Pack, CC0), no outline; white particles tinted here
 SM = P('kenney', 'kenney_smoke-particles', 'PNG', '%s', '%s.png')
 for i in range(9): add(f'boom{i}', simple(SM % ('Explosion', f'explosion0{i}'), 0.3))
@@ -101,10 +94,12 @@ PP = P('kenney', 'kenney_particle-pack', 'PNG (Transparent)', '%s.png')
 for n, t in (('muzzle_02', (253, 186, 116)), ('muzzle_04', (253, 224, 71)), ('spark_05', (254, 240, 138)), ('spark_06', (253, 230, 138)), ('light_01', (217, 70, 239)),
              ('light_02', (255, 255, 255)), ('light_03', (250, 204, 21)), ('circle_03', (255, 255, 255)), ('star_06', (255, 255, 255)), ('dirt_01', (168, 162, 158)), ('magic_05', (163, 230, 53)), ('trace_06', (255, 255, 255))):
     add(n, simple(PP % n, 0.25, 0, None, t))
-# --- cannabis art: Openclipart (public domain) plants, leaf and bong; saturated and outlined to match
-add('plant', simple(P('oc', 'oc-265563.png'), 0.55, 2, 1.8)); add('plant2', simple(P('oc', 'oc-238184.png'), 0.55, 2, 1.8))
-add('leaf', simple(P('oc', 'oc-277751.png'), 0.5, 3)); add('bong', simple(P('oc', 'oc-320677.png'), 0.62, 4)); add('camera', simple(P('oc', 'oc-1594.png'), 0.3, 3))
-
+# --- cannabis leaf mark (Openclipart, public domain) and wall camera
+add('leaf', simple(P('oc', 'oc-277751.png'), 0.5, 3)); add('camera', simple(P('oc', 'oc-1594.png'), 0.3, 3))
+# --- toon renders (toon.js + models.json): dolly, vehicles, drones, robot arm, zapper nodes, lab walls, props, grow-room plants
+R3_SCALE = {'w': 0.72, 'f': 0.5, 'p': 0.42, 's': 0.45, 'v': 0.55, 'd': 0.5, 'o': 0.4}
+for fn in sorted(os.listdir(P('r3d'))):
+    if fn.endswith('.png'): n = fn[:-4]; add(n, simple(P('r3d', fn), R3_SCALE[n[0]], 0 if n[0] in 'wf' else 4))
 ims = [(n, f()) for n, f in items]
 ims.sort(key=lambda t: -t[1].height)
 W, PAD = 2048, 2; x = y = rowh = 0; pos = {}
@@ -119,13 +114,3 @@ pos['_anchor'] = anchors
 json.dump(pos, open(os.path.join(OUT, 'atlas.json'), 'w'), separators=(',', ':'))
 print('atlas', W, sheet.height, len(ims), 'sprites', os.path.getsize(os.path.join(OUT, 'atlas.webp')) // 1024, 'KB')
 
-# --- corridor wall: ask4asset "Sci-Fi Background" (OpenGameArt, CC0). One pillar + window period, the window glass cut out so the
-# grow room behind shows through (a light glass tint keeps it reading as a window).
-bg = load(P('oga', 'scifi_bg1.jpg')).crop((265, 0, 1548, 1080))
-from PIL import ImageDraw
-mask = Image.new('L', bg.size, 255); d = ImageDraw.Draw(mask)
-ox = 372 - 265; win = [(ox + 118, 100), (ox + 1058, 100), (ox + 1176, 190), (ox + 1176, 890), (ox + 1058, 980), (ox + 118, 980), (ox, 890), (ox, 190)]
-d.polygon(win, fill=38)
-bg.putalpha(mask); bg = scale(bg, 0.75)
-bg.save(os.path.join(OUT, 'wall.webp'), quality=86, method=6)
-print('wall', bg.size, os.path.getsize(os.path.join(OUT, 'wall.webp')) // 1024, 'KB')

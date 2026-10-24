@@ -1,0 +1,367 @@
+{
+ "d_dolly": {
+  "parts": [
+   {
+    "proc": "dolly"
+   }
+  ],
+  "yaw": -12,
+  "pitch": 14
+ },
+ "v_blunt": {
+  "parts": [
+   {
+    "proc": "blunt"
+   }
+  ],
+  "yaw": -15,
+  "pitch": 12
+ },
+ "v_walker": {
+  "parts": [
+   {
+    "proc": "walker"
+   }
+  ],
+  "yaw": -12,
+  "pitch": 10
+ },
+ "v_glider": {
+  "parts": [
+   {
+    "proc": "glider"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 20
+ },
+ "v_sled": {
+  "parts": [
+   {
+    "url": "/space/craft_racer.glb",
+    "tint": "#f59e0b",
+    "mix": 0.55
+   }
+  ],
+  "yaw": -90,
+  "pitch": 12
+ },
+ "v_bong": {
+  "parts": [
+   {
+    "proc": "bong"
+   }
+  ],
+  "yaw": -10,
+  "pitch": 8
+ },
+ "v_cannon": {
+  "parts": [
+   {
+    "url": "/car/kart-oopi.glb"
+   },
+   {
+    "proc": "cannon",
+    "pos": [
+     0,
+     0.2,
+     0
+    ],
+    "scale": 0.8
+   }
+  ],
+  "yaw": -90,
+  "pitch": 10
+ },
+ "v_board": {
+  "parts": [
+   {
+    "proc": "board"
+   }
+  ],
+  "yaw": -8,
+  "pitch": 18
+ },
+ "o_drone_a": {
+  "parts": [
+   {
+    "url": "/td/enemy-ufo-a-weapon.glb"
+   }
+  ],
+  "yaw": -90,
+  "pitch": 16
+ },
+ "o_drone_b": {
+  "parts": [
+   {
+    "url": "/td/enemy-ufo-b-weapon.glb"
+   }
+  ],
+  "yaw": -90,
+  "pitch": 16
+ },
+ "o_arm": {
+  "parts": [
+   {
+    "url": "/factory/robot-arm-a.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 6
+ },
+ "o_node": {
+  "parts": [
+   {
+    "url": "/td/weapon-ammo-cannonball.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "o_emitter": {
+  "parts": [
+   {
+    "url": "/factory/scanner-low.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 5,
+  "roll": -90
+ },
+ "o_bullet": {
+  "parts": [
+   {
+    "url": "/td/weapon-ammo-bullet.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "o_cog": {
+  "parts": [
+   {
+    "url": "/factory/cog-a.glb",
+    "tint": "#cbd5e1",
+    "mix": 0.5
+   }
+  ],
+  "yaw": 0,
+  "pitch": 90
+ },
+ "p_plant1": {
+  "parts": [
+   {
+    "proc": "plant",
+    "seed": 3,
+    "h": 1.7
+   }
+  ],
+  "yaw": 0,
+  "pitch": 10
+ },
+ "p_plant2": {
+  "parts": [
+   {
+    "proc": "plant",
+    "seed": 11,
+    "h": 1.4
+   }
+  ],
+  "yaw": 30,
+  "pitch": 10
+ },
+ "p_plant3": {
+  "parts": [
+   {
+    "proc": "plant",
+    "seed": 29,
+    "h": 2.0
+   }
+  ],
+  "yaw": 60,
+  "pitch": 10
+ },
+ "w_window": {
+  "parts": [
+   {
+    "url": "/station/wall-window.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "w_wall": {
+  "parts": [
+   {
+    "url": "/station/wall.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "w_pillar": {
+  "parts": [
+   {
+    "url": "/station/wall-pillar.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "w_detail": {
+  "parts": [
+   {
+    "url": "/station/wall-detail.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "w_display": {
+  "parts": [
+   {
+    "url": "/station/display-wall-wide.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "w_door": {
+  "parts": [
+   {
+    "url": "/station/wall-door-wide.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "f_floor": {
+  "parts": [
+   {
+    "url": "/station/floor-panel-straight.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 20
+ },
+ "f_metal": {
+  "parts": [
+   {
+    "url": "/survival/metal-panel-screws.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "s_pipe": {
+  "parts": [
+   {
+    "url": "/factory/pipe-large-long.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0
+ },
+ "s_girder": {
+  "parts": [
+   {
+    "url": "/factory/structure-yellow-tall.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 0,
+  "roll": 90
+ },
+ "s_machine": {
+  "parts": [
+   {
+    "url": "/factory/machine-window.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 10
+ },
+ "s_computer": {
+  "parts": [
+   {
+    "url": "/station/computer-wide.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 10
+ },
+ "s_cone": {
+  "parts": [
+   {
+    "url": "/factory/cone.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 10
+ },
+ "s_box": {
+  "parts": [
+   {
+    "url": "/factory/box-large.glb"
+   }
+  ],
+  "yaw": -25,
+  "pitch": 12
+ },
+ "s_tank": {
+  "parts": [
+   {
+    "url": "/station/container-wide.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 10
+ },
+ "s_hopper": {
+  "parts": [
+   {
+    "url": "/factory/hopper-high-square.glb"
+   }
+  ],
+  "yaw": -20,
+  "pitch": 10
+ },
+ "s_barrel": {
+  "parts": [
+   {
+    "url": "/space/machine_barrel.glb"
+   }
+  ],
+  "yaw": -20,
+  "pitch": 10
+ },
+ "s_generator": {
+  "parts": [
+   {
+    "url": "/space/machine_generatorLarge.glb"
+   }
+  ],
+  "yaw": -20,
+  "pitch": 10
+ },
+ "s_screen": {
+  "parts": [
+   {
+    "url": "/factory/screen-hanging-wide.glb"
+   }
+  ],
+  "yaw": 0,
+  "pitch": 5
+ },
+ "s_containertall": {
+  "parts": [
+   {
+    "url": "/station/container-tall.glb",
+    "tint": "#2563eb",
+    "mix": 0.6
+   }
+  ],
+  "yaw": -20,
+  "pitch": 8
+ }
+}

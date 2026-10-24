@@ -164,3 +164,17 @@ matched to the reference game). Void Swarm is a third vertical space shooter nex
   (CC0) for drones; FreeArt cartoon crates; Kenney and Openclipart pieces get the same dark outline at build time.
   Licence record and rebuild steps: `tools/bud-escape-assets/README.md`.
 - Gameplay and scoring unchanged; runs re-validated against the server rule, signed-in run accepted, 60 fps on emulated iPhone 13.
+
+## Round 8 (2026-10-24): Bud Escape scene, hazards, dolly and vehicles rebuilt (owner: not happy with those)
+
+- New pipeline `tools/bud-escape-assets/toon.html` + `toon.js` + `models.json`: CC0 Kenney 3D models (Factory, Space Station,
+  Tower Defense, Space, Car, Survival kits) and models built in code for the cannabis-specific pieces are cel-shaded, rendered
+  side-on and outlined so they match the 2D cartoon art.
+- Scene: space-station wall modules with orange-framed windows onto a magenta grow room of 3D cannabis plants, metal ceiling
+  with pipes, floor rail, machines / tanks / hoppers / desks / cones along the wall, hanging screens and cameras.
+- Hazards: UFO security drones with turrets, robot-arm harvest arms with a spinning saw, metal zapper nodes, scanner laser
+  emitters, glowing drone shots. Hover-dolly: striped inspection cart with push handle and beacon. Vehicles: Rolling Blunt
+  (lit ember), Hydroponic Walker (nutrient tank with a sprout, animated legs), Trichome Glider (giant leaf), Resin Rocket Sled,
+  Bong Hover (glass bong with water), Seed Pod Cannon Cart, Smoke Cloud Board.
+- The ask4asset wall, the robo orb, the GameArt2D tiles and the Openclipart plants/bong are no longer used.
+- Gameplay and scoring unchanged; runs re-validated, signed-in run accepted, 60 fps on emulated iPhone 13.
