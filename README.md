@@ -19,11 +19,11 @@ power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-
 - **Restored on this branch:** cosmetics, achievements and rotating quests had been replaced by stubs on 2026-10-19..21;
   restored from `099effa` with the AAA designs merged properly.
 - **Rebuild in progress** ([docs/CORE-GAME-REBUILD-PLAN.md](docs/CORE-GAME-REBUILD-PLAN.md)): **Drift Rush v9** (3D highway
-  racer) and **Jetpack Dash v9** (2D side-scrolling Joyride-style lab runner with points scoring) are done; Memory Match is next. Stack and
+  racer) and **Bud Escape** (the Jetpack Dash rebuild: 2D Joyride-style warehouse escape with Kenney CC0 art, 7 vehicles and daily missions) are done; Memory Match is next. Stack and
   Munchies Snake are kept as they are.
-- **Jetpack Dash now scores points** (strong runs 100k–1M+). On the first boot of this version, all meter-scored Jetpack runs
-  move to the retired id `jetpack-dash-m` (board archived, history kept) and pending Jetpack challenges expire. End any open
-  giveaway or tournament that includes Jetpack Dash before deploying.
+- **Jetpack Dash is now Bud Escape** (same game id `jetpack-dash`, scored in meters + daily mission bonus). On the first boot of
+  this version, all classic Jetpack Dash runs move to the retired id `jetpack-dash-m` (board archived, history kept) and pending
+  Jetpack challenges expire. End any open giveaway or tournament that includes Jetpack Dash before deploying.
 - **Every game has its own settings and a pause menu** (core games: header pause → Settings; library games: on-screen pause
   button → Resume / Settings / Exit). Games can declare their own options (e.g. Drift Rush camera view and graphics detail).
 - **Admin security restored:** `src/admin-sec.js` had been replaced by a stub on `main` (admin routes unauthenticated);
@@ -105,7 +105,7 @@ log (`src/ac-levels.js`); Memory Match and Stack are additionally replay-verifie
 
 | Game | Scoring loop | Server envelope |
 |---|---|---|
-| Jetpack Dash (v9, 2D side-scroller) | Points: 625 × multiplier per 25 m, coin trails, close calls; multiplier up to x10 | 15,000/s + 10,000 grace; event log |
+| Bud Escape (`jetpack-dash`) | Meters travelled + 200 per completed daily mission (max 3) | 25 m/s + 700 grace; event log |
 | Drift Rush (v9, 3D) | Meters driven + banked drift and near-miss points (multiplier up to x3) | 240/s + 200 grace; event log |
 | Memory Match | Pair score, combo, time left, board bonus; replay-verified | 1,100/s + 500 grace |
 | High Score | Reflex targets, accuracy and combo | 1,100/s + 300 grace |
@@ -289,7 +289,7 @@ src/cosmetics.js     banners / frames / titles (original CSS) -> /cosmetics.css
 src/sponsor.js       Sponsor a Host: feature list, admin price sheet, quotes, placements
 src/brands.js        brand affiliation (invite codes, one brand per player, giveaway audience)
 src/packages.js      legacy package copy (sponsor FAQ + Potato handle; v5 tier data kept for old bookings)
-public/index.html    player SPA shell (per-page meta injected server-side), manifest.webmanifest + sw.js (PWA); public/js/app.js (router and all pages), public/js/jetpack.js (Jetpack Dash)
+public/index.html    player SPA shell (per-page meta injected server-side), manifest.webmanifest + sw.js (PWA); public/js/app.js (router and all pages), public/js/jetpack.js (Bud Escape)
 public/js/games/     engine.js + kit.js (shared core-game base, HUD, synth) and the core games; drift-rush.js is three.js 3D
 public/js/player-prefs.js  per-game settings panel (sound, sharpness, per-game options) used by core and library games
 src/admin-ui/          secret-path admin SPA (served only through authenticated admin routes)

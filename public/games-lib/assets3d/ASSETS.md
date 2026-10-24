@@ -3,7 +3,7 @@ Rejected outright: NC, editorial-only, engine-locked (Unity Asset Store / Fab st
 
 | Files | Source | Author | Licence | Commercial in-game OK | Used by |
 |---|---|---|---|---|---|
-| hero.glb, chaser2.glb | Universal Base Characters [Standard] + Universal Animation Library [Standard] (itch.io) | Quaternius | CC0 | yes | rail-rush; jetpack-dash (hero.glb pre-rendered to `public/assets/jetpack/pilot.webp` via `tools/jetpack-sprites/`) |
+| hero.glb, chaser2.glb | Universal Base Characters [Standard] + Universal Animation Library [Standard] (itch.io) | Quaternius | CC0 | yes | rail-rush |
 | qn-*.glb | Stylized Nature MegaKit [Standard] (itch.io) | Quaternius | CC0 | yes | lane-racer (+ ruin-runner planned) |
 | kc-*.glb (10 models) | Kenney Car Kit 3.1 (original glTF files, sourced via a third-party mirror of the full Kenney archive) | Kenney | CC0 | yes, subject to per-model test | Most Wanted (player model & QA variants) |
 | cv-*.glb | Cartoon Vehicles Pack 1 (opengameart.org/content/cartoon-vehicles-pack-1) | Divinux | CC0 | yes | lane-racer |

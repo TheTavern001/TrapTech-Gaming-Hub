@@ -27,8 +27,8 @@ function seed() {
       const nRuns = 4 + Math.floor(rand() * 8);
       for (let k = 0; k < nRuns; k++) {
         const ago = (i < 4 && k === 0) ? (2 + i * 3) * H : Math.floor(rand() * 40 * D);
-        const meters = Math.max(80, Math.floor(skill * (0.35 + rand() * 0.65))); // v9 points: ~625 x average multiplier per 25 m
-        const score = Math.floor(meters * 25 * Math.min(6.5, 1 + meters / 700)); const dur = Math.round((meters / 14) * 1000);
+        const meters = Math.max(80, Math.floor(skill * (0.35 + rand() * 0.65))); // Bud Escape: meters (10 m steps) + 200 per daily mission
+        const score = Math.floor(meters / 10) * 10 + 200 * Math.min(3, Math.floor(meters / 1500)); const dur = Math.round((meters / 14) * 1000);
         insR.run(id, 'jetpack-dash', score, Math.floor(meters / 18), dur, t - ago - dur, t - ago);
       }
       // a few runs in the other games, scaled to each game's Bronze/Silver/Gold thresholds
@@ -66,10 +66,10 @@ function seed() {
     const insB = db.prepare(`INSERT INTO bookings (brand,contact_name,contact,event_type,package,start_date,end_date,details,status,created_at,is_demo) VALUES (?,?,?,?,?,?,?,?,?,?,1)`);
     insB.run('Canopy Club', 'Promo Team', 'promo@example.com', 'Giveaway', 'premium', '2026-10-12', '2026-10-26', 'Two-week giveaway with branded game skin.', 'pending', t - 12 * 60e3);
     insB.run('Terp Tavern', 'Sam', 'discord: terptavern', 'Custom Game', 'elite', '2026-11-01', '2026-11-30', 'Full campaign, custom game + leaderboard.', 'approved', t - 2 * D);
-    db.prepare('INSERT INTO announcements (title, body, created_at, is_demo) VALUES (?,?,?,1)').run('Big things coming!', 'New games, bigger giveaways, and more ways to win. Stay tuned and keep flying in Jetpack Dash!', t - 3 * H);
+    db.prepare('INSERT INTO announcements (title, body, created_at, is_demo) VALUES (?,?,?,1)').run('Big things coming!', 'New games, bigger giveaways, and more ways to win. Stay tuned and keep flying in Bud Escape!', t - 3 * H);
     insA.run('entry', 'TerpQueen entered "$250 Store Credit"', null, t - 3 * 60e3);
     insA.run('booking', 'Booking request submitted: Canopy Club (premium)', null, t - 12 * 60e3);
-    insA.run('highscore', 'New high score (Jetpack Dash): BlazedKing - 4,120m', null, t - 15 * 60e3);
+    insA.run('highscore', 'New high score (Bud Escape): BlazedKing - 4,120 m', null, t - 15 * 60e3);
 
     // ---------- v3 demo: tournaments, follows, check-in streaks, broadcast notifications ----------
     const insT = db.prepare(`INSERT INTO tournaments (title, game_id, format, description, prize, start_at, qual_end_at, round_ms, end_at, active, created_at, is_demo) VALUES (?,?,?,?,?,?,?,?,?,1,?,1)`);

@@ -43,12 +43,12 @@ const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
 // tiers = Bronze / Silver / Gold score thresholds used by the achievement system.
 const MAX_SCORE = 1_000_000_000_000; // sanity bound only (1e12); endless runs have no game cap
 const GAMES = [
-  { id: 'jetpack-dash', title: 'Jetpack Dash', category: 'Arcade', tags: ['Arcade', 'High Score', '1-Player'], playable: true, unit: 'pts', module: 'jetpack.js', cls: 'JetpackDash',
+  { id: 'jetpack-dash', title: 'Bud Escape', category: 'Arcade', tags: ['Arcade', 'Endless', '1-Player'], playable: true, unit: 'm', module: 'jetpack.js', cls: 'JetpackDash',
     art: '/assets/cards/v5/jetpack-dash.webp', artTall: '/assets/cards/v5/jetpack-dash-tall.webp',
-    desc: 'Jetpack through a research lab, dodge zappers, missiles and lasers, build your multiplier and chase a six-figure score.',
-    howto: 'Hold anywhere (or Space) to fire your jetpack and rise; let go to fall. Dodge zappers (some rotate), missiles (a red ! shows their height before they fly in) and charging lasers. Fly 250 m without a hit to raise your multiplier, up to x10. Grab coin trails, pass zappers closely for bonus points, and pick up a shield to survive one hit.',
-    scoring: 'Score = 625 x multiplier for every 25 m flown + 25 x multiplier per coin + 250 x multiplier per close call. The multiplier rises by 1 every 250 m without a hit (max x10) and drops by 3 when a shield breaks.',
-    ac: { perSec: 15000, ramp: 0, grace: 10000, max: MAX_SCORE, coinsPerSec: 12 }, tiers: [12000, 150000, 600000] },
+    desc: 'Cash Green stole the government\'s best seeds. Fly his hover-dolly out of the federal grow warehouse past zappers, drones, lasers and harvest arms.',
+    howto: 'Hold anywhere (or Space) to fire the hover-dolly and rise; let go to fall. Dodge grow-light zappers (some rotate), security drones (a red reticle shows the height they lock on to before they fire), UV lasers and harvest arms. Grab a rainbow strain crate for a vehicle with its own controls (shown on screen) that takes one hit. Fly low past warehouse staff to high-five them. Everyone gets the same three missions each day.',
+    scoring: 'Score = meters travelled (counted every 10 m) + 200 for each completed daily mission (max 3). Nugs count toward missions only. One run, no revives, nothing carries over.',
+    ac: { perSec: 25, ramp: 0, grace: 700, max: MAX_SCORE, coinsPerSec: 12 }, tiers: [700, 2500, 5000] },
   { id: 'drift-rush', title: 'Drift Rush', category: 'Racing', tags: ['Racing', 'Endless'], playable: true, unit: 'pts', module: 'games/drift-rush.js', cls: 'DriftRush',
     art: '/assets/cards/v5/drift-rush.webp', artTall: '/assets/cards/v5/drift-rush-tall.webp',
     desc: 'Weave through highway traffic at golden hour, slide through sharp bends and bank big drift and near-miss combos.',
@@ -133,8 +133,8 @@ const GAMES = [
 // v7: retired games. Not in the catalog, can't be started or linked, but old runs/challenges still resolve a title and
 // their final board is archived (src/games-v7.js -> leaderboard_archive, GET /api/games/archive/:id).
 const RETIRED = [
-  // 2026-10-24: Jetpack Dash moved from meters to points (v9). Meter-scored runs were moved to this id and archived.
-  { id: 'jetpack-dash-m', title: 'Jetpack Dash (classic, meters)', retired: true, playable: false, replacedBy: 'jetpack-dash', unit: 'm', art: '/assets/cards/v5/jetpack-dash.webp', ac: { perSec: 30, ramp: 0, grace: 25, max: 10_000_000, coinsPerSec: 12 }, tiers: [440, 3400, 5050] },
+  // 2026-10-24: Jetpack Dash was rebuilt as Bud Escape (v9). Classic runs were moved to this id and archived.
+  { id: 'jetpack-dash-m', title: 'Jetpack Dash (classic)', retired: true, playable: false, replacedBy: 'jetpack-dash', unit: 'm', art: '/assets/cards/v5/jetpack-dash.webp', ac: { perSec: 30, ramp: 0, grace: 25, max: 10_000_000, coinsPerSec: 12 }, tiers: [440, 3400, 5050] },
   { id: 'stack-2048', title: 'Stack 2048 (retired)', retired: true, playable: false, replacedBy: 'stack', unit: 'pts', art: '/assets/cards/v7/stack.svg', ac: { perSec: 150, ramp: 0, grace: 400, max: 10_000_000, coinsPerSec: 1 }, tiers: [2500, 8000, 20000] },
 ];
 // v7 (item 21): pure-chance games stay playable "just for fun" but can never be linked to (or count for) a giveaway.

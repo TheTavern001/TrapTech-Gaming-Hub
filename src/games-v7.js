@@ -35,25 +35,25 @@ function retire(old, t = Date.now()) {
   if (out.archived || out.relinked || out.tournaments || out.challenges) console.log(`v7: retired ${old.id}`, JSON.stringify(out));
   return out;
 }
-// v9 (2026-10-24): Jetpack Dash switched from meters to points. Once, on the first boot of this version, move every
-// meter-scored run to the retired id 'jetpack-dash-m' (its board is archived by retire() below) and expire pending
-// Jetpack challenges, so the live board starts fresh and old and new scores are never ranked together.
-(function jetpackPointsCutover() {
-  const key = 'v9_jetpack_points'; if (db.prepare('SELECT 1 FROM settings WHERE key=?').get(key)) return;
+// v9 (2026-10-24): Jetpack Dash became Bud Escape (same id, new game: vehicles, harvest arms, drones, missions). Once, on the
+// first boot of this version, move every classic Jetpack Dash run to the retired id 'jetpack-dash-m' (its board is archived by
+// retire() below) and expire pending Jetpack challenges, so the live board starts fresh and the two games are never ranked together.
+(function budEscapeCutover() {
+  const key = 'v9_bud_escape'; if (db.prepare('SELECT 1 FROM settings WHERE key=?').get(key)) return;
   const t = Date.now(); const out = {};
   db.transaction(() => {
     out.runs = db.prepare("UPDATE runs SET game_id='jetpack-dash-m' WHERE game_id='jetpack-dash'").run().changes;
     out.challenges = db.prepare("UPDATE challenges SET status='expired' WHERE game_id='jetpack-dash' AND status IN ('pending','accepted')").run().changes;
     db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?,?,?)').run(key, JSON.stringify(out), t);
   })();
-  if (out.runs || out.challenges) console.log('v9: Jetpack Dash points cutover', JSON.stringify(out));
+  if (out.runs || out.challenges) console.log('v9: Bud Escape cutover', JSON.stringify(out));
 })();
 for (const g of cfg.RETIRED) retire(g);
 // library titles retired in src/games-lib.js (OWNER_RETIRED) get the same archive + giveaway/tournament relink
 for (const g of cfg.LIB_GAMES) if (g.retired && g.replacedBy) retire(g);
 
 // v7 item 21: chance games are "just for fun". Unlink them from every giveaway that is still open (runs on every boot, cheap and
-// idempotent); a giveaway left with no game gets Jetpack Dash so it stays playable. Finalized giveaways keep their history.
+// idempotent); a giveaway left with no game gets Bud Escape so it stays playable. Finalized giveaways keep their history.
 function unlinkFun(t = Date.now()) {
   const fun = [...cfg.JUST_FOR_FUN]; if (!fun.length) return 0; const ph = fun.map(() => '?').join(',');
   const rows = db.prepare(`SELECT gg.giveaway_id AS gid, gg.game_id FROM giveaway_games gg JOIN giveaways g ON g.id = gg.giveaway_id WHERE gg.game_id IN (${ph}) AND g.finalized_at IS NULL AND g.end_at > ?`).all(...fun, t);

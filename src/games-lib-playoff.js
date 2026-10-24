@@ -29,7 +29,7 @@ const M2 = { 'neon-circuit': ['e', 'More energy cells collected'], 'rift-surviva
   'missile-guard': ['k', 'More warheads stopped'], 'knife-toss': ['a', 'More apples'], 'bat-boy': ['h', 'More hits'] };
 // core catalog games (Reese: skill-only tie-breaks for ALL games). 'eff' = more points per scoring action; 'coins' = more
 // coins collected (server plausibility-checked against the server-timed run); a count key = more events of that kind.
-const CORE = { 'jetpack-dash': ['coins', 'More coins collected'], 'sky-hopper': ['coins', 'More coins collected'], 'drift-rush': ['d', 'More drift banks'],
+const CORE = { 'jetpack-dash': ['coins', 'More nugs collected'], 'sky-hopper': ['coins', 'More coins collected'], 'drift-rush': ['d', 'More drift banks'],
   'memory-match': ['eff', 'Fewer misses: more points per flip'], 'high-score': ['eff', 'Bigger combos: more points per hit'], 'terp-tapper': ['eff', 'Bigger combos: more points per note'],
   'munchies-snake': ['f', 'More snacks eaten'], 'brick-breaker': ['eff', 'Bigger chains: more points per brick'], 'void-swarm': ['k', 'More drones destroyed'],
   stack: ['eff', 'More perfect drops: more points per slab'], 'grow-guard': ['eff', 'More points per defence action'], 'sling-smash': ['b', 'More bots smashed'],

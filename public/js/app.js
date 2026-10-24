@@ -617,7 +617,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   setTitle(`Play ${g.title}`);
   const bootAt = Date.now();
   const mod = await import('./' + g.module); const Cls = mod[g.cls];
-  const bestKey = g.id === 'jetpack-dash' ? 'jd_best' : 'gh_best_' + g.id;
+  const bestKey = g.id === 'jetpack-dash' ? 'jd_best_be' : 'gh_best_' + g.id;
   let best = +ls.getItem(bestKey) || 0;
   if (S.me) { const p = await api('/api/profile/' + encodeURIComponent(S.me.username)); const b = p.ok && p.profile.best_by_game.find(x => x.game_id === g.id); if (b) best = Math.max(best, b.best); }
   if (!document.getElementById('game')) return; // navigated away while loading
@@ -656,7 +656,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   }
   async function finish(res) {
     if (res.score > (+ls.getItem(bestKey) || 0)) ls.setItem(bestKey, res.score);
-    ov.innerHTML = `<div class="card over-card glow-purple"><div class="small muted orb">RUN OVER</div><div class="big">${fmtScore(res.score, g.id)}</div>${res.coins ? `<div class="muted">${icon('coins')} ${res.coins} ${g.id === 'jetpack-dash' ? 'coins' : 'bonus'}</div>` : ''}<div id="sv" style="margin-top:12px"><div class="small muted">Saving score...</div></div>
+    ov.innerHTML = `<div class="card over-card glow-purple"><div class="small muted orb">RUN OVER</div><div class="big">${fmtScore(res.score, g.id)}</div>${res.coins ? `<div class="muted">${icon('coins')} ${res.coins} ${g.id === 'jetpack-dash' ? 'nugs' : 'bonus'}</div>` : ''}<div id="sv" style="margin-top:12px"><div class="small muted">Saving score...</div></div>
       <div class="btns"><button class="btn block" id="again">${icon('rotate-ccw')} Play Again</button><a class="btn ghost block" href="/leaderboard?game=${g.id}">${icon('trophy')} Leaderboard</a><a class="btn ghost block" href="/games/${g.id}">Back</a></div></div>`;
     ov.classList.remove('hidden');
     ov.querySelector('#again').onclick = async () => { ov.classList.add('hidden'); await getToken(); game.restart(); };
@@ -1344,7 +1344,7 @@ route(/^\/search$/, (m, url) => {
   const inp = document.getElementById('sq'); const out = document.getElementById('sr'); let tmr = null, seq = 0;
   async function run() {
     const q = inp.value.trim(); history.replaceState({}, '', q ? `/search?q=${encodeURIComponent(q)}` : '/search');
-    if (!q) { out.innerHTML = `<div class="chips" style="padding:6px 0">${['Drift', 'Jetpack', 'Giveaway', 'Cup', 'Terp'].map(x => `<button class="chip" data-s="${x}">${x}</button>`).join('')}</div>`; return; }
+    if (!q) { out.innerHTML = `<div class="chips" style="padding:6px 0">${['Drift', 'Bud Escape', 'Giveaway', 'Cup', 'Terp'].map(x => `<button class="chip" data-s="${x}">${x}</button>`).join('')}</div>`; return; }
     const my = ++seq; const r = await api('/api/search?q=' + encodeURIComponent(q)); if (my !== seq) return;
     const grp = (title, items, fn) => items.length ? `<div class="section-h"><h2>${title}</h2><span class="small muted">${items.length}</span></div><div class="card sr-list">${items.map(fn).join('')}</div>` : '';
     const html = grp('Games', r.games, g => `<a class="sr-row" href="/games/${g.id}"><img src="${esc(g.art)}" alt="" class="gthumb"><b>${esc(g.title)}</b><span class="muted small">${esc(g.category)}</span></a>`)

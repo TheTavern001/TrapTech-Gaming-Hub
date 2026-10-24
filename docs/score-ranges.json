@@ -11,29 +11,29 @@
  },
  "games": {
   "jetpack-dash": {
-   "title": "Jetpack Dash",
-   "unit": "pts",
+   "title": "Bud Escape",
+   "unit": "m",
    "casual": {
-    "median": 12000,
-    "p75": 30000
+    "median": 450,
+    "p75": 900
    },
    "good": {
-    "median_pb": 150000,
-    "p90_pb": 300000
+    "median_pb": 2500,
+    "p90_pb": 4200
    },
    "top1": {
-    "pb": 700000
+    "pb": 6500
    },
-   "note": "v9 points scoring (2026-10-24): design estimates from the scoring rules (good run ~1,500 m at an average x4); replace with real run percentiles after launch.",
+   "note": "Bud Escape (2026-10-24): score = meters (10 m steps) + 200 per daily mission (max 3). Design estimates from the classic meter game and autopilot runs; replace with real run percentiles after launch.",
    "suggested_tiers": [
-    12000,
-    150000,
-    600000
+    700,
+    2500,
+    5000
    ],
    "current_tiers": [
-    12000,
-    150000,
-    600000
+    700,
+    2500,
+    5000
    ]
   },
   "drift-rush": {

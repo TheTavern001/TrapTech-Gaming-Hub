@@ -134,3 +134,24 @@ matched to the reference game). Void Swarm is a third vertical space shooter nex
   service levels above/below; HUD moves right in landscape so it never covers the pilot.
 - **Gameplay, spawn order and every scoring event are unchanged** (same server rule). Re-validated: 9 simulated runs from
   4k to 1.86M points pass `checkEvents`; a signed-in run is accepted (not held). Settings: graphics detail, screen shake.
+
+## Round 6 (2026-10-24): Bud Escape replaces Jetpack Dash
+
+- **Owner spec "Bud Escape"** (same id `jetpack-dash`, so giveaway links and history stay): Cash Green flees a federal grow
+  warehouse on a stolen hover-dolly (hold to rise, release to fall; speed grows with distance). Hazards: grow-light zappers
+  (some rotate), security drones (fly in, lock a red reticle on your height with beeps, fire one straight shot), UV lasers (never
+  while in a vehicle) and harvest arms (striped arms with a spinning saw sweeping from floor or ceiling).
+- **Vehicles** from rainbow strain crates (one crate per 480-760 m, same rules for everyone): Rolling Blunt, Hydroponic Walker,
+  Trichome Glider, Resin Rocket Sled, Bong Hover, Seed Pod Cannon Cart, Smoke Cloud Board. Each has its own controls, absorbs one
+  hit, clears nearby hazards with a shockwave on entry and on destruction, and slows the game briefly on entry.
+- **Missions:** three per UTC day, identical for every player (high fives, near misses, nugs, airtime, vehicles, dodged shots,
+  shockwave clears); each adds a flat 200. No shields, magnets, upgrades or anything that carries over.
+- **Scoring (owner decision):** meters travelled (10 per 10 m) + mission bonuses. New L3 rule; tiers 700 / 2,500 / 5,000 m.
+  Classic runs migrate once to `jetpack-dash-m` (archived board).
+- **Art (owner: use finished downloaded assets, not drawn-in-code ones):** Kenney CC0 Toon Characters (Cash, staff, robot),
+  Platformer Pack Industrial (warehouse), Robot Pack (drones, vehicles), New Platformer Pack, Smoke Particles, Particle Pack, Space
+  Shooter; Openclipart public-domain cannabis plants, leaf and bong. One 555 KB atlas built by `tools/bud-escape-assets/build.py`
+  (licence record + rebuild steps in its README). The previous pilot sprites were removed.
+- Verified: 8 simulated runs (70 m to 7,870 points over 7 minutes) pass the server rule and stay under the rate cap; a signed-in
+  run is accepted; e2e-api 323/323, anticheat 12/12, economy 49/49, systems 54/54. e2e-tiebreak (with its prize-proof hook) has
+  one failure that is identical on the base branch.

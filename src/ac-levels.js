@@ -189,19 +189,16 @@ const RULES = {
     const meters = score - sumD; if (meters < 0 || meters > lastM + 260) return 'score does not match distance + drift';
     return null;
   }),
-  // Jetpack Dash v9 (public/js/jetpack.js): 'm' = 625 x mult per 25 m, 'c' = coin trail (25 x mult per coin, <= 16 coins),
-  // 'n' = close call (250 x mult), 'x' = multiplier change (+1 only after 10 distance payouts, any drop on a shield break).
+  // Bud Escape (id jetpack-dash, public/js/jetpack.js): 'm' = 10 per 10 m travelled (speed <= 25 m/s), 'q' = completed
+  // daily mission (200 each, at most 3), '#v' = vehicle crate taken (crates are >= 480 m apart), '#x' = vehicle destroyed.
   'jetpack-dash': rule((E) => {
-    let mult = 1, mEv = 0, sinceUp = 0, nEv = 0, cEv = 0;
+    let mEv = 0, q = 0, veh = 0;
     for (const e of E) {
       const t = e.t / 100;
-      if (e.k === 'm') { if (e.v !== 625 * mult) return `distance payout ${e.v} does not match multiplier x${mult}`; mEv++; sinceUp++; if (mEv * 25 > 25 * t + 60) return `${mEv * 25} m is not reachable in ${t.toFixed(1)} s`; }
-      else if (e.k === 'c') { const per = 25 * mult; if (e.v <= 0 || e.v % per !== 0 || e.v / per > 16) return `coin trail worth ${e.v} is not possible at x${mult}`; if (++cEv > t * 2 + 5) return 'too many coin trails for the run time'; }
-      else if (e.k === 'n') { if (e.v !== 250 * mult) return `close call worth ${e.v} is not possible at x${mult}`; if (++nEv > t * 3 + 5) return 'too many close calls for the run time'; }
-      else if (e.k === 'x') { if (!Number.isInteger(e.v) || e.v < 1 || e.v > 10) return `multiplier x${e.v} is not possible`;
-        if (e.v > mult) { if (e.v !== mult + 1 || sinceUp < 10) return 'multiplier rose faster than the rules allow'; } else if (e.v === mult) return 'repeated multiplier mark';
-        sinceUp = 0; mult = e.v; }
-      else return `unknown event ${e.k}`;
+      if (e.k === 'm') { if (e.v !== 10) return `distance payout ${e.v} is not possible`; if (++mEv * 10 > 25 * t + 60) return `${mEv * 10} m is not reachable in ${t.toFixed(1)} s`; }
+      else if (e.k === 'q') { if (e.v !== 200) return `mission bonus ${e.v} is not possible`; if (++q > 3) return 'more than three missions completed'; }
+      else if (e.k === '#v') { if (!Number.isInteger(e.v) || e.v < 1 || e.v > 7) return 'unknown vehicle'; if (++veh > mEv / 40 + 2) return 'vehicle crates closer together than the rules allow'; }
+      else if (e.k !== '#x') return `unknown event ${e.k}`;
     }
     return null;
   }),
