@@ -11,52 +11,29 @@
  },
  "games": {
   "jetpack-dash": {
+   "title": "Jetpack Dash",
+   "unit": "pts",
    "casual": {
-    "median": 440,
-    "p75": 890
+    "median": 12000,
+    "p75": 30000
    },
    "good": {
-    "median_pb": 3400,
-    "p90_pb": 4700
+    "median_pb": 150000,
+    "p90_pb": 300000
    },
    "top1": {
-    "pb": 5300
+    "pb": 700000
    },
-   "runs": {
-    "p10": 67,
-    "p50": 580,
-    "p90": 2050,
-    "p99": 3950
-   },
-   "run_seconds": {
-    "p10": 5,
-    "p50": 42,
-    "p90": 113,
-    "p99": 191
-   },
-   "rate": {
-    "max_seen_per_sec": 23.03,
-    "at": {
-     "score": 7023,
-     "seconds": 305
-    },
-    "ceiling_per_sec": 30,
-    "ramp": 0,
-    "over_ceiling_runs": 0,
-    "expert_over_ceiling": 0,
-    "expert_best": 7950
-   },
+   "note": "v9 points scoring (2026-10-24): design estimates from the scoring rules (good run ~1,500 m at an average x4); replace with real run percentiles after launch.",
    "suggested_tiers": [
-    440,
-    3400,
-    5050
+    12000,
+    150000,
+    600000
    ],
-   "title": "Jetpack Dash",
-   "unit": "m",
    "current_tiers": [
-    440,
-    3400,
-    5050
+    12000,
+    150000,
+    600000
    ]
   },
   "drift-rush": {
@@ -645,6 +622,55 @@
     6950,
     42800,
     67800
+   ]
+  },
+  "jetpack-dash-m": {
+   "casual": {
+    "median": 440,
+    "p75": 890
+   },
+   "good": {
+    "median_pb": 3400,
+    "p90_pb": 4700
+   },
+   "top1": {
+    "pb": 5300
+   },
+   "runs": {
+    "p10": 67,
+    "p50": 580,
+    "p90": 2050,
+    "p99": 3950
+   },
+   "run_seconds": {
+    "p10": 5,
+    "p50": 42,
+    "p90": 113,
+    "p99": 191
+   },
+   "rate": {
+    "max_seen_per_sec": 23.03,
+    "at": {
+     "score": 7023,
+     "seconds": 305
+    },
+    "ceiling_per_sec": 30,
+    "ramp": 0,
+    "over_ceiling_runs": 0,
+    "expert_over_ceiling": 0,
+    "expert_best": 7950
+   },
+   "suggested_tiers": [
+    440,
+    3400,
+    5050
+   ],
+   "title": "Jetpack Dash (classic, meters)",
+   "unit": "m",
+   "current_tiers": [
+    440,
+    3400,
+    5050
    ]
   }
  }

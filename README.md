@@ -18,8 +18,12 @@ power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-
   → Hill Hauler / Drift Rush (library).
 - **Restored on this branch:** cosmetics, achievements and rotating quests had been replaced by stubs on 2026-10-19..21;
   restored from `099effa` with the AAA designs merged properly.
-- **Rebuild in progress** ([docs/CORE-GAME-REBUILD-PLAN.md](docs/CORE-GAME-REBUILD-PLAN.md)): **Drift Rush v9 is done** (3D
-  highway racer); Jetpack Dash and Memory Match are next. Stack and Munchies Snake are kept as they are.
+- **Rebuild in progress** ([docs/CORE-GAME-REBUILD-PLAN.md](docs/CORE-GAME-REBUILD-PLAN.md)): **Drift Rush v9** (3D highway
+  racer) and **Jetpack Dash v9** (3D Joyride-style lab runner with points scoring) are done; Memory Match is next. Stack and
+  Munchies Snake are kept as they are.
+- **Jetpack Dash now scores points** (strong runs 100k–1M+). On the first boot of this version, all meter-scored Jetpack runs
+  move to the retired id `jetpack-dash-m` (board archived, history kept) and pending Jetpack challenges expire. End any open
+  giveaway or tournament that includes Jetpack Dash before deploying.
 - **Every game has its own settings and a pause menu** (core games: header pause → Settings; library games: on-screen pause
   button → Resume / Settings / Exit). Games can declare their own options (e.g. Drift Rush camera view and graphics detail).
 - **Admin security restored:** `src/admin-sec.js` had been replaced by a stub on `main` (admin routes unauthenticated);
@@ -101,7 +105,7 @@ log (`src/ac-levels.js`); Memory Match and Stack are additionally replay-verifie
 
 | Game | Scoring loop | Server envelope |
 |---|---|---|
-| Jetpack Dash | Meters flown in one run | 30/s + 25 grace |
+| Jetpack Dash (v9, 3D) | Points: 625 × multiplier per 25 m, coin trails, close calls; multiplier up to x10 | 15,000/s + 10,000 grace; event log |
 | Drift Rush (v9, 3D) | Meters driven + banked drift and near-miss points (multiplier up to x3) | 240/s + 200 grace; event log |
 | Memory Match | Pair score, combo, time left, board bonus; replay-verified | 1,100/s + 500 grace |
 | High Score | Reflex targets, accuracy and combo | 1,100/s + 300 grace |

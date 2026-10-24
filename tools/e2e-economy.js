@@ -101,7 +101,7 @@ console.log('# seasons: track, rewards, perks, end -> archive -> hall of fame ->
 ok(SE.CUM[60] === 30300 && SE.levelOf(0).level === 0 && SE.levelOf(30300).level === 60 && SE.levelOf(30300 + 4500).overdrive === 2, '60 levels / 30,300 XP, Overdrive stars every 2,000 XP after');
 const sp = SE.seasonProgress(null); ok(sp.track.length === 60 && sp.track.filter(t => t.item).length === 13 && sp.perks.length === 6 && sp.track.filter(t => !t.item).every(t => t.points >= 40), 'track: 13 season-exclusive cosmetics, Hub Points on every other level, 6 perks');
 const su = mkUser('seasoncheck'); const sNow = SE.seasonAt();
-for (let k = 0; k < 400; k++) insRun.run(su, 'jetpack-dash', 5000, sNow.start_at + 60e3 + k * 1000, sNow.start_at + 61e3 + k * 1000);
+for (let k = 0; k < 400; k++) insRun.run(su, 'jetpack-dash', 200000, sNow.start_at + 60e3 + k * 1000, sNow.start_at + 61e3 + k * 1000);
 const prog = SE.seasonProgress(su); const cl = SE.claimTrack(su); ok(prog.level >= 20 && cl.points > 0 && cl.items.length >= 4 && SE.claimTrack(su).points === 0, `level ${prog.level}: claimed ${cl.points} pts + ${cl.items.length} cosmetics once (idempotent)`);
 ok(SE.perksOf(su).discount >= 5 && SH.priceFor(pick, { id: su }) < pick.price, `season perk discount applies (${SE.perksOf(su).discount}% off: ${pick.price} -> ${SH.priceFor(pick, { id: su })})`);
 const b4 = SE.seasonAt(); const upd = SE.adminUpdate(b4.number, { name: 'Test Name', ends_at: b4.end_at + 7 * D }, { username: 'owner' });

@@ -111,3 +111,15 @@ matched to the reference game). Void Swarm is a third vertical space shooter nex
   anti-cheat and admin access; About page game count is now computed live; Terms no longer mention retired casino games.
 - **Owner/legal check needed:** Terms section 3 says cosmetics "cannot be bought", while the Hub Store supports optional paid
   cosmetic purchases (checkout currently closed). Align the wording with counsel before opening paid checkout.
+
+## Round 4 (2026-10-24): admin security, CI, Jetpack Dash v9
+
+- **Admin security restored** (`src/admin-sec.js` from `099effa`): unauthenticated admin requests now 404/401; e2e-api 323/323.
+- **CI:** two checks that already failed on `main` fixed (stale Stripe refund regex; missing `tools/e2e-hub-library.js`).
+- **Jetpack Dash v9** (owner decisions: Joyride-style in portrait, points scoring): three.js lab corridor, angled camera,
+  pilot hero, zappers / missiles / lasers / coins / shields. Score = 625 × multiplier per 25 m + 25 × multiplier per coin +
+  250 × multiplier per close call; the multiplier (max x10) rises every 250 m without a hit. New L3 rule in `src/ac-levels.js`;
+  simulated runs from ~4k to ~1.25M points validate; a shield break at x1 no longer logs a repeated multiplier mark (would
+  have rejected legitimate runs). Tiers 12k / 150k / 600k; `docs/score-ranges.json` holds design estimates until real data
+  exists (`tools/score-sim.js` still models meters and must not be re-run for this game). Meter runs migrate once to the
+  retired id `jetpack-dash-m` (archived board).

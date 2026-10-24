@@ -67,7 +67,7 @@ function client() {
   ok(r.body.ok && r.body.rank >= 1, 'valid score accepted (80m in ~3s)', r.body);
   ok(!(r.body.giveaways || []).length, 'score is not counted toward any prize event while the lock is on');
   r = await A('/api/score', { body: { token: tokA, score: 80, coins: 5 } }); ok(r.status === 409, 'same token cannot be submitted twice');
-  r = await B('/api/score', { body: { token: tokB, score: 5000, coins: 0 } }); ok(r.status === 422 && r.body.rejected, 'implausible score rejected (5000m in ~3s)', r.body);
+  r = await B('/api/score', { body: { token: tokB, score: 500000, coins: 0 } }); ok(r.status === 422 && r.body.rejected, 'implausible score rejected (500,000 pts in ~3s)', r.body);
   r = await B('/api/score', { body: { token: tokB, score: 10, coins: 0 } }); ok(r.status === 409, 'rejected token cannot be reused');
   r = await B('/api/score', { body: { token: tokB.slice(0, -3) + 'abc', score: 10 } }); ok(r.status === 400, 'tampered token rejected');
   r = await B('/api/run/start', { body: { game_id: 'not-a-game' } }); ok(r.status === 400, 'unknown game cannot be started');

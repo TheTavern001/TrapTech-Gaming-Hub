@@ -27,9 +27,9 @@ function seed() {
       const nRuns = 4 + Math.floor(rand() * 8);
       for (let k = 0; k < nRuns; k++) {
         const ago = (i < 4 && k === 0) ? (2 + i * 3) * H : Math.floor(rand() * 40 * D);
-        const score = Math.max(80, Math.floor(skill * (0.35 + rand() * 0.65)));
-        const dur = Math.round((score / 17) * 1000);
-        insR.run(id, 'jetpack-dash', score, Math.floor(score / 18), dur, t - ago - dur, t - ago);
+        const meters = Math.max(80, Math.floor(skill * (0.35 + rand() * 0.65))); // v9 points: ~625 x average multiplier per 25 m
+        const score = Math.floor(meters * 25 * Math.min(6.5, 1 + meters / 700)); const dur = Math.round((meters / 14) * 1000);
+        insR.run(id, 'jetpack-dash', score, Math.floor(meters / 18), dur, t - ago - dur, t - ago);
       }
       // a few runs in the other games, scaled to each game's Bronze/Silver/Gold thresholds
       for (const g of cfg.GAMES.filter(x => x.id !== 'jetpack-dash')) {

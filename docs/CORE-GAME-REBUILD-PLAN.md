@@ -37,8 +37,8 @@ consistent start, pause and game-over cards (current game-over card has a large 
 
 | Game (id) | Reference | Rebuild target | Assets on hand |
 |---|---|---|---|
-| Drift Rush (`drift-rush`) | Traffic Racer / Drift Boss | 3D highway, chase camera, traffic weaving, near-miss + drift combo scoring, day/night | Kenney Car Kit (sedan, taxi, police, SUV, trucks), city buildings, lamps, barriers |
-| Jetpack Dash (`jetpack-dash`) | Jetpack Joyride | Side-on lab corridor with parallax depth, zappers, missiles with warnings, coin patterns, vehicle power-ups | Quaternius hero rig; lab set to build |
+| Drift Rush (`drift-rush`) | Traffic Racer / Drift Boss | **Done (v9):** 3D highway, chase camera, traffic weaving, near-miss + drift combo scoring | Kenney Car Kit (sedan, taxi, police, SUV, trucks), city buildings, lamps, barriers |
+| Jetpack Dash (`jetpack-dash`) | Jetpack Joyride | **Done (v9):** 3D lab corridor with grow-room windows, angled portrait camera, hold-to-fly pilot (Quaternius rig + suit + helmet), fixed/rotating zappers, homing missiles with warnings, charging lasers, coin trails, shields; points scoring with a x10 multiplier | Quaternius hero rig; lab built in code |
 | Sky Hopper (`sky-hopper`) | Flappy Bird | Bright daytime world, readable pipes/towers, satisfying flap physics, medals | 2D art to commission/build |
 | Brick Breaker (`brick-breaker`) | Arkanoid / Breakout | 3D-lit bricks with materials, multi-hit and steel bricks, capsules (laser, multiball, catch), boss stage | Procedural PBR bricks |
 | Void Swarm (`void-swarm`) | Galaga | **Overlaps Star Swarm.** Proposal: retire into Star Swarm, or re-theme to a different shooter (e.g. Asteroids or vertical bullet-hell) | Kenney space kit |
