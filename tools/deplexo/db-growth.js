@@ -13,7 +13,7 @@ const out = '/tmp/hub-growth.db'; for (const s of ['', '-wal', '-shm']) fs.rmSyn
   const size = () => fs.statSync(out).size;
   const before = size();
   const hex = (n) => crypto.randomBytes(n).toString('hex');
-  const games = ['jetpack-dash', 'drift-rush', 'plinko', 'memory-match', 'high-score', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
+  const games = ['jetpack-dash', 'drift-rush', 'plinko', 'high-score', 'terp-tapper', 'stack-2048', 'munchies-snake', 'brick-breaker', 'sky-hopper'];
   const t0 = Date.now() - 90 * 864e5; const hash = '$2a$10$' + hex(26).slice(0, 53);
   const insU = db.prepare("INSERT INTO users (username, pass_hash, created_at, last_seen, birth_date, ref_code) VALUES (?,?,?,?,?,?)");
   const insT = db.prepare("INSERT INTO run_tokens (rid,user_id,game_id,started_at,used_at,status,ip_hash,seed) VALUES (?,?,?,?,?,'accepted',?,?)");

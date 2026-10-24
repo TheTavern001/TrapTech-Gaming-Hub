@@ -27,8 +27,8 @@ function client() {
 }
 let seed = 20261003; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 const N_PLAYERS = 300; const name = (i) => 'sc_' + String(i).padStart(3, '0');
-// memory-match: a game with no other recent runs, so the window holds exactly our 300 players
-const GAME = 'memory-match'; const AC = cfg.GAME_MAP[GAME].ac;
+// brick-breaker: a game with no other recent runs, so the window holds exactly our 300 players
+const GAME = 'brick-breaker'; const AC = cfg.GAME_MAP[GAME].ac;
 const capOf = (r) => Math.min(AC.max, Math.floor(AC.perSec * (r.created_at - r.started_at) / 1000 + AC.grace));
 const stats = (a) => { const s = [...a].sort((x, y) => x - y); return { n: s.length, avg: +(s.reduce((p, c) => p + c, 0) / s.length).toFixed(1), p50: +s[Math.floor(s.length * .5)].toFixed(1), p95: +s[Math.min(s.length - 1, Math.floor(s.length * .95))].toFixed(1), max: +s[s.length - 1].toFixed(1) }; };
 

@@ -4,7 +4,7 @@
 const fs = require('fs'); const { Agent, setGlobalDispatcher } = (() => { try { return require('undici'); } catch { return {}; } })();
 const BASE = process.env.BASE || 'http://127.0.0.1:8899'; const PID = process.env.PID; const DB = process.env.DB;
 const USERS = +(process.env.USERS || 20000); const STAGES = (process.env.STAGES || '50:1000,200:4000,500:8000,800:7000').split(',').map(s => s.split(':').map(Number));
-const GAMES = ['jetpack-dash', 'drift-rush', 'memory-match', 'stack', 'high-score', 'terp-tapper'];
+const GAMES = ['jetpack-dash', 'drift-rush', 'stack', 'high-score', 'terp-tapper'];
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const lat = {}; const codes = {}; let errors = 0, reqs = 0, netErr = 0;
 const rec = (name, ms, status) => { (lat[name] = lat[name] || []).push(ms); const k = name + ' ' + status; codes[k] = (codes[k] || 0) + 1; reqs++; if (status >= 500 || status === 0) errors++; };

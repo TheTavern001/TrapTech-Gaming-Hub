@@ -11,52 +11,29 @@
  },
  "games": {
   "jetpack-dash": {
+   "title": "Bud Escape",
+   "unit": "m",
    "casual": {
-    "median": 440,
-    "p75": 890
+    "median": 450,
+    "p75": 900
    },
    "good": {
-    "median_pb": 3400,
-    "p90_pb": 4700
+    "median_pb": 2500,
+    "p90_pb": 4200
    },
    "top1": {
-    "pb": 5300
+    "pb": 6500
    },
-   "runs": {
-    "p10": 67,
-    "p50": 580,
-    "p90": 2050,
-    "p99": 3950
-   },
-   "run_seconds": {
-    "p10": 5,
-    "p50": 42,
-    "p90": 113,
-    "p99": 191
-   },
-   "rate": {
-    "max_seen_per_sec": 23.03,
-    "at": {
-     "score": 7023,
-     "seconds": 305
-    },
-    "ceiling_per_sec": 30,
-    "ramp": 0,
-    "over_ceiling_runs": 0,
-    "expert_over_ceiling": 0,
-    "expert_best": 7950
-   },
+   "note": "Bud Escape (2026-10-24): score = meters (10 m steps) + 200 per daily mission (max 3). Design estimates from the classic meter game and autopilot runs; replace with real run percentiles after launch.",
    "suggested_tiers": [
-    440,
-    3400,
-    5050
+    700,
+    2500,
+    5000
    ],
-   "title": "Jetpack Dash",
-   "unit": "m",
    "current_tiers": [
-    440,
-    3400,
-    5050
+    700,
+    2500,
+    5000
    ]
   },
   "drift-rush": {
@@ -645,6 +622,55 @@
     6950,
     42800,
     67800
+   ]
+  },
+  "jetpack-dash-m": {
+   "casual": {
+    "median": 440,
+    "p75": 890
+   },
+   "good": {
+    "median_pb": 3400,
+    "p90_pb": 4700
+   },
+   "top1": {
+    "pb": 5300
+   },
+   "runs": {
+    "p10": 67,
+    "p50": 580,
+    "p90": 2050,
+    "p99": 3950
+   },
+   "run_seconds": {
+    "p10": 5,
+    "p50": 42,
+    "p90": 113,
+    "p99": 191
+   },
+   "rate": {
+    "max_seen_per_sec": 23.03,
+    "at": {
+     "score": 7023,
+     "seconds": 305
+    },
+    "ceiling_per_sec": 30,
+    "ramp": 0,
+    "over_ceiling_runs": 0,
+    "expert_over_ceiling": 0,
+    "expert_best": 7950
+   },
+   "suggested_tiers": [
+    440,
+    3400,
+    5050
+   ],
+   "title": "Jetpack Dash (classic, meters)",
+   "unit": "m",
+   "current_tiers": [
+    440,
+    3400,
+    5050
    ]
   }
  }

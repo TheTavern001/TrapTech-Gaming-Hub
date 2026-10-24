@@ -35,7 +35,7 @@ const WINNER_RULE = 'Highest verified score at close';
 
 // built-in defaults for the hub's own games (reference names are for recognition only; the hub versions are originals)
 const D = {
-  'jetpack-dash': { game: 'Jetpack Joyride', category: CATEGORIES[0], recognition_tier: 'A+', competition_type: 'endless', metric: 'distance', hours: 72, ac: 'L2' },
+  'jetpack-dash': { game: 'Jetpack Joyride', category: CATEGORIES[0], recognition_tier: 'A+', competition_type: 'endless', metric: 'meters', hours: 72, ac: 'L3' },
   'drift-rush': { game: 'Drift Boss / Traffic Racer', category: CATEGORIES[1], recognition_tier: 'A', competition_type: 'endless', metric: 'survival_distance', hours: 72, ac: 'L2' },
   'sky-hopper': { game: 'Flappy Bird', category: CATEGORIES[0], recognition_tier: 'A+', competition_type: 'endless', metric: 'score', hours: 48, ac: 'L1' },
   'stack': { game: 'Stack', category: CATEGORIES[7], recognition_tier: 'A', competition_type: 'endless', metric: 'score', hours: 48, ac: 'L2' },

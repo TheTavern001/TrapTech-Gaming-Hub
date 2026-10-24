@@ -226,7 +226,7 @@ G.parse.contexts.b = (num, slot) => {
 };
 const gateItem = (gt) => resolve(G.make('b', gt.num, gt.slot, G.parse.contexts.b(gt.num, gt.slot)).id);
 const gateText = (gt) => gt.kind === 'weekly' ? (gt.need === 3 ? 'Finish top 3 on any game\'s weekly leaderboard' : 'Finish top 10 on any game\'s weekly leaderboard')
-  : `Score ${gt.need.toLocaleString('en-US')}${(cfg.GAME_MAP[gt.game] || {}).unit === 'm' ? 'm' : ''}+ in ${(cfg.GAME_MAP[gt.game] || {}).title} (${gt.label === 'good' ? 'a strong player\'s best' : 'top 1% of players'})`;
+  : `Score ${gt.need.toLocaleString('en-US')}${(cfg.GAME_MAP[gt.game] || {}).unit === 'm' ? 'm' : ''}+ in ${(cfg.GAME_MAP[gt.game] || {}).title} (${gt.label === 'good' ? 'Pro target' : 'top 1% of players'})`;
 function grantGates(userId, t = Date.now()) {
   const best = new Map(db.prepare('SELECT game_id, MAX(score) AS b FROM runs WHERE user_id=? AND held=0 GROUP BY game_id').all(userId).map(r => [r.game_id, r.b]));
   const ins = db.prepare('INSERT OR IGNORE INTO user_items (user_id, item_id, price, acquired_at) VALUES (?,?,0,?)'); const got = [];

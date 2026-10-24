@@ -37,7 +37,7 @@ export class GrowGuard extends Game8 {
     if (this.between > 0) { this.between -= dt; if (this.between <= 0) this.startWave(); }
     else { this.spawnT -= dt; if (this.queue.length && this.spawnT <= 0) { const k = this.queue.shift(), r = Math.floor(this.r() * ROWS); this.pests.push({ k, def: PEST[k], r, x: this.W + 20, hp: PEST[k].hp, dead: false, flash: 0, ph: this.r() * TAU, slow: 0, eat: 0 }); this.warn[r] = 1.2; this.spawnT = Math.max(0.7, 2.2 - this.wave * 0.07) * (0.7 + this.r() * 0.6); } if (!this.queue.length) this.waveSpawned = true;
       if (this.waveSpawned && !this.pests.length && !this.wavePaid) { this.wavePaid = true; const b = this.award(100 * this.wave, 'c'); this.light += 50; this.coins++; this.pop(this.W / 2, 128, `WAVE CLEAR +${b}`, '#fde047', 20); this.fx.flash('#bef264', 0.12); this.between = 4; this.setLevel(Math.min(1, this.wave / 18)); } }
-    this.dropT -= dt; if (this.dropT <= 0) { this.dropT = 6 + this.r() * 3; this.drops.push({ x: rnd(60, this.W - 40), y: 120, ty: rnd(this.gy + 20, this.gy + this.ch * ROWS - 20), v: 25, got: false, life: 9 }); }
+    this.dropT -= dt; if (this.dropT <= 0) { this.dropT = 6 + this.r() * 3; this.drops.push({ x: 60 + this.r() * (this.W - 100), y: 120, ty: this.gy + 20 + this.r() * (this.ch * ROWS - 40), v: 25, got: false, life: 9 }); }
     for (const d of this.drops) { d.y = Math.min(d.ty, d.y + 90 * dt); d.life -= dt; } this.drops = this.drops.filter(d => !d.got && d.life > 0);
     for (let r = 0; r < ROWS; r++) if (this.warn[r] > 0) this.warn[r] -= dt;
     for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const g = this.tiles[r][c]; if (!g) continue; g.t += dt; g.cd -= dt; const x = this.cxT(c);

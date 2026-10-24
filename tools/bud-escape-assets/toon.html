@@ -1,0 +1,109 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"/vendor/three.module.min.js","three/addons/":"/vendor/three-addons/"}}</script></head><body>
+<script type="module">
+// Toon renderer for Bud Escape: loads one or more CC0 glTF parts, turns their materials into cel-shaded toon materials
+// (3 light bands, optional recolour) and renders a near side-on orthographic view to a transparent PNG. The thick dark
+// outline is added afterwards by build.py so it matches the 2D art.
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const loader = new GLTFLoader(), cache = {};
+const grad = (() => { const d = new Uint8Array([90, 90, 90, 255, 175, 175, 175, 255, 255, 255, 255, 255]); const t = new THREE.DataTexture(d, 3, 1); t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })();
+
+// ---- procedural models for pieces no free pack has (cannabis plants and the cannabis-themed vehicles) ----
+const toon = (c, o = {}) => new THREE.MeshToonMaterial({ color: new THREE.Color(c), gradientMap: grad, side: THREE.DoubleSide, ...o });
+function leafGeo(len, thin = 0.17) { // 7-leaflet cannabis leaf in the XY plane, base at the origin, pointing +Y
+  const geos = []; const spec = [[0, 1], [0.42, 0.86], [-0.42, 0.86], [0.85, 0.62], [-0.85, 0.62], [1.25, 0.36], [-1.25, 0.36]];
+  for (const [a, l] of spec) { const L = len * l, W = L * thin, sh = new THREE.Shape(); sh.moveTo(0, 0);
+    for (let i = 1; i <= 8; i++) { const t = i / 8, w = Math.sin(t * Math.PI) * W * (1 - t * 0.25), y = t * L; sh.lineTo(w * (i % 2 ? 1.12 : 0.92), y); }
+    for (let i = 7; i >= 0; i--) { const t = i / 8, w = Math.sin(t * Math.PI) * W * (1 - t * 0.25), y = t * L; sh.lineTo(-w * (i % 2 ? 1.12 : 0.92), y); }
+    const g = new THREE.ShapeGeometry(sh); g.rotateZ(-a); geos.push(g); }
+  const pos = []; const idx = []; let off = 0;
+  for (const g of geos) { const p = g.attributes.position.array; for (let i = 0; i < p.length; i++) pos.push(p[i]); const ix = g.index.array; for (const i of ix) idx.push(i + off); off += p.length / 3; }
+  const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.setIndex(idx); out.computeVertexNormals(); return out;
+}
+function plant(seed, h) {
+  let a = seed; const rnd = () => (a = (a * 16807) % 2147483647) / 2147483647; const g = new THREE.Group();
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.24, 0.36, 10), toon('#3f3f46')); pot.position.y = 0.18; g.add(pot);
+  const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.04, 10), toon('#44291b')); soil.position.y = 0.36; g.add(soil);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, h, 6), toon('#4d7c0f')); stem.position.y = 0.36 + h / 2; g.add(stem);
+  const tiers = 7;
+  for (let t = 0; t < tiers; t++) { const y = 0.45 + (h - 0.2) * t / tiers, size = 0.62 * (1 - t / tiers * 0.65);
+    for (const side of [-1, 1]) { const m = new THREE.Mesh(leafGeo(size, 0.2), toon((t + (side > 0 ? 1 : 0)) % 2 ? '#3f9b3a' : '#2f7d32'));
+      m.position.set(0, y, (rnd() - 0.5) * 0.1); m.rotation.set(0, (rnd() - 0.5) * 0.6, side * (0.75 + rnd() * 0.45) + t * 0.05 * side); g.add(m); }
+    const fm = new THREE.Mesh(leafGeo(size * 0.8), toon('#367f33')); fm.position.set(0, y + 0.05, 0.08); fm.rotation.set(0.5, 0, (rnd() - 0.5) * 0.5); g.add(fm); }
+  for (let i = 0; i < 3; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.06, 7, 6), toon('#84cc16')); b.scale.y = 1.7; b.position.set((i - 1) * 0.12, 0.36 + h * (0.55 + i * 0.12), 0.06); g.add(b);
+    for (let k = 0; k < 4; k++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.014, 4, 3), toon('#f97316')); d.position.copy(b.position).add(new THREE.Vector3((rnd() - 0.5) * 0.1, (rnd() - 0.5) * 0.18, 0.06)); g.add(d); } }
+  const top = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), toon('#a3e635')); top.scale.y = 2; top.position.y = 0.36 + h + 0.05; g.add(top);
+  return g;
+}
+function blunt() { const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.22, 2.4, 14), toon('#f5ead6')); body.rotation.z = Math.PI / 2; g.add(body);
+  for (let i = 0; i < 12; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.035, 5, 4), toon('#65a30d')); const x = -1 + i * 0.17, ang = i * 2.1; f.position.set(x, Math.cos(ang) * 0.26, Math.sin(ang) * 0.26); g.add(f); }
+  const crutch = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.3, 14), toon('#d6b98c')); crutch.rotation.z = Math.PI / 2; crutch.position.x = -1.32; g.add(crutch);
+  const ash = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.14, 14), toon('#9ca3af')); ash.rotation.z = Math.PI / 2; ash.position.x = 1.25; g.add(ash);
+  const ember = new THREE.Mesh(new THREE.SphereGeometry(0.29, 14, 10), toon('#f97316', { emissive: new THREE.Color('#ea580c'), emissiveIntensity: 0.9 })); ember.scale.x = 0.45; ember.position.x = 1.33; g.add(ember);
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.305, 0.3, 0.12, 14), toon('#16a34a')); band.rotation.z = Math.PI / 2; band.position.x = -0.9; g.add(band); return g; }
+function bong() { const g = new THREE.Group(), glass = toon('#86efac', { transparent: true, opacity: 0.78 }), water = toon('#38bdf8', { transparent: true, opacity: 0.85 });
+  const prof = [[0, 0], [0.55, 0], [0.62, 0.12], [0.62, 0.6], [0.5, 0.9], [0.2, 1.15], [0.17, 2.6], [0.24, 2.75], [0.26, 2.85]].map(([x, y]) => new THREE.Vector2(x, y));
+  g.add(new THREE.Mesh(new THREE.LatheGeometry(prof, 16), glass));
+  const w = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.58, 0.45, 16), water); w.position.y = 0.3; g.add(w);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.64, 0.66, 0.1, 16), toon('#15803d')); base.position.y = 0.05; g.add(base);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.9, 8), glass); stem.position.set(0.45, 0.85, 0); stem.rotation.z = -0.8; g.add(stem);
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.08, 0.2, 10), toon('#16a34a')); bowl.position.set(0.78, 1.15, 0); g.add(bowl);
+  const herb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), toon('#4d7c0f')); herb.position.set(0.78, 1.25, 0); herb.scale.y = 0.5; g.add(herb);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.04, 6, 16), toon('#facc15')); ring.rotation.x = Math.PI / 2; ring.position.y = 2.2; g.add(ring); return g; }
+function glider() { const g = new THREE.Group(); const lf = new THREE.Mesh(leafGeo(2.2, 0.11), toon('#a3e635')); lf.rotation.x = -Math.PI / 2 + 0.25; lf.position.z = 0.9; g.add(lf);
+  const vein = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.0, 6), toon('#65a30d')); vein.rotation.x = Math.PI / 2; vein.position.set(0, 0.05, 0.1); g.add(vein);
+  for (let i = 0; i < 14; i++) { const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), toon('#f0fdfa')); c.position.set((Math.random() - 0.5) * 2.2, 0.08, (Math.random() - 0.2) * 2); g.add(c); }
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.2, 6), toon('#475569')); bar.position.set(0, -0.6, 0.2); g.add(bar);
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.8, 6), toon('#475569')); grip.rotation.z = Math.PI / 2; grip.position.set(0, -1.2, 0.2); g.add(grip); return g; }
+function board() { const g = new THREE.Group(); const sh = new THREE.Shape(); sh.absarc(-0.9, 0, 0.32, Math.PI / 2, Math.PI * 1.5, false); sh.absarc(0.9, 0, 0.32, -Math.PI / 2, Math.PI / 2, false);
+  const deck = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.12, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 2 }), toon('#16a34a')); deck.rotation.x = Math.PI / 2; g.add(deck);
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.02, 0.5), toon('#1f2937')); grip.position.y = 0.02; g.add(grip);
+  const lf = new THREE.Mesh(leafGeo(0.45), toon('#a3e635')); lf.rotation.x = -Math.PI / 2; lf.position.set(0, 0.04, 0.2); g.add(lf);
+  for (const x of [-0.8, 0.8]) { const pod = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.26, 0.16, 12), toon('#334155')); pod.position.set(x, -0.18, 0); g.add(pod); const glow = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.04, 12), toon('#bef264', { emissive: new THREE.Color('#84cc16'), emissiveIntensity: 1 })); glow.position.set(x, -0.27, 0); g.add(glow); }
+  return g; }
+function walker() { const g = new THREE.Group(), glass = toon('#bbf7d0', { transparent: true, opacity: 0.7 });
+  const tank = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 0.9, 6, 14), glass); tank.rotation.z = Math.PI / 2; tank.position.y = 1.3; g.add(tank);
+  const liquid = new THREE.Mesh(new THREE.CapsuleGeometry(0.45, 0.8, 6, 14), toon('#22c55e')); liquid.rotation.z = Math.PI / 2; liquid.position.y = 1.22; liquid.scale.set(1, 1, 0.9); g.add(liquid);
+  const sprout = plant(7, 0.5); sprout.scale.setScalar(0.55); sprout.position.y = 1.55; g.add(sprout);
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.18, 0.9), toon('#64748b')); frame.position.y = 0.72; g.add(frame);
+  for (const [x, z] of [[-0.7, 0.35], [0.7, 0.35], [-0.7, -0.35], [0.7, -0.35]]) { const hip = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), toon('#facc15')); hip.position.set(x, 0.66, z); g.add(hip); }
+  return g; }
+function cannon() { const g = new THREE.Group(); const hop = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.35, 0.6, 12), toon('#2563eb')); hop.position.y = 1.05; g.add(hop);
+  for (let i = 0; i < 6; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), toon('#65a30d')); s.scale.y = 1.25; s.position.set(Math.cos(i) * 0.28, 1.38, Math.sin(i) * 0.28); g.add(s); }
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.22, 0.9, 12), toon('#334155')); barrel.position.set(0.25, 0.45, 0); barrel.rotation.z = 0.35; g.add(barrel);
+  const muzzle = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.06, 6, 12), toon('#facc15')); muzzle.position.set(0.4, 0.04, 0); muzzle.rotation.x = Math.PI / 2; g.add(muzzle); return g; }
+function dolly() { const g = new THREE.Group();
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.34, 1.0), toon('#94a3b8')); deck.position.y = 0.32; g.add(deck);
+  const lip = new THREE.Mesh(new THREE.BoxGeometry(2.04, 0.08, 1.04), toon('#cbd5e1')); lip.position.y = 0.5; g.add(lip);
+  for (let i = 0; i < 6; i++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.2, 0.02), toon(i % 2 ? '#111827' : '#facc15')); st.position.set(-0.75 + i * 0.3, 0.32, 0.51); st.rotation.z = 0.5; g.add(st); }
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.02), toon('#1e3a8a')); plate.position.set(0.55, 0.32, 0.52); g.add(plate);
+  for (const x of [-0.6, 0.6]) { const n = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.14, 0.24, 12), toon('#475569')); n.position.set(x, 0.06, 0); g.add(n); const r = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.03, 12), toon('#fb923c', { emissive: new THREE.Color('#ea580c'), emissiveIntensity: 0.8 })); r.position.set(x, -0.07, 0); g.add(r); }
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.3, 8), toon('#64748b')); pole.position.set(-0.9, 1.1, 0); pole.rotation.z = 0.12; g.add(pole);
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), toon('#1f2937')); bar.rotation.x = Math.PI / 2; bar.position.set(-0.98, 1.72, 0); g.add(bar);
+  const bea = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), toon('#fb923c', { emissive: new THREE.Color('#f97316'), emissiveIntensity: 0.6 })); bea.scale.y = 1.2; bea.position.set(-0.98, 1.88, 0); g.add(bea);
+  return g; }
+const PROC = { dolly, plant: (o) => plant(o.seed || 3, o.h || 1.6), blunt, bong, glider, board, walker, cannon };
+window.render = async (spec) => {
+  const size = spec.size || 512, R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); R.setSize(size, size); R.setClearColor(0, 0); R.outputColorSpace = THREE.SRGBColorSpace;
+  const S = new THREE.Scene(); S.add(new THREE.HemisphereLight('#ffffff', '#8a90b0', 1.4)); const L = new THREE.DirectionalLight('#ffffff', 2.2); L.position.set(-3, 6, 7); S.add(L);
+  const root = new THREE.Group(); S.add(root);
+  for (const part of spec.parts) {
+    let o; if (part.proc) { o = PROC[part.proc](part); if (part.pos) o.position.set(...part.pos); if (part.rot) o.rotation.set(...part.rot.map(d => d * Math.PI / 180)); if (part.scale) o.scale.setScalar(part.scale); root.add(o); continue; }
+    if (!cache[part.url]) cache[part.url] = await loader.loadAsync(part.url); o = cache[part.url].scene.clone(true);
+    o.traverse(m => { if (!m.isMesh) return; const src = m.material; const mat = new THREE.MeshToonMaterial({ map: src.map || null, color: src.color ? src.color.clone() : new THREE.Color('#fff'), gradientMap: grad, transparent: !!part.glass, opacity: part.glass ? part.glass : 1, side: THREE.DoubleSide });
+      if (src.emissive && (src.emissive.r + src.emissive.g + src.emissive.b) > 0) { mat.emissive = src.emissive.clone(); mat.emissiveMap = src.emissiveMap || null; }
+      if (part.flat) { mat.map = null; mat.color = new THREE.Color(part.flat); } else if (part.tint) { const t = new THREE.Color(part.tint); if (mat.map) { mat.color = t; } else mat.color.lerp(t, part.mix == null ? 0.75 : part.mix); }
+      if (part.sat) { const hsl = {}; mat.color.getHSL(hsl); mat.color.setHSL(hsl.h, Math.min(1, hsl.s * part.sat), hsl.l); }
+      m.material = mat; });
+    if (part.pos) o.position.set(...part.pos); if (part.rot) o.rotation.set(...part.rot.map(d => d * Math.PI / 180)); if (part.scale) o.scale.setScalar(part.scale); if (part.sxyz) o.scale.set(...part.sxyz);
+    root.add(o);
+  }
+  root.rotation.set((spec.pitch || 0) * Math.PI / 180, (spec.yaw || 0) * Math.PI / 180, (spec.roll || 0) * Math.PI / 180); root.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(root), s = new THREE.Vector3(), c = new THREE.Vector3(); b.getSize(s); b.getCenter(c);
+  const half = Math.max(s.x, s.y) / 2 * 1.04, cam = new THREE.OrthographicCamera(-half, half, half, -half, 0.01, 1000);
+  cam.position.set(c.x, c.y, c.z + 50); cam.lookAt(c.x, c.y, c.z); R.render(S, cam);
+  const out = R.domElement.toDataURL('image/png'); R.dispose(); return { png: out, w: s.x, h: s.y };
+};
+window.ready = true;
+</script></body></html>

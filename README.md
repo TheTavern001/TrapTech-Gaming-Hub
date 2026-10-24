@@ -1,7 +1,7 @@
 # The Gaming Hub by Trap Tech Solutions
 
 Mobile-first game hub with accounts, leaderboards, giveaways, a booking request system and an admin dashboard, designed,
-built and operated by **Trap Tech Solutions**. 13 active core games and 80 curated Games Library titles (93 active entries, with three retired historical core-game IDs excluded), daily quests, login streaks, XP levels, a free season
+built and operated by **Trap Tech Solutions**. **84 playable games**: 12 core games and 72 Games Library titles (13 retired IDs are kept only so old scores and links still resolve), daily quests, login streaks, XP levels, a free season
 track, tournaments (timed and bracket), friends, notifications, share cards and invite codes. Competitive outcomes remain
 server-validated and purchases are limited to cosmetic items, profile presentation, and season-track content—never gameplay
 power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-gap research and sources.
@@ -9,13 +9,30 @@ power or score advantages. Adults only (21+). See `RESEARCH.md` for the feature-
 - Local URL: http://localhost:8787 (port is set by `PORT` in `.env` or the environment)
 - Public leaderboard: `/leaderboard` · Giveaways: `/giveaways` · Admin: disabled unless `ADMIN_PATH` is configured; the dashboard uses a non-public random path, password + authenticator-based 2FA, CSRF protection, and role permissions. `/admin` is not the dashboard.
 
-## Current deployment state and 500-game expansion (read first)
+## Current build status (read first)
 
-**Operational source of truth:** [Deployment and audit journal](docs/DEPLOYMENT-JOURNAL.md) → `docs/audit/DEPLOYMENT-JOURNAL.json`; [master workboard](docs/HUB-MASTER-CHECKLIST.md) and [game intake protocol](docs/audit/GAME-IMPORT-PROTOCOL.md). Record the exact GitHub SHA and observed Deplexo outcome for **every** attempt, including failure, in the journal. A screenshot of BUILDING is not proof of READY.
+**As of 2026-10-23** (branch `claude/fix-cosmetics-quests-4l4mnz`; full detail in [docs/AAA-FULL-AUDIT.md](docs/AAA-FULL-AUDIT.md)):
 
-Run `node tools/release-status.js` for current-source and last-observed-host status; run `node tools/verify-game-intake.js` for registered intake and `node tools/quality-readiness.js` for **evidence-backed AAA quality approval**, counted separately. The baseline is **93 active games**, target **500** (407 further distinct accepted titles). The research candidate list is not a live game list. Docker prelaunch now derives library counts from the registry rather than refusing a valid 81st game. All new titles still need rights, gameplay, score and Android QA before public release.
+- **Live catalog:** 12 core games + 72 Games Library titles = **84 playable**. Retired and redirected: Plinko, Spin to Win,
+  Blazed Roulette, Stack 2048, Memory Match (owner, 2026-10-24) → Stack (core); Alien Rows → Star Swarm, Hex Stack → Block Drop, and six duplicate driving titles
+  → Hill Hauler / Drift Rush (library).
+- **Restored on this branch:** cosmetics, achievements and rotating quests had been replaced by stubs on 2026-10-19..21;
+  restored from `099effa` with the AAA designs merged properly.
+- **Rebuild in progress** ([docs/CORE-GAME-REBUILD-PLAN.md](docs/CORE-GAME-REBUILD-PLAN.md)): **Drift Rush v9** (3D highway
+  racer) and **Bud Escape** (the Jetpack Dash rebuild: 2D Joyride-style warehouse escape with outlined cartoon CC0 art, 7 vehicles and daily missions) are done (Bud Escape art is being redone); the remaining core games are next. Stack and
+  Munchies Snake are kept as they are.
+- **Jetpack Dash is now Bud Escape** (same game id `jetpack-dash`, scored in meters + daily mission bonus). On the first boot of
+  this version, all classic Jetpack Dash runs move to the retired id `jetpack-dash-m` (board archived, history kept) and pending
+  Jetpack challenges expire. End any open giveaway or tournament that includes Jetpack Dash before deploying.
+- **Every game has its own settings and a pause menu** (core games: header pause → Settings; library games: on-screen pause
+  button → Resume / Settings / Exit). Games can declare their own options (e.g. Drift Rush camera view and graphics detail).
+- **Admin security restored:** `src/admin-sec.js` had been replaced by a stub on `main` (admin routes unauthenticated);
+  this branch restores the full module (secret path, password + authenticator, CSRF, lockouts, audit log).
+- **Human release gates** (owner sign-off, live Stripe test, real-device passes, staging load) are tracked by
+  `node tools/public-release-gate.js`; the deployment history lives in [docs/DEPLOYMENT-JOURNAL.md](docs/DEPLOYMENT-JOURNAL.md).
 
-**Last Deplexo screenshot reconciliation:** historical READY at `420bab1`; later `58a9f52`, `b7be1ec`, `4ad48e9`, and `71a07b4` each FAILED (root causes unconfirmed until logs obtained). Deplexo also reports failed builds for `570a9fe`, `eaaca78`, `12446a1` and `3623d72` (working-branch builds). The branch is not a host-isolated sandbox. See the journal for exact evidence and resume point. This README does not claim the present `main` is live.
+The long-term target is 500 distinct, quality-approved games; the research list in `docs/GAME-CANDIDATES.md` is not a live game
+list. Every new title needs rights, gameplay, score and mobile QA before release.
 
 ## Run / restart
 ```bash
@@ -80,40 +97,41 @@ This works on Fly.io, Railway or any VPS. Always mount a volume at `/data`, or t
 Signed-in players' runs are scored automatically when the run ends (or from Pause > **End run & save score**). Guests can play
 practice runs, but those scores aren't saved.
 
-### Core games (all 16 playable)
+### Core games (13 playable)
 
-All core games use the same signed run-token flow and accept only server-validated score submissions. For endless scores, the server checks elapsed time against a per-game scoring envelope: `perSec × elapsed + ramp × elapsed² / 2 + grace`, then hard-rejects results over twice that envelope. The global score ceiling is a sanity bound, not a per-game cap.
+All core games use the same signed run-token flow and accept only server-validated score submissions. The server checks the
+score against a per-game envelope (`perSec × server-measured seconds + grace`) and, at anti-cheat level 3–4, the game's event
+log (`src/ac-levels.js`); Stack is additionally replay-verified from the drop log.
 
-| Game | Scoring loop | Server acceptance envelope |
+| Game | Scoring loop | Server envelope |
 |---|---|---|
-| Jetpack Dash | Meters flown in one run | 30/s + 25 grace |
-| Drift Rush | Distance plus banked drift chains (up to x4) | 240/s + 200 grace |
-| Plinko | Slot points multiplied by golden pegs | 700/s + 900 grace |
-| Spin to Win | Total points from timed spins | 700/s + 2,000 grace |
-| Memory Match | Pair score, combo, remaining time and board-clear bonus; server replay-verified | 1,100/s + 500 grace |
-| High Score | Reflex targets, accuracy, combo, and gold-target bonus | 1,100/s + 300 grace |
-| Blazed Roulette | Points won on successful spins; no real-money value | 300/s + 40/s² ramp + 1,500 grace |
-| Terp Tapper | Rhythm timing: 100/60/30 per note, multiplied by combo | 4,000/s + 500 grace |
-| Neon Munchies | Pellets, snacks, golden pickups, and arena play | 400/s + 1,000 grace |
-| Brick Breaker | Bricks, wave multiplier, and hit-chain bonus | 1,200/s + 1,500 grace |
-| Sky Hopper | Towers passed; one collision ends the run | 1.6/s + 5 grace |
-| Void Swarm | Drone kills, dives, wave bonus, motherships and cleared waves | 700/s + 10/s² ramp + 3,000 grace |
-| Stack | Timed slab drops; tight landings maintain or grow the tower | 300/s + 200 grace |
-| Grow Guard | Pest eliminations and completed defense waves | 140/s + 1.2/s² ramp + 600 grace |
-| Sling Smash | Knock out Glitch Bots, destroy blocks and clear towers | 1,500/s + 3,000 grace |
-| Haze Defense | Pop layered orbs and clear defense waves | 160/s + 1.4/s² ramp + 600 grace |
+| Bud Escape (`jetpack-dash`) | Meters travelled + 200 per completed daily mission (max 3) | 25 m/s + 700 grace; event log |
+| Drift Rush (v9, 3D) | Meters driven + banked drift and near-miss points (multiplier up to x3) | 240/s + 200 grace; event log |
+| High Score | Reflex targets, accuracy and combo | 1,100/s + 300 grace |
+| Terp Tapper | Rhythm timing 100/60/30 per note × combo | 4,000/s + 500 grace |
+| Neon Munchies | Pellets, snacks, golden brownies, rival orbs | 400/s + 1,000 grace |
+| Brick Breaker | Bricks × wave bonus | 1,200/s + 1,500 grace |
+| Sky Hopper | Towers passed | 1.6/s + 5 grace |
+| Void Swarm | Drone kills × wave bonus | 700/s + 3,000 grace |
+| Stack | Slabs + perfect-streak bonus; replay-verified | 300/s + 200 grace |
+| Grow Guard | Pests + cleared waves | 140/s + 600 grace |
+| Sling Smash | Glitch Bots and blocks destroyed | 1,500/s + 3,000 grace |
+| Haze Defense | Layers popped × wave tier + wave bonus | 160/s + 600 grace |
 
-The active Games Library adds 80 separately listed titles. Catalog uniqueness checks prevent the 20 retired duplicates from returning. `src/config.js` contains core scoring envelopes; `src/games-lib.js` contains the active library registry.
+Retired core games (kept in `config.RETIRED` so their history resolves; open giveaways and tournaments were moved to the
+replacement): Plinko, Spin to Win, Blazed Roulette, Stack 2048.
+
+The **Games Library** (`src/games-lib.js`, `public/games-lib/`) adds 72 live original titles on the shared `kit.js` engine
+(2D and three.js 3D), all giveaway-eligible with skill-only tie-breaks.
 
 ### Achievements & cosmetics (cosmetic only, no cash value)
-`src/achievements.js` defines **84 achievements** in 6 categories: game milestones (5 per game: bronze/silver/gold score, 10 runs,
-3-run streak), overall (runs, total points, days played, variety), giveaways (enter 1/5/25, podium, win 1/3), community (hype posts,
-equip cosmetics, collector), leaderboards (weekly top 10/3/1, monthly #1, global top 10, #1 in 3 games) and 9 hidden secrets.
-They are evaluated **on the server** after every accepted run, signup, equip, hype, admin draw and profile view, from data the server
-already validated; the client can't claim an unlock. Rarity = % of players who have it.
-Every unlock gives a badge plus a cosmetic from `src/cosmetics.js`: **39 profile banners, 19 avatar frames, 35 titles** (all original
-CSS/SVG, served as `/cosmetics.css`). Players equip a banner, frame, title and featured badge on their profile (Customize); these
-show on leaderboards, giveaway entrants, home and community posts.
+`src/achievements.js` defines **147 hand-made achievements** in 9 categories (game milestones, overall, streaks & seasons,
+giveaways, community, friends & referrals, leaderboards, legendary, secrets); `src/skill-engine.js` adds **~11,300 skill
+achievement ladders** and **~7,700 skill-quest variants** generated per game. Everything is evaluated **on the server** from data
+the server already validated; the client can't claim an unlock. Cosmetics (`src/cosmetics.js`, original CSS/SVG, served as
+`/cosmetics.css`): **71 banners, 39 avatar frames, 84 titles**, plus 49 shop items and a 12,000-design rotating universe
+(`src/shop-gen.js`). Players equip a banner, frame, title and featured badge on their profile; these show on leaderboards,
+giveaway entrants, home and community posts.
 
 ### Sponsor a Host (/sponsor) and brands
 No tiers and no public prices. A sponsor ticks the features they want from one combined list (giveaway length, extra
@@ -158,8 +176,8 @@ Community feed), Reports (CSV exports and rejected anti-cheat submissions), Sett
   Level L needs 100·(L-1)·L/2 XP in total. Level-ups show a toast, post a notification and (every 5th level) appear in the community feed.
 - **Daily check-in streaks**: opening the home page checks you in (+20 XP, +5 per streak day up to +50). `/quests` shows the streak.
 - **Daily quests**: everyone gets the same 3 quests each day (midnight ET reset). They are claimed for XP, and an all-clear bonus adds +100 XP.
-- **Seasons**: calendar quarters. Season 1 "Neon Genesis" runs Oct 1 - Dec 31 2026, with 20 tiers × 300 season XP, a **free track only**
-  (no paid pass) and cosmetic rewards at tiers 3/5/10/20. There's also a season leaderboard.
+- **Seasons** (`src/seasons.js`): auto-rolling seasons with a 60-level **free** track (no paid pass), perks and cosmetic
+  rewards, a season leaderboard and a hall of fame. Season 1 ("V1 Launch Season") runs Oct 1 – Nov 26, 2026; later seasons last 6 weeks.
 - **Tournaments** (`src/tournaments.js`, Admin > Tournaments): *timed* events rank the best single score in a window. *Brackets* run
   a qualifying window, then the top 8 play 3 async knockout rounds (QF/SF/Final). In each round the higher best score inside the round
   window advances, and ties go to the higher seed. Creating a tournament broadcasts a notification. Prizes are cosmetic unless you link a real giveaway.
@@ -219,13 +237,15 @@ Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store C
 1 announcement, 3 tournaments (live timed cup, bracket, upcoming), follows, streaks and broadcast notifications are tagged **DEMO** in the UI (`is_demo=1` in the database). Remove them with Admin > Settings > Wipe demo data, or
 `npm run demo:wipe`. Load them again with `npm run demo:seed`. Demo accounts have random passwords, so nobody can log into them.
 
-## Anti-cheat (basic)
+## Anti-cheat
 - `POST /api/run/start` (signed-in only) returns an HMAC-signed, single-use run token tied to the player and game.
 - `POST /api/score` must include the token. Requests are rejected if the token belongs to another player, was already used,
   has been tampered with, or has expired (2 hours). Each game has its own caps (table above): scores above
   `perSec x server-measured elapsed seconds + grace`, above the game's absolute `max`, or with implausible coin counts are rejected.
 - Rate limits: 20 run starts per minute per player (40 per IP) and 30 score submissions per minute per IP. Login, signup and booking
   are rate-limited per IP. IPs are stored only as salted hashes.
+- Each run is seeded by the server; gameplay randomness comes from that seed, so every player of a seed gets the same game.
+- Level 3–4 games also send an event log that `src/ac-levels.js` checks against the game's rules (sums, rates, legal values); Stack is replayed from its drop log.
 - Limitation: it's a client-side game, so a skilled cheater can still script plausible scores. Use the admin tools before paying out prizes:
   the winner review queue (flags, per-run rate vs cap, shared IP/device), ban, and the runs CSV. Giveaway standings also re-check every run against the caps,
   so a run inserted past the API is excluded and flagged.
@@ -236,7 +256,7 @@ Sample players such as BlazedKing and TerpQueen, sample giveaways ("$250 Store C
 `POST /api/run/start`, `POST /api/score`, `GET /api/giveaways?status=active|upcoming|past`, `GET /api/giveaways/:id`,
 `GET /api/profile/:username`, `GET /api/community`, `POST /api/community/react {key}`, `GET /api/sponsor/catalog`, `POST /api/sponsor/requests {features,...}` (alias `POST /api/bookings`), `GET /api/sponsor/requests/:token`, `GET /api/brands`, `GET|POST /api/me/brand`,
 `GET /api/achievements[?user=]`, `GET /api/cosmetics`, `POST /api/me/cosmetics {banner,frame,title,badge}`, `GET /cosmetics.css`,
-and `/api/admin/*` (cookie session after `POST /api/admin/login`), incl. `GET /api/admin/games` (with linked giveaways),
+and the admin API under the private `ADMIN_PATH` (`/<ADMIN_PATH>/api/*`, password + authenticator session, CSRF token), incl. `GET /api/admin/games` (with linked giveaways),
 `POST /api/admin/giveaways/:id/games {game_id, linked}`, `GET|PUT /api/admin/packages`, `POST /api/admin/packages/reset`, `GET /api/admin/achievements`.
 v3: `POST /api/checkin`, `GET /api/quests`, `POST /api/quests/:idx/claim` (3 = bonus), `GET /api/season`, `GET /api/tournaments[/:id]`,
 `POST|DELETE /api/follow/:username`, `GET /api/follows/:username?type=followers|following`, `GET /api/leaderboard?...&friends=1`,
@@ -254,7 +274,9 @@ src/db.js            SQLite schema (better-sqlite3), database at $DATA_DIR/hub.d
 src/config.js        env/.env loader, secrets, game catalog, anti-cheat constants
 src/demo.js          demo seed/wipe
 src/boards.js        leaderboards + giveaway entrants (multi-game, min score) + campaign stats
-src/achievements.js  105 achievements (8 categories), server-side evaluation, rarity, unlock notifications
+src/achievements.js  147 hand-made achievements (9 categories), server-side evaluation, rarity, unlock notifications
+src/skill-engine.js  generated skill achievements + skill quests (per game, server-side progress and claims)
+src/games-lib.js     Games Library registry (72 live titles, retirements); public/games-lib/ holds the games, kit.js engine and 3D assets
 src/progress.js      XP/levels, check-in streaks, daily quests, seasons
 src/tournaments.js   timed boards + async 8-seed brackets
 src/notify.js        notifications (per-user + broadcast)
@@ -266,14 +288,15 @@ src/cosmetics.js     banners / frames / titles (original CSS) -> /cosmetics.css
 src/sponsor.js       Sponsor a Host: feature list, admin price sheet, quotes, placements
 src/brands.js        brand affiliation (invite codes, one brand per player, giveaway audience)
 src/packages.js      legacy package copy (sponsor FAQ + Potato handle; v5 tier data kept for old bookings)
-public/index.html    player SPA shell (per-page meta injected server-side), manifest.webmanifest + sw.js (PWA); public/js/app.js (router and all pages), public/js/jetpack.js (Jetpack Dash)
-public/js/games/     engine.js (shared canvas game base + WebAudio synth) and the 7 other games
+public/index.html    player SPA shell (per-page meta injected server-side), manifest.webmanifest + sw.js (PWA); public/js/app.js (router and all pages), public/js/jetpack.js (Bud Escape)
+public/js/games/     engine.js + kit.js (shared core-game base, HUD, synth) and the core games; drift-rush.js is three.js 3D
+public/js/player-prefs.js  per-game settings panel (sound, sharpness, per-game options) used by core and library games
 src/admin-ui/          secret-path admin SPA (served only through authenticated admin routes)
 public/css/app.css   theme (dark navy, neon purple-to-blue, glowing cards, bottom tab nav)
 public/assets/       brand/, cards/, giveaways/, badges/, packages/, avatars/ (from mockups), game/ + sfx/ (Kenney CC0)
 public/fonts/        Orbitron + Exo 2 (OFL)
 mockups/             the owner's original mockup PNGs (reference only, not served)
-tools/               extract_mockup_art.py, render-cover.js, e2e-api.js, e2e-browser.js, e2e-scale.js, compare.py
+tools/               e2e-*.js test suites, audits (prelaunch-deep-audit, games-lib-integrity-audit, public-release-gate), impostors/ (3D vegetation pipeline)
 screenshots/         mobile-*.png, desktop-*.png, v2/, v3/, v4/ (m*-*.png = mobile 390x844, d*-*.png = desktop 1440x900), compare/ (generated by the tests, git-ignored)
 scripts/             start/stop/restart scripts
 .env                 local dev secrets (chmod 600, git-ignored); see .env.example
@@ -301,7 +324,7 @@ python3 tools/compare.py                   # mockup vs built side-by-side images
 
 ## Optional payments and media storage
 
-- Bitcoin checkout uses BTC_ADDRESS and never stores private wallet keys.
+- Payments are Stripe-only by default; Bitcoin checkout is opt-in (`BTC_CHECKOUT_ENABLED`), uses BTC_ADDRESS and never stores private wallet keys.
 - Hosted credit/debit checkout is implemented with Stripe Checkout and signed webhooks. It remains disabled until STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, and an HTTPS PUBLIC_URL are configured and test-mode payment/refund flows pass.
 - Optional Cloudflare R2 storage can move admin-uploaded media off the app disk. It requires a bucket-scoped R2 S3 API credential set; without it, the app keeps using DATA_DIR/media.
 - Setup steps and security caveats: docs/CLOUDFLARE-AND-PAYMENTS-SETUP.md.

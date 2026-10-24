@@ -170,7 +170,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   await v3(m, 'm15-profile');
 
   console.log('# new games: play each briefly, end run & save');
-  const NEW = ['drift-rush', 'memory-match', 'high-score', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'stack', 'void-swarm', 'grow-guard', 'sling-smash', 'haze-defense'];
+  const NEW = ['drift-rush', 'high-score', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'stack', 'void-swarm', 'grow-guard', 'sling-smash', 'haze-defense'];
   const BOTS = require('./v7/bots');
   const botPlay = (id, ms) => async (p) => { await p.evaluate(([src, ms]) => { const g = window.__game; const b = eval(src); const until = performance.now() + ms; const loop = () => { if (g.state !== 'play' || performance.now() > until) return; try { b(g); } catch (e) {} requestAnimationFrame(loop); }; loop(); }, [BOTS[id], ms]); await sleep(ms + 200); };
   const PLAY = {
@@ -202,7 +202,7 @@ setInterval(() => { if (Date.now() - t0 > 15 * 60e3) { console.error('WATCHDOG: 
   ok(lastUnlocked.some(a => a.id === 'variety-all'), 'playing all 13 games unlocks "variety-all" (server-side)', lastUnlocked.map(a => a.id));
   ok((await m.isVisible('.ach-toast')) || (await m.locator('#sv .unl').count()) >= 1, 'unlock shown after the last run (toast, or listed in the run result if the toast already faded)');
   await shot(m, 'mobile-08c-unlock-toast', false, true);
-  const lbAll = await m.evaluate(async (u) => { const out = {}; for (const g of ['drift-rush', 'memory-match', 'high-score', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'stack', 'void-swarm', 'sling-smash']) { const r = await (await fetch('/api/leaderboard?game=' + g + '&limit=500')).json(); out[g] = r.rows.some(x => x.username === u); } return out; }, uname);
+  const lbAll = await m.evaluate(async (u) => { const out = {}; for (const g of ['drift-rush', 'high-score', 'terp-tapper', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'stack', 'void-swarm', 'sling-smash']) { const r = await (await fetch('/api/leaderboard?game=' + g + '&limit=500')).json(); out[g] = r.rows.some(x => x.username === u); } return out; }, uname);
   ok(Object.values(lbAll).every(Boolean), 'my scores are on every new game leaderboard', lbAll);
 
   console.log('# achievements page');

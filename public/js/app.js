@@ -271,10 +271,16 @@ async function render() {
   for (const [re, fn] of routes) { const m = path.match(re); if (m) {
     window.scrollTo(0, 0);
     if (!NO_SKEL.test(path) && !first) shell(path, skeleton(/^\/(games|achievements|tournaments)$/.test(path) ? 'grid' : 'list'));
-    try { await fn(m, url); } catch (err) { console.error(err); shell(path, emptyState('triangle-alert', 'Something went wrong', 'Please try again in a moment.', '<a class="btn sm" href="/">Go home</a>')); }
+    try { await fn(m, url); scrollToHash(url); } catch (err) { console.error(err); shell(path, emptyState('triangle-alert', 'Something went wrong', 'Please try again in a moment.', '<a class="btn sm" href="/">Go home</a>')); }
     if (!first) { const mm = document.getElementById('main'); if (mm) mm.focus({ preventScroll: true }); }
     return; } }
   shell(path, emptyState('circle-help', 'Page not found', "We couldn't find that page.", '<a class="btn sm" href="/">Go home</a>'), { title: 'Page not found' });
+}
+// In-page links such as /shop#earned: jump to that section once the route has rendered.
+function scrollToHash(url) {
+  if (url.hash.length < 2) return;
+  let el = null; try { el = document.getElementById(decodeURIComponent(url.hash.slice(1))); } catch {}
+  if (el) requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));
 }
 // ---------------- 21+ age gate (neutral date-of-birth screen; cannabis-brand content) ----------------
 function ageOk() { const v = +ls.getItem('gh_age_ok') || 0; return v && Date.now() - v < 30 * 864e5; }
@@ -611,7 +617,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   setTitle(`Play ${g.title}`);
   const bootAt = Date.now();
   const mod = await import('./' + g.module); const Cls = mod[g.cls];
-  const bestKey = g.id === 'jetpack-dash' ? 'jd_best' : 'gh_best_' + g.id;
+  const bestKey = g.id === 'jetpack-dash' ? 'jd_best_be' : 'gh_best_' + g.id;
   let best = +ls.getItem(bestKey) || 0;
   if (S.me) { const p = await api('/api/profile/' + encodeURIComponent(S.me.username)); const b = p.ok && p.profile.best_by_game.find(x => x.game_id === g.id); if (b) best = Math.max(best, b.best); }
   if (!document.getElementById('game')) return; // navigated away while loading
@@ -624,7 +630,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   S.game = game; window.__game = game; window.__lastResult = null;
   // Core games share exactly the same device-only visual preferences.
   let resumeAfterOptions = false;
-  GP.openGameSettings({id:g.id,title:g.title,host:document.querySelector('.play-wrap'),
+  const gs = GP.openGameSettings({id:g.id,title:g.title,host:document.querySelector('.play-wrap'),extra:game.settingsSchema||[],
     trigger:document.getElementById('game-settings'),
     onOpen:()=>{resumeAfterOptions=game.state==='play';if(resumeAfterOptions)game.pause(true);},
     onClose:()=>{if(resumeAfterOptions&&game.state==='paused')game.pause(false);resumeAfterOptions=false;},
@@ -632,6 +638,7 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
       if(game.sfx.muted===p.sound)game.sfx.toggle();
       const cap=GP.qualityCap(p.quality,window.devicePixelRatio||1);
       if(game.renderDpr!==cap){game.renderDpr=cap;game.resize(true);}
+      if(typeof game.applySettings==='function')game.applySettings(p.extra||{},p);
     },
     fps:()=>game.fps});
   const setMute = () => { document.getElementById('mute').innerHTML = icon(game.sfx.muted ? 'volume-x' : 'volume-2'); };
@@ -641,14 +648,15 @@ route(/^\/play\/([\w-]+)$/, async (m, url) => {
   document.getElementById('exit').onclick = () => go('/games/' + g.id);
   if (g.id === 'jetpack-dash') { const rot = document.getElementById('rot'); let shown = 0; const checkRot = () => { if (!document.body.contains(rot)) return removeEventListener('resize', checkRot); const p = innerHeight > innerWidth && innerWidth < 700 && shown < 1; rot.classList.toggle('hidden', !p); if (p) { shown++; setTimeout(() => rot.classList.add('hidden'), 5000); } }; checkRot(); addEventListener('resize', checkRot); }
   function showPause() {
-    ov.innerHTML = `<div class="card over-card"><h2>Paused</h2><div class="btns"><button class="btn block" id="res">${icon('play')} Resume</button><button class="btn ghost block" id="endrun">${icon('flag')} End run &amp; save score</button><button class="btn ghost block" id="quit">Quit without saving</button></div></div>`;
+    ov.innerHTML = `<div class="card over-card"><h2>Paused</h2><div class="btns"><button class="btn block" id="res">${icon('play')} Resume</button><button class="btn ghost block" id="opts">${icon('settings')} Settings</button><button class="btn ghost block" id="endrun">${icon('flag')} End run &amp; save score</button><button class="btn ghost block" id="quit">Quit without saving</button></div></div>`;
     ov.classList.remove('hidden');
     ov.querySelector('#res').onclick = () => game.pause(false); ov.querySelector('#quit').onclick = () => go('/games/' + g.id);
     ov.querySelector('#endrun').onclick = () => game.endNow();
+    ov.querySelector('#opts').onclick = () => gs.open();
   }
   async function finish(res) {
     if (res.score > (+ls.getItem(bestKey) || 0)) ls.setItem(bestKey, res.score);
-    ov.innerHTML = `<div class="card over-card glow-purple"><div class="small muted orb">RUN OVER</div><div class="big">${fmtScore(res.score, g.id)}</div>${res.coins ? `<div class="muted">${icon('coins')} ${res.coins} ${g.id === 'jetpack-dash' ? 'coins' : 'bonus'}</div>` : ''}<div id="sv" style="margin-top:12px"><div class="small muted">Saving score...</div></div>
+    ov.innerHTML = `<div class="card over-card glow-purple"><div class="small muted orb">RUN OVER</div><div class="big">${fmtScore(res.score, g.id)}</div>${res.coins ? `<div class="muted">${icon('coins')} ${res.coins} ${g.id === 'jetpack-dash' ? 'nugs' : 'bonus'}</div>` : ''}<div id="sv" style="margin-top:12px"><div class="small muted">Saving score...</div></div>
       <div class="btns"><button class="btn block" id="again">${icon('rotate-ccw')} Play Again</button><a class="btn ghost block" href="/leaderboard?game=${g.id}">${icon('trophy')} Leaderboard</a><a class="btn ghost block" href="/games/${g.id}">Back</a></div></div>`;
     ov.classList.remove('hidden');
     ov.querySelector('#again').onclick = async () => { ov.classList.add('hidden'); await getToken(); game.restart(); };
@@ -1336,7 +1344,7 @@ route(/^\/search$/, (m, url) => {
   const inp = document.getElementById('sq'); const out = document.getElementById('sr'); let tmr = null, seq = 0;
   async function run() {
     const q = inp.value.trim(); history.replaceState({}, '', q ? `/search?q=${encodeURIComponent(q)}` : '/search');
-    if (!q) { out.innerHTML = `<div class="chips" style="padding:6px 0">${['Drift', 'Plinko', 'Giveaway', 'Cup', 'Terp'].map(x => `<button class="chip" data-s="${x}">${x}</button>`).join('')}</div>`; return; }
+    if (!q) { out.innerHTML = `<div class="chips" style="padding:6px 0">${['Drift', 'Bud Escape', 'Giveaway', 'Cup', 'Terp'].map(x => `<button class="chip" data-s="${x}">${x}</button>`).join('')}</div>`; return; }
     const my = ++seq; const r = await api('/api/search?q=' + encodeURIComponent(q)); if (my !== seq) return;
     const grp = (title, items, fn) => items.length ? `<div class="section-h"><h2>${title}</h2><span class="small muted">${items.length}</span></div><div class="card sr-list">${items.map(fn).join('')}</div>` : '';
     const html = grp('Games', r.games, g => `<a class="sr-row" href="/games/${g.id}"><img src="${esc(g.art)}" alt="" class="gthumb"><b>${esc(g.title)}</b><span class="muted small">${esc(g.category)}</span></a>`)
@@ -1400,7 +1408,7 @@ route(/^\/terms$/, () => legal('/terms', 'Terms of Service', 'October 3, 2026', 
   <p>These Terms govern your use of The Gaming Hub (the "Hub"), operated by <b>${OP}</b> ("we", "us"). By creating an account or using the Hub you agree to these Terms, our <a href="/privacy">Privacy Policy</a> and the <a href="/rules">Official Giveaway Rules</a>.</p>
   <h2>1. Eligibility (21+)</h2><p>You must be at least <b>21 years old</b> to use the Hub. The Hub features sponsors from the cannabis industry. We may ask winners to verify their age and identity before a prize is awarded.</p>
   <h2>2. Your account</h2><p>One account per person. Keep your password private; you are responsible for activity on your account. Usernames must not impersonate others or be offensive.</p>
-  <h2>3. Free to play, points only</h2><p>The Hub is free. Scores, points, XP, levels, streaks, season tiers, badges, banners, frames and titles are <b>for entertainment only, have no cash value</b>, and cannot be bought, sold, traded or redeemed for money. Casino-style games (Plinko, Spin to Win, Blazed Roulette) use free points only. No real-money wagering takes place on the Hub.</p>
+  <h2>3. Free to play, points only</h2><p>The Hub is free. Scores, points, XP, levels, streaks, season tiers, badges, banners, frames and titles are <b>for entertainment only, have no cash value</b>, and cannot be bought, sold, traded or redeemed for money. Every game on the Hub is a game of skill. No real-money wagering takes place on the Hub.</p>
   <h2>4. Giveaways & tournaments</h2><p>Giveaways are free to enter. <b>No purchase necessary.</b> Each giveaway is subject to the <a href="/rules">Official Rules</a> and any extra rules shown on its page. Tournament prizes are cosmetic unless a giveaway page says otherwise.</p>
   <h2>5. Fair play</h2><p>No cheating, bots, scripts, exploits, score tampering, multiple accounts or self-referrals. We use server-side checks and may remove scores, entries, rewards or accounts that break these rules.</p>
   <h2>6. Community</h2><p>Be respectful. We may remove content or suspend accounts that harass others, share illegal content or promote sales of regulated products.</p>
@@ -1473,8 +1481,8 @@ route(/^\/about$/, () => shell('/about', `<div class="narrow">
   <div class="about-hero card"><div class="about-tt">${TT('horizontal', 84, 'ab-lock')}</div><h1>We build the games your brand plays.</h1>
     <p class="muted">Trap Tech Solutions is the studio behind The Gaming Hub. We design, build and run every part of it: the games, leaderboards, tournaments, giveaways, achievements and the admin tools brands use.</p>
     <div class="btn-row center-row"><a class="btn" href="/sponsor">${icon('briefcase')} Book a Giveaway</a><a class="btn ghost" href="/games">${icon('gamepad-2')} Play our games</a></div></div>
-  <div class="about-grid">${[['gamepad-2', 'Original games', '13 original HTML5 skill games, made to play great on phones, with skill-based scoring and server-side anti-cheat.'], ['gift', 'Brand giveaways', 'Sponsors pick exactly the features they want, from a simple prize drop to a full branded takeover, and get a custom quote.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Free to play, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
-  <div class="card pad"><h2 style="margin-bottom:6px">The Gaming Hub by Trap Tech Solutions</h2><p class="small muted">Version 7 • Built by Trap Tech Solutions. Every game, banner and badge is original work. See <a href="/terms">Terms</a>, <a href="/privacy">Privacy</a>, <a href="/rules">Official Rules</a> and <a href="/responsible-play">Responsible play</a>.</p></div>
+  <div class="about-grid">${[['gamepad-2', 'Original games', `${[...S.games, ...S.libraryGames].filter(g => g && g.playable !== false && !g.retired).length || 'Dozens of'} original skill games built for phones (2D and 3D), with skill-based scoring and server-side anti-cheat.`], ['gift', 'Brand giveaways', 'Sponsors pick exactly the features they want, from a simple prize drop to a full branded takeover, and get a custom quote.'], ['swords', 'Tournaments & seasons', 'Timed events, async brackets, daily quests and a free season track that keep players coming back.'], ['shield-check', 'Fair & compliant', 'Free to play, no purchase necessary, 21+ age gate and official rules for every giveaway, with Trap Tech as operator.']].map(([ic, t, d]) => `<div class="card pad"><span class="es-ic">${icon(ic)}</span><b>${t}</b><p class="small muted">${d}</p></div>`).join('')}</div>
+  <div class="card pad"><h2 style="margin-bottom:6px">The Gaming Hub by Trap Tech Solutions</h2><p class="small muted">Version V1 • Built by Trap Tech Solutions. Every game, banner and badge is original work. See <a href="/terms">Terms</a>, <a href="/privacy">Privacy</a>, <a href="/rules">Official Rules</a> and <a href="/responsible-play">Responsible play</a>.</p></div>
 </div>`));
 
 // ---------------- settings (mobile "about" lives here too) ----------------

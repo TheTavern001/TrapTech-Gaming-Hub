@@ -26,3 +26,7 @@ html.tt-high-contrast .topbar{border-color:#bfc5d3}
 
 /* HUD-safe placement: keep the score/multiplier cards on the right unobstructed. */
 .ttgs-gear{left:max(10px,env(safe-area-inset-left));right:auto;top:max(76px,calc(env(safe-area-inset-top) + 58px))}
+
+.ttgs-pausebtn{position:fixed;left:max(10px,env(safe-area-inset-left));top:max(128px,calc(env(safe-area-inset-top) + 110px));z-index:1180;border:1px solid #9abcfa;border-radius:12px;background:#13203af0;color:#fff;min-width:44px;height:44px;font-size:15px;letter-spacing:-2px;box-shadow:0 8px 22px #0009;cursor:pointer}
+.ttgs-actions.ttgs-col{flex-direction:column}.ttgs-pausemenu .ttgs-box{width:min(340px,100%);text-align:center}
+.ttgs-pausemenu .ttgs-actions button:last-child{background:#31436c}.ttgs-pausemenu .ttgs-actions button:first-child{background:linear-gradient(90deg,#7755d9,#258cc9)}

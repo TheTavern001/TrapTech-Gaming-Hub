@@ -189,6 +189,19 @@ const RULES = {
     const meters = score - sumD; if (meters < 0 || meters > lastM + 260) return 'score does not match distance + drift';
     return null;
   }),
+  // Bud Escape (id jetpack-dash, public/js/jetpack.js): 'm' = 10 per 10 m travelled (speed <= 25 m/s), 'q' = completed
+  // daily mission (200 each, at most 3), '#v' = vehicle crate taken (crates are >= 480 m apart), '#x' = vehicle destroyed.
+  'jetpack-dash': rule((E) => {
+    let mEv = 0, q = 0, veh = 0;
+    for (const e of E) {
+      const t = e.t / 100;
+      if (e.k === 'm') { if (e.v !== 10) return `distance payout ${e.v} is not possible`; if (++mEv * 10 > 25 * t + 60) return `${mEv * 10} m is not reachable in ${t.toFixed(1)} s`; }
+      else if (e.k === 'q') { if (e.v !== 200) return `mission bonus ${e.v} is not possible`; if (++q > 3) return 'more than three missions completed'; }
+      else if (e.k === '#v') { if (!Number.isInteger(e.v) || e.v < 1 || e.v > 7) return 'unknown vehicle'; if (++veh > mEv / 40 + 2) return 'vehicle crates closer together than the rules allow'; }
+      else if (e.k !== '#x') return `unknown event ${e.k}`;
+    }
+    return null;
+  }),
   stack: rule((E) => { for (const e of E) if (e.k !== 's' || !(e.v === 10 || (e.v >= 20 && e.v <= 110 && e.v % 10 === 0))) return `slab worth ${e.v}`; return null; }),
 };
 

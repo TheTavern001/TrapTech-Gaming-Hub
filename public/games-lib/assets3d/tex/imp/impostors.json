@@ -1,0 +1,26 @@
+{
+ "imp-tree-a": {
+  "aspect": 1.232,
+  "src": "island_tree_02"
+ },
+ "imp-tree-b": {
+  "aspect": 1.274,
+  "src": "island_tree_02"
+ },
+ "imp-fir": {
+  "aspect": 0.632,
+  "src": "fir_sapling"
+ },
+ "imp-bush-a": {
+  "aspect": 0.897,
+  "src": "searsia_lucida"
+ },
+ "imp-bush-b": {
+  "aspect": 0.735,
+  "src": "searsia_lucida"
+ },
+ "imp-fern": {
+  "aspect": 2.313,
+  "src": "fern_02"
+ }
+}

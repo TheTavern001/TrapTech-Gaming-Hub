@@ -81,13 +81,13 @@ const DEFAULT_PACKAGES = {
     ['Alerts are capped', 'At most one push blast per day across all brands, so your alert isn\'t lost in a flood.'],
   ],
   faq: [
-    ['Who can sponsor?', 'Any legitimate business or creator: streamers, gaming channels, apparel brands, glass and smoke-gear shops, artists, shops and licensed cannabis brands, dispensaries and delivery services. Cannabis product sellers confirm they are licensed and legally permitted to advertise in their jurisdiction. Every sponsor must follow the laws that apply to them.'],
-    ['How do players enter a giveaway?', 'Players sign in and finish a run of a linked game while the giveaway is open. No purchase is necessary and nothing can be bought in any game. Each giveaway shows its eligibility rules and each player\'s status.'],
-    ['How are winners picked and contacted?', 'By the published rules: best score with fixed tiebreakers, or a verifiable random draw. Results lock automatically at the end time. Trap Tech verifies winners and contacts them on Potato.'],
-    ['How do you stop giveaway camping and cheating?', 'Eligibility rules (recent activity, account age, max simultaneous entries, win cooldowns), seeded runs with server checks, and admin review of top entrants before any prize goes out.'],
-    ['Are the casino-style games gambling?', 'No. Plinko, Spin to Win and Blazed Roulette use free points only. No real money, no purchase, no cash value.'],
-    ['What do I need to provide?', 'The prize, your dates, rules (age, regions), your brand name and prize photo. Your logo, colors and links are used if you picked those features. You deliver the prize and follow giveaway and advertising laws where you run it.'],
-    ['When do I pay?', 'Not now. A booking request is free. We confirm details and a quote with you on Potato before anything goes live.'],
+    ['Who can sponsor a giveaway?', 'Any legitimate business or creator, including streamers, gaming channels, apparel and accessory brands, smoke-shop retailers, artists, and licensed cannabis brands, dispensaries and delivery services. Cannabis sellers must confirm they hold a valid license and are permitted to advertise in their jurisdiction. Every sponsor is responsible for following the laws that apply to them.'],
+    ['How do players enter?', 'Players sign in to a free account and complete a run of one of the giveaway\'s games while it is open. Entry is always free: no purchase is required and nothing in any game can be bought. Each giveaway page lists its eligibility rules and shows every player whether they qualify.'],
+    ['How are winners selected and contacted?', 'Winners are selected exactly as the published rules state: either the highest verified score (with fixed, skill-based tiebreakers) or a verifiable random draw among eligible players. Results lock automatically when the giveaway ends. Trap Tech verifies each winner before the prize is released and contacts them through the Potato messaging app.'],
+    ['How do you prevent cheating?', 'Every run is started and timed by our server and checked against what is physically possible in that game. Giveaways can also require recent activity, a minimum account age, a limit on simultaneous entries and a cooldown between wins. Our team reviews the top entrants before any prize is awarded.'],
+    ['Is this gambling?', 'No. Every giveaway game is a game of skill, entry is free, and no money is ever wagered. Hub Credits and cosmetic items have no cash value and cannot be exchanged for money.'],
+    ['What do I need to provide?', 'Your prize and a photo of it, the giveaway dates, any eligibility rules (such as age or region), and your brand name. If your package includes branding, we also use your logo, colors and links. You are responsible for delivering the prize and for following giveaway and advertising laws where the giveaway runs.'],
+    ['When do I pay?', 'Not when you submit a request. Booking requests are free. We review your request, confirm the details and send you a quote through the Potato messaging app before anything goes live.'],
   ],
 };
 

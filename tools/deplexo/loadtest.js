@@ -17,7 +17,7 @@ if (USERS > 250 && process.env.ISOLATED_TEST_DB !== '1') throw new Error('Set IS
 const DURATION = Number(process.env.DURATION || 60) * 1000;
 if (!Number.isFinite(DURATION) || DURATION < 1000 || DURATION > 3600000) throw new Error('DURATION must be 1 to 3600 seconds.');
 const OG = process.env.OG !== '0'; // OG=0 skips share-image requests (to isolate API memory)
-const GAMES = ['jetpack-dash', 'drift-rush', 'memory-match', 'high-score', 'terp-tapper', 'stack', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'void-swarm'];
+const GAMES = ['jetpack-dash', 'drift-rush', 'high-score', 'terp-tapper', 'stack', 'munchies-snake', 'brick-breaker', 'sky-hopper', 'void-swarm'];
 const stats = { req: 0, err: 0, s429: 0, s5xx: 0, lat: [], byKind: {}, signupsAccepted: 0, signupsFailed: 0 };
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 async function call(ip, jar, p, body, kind) {
